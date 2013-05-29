@@ -115,6 +115,9 @@ public:
     void setColor(const QColor &color);
     QColor color() const;
 
+    static bool hasDefaultAlphaBuffer();
+    static void setDefaultAlphaBuffer(bool useAlpha);
+
     void setPersistentOpenGLContext(bool persistent);
     bool isPersistentOpenGLContext() const;
 

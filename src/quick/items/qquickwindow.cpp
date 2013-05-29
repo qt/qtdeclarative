@@ -74,6 +74,8 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
+bool QQuickWindowPrivate::defaultAlphaBuffer(0);
+
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
     Q_Q(QQuickWindow);
@@ -2969,7 +2971,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     Setting the clear color has no effect when clearing is disabled.
     By default, the clear color is white.
 
-    \sa setClearBeforeRendering()
+    \sa setClearBeforeRendering(), setDefaultAlphaBuffer()
  */
 
 void QQuickWindow::setColor(const QColor &color)
@@ -2979,7 +2981,7 @@ void QQuickWindow::setColor(const QColor &color)
         return;
 
     if (color.alpha() != d->clearColor.alpha()) {
-        QSurfaceFormat fmt = format();
+        QSurfaceFormat fmt = requestedFormat();
         if (color.alpha() < 255)
             fmt.setAlphaBufferSize(8);
         else
@@ -2994,6 +2996,31 @@ void QQuickWindow::setColor(const QColor &color)
 QColor QQuickWindow::color() const
 {
     return d_func()->clearColor;
+}
+
+/*!
+    \brief Returns whether to use alpha transparency on newly created windows.
+
+    \since Qt 5.1
+    \sa setDefaultAlphaBuffer()
+ */
+bool QQuickWindow::hasDefaultAlphaBuffer()
+{
+    return QQuickWindowPrivate::defaultAlphaBuffer;
+}
+
+/*!
+    \brief \a useAlpha specifies whether to use alpha transparency on newly created windows.
+    \since Qt 5.1
+
+    In any application which expects to create translucent windows, it's
+    necessary to set this to true before creating the first QQuickWindow,
+    because all windows will share the same \l QOpenGLContext. The default
+    value is false.
+ */
+void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
+{
+    QQuickWindowPrivate::defaultAlphaBuffer = useAlpha;
 }
 
 /*!
