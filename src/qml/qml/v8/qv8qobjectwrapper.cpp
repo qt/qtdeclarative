@@ -365,13 +365,6 @@ void QV8QObjectWrapper::destroy()
 {
     qDeleteAll(m_connections);
     m_connections.clear();
-
-    QIntrusiveList<QV4::QObjectWrapper, &QV4::QObjectWrapper::weakResource>::iterator i = m_javaScriptOwnedWeakQObjects.begin();
-    for (; i != m_javaScriptOwnedWeakQObjects.end(); ++i) {
-        QV4::QObjectWrapper *wrapper = *i;
-        Q_ASSERT(wrapper);
-        deleteWeakQObject(wrapper, true);
-    }
 }
 
 struct ReadAccessor {
@@ -831,24 +824,6 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
 
-void QV8QObjectWrapper::WeakQObjectReferenceCallback(QV4::PersistentValue &handle, void *wrapper)
-{
-    Q_ASSERT(handle.value().isObject());
-    QV4::QObjectWrapper *wrappedObject = handle.value().asQObjectWrapper();
-    Q_ASSERT(wrappedObject);
-    Q_ASSERT(wrapper);
-
-    static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(wrappedObject);
-    if (static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(wrappedObject, false)) {
-        // dispose
-        delete wrappedObject;
-        handle.clear();
-    } else {
-        // ### FIXME
-        // handle.MakeWeak(0, WeakQObjectReferenceCallback); // revive.
-    }
-}
-
 v8::Handle<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QQmlData *ddata, QV8Engine *engine)
 {
     if (!ddata->propertyCache && engine->engine()) {
@@ -895,11 +870,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
         ddata->v8object = rv->v4Value();
-        // ### FIXME
-        //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
         ddata->v8objectid = m_id;
-        QV4::QObjectWrapper *wrapper = rv->v4Value().asQObjectWrapper();
-        // ### FIXME: registerWeakQObjectReference(wrapper);
         return rv;
 
     } else {
@@ -914,11 +885,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         if ((!found || (*iter)->v8object.isEmpty()) && ddata->v8object.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
             ddata->v8object = rv->v4Value();
-            // ### FIXME
-            //ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
             ddata->v8objectid = m_id;
-            QV4::QObjectWrapper *wrapper = rv->v4Value().asQObjectWrapper();
-            // ### FIXME registerWeakQObjectReference(wrapper);
 
             if (found) {
                 delete (*iter);
@@ -935,44 +902,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         if ((*iter)->v8object.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
             (*iter)->v8object = rv->v4Value();
-            // ### FIXME
-//            (*iter)->v8object.MakeWeak((*iter), WeakQObjectInstanceCallback);
         }
 
         return (*iter)->v8object.value();
     }
-}
-
-// returns true if the object's qqmldata v8object handle should
-// be disposed by the caller, false if it should not be (due to
-// creation status, etc).
-bool QV8QObjectWrapper::deleteWeakQObject(QObjectWrapper *wrapper, bool calledFromEngineDtor)
-{
-    QObject *object = wrapper->object;
-    if (object) {
-        QQmlData *ddata = QQmlData::get(object, false);
-        if (ddata) {
-            if (!calledFromEngineDtor && ddata->rootObjectInCreation) {
-                // if weak ref callback is triggered (by gc) for a root object
-                // prior to completion of creation, we should NOT delete it.
-                return false;
-            }
-
-            ddata->v8object = QV4::PersistentValue();
-            if (!object->parent() && !ddata->indestructible) {
-                // This object is notionally destroyed now
-                if (ddata->ownContext && ddata->context)
-                    ddata->context->emitDestruction();
-                ddata->isQueuedForDeletion = true;
-                if (calledFromEngineDtor)
-                    delete object;
-                else
-                    object->deleteLater();
-            }
-        }
-    }
-
-    return true;
 }
 
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::Handle<v8::Object> object)
