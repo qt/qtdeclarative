@@ -43,6 +43,7 @@ import QtQuick.Window 2.1
 
 //! [splash-properties]
 Window {
+    id: splash
     visible: true
     width: splashImage.width
     height: splashImage.height
@@ -50,7 +51,8 @@ Window {
     title: "Splash Window"
     modality: Qt.ApplicationModal
     flags: Qt.SplashScreen
-    property int timeout: 2000
+    property int timeoutInterval: 2000
+    signal timeout
 //! [splash-properties]
 //! [screen-properties]
     x: (Screen.width - splashImage.width) / 2
@@ -67,8 +69,11 @@ Window {
     }
     //! [timer]
     Timer {
-        interval: timeout; running: true; repeat: false
-        onTriggered: visible = false
+        interval: timeoutInterval; running: true; repeat: false
+        onTriggered: {
+            visible = false
+            splash.timeout()
+        }
     }
     //! [timer]
 }
