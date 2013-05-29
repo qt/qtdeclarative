@@ -48,59 +48,77 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4objectproto_p.h>
+#include <private/qv4mm_p.h>
 
 QT_BEGIN_NAMESPACE
 
-static QString internal(QLatin1String("You've stumbled onto an internal implementation detail "
-                                      "that should never have been exposed."));
+namespace QV4 {
 
-class QV8ContextResource : public QV8ObjectResource
+struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-    V8_RESOURCE_TYPE(ContextType);
+    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    ~QmlContextWrapper();
 
-public:
-    QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    ~QV8ContextResource();
+    inline QObject *getScopeObject() const { return scopeObject; }
+    inline QQmlContextData *getContext() const { return context; }
 
-    inline QQmlContextData *getContext() const;
-    inline QObject *getScopeObject() const;
+    QV8Engine *v8; // ### temporary, remove
+    bool readOnly;
+    bool ownsContext;
 
-    quint32 readOnly:1;
-    quint32 ownsContext:1;
-    quint32 dummy:29;
-
-private:
     QQmlGuardedContextData context;
     QQmlGuard<QObject> scopeObject;
 
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void destroy(Managed *that);
+
+private:
+    const static ManagedVTable static_vtbl;
 };
 
-QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-: QV8ObjectResource(engine), readOnly(true),
-  ownsContext(ownsContext), dummy(0), context(context), scopeObject(scopeObject)
+struct QmlContextNullWrapper : QmlContextWrapper
 {
+    QmlContextNullWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false)
+        : QmlContextWrapper(engine, context, scopeObject, ownsContext)
+    {
+        vtbl = &static_vtbl;
+    }
+
+    using Object::get;
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+
+private:
+    const static ManagedVTable static_vtbl;
+};
+
 }
 
-QV8ContextResource::~QV8ContextResource()
+using namespace QV4;
+
+DEFINE_MANAGED_VTABLE(QmlContextWrapper);
+DEFINE_MANAGED_VTABLE(QmlContextNullWrapper);
+
+QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+    : Object(QV8Engine::getV4(engine)),
+      v8(engine), readOnly(true), ownsContext(ownsContext),
+      context(context), scopeObject(scopeObject)
+{
+    type = Type_QmlContext;
+    vtbl = &static_vtbl;
+}
+
+QmlContextWrapper::~QmlContextWrapper()
 {
     if (context && ownsContext)
         context->destroy();
 }
 
-// Returns the scope object
-QObject *QV8ContextResource::getScopeObject() const
-{
-    return scopeObject;
-}
 
-// Returns the context, including resolving a subcontext
-QQmlContextData *QV8ContextResource::getContext() const
-{
-    return context;
-}
 
 QV8ContextWrapper::QV8ContextWrapper()
-: m_engine(0)
+    : m_engine(0), v4(0)
 {
 }
 
@@ -115,27 +133,14 @@ void QV8ContextWrapper::destroy()
 void QV8ContextWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-    {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
-    m_constructor = ft->GetFunction()->v4Value();
-    }
-    {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
-    m_urlConstructor = ft->GetFunction()->v4Value();
-    }
+    v4 = QV8Engine::getV4(engine);
 }
 
 QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
 {
-    // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_constructor.value().asFunctionObject()->newInstance();
-    QV8ContextResource *r = new QV8ContextResource(m_engine, ctxt, scope);
-    rv->SetExternalResource(r);
-    return rv->v4Value();
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(m_engine, ctxt, scope);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
 }
 
 QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
@@ -145,18 +150,17 @@ QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    // XXX NewInstance() should be optimized
-    v8::Handle<v8::Object> rv = m_urlConstructor.value().asFunctionObject()->newInstance();
-    QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0, true);
-    rv->SetExternalResource(r);
-    return rv->v4Value();
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextNullWrapper(m_engine, context, 0);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
 }
 
-void QV8ContextWrapper::setReadOnly(v8::Handle<v8::Object> qmlglobal, bool readOnly)
+void QV8ContextWrapper::setReadOnly(const Value &qmlglobal, bool readOnly)
 {
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(qmlglobal);
-    Q_ASSERT(resource);
-    resource->readOnly = readOnly;
+    Object *o = qmlglobal.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    assert(c);
+    c->readOnly = readOnly;
 }
 
 QQmlContextData *QV8ContextWrapper::callingContext()
@@ -165,48 +169,52 @@ QQmlContextData *QV8ContextWrapper::callingContext()
     if (!qmlglobal)
         return 0;
 
-    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(v8::Handle<v8::Object>(QV4::Value::fromObject(qmlglobal)));
-    return r ? r->getContext() : 0;
+    QmlContextWrapper *c = qmlglobal->asQmlContext();
+    return c ? c->getContext() : 0;
 }
 
-QQmlContextData *QV8ContextWrapper::context(v8::Handle<v8::Value> value)
+QQmlContextData *QV8ContextWrapper::context(const Value &value)
 {
-    if (!value->IsObject())
+    Object *o = value.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    if (!c)
         return 0;
 
-    v8::Handle<v8::Object> qmlglobal = v8::Handle<v8::Object>::Cast(value);
-    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(qmlglobal);
-    return r?r->getContext():0;
+    return c ? c->getContext():0;
 }
 
-void QV8ContextWrapper::takeContextOwnership(v8::Handle<v8::Object> qmlglobal)
+void QV8ContextWrapper::takeContextOwnership(const Value &qmlglobal)
 {
-    QV8ContextResource *r = v8_resource_cast<QV8ContextResource>(qmlglobal);
-    r->ownsContext = true;
+    Object *o = qmlglobal.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    assert(c);
+    c->ownsContext = true;
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Handle<v8::String>,
-                                                    const v8::AccessorInfo &)
+Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    // V8 will throw a ReferenceError if appropriate ("typeof" should not throw)
-    return v8::Handle<v8::Value>();
-}
+    QmlContextWrapper *resource = m->asQmlContext();
+    if (!m)
+        ctx->throwTypeError();
 
-v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
-                                                const v8::AccessorInfo &info)
-{
-    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
+    bool hasProp;
+    Value result = Object::get(m, ctx, name, &hasProp);
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result;
+    }
 
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.
     QQmlContextData *context = resource->getContext();
     QQmlContextData *expressionContext = context;
 
-    if (!context)
-        return QV4::Value::undefinedValue();
-
-    if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
-        return v8::Handle<v8::Value>();
+    if (!context) {
+        if (hasProperty)
+            *hasProperty = true;
+        return result;
+    }
 
     // Search type (attached property/enum/imported scripts) names
     // while (context) {
@@ -216,17 +224,19 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
     //     context = context->parent
     // }
 
-    QV8Engine *engine = resource->engine;
+    QV8Engine *engine = resource->v8;
 
     QObject *scopeObject = resource->getScopeObject();
 
-    QHashedV4String propertystring(property->v4Value());
+    QHashedV4String propertystring(Value::fromString(name));
 
-    if (context->imports && property->v4Value().asString()->startsWithUpper()) {
+    if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(propertystring);
-        
-        if (r.isValid()) { 
+
+        if (r.isValid()) {
+            if (hasProperty)
+                *hasProperty = true;
             if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
@@ -234,9 +244,9 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
                 else
                     return QV4::Value::undefinedValue();
             } else if (r.type) {
-                return engine->typeWrapper()->newObject(scopeObject, r.type);
+                return engine->typeWrapper()->newObject(scopeObject, r.type)->v4Value();
             } else if (r.importNamespace) {
-                return engine->typeWrapper()->newObject(scopeObject, context->imports, r.importNamespace);
+                return engine->typeWrapper()->newObject(scopeObject, context->imports, r.importNamespace)->v4Value();
             }
             Q_ASSERT(!"Unreachable");
         }
@@ -257,6 +267,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
                 if (propertyIdx < context->idValueCount) {
 
                     ep->captureProperty(&context->idValues[propertyIdx].bindings);
+                    if (hasProperty)
+                        *hasProperty = true;
                     return engine->newQObject(context->idValues[propertyIdx]);
                 } else {
 
@@ -266,11 +278,13 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
                                         propertyIdx + cp->notifyIndex);
 
                     const QVariant &value = cp->propertyValues.at(propertyIdx);
+                    if (hasProperty)
+                        *hasProperty = true;
                     if (value.userType() == qMetaTypeId<QList<QObject*> >()) {
                         QQmlListProperty<QObject> prop(context->asQQmlContext(), (void*) qintptr(propertyIdx),
                                                                QQmlContextPrivate::context_count,
                                                                QQmlContextPrivate::context_at);
-                        return engine->listWrapper()->newList(prop, qMetaTypeId<QQmlListProperty<QObject> >());
+                        return engine->listWrapper()->newList(prop, qMetaTypeId<QQmlListProperty<QObject> >())->v4Value();
                     } else {
                         return engine->fromVariant(cp->propertyValues.at(propertyIdx));
                     }
@@ -282,10 +296,13 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
         if (scopeObject) {
             QV4::Value wrapper = qobjectWrapper->newQObject(scopeObject)->v4Value();
             if (QV4::Object *o = wrapper.asObject()) {
-                bool hasProperty = false;
-                QV4::Value result = o->get(o->engine()->current, propertystring.string().asString(), &hasProperty);
-                if (hasProperty)
+                bool hasProp = false;
+                QV4::Value result = o->get(o->engine()->current, propertystring.string().asString(), &hasProp);
+                if (hasProp) {
+                    if (hasProperty)
+                        *hasProperty = true;
                     return result;
+                }
             }
         }
         scopeObject = 0;
@@ -293,9 +310,13 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
 
         // Search context object
         if (context->contextObject) {
-            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(context->contextObject, propertystring,
-                                                                       context, QV8QObjectWrapper::CheckRevision);
-            if (!result.IsEmpty()) return result;
+            QV4::Value result = qobjectWrapper->getProperty(context->contextObject, propertystring,
+                                                                       context, QV8QObjectWrapper::CheckRevision)->v4Value();
+            if (!result.isEmpty()) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result;
+            }
         }
 
         context = context->parent;
@@ -303,84 +324,86 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Handle<v8::String> property,
 
     expressionContext->unresolvedNames = true;
 
-    // V8 will throw a ReferenceError if appropriate ("typeof" should not throw)
-    return v8::Handle<v8::Value>();
+    return Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Handle<v8::String> property,
-                                                    v8::Handle<v8::Value>,
-                                                    const v8::AccessorInfo &info)
+void QmlContextNullWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
-
-    QV8Engine *engine = resource->engine;
-
-    if (!resource->readOnly) {
-        return v8::Handle<v8::Value>();
-    } else {
-        QString error = QLatin1String("Invalid write to global property \"") + property->v4Value().toQString() +
+    QmlContextWrapper *w = m->asQmlContext();
+    if (w && w->readOnly) {
+        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
-        v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return v8::Handle<v8::Value>();
+        ctx->throwError(Value::fromString(ctx->engine->newString(error)));
     }
+
+    Object::put(m, ctx, name, value);
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Handle<v8::String> property,
-                                                v8::Handle<v8::Value> value,
-                                                const v8::AccessorInfo &info)
+void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
+    QmlContextWrapper *wrapper = m->asQmlContext();
+    if (!m)
+        ctx->throwTypeError();
+
+    PropertyAttributes attrs;
+    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
+    if (pd) {
+        wrapper->putValue(ctx, pd, attrs, value);
+        return;
+    }
 
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.
-    QQmlContextData *context = resource->getContext();
+    QQmlContextData *context = wrapper->getContext();
     QQmlContextData *expressionContext = context;
 
     if (!context)
-        return QV4::Value::undefinedValue();
-
-    if (info.GetIsolate()->GetEngine()->qmlContextObject() != info.This()->v4Value().asObject())
-        return v8::Handle<v8::Value>();
+        return;
 
     // See QV8ContextWrapper::Getter for resolution order
-    
-    QV8Engine *engine = resource->engine;
-    QObject *scopeObject = resource->getScopeObject();
 
-    QHashedV4String propertystring(property->v4Value());
+    QV8Engine *engine = wrapper->v8;
+    QObject *scopeObject = wrapper->getScopeObject();
+
+    QHashedV4String propertystring(Value::fromString(name));
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
 
     while (context) {
         // Search context properties
         if (context->propertyNames && -1 != context->propertyNames->value(propertystring))
-            return value;
+            return;
 
         // Search scope object
-        if (scopeObject && 
+        if (scopeObject &&
             qobjectWrapper->setProperty(scopeObject, propertystring, context, value, QV8QObjectWrapper::CheckRevision))
-            return value;
+            return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
             qobjectWrapper->setProperty(context->contextObject, propertystring, context, value,
                                         QV8QObjectWrapper::CheckRevision))
-            return value;
+            return;
 
         context = context->parent;
     }
 
     expressionContext->unresolvedNames = true;
 
-    if (!resource->readOnly) {
-        return v8::Handle<v8::Value>();
-    } else {
-        QString error = QLatin1String("Invalid write to global property \"") + property->v4Value().toQString() +
+    if (wrapper->readOnly) {
+        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
-        v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return QV4::Value::undefinedValue();
+        ctx->throwError(Value::fromString(ctx->engine->newString(error)));
     }
+
+    Object::put(m, ctx, name, value);
 }
+
+void QmlContextWrapper::destroy(Managed *that)
+{
+    static_cast<QmlContextWrapper *>(that)->~QmlContextWrapper();
+}
+
 
 QT_END_NAMESPACE

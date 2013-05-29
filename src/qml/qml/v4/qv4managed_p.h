@@ -81,6 +81,7 @@ struct ExecutionEngine;
 struct VariantObject;
 struct QObjectWrapper;
 struct QtObject;
+struct QmlContextWrapper;
 
 struct ManagedVTable
 {
@@ -184,7 +185,8 @@ public:
         Type_QVariant,
 
         // Qt Object
-        Type_QtObject
+        Type_QtObject,
+        Type_QmlContext
     };
 
     ExecutionEngine *engine() const;
@@ -218,6 +220,7 @@ public:
     QQmlSequence<QList<QUrl>, Type_QmlUrlList> *asQmlUrlList() { return type == Type_QmlUrlList ?  reinterpret_cast<QQmlSequence<QList<QUrl>, Type_QmlUrlList> *>(this): 0; }
 
     QtObject *asQtObject() {return type == Type_QtObject ? reinterpret_cast<QtObject *>(this) : 0; }
+    QmlContextWrapper *asQmlContext() {return type == Type_QmlContext ? reinterpret_cast<QmlContextWrapper *>(this) : 0; }
 
     bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
 
@@ -278,11 +281,11 @@ public:
             uint needsActivation : 1; // used by FunctionObject
             uint usesArgumentsObject : 1; // used by FunctionObject
             uint strictMode : 1; // used by FunctionObject
-            uint type : 5;
+            uint type : 8;
             mutable uint subtype : 3;
             uint externalComparison : 1;
             uint bindingKeyFlag : 1;
-            uint unused : 14;
+            uint unused : 11;
         };
     };
 

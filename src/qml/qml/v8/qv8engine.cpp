@@ -208,7 +208,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::SignalHandlerType:
             case QV8ObjectResource::IncubatorType:
             case QV8ObjectResource::VisualDataItemType:
-            case QV8ObjectResource::ContextType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::SQLDatabaseType:
@@ -228,6 +227,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return QVariant::fromValue(jsonObjectFromJS(value));
         } else if (QV4::QObjectWrapper *wrapper = object->asQObjectWrapper()) {
             return qVariantFromValue<QObject *>(wrapper->object);
+        } else if (QV4::QmlContextWrapper *wrapper = object->asQmlContext()) {
+            return QVariant();
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
     }

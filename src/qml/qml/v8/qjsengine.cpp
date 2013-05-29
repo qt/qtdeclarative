@@ -71,7 +71,6 @@
 #define Q_D(blah)
 #define Q_Q(blah)
 
-Q_DECLARE_METATYPE(QObjectList)
 Q_DECLARE_METATYPE(QList<int>)
 
 /*!

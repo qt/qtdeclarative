@@ -58,6 +58,8 @@
 #include <private/qv8_p.h>
 
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
+#include <private/qqmlcontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,28 +79,16 @@ public:
     QV4::Value qmlScope(QQmlContextData *ctxt, QObject *scope);
     QV4::Value urlScope(const QUrl &);
 
-    void setReadOnly(v8::Handle<v8::Object>, bool);
+    void setReadOnly(const QV4::Value &, bool);
 
     QQmlContextData *callingContext();
-    QQmlContextData *context(v8::Handle<v8::Value>);
+    QQmlContextData *context(const QV4::Value &);
 
-    void takeContextOwnership(v8::Handle<v8::Object> qmlglobal);
+    void takeContextOwnership(const QV4::Value &qmlglobal);
 
 private:
-    static v8::Handle<v8::Value> NullGetter(v8::Handle<v8::String> property,
-                                            const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> NullSetter(v8::Handle<v8::String> property,
-                                            v8::Handle<v8::Value> value,
-                                            const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
-                                        v8::Handle<v8::Value> value,
-                                        const v8::AccessorInfo &info);
-
     QV8Engine *m_engine;
-    QV4::PersistentValue m_constructor;
-    QV4::PersistentValue m_urlConstructor;
+    QV4::ExecutionEngine *v4;
 };
 
 
