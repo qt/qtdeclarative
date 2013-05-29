@@ -724,6 +724,32 @@ ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
     return frame;
 }
 
+QUrl ExecutionEngine::resolvedUrl(const QString &file)
+{
+    QUrl src(file);
+    if (!src.isRelative())
+        return src;
+
+    QUrl base;
+    QV4::ExecutionContext *c = current;
+    while (c) {
+        if (CallContext *callCtx = c->asCallContext()) {
+            if (callCtx->function->function)
+                base.setUrl(callCtx->function->function->sourceFile);
+            break;
+        }
+        c = c->parent;
+    }
+
+    if (base.isEmpty() && globalCode)
+            base.setUrl(globalCode->sourceFile);
+
+    if (base.isEmpty())
+        return src;
+
+    return base.resolved(src);
+}
+
 void ExecutionEngine::requireArgumentsAccessors(int n)
 {
     if (n <= argumentsAccessors.size())

@@ -282,6 +282,7 @@ struct Q_QML_EXPORT ExecutionEngine
     typedef QVector<StackFrame> StackTrace;
     StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;
+    QUrl resolvedUrl(const QString &file);
 
     void requireArgumentsAccessors(int n);
 

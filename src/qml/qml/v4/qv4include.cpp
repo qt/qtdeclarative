@@ -140,18 +140,9 @@ void QV4Include::finished()
         QString code = QString::fromUtf8(data);
         QQmlScript::Parser::extractPragmas(code);
 
-        QQmlContextData *importContext = new QQmlContextData;
-        importContext->isInternal = true;
-        importContext->isJSContext = true;
-        importContext->url = m_url;
-        importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
-        importContext->setParent(m_context, true);
-
         QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        // ### Only used for debugging info
-        //m_engine->contextWrapper()->addSubContext(m_qmlglobal.value(), script, importContext);
         QV4::Object *o = m_resultObject.value().asObject();
         try {
             script.parse();
@@ -187,7 +178,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(context->resolvedUrl(QUrl(ctx->arguments[0].toQString())));
+    QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQString()));
 
     QV4::Value callbackFunction;
     if (ctx->argumentCount >= 2 && ctx->arguments[1].asFunctionObject())
@@ -213,17 +204,9 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
             QString code = QString::fromUtf8(data);
             QQmlScript::Parser::extractPragmas(code);
 
-            QQmlContextData *importContext = new QQmlContextData;
-            importContext->isInternal = true;
-            importContext->isJSContext = true;
-            importContext->url = url;
-            importContext->setParent(context, true);
-
             QV4::Object *qmlglobal = v4->qmlContextObject();
             QV4::Script script(v4, qmlglobal, code, url.toString());
 
-            // ### Only used for debugging info
-            // engine->contextWrapper()->addSubContext(qmlglobal, script, importContext);
             QV4::ExecutionContext *ctx = v4->current;
             try {
                 script.parse();
