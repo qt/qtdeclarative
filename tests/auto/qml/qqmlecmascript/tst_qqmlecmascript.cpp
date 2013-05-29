@@ -6634,7 +6634,7 @@ void tst_qqmlecmascript::switchStatement()
     {
         QQmlComponent component(&engine, testFileUrl("switchStatement.4.qml"));
 
-        QString warning = component.url().toString() + ":4: Unable to assign [undefined] to int";
+        QString warning = component.url().toString() + ":4:12: Unable to assign [undefined] to int";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
