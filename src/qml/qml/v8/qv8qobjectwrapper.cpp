@@ -1964,8 +1964,7 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args
 {
     if (!m_object)
         return QV4::Value::undefinedValue();
-    QQmlData *ddata = QQmlData::get(m_object, false);
-    if (!ddata || ddata->indestructible || ddata->rootObjectInCreation)
+    if (QQmlData::keepAliveDuringGarbageCollection(m_object))
         ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;

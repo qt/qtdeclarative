@@ -303,14 +303,14 @@ void MemoryManager::mark()
         QObject *qobject = qobjectWrapper->object;
         if (!qobject)
             continue;
-        bool keepAlive = QQmlEngine::objectOwnership(qobject) == QQmlEngine::CppOwnership;
+        bool keepAlive = QQmlData::keepAliveDuringGarbageCollection(qobject);
 
         if (!keepAlive) {
             if (QObject *parent = qobject->parent()) {
                 while (parent->parent())
                     parent = parent->parent();
 
-                keepAlive = QQmlEngine::objectOwnership(parent) == QQmlEngine::CppOwnership;
+                keepAlive = QQmlData::keepAliveDuringGarbageCollection(parent);
             }
         }
 

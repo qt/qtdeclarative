@@ -200,6 +200,13 @@ public:
         }
     }
 
+    static bool keepAliveDuringGarbageCollection(const QObject *object) {
+        QQmlData *ddata = get(object);
+        if (!ddata || ddata->indestructible || ddata->rootObjectInCreation)
+            return true;
+        return false;
+    }
+
     bool hasExtendedData() const { return extendedData != 0; }
     QHash<int, QObject *> *attachedProperties() const;
 
