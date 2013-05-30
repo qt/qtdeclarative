@@ -41,7 +41,6 @@
 
 #include "qv8engine_p.h"
 
-#include "qv8valuetypewrapper_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qjsengine_p.h"
 
@@ -56,6 +55,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -91,39 +91,22 @@ static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::
     if (lhs.IsEmpty() || rhs.IsEmpty())
         return false;
 
-    QV4::VariantObject *lv = lhs->v4Value().asVariantObject();
-    if (lv) {
-        QV4::VariantObject *rv = rhs->v4Value().asVariantObject();
-        if (rv)
+    if (QV4::VariantObject *lv = lhs->v4Value().asVariantObject()) {
+        if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject())
             return lv->data == rv->data;
 
-        QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
-        if (rhsr->resourceType() == QV8ObjectResource::ValueTypeType)
-            return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, lv->data);
+        if (QV4::QmlValueTypeWrapper *v = rhs->v4Value().asQmlValueType())
+            return v->isEqual(lv->data);
 
         return false;
     }
 
-    QV8ObjectResource *lhsr = static_cast<QV8ObjectResource*>(lhs->GetExternalResource());
-    QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
+    if (QV4::QmlValueTypeWrapper *lv = rhs->v4Value().asQmlValueType()) {
+        if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject())
+            return lv->isEqual(rv->data);
 
-    if (lhsr && rhsr) {
-        Q_ASSERT(lhsr->engine == rhsr->engine);
-        QV8ObjectResource::ResourceType lhst = lhsr->resourceType();
-        QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
-
-        switch (lhst) {
-        case QV8ObjectResource::ValueTypeType:
-            // a value type might be equal to a variant or another value type
-            if (rhst == QV8ObjectResource::ValueTypeType) {
-                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->valueTypeWrapper()->toVariant(rhsr));
-            } else if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject()) {
-                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, rv->data);
-            }
-            break;
-        default:
-            break;
-        }
+        if (QV4::QmlValueTypeWrapper *v = rhs->v4Value().asQmlValueType())
+            return lv->isEqual(v->toVariant());
     }
 
     return false;
@@ -154,7 +137,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     m_qobjectWrapper.init(this);
     m_listWrapper.init(this);
-    m_valueTypeWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
 
 }
@@ -171,7 +153,6 @@ QV8Engine::~QV8Engine()
     m_listModelData = 0;
 
     m_jsonWrapper.destroy();
-    m_valueTypeWrapper.destroy();
     m_listWrapper.destroy();
     m_qobjectWrapper.destroy();
 
@@ -214,8 +195,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                 return QVariant();
             case QV8ObjectResource::ListType:
                 return m_listWrapper.toVariant(r);
-            case QV8ObjectResource::ValueTypeType:
-                return m_valueTypeWrapper.toVariant(r);
             }
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
@@ -226,6 +205,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return QVariant();
         } else if (QV4::QmlTypeWrapper *w = object->asQmlTypeWrapper()) {
             return w->toVariant();
+        } else if (QV4::QmlValueTypeWrapper *v = object->asQmlValueTypeWrapper()) {
+            return v->toVariant();
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
     }
@@ -364,7 +345,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
         }
 
         if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
-            return m_valueTypeWrapper.newValueType(variant, vt)->v4Value();
+            return QV4::QmlValueTypeWrapper::create(this, variant, vt);
     } else {
         if (type == qMetaTypeId<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
@@ -400,7 +381,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             return retn->v4Value();
 
         if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
-            return m_valueTypeWrapper.newValueType(variant, vt)->v4Value();
+            return QV4::QmlValueTypeWrapper::create(this, variant, vt);
     }
 
     // XXX TODO: To be compatible, we still need to handle:
@@ -1286,6 +1267,25 @@ QV4::Value QV8Engine::toString(const QString &string)
     return QV4::Value::fromString(m_v4Engine->newString(string));
 }
 
+QV4::Value QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)
+{
+    return QV4::QmlValueTypeWrapper::create(this, object, property, type);
+}
+
+QV4::Value QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
+{
+    return QV4::QmlValueTypeWrapper::create(this, value, type);
+}
+
+bool QV8Engine::isValueType(const QV4::Value &value) const
+{
+    return value.isObject() ? value.objectValue()->asQmlValueTypeWrapper() : 0;
+}
+
+QVariant QV8Engine::toValueType(const QV4::Value &obj)
+{
+    return obj.isObject() ? obj.objectValue()->asQmlValueTypeWrapper()->toVariant() : QVariant();
+}
 
 QT_END_NAMESPACE
 

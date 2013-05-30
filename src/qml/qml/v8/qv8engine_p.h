@@ -73,7 +73,6 @@
 #include "qv8objectresource_p.h"
 #include "qv8qobjectwrapper_p.h"
 #include "qv8listwrapper_p.h"
-#include "qv8valuetypewrapper_p.h"
 #include <private/qv4sequenceobject_p.h>
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
@@ -274,7 +273,6 @@ public:
 
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
-    QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -299,10 +297,10 @@ public:
     QV4::Value toString(const QString &string);
 
     // Create a new value type object
-    inline QV4::Value newValueType(QObject *, int coreIndex, QQmlValueType *);
-    inline QV4::Value newValueType(const QVariant &, QQmlValueType *);
-    inline bool isValueType(const QV4::Value &value) const;
-    inline QVariant toValueType(const QV4::Value &obj);
+    QV4::Value newValueType(QObject *, int coreIndex, QQmlValueType *);
+    QV4::Value newValueType(const QVariant &, QQmlValueType *);
+    bool isValueType(const QV4::Value &value) const;
+    QVariant toValueType(const QV4::Value &obj);
 
     // Create a new sequence type object
     inline QV4::Value newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
@@ -391,7 +389,6 @@ protected:
 
     QV8QObjectWrapper m_qobjectWrapper;
     QV8ListWrapper m_listWrapper;
-    QV8ValueTypeWrapper m_valueTypeWrapper;
     QV4JsonWrapper m_jsonWrapper;
 
     QV4::PersistentValue m_freezeObject;
@@ -449,26 +446,6 @@ QV4::Value QV8Engine::newQObject(QObject *object, const ObjectOwnership ownershi
         ddata->explicitIndestructibleSet = true;
     }
     return result;
-}
-
-QV4::Value QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)
-{
-    return m_valueTypeWrapper.newValueType(object, property, type)->v4Value();
-}
-
-QV4::Value QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
-{
-    return m_valueTypeWrapper.newValueType(value, type)->v4Value();
-}
-
-bool QV8Engine::isValueType(const QV4::Value &value) const
-{
-    return value.isObject() ? m_valueTypeWrapper.isValueType(v8::Handle<v8::Object>::Cast(v8::Value::fromV4Value(value))) : false;
-}
-
-QVariant QV8Engine::toValueType(const QV4::Value &obj)
-{
-    return obj.isObject() ? m_valueTypeWrapper.toVariant(v8::Handle<v8::Object>::Cast(v8::Value::fromV4Value(obj))) : QVariant();
 }
 
 QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)

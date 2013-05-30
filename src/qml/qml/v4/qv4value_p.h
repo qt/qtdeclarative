@@ -271,6 +271,7 @@ struct Q_QML_EXPORT Value
     ErrorObject *asErrorObject() const;
     VariantObject *asVariantObject() const;
     QObjectWrapper *asQObjectWrapper() const;
+    QmlValueTypeWrapper *asQmlValueType() const;
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
 
@@ -553,6 +554,10 @@ inline QObjectWrapper *Value::asQObjectWrapper() const
     return isObject() ? managed()->asQObjectWrapper() : 0;
 }
 
+inline QmlValueTypeWrapper *Value::asQmlValueType() const
+{
+    return isObject() ? managed()->asQmlValueTypeWrapper() : 0;
+}
 // ###
 inline Value Managed::construct(ExecutionContext *context, Value *args, int argc) {
     return vtbl->construct(this, context, args, argc);

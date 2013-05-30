@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8VALUETYPEWRAPPER_P_H
-#define QV8VALUETYPEWRAPPER_P_H
+#ifndef QQMLVALUETYPEWRAPPER_P_H
+#define QQMLVALUETYPEWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -54,54 +54,52 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQml/qqmllist.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qv8_p.h>
-#include <private/qhashedstring_p.h>
 
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-class QV8ObjectResource;
 class QQmlValueType;
-class Q_QML_PRIVATE_EXPORT QV8ValueTypeWrapper
+class QV8Engine;
+
+namespace QV4 {
+
+struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
+protected:
+    enum ObjectType { Reference, Copy };
+    QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
+    ~QmlValueTypeWrapper();
+
 public:
-    QV8ValueTypeWrapper();
-    ~QV8ValueTypeWrapper();
 
-    void init(QV8Engine *);
-    void destroy();
+    static Value create(QV8Engine *v8, QObject *, int, QQmlValueType *);
+    static Value create(QV8Engine *v8, const QVariant &, QQmlValueType *);
 
-    v8::Handle<v8::Object> newValueType(QObject *, int, QQmlValueType *);
-    v8::Handle<v8::Object> newValueType(const QVariant &, QQmlValueType *);
+    QVariant toVariant() const;
+    bool isEqual(const QVariant& value);
 
-    bool isValueType(v8::Handle<v8::Object>) const;
 
-    QVariant toVariant(v8::Handle<v8::Object>, int typeHint, bool *succeeded);
-    QVariant toVariant(v8::Handle<v8::Object>);
-    QVariant toVariant(QV8ObjectResource *);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void destroy(Managed *that);
 
-    static bool isEqual(QV8ObjectResource *, const QVariant& value);
+    static QV4::Value method_toString(SimpleCallContext *ctx);
+
+    QV8Engine *v8;
+    ObjectType objectType;
+    mutable QQmlValueType *type;
 
 private:
-    static v8::Handle<v8::Value> ToStringGetter(v8::Handle<v8::String> property,
-                                                const v8::AccessorInfo &info);
-    static QV4::Value ToString(const v8::Arguments &args);
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
-                                        v8::Handle<v8::Value> value,
-                                        const v8::AccessorInfo &info);
+    const static ManagedVTable static_vtbl;
 
-    QV8Engine *m_engine;
-    QV4::PersistentValue m_constructor;
-    QV4::PersistentValue m_toString;
-    QV4::PersistentValue m_toStringSymbol;
-    QHashedV4String m_toStringString;
+    static void initProto(ExecutionEngine *v4);
+    static PersistentValue proto;
 };
+
+}
 
 QT_END_NAMESPACE
 
