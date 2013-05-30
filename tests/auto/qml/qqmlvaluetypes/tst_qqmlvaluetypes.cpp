@@ -946,7 +946,7 @@ void tst_qqmlvaluetypes::bindingAssignment()
     // function assignment should fail without crashing
     {
     QString warning1 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":6:13: Invalid use of Qt.binding() in a binding declaration.");
-    QString warning2 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":10: Error: Cannot assign JavaScript function to value-type property");
+    QString warning2 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":10: Cannot assign JavaScript function to value-type property");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QQmlComponent component(&engine, testFileUrl("bindingAssignment.2.qml"));
@@ -1050,7 +1050,7 @@ void tst_qqmlvaluetypes::autoBindingRemoval()
 
     {
         QQmlComponent component(&engine, testFileUrl("autoBindingRemoval.3.qml"));
-        QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QRect";
+        QString warning = component.url().toString() + ":6:11: Unable to assign [undefined] to QRect";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);

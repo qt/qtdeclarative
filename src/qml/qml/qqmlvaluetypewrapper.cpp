@@ -136,7 +136,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
         return;
 
     Object *o = v4->newObject();
-    o->defineDefaultProperty(v4, QStringLiteral("toString"), method_toString);
+    o->defineDefaultProperty(v4, QStringLiteral("toString"), method_toString, 1);
     proto = Value::fromObject(o);
 }
 
@@ -146,6 +146,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, 
     initProto(v4);
 
     QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
+    r->externalComparison = true;
     r->prototype = proto.value().objectValue();
     r->type = type; r->object = object; r->property = property;
     return Value::fromObject(r);
@@ -157,6 +158,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValu
     initProto(v4);
 
     QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
+    r->externalComparison = true;
     r->prototype = proto.value().objectValue();
     r->type = type; r->value = value;
     return Value::fromObject(r);
@@ -274,7 +276,7 @@ Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
     }
 
     if (!result)
-        return Value::undefinedValue();
+        return Object::get(m, ctx, name, hasProperty);
 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type

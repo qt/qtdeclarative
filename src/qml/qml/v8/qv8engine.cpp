@@ -101,7 +101,7 @@ static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::
         return false;
     }
 
-    if (QV4::QmlValueTypeWrapper *lv = rhs->v4Value().asQmlValueType()) {
+    if (QV4::QmlValueTypeWrapper *lv = lhs->v4Value().asQmlValueType()) {
         if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject())
             return lv->isEqual(rv->data);
 
