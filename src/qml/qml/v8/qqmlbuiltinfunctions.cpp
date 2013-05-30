@@ -86,20 +86,18 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_platform(0)
     , m_application(0)
 {
-    v8::Handle<v8::Object> qt = Value::fromObject(this);
-
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            qt->Set(v8::String::New(enumerator.key(jj)), QV4::Value::fromInt32(enumerator.value(jj)));
+            put(v4->newString(enumerator.key(jj)), QV4::Value::fromInt32(enumerator.value(jj)));
         }
     }
-    qt->Set(v8::String::New("Asynchronous"), QV4::Value::fromInt32(0));
-    qt->Set(v8::String::New("Synchronous"), QV4::Value::fromInt32(1));
+    put(v4->newString("Asynchronous"), QV4::Value::fromInt32(0));
+    put(v4->newString("Synchronous"), QV4::Value::fromInt32(1));
 
-    qt->v4Value().asObject()->defineDefaultProperty(v4, QStringLiteral("include"), QV4Include::include);
+    defineDefaultProperty(v4, QStringLiteral("include"), QV4Include::include);
     defineDefaultProperty(v4, QStringLiteral("isQtObject"), method_isQtObject);
     defineDefaultProperty(v4, QStringLiteral("rgba"), method_rgba);
     defineDefaultProperty(v4, QStringLiteral("hsla"), method_hsla);
@@ -955,22 +953,22 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
         static Value create(QV8Engine *engine, const QList<QQmlError> &errors) {
             QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
-            v8::Handle<v8::Array> qmlerrors = v8::Array::New(errors.count());
+            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+            QV4::ArrayObject *qmlerrors = v4->newArrayObject();
             for (int ii = 0; ii < errors.count(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
-                v8::Handle<v8::Object> qmlerror = v8::Object::New();
-                qmlerror->Set(v8::String::New("lineNumber"), QV4::Value::fromInt32(error.line()));
-                qmlerror->Set(v8::String::New("columnNumber"), QV4::Value::fromInt32(error.column()));
-                qmlerror->Set(v8::String::New("fileName"), engine->toString(error.url().toString()));
-                qmlerror->Set(v8::String::New("message"), engine->toString(error.description()));
-                qmlerrors->Set(ii, qmlerror);
+                QV4::Object *qmlerror = v4->newObject();
+                qmlerror->put(v4->newString("lineNumber"), QV4::Value::fromInt32(error.line()));
+                qmlerror->put(v4->newString("columnNumber"), QV4::Value::fromInt32(error.column()));
+                qmlerror->put(v4->newString("fileName"), engine->toString(error.url().toString()));
+                qmlerror->put(v4->newString("message"), engine->toString(error.description()));
+                qmlerrors->putIndexed(ii, QV4::Value::fromObject(qmlerror));
             }
 
-            v8::Handle<v8::Value> error = v8::Exception::Error(engine->toString(errorstr));
-            v8::Handle<v8::Object> errorObject = error->ToObject();
-            errorObject->Set(v8::String::New("qmlErrors"), qmlerrors);
-            return error->v4Value();
+            QV4::Object *errorObject = v4->newErrorObject(engine->toString(errorstr));
+            errorObject->put(v4->newString("qmlErrors"), Value::fromObject(qmlerrors));
+            return Value::fromObject(errorObject);
         }
     };
 
@@ -1006,7 +1004,7 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
     component.setData(qml.toUtf8(), url);
 
     if (component.isError()) {
-        v8::ThrowException(Error::create(v8engine, component.errors()));
+        ctx->throwError(Error::create(v8engine, component.errors()));
         return QV4::Value::undefinedValue();
     }
 
@@ -1030,7 +1028,7 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
     component.completeCreate();
 
     if (component.isError()) {
-        v8::ThrowException(Error::create(v8engine, component.errors()));
+        ctx->throwError(Error::create(v8engine, component.errors()));
         return QV4::Value::undefinedValue();
     }
 
