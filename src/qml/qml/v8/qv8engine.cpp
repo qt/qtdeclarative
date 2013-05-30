@@ -56,6 +56,7 @@
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qqmllistwrapper_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -136,7 +137,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
 
     m_qobjectWrapper.init(this);
-    m_listWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
 
 }
@@ -153,7 +153,6 @@ QV8Engine::~QV8Engine()
     m_listModelData = 0;
 
     m_jsonWrapper.destroy();
-    m_listWrapper.destroy();
     m_qobjectWrapper.destroy();
 
     v8::Isolate::SetEngine(0);
@@ -193,8 +192,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::ParticleDataType:
             case QV8ObjectResource::ChangeSetArrayType:
                 return QVariant();
-            case QV8ObjectResource::ListType:
-                return m_listWrapper.toVariant(r);
             }
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
@@ -207,6 +204,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return w->toVariant();
         } else if (QV4::QmlValueTypeWrapper *v = object->asQmlValueTypeWrapper()) {
             return v->toVariant();
+        } else if (QV4::QmlListWrapper *l = object->asQmlListWrapper()) {
+            return l->toVariant();
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
     }
@@ -351,7 +350,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             typedef QQmlListReferencePrivate QDLRP;
             QDLRP *p = QDLRP::get((QQmlListReference*)ptr);
             if (p->object) {
-                return m_listWrapper.newList(p->property, p->propertyType)->v4Value();
+                return QV4::QmlListWrapper::create(this, p->property, p->propertyType);
             } else {
                 return QV4::Value::nullValue();
             }

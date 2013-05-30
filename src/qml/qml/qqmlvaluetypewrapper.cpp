@@ -236,7 +236,6 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
 Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QmlValueTypeWrapper *r = m->asQmlValueTypeWrapper();
-
     if (!r)
         ctx->throwTypeError();
 

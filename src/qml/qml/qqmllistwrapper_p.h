@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8LISTWRAPPER_P_H
-#define QV8LISTWRAPPER_P_H
+#ifndef QQMLLISTWRAPPER_P_H
+#define QQMLLISTWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -55,45 +55,47 @@
 
 #include <QtCore/qglobal.h>
 #include <QtQml/qqmllist.h>
-#include <private/qv8_p.h>
+#include <private/qqmlguard_p.h>
 
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
-class QV8ObjectResource;
-class QV8ListWrapper 
+
+namespace QV4 {
+
+struct Q_QML_EXPORT QmlListWrapper : Object
 {
+protected:
+    QmlListWrapper(QV8Engine *engine);
+    ~QmlListWrapper();
+
 public:
-    QV8ListWrapper();
-    ~QV8ListWrapper();
 
-    void init(QV8Engine *);
-    void destroy();
+    static Value create(QV8Engine *v8, QObject *object, int propId, int propType);
+    static Value create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);
 
-    v8::Handle<v8::Value> newList(QObject *, int, int);
-    v8::Handle<v8::Value> newList(const QQmlListProperty<QObject> &, int);
-    QVariant toVariant(v8::Handle<v8::Object>);
-    QVariant toVariant(QV8ObjectResource *);
+    QVariant toVariant() const;
+
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void destroy(Managed *that);
 
 private:
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
-                                        v8::Handle<v8::Value> value,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> IndexedGetter(uint32_t index, 
-                                               const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> LengthGetter(v8::Handle<v8::String> property,
-                                              const v8::AccessorInfo &info);
-    static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
+    QV8Engine *v8;
+    QQmlGuard<QObject> object;
+    QQmlListProperty<QObject> property;
+    int propertyType;
 
-    QV8Engine *m_engine;
-    QV4::PersistentValue m_constructor;
+    static const ManagedVTable static_vtbl;
 };
+
+}
 
 QT_END_NAMESPACE
 
-#endif // QV8LISTWRAPPER_P_H
+#endif
 

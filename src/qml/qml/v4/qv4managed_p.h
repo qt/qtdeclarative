@@ -84,6 +84,7 @@ struct QtObject;
 struct QmlContextWrapper;
 struct QmlTypeWrapper;
 struct QmlValueTypeWrapper;
+struct QmlListWrapper;
 
 struct ManagedVTable
 {
@@ -190,7 +191,8 @@ public:
         Type_QtObject,
         Type_QmlContext,
         Type_QmlTypeWrapper,
-        Type_QmlValueTypeWrapper
+        Type_QmlValueTypeWrapper,
+        Type_QmlListWrapper
     };
 
     ExecutionEngine *engine() const;
@@ -227,6 +229,7 @@ public:
     QmlContextWrapper *asQmlContext() { return type == Type_QmlContext ? reinterpret_cast<QmlContextWrapper *>(this) : 0; }
     QmlTypeWrapper *asQmlTypeWrapper() { return type == Type_QmlTypeWrapper ? reinterpret_cast<QmlTypeWrapper *>(this) : 0; }
     QmlValueTypeWrapper *asQmlValueTypeWrapper() { return type == Type_QmlValueTypeWrapper ? reinterpret_cast<QmlValueTypeWrapper *>(this) : 0; }
+    QmlListWrapper *asQmlListWrapper() { return type == Type_QmlListWrapper ? reinterpret_cast<QmlListWrapper *>(this) : 0; }
 
     bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
 

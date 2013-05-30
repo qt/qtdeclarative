@@ -51,6 +51,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmllistwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -148,7 +149,7 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QmlContextWrapper *resource = m->asQmlContext();
-    if (!m)
+    if (!resource)
         ctx->throwTypeError();
 
     bool hasProp;
@@ -238,7 +239,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
                         QQmlListProperty<QObject> prop(context->asQQmlContext(), (void*) qintptr(propertyIdx),
                                                                QQmlContextPrivate::context_count,
                                                                QQmlContextPrivate::context_at);
-                        return engine->listWrapper()->newList(prop, qMetaTypeId<QQmlListProperty<QObject> >())->v4Value();
+                        return QmlListWrapper::create(engine, prop, qMetaTypeId<QQmlListProperty<QObject> >());
                     } else {
                         return engine->fromVariant(cp->propertyValues.at(propertyIdx));
                     }
@@ -284,7 +285,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
     QmlContextWrapper *wrapper = m->asQmlContext();
-    if (!m)
+    if (!wrapper)
         ctx->throwTypeError();
 
     PropertyAttributes attrs;

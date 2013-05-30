@@ -72,7 +72,6 @@
 
 #include "qv8objectresource_p.h"
 #include "qv8qobjectwrapper_p.h"
-#include "qv8listwrapper_p.h"
 #include <private/qv4sequenceobject_p.h>
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
@@ -272,7 +271,6 @@ public:
     QV4::Value global();
 
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
-    QV8ListWrapper *listWrapper() { return &m_listWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -388,7 +386,6 @@ protected:
     QV4::PersistentValue m_bindingFlagKey;
 
     QV8QObjectWrapper m_qobjectWrapper;
-    QV8ListWrapper m_listWrapper;
     QV4JsonWrapper m_jsonWrapper;
 
     QV4::PersistentValue m_freezeObject;

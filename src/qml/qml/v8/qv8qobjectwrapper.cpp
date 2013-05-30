@@ -53,6 +53,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmllistwrapper_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
@@ -463,7 +464,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         ReadFunction(object, property, &rv, notifier);
         return engine->newQObject(rv);
     } else if (property.isQList()) {
-        return engine->listWrapper()->newList(object, property.coreIndex, property.propType);
+        return QmlListWrapper::create(engine, object, property.coreIndex, property.propType);
     } else if (property.propType == QMetaType::QReal) {
         qreal v = 0;
         ReadFunction(object, property, &v, notifier);
