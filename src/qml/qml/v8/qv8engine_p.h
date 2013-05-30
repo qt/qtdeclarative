@@ -73,7 +73,6 @@
 #include "qv8objectresource_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8qobjectwrapper_p.h"
-#include "qv8typewrapper_p.h"
 #include "qv8listwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include <private/qv4sequenceobject_p.h>
@@ -276,7 +275,6 @@ public:
 
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
-    QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
 
@@ -398,7 +396,6 @@ protected:
 
     QV8ContextWrapper m_contextWrapper;
     QV8QObjectWrapper m_qobjectWrapper;
-    QV8TypeWrapper m_typeWrapper;
     QV8ListWrapper m_listWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
     QV4JsonWrapper m_jsonWrapper;

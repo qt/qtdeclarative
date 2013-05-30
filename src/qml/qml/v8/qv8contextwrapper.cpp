@@ -50,6 +50,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
+#include <private/qqmltypewrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -115,82 +116,6 @@ QmlContextWrapper::~QmlContextWrapper()
         context->destroy();
 }
 
-
-
-QV8ContextWrapper::QV8ContextWrapper()
-    : m_engine(0), v4(0)
-{
-}
-
-QV8ContextWrapper::~QV8ContextWrapper()
-{
-}
-
-void QV8ContextWrapper::destroy()
-{
-}
-
-void QV8ContextWrapper::init(QV8Engine *engine)
-{
-    m_engine = engine;
-    v4 = QV8Engine::getV4(engine);
-}
-
-QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
-{
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(m_engine, ctxt, scope);
-    w->prototype = v4->objectPrototype;
-    return Value::fromObject(w);
-}
-
-QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
-{
-    QQmlContextData *context = new QQmlContextData;
-    context->url = url;
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextNullWrapper(m_engine, context, 0);
-    w->prototype = v4->objectPrototype;
-    return Value::fromObject(w);
-}
-
-void QV8ContextWrapper::setReadOnly(const Value &qmlglobal, bool readOnly)
-{
-    Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    assert(c);
-    c->readOnly = readOnly;
-}
-
-QQmlContextData *QV8ContextWrapper::callingContext()
-{
-    QV4::Object *qmlglobal = QV8Engine::getV4(m_engine)->qmlContextObject();
-    if (!qmlglobal)
-        return 0;
-
-    QmlContextWrapper *c = qmlglobal->asQmlContext();
-    return c ? c->getContext() : 0;
-}
-
-QQmlContextData *QV8ContextWrapper::context(const Value &value)
-{
-    Object *o = value.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    if (!c)
-        return 0;
-
-    return c ? c->getContext():0;
-}
-
-void QV8ContextWrapper::takeContextOwnership(const Value &qmlglobal)
-{
-    Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    assert(c);
-    c->ownsContext = true;
-}
-
 Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QmlContextWrapper *resource = m->asQmlContext();
@@ -244,9 +169,9 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
                 else
                     return QV4::Value::undefinedValue();
             } else if (r.type) {
-                return engine->typeWrapper()->newObject(scopeObject, r.type)->v4Value();
+                return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {
-                return engine->typeWrapper()->newObject(scopeObject, context->imports, r.importNamespace)->v4Value();
+                return QmlTypeWrapper::create(engine, scopeObject, context->imports, r.importNamespace);
             }
             Q_ASSERT(!"Unreachable");
         }
@@ -327,18 +252,6 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
     return Value::undefinedValue();
 }
 
-void QmlContextNullWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
-{
-    QmlContextWrapper *w = m->asQmlContext();
-    if (w && w->readOnly) {
-        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
-                        QLatin1Char('"');
-        ctx->throwError(Value::fromString(ctx->engine->newString(error)));
-    }
-
-    Object::put(m, ctx, name, value);
-}
-
 void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
     QmlContextWrapper *wrapper = m->asQmlContext();
@@ -405,5 +318,92 @@ void QmlContextWrapper::destroy(Managed *that)
     static_cast<QmlContextWrapper *>(that)->~QmlContextWrapper();
 }
 
+void QmlContextNullWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+{
+    QmlContextWrapper *w = m->asQmlContext();
+    if (w && w->readOnly) {
+        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
+                        QLatin1Char('"');
+        ctx->throwError(Value::fromString(ctx->engine->newString(error)));
+    }
+
+    Object::put(m, ctx, name, value);
+}
+
+
+
+QV8ContextWrapper::QV8ContextWrapper()
+    : m_engine(0), v4(0)
+{
+}
+
+QV8ContextWrapper::~QV8ContextWrapper()
+{
+}
+
+void QV8ContextWrapper::destroy()
+{
+}
+
+void QV8ContextWrapper::init(QV8Engine *engine)
+{
+    m_engine = engine;
+    v4 = QV8Engine::getV4(engine);
+}
+
+QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
+{
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(m_engine, ctxt, scope);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
+}
+
+QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
+{
+    QQmlContextData *context = new QQmlContextData;
+    context->url = url;
+    context->isInternal = true;
+    context->isJSContext = true;
+
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextNullWrapper(m_engine, context, 0);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
+}
+
+void QV8ContextWrapper::setReadOnly(const Value &qmlglobal, bool readOnly)
+{
+    Object *o = qmlglobal.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    assert(c);
+    c->readOnly = readOnly;
+}
+
+QQmlContextData *QV8ContextWrapper::callingContext()
+{
+    QV4::Object *qmlglobal = QV8Engine::getV4(m_engine)->qmlContextObject();
+    if (!qmlglobal)
+        return 0;
+
+    QmlContextWrapper *c = qmlglobal->asQmlContext();
+    return c ? c->getContext() : 0;
+}
+
+QQmlContextData *QV8ContextWrapper::context(const Value &value)
+{
+    Object *o = value.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    if (!c)
+        return 0;
+
+    return c ? c->getContext():0;
+}
+
+void QV8ContextWrapper::takeContextOwnership(const Value &qmlglobal)
+{
+    Object *o = qmlglobal.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    assert(c);
+    c->ownsContext = true;
+}
 
 QT_END_NAMESPACE

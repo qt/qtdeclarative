@@ -55,6 +55,7 @@
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qjsvalue_p.h>
+#include <private/qqmltypewrapper_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -153,7 +154,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
-    m_typeWrapper.init(this);
     m_listWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
@@ -174,7 +174,6 @@ QV8Engine::~QV8Engine()
     m_jsonWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_listWrapper.destroy();
-    m_typeWrapper.destroy();
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
 
@@ -215,8 +214,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::ParticleDataType:
             case QV8ObjectResource::ChangeSetArrayType:
                 return QVariant();
-            case QV8ObjectResource::TypeType:
-                return m_typeWrapper.toVariant(r);
             case QV8ObjectResource::ListType:
                 return m_listWrapper.toVariant(r);
             case QV8ObjectResource::ValueTypeType:
@@ -229,6 +226,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return qVariantFromValue<QObject *>(wrapper->object);
         } else if (QV4::QmlContextWrapper *wrapper = object->asQmlContext()) {
             return QVariant();
+        } else if (QV4::QmlTypeWrapper *w = object->asQmlTypeWrapper()) {
+            return w->toVariant();
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
     }

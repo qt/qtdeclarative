@@ -82,6 +82,7 @@ struct VariantObject;
 struct QObjectWrapper;
 struct QtObject;
 struct QmlContextWrapper;
+struct QmlTypeWrapper;
 
 struct ManagedVTable
 {
@@ -186,7 +187,8 @@ public:
 
         // Qt Object
         Type_QtObject,
-        Type_QmlContext
+        Type_QmlContext,
+        Type_QmlTypeWrapper
     };
 
     ExecutionEngine *engine() const;
@@ -219,8 +221,9 @@ public:
     QQmlSequence<QStringList, Type_QmlQStringList> *asQmlQStringList() { return type == Type_QmlQStringList ? reinterpret_cast<QQmlSequence<QStringList, Type_QmlQStringList> *>(this): 0; }
     QQmlSequence<QList<QUrl>, Type_QmlUrlList> *asQmlUrlList() { return type == Type_QmlUrlList ?  reinterpret_cast<QQmlSequence<QList<QUrl>, Type_QmlUrlList> *>(this): 0; }
 
-    QtObject *asQtObject() {return type == Type_QtObject ? reinterpret_cast<QtObject *>(this) : 0; }
-    QmlContextWrapper *asQmlContext() {return type == Type_QmlContext ? reinterpret_cast<QmlContextWrapper *>(this) : 0; }
+    QtObject *asQtObject() { return type == Type_QtObject ? reinterpret_cast<QtObject *>(this) : 0; }
+    QmlContextWrapper *asQmlContext() { return type == Type_QmlContext ? reinterpret_cast<QmlContextWrapper *>(this) : 0; }
+    QmlTypeWrapper *asQmlTypeWrapper() { return type == Type_QmlTypeWrapper ? reinterpret_cast<QmlTypeWrapper *>(this) : 0; }
 
     bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
 

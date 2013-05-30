@@ -7,7 +7,6 @@ HEADERS += \
     $$PWD/qv8engine_p.h \
     $$PWD/qv8contextwrapper_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
-    $$PWD/qv8typewrapper_p.h \
     $$PWD/qv8listwrapper_p.h \
     $$PWD/qv8valuetypewrapper_p.h \
     $$PWD/qv4jsonwrapper_p.h \
@@ -20,7 +19,6 @@ SOURCES += \
     $$PWD/qv8engine.cpp \
     $$PWD/qv8contextwrapper.cpp \
     $$PWD/qv8qobjectwrapper.cpp \
-    $$PWD/qv8typewrapper.cpp \
     $$PWD/qv8listwrapper.cpp \
     $$PWD/qv8valuetypewrapper.cpp \
     $$PWD/qv4jsonwrapper.cpp \

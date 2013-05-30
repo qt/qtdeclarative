@@ -52,6 +52,7 @@
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmltypewrapper_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
@@ -157,10 +158,9 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
                 if (r.scriptIndex != -1) {
                     return QV4::Value::undefinedValue();
                 } else if (r.type) {
-                    return v8engine->typeWrapper()->newObject(object, r.type, QV8TypeWrapper::ExcludeEnums)->v4Value();
+                    return QmlTypeWrapper::create(v8engine, object, r.type, QmlTypeWrapper::ExcludeEnums);
                 } else if (r.importNamespace) {
-                    return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace,
-                                                              QV8TypeWrapper::ExcludeEnums)->v4Value();
+                    return QmlTypeWrapper::create(v8engine, object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
                 }
                 Q_ASSERT(!"Unreachable");
             }

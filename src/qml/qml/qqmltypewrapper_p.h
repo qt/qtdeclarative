@@ -54,41 +54,50 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <private/qv8_p.h>
 
+#include <private/qqmlguard_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QObject;
 class QV8Engine;
-class QQmlType;
 class QQmlTypeNameCache;
-class QV8TypeWrapper 
+
+namespace QV4 {
+
+struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
+private:
+    QmlTypeWrapper(QV8Engine *engine);
+    ~QmlTypeWrapper();
+
 public:
-    QV8TypeWrapper();
-    ~QV8TypeWrapper();
-
-    void init(QV8Engine *);
-    void destroy();
-
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
-    v8::Handle<v8::Object> newObject(QObject *, QQmlType *, TypeNameMode = IncludeEnums);
-    v8::Handle<v8::Object> newObject(QObject *, QQmlTypeNameCache *, const void *,
-                                    TypeNameMode = IncludeEnums);
-    QVariant toVariant(QV8ObjectResource *);
+
+    QVariant toVariant() const;
+
+    static QV4::Value create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
+    static QV4::Value create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
+
+
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void destroy(Managed *that);
 
 private:
-    static v8::Handle<v8::Value> Getter(v8::Handle<v8::String> property,
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Handle<v8::String> property,
-                                        v8::Handle<v8::Value> value,
-                                        const v8::AccessorInfo &info);
+    QV8Engine *v8;
+    TypeNameMode mode;
+    QQmlGuard<QObject> object;
 
-    QV8Engine *m_engine;
-    QV4::PersistentValue m_constructor;
+    QQmlType *type;
+    QQmlTypeNameCache *typeNamespace;
+    const void *importNamespace;
+
+    const static ManagedVTable static_vtbl;
 };
+
+}
 
 QT_END_NAMESPACE
 
