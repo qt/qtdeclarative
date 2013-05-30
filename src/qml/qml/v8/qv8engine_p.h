@@ -71,7 +71,6 @@
 #include <private/qqmlpropertycache_p.h>
 
 #include "qv8objectresource_p.h"
-#include "qv8contextwrapper_p.h"
 #include "qv8qobjectwrapper_p.h"
 #include "qv8listwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
@@ -273,7 +272,6 @@ public:
     QQmlEngine *engine() { return m_engine; }
     QV4::Value global();
 
-    QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
@@ -290,9 +288,6 @@ public:
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
-
-    // Return the QML global "scope" object for the \a ctxt context and \a scope object.
-    inline QV4::Value qmlScope(QQmlContextData *ctxt, QObject *scope);
 
     // Return a JS wrapper for the given QObject \a object
     inline QV4::Value newQObject(QObject *object);
@@ -394,7 +389,6 @@ protected:
 
     QV4::PersistentValue m_bindingFlagKey;
 
-    QV8ContextWrapper m_contextWrapper;
     QV8QObjectWrapper m_qobjectWrapper;
     QV8ListWrapper m_listWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
@@ -427,11 +421,6 @@ private:
 
     Q_DISABLE_COPY(QV8Engine)
 };
-
-QV4::Value QV8Engine::qmlScope(QQmlContextData *ctxt, QObject *scope)
-{
-    return m_contextWrapper.qmlScope(ctxt, scope);
-}
 
 bool QV8Engine::isQObject(const QV4::Value &value)
 {

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qv8contextwrapper_p.h"
-#include "qv8engine_p.h"
+#include "qqmlcontextwrapper_p.h"
+#include <private/qv8engine_p.h>
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcontext_p.h>
@@ -55,29 +55,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct Q_QML_EXPORT QmlContextWrapper : Object
-{
-    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
-    ~QmlContextWrapper();
-
-    inline QObject *getScopeObject() const { return scopeObject; }
-    inline QQmlContextData *getContext() const { return context; }
-
-    QV8Engine *v8; // ### temporary, remove
-    bool readOnly;
-    bool ownsContext;
-
-    QQmlGuardedContextData context;
-    QQmlGuard<QObject> scopeObject;
-
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
-    static void destroy(Managed *that);
-
-private:
-    const static ManagedVTable static_vtbl;
-};
 
 struct QmlContextNullWrapper : QmlContextWrapper
 {
@@ -115,6 +92,58 @@ QmlContextWrapper::~QmlContextWrapper()
     if (context && ownsContext)
         context->destroy();
 }
+
+QV4::Value QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
+{
+    ExecutionEngine *v4 = QV8Engine::getV4(v8);
+
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
+}
+
+QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
+{
+    ExecutionEngine *v4 = QV8Engine::getV4(v8);
+
+    QQmlContextData *context = new QQmlContextData;
+    context->url = url;
+    context->isInternal = true;
+    context->isJSContext = true;
+
+    QmlContextWrapper *w = new (v4->memoryManager) QmlContextNullWrapper(v8, context, 0);
+    w->prototype = v4->objectPrototype;
+    return Value::fromObject(w);
+}
+
+QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
+{
+    QV4::Object *qmlglobal = v4->qmlContextObject();
+    if (!qmlglobal)
+        return 0;
+
+    QmlContextWrapper *c = qmlglobal->asQmlContext();
+    return c ? c->getContext() : 0;
+}
+
+QQmlContextData *QmlContextWrapper::getContext(const Value &value)
+{
+    Object *o = value.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    if (!c)
+        return 0;
+
+    return c ? c->getContext():0;
+}
+
+void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
+{
+    Object *o = qmlglobal.asObject();
+    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    assert(c);
+    c->ownsContext = true;
+}
+
 
 Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
@@ -330,80 +359,5 @@ void QmlContextNullWrapper::put(Managed *m, ExecutionContext *ctx, String *name,
     Object::put(m, ctx, name, value);
 }
 
-
-
-QV8ContextWrapper::QV8ContextWrapper()
-    : m_engine(0), v4(0)
-{
-}
-
-QV8ContextWrapper::~QV8ContextWrapper()
-{
-}
-
-void QV8ContextWrapper::destroy()
-{
-}
-
-void QV8ContextWrapper::init(QV8Engine *engine)
-{
-    m_engine = engine;
-    v4 = QV8Engine::getV4(engine);
-}
-
-QV4::Value QV8ContextWrapper::qmlScope(QQmlContextData *ctxt, QObject *scope)
-{
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(m_engine, ctxt, scope);
-    w->prototype = v4->objectPrototype;
-    return Value::fromObject(w);
-}
-
-QV4::Value QV8ContextWrapper::urlScope(const QUrl &url)
-{
-    QQmlContextData *context = new QQmlContextData;
-    context->url = url;
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextNullWrapper(m_engine, context, 0);
-    w->prototype = v4->objectPrototype;
-    return Value::fromObject(w);
-}
-
-void QV8ContextWrapper::setReadOnly(const Value &qmlglobal, bool readOnly)
-{
-    Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    assert(c);
-    c->readOnly = readOnly;
-}
-
-QQmlContextData *QV8ContextWrapper::callingContext()
-{
-    QV4::Object *qmlglobal = QV8Engine::getV4(m_engine)->qmlContextObject();
-    if (!qmlglobal)
-        return 0;
-
-    QmlContextWrapper *c = qmlglobal->asQmlContext();
-    return c ? c->getContext() : 0;
-}
-
-QQmlContextData *QV8ContextWrapper::context(const Value &value)
-{
-    Object *o = value.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    if (!c)
-        return 0;
-
-    return c ? c->getContext():0;
-}
-
-void QV8ContextWrapper::takeContextOwnership(const Value &qmlglobal)
-{
-    Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
-    assert(c);
-    c->ownsContext = true;
-}
 
 QT_END_NAMESPACE

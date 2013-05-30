@@ -41,7 +41,6 @@
 
 #include "qv8engine_p.h"
 
-#include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qjsengine_p.h"
@@ -56,6 +55,7 @@
 #include <private/qqmlplatform_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -152,7 +152,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
 
-    m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
     m_listWrapper.init(this);
     m_valueTypeWrapper.init(this);
@@ -175,7 +174,6 @@ QV8Engine::~QV8Engine()
     m_valueTypeWrapper.destroy();
     m_listWrapper.destroy();
     m_qobjectWrapper.destroy();
-    m_contextWrapper.destroy();
 
     v8::Isolate::SetEngine(0);
     delete m_v4Engine;
@@ -440,7 +438,7 @@ QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
 
 QQmlContextData *QV8Engine::callingContext()
 {
-    return m_contextWrapper.callingContext();
+    return QV4::QmlContextWrapper::callingContext(m_v4Engine);
 }
 
 // Converts a JS value to a QVariant.

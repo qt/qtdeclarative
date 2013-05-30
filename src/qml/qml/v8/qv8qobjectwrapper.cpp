@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qv8qobjectwrapper_p.h"
-#include "qv8contextwrapper_p.h"
 #include "qv8engine_p.h"
 
 #include <private/qqmlguard_p.h>
@@ -53,6 +52,7 @@
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
@@ -1957,7 +1957,7 @@ Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisOb
         QV4::Value rv = QV4::Value::undefinedValue();
 
         QQmlV4Function func(argc, args, &rv, m_qmlGlobal.value(),
-                            v8Engine->contextWrapper()->context(m_qmlGlobal.value()),
+                            QmlContextWrapper::getContext(m_qmlGlobal.value()),
                             v8Engine);
         QQmlV4Function *funcptr = &func;
 

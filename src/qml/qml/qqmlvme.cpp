@@ -64,6 +64,7 @@
 #include "qqmlpropertyvalueinterceptor_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
 #include "qqmlexpression_p.h"
+#include "qqmlcontextwrapper_p.h"
 
 #include <QStack>
 #include <QPointF>
@@ -1153,8 +1154,8 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     if (!script->m_program)
         return QV4::PersistentValue();
 
-    QV4::Value qmlglobal = v8engine->qmlScope(ctxt, 0);
-    v8engine->contextWrapper()->takeContextOwnership(qmlglobal);
+    QV4::Value qmlglobal = QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0);
+    QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
     try {

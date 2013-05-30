@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8CONTEXTWRAPPER_P_H
-#define QV8CONTEXTWRAPPER_P_H
+#ifndef QQMLCONTEXTWRAPPER_P_H
+#define QQMLCONTEXTWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -55,7 +55,6 @@
 
 #include <QtCore/qglobal.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qv8_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
@@ -63,34 +62,42 @@
 
 QT_BEGIN_NAMESPACE
 
-class QUrl;
-class QObject;
-class QV8Engine;
-class QQmlContextData;
-class Q_QML_PRIVATE_EXPORT QV8ContextWrapper
+namespace QV4 {
+
+struct Q_QML_EXPORT QmlContextWrapper : Object
 {
-public:
-    QV8ContextWrapper();
-    ~QV8ContextWrapper();
+    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    ~QmlContextWrapper();
 
-    void init(QV8Engine *);
-    void destroy();
+    static QV4::Value qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
+    static QV4::Value urlScope(QV8Engine *e, const QUrl &);
 
-    QV4::Value qmlScope(QQmlContextData *ctxt, QObject *scope);
-    QV4::Value urlScope(const QUrl &);
+    static QQmlContextData *callingContext(ExecutionEngine *v4);
+    static void takeContextOwnership(const QV4::Value &qmlglobal);
 
-    void setReadOnly(const QV4::Value &, bool);
+    inline QObject *getScopeObject() const { return scopeObject; }
+    inline QQmlContextData *getContext() const { return context; }
+    static QQmlContextData *getContext(const Value &value);
 
-    QQmlContextData *callingContext();
-    QQmlContextData *context(const QV4::Value &);
+    void setReadOnly(bool b) { readOnly = b; }
 
-    void takeContextOwnership(const QV4::Value &qmlglobal);
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void destroy(Managed *that);
+
+
+    QV8Engine *v8; // ### temporary, remove
+    bool readOnly;
+    bool ownsContext;
+
+    QQmlGuardedContextData context;
+    QQmlGuard<QObject> scopeObject;
 
 private:
-    QV8Engine *m_engine;
-    QV4::ExecutionEngine *v4;
+    const static ManagedVTable static_vtbl;
 };
 
+}
 
 QT_END_NAMESPACE
 

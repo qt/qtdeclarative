@@ -52,6 +52,7 @@ SOURCES += \
     $$PWD/qqmlplatform.cpp \
     $$PWD/qqmlbinding.cpp \
     $$PWD/qqmlapplicationengine.cpp \
+    $$PWD/qqmlcontextwrapper.cpp \
     $$PWD/qqmltypewrapper.cpp
 
 HEADERS += \
@@ -126,6 +127,7 @@ HEADERS += \
     $$PWD/qqmlextensionplugin_p.h \
     $$PWD/qqmlapplicationengine_p.h \
     $$PWD/qqmlapplicationengine.h \
+    $$PWD/qqmlcontextwrapper_p.h \
     $$PWD/qqmltypewrapper_p.h
 
 JS_CLASS_SOURCES += \

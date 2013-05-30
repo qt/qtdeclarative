@@ -52,6 +52,7 @@
 #include <private/qv4domerrors_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
@@ -107,7 +108,7 @@ static v8::Handle<v8::Object> constructMeObject(v8::Handle<v8::Object> thisObj, 
 {
     v8::Handle<v8::Object> meObj = v8::Object::New();
     meObj->Set(v8::String::New("ThisObject"), thisObj);
-    meObj->Set(v8::String::New("ActivationObject"), e->qmlScope(e->callingContext(), 0));
+    meObj->Set(v8::String::New("ActivationObject"), QV4::QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
     return meObj;
 }
 
@@ -1464,7 +1465,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const QV4::Value &me)
             return;
         }
 
-        QQmlContextData *callingContext = engine->contextWrapper()->context(activationObject);
+        QQmlContextData *callingContext = QV4::QmlContextWrapper::getContext(activationObject);
         if (callingContext)
             callback->call(v4->current, activationObject, 0, 0);
 

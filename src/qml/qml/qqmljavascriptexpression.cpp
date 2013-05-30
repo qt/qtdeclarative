@@ -42,6 +42,7 @@
 #include "qqmljavascriptexpression_p.h"
 
 #include <private/qqmlexpression_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
@@ -311,7 +312,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
 
-    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope);
+    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scope);
     QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
     QV4::Value result;
     try {
@@ -345,7 +346,7 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
 
-    QV4::Value scopeObject = ep->v8engine()->qmlScope(ctxt, scope);
+    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scope);
     QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
     QV4::Value result;
     try {
