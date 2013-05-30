@@ -84,6 +84,19 @@ various QML object types:
 \li \l Timer
 \endlist
 
+\section2 Lists and Models
+
+New in Qt 5.1, the model types are moved to a submodule, \c QtQml.Models. The
+\l{Qt QML Models QML Types}{Qt QML Models} page has more information.
+
+\list
+\li \l DelegateModel
+\li \l DelegateModelGroup
+\li \l ListElement
+\li \l ListModel
+\li \l ObjectModel
+\endlist
+
 \section1 JavaScript Environment for QML Applications
 
 JavaScript expressions allow QML code to contain application logic. Qt QML

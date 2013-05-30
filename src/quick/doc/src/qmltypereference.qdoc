@@ -234,13 +234,26 @@ Animation paths
 
 \section2 Model/View Types And Data Storage And Access
 
-Models And Model Data
+QML Lists and Models
+
+The \l{Qt QML Models QML Types}{Qt QML Models} submodule provides the types for
+structuring data with models and lists.
 \list
-\li \l {QtQml2::ListModel}{ListModel} - Defines a list of data
-\li \l {QtQml2::ListElement}{ListElement} - Defines a data item in a \l {QtQml2::ListModel}{ListModel}
+\li \l ListModel - Defines a list of data
+\li \l ListElement - Defines a data item in a \l ListModel
+\endlist
+
+These QML types are part of Qt Quick for backwards compatibility, but for
+newer applications, \l{Qt QML Models QML Types}{Qt QML Models} provides
+the same functionality.
+\list
 \li \l {VisualItemModel} - Contains items that already defines its own visual delegate
 \li \l {VisualDataModel} - Encapsulates a model and a delegate
 \li \l {VisualDataGroup} - Encapsulates a filtered set of visual data items
+\endlist
+
+XML Lists
+\list
 \li \l {XmlListModel} - Specifies a model using XPath expressions
 \li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
 \endlist

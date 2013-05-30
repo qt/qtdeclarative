@@ -58,8 +58,13 @@ follows:
 import QtQuick 2.0
 \endqml
 
-See the \l{Qt Quick} module documentation for more information about the
-\c QtQuick namespace and what it provides to QML application developers.
+See the \l{Qt Quick} module documentation for more information about the \c
+QtQuick namespace and what it provides to QML application developers.
+
+The QML types for creating lists and models, such as \l ListModel and \l
+ListElement, are moved to a submodule, \c QtQml.Models. The \l{Qt QML Models QML
+Types}{Qt QML Models} page has more information.
+
 
 The documentation for the types below applies equally to the types of the same
 name provided by the \l{Qt Quick} module, as they are in fact identical.

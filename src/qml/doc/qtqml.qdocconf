@@ -32,9 +32,11 @@ tagfile                 = ../../../doc/qtqml/qtqml.tags
 
 depends += qtcore qtxmlpatterns qtgui qtquick qtdoc
 
-headerdirs  += ..
+headerdirs  += .. \
+               ../../imports/models
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               ../../imports/models
 
 exampledirs += ../../../examples/qml \
                ../ \
