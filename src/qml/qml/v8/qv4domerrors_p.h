@@ -76,13 +76,6 @@ QT_BEGIN_NAMESPACE
 #define DOMEXCEPTION_VALIDATION_ERR 16
 #define DOMEXCEPTION_TYPE_MISMATCH_ERR 17
 
-#define V8THROW_DOM(error, string) { \
-    v8::Handle<v8::Value> v = v8::Exception::Error(v8::String::New(string)); \
-    v->ToObject()->Set(v8::String::New("code"), QV4::Value::fromInt32(error)); \
-    v8::ThrowException(v); \
-    return v8::Handle<v8::Value>(); \
-}
-
 #define V4THROW_DOM(error, string) { \
     QV4::ExecutionContext *ctx = v8::Isolate::GetEngine()->current; \
     QV4::Value v = QV4::Value::fromString(ctx, QStringLiteral(string)); \

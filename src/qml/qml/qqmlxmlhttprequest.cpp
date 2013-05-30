@@ -1677,7 +1677,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Handle<v8::String> /* 
 
     if (r->readyState() == QQmlXMLHttpRequest::Unsent ||
         r->readyState() == QQmlXMLHttpRequest::Opened)
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
         return QV4::Value::fromInt32(0);
@@ -1696,7 +1696,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Handle<v8::String>
 
     if (r->readyState() == QQmlXMLHttpRequest::Unsent ||
         r->readyState() == QQmlXMLHttpRequest::Opened)
-        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
+        V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
         return engine->toString(QString());
