@@ -126,15 +126,13 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
         return QV4::Value::undefinedValue();
     }
 
-    QObject *object = that->object;
-
     if (name->isEqualTo(that->m_destroy) || name->isEqualTo(that->m_toString)) {
         bool hasProp = false;
         QV4::Value method = QV4::Object::get(m, ctx, name, &hasProp);
 
         if (!hasProp) {
             int index = name->isEqualTo(that->m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, object, index, QV4::Value::undefinedValue()));
+            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, that->object, index, QV4::Value::undefinedValue()));
             QV4::Object::put(m, ctx, name, method);
         }
 
@@ -149,8 +147,7 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
     QV8Engine *v8engine = that->v8Engine;
     QQmlContextData *context = v8engine->callingContext();
 
-    v8::Handle<v8::Value> This = QV4::Value::fromObject(that);
-    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8engine, object, &This, propertystring,
+    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8engine, that->object, propertystring,
                                                                   context, QV8QObjectWrapper::IgnoreRevision);
     if (!result.IsEmpty()) {
         if (hasProperty)
@@ -167,9 +164,9 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
                 if (r.scriptIndex != -1) {
                     return QV4::Value::undefinedValue();
                 } else if (r.type) {
-                    return QmlTypeWrapper::create(v8engine, object, r.type, QmlTypeWrapper::ExcludeEnums);
+                    return QmlTypeWrapper::create(v8engine, that->object, r.type, QmlTypeWrapper::ExcludeEnums);
                 } else if (r.importNamespace) {
-                    return QmlTypeWrapper::create(v8engine, object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                    return QmlTypeWrapper::create(v8engine, that->object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
                 }
                 Q_ASSERT(!"Unreachable");
             }
@@ -306,7 +303,7 @@ struct CallArgument {
     inline void *dataPtr();
 
     inline void initAsType(int type);
-    inline void fromValue(int type, QV8Engine *, v8::Handle<v8::Value>);
+    inline void fromValue(int type, QV8Engine *, const QV4::Value&);
     inline QV4::Value toValue(QV8Engine *);
 
 private:
@@ -407,19 +404,19 @@ struct ReadAccessor {
     }
 };
 
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, int v)
+static inline QV4::Value valueToHandle(QV8Engine *, int v)
 { return QV4::Value::fromInt32(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, uint v)
+static inline QV4::Value valueToHandle(QV8Engine *, uint v)
 { return QV4::Value::fromUInt32(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, bool v)
+static inline QV4::Value valueToHandle(QV8Engine *, bool v)
 { return QV4::Value::fromBoolean(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, const QString &v)
+static inline QV4::Value valueToHandle(QV8Engine *e, const QString &v)
 { return e->toString(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, float v)
+static inline QV4::Value valueToHandle(QV8Engine *, float v)
 { return QV4::Value::fromDouble(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *, double v)
+static inline QV4::Value valueToHandle(QV8Engine *, double v)
 { return QV4::Value::fromDouble(v); }
-static inline v8::Handle<v8::Value> valueToHandle(QV8Engine *e, QObject *v)
+static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
 { return e->newQObject(v); }
 
 void QV8QObjectWrapper::init(QV8Engine *engine)
@@ -461,7 +458,7 @@ QObject *QV8QObjectWrapper::toQObject(v8::Handle<v8::Object> obj)
 // Load value properties
 template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
                               void *, QQmlNotifier **)>
-static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
+static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
                                           const QQmlPropertyData &property,
                                           QQmlNotifier **notifier)
 {
@@ -508,14 +505,14 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
-        return v8::Value::fromV4Value(QJSValuePrivate::get(v)->getValue(QV8Engine::getV4(engine)));
+        return QJSValuePrivate::get(v)->getValue(QV8Engine::getV4(engine));
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
             if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
-                return v8::Value::fromV4Value(engine->newValueType(object, property.coreIndex, valueType)); // VariantReference value-type.
+                return engine->newValueType(object, property.coreIndex, valueType); // VariantReference value-type.
         }
 
         return engine->fromVariant(v);
@@ -523,14 +520,13 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         Q_ASSERT(notifier == 0);
 
         if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
-            return v8::Value::fromV4Value(engine->newValueType(object, property.coreIndex, valueType));
+            return engine->newValueType(object, property.coreIndex, valueType);
     } else {
         Q_ASSERT(notifier == 0);
 
         // see if it's a sequence type
         bool succeeded = false;
-        v8::Handle<v8::Value> retn = v8::Value::fromV4Value(engine->newSequence(property.propType, object, property.coreIndex,
-                                                         &succeeded));
+        QV4::Value retn = engine->newSequence(property.propType, object, property.coreIndex, &succeeded);
         if (succeeded)
             return retn;
     }
@@ -547,8 +543,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     }
 }
 
-v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object, 
-                                                     v8::Handle<v8::Value> *objectHandle, 
+QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
                                                      const QHashedV4String &property,
                                                      QQmlContextData *context,
                                                      QV8QObjectWrapper::RevisionMode revisionMode)
@@ -556,22 +551,20 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
     // will be a faster way of creating QObject method objects.
     struct MethodClosure {
-       static v8::Handle<v8::Value> create(QV8Engine *engine, QObject *object, 
-                                           v8::Handle<v8::Value> *objectHandle, 
-                                           int index) { 
+       static QV4::Value create(QV8Engine *engine, QObject *object,
+                                           int index) {
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
            return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::undefinedValue()));
        }
-       static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
-                                                     v8::Handle<v8::Value> *objectHandle, 
-                                                     int index) { 
+       static QV4::Value createWithGlobal(QV8Engine *engine, QObject *object,
+                                                     int index) {
            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
            return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())));
        }
     };
 
     if (QQmlData::wasDeleted(object))
-        return v8::Handle<v8::Value>();
+        return QV4::Value::emptyValue();
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
@@ -584,14 +577,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     }
 
     if (!result)
-        return v8::Handle<v8::Value>();
+        return QV4::Value::emptyValue();
 
     QQmlData::flushPendingBinding(object, result->coreIndex);
 
     if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
-            return v8::Handle<v8::Value>();
+            return QV4::Value::emptyValue();
     }
 
     if (result->isFunction() && !result->isVarProperty()) {
@@ -600,14 +593,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV4Function()) {
-            return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
+            return MethodClosure::createWithGlobal(engine, object, result->coreIndex);
         } else if (result->isSignalHandler()) {
             v8::Handle<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor.value().asFunctionObject()->newInstance();
             QV8SignalHandlerResource *r = new QV8SignalHandlerResource(engine, object, result->coreIndex);
             handler->SetExternalResource(r);
-            return handler;
+            return handler->v4Value();
         } else {
-            return MethodClosure::create(engine, object, objectHandle, result->coreIndex);
+            return MethodClosure::create(engine, object, result->coreIndex);
         }
     }
 
@@ -621,7 +614,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         if (ep && ep->propertyCapture && result->accessors->notifier)
             nptr = &n;
 
-        v8::Handle<v8::Value> rv = LoadProperty<ReadAccessor::Accessor>(engine, object, *result, nptr);
+        QV4::Value rv = LoadProperty<ReadAccessor::Accessor>(engine, object, *result, nptr);
 
         if (result->accessors->notifier) {
             if (n) ep->captureProperty(n);
@@ -1260,7 +1253,7 @@ struct CallArgs
 {
     CallArgs(int length, QV4::Value *args) : _length(length), _args(args) {}
     int Length() const { return _length; }
-    v8::Handle<v8::Value> operator[](int idx) { return _args[idx]; }
+    QV4::Value operator[](int idx) { return _args[idx]; }
 
 private:
     int _length;
@@ -1725,62 +1718,61 @@ void CallArgument::initAsType(int callType)
     }
 }
 
-void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Value> value)
+void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &value)
 {
     if (type != 0) { cleanup(); type = 0; }
 
     if (callType == qMetaTypeId<QJSValue>()) {
-        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(QV8Engine::getV4(engine), value.get()->v4Value()));
+        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(QV8Engine::getV4(engine), value));
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
-        intValue = quint32(value->Int32Value());
+        intValue = quint32(value.toInt32());
         type = callType;
     } else if (callType == QMetaType::UInt) {
-        intValue = quint32(value->Uint32Value());
+        intValue = quint32(value.toUInt32());
         type = callType;
     } else if (callType == QMetaType::Bool) {
-        boolValue = value->BooleanValue();
+        boolValue = value.toBoolean();
         type = callType;
     } else if (callType == QMetaType::Double) {
-        doubleValue = double(value->NumberValue());
+        doubleValue = double(value.toNumber());
         type = callType;
     } else if (callType == QMetaType::Float) {
-        floatValue = float(value->NumberValue());
+        floatValue = float(value.toNumber());
         type = callType;
     } else if (callType == QMetaType::QString) {
-        if (value->IsNull() || value->IsUndefined())
+        if (value.isNull() || value.isUndefined())
             qstringPtr = new (&allocData) QString();
         else
-            qstringPtr = new (&allocData) QString(value->v4Value().toQString());
+            qstringPtr = new (&allocData) QString(value.toQString());
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
-        qobjectPtr = engine->toQObject(value->v4Value());
+        qobjectPtr = engine->toQObject(value);
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
-        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value->v4Value(), -1));
+        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
-        if (value->IsArray()) {
-            v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
-            uint32_t length = array->Length();
+        if (QV4::ArrayObject *array = value.asArrayObject()) {
+            uint32_t length = array->arrayLength();
             for (uint32_t ii = 0; ii < length; ++ii) 
-                qlistPtr->append(engine->toQObject(array->Get(ii)->v4Value()));
+                qlistPtr->append(engine->toQObject(array->getIndexed(ii)));
         } else {
-            qlistPtr->append(engine->toQObject(value->v4Value()));
+            qlistPtr->append(engine->toQObject(value));
         }
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle(value->v4Value()));
+        handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle(value));
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
-        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value->v4Value()));
+        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value));
         type = callType;
     } else if (callType == QMetaType::QJsonObject) {
-        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value->v4Value()));
+        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value));
         type = callType;
     } else if (callType == QMetaType::QJsonValue) {
-        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value->v4Value()));
+        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value));
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
@@ -1789,7 +1781,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         type = -1;
 
         QQmlEnginePrivate *ep = engine->engine() ? QQmlEnginePrivate::get(engine->engine()) : 0;
-        QVariant v = engine->toVariant(value->v4Value(), -1); // why -1 instead of callType?
+        QVariant v = engine->toVariant(value, -1); // why -1 instead of callType?
 
         if (v.userType() == callType) {
             *qvariantPtr = v;
@@ -1798,7 +1790,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
             qvariantPtr->convert(callType);
         } else if (QV4::SequencePrototype::isSequenceType(callType) && v.userType() == qMetaTypeId<QVariantList>()) {
             // convert the JS array to a sequence of the correct type.
-            QVariant seqV = engine->toVariant(value->v4Value(), callType);
+            QVariant seqV = engine->toVariant(value, callType);
             *qvariantPtr = seqV;
         } else {
             QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();

@@ -162,7 +162,7 @@ private:
     friend struct QV4::QObjectWrapper;
 
     v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
-    static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
+    static QV4::Value GetProperty(QV8Engine *, QObject *,
                                              const QHashedV4String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
@@ -185,7 +185,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHas
     QQmlData *dd = QQmlData::get(object, false);
     if (!dd || !dd->propertyCache ||
         dd->propertyCache->property(string, object, context)) {
-        return GetProperty(m_engine, object, 0, string, context, mode);
+        return GetProperty(m_engine, object, string, context, mode);
     } else {
         return v8::Handle<v8::Value>();
     }
