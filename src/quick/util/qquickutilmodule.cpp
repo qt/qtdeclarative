@@ -58,6 +58,9 @@
 #include <private/qquickanimationcontroller_p.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtGui/QInputMethod>
+#include <QtGui/QKeySequence>
+
+Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 void QQuickUtilModule::defineModule()
 {
@@ -91,4 +94,7 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickStateOperation>();
 
     qmlRegisterCustomType<QQuickPropertyChanges>("QtQuick",2,0,"PropertyChanges", new QQuickPropertyChangesParser);
+
+    qRegisterMetaType<QKeySequence::StandardKey>();
+    qmlRegisterUncreatableType<QKeySequence, 2>("QtQuick", 2, 2, "StandardKey", QStringLiteral("Cannot create an instance of StandardKey."));
 }

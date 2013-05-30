@@ -147,6 +147,26 @@ Item {
     \endqml
 */
 
+/*!
+    \qmlmethod bool QtQuick2::KeyEvent::matches(StandardKey key)
+    \since QtQuick 2.2
+
+    Returns \c true if the key event matches the given standard \a key; otherwise returns \c false.
+
+    \qml
+    Item {
+        focus: true
+        Keys.onPressed: {
+            if (event.matches(StandardKey.Undo))
+                myModel.undo();
+            else if (event.matches(StandardKey.Redo))
+                myModel.redo();
+        }
+    }
+    \endqml
+
+    \sa QKeySequence::StandardKey
+*/
 
 /*!
     \qmltype MouseEvent
