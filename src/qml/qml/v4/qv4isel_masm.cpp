@@ -607,6 +607,8 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
         }
 
         foreach (V4IR::Stmt *s, block->statements) {
+            if (s->location.isValid())
+                _as->recordLineNumber(s->location.startLine);
             s->accept(this);
         }
     }
@@ -797,11 +799,6 @@ void InstructionSelection::visitTry(V4IR::Try *t)
                          Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
                          identifier(t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
     _as->jump(Assembler::ReturnValueRegister);
-}
-
-void InstructionSelection::visitDebugAnnotation(V4IR::DebugAnnotation *annotation)
-{
-    _as->recordLineNumber(annotation->location.startLine);
 }
 
 void InstructionSelection::callBuiltinFinishTry()

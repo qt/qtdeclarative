@@ -847,7 +847,6 @@ protected:
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
     virtual void visitTry(V4IR::Try *);
-    virtual void visitDebugAnnotation(V4IR::DebugAnnotation *);
 
 private:
     #define isel_stringIfyx(s) #s

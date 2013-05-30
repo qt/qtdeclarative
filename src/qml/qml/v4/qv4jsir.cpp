@@ -221,8 +221,6 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         // nothing to do for Try statements
     }
 
-    virtual void visitDebugAnnotation(DebugAnnotation *) {}
-
     // expressions
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -545,11 +543,6 @@ void Try::dump(QTextStream &out, Stmt::Mode mode)
     out << " with the name " << exceptionVarName << " and go to L" << catchBlock->index << ';';
 }
 
-void DebugAnnotation::dump(QTextStream &out, Mode mode)
-{
-    out << "// line: " << location.startLine << " ; column: " << location.startColumn;
-}
-
 Function *Module::newFunction(const QString &name, Function *outer)
 {
     Function *f = new Function(this, outer, name);
@@ -739,7 +732,7 @@ Stmt *BasicBlock::EXP(Expr *expr)
 
     Exp *s = function->New<Exp>();
     s->init(expr);
-    statements.append(s);
+    appendStatement(s);
     return s;
 }
 
@@ -750,7 +743,7 @@ Stmt *BasicBlock::ENTER(Expr *expr)
 
     Enter *s = function->New<Enter>();
     s->init(expr);
-    statements.append(s);
+    appendStatement(s);
     return s;
 }
 
@@ -761,7 +754,7 @@ Stmt *BasicBlock::LEAVE()
 
     Leave *s = function->New<Leave>();
     s->init();
-    statements.append(s);
+    appendStatement(s);
     return s;
 }
 
@@ -772,7 +765,7 @@ Stmt *BasicBlock::MOVE(Expr *target, Expr *source, AluOp op)
 
     Move *s = function->New<Move>();
     s->init(target, source, op);
-    statements.append(s);
+    appendStatement(s);
     return s;
 }
 
@@ -783,7 +776,7 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
 
     Jump *s = function->New<Jump>();
     s->init(target);
-    statements.append(s);
+    appendStatement(s);
 
     assert(! out.contains(target));
     out.append(target);
@@ -806,7 +799,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
 
     CJump *s = function->New<CJump>();
     s->init(cond, iftrue, iffalse);
-    statements.append(s);
+    appendStatement(s);
 
     assert(! out.contains(iftrue));
     out.append(iftrue);
@@ -830,7 +823,7 @@ Stmt *BasicBlock::RET(Temp *expr)
 
     Ret *s = function->New<Ret>();
     s->init(expr);
-    statements.append(s);
+    appendStatement(s);
     return s;
 }
 
@@ -841,7 +834,7 @@ Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QStrin
 
     Try *t = function->New<Try>();
     t->init(tryBlock, catchBlock, exceptionVarName, exceptionVar);
-    statements.append(t);
+    appendStatement(t);
 
     assert(! out.contains(tryBlock));
     out.append(tryBlock);
@@ -858,24 +851,27 @@ Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QStrin
     return t;
 }
 
-Stmt *BasicBlock::DEBUGANNOTATION(const AST::SourceLocation &location)
-{
-    if (isTerminated())
-        return 0;
-
-    DebugAnnotation *t = function->New<DebugAnnotation>();
-    t->init(location);
-    statements.append(t);
-}
-
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 {
     out << 'L' << index << ':' << endl;
     foreach (Stmt *s, statements) {
         out << '\t';
         s->dump(out, mode);
+
+        if (s->location.isValid())
+            out << " // line: " << s->location.startLine << " ; column: " << s->location.startColumn;
+
         out << endl;
     }
+}
+
+void BasicBlock::appendStatement(Stmt *statement)
+{
+    if (nextLocation.isValid()) {
+        statement->location = nextLocation;
+        nextLocation = AST::SourceLocation();
+    }
+    statements.append(statement);
 }
 
 CloneExpr::CloneExpr(BasicBlock *block)

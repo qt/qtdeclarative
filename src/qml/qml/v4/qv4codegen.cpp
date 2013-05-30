@@ -116,7 +116,6 @@ struct ComputeUseDef: V4IR::StmtVisitor, V4IR::ExprVisitor
         if (! _stmt->d->defs.contains(t->exceptionVar->index))
             _stmt->d->defs.append(t->exceptionVar->index);
     }
-    virtual void visitDebugAnnotation(V4IR::DebugAnnotation *) {}
 
     virtual void visitTemp(V4IR::Temp *e) {
         if (e->index < 0 || e->scope != 0)
@@ -372,7 +371,6 @@ protected:
     virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
     virtual void visitTry(V4IR::Try *) {}
-    virtual void visitDebugAnnotation(V4IR::DebugAnnotation *) {}
 
     virtual void visitCall(V4IR::Call *e) {
         e->base->accept(this);
@@ -552,7 +550,6 @@ protected:
     virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
     virtual void visitTry(V4IR::Try *t) { visitTemp(t->exceptionVar); }
-    virtual void visitDebugAnnotation(V4IR::DebugAnnotation *) {}
 
     virtual void visitTemp(V4IR::Temp *e) {
         if (e->scope) // scoped local
@@ -1343,7 +1340,7 @@ void Codegen::accept(Node *node)
 
 void Codegen::statement(Statement *ast)
 {
-    _block->DEBUGANNOTATION(ast->firstSourceLocation());
+    _block->nextLocation = ast->firstSourceLocation();
     accept(ast);
 }
 
@@ -2519,6 +2516,9 @@ void Codegen::linearize(V4IR::Function *function)
             QTextStream out(&buf);
             s->dump(out, V4IR::Stmt::MIR);
             out.flush();
+
+            if (s->location.isValid())
+                qout << "    // line: " << s->location.startLine << " column: " << s->location.startColumn << endl;
 
 #ifndef QV4_NO_LIVENESS
             for (int i = 60 - str.size(); i >= 0; --i)
