@@ -1286,7 +1286,6 @@ Handle<Object> ObjectTemplate::NewInstance()
     QV4::ExecutionEngine *engine = currentEngine();
     QV4::Object *o = new (engine->memoryManager) V4V8Object<QV4::Object>(engine, this);
     o->prototype = engine->objectPrototype;
-    o->externalComparison = m_useUserComparison;
 
     return QV4::Value::fromObject(o);
 }
@@ -1362,11 +1361,6 @@ void ObjectTemplate::SetHasExternalResource(bool value)
     Q_UNUSED(value);
 }
 
-void ObjectTemplate::MarkAsUseUserObjectComparison()
-{
-    m_useUserComparison = true;
-}
-
 ObjectTemplate::ObjectTemplate()
 {
     m_namedPropertyGetter = 0;
@@ -1386,8 +1380,6 @@ ObjectTemplate::ObjectTemplate()
     m_indexedPropertyQuery = 0;
     m_indexedPropertyDeleter = 0;
     m_indexedPropertyEnumerator = 0;
-
-    m_useUserComparison = false;
 }
 
 Handle<Value> ThrowException(Handle<Value> exception)
@@ -1459,23 +1451,6 @@ Isolate *Isolate::GetCurrent()
     return currentIsolate.localData();
 }
 
-
-static UserObjectComparisonCallback userObjectComparisonCallback = 0;
-
-static bool v8ExternalResourceComparison(const QV4::Value &a, const QV4::Value &b)
-{
-    if (!userObjectComparisonCallback)
-        return false;
-    Handle<Object> la = a;
-    Handle<Object> lb = b;
-    return userObjectComparisonCallback(la, lb);
-}
-
-void V8::SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback callback)
-{
-    userObjectComparisonCallback = callback;
-    currentEngine()->externalResourceComparison = v8ExternalResourceComparison;
-}
 
 void V8::AddGCPrologueCallback(GCPrologueCallback, GCType)
 {

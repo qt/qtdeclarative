@@ -84,35 +84,6 @@ Q_DECLARE_METATYPE(QList<int>)
 // QQmlEngine is not available
 QT_BEGIN_NAMESPACE
 
-static bool ObjectComparisonCallback(v8::Handle<v8::Object> lhs, v8::Handle<v8::Object> rhs)
-{
-    if (lhs == rhs)
-        return true;
-
-    if (lhs.IsEmpty() || rhs.IsEmpty())
-        return false;
-
-    if (QV4::VariantObject *lv = lhs->v4Value().asVariantObject()) {
-        if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject())
-            return lv->data == rv->data;
-
-        if (QV4::QmlValueTypeWrapper *v = rhs->v4Value().asQmlValueType())
-            return v->isEqual(lv->data);
-
-        return false;
-    }
-
-    if (QV4::QmlValueTypeWrapper *lv = lhs->v4Value().asQmlValueType()) {
-        if (QV4::VariantObject *rv = rhs->v4Value().asVariantObject())
-            return lv->isEqual(rv->data);
-
-        if (QV4::QmlValueTypeWrapper *v = rhs->v4Value().asQmlValueType())
-            return lv->isEqual(v->toVariant());
-    }
-
-    return false;
-}
-
 
 QV8Engine::QV8Engine(QJSEngine* qq)
     : q(qq)
@@ -130,7 +101,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     v8::Isolate::SetEngine(m_v4Engine);
     m_v4Engine->publicEngine = q;
 
-    v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
     QV8GCCallback::registerGcPrologueCallback();
     m_strongReferencer = QV4::Value::fromObject(m_v4Engine->newObject());
 

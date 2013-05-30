@@ -85,6 +85,7 @@ public:
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static void destroy(Managed *that);
+    static bool isEqualTo(Managed *m, Managed *other);
 
     static QV4::Value method_toString(SimpleCallContext *ctx);
 

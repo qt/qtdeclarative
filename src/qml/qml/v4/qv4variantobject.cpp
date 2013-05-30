@@ -42,6 +42,7 @@
 #include "qv4variantobject_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4objectproto_p.h"
+#include <private/qqmlvaluetypewrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,6 +79,20 @@ void VariantObject::destroy(Managed *that)
     if (v->isScarce())
         v->node.remove();
     Object::destroy(that);
+}
+
+bool VariantObject::isEqualTo(Managed *m, Managed *other)
+{
+    QV4::VariantObject *lv = m->asVariantObject();
+    assert(lv);
+
+    if (QV4::VariantObject *rv = other->asVariantObject())
+        return lv->data == rv->data;
+
+    if (QV4::QmlValueTypeWrapper *v = other->asQmlValueTypeWrapper())
+        return v->isEqual(lv->data);
+
+    return false;
 }
 
 void VariantObject::addVmePropertyReference()

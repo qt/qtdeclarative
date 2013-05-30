@@ -62,6 +62,7 @@ const ManagedVTable Managed::static_vtbl =
     0,
     0,
     0,
+    isEqualTo,
     "Managed",
 };
 
@@ -192,6 +193,12 @@ void Managed::setLookup(Managed *, ExecutionContext *ctx, Lookup *, const Value 
 {
     ctx->throwTypeError();
 }
+
+bool Managed::isEqualTo(Managed *, Managed *)
+{
+    return false;
+}
+
 
 Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)
 {

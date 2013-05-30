@@ -48,6 +48,7 @@
 
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4variantobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -146,7 +147,6 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, 
     initProto(v4);
 
     QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
-    r->externalComparison = true;
     r->prototype = proto.value().objectValue();
     r->type = type; r->object = object; r->property = property;
     return Value::fromObject(r);
@@ -158,7 +158,6 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValu
     initProto(v4);
 
     QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
-    r->externalComparison = true;
     r->prototype = proto.value().objectValue();
     r->type = type; r->value = value;
     return Value::fromObject(r);
@@ -188,6 +187,20 @@ void QmlValueTypeWrapper::destroy(Managed *that)
         static_cast<QmlValueTypeReference *>(w)->~QmlValueTypeReference();
     else
         static_cast<QmlValueTypeCopy *>(w)->~QmlValueTypeCopy();
+}
+
+bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
+{
+    QV4::QmlValueTypeWrapper *lv = m->asQmlValueTypeWrapper();
+    assert(lv);
+
+    if (QV4::VariantObject *rv = other->asVariantObject())
+        return lv->isEqual(rv->data);
+
+    if (QV4::QmlValueTypeWrapper *v = other->asQmlValueTypeWrapper())
+        return lv->isEqual(v->toVariant());
+
+    return false;
 }
 
 bool QmlValueTypeWrapper::isEqual(const QVariant& value)

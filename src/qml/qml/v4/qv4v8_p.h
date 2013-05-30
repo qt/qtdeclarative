@@ -1239,12 +1239,6 @@ class V8EXPORT ObjectTemplate : public Template {
   bool HasExternalResource();
   void SetHasExternalResource(bool value);
 
-  /**
-   * Mark object instances of the template as using the user object
-   * comparison callback.
-   */
-  void MarkAsUseUserObjectComparison();
-
   struct Accessor {
       QV4::PersistentValue getter;
       QV4::PersistentValue setter;
@@ -1275,7 +1269,6 @@ class V8EXPORT ObjectTemplate : public Template {
   IndexedPropertyEnumerator m_indexedPropertyEnumerator;
   QV4::PersistentValue m_indexedPropertyData;
 
-  bool m_useUserComparison;
   private:
   ObjectTemplate();
  };
@@ -1369,9 +1362,6 @@ class V8EXPORT Isolate {
  */
 class V8EXPORT V8 {
  public:
-
-  /** Callback for user object comparisons */
-  static void SetUserObjectComparisonCallbackFunction(UserObjectComparisonCallback);
 
   /**
    * Enables the host application to receive a notification before a

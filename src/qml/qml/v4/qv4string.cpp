@@ -91,6 +91,7 @@ const ManagedVTable String::static_vtbl =
     deleteIndexedProperty,
     0 /*getLookup*/,
     0 /*setLookup*/,
+    Managed::isEqualTo,
     "String",
 };
 

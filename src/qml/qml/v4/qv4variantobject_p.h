@@ -77,6 +77,7 @@ public:
     int m_vmePropertyReferenceCount;
 
     static void destroy(Managed *that);
+    static bool isEqualTo(Managed *m, Managed *other);
 
 private:
     static const ManagedVTable static_vtbl;

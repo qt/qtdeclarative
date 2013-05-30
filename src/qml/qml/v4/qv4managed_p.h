@@ -103,6 +103,7 @@ struct ManagedVTable
     bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
     void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
     void (*setLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
+    bool (*isEqualTo)(Managed *m, Managed *other);
     const char *className;
 };
 
@@ -124,6 +125,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     deleteIndexedProperty,                      \
     getLookup,                                  \
     setLookup,                                  \
+    isEqualTo,                                  \
     #classname                                  \
 }
 
@@ -268,12 +270,16 @@ public:
     void setLookup(ExecutionContext *ctx, Lookup *l, const Value &v)
     { vtbl->setLookup(this, ctx, l, v); }
 
+    bool isEqualTo(Managed *other)
+    { return vtbl->isEqualTo(this, other); }
+
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
     static void getLookup(Managed *, ExecutionContext *context, Lookup *, Value *);
     static void setLookup(Managed *, ExecutionContext *ctx, Lookup *l, const Value &v);
+    static bool isEqualTo(Managed *m, Managed *other);
 
     uint internalType() const {
         return type;
@@ -292,9 +298,8 @@ public:
             uint strictMode : 1; // used by FunctionObject
             uint type : 8;
             mutable uint subtype : 3;
-            uint externalComparison : 1;
             uint bindingKeyFlag : 1;
-            uint unused : 11;
+            uint unused : 12;
         };
     };
 
