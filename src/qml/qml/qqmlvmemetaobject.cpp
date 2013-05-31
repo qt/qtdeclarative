@@ -1230,12 +1230,9 @@ void QQmlVMEMetaObject::mark()
     }
 }
 
-// see also: QV8GCCallback::garbageCollectorPrologueCallback()
 void QQmlVMEMetaObject::allocateVarPropertiesArray()
 {
     varProperties = v8::Array::New(metaData->varPropertyCount)->v4Value();
-    // ### FIXME
-//    varProperties.MakeWeak(static_cast<void*>(this), VarPropertiesWeakReferenceCallback);
     varPropertiesInitialized = true;
 }
 

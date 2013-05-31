@@ -1452,17 +1452,6 @@ Isolate *Isolate::GetCurrent()
 }
 
 
-void V8::AddGCPrologueCallback(GCPrologueCallback, GCType)
-{
-    // not required currently as we don't have weak Persistent references.
-    // not having them will lead to some leaks in QQmlVMEMetaObejct, but shouldn't matter otherwise
-}
-
-void V8::RemoveGCPrologueCallback(GCPrologueCallback)
-{
-    assert(!"RemoveGCPrologueCallback();");
-}
-
 Handle<Value> Context::GetCallingScriptData()
 {
     Q_UNIMPLEMENTED();

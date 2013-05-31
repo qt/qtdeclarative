@@ -224,27 +224,6 @@ class QQmlValueType;
 class QNetworkAccessManager;
 class QQmlContextData;
 
-class Q_AUTOTEST_EXPORT QV8GCCallback
-{
-private:
-    class ThreadData;
-public:
-    static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
-    static void registerGcPrologueCallback();
-
-    class Q_AUTOTEST_EXPORT Node {
-    public:
-        typedef void (*PrologueCallback)(Node *node);
-        Node(PrologueCallback callback);
-        ~Node();
-
-        QIntrusiveListNode node;
-        PrologueCallback prologueCallback;
-    };
-
-    static void addGcCallbackNode(Node *node);
-};
-
 class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
@@ -360,20 +339,6 @@ public:
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
     QObject *qtObjectFromJS(const QV4::Value &value);
-
-    void addRelationshipForGC(QObject *object, const QV4::PersistentValue &handle);
-    void addRelationshipForGC(QObject *object, QObject *other);
-
-    struct ThreadData {
-        ThreadData();
-        ~ThreadData();
-        bool gcPrologueCallbackRegistered;
-        QIntrusiveList<QV8GCCallback::Node, &QV8GCCallback::Node::node> gcCallbackNodes;
-    };
-
-    static bool hasThreadData();
-    static ThreadData* threadData();
-    static void ensurePerThreadIsolate();
 
     QV4::PersistentValue m_strongReferencer;
 

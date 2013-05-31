@@ -1357,44 +1357,6 @@ class V8EXPORT Isolate {
 };
 
 
-/**
- * Container class for static utility functions.
- */
-class V8EXPORT V8 {
- public:
-
-  /**
-   * Enables the host application to receive a notification before a
-   * garbage collection.  Allocations are not allowed in the
-   * callback function, you therefore cannot manipulate objects (set
-   * or delete properties for example) since it is possible such
-   * operations will result in the allocation of objects. It is possible
-   * to specify the GCType filter for your callback. But it is not possible to
-   * register the same callback function two times with different
-   * GCType filters.
-   */
-  static void AddGCPrologueCallback(
-      GCPrologueCallback callback, GCType gc_type_filter = kGCTypeAll);
-
-  /**
-   * This function removes callback which was installed by
-   * AddGCPrologueCallback function.
-   */
-  static void RemoveGCPrologueCallback(GCPrologueCallback callback);
-
-  /**
-   * Allows the host application to declare implicit references between
-   * the objects: if |parent| is alive, all |children| are alive too.
-   * After each garbage collection, all implicit references
-   * are removed.  It is intended to be used in the before-garbage-collection
-   * callback function.
-   */
-//  static void AddImplicitReferences(Persistent<Object> parent,
-//                                    Persistent<Value>* children,
-//                                    size_t length);
-
-};
-
 
 /**
  * A sandboxed execution context with its own set of built-in objects

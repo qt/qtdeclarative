@@ -95,13 +95,10 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
 
-    ensurePerThreadIsolate();
-
     m_v4Engine = new QV4::ExecutionEngine;
     v8::Isolate::SetEngine(m_v4Engine);
     m_v4Engine->publicEngine = q;
 
-    QV8GCCallback::registerGcPrologueCallback();
     m_strongReferencer = QV4::Value::fromObject(m_v4Engine->newObject());
 
     m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
@@ -594,60 +591,6 @@ QV4::WeakValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeS
         *shouldBeStrong = true;
         return 0;
     }
-}
-
-void QV8Engine::addRelationshipForGC(QObject *object, const QV4::PersistentValue &handle)
-{
-    if (!object || handle.isEmpty())
-        return;
-
-    bool handleShouldBeStrong = false;
-    QV4::WeakValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    if (handleShouldBeStrong) {
-        // ### FIXME
-//        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
-    } else if (!implicitOwner->isEmpty()) {
-        // ### FIXME
-        qWarning() << "Fix object ownership";
-//        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
-    }
-}
-
-void QV8Engine::addRelationshipForGC(QObject *object, QObject *other)
-{
-    if (!object || !other)
-        return;
-
-    bool handleShouldBeStrong = false;
-    QV4::WeakValue *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    QV4::WeakValue handle = QQmlData::get(other, true)->v8object;
-    if (handle.isEmpty()) // no JS data to keep alive.
-        return;
-    // ### FIXME
-    qWarning() << "Fix object ownership";
-//    else if (handleShouldBeStrong)
-//        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
-//    else if (!implicitOwner->IsEmpty())
-//        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
-}
-
-static QThreadStorage<QV8Engine::ThreadData*> perThreadEngineData;
-
-bool QV8Engine::hasThreadData()
-{
-    return perThreadEngineData.hasLocalData();
-}
-
-QV8Engine::ThreadData *QV8Engine::threadData()
-{
-    Q_ASSERT(perThreadEngineData.hasLocalData());
-    return perThreadEngineData.localData();
-}
-
-void QV8Engine::ensurePerThreadIsolate()
-{
-    if (!perThreadEngineData.hasLocalData())
-        perThreadEngineData.setLocalData(new ThreadData);
 }
 
 void QV8Engine::initQmlGlobalObject()
@@ -1165,70 +1108,6 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     number++;
     m_consoleCount.insert(key, number);
     return number;
-}
-
-void QV8GCCallback::registerGcPrologueCallback()
-{
-    QV8Engine::ThreadData *td = QV8Engine::threadData();
-    if (!td->gcPrologueCallbackRegistered) {
-        td->gcPrologueCallbackRegistered = true;
-        v8::V8::AddGCPrologueCallback(QV8GCCallback::garbageCollectorPrologueCallback, v8::kGCTypeMarkSweepCompact);
-    }
-}
-
-QV8GCCallback::Node::Node(PrologueCallback callback)
-    : prologueCallback(callback)
-{
-}
-
-QV8GCCallback::Node::~Node()
-{
-    node.remove();
-}
-
-/*
-   Ensure that each persistent handle is strong if it has CPP ownership
-   and has no implicitly JS owned object owner in its parent chain, and
-   weak otherwise.
-
-   Any weak handle whose parent object is still alive will have an implicit
-   reference (between the parent and the handle) added, so that it will
-   not be collected.
-
-   Note that this callback is registered only for kGCTypeMarkSweepCompact
-   collection cycles, as it is during collection cycles of that type
-   in which weak persistent handle callbacks are called when required.
- */
-void QV8GCCallback::garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags)
-{
-    if (!QV8Engine::hasThreadData())
-        return;
-
-    QV8Engine::ThreadData *td = QV8Engine::threadData();
-    QV8GCCallback::Node *currNode = td->gcCallbackNodes.first();
-
-    while (currNode) {
-        // The client which adds itself to the list is responsible
-        // for maintaining the correct implicit references in the
-        // specified callback.
-        currNode->prologueCallback(currNode);
-        currNode = td->gcCallbackNodes.next(currNode);
-    }
-}
-
-void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
-{
-    QV8Engine::ThreadData *td = QV8Engine::threadData();
-    td->gcCallbackNodes.insert(node);
-}
-
-QV8Engine::ThreadData::ThreadData()
-    : gcPrologueCallbackRegistered(false)
-{
-}
-
-QV8Engine::ThreadData::~ThreadData()
-{
 }
 
 QV4::Value QV8Engine::toString(const QString &string)
