@@ -269,8 +269,11 @@ struct Q_QML_EXPORT Value
     RegExpObject *asRegExpObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
-    VariantObject *asVariantObject() const;
     QObjectWrapper *asQObjectWrapper() const;
+
+    template<typename T>
+    T *as() const { Managed *m = asObject(); return m ? m->as<T>() : 0; }
+
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
 
@@ -541,11 +544,6 @@ inline ArrayObject *Value::asArrayObject() const
 inline ErrorObject *Value::asErrorObject() const
 {
     return isObject() ? managed()->asErrorObject() : 0;
-}
-
-inline VariantObject *Value::asVariantObject() const
-{
-    return isObject() ? managed()->asVariantObject() : 0;
 }
 
 inline QObjectWrapper *Value::asQObjectWrapper() const

@@ -77,9 +77,7 @@ struct Value;
 class RegExp;
 struct Lookup;
 struct ExecutionEngine;
-struct VariantObject;
 struct QObjectWrapper;
-struct QtObject;
 
 #define Q_MANAGED_CHECK \
     template <typename T> inline void qt_check_for_QMANAGED_macro(const T &_q_argument) const \
@@ -239,9 +237,6 @@ public:
 
     QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
     QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
-    VariantObject *asVariantObject() { return type == Type_QVariant ? reinterpret_cast<VariantObject *>(this) : 0; }
-
-    QtObject *asQtObject() { return type == Type_QtObject ? reinterpret_cast<QtObject *>(this) : 0; }
 
     bool isListType() const { return type == Type_QmlSequence; }
 

@@ -319,7 +319,7 @@ bool QJSValue::isCallable() const
 bool QJSValue::isVariant() const
 {
     Managed *m = d->value.asManaged();
-    return m ? m->asVariantObject() : 0;
+    return m ? m->as<QV4::VariantObject>() : 0;
 }
 
 /*!

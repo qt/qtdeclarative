@@ -75,6 +75,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
+DEFINE_MANAGED_VTABLE(QtObject);
+
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
@@ -86,6 +88,8 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     , m_platform(0)
     , m_application(0)
 {
+    vtbl = &static_vtbl;
+
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
@@ -1233,7 +1237,7 @@ Value QtObject::method_get_platform(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
-    QtObject *qt = o->asQtObject();
+    QtObject *qt = o->as<QtObject>();
     if (!qt)
         ctx->throwTypeError();
 
@@ -1250,7 +1254,7 @@ Value QtObject::method_get_application(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
-    QtObject *qt = o->asQtObject();
+    QtObject *qt = o->as<QtObject>();
     if (!qt)
         ctx->throwTypeError();
 

@@ -56,6 +56,7 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
     , m_vmePropertyReferenceCount(0)
 {
     type = Type_QVariant;
+    vtbl = &static_vtbl;
     prototype = engine->variantPrototype;
     if (isScarce())
         internalClass->engine->scarceResources.insert(this);
@@ -63,7 +64,7 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
 
 QVariant VariantObject::toVariant(const QV4::Value &v)
 {
-    VariantObject *o = v.asVariantObject();
+    VariantObject *o = v.as<QV4::VariantObject>();
     return o ? o->data : QVariant();
 }
 
@@ -83,10 +84,10 @@ void VariantObject::destroy(Managed *that)
 
 bool VariantObject::isEqualTo(Managed *m, Managed *other)
 {
-    QV4::VariantObject *lv = m->asVariantObject();
+    QV4::VariantObject *lv = m->as<QV4::VariantObject>();
     assert(lv);
 
-    if (QV4::VariantObject *rv = other->asVariantObject())
+    if (QV4::VariantObject *rv = other->as<QV4::VariantObject>())
         return lv->data == rv->data;
 
     if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
@@ -124,7 +125,7 @@ VariantPrototype::VariantPrototype(ExecutionEngine *engine)
 
 QV4::Value VariantPrototype::method_preserve(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.asVariantObject();
+    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o && o->isScarce())
         o->node.remove();
     return Value::undefinedValue();
@@ -132,7 +133,7 @@ QV4::Value VariantPrototype::method_preserve(SimpleCallContext *ctx)
 
 QV4::Value VariantPrototype::method_destroy(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.asVariantObject();
+    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o) {
         if (o->isScarce())
             o->node.remove();
@@ -143,7 +144,7 @@ QV4::Value VariantPrototype::method_destroy(SimpleCallContext *ctx)
 
 QV4::Value VariantPrototype::method_toString(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.asVariantObject();
+    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (!o)
         return Value::undefinedValue();
     QString result = o->data.toString();
@@ -154,7 +155,7 @@ QV4::Value VariantPrototype::method_toString(SimpleCallContext *ctx)
 
 QV4::Value VariantPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.asVariantObject();
+    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o) {
         QVariant v = o->data;
         switch (v.type()) {

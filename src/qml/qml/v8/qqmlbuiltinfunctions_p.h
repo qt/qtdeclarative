@@ -66,6 +66,7 @@ namespace QV4 {
 
 struct QtObject : Object
 {
+    Q_MANAGED
     QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
 
     static Value method_isQtObject(SimpleCallContext *ctx);

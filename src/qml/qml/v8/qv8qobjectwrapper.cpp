@@ -1418,7 +1418,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         QV4::Object *obj = actual->v4Value().asObject();
         QV8Engine *engine = obj->engine()->publicEngine->handle();
 
-        if (QV4::VariantObject *v = obj->asVariantObject()) {
+        if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
             if (engine->toVariant(actual->v4Value(), -1).userType() == conversionType)

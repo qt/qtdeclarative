@@ -66,6 +66,7 @@ namespace QV4 {
 
 struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 {
+    Q_MANAGED
 public:
     VariantObject(ExecutionEngine *engine, const QVariant &value);
 
@@ -78,9 +79,6 @@ public:
 
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
-
-private:
-    static const ManagedVTable static_vtbl;
 };
 
 struct QV4_JS_CLASS(VariantPrototype) : VariantObject
@@ -94,9 +92,6 @@ public:
     static Value method_destroy(SimpleCallContext *ctx);
     static Value method_toString(SimpleCallContext *ctx);
     static Value method_valueOf(SimpleCallContext *ctx);
-
-private:
-    static const QV4::ManagedVTable static_vtbl;
 };
 
 }

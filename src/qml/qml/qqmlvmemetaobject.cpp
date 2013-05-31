@@ -1018,7 +1018,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
     QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-    if (QV4::VariantObject *v = oldv.asVariantObject())
+    if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
         v->removeVmePropertyReference();
 
     QObject *valueObject = 0;
@@ -1027,7 +1027,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     if (QV4::Object *o = value.asObject()) {
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        if (QV4::VariantObject *v = o->asVariantObject()) {
+        if (QV4::VariantObject *v = o->as<QV4::VariantObject>()) {
             v->addVmePropertyReference();
         } else if (QV4::QObjectWrapper *wrapper = o->asQObjectWrapper()) {
             // We need to track this QObject to signal its deletion
@@ -1059,13 +1059,13 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
         QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-        if (QV4::VariantObject *v = oldv.asVariantObject())
+        if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
             v->removeVmePropertyReference();
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
         QV4::Value newv = QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
-        if (QV4::VariantObject *v = newv.asVariantObject())
+        if (QV4::VariantObject *v = newv.as<QV4::VariantObject>())
             v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.

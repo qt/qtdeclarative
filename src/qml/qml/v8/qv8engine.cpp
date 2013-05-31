@@ -134,7 +134,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
     if (value.isEmpty())
         return QVariant();
 
-    if (QV4::VariantObject *v = value.asVariantObject())
+    if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->data;
 
     if (typeHint == QVariant::Bool)
@@ -986,9 +986,9 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
-    if (value.asVariantObject() && name.endsWith('*')) {
+    if (value.as<QV4::VariantObject>() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = value.asVariantObject()->data;
+        QVariant &var = value.as<QV4::VariantObject>()->data;
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -998,7 +998,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             QV4::Object *proto = o->prototype;
             while (proto) {
                 bool canCast = false;
-                if (QV4::VariantObject *vo = proto->asVariantObject()) {
+                if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
                     const QVariant &v = vo->data;
                     canCast = (type == v.userType()) || (valueType && (valueType == v.userType()));
                 }
@@ -1068,7 +1068,7 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return d->toQDateTime();
     if (QV4::RegExpObject *re = value.asRegExpObject())
         return re->toQRegExp();
-    if (QV4::VariantObject *v = value.asVariantObject())
+    if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->data;
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
@@ -1128,7 +1128,7 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
         return 0;
 
 
-    if (QV4::VariantObject *v = value.asVariantObject()) {
+    if (QV4::VariantObject *v = value.as<QV4::VariantObject>()) {
         QVariant variant = v->data;
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
