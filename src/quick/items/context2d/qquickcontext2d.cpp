@@ -238,13 +238,14 @@ V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 class QV4_JS_CLASS(QQuickJSContext2D) : public QV4::Object
 {
+    Q_MANAGED
     QV4_ANNOTATE(staticInitClass true)
 public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
-        type = Type_QQuickJSContext2D;
+        type = Type_Object;
     }
     QQuickContext2D* context;
 
@@ -255,8 +256,6 @@ protected:
     {
         static_cast<QQuickJSContext2D *>(that)->~QQuickJSContext2D();
     }
-
-    static const QV4::ManagedVTable static_vtbl;
 };
 
 DEFINE_MANAGED_VTABLE(QQuickJSContext2D);
@@ -473,7 +472,7 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
 */
 static v8::Handle<v8::Value> ctx2d_canvas(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -490,7 +489,7 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Handle<v8::String>, const v8::Acce
 */
 static QV4::Value ctx2d_restore(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->popState();
@@ -503,7 +502,7 @@ static QV4::Value ctx2d_restore(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_reset(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->reset();
@@ -543,7 +542,7 @@ static QV4::Value ctx2d_reset(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_save(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->pushState();
@@ -569,7 +568,7 @@ static QV4::Value ctx2d_save(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_rotate(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 1)
@@ -593,7 +592,7 @@ static QV4::Value ctx2d_rotate(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_scale(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -637,7 +636,7 @@ static QV4::Value ctx2d_scale(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_setTransform(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -664,7 +663,7 @@ static QV4::Value ctx2d_setTransform(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_transform(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -690,7 +689,7 @@ static QV4::Value ctx2d_transform(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_translate(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -708,7 +707,7 @@ static QV4::Value ctx2d_translate(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_resetTransform(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->setTransform(1, 0, 0, 1, 0, 0);
@@ -723,7 +722,7 @@ static QV4::Value ctx2d_resetTransform(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_shear(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 2)
@@ -741,7 +740,7 @@ static QV4::Value ctx2d_shear(const v8::Arguments &args)
 */
 static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     return QV4::Value::fromDouble(r->context->state.globalAlpha);
@@ -749,7 +748,7 @@ static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Handle<v8::String>, const v8:
 
 static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     qreal globalAlpha = value->NumberValue();
@@ -791,7 +790,7 @@ static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
 */
 static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -802,7 +801,7 @@ static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Handle<v8::Strin
 
 static void ctx2d_globalCompositeOperation_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QString mode = value->v4Value().toQString();
@@ -841,7 +840,7 @@ static void ctx2d_globalCompositeOperation_set(v8::Handle<v8::String>, v8::Handl
  */
 static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -862,7 +861,7 @@ static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Handle<v8::String>, const v8::A
 
 static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -906,7 +905,7 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
  */
 static v8::Handle<v8::Value> ctx2d_fillRule(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
@@ -915,7 +914,7 @@ static v8::Handle<v8::Value> ctx2d_fillRule(v8::Handle<v8::String>, const v8::Ac
 
 static void ctx2d_fillRule_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     if ((value->IsString() && value->v4Value().toQString() == QStringLiteral("WindingFill"))
@@ -944,7 +943,7 @@ static void ctx2d_fillRule_set(v8::Handle<v8::String>, v8::Handle<v8::Value> val
  */
 v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -965,7 +964,7 @@ v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Handle<v8::String>, const v8::Access
 
 static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -1016,7 +1015,7 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
 
 static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1062,7 +1061,7 @@ static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
 
 static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1117,7 +1116,7 @@ static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
 
 static QV4::Value ctx2d_createConicalGradient(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1193,7 +1192,7 @@ static QV4::Value ctx2d_createConicalGradient(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1266,7 +1265,7 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
 */
 v8::Handle<v8::Value> ctx2d_lineCap(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1286,7 +1285,7 @@ v8::Handle<v8::Value> ctx2d_lineCap(v8::Handle<v8::String>, const v8::AccessorIn
 
 static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QString lineCap = value->v4Value().toQString();
@@ -1322,7 +1321,7 @@ static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> valu
 */
 v8::Handle<v8::Value> ctx2d_lineJoin(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1342,7 +1341,7 @@ v8::Handle<v8::Value> ctx2d_lineJoin(v8::Handle<v8::String>, const v8::AccessorI
 
 static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QString lineJoin = value->v4Value().toQString();
@@ -1368,7 +1367,7 @@ static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> val
  */
 v8::Handle<v8::Value> ctx2d_lineWidth(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1377,7 +1376,7 @@ v8::Handle<v8::Value> ctx2d_lineWidth(v8::Handle<v8::String>, const v8::Accessor
 
 static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     qreal w = value->NumberValue();
@@ -1395,7 +1394,7 @@ static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
  */
 v8::Handle<v8::Value> ctx2d_miterLimit(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1404,7 +1403,7 @@ v8::Handle<v8::Value> ctx2d_miterLimit(v8::Handle<v8::String>, const v8::Accesso
 
 static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     qreal ml = value->NumberValue();
@@ -1422,7 +1421,7 @@ static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> v
  */
 v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1431,7 +1430,7 @@ v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Handle<v8::String>, const v8::Accesso
 
 static void ctx2d_shadowBlur_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
     qreal blur = value->NumberValue();
 
@@ -1447,7 +1446,7 @@ static void ctx2d_shadowBlur_set(v8::Handle<v8::String>, v8::Handle<v8::Value> v
  */
 v8::Handle<v8::Value> ctx2d_shadowColor(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1458,7 +1457,7 @@ v8::Handle<v8::Value> ctx2d_shadowColor(v8::Handle<v8::String>, const v8::Access
 
 static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QColor color = qt_color_from_string(value);
@@ -1478,7 +1477,7 @@ static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
  */
 v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1487,7 +1486,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Handle<v8::String>, const v8::Acce
 
 static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     qreal offsetX = value->NumberValue();
@@ -1504,7 +1503,7 @@ static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value
  */
 v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1513,7 +1512,7 @@ v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Handle<v8::String>, const v8::Acce
 
 static void ctx2d_shadowOffsetY_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     qreal offsetY = value->NumberValue();
@@ -1525,14 +1524,14 @@ static void ctx2d_shadowOffsetY_set(v8::Handle<v8::String>, v8::Handle<v8::Value
 
 v8::Handle<v8::Value> ctx2d_path(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
     return r->context->m_v8path;
 }
 
 static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
@@ -1555,7 +1554,7 @@ static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
   */
 static QV4::Value ctx2d_clearRect(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1575,7 +1574,7 @@ static QV4::Value ctx2d_clearRect(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_fillRect(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4)
@@ -1595,7 +1594,7 @@ static QV4::Value ctx2d_fillRect(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_strokeRect(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4)
@@ -1614,7 +1613,7 @@ static QV4::Value ctx2d_strokeRect(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_arc(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() >= 5) {
@@ -1661,7 +1660,7 @@ static QV4::Value ctx2d_arc(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_arcTo(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 5) {
@@ -1687,7 +1686,7 @@ static QV4::Value ctx2d_arcTo(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_beginPath(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1717,7 +1716,7 @@ static QV4::Value ctx2d_beginPath(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_bezierCurveTo(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1764,7 +1763,7 @@ static QV4::Value ctx2d_bezierCurveTo(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_clip(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->clip();
@@ -1780,7 +1779,7 @@ static QV4::Value ctx2d_clip(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_closePath(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1800,7 +1799,7 @@ static QV4::Value ctx2d_closePath(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_fill(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r);
     r->context->fill();
     return args.ThisV4();
@@ -1813,7 +1812,7 @@ static QV4::Value ctx2d_fill(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_lineTo(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1837,7 +1836,7 @@ static QV4::Value ctx2d_lineTo(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_moveTo(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 2) {
@@ -1860,7 +1859,7 @@ static QV4::Value ctx2d_moveTo(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_quadraticCurveTo(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4) {
@@ -1885,7 +1884,7 @@ static QV4::Value ctx2d_quadraticCurveTo(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_rect(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 4)
@@ -1901,7 +1900,7 @@ static QV4::Value ctx2d_rect(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_roundedRect(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 6)
@@ -1924,7 +1923,7 @@ static QV4::Value ctx2d_roundedRect(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_ellipse(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
 
@@ -1942,7 +1941,7 @@ static QV4::Value ctx2d_ellipse(const v8::Arguments &args)
  */
 static QV4::Value ctx2d_text(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 3) {
@@ -1967,7 +1966,7 @@ static QV4::Value ctx2d_text(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_stroke(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     r->context->stroke();
@@ -1983,7 +1982,7 @@ static QV4::Value ctx2d_stroke(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_isPointInPath(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     bool pointInPath = false;
@@ -2022,7 +2021,7 @@ static QV4::Value ctx2d_caretBlinkRate(const v8::Arguments &args)
   */
 v8::Handle<v8::Value> ctx2d_font(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -2032,7 +2031,7 @@ v8::Handle<v8::Value> ctx2d_font(v8::Handle<v8::String>, const v8::AccessorInfo 
 
 static void ctx2d_font_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QString fs = value->v4Value().toQString();
@@ -2058,7 +2057,7 @@ static void ctx2d_font_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
   */
 v8::Handle<v8::Value> ctx2d_textAlign(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.textAlign) {
@@ -2080,7 +2079,7 @@ v8::Handle<v8::Value> ctx2d_textAlign(v8::Handle<v8::String>, const v8::Accessor
 
 static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
     QString textAlign = value->v4Value().toQString();
@@ -2121,7 +2120,7 @@ static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
   */
 v8::Handle<v8::Value> ctx2d_textBaseline(v8::Handle<v8::String>, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
@@ -2144,7 +2143,7 @@ v8::Handle<v8::Value> ctx2d_textBaseline(v8::Handle<v8::String>, const v8::Acces
 
 static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
     QString textBaseline = value->v4Value().toQString();
 
@@ -2177,7 +2176,7 @@ static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value>
   */
 static QV4::Value ctx2d_fillText(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 3) {
@@ -2200,7 +2199,7 @@ static QV4::Value ctx2d_fillText(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_strokeText(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 3)
@@ -2234,7 +2233,7 @@ static QV4::Value ctx2d_strokeText(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_measureText(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     if (args.Length() == 1) {
@@ -2308,7 +2307,7 @@ static QV4::Value ctx2d_measureText(const v8::Arguments &args)
 */
 static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE();
@@ -2559,7 +2558,7 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8
   */
 static QV4::Value ctx2d_createImageData(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE();
@@ -2598,7 +2597,7 @@ static QV4::Value ctx2d_createImageData(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_getImageData(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE();
@@ -2627,7 +2626,7 @@ static QV4::Value ctx2d_getImageData(const v8::Arguments &args)
   */
 static QV4::Value ctx2d_putImageData(const v8::Arguments &args)
 {
-    QQuickJSContext2D *r = args.This()->v4Value().asObject()->asQQuickJSContext2D();
+    QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
     if (args.Length() != 3 && args.Length() != 7)
         return QV4::Value::undefinedValue();

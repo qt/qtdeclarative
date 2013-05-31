@@ -648,7 +648,7 @@ void __qmljs_foreach_next_property_name(Value *result, const Value &foreach_iter
     assert(foreach_iterator.isObject());
 
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
-    assert(it->asForeachIteratorObject());
+    assert(it->as<ForEachIteratorObject>());
 
     *result = it->nextPropertyName();
 }

@@ -65,7 +65,6 @@ QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context
       v8(engine), readOnly(true), ownsContext(ownsContext),
       context(context), scopeObject(scopeObject)
 {
-    type = Type_QmlContext;
     vtbl = &static_vtbl;
 }
 

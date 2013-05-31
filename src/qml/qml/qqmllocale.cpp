@@ -56,19 +56,20 @@ QT_BEGIN_NAMESPACE
 
 class QV4_JS_CLASS(QQmlLocaleData) : public QV4::Object
 {
+    Q_MANAGED
     QV4_ANNOTATE(managedTypeName QmlLocale staticInitClass true)
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
-        type = Type_QmlLocale;
+        type = Type_Object;
     }
 
     QLocale locale;
 
     static QLocale &getThisLocale(QV4::SimpleCallContext *ctx) {
-        QQmlLocaleData *thisObject = ctx->thisObject.asObject()->asQmlLocale();
+        QQmlLocaleData *thisObject = ctx->thisObject.asObject()->as<QQmlLocaleData>();
         if (!thisObject)
             ctx->throwTypeError();
         return thisObject->locale;
@@ -109,24 +110,18 @@ private:
     {
         static_cast<QQmlLocaleData *>(that)->~QQmlLocaleData();
     }
-
-    static const QV4::ManagedVTable static_vtbl;
 };
 
 DEFINE_MANAGED_VTABLE(QQmlLocaleData);
 
 #define GET_LOCALE_DATA_RESOURCE(OBJECT) \
-    QQmlLocaleData *r = OBJECT.isObject() ? (OBJECT.asManaged()->asQmlLocale()) : 0; \
+    QQmlLocaleData *r = OBJECT.as<QQmlLocaleData>(); \
     if (!r) \
         V4THROW_ERROR("Not a valid Locale object")
 
 static bool isLocaleObject(const QV4::Value &val)
 {
-    QV4::Object *obj = val.asObject();
-    if (!obj)
-        return false;
-
-    return obj->asQmlLocale();
+    return val.as<QQmlLocaleData>();
 }
 
 //--------------

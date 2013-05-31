@@ -266,7 +266,6 @@ struct Q_QML_EXPORT Value
     NumberObject *asNumberObject() const;
     StringObject *asStringObject() const;
     DateObject *asDateObject() const;
-    RegExpObject *asRegExpObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     QObjectWrapper *asQObjectWrapper() const;
@@ -529,11 +528,6 @@ inline StringObject *Value::asStringObject() const
 inline DateObject *Value::asDateObject() const
 {
     return isObject() ? managed()->asDateObject() : 0;
-}
-
-inline RegExpObject *Value::asRegExpObject() const
-{
-    return isObject() ? managed()->asRegExpObject() : 0;
 }
 
 inline ArrayObject *Value::asArrayObject() const

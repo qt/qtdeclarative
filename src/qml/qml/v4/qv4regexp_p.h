@@ -93,6 +93,7 @@ public:
 
 class RegExp : public Managed
 {
+    Q_MANAGED
 public:
     static RegExp* create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
     ~RegExp();
@@ -108,7 +109,6 @@ public:
     int captureCount() const { return m_subPatternCount + 1; }
 
 protected:
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);

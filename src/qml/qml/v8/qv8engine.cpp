@@ -418,7 +418,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
     Q_ASSERT(value.isObject());
 
-    if (QV4::RegExpObject *re = value.asRegExpObject())
+    if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
         return re->toQRegExp();
     if (QV4::ArrayObject *a = value.asArrayObject()) {
         QVariantList rv;
@@ -921,7 +921,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             return true;
         } break;
     case QMetaType::QRegExp:
-        if (QV4::RegExpObject *r = value.asRegExpObject()) {
+        if (QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
             *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
@@ -1066,7 +1066,7 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return variantListFromJS(a, visitedObjects);
     if (QV4::DateObject *d = value.asDateObject())
         return d->toQDateTime();
-    if (QV4::RegExpObject *re = value.asRegExpObject())
+    if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
         return re->toQRegExp();
     if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->data;

@@ -80,7 +80,6 @@ QmlValueTypeWrapper::QmlValueTypeWrapper(QV8Engine *engine, ObjectType objectTyp
     : Object(QV8Engine::getV4(engine)), objectType(objectType)
 {
     v8 = engine;
-    Managed::type = Type_QmlValueTypeWrapper;
     vtbl = &static_vtbl;
 }
 

@@ -66,6 +66,7 @@ namespace QV4 {
 struct RegExp;
 
 struct RegExpObject: Object {
+    Q_MANAGED
     // needs to be compatible with the flags in qv4jsir_p.h
     enum Flags {
         RegExp_Global     = 0x01,
@@ -88,7 +89,6 @@ struct RegExpObject: Object {
     uint flags() const;
 
 protected:
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
 };

@@ -214,7 +214,7 @@ Value RegExpPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, V
 {
     Value r = argc > 0 ? argv[0] : Value::undefinedValue();
     Value f = argc > 1 ? argv[1] : Value::undefinedValue();
-    if (RegExpObject *re = r.asRegExpObject()) {
+    if (RegExpObject *re = r.as<RegExpObject>()) {
         if (!f.isUndefined())
             ctx->throwTypeError();
 
@@ -255,7 +255,7 @@ Value RegExpPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, V
 
 Value RegExpPrototype::ctor_method_call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
 {
-    if (argc > 0 && argv[0].asRegExpObject()) {
+    if (argc > 0 && argv[0].as<RegExpObject>()) {
         if (argc == 1 || argv[1].isUndefined())
             return argv[0];
     }
@@ -265,7 +265,7 @@ Value RegExpPrototype::ctor_method_call(Managed *that, ExecutionContext *ctx, co
 
 Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
-    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
@@ -314,7 +314,7 @@ Value RegExpPrototype::method_test(SimpleCallContext *ctx)
 
 Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
 {
-    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
@@ -323,11 +323,11 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
 
 Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
-    RegExpObject *r = ctx->thisObject.asRegExpObject();
+    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
-    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, ctx->arguments, ctx->argumentCount).asRegExpObject();
+    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, ctx->arguments, ctx->argumentCount).as<RegExpObject>();
 
     r->value = re->value;
     r->global = re->global;

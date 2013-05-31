@@ -48,9 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLocaleData;
-class QQuickJSContext2D;
-
 namespace QV4 {
 
 class MemoryManager;
@@ -67,14 +64,11 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
-struct RegExpObject;
 struct ErrorObject;
 struct ArgumentsObject;
 struct JSONObject;
-struct ForeachIteratorObject;
 struct Managed;
 struct Value;
-class RegExp;
 struct Lookup;
 struct ExecutionEngine;
 struct QObjectWrapper;
@@ -92,7 +86,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define Q_MANAGED \
     public: \
         Q_MANAGED_CHECK \
-        static const ManagedVTable static_vtbl;
+        static const QV4::ManagedVTable static_vtbl;
 
 
 struct ManagedVTable
@@ -183,27 +177,10 @@ public:
         Type_RegExp,
         Type_QObject,
 
-        // QML bindings
-        Type_QmlLocale,
-        Type_QQuickJSContext2D,
-
-        Type_QmlSequence,
-
-        // Wrapped QVariant
-        Type_QVariant,
-
-        // Qt Object
-        Type_QtObject,
-        Type_QmlContext,
-        Type_QmlTypeWrapper,
-        Type_QmlValueTypeWrapper,
-        Type_QmlListWrapper
+        Type_QmlSequence
     };
 
     ExecutionEngine *engine() const;
-
-    String *asString() { return reinterpret_cast<String *>(this); }
-    Object *asObject() { return reinterpret_cast<Object *>(this); }
 
     template <typename T>
     T *as() {
@@ -226,17 +203,11 @@ public:
     NumberObject *asNumberObject() { return type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
     StringObject *asStringObject() { return type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
     DateObject *asDateObject() { return type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
-    RegExpObject *asRegExpObject() { return type == Type_RegExpObject ? reinterpret_cast<RegExpObject *>(this) : 0; }
     ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
     JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
-    ForeachIteratorObject *asForeachIteratorObject() { return type == Type_ForeachIteratorObject ? reinterpret_cast<ForeachIteratorObject *>(this) : 0; }
-    RegExp *asRegExp() { return type == Type_RegExp ? reinterpret_cast<RegExp *>(this) : 0; }
     QObjectWrapper *asQObjectWrapper() { return type == Type_QObject ? reinterpret_cast<QObjectWrapper*>(this) : 0; }
 
-
-    QQmlLocaleData *asQmlLocale() { return type == Type_QmlLocale ? reinterpret_cast<QQmlLocaleData *>(this) : 0; }
-    QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
 
     bool isListType() const { return type == Type_QmlSequence; }
 

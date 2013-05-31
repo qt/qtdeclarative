@@ -268,9 +268,9 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     String *s = context->thisObject.toString(context);
 
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
-    RegExpObject *rx = regexp.asRegExpObject();
+    RegExpObject *rx = regexp.as<RegExpObject>();
     if (!rx)
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(context, &regexp, 1).asRegExpObject();
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(context, &regexp, 1).as<RegExpObject>();
 
     if (!rx)
         // ### CHECK
@@ -372,7 +372,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     int numStringMatches = 0;
 
     Value searchValue = ctx->argument(0);
-    RegExpObject *regExp = searchValue.asRegExpObject();
+    RegExpObject *regExp = searchValue.as<RegExpObject>();
     if (regExp) {
         uint offset = 0;
         while (true) {
@@ -456,10 +456,10 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
         string = ctx->thisObject.toString(ctx)->toQString();
 
     Value regExpValue = ctx->argument(0);
-    RegExpObject *regExp = regExpValue.asRegExpObject();
+    RegExpObject *regExp = regExpValue.as<RegExpObject>();
     if (!regExp) {
         regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, &regExpValue, 1);
-        regExp = regExpValue.asRegExpObject();
+        regExp = regExpValue.as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
     uint result = regExp->value->match(string, /*offset*/0, matchOffsets);
@@ -521,14 +521,14 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
     if (limit == 0)
         return result;
 
-    if (RegExpObject* re = separatorValue.asRegExpObject()) {
+    if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
         if (re->value->pattern().isEmpty()) {
             re = 0;
             separatorValue = Value::fromString(ctx, QString());
         }
     }
 
-    if (RegExpObject* re = separatorValue.asRegExpObject()) {
+    if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
         uint offset = 0;
         uint* matchOffsets = (uint*)alloca(re->value->captureCount() * 2 * sizeof(uint));
         while (true) {

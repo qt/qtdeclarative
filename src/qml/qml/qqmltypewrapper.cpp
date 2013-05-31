@@ -60,7 +60,6 @@ QmlTypeWrapper::QmlTypeWrapper(QV8Engine *engine)
     : Object(QV8Engine::getV4(engine)),
       v8(engine), mode(IncludeEnums), type(0), typeNamespace(0), importNamespace(0)
 {
-    Managed::type = Type_QmlTypeWrapper;
     vtbl = &static_vtbl;
 }
 

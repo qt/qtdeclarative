@@ -52,6 +52,7 @@
 #include "qv4runtime_p.h"
 #include "qv4v8_p.h"
 #include "qv4variantobject_p.h"
+#include "qv4regexpobject_p.h"
 
 /*!
   \since 5.0
@@ -959,7 +960,7 @@ bool QJSValue::isDate() const
 */
 bool QJSValue::isRegExp() const
 {
-    return d->value.asRegExpObject();
+    return d->value.as<RegExpObject>();
 }
 
 /*!

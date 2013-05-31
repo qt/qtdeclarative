@@ -202,7 +202,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         reserve(data, sizeof(quint32) + sizeof(double));
         push(data, valueheader(WorkerDate));
         push(data, d->value.asDouble());
-    } else if (QV4::RegExpObject *re = v.asRegExpObject()) {
+    } else if (QV4::RegExpObject *re = v.as<RegExpObject>()) {
         quint32 flags = re->flags();
         QString pattern = re->source();
         int length = pattern.length() + 1;

@@ -55,7 +55,6 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
     , ExecutionEngine::ScarceResourceData(value)
     , m_vmePropertyReferenceCount(0)
 {
-    type = Type_QVariant;
     vtbl = &static_vtbl;
     prototype = engine->variantPrototype;
     if (isScarce())

@@ -372,6 +372,7 @@ private:
 };
 
 struct ForEachIteratorObject: Object {
+    Q_MANAGED
     ObjectIterator it;
     ForEachIteratorObject(ExecutionContext *ctx, Object *o)
         : Object(ctx->engine), it(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
@@ -382,7 +383,6 @@ struct ForEachIteratorObject: Object {
     Value nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
-    static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
 };
 

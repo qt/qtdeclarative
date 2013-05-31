@@ -261,7 +261,7 @@ bool Value::IsStringObject() const
 
 bool Value::IsRegExp() const
 {
-    return ConstValuePtr(this)->asRegExpObject();
+    return ConstValuePtr(this)->as<RegExpObject>();
 }
 
 bool Value::IsError() const
