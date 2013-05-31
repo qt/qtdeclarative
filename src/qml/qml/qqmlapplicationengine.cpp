@@ -171,6 +171,10 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   \endlist
 
   The engine behavior can be further tweaked by using the inherited methods from QQmlEngine.
+
+  \note In the future QQmlApplicationEngine may automatically apply file selectors.
+  To ensure forwards compatibility, do not use folder names containing a '+' character in your QML file
+  structure.
 */
 
 /*!
