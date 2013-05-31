@@ -268,6 +268,7 @@ Property *Object::insertMember(String *s, PropertyAttributes attributes)
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
         Property *newMemberData = new Property[memberDataAlloc];
         memcpy(newMemberData, memberData, sizeof(Property)*idx);
+        memset(newMemberData + idx, 0, sizeof(Property)*(memberDataAlloc - idx));
         if (memberData != inlineProperties)
             delete [] memberData;
         memberData = newMemberData;
