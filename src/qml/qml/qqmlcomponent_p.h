@@ -55,7 +55,6 @@
 
 #include "qqmlcomponent.h"
 
-#include <private/qv8_p.h>
 #include "qqmlengine_p.h"
 #include "qqmltypeloader_p.h"
 #include <private/qbitfield_p.h>
@@ -91,7 +90,7 @@ public:
 
     QObject *beginCreate(QQmlContextData *);
     void completeCreate();
-    void initializeObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
+    void initializeObjectWithInitialProperties(const QV4::Value &qmlGlobal, const QV4::Value &valuemap, QObject *toCreate);
 
     QQmlTypeData *typeData;
     virtual void typeDataReady(QQmlTypeData *);

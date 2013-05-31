@@ -146,7 +146,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::Context2DStyleType:
             case QV8ObjectResource::Context2DPixelArrayType:
             case QV8ObjectResource::SignalHandlerType:
-            case QV8ObjectResource::IncubatorType:
             case QV8ObjectResource::VisualDataItemType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
