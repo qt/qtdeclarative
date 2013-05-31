@@ -480,7 +480,7 @@ static inline double ParseString(const QString &s)
 
     if (!error) {
         double t = MakeDate(MakeDay(year * yearSign, month, day), MakeTime(hour, minute, second, msec));
-        t += offset * offsetSign * 60 * 1000;
+        t -= offset * offsetSign * 60 * 1000;
         return t;
     }
 
