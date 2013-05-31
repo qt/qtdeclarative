@@ -97,7 +97,9 @@ public Q_SLOTS:
             }
         }
 
-        return QQmlV4Handle(v8::String::New(name.toUtf8())->v4Value());
+        QQmlEngine *engine = qmlEngine(this);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        return QQmlV4Handle(QV4::Value::fromString(v4->newString(name)));
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
