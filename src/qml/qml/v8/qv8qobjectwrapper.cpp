@@ -59,6 +59,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4variantobject_p.h>
+#include <private/qv4sequenceobject_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -513,7 +514,7 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
             if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
-                return engine->newValueType(object, property.coreIndex, valueType); // VariantReference value-type.
+                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType); // VariantReference value-type.
         }
 
         return engine->fromVariant(v);
@@ -521,13 +522,13 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
         Q_ASSERT(notifier == 0);
 
         if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
-            return engine->newValueType(object, property.coreIndex, valueType);
+            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType);
     } else {
         Q_ASSERT(notifier == 0);
 
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::Value retn = engine->newSequence(property.propType, object, property.coreIndex, &succeeded);
+        QV4::Value retn = QV4::SequencePrototype::newSequence(QV8Engine::getV4(engine), property.propType, object, property.coreIndex, &succeeded);
         if (succeeded)
             return retn;
     }

@@ -99,10 +99,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     v8::Isolate::SetEngine(m_v4Engine);
     m_v4Engine->publicEngine = q;
 
-    m_strongReferencer = QV4::Value::fromObject(m_v4Engine->newObject());
-
-    m_bindingFlagKey = QV4::Value::fromString(m_v4Engine->current, QStringLiteral("qml::binding"));
-
     m_qobjectWrapper.init(this);
     m_jsonWrapper.init(m_v4Engine);
 
@@ -367,22 +363,6 @@ const QStringHash<bool> &QV8Engine::illegalNames() const
     return m_illegalNames;
 }
 
-// Requires a handle scope
-QV4::Value QV8Engine::getOwnPropertyNames(const QV4::Value &o)
-{
-    if (!o.asObject())
-        return QV4::Value::fromObject(m_v4Engine->newArrayObject());
-    QV4::SimpleCallContext ctx;
-    ctx.initSimpleCallContext(m_v4Engine);
-    QV4::Value args = o;
-    ctx.arguments = &args;
-    ctx.argumentCount = 1;
-    m_v4Engine->pushContext(&ctx);
-    QV4::Value result = QV4::ObjectPrototype::method_getOwnPropertyNames(&ctx);
-    m_v4Engine->popContext();
-    return result;
-}
-
 QQmlContextData *QV8Engine::callingContext()
 {
     return QV4::QmlContextWrapper::callingContext(m_v4Engine);
@@ -487,43 +467,6 @@ void QV8Engine::gc()
 {
     m_v4Engine->memoryManager->runGC();
 }
-
-#ifdef QML_GLOBAL_HANDLE_DEBUGGING
-#include <QtCore/qthreadstorage.h>
-static QThreadStorage<QSet<void *> *> QV8Engine_activeHandles;
-
-void QV8Engine::registerHandle(void *handle)
-{
-    if (!handle) {
-        qWarning("Attempting to register a null handle");
-        return;
-    }
-
-    if (!QV8Engine_activeHandles.hasLocalData())
-        QV8Engine_activeHandles.setLocalData(new QSet<void *>);
-
-    if (QV8Engine_activeHandles.localData()->contains(handle)) {
-        qFatal("Handle %p already alive", handle);
-    } else {
-        QV8Engine_activeHandles.localData()->insert(handle);
-    }
-}
-
-void QV8Engine::releaseHandle(void *handle)
-{
-    if (!handle)
-        return;
-
-    if (!QV8Engine_activeHandles.hasLocalData())
-        QV8Engine_activeHandles.setLocalData(new QSet<void *>);
-
-    if (QV8Engine_activeHandles.localData()->contains(handle)) {
-        QV8Engine_activeHandles.localData()->remove(handle);
-    } else {
-        qFatal("Handle %p already dead", handle);
-    }
-}
-#endif
 
 struct QV8EngineRegistrationData
 {
@@ -1015,8 +958,8 @@ QVariant QV8Engine::variantFromJS(const QV4::Value &value,
         return v->data;
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
-    if (isValueType(value))
-        return toValueType(value);
+    if (QV4::QmlValueTypeWrapper *v = value.as<QV4::QmlValueTypeWrapper>())
+        return v->toVariant();
     return variantMapFromJS(value.asObject(), visitedObjects);
 }
 
@@ -1113,26 +1056,6 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
 QV4::Value QV8Engine::toString(const QString &string)
 {
     return QV4::Value::fromString(m_v4Engine->newString(string));
-}
-
-QV4::Value QV8Engine::newValueType(QObject *object, int property, QQmlValueType *type)
-{
-    return QV4::QmlValueTypeWrapper::create(this, object, property, type);
-}
-
-QV4::Value QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
-{
-    return QV4::QmlValueTypeWrapper::create(this, value, type);
-}
-
-bool QV8Engine::isValueType(const QV4::Value &value) const
-{
-    return value.isObject() ? value.objectValue()->as<QV4::QmlValueTypeWrapper>() : 0;
-}
-
-QVariant QV8Engine::toValueType(const QV4::Value &obj)
-{
-    return obj.isObject() ? obj.objectValue()->as<QV4::QmlValueTypeWrapper>()->toVariant() : QVariant();
 }
 
 QT_END_NAMESPACE

@@ -156,14 +156,7 @@ Value ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
     if (!O)
         context->throwTypeError();
 
-    ArrayObject *array = context->engine->newArrayObject();
-    ObjectIterator it(O, ObjectIterator::NoFlags);
-    while (1) {
-        Value v = it.nextPropertyNameAsString();
-        if (v.isNull())
-            break;
-        array->push_back(v);
-    }
+    ArrayObject *array = getOwnPropertyNames(context->engine, context->arguments[0]);
     return Value::fromObject(array);
 }
 
@@ -562,4 +555,22 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), pd, Attr_Data);
 
     return Value::fromObject(o);
+}
+
+
+ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
+{
+    ArrayObject *array = v4->newArrayObject();
+    Object *O = o.asObject();
+    if (!O)
+        return array;
+
+    ObjectIterator it(O, ObjectIterator::NoFlags);
+    while (1) {
+        Value v = it.nextPropertyNameAsString();
+        if (v.isNull())
+            break;
+        array->push_back(v);
+    }
+    return array;
 }

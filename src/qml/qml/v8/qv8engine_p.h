@@ -72,7 +72,6 @@
 
 #include "qv8objectresource_p.h"
 #include "qv8qobjectwrapper_p.h"
-#include <private/qv4sequenceobject_p.h>
 #include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
@@ -103,10 +102,6 @@ namespace QV4 {
 #define V4THROW_ERROR(string) \
     v8::Isolate::GetEngine()->current->throwError(QString::fromUtf8(string));
 
-#define V8THROW_TYPE(string) { \
-    v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
-    return v8::Handle<v8::Value>(); \
-}
 #define V4THROW_TYPE(string) \
     v8::Isolate::GetEngine()->current->throwError(QStringLiteral(string));
 
@@ -258,7 +253,6 @@ public:
 
     QQmlContextData *callingContext();
 
-    QV4::Value getOwnPropertyNames(const QV4::Value &o);
     void freezeObject(const QV4::Value &value);
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
@@ -273,15 +267,6 @@ public:
     // Return a JS string for the given QString \a string
     QV4::Value toString(const QString &string);
 
-    // Create a new value type object
-    QV4::Value newValueType(QObject *, int coreIndex, QQmlValueType *);
-    QV4::Value newValueType(const QVariant &, QQmlValueType *);
-    bool isValueType(const QV4::Value &value) const;
-    QVariant toValueType(const QV4::Value &obj);
-
-    // Create a new sequence type object
-    inline QV4::Value newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
-
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).
@@ -292,12 +277,6 @@ public:
 
     inline void collectGarbage() { gc(); }
     void gc();
-
-#ifdef QML_GLOBAL_HANDLE_DEBUGGING
-    // Used for handle debugging
-    static void registerHandle(void *);
-    static void releaseHandle(void *);
-#endif
 
     static QMutex *registrationMutex();
     static int registerExtension();
@@ -340,15 +319,11 @@ public:
 
     QObject *qtObjectFromJS(const QV4::Value &value);
 
-    QV4::PersistentValue m_strongReferencer;
-
 protected:
     QJSEngine* q;
     QQmlEngine *m_engine;
 
     QV4::ExecutionEngine *m_v4Engine;
-
-    QV4::PersistentValue m_bindingFlagKey;
 
     QV8QObjectWrapper m_qobjectWrapper;
     QV4JsonWrapper m_jsonWrapper;
@@ -408,11 +383,6 @@ QV4::Value QV8Engine::newQObject(QObject *object, const ObjectOwnership ownershi
         ddata->explicitIndestructibleSet = true;
     }
     return result;
-}
-
-QV4::Value QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
-{
-    return QV4::SequencePrototype::newSequence(m_v4Engine, sequenceType, object, property, succeeded);
 }
 
 QV8Engine::Deletable *QV8Engine::extensionData(int index) const

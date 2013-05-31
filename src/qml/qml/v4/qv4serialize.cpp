@@ -48,6 +48,8 @@
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4objectproto_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -262,7 +264,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         }
 
         // regular object
-        QV4::ArrayObject *properties = engine->getOwnPropertyNames(v).asArrayObject();
+        QV4::ArrayObject *properties = QV4::ObjectPrototype::getOwnPropertyNames(v4, v);
         quint32 length = properties->arrayLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));

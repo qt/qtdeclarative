@@ -92,6 +92,8 @@ struct ObjectPrototype: Object
 
     static void toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs);
     static Value fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
+
+    static ArrayObject *getOwnPropertyNames(ExecutionEngine *v4, const Value &o);
 };
 
 
