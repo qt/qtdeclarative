@@ -50,7 +50,6 @@ QT_BEGIN_NAMESPACE
 
 class QQmlLocaleData;
 class QQuickJSContext2D;
-template <typename, int> class QQmlSequence;
 
 namespace QV4 {
 
@@ -81,10 +80,22 @@ struct ExecutionEngine;
 struct VariantObject;
 struct QObjectWrapper;
 struct QtObject;
-struct QmlContextWrapper;
-struct QmlTypeWrapper;
-struct QmlValueTypeWrapper;
-struct QmlListWrapper;
+
+#define Q_MANAGED_CHECK \
+    template <typename T> inline void qt_check_for_QMANAGED_macro(const T &_q_argument) const \
+    { int i = qYouForgotTheQ_MANAGED_Macro(this, &_q_argument); i = i + 1; }
+
+template <typename T>
+inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
+
+template <typename T1, typename T2>
+inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
+
+#define Q_MANAGED \
+    public: \
+        Q_MANAGED_CHECK \
+        static const ManagedVTable static_vtbl;
+
 
 struct ManagedVTable
 {
@@ -178,13 +189,7 @@ public:
         Type_QmlLocale,
         Type_QQuickJSContext2D,
 
-        // QML sequence types
-        Type_QmlIntList,
-        Type_QmlRealList,
-        Type_QmlBoolList,
-        Type_QmlStringList,
-        Type_QmlQStringList,
-        Type_QmlUrlList,
+        Type_QmlSequence,
 
         // Wrapped QVariant
         Type_QVariant,
@@ -201,6 +206,22 @@ public:
 
     String *asString() { return reinterpret_cast<String *>(this); }
     Object *asObject() { return reinterpret_cast<Object *>(this); }
+
+    template <typename T>
+    T *as() {
+#if !defined(QT_NO_QOBJECT_CHECK)
+        reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
+#endif
+        return vtbl == &T::static_vtbl ? static_cast<T *>(this) : 0;
+    }
+    template <typename T>
+    const T *as() const {
+#if !defined(QT_NO_QOBJECT_CHECK)
+        reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(const_cast<Managed *>(this)));
+#endif
+        return vtbl == &T::static_vtbl ? static_cast<const T *>(this) : 0;
+    }
+
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
     FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
@@ -220,20 +241,9 @@ public:
     QQuickJSContext2D *asQQuickJSContext2D() { return type == Type_QQuickJSContext2D ? reinterpret_cast<QQuickJSContext2D *>(this) : 0; }
     VariantObject *asVariantObject() { return type == Type_QVariant ? reinterpret_cast<VariantObject *>(this) : 0; }
 
-    QQmlSequence<QList<int>, Type_QmlIntList> *asQmlIntList() { return type == Type_QmlIntList ? reinterpret_cast<QQmlSequence<QList<int>, Type_QmlIntList> *>(this): 0; }
-    QQmlSequence<QList<qreal>, Type_QmlRealList> *asQmlRealList() { return type == Type_QmlRealList ?  reinterpret_cast<QQmlSequence<QList<qreal>, Type_QmlRealList> *>(this): 0; }
-    QQmlSequence<QList<bool>, Type_QmlBoolList> *asQmlBoolList() { return type == Type_QmlBoolList ?  reinterpret_cast<QQmlSequence<QList<bool>, Type_QmlBoolList> *>(this): 0; }
-    QQmlSequence<QList<QString>, Type_QmlStringList> *asQmlStringList() { return type == Type_QmlStringList ? reinterpret_cast<QQmlSequence<QList<QString>, Type_QmlStringList> *>(this): 0; }
-    QQmlSequence<QStringList, Type_QmlQStringList> *asQmlQStringList() { return type == Type_QmlQStringList ? reinterpret_cast<QQmlSequence<QStringList, Type_QmlQStringList> *>(this): 0; }
-    QQmlSequence<QList<QUrl>, Type_QmlUrlList> *asQmlUrlList() { return type == Type_QmlUrlList ?  reinterpret_cast<QQmlSequence<QList<QUrl>, Type_QmlUrlList> *>(this): 0; }
-
     QtObject *asQtObject() { return type == Type_QtObject ? reinterpret_cast<QtObject *>(this) : 0; }
-    QmlContextWrapper *asQmlContext() { return type == Type_QmlContext ? reinterpret_cast<QmlContextWrapper *>(this) : 0; }
-    QmlTypeWrapper *asQmlTypeWrapper() { return type == Type_QmlTypeWrapper ? reinterpret_cast<QmlTypeWrapper *>(this) : 0; }
-    QmlValueTypeWrapper *asQmlValueTypeWrapper() { return type == Type_QmlValueTypeWrapper ? reinterpret_cast<QmlValueTypeWrapper *>(this) : 0; }
-    QmlListWrapper *asQmlListWrapper() { return type == Type_QmlListWrapper ? reinterpret_cast<QmlListWrapper *>(this) : 0; }
 
-    bool isListType() const { return type >= Type_QmlIntList && type <= Type_QmlUrlList; }
+    bool isListType() const { return type == Type_QmlSequence; }
 
     bool isArrayObject() const { return type == Type_ArrayObject; }
     bool isStringObject() const { return type == Type_StringObject; }

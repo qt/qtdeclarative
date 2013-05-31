@@ -168,13 +168,13 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return QVariant::fromValue(jsonObjectFromJS(value));
         } else if (QV4::QObjectWrapper *wrapper = object->asQObjectWrapper()) {
             return qVariantFromValue<QObject *>(wrapper->object);
-        } else if (QV4::QmlContextWrapper *wrapper = object->asQmlContext()) {
+        } else if (QV4::QmlContextWrapper *wrapper = object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
-        } else if (QV4::QmlTypeWrapper *w = object->asQmlTypeWrapper()) {
+        } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
             return w->toVariant();
-        } else if (QV4::QmlValueTypeWrapper *v = object->asQmlValueTypeWrapper()) {
+        } else if (QV4::QmlValueTypeWrapper *v = object->as<QV4::QmlValueTypeWrapper>()) {
             return v->toVariant();
-        } else if (QV4::QmlListWrapper *l = object->asQmlListWrapper()) {
+        } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
         } else if (object->isListType())
             return QV4::SequencePrototype::toVariant(object);
@@ -1248,12 +1248,12 @@ QV4::Value QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
 
 bool QV8Engine::isValueType(const QV4::Value &value) const
 {
-    return value.isObject() ? value.objectValue()->asQmlValueTypeWrapper() : 0;
+    return value.isObject() ? value.objectValue()->as<QV4::QmlValueTypeWrapper>() : 0;
 }
 
 QVariant QV8Engine::toValueType(const QV4::Value &obj)
 {
-    return obj.isObject() ? obj.objectValue()->asQmlValueTypeWrapper()->toVariant() : QVariant();
+    return obj.isObject() ? obj.objectValue()->as<QV4::QmlValueTypeWrapper>()->toVariant() : QVariant();
 }
 
 QT_END_NAMESPACE

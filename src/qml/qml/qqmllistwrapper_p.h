@@ -68,6 +68,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
+    Q_MANAGED
 protected:
     QmlListWrapper(QV8Engine *engine);
     ~QmlListWrapper();
@@ -90,7 +91,6 @@ private:
     QQmlListProperty<QObject> property;
     int propertyType;
 
-    static const ManagedVTable static_vtbl;
 };
 
 }

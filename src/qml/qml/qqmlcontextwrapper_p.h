@@ -66,6 +66,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
+    Q_MANAGED
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
 
@@ -92,9 +93,19 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     QQmlGuardedContextData context;
     QQmlGuard<QObject> scopeObject;
+};
 
-private:
-    const static ManagedVTable static_vtbl;
+struct QmlContextNullWrapper : QmlContextWrapper
+{
+    Q_MANAGED
+    QmlContextNullWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false)
+        : QmlContextWrapper(engine, context, scopeObject, ownsContext)
+    {
+        vtbl = &static_vtbl;
+    }
+
+    using Object::get;
+    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
 };
 
 }

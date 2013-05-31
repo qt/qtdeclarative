@@ -620,7 +620,7 @@ void tst_qqmlecmascript::methods()
 void tst_qqmlecmascript::bindingLoop()
 {
     QQmlComponent component(&engine, testFileUrl("bindingLoop.qml"));
-    QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
+    QString warning = component.url().toString() + ":5:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -859,7 +859,7 @@ void tst_qqmlecmascript::deferredPropertiesErrors()
     QVERIFY(object->objectProperty() == 0);
     QVERIFY(object->objectProperty2() == 0);
 
-    QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QObject*";
+    QString warning = component.url().toString() + ":6:21: Unable to assign [undefined] to QObject*";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     qmlExecuteDeferred(object);

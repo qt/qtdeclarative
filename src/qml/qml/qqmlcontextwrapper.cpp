@@ -55,25 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-
-struct QmlContextNullWrapper : QmlContextWrapper
-{
-    QmlContextNullWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false)
-        : QmlContextWrapper(engine, context, scopeObject, ownsContext)
-    {
-        vtbl = &static_vtbl;
-    }
-
-    using Object::get;
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
-
-private:
-    const static ManagedVTable static_vtbl;
-};
-
-}
-
 using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(QmlContextWrapper);
@@ -123,14 +104,14 @@ QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
     if (!qmlglobal)
         return 0;
 
-    QmlContextWrapper *c = qmlglobal->asQmlContext();
+    QmlContextWrapper *c = qmlglobal->as<QmlContextWrapper>();
     return c ? c->getContext() : 0;
 }
 
 QQmlContextData *QmlContextWrapper::getContext(const Value &value)
 {
     Object *o = value.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    QmlContextWrapper *c = o ? o->as<QmlContextWrapper>() : 0;
     if (!c)
         return 0;
 
@@ -140,7 +121,7 @@ QQmlContextData *QmlContextWrapper::getContext(const Value &value)
 void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 {
     Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->asQmlContext() : 0;
+    QmlContextWrapper *c = o ? o->as<QmlContextWrapper>() : 0;
     assert(c);
     c->ownsContext = true;
 }
@@ -148,7 +129,7 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 
 Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QmlContextWrapper *resource = m->asQmlContext();
+    QmlContextWrapper *resource = m->as<QmlContextWrapper>();
     if (!resource)
         ctx->throwTypeError();
 
@@ -284,7 +265,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
 void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QmlContextWrapper *wrapper = m->asQmlContext();
+    QmlContextWrapper *wrapper = m->as<QmlContextWrapper>();
     if (!wrapper)
         ctx->throwTypeError();
 
@@ -350,7 +331,7 @@ void QmlContextWrapper::destroy(Managed *that)
 
 void QmlContextNullWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QmlContextWrapper *w = m->asQmlContext();
+    QmlContextWrapper *w = m->as<QmlContextWrapper>();
     if (w && w->readOnly) {
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');

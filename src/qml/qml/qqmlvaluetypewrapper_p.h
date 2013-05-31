@@ -68,6 +68,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
+    Q_MANAGED
 protected:
     enum ObjectType { Reference, Copy };
     QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
@@ -92,9 +93,6 @@ public:
     QV8Engine *v8;
     ObjectType objectType;
     mutable QQmlValueType *type;
-
-private:
-    const static ManagedVTable static_vtbl;
 
     static void initProto(ExecutionEngine *v4);
     static PersistentValue proto;

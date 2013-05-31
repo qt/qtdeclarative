@@ -181,7 +181,7 @@ QVariant QmlValueTypeWrapper::toVariant() const
 
 void QmlValueTypeWrapper::destroy(Managed *that)
 {
-    QmlValueTypeWrapper *w = that->asQmlValueTypeWrapper();
+    QmlValueTypeWrapper *w = that->as<QmlValueTypeWrapper>();
     assert(w);
     if (w->objectType == Reference)
         static_cast<QmlValueTypeReference *>(w)->~QmlValueTypeReference();
@@ -191,13 +191,13 @@ void QmlValueTypeWrapper::destroy(Managed *that)
 
 bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
 {
-    QV4::QmlValueTypeWrapper *lv = m->asQmlValueTypeWrapper();
+    QV4::QmlValueTypeWrapper *lv = m->as<QmlValueTypeWrapper>();
     assert(lv);
 
     if (QV4::VariantObject *rv = other->asVariantObject())
         return lv->isEqual(rv->data);
 
-    if (QV4::QmlValueTypeWrapper *v = other->asQmlValueTypeWrapper())
+    if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
         return lv->isEqual(v->toVariant());
 
     return false;
@@ -227,7 +227,7 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
-    QmlValueTypeWrapper *w = o->asQmlValueTypeWrapper();
+    QmlValueTypeWrapper *w = o->as<QmlValueTypeWrapper>();
     if (!w)
         ctx->throwTypeError();
 
@@ -248,7 +248,7 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
 
 Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QmlValueTypeWrapper *r = m->asQmlValueTypeWrapper();
+    QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     if (!r)
         ctx->throwTypeError();
 
@@ -311,7 +311,7 @@ Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
 
 void QmlValueTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QmlValueTypeWrapper *r = m->asQmlValueTypeWrapper();
+    QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     if (!r)
         ctx->throwTypeError();
 

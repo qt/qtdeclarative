@@ -100,7 +100,7 @@ QVariant QmlListWrapper::toVariant() const
 
 Value QmlListWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QmlListWrapper *w = m->asQmlListWrapper();
+    QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
         ctx->throwTypeError();
 
@@ -114,7 +114,7 @@ Value QmlListWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
 
 Value QmlListWrapper::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    QmlListWrapper *w = m->asQmlListWrapper();
+    QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
         ctx->throwTypeError();
 
@@ -136,7 +136,7 @@ void QmlListWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
 
 void QmlListWrapper::destroy(Managed *that)
 {
-    QmlListWrapper *w = that->asQmlListWrapper();
+    QmlListWrapper *w = that->as<QmlListWrapper>();
     w->~QmlListWrapper();
 }
 

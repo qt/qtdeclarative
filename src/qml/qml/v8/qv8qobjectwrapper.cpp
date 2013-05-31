@@ -52,6 +52,7 @@
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 
@@ -1435,7 +1436,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
             }
         }
 
-        if (QV4::QmlValueTypeWrapper *w = obj->asQmlValueTypeWrapper()) {
+        if (QV4::QmlValueTypeWrapper *w = obj->as<QV4::QmlValueTypeWrapper>()) {
             if (engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
                 return 0;
             return 10;

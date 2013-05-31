@@ -68,6 +68,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
+    Q_MANAGED
 private:
     QmlTypeWrapper(QV8Engine *engine);
     ~QmlTypeWrapper();
@@ -93,8 +94,6 @@ private:
     QQmlType *type;
     QQmlTypeNameCache *typeNamespace;
     const void *importNamespace;
-
-    const static ManagedVTable static_vtbl;
 };
 
 }

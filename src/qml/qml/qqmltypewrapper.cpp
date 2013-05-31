@@ -117,7 +117,7 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, co
 
 Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QmlTypeWrapper *w = m->asQmlTypeWrapper();
+    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     if (!w)
         ctx->throwTypeError();
 
@@ -229,7 +229,7 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
 
 void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
 {
-    QmlTypeWrapper *w = m->asQmlTypeWrapper();
+    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     if (!w)
         ctx->throwTypeError();
 

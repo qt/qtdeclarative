@@ -155,9 +155,10 @@ template <> bool convertValueToElement(const QV4::Value &value)
     return value.toBoolean();
 }
 
-template <typename Container, int ManagedType>
+template <typename Container>
 class QQmlSequence : public QQmlSequenceBase
 {
+    Q_MANAGED
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
         : QQmlSequenceBase(engine)
@@ -166,7 +167,7 @@ public:
         , m_propertyIndex(-1)
         , m_isReference(false)
     {
-        type = ManagedType;
+        type = Type_QmlSequence;
         vtbl = &static_vtbl;
         prototype = engine->sequencePrototype;
         initClass(engine);
@@ -178,7 +179,7 @@ public:
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
-        type = ManagedType;
+        type = Type_QmlSequence;
         vtbl = &static_vtbl;
         prototype = engine->sequencePrototype;
         loadReference();
@@ -432,38 +433,36 @@ private:
     bool m_isReference;
 
     static QV4::Value getIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerGetIndexed(ctx, index, hasProperty); }
+    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(ctx, index, hasProperty); }
     static void putIndexed(Managed *that, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
-    { static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerPutIndexed(ctx, index, value); }
+    { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(ctx, index, value); }
     static QV4::PropertyAttributes queryIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerQueryIndexed(ctx, index); }
+    { return static_cast<QQmlSequence<Container> *>(that)->containerQueryIndexed(ctx, index); }
     static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlSequence<Container, ManagedType> *>(that)->containerDeleteIndexedProperty(ctx, index); }
+    { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(ctx, index); }
 
     static void destroy(Managed *that)
     {
-        static_cast<QQmlSequence<Container, ManagedType> *>(that)->~QQmlSequence<Container, ManagedType>();
+        static_cast<QQmlSequence<Container> *>(that)->~QQmlSequence<Container>();
     }
-
-    static const QV4::ManagedVTable static_vtbl;
 };
 
-typedef QQmlSequence<QStringList, QV4::Managed::Type_QmlQStringList> QQmlQStringList;
+typedef QQmlSequence<QStringList> QQmlQStringList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlQStringList);
-typedef QQmlSequence<QList<QString>, QV4::Managed::Type_QmlStringList> QQmlStringList;
+typedef QQmlSequence<QList<QString> > QQmlStringList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlStringList);
-typedef QQmlSequence<QList<int>, QV4::Managed::Type_QmlIntList> QQmlIntList;
+typedef QQmlSequence<QList<int> > QQmlIntList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlIntList);
-typedef QQmlSequence<QList<QUrl>, QV4::Managed::Type_QmlUrlList> QQmlUrlList;
+typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlUrlList);
-typedef QQmlSequence<QList<bool>, QV4::Managed::Type_QmlBoolList> QQmlBoolList;
+typedef QQmlSequence<QList<bool> > QQmlBoolList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlBoolList);
-typedef QQmlSequence<QList<qreal>, QV4::Managed::Type_QmlRealList> QQmlRealList;
+typedef QQmlSequence<QList<qreal> > QQmlRealList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlRealList);
 
@@ -482,17 +481,17 @@ QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
-    if (ctx->argumentCount < 2) {
-#define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-        case QV4::Managed::Type_Qml##SequenceElementTypeName##List: o->asQml##SequenceElementTypeName##List()->sort(ctx); break;
+    if (ctx->argumentCount >= 2)
+        return ctx->thisObject;
 
-        switch (o->internalType()) {
-            FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
-            default: break;
-        }
+#define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
+        if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
+            s->sort(ctx); \
+        } else
+
+        FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    }
     return ctx->thisObject;
 }
 
@@ -502,14 +501,14 @@ QV4::Value QQmlSequenceBase::method_get_length(QV4::SimpleCallContext* ctx) QV4_
     if (!o)
         ctx->throwTypeError();
 #define CALL_LENGTH_GETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: return o->asQml##SequenceElementTypeName##List()->lengthGetter(ctx);
+    if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
+        return s->lengthGetter(ctx); \
+    } else
 
-    switch (o->internalType()) {
-        FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_GETTER)
-        default: QV4::Value::undefinedValue();
-    }
-
+    FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_GETTER)
 #undef CALL_LENGTH_GETTER
+
+    return QV4::Value::undefinedValue();
 }
 
 QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
@@ -518,12 +517,11 @@ QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
     if (!o)
         ctx->throwTypeError();
 #define CALL_LENGTH_SETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    case QV4::Managed::Type_Qml##SequenceElementTypeName##List: o->asQml##SequenceElementTypeName##List()->lengthSetter(ctx); break;
+    if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
+        s->lengthSetter(ctx); \
+    } else
 
-    switch (o->internalType()) {
-        FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_SETTER)
-        default: break;
-    }
+    FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_SETTER)
 #undef CALL_LENGTH_SETTER
 
     return QV4::Value::undefinedValue();
@@ -576,7 +574,7 @@ QV4::Value SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QV
 #undef NEW_COPY_SEQUENCE
 
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
-    if (QQml##ElementTypeName##List *list = object->asQml##ElementTypeName##List()) \
+    if (QQml##ElementTypeName##List *list = object->as<QQml##ElementTypeName##List>()) \
         return list->toVariant(); \
     else
 
@@ -606,13 +604,14 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
 #undef SEQUENCE_TO_VARIANT
 
 #define MAP_META_TYPE(ElementType, ElementTypeName, SequenceType, unused) \
-    case QV4::Managed::Type_Qml##ElementTypeName##List: return qMetaTypeId<SequenceType>();
+    if (object->as<QQml##ElementTypeName##List>()) { \
+        return qMetaTypeId<SequenceType>(); \
+    } else
 
 int SequencePrototype::metaTypeForSequence(QV4::Object *object)
 {
-    switch (object->internalType()) {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
-    default:
+    /*else*/ {
         return -1;
     }
 }
