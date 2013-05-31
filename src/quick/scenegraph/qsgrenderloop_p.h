@@ -51,8 +51,10 @@ class QQuickWindow;
 class QSGContext;
 class QAnimationDriver;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop
+class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
 {
+    Q_OBJECT
+
 public:
     virtual ~QSGRenderLoop();
 
@@ -76,6 +78,11 @@ public:
     // ### make this less of a singleton
     static QSGRenderLoop *instance();
     static void setInstance(QSGRenderLoop *instance);
+
+    virtual bool interleaveIncubation() const { return false; }
+
+signals:
+    void timeToIncubate();
 
 private:
     static QSGRenderLoop *s_instance;

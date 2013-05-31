@@ -67,7 +67,7 @@ class QSGContext;
 class QAnimationDriver;
 class QOpenGLContext;
 
-class DesignerWindowManager : public QObject, public QSGRenderLoop
+class DesignerWindowManager : public QSGRenderLoop
 {
     Q_OBJECT
 public:

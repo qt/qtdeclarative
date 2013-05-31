@@ -82,7 +82,7 @@ QSGRenderLoop::~QSGRenderLoop()
 {
 }
 
-class QSGGuiThreadRenderLoop : public QObject, public QSGRenderLoop
+class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
 public:

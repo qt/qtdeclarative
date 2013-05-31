@@ -18,3 +18,6 @@ qmldir.files = TextBalloonPlugin/qmldir
 qmldir.path = $$[QT_INSTALL_EXAMPLES]/quick/customitems/painteditem/TextBalloonPlugin
 
 INSTALLS += qmldir target
+
+OTHER_FILES += \
+    textballoons.qml

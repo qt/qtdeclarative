@@ -89,44 +89,49 @@ void QQuickWindowPrivate::updateFocusItemTransform()
 #endif
 }
 
-
 class QQuickWindowIncubationController : public QObject, public QQmlIncubationController
 {
     Q_OBJECT
 
 public:
-    QQuickWindowIncubationController(const QQuickWindow *window)
-        : m_window(QQuickWindowPrivate::get(const_cast<QQuickWindow *>(window)))
+    QQuickWindowIncubationController(QSGRenderLoop *loop)
+        : m_renderLoop(loop), m_timer(0)
     {
         // Allow incubation for 1/3 of a frame.
         m_incubation_time = qMax(1, int(1000 / QGuiApplication::primaryScreen()->refreshRate()) / 3);
 
-        m_animation_driver = m_window->windowManager->animationDriver();
+        m_animation_driver = m_renderLoop->animationDriver();
         if (m_animation_driver) {
             connect(m_animation_driver, SIGNAL(stopped()), this, SLOT(animationStopped()));
-            connect(window, SIGNAL(frameSwapped()), this, SLOT(incubate()));
+            connect(m_renderLoop, SIGNAL(timeToIncubate()), this, SLOT(incubate()));
         }
     }
 
 protected:
-    virtual bool event(QEvent *e)
+    void timerEvent(QTimerEvent *e)
     {
-        if (e->type() == QEvent::User) {
-            incubate();
-            return true;
+        killTimer(m_timer);
+        m_timer = 0;
+        incubate();
+    }
+
+    void incubateAgain() {
+        if (m_timer == 0) {
+            // Wait for a while before processing the next batch. Using a
+            // timer to avoid starvation of system events.
+            m_timer = startTimer(m_incubation_time);
         }
-        return QObject::event(e);
     }
 
 public slots:
     void incubate() {
         if (incubatingObjectCount()) {
-            if (m_animation_driver && m_animation_driver->isRunning()) {
+            if (m_renderLoop->interleaveIncubation()) {
                 incubateFor(m_incubation_time);
             } else {
                 incubateFor(m_incubation_time * 2);
                 if (incubatingObjectCount())
-                    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+                    incubateAgain();
             }
         }
     }
@@ -136,14 +141,15 @@ public slots:
 protected:
     virtual void incubatingObjectCountChanged(int count)
     {
-        if (count && (!m_animation_driver || !m_animation_driver->isRunning()))
-            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+        if (count && !m_renderLoop->interleaveIncubation())
+            incubateAgain();
     }
 
 private:
-    QQuickWindowPrivate *m_window;
+    QSGRenderLoop *m_renderLoop;
     int m_incubation_time;
     QAnimationDriver *m_animation_driver;
+    int m_timer;
 };
 
 #include "qquickwindow.moc"
@@ -349,6 +355,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , persistentGLContext(true)
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
+    , componentCompleted(true)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -2779,7 +2786,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     Q_D(const QQuickWindow);
 
     if (!d->incubationController)
-        d->incubationController = new QQuickWindowIncubationController(this);
+        d->incubationController = new QQuickWindowIncubationController(d->windowManager);
     return d->incubationController;
 }
 
