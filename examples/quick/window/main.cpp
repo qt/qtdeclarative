@@ -41,6 +41,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
+#include <QtQuick/QQuickWindow>
 #include <QtCore/QUrl>
 #include <QDebug>
 
@@ -49,6 +50,7 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QQmlEngine engine;
     QQmlComponent component(&engine);
+    QQuickWindow::setDefaultAlphaBuffer(true);
     component.loadUrl(QUrl("qrc:///window/window.qml"));
     if ( component.isReady() )
         component.create();

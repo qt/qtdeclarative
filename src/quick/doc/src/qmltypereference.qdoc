@@ -236,11 +236,11 @@ Animation paths
 
 Models And Model Data
 \list
-\li \l {QtQuick2::ListModel}{ListModel} - Defines a list of data
-\li \l {QtQuick2::ListElement}{ListElement} - Defines a data item in a \l {QtQuick2::ListModel}{ListModel}
+\li \l {QtQml2::ListModel}{ListModel} - Defines a list of data
+\li \l {QtQml2::ListElement}{ListElement} - Defines a data item in a \l {QtQml2::ListModel}{ListModel}
 \li \l {VisualItemModel} - Contains items that already defines its own visual delegate
 \li \l {VisualDataModel} - Encapsulates a model and a delegate
-\li \l {VisualDataGroup} -Encapsulates a filtered set of visual data items
+\li \l {VisualDataGroup} - Encapsulates a filtered set of visual data items
 \li \l {XmlListModel} - Specifies a model using XPath expressions
 \li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
 \endlist

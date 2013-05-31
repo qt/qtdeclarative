@@ -3,6 +3,8 @@ TARGET  = dialogplugin
 TARGETPATH = QtQuick/Dialogs
 IMPORT_VERSION = 1.0
 
+QMAKE_DOCS = $$PWD/doc/qtquickdialogs.qdocconf
+
 SOURCES += \
     qquickabstractfiledialog.cpp \
     qquickplatformfiledialog.cpp \

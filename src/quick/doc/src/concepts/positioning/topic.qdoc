@@ -34,7 +34,7 @@ Visual items in QML can be positioned in a variety of ways.  The most important
 positioning-related concept is that of anchoring, a form of relative
 positioning where items can be anchored (or attached) to each other at certain
 boundaries.  Other positioning concepts include absolute positioning,
-positioning with coordinate bindings, and layouts.
+positioning with coordinate bindings, positioners, and layouts.
 
 
 \section1 Manual Positioning
@@ -134,21 +134,20 @@ positioning, whereas a "contaminated" anchor layout is one which uses both
 anchoring and bindings (either on position-related [x,y] properties or on
 dimension-related [width,height] properties) to determine the position.
 
+\section1 Positioners
+
+Qt Quick also provides some built-in positioner items. For many use cases, the best
+positioner to use is a simple grid, row, or column, and Qt Quick provides items which
+will position children in these formations in the most efficient manner possible.
+See the documentation on \l{qtquick-positioning-layouts.html}{item positioners types}
+for more information about utilizing pre-defined positioners.
+
 \section1 Layouts
 
-Qt Quick also provides some built-in layout items.  For many use cases, the
-best layout to use is a simple grid, row, or column, and Qt Quick provides
-items which will layout children in these formations in the most efficient
-manner possible.
-
-There are many well-known layouts which work well in user-interfaces, such as
-grids and lists, rows and columns.  Qt Quick supports these sort of pre-defined
-layouts, which can often be more performant to draw than anchor or
-binding-based layouts.  See the documentation on
-\l{qtquick-positioning-layouts.html}{layout types} for more
-information about utilizing pre-defined layouts.
-
-
+From Qt 5.1, the module \l {Qt Quick Layouts} can also be used to arrange Qt Quick
+items in a user interface. Unlike positioners, the types in Qt Quick Layouts manage
+both the positions and sizes of items in a declarative interface. They are well
+suited for resizable user interfaces.
 
 \section1 Right-To-Left Support
 

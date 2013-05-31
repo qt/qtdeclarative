@@ -219,6 +219,8 @@ public:
 
     mutable QQuickWindowIncubationController *incubationController;
 
+    static bool defaultAlphaBuffer;
+
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
 
     // data property

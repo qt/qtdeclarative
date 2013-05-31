@@ -54,6 +54,7 @@
 
 #include <QGuiApplication>
 #include <QOpenGLContext>
+#include <QQuickWindow>
 #include <QtGui/qopenglframebufferobject.h>
 
 #include <private/qqmlglobal_p.h>
@@ -396,6 +397,8 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
+    if (QQuickWindow::hasDefaultAlphaBuffer())
+        format.setAlphaBufferSize(8);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     return format;
 }

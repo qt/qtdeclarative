@@ -60,7 +60,7 @@ Grid {
     Button { text: "±"; color: "#6da43d"; operator: true }
     Button { text: "−"; color: "#6da43d"; operator: true }
     Button { text: "+"; color: "#6da43d"; operator: true }
-    Button { text: " "; color: "#6da43d"; operator: true }
+    Button { text: "√"; color: "#6da43d"; operator: true }
     Button { text: "÷"; color: "#6da43d"; operator: true }
     Button { text: "×"; color: "#6da43d"; operator: true }
     Button { text: "C"; color: "#6da43d"; operator: true }
