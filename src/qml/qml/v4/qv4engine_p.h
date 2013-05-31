@@ -249,7 +249,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Object *newNumberObject(const Value &value);
     Object *newBooleanObject(const Value &value);
 
-    ArrayObject *newArrayObject();
+    ArrayObject *newArrayObject(int count = 0);
     ArrayObject *newArrayObject(const QStringList &list);
 
     DateObject *newDateObject(const Value &value);

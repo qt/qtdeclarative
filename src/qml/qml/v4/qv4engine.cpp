@@ -442,10 +442,16 @@ Object *ExecutionEngine::newBooleanObject(const Value &value)
     return object;
 }
 
-ArrayObject *ExecutionEngine::newArrayObject()
+ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     ArrayObject *object = new (memoryManager) ArrayObject(this);
     object->prototype = arrayPrototype;
+
+    if (count) {
+        if (count < 0x1000)
+            object->arrayReserve(count);
+        object->setArrayLengthUnchecked(count);
+    }
     return object;
 }
 
