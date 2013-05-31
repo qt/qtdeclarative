@@ -180,6 +180,8 @@ void paint_RoundedRect(QPainter &p)
     }
 }
 
+// Disable this test case since this cannot be compiled with Qt5.
+#if 0
 void paint_QPixmapCachedRoundedRect(QPainter &p)
 {
     static bool first = true;
@@ -218,6 +220,7 @@ void paint_QPixmapCachedRoundedRect(QPainter &p)
         }
     }
 }
+#endif
 
 void paint_pathCacheRoundedRect(QPainter &p)
 {
@@ -312,7 +315,7 @@ struct {
     { "QStaticTextWithBackendOptimizations", &paint_QStaticText_optimizations },
     { "CachedText", &paint_QPixmapCachedText },
     { "RoundedRect", &paint_RoundedRect },
-    { "CachedRoundedRect", &paint_QPixmapCachedRoundedRect },
+    // { "CachedRoundedRect", &paint_QPixmapCachedRoundedRect },
     { "PathCacheRoundedRect", &paint_pathCacheRoundedRect },
     { "QPixmap63x63_opaque", &paint_QPixmap63x63_opaque },
     { "QPixmap64x64_opaque", &paint_QPixmap64x64_opaque },

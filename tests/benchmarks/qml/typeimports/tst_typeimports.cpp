@@ -67,7 +67,7 @@ public:
     TestType1(QObject *parent = 0) : QObject(parent) {}
 
     QQmlListProperty<QObject> resources() {
-        return QQmlListProperty<QObject>(this, 0, resources_append);
+        return QQmlListProperty<QObject>(this, 0, resources_append, 0, 0, 0);
     }
 
     static void resources_append(QQmlListProperty<QObject> *p, QObject *o) {

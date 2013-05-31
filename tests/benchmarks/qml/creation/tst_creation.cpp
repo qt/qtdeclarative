@@ -48,7 +48,6 @@
 #include <QGraphicsItem>
 #include <QQuickItem>
 #include <QQmlContext>
-#include <QtQuick1/private/qdeclarativetextinput_p.h>
 #include <private/qobject_p.h>
 
 class tst_creation : public QObject
@@ -96,7 +95,7 @@ public:
     : QObject(parent) {}
 
     QQmlListProperty<QObject> resources() {
-        return QQmlListProperty<QObject>(this, 0, resources_append);
+        return QQmlListProperty<QObject>(this, 0, resources_append, 0, 0, 0);
     }
 
     static void resources_append(QQmlListProperty<QObject> *p, QObject *o) {
@@ -107,9 +106,6 @@ public:
 tst_creation::tst_creation()
 {
     qmlRegisterType<TestType>("Qt.test", 1, 0, "TestType");
-
-    //get rid of initialization effects
-    QDeclarative1TextInput te;
 }
 
 inline QUrl TEST_FILE(const QString &filename)
@@ -321,9 +317,7 @@ void tst_creation::itemtree_qml()
 
 void tst_creation::itemtree_scene_cpp()
 {
-    QGraphicsScene scene;
     QQuickItem *root = new QQuickItem;
-    scene.addItem(root);
     QBENCHMARK {
         QQuickItem *item = new QQuickItem;
         for (int i = 0; i < 30; ++i) {

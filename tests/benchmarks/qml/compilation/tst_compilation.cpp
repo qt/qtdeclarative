@@ -120,7 +120,6 @@ void tst_compilation::jsparser()
 
     QBENCHMARK {
         QQmlJS::Engine engine;
-        QQmlJS::NodePool nodePool(file, &engine);
 
         QQmlJS::Lexer lexer(&engine);
         lexer.setCode(code, -1);
@@ -146,11 +145,14 @@ void tst_compilation::scriptparser()
     QVERIFY(f.open(QIODevice::ReadOnly));
     QByteArray data = f.readAll();
 
+    //TODO(pvarga): check preparseData
+    QByteArray preparseData;
     QUrl url = QUrl::fromLocalFile(file);
+    QString urlString = url.toString();
 
     QBENCHMARK {
         QQmlScript::Parser parser;
-        parser.parse(data, url);
+        parser.parse(data, preparseData, url, urlString);
         parser.tree();
     }
 }
