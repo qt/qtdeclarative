@@ -180,7 +180,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
 
     QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQString()));
 
-    QV4::Value callbackFunction;
+    QV4::Value callbackFunction = QV4::Value::undefinedValue();
     if (ctx->argumentCount >= 2 && ctx->arguments[1].asFunctionObject())
         callbackFunction = ctx->arguments[1];
 
