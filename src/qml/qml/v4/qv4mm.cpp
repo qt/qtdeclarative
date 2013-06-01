@@ -472,6 +472,9 @@ MemoryManager::~MemoryManager()
     }
 
     sweep();
+#ifdef V4_USE_VALGRIND
+    VALGRIND_DESTROY_MEMPOOL(this);
+#endif
 }
 
 void MemoryManager::protect(Managed *m)
