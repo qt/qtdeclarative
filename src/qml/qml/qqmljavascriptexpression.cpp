@@ -154,7 +154,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     // incase we have been deleted.
     DeleteWatcher watcher(this);
 
-    QV4::Value result;
+    QV4::Value result = QV4::Value::undefinedValue();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
     try {
