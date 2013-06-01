@@ -72,6 +72,13 @@ struct QmlBindingWrapper : FunctionObject
     }
 
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static void markObjects(Managed *m)
+    {
+        QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
+        if (wrapper->qml)
+            wrapper->qml->mark();
+        FunctionObject::markObjects(m);
+    }
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -177,7 +184,7 @@ Value Script::run()
     if (engine->debugger)
         engine->debugger->aboutToCall(0, scope);
 
-    if (!qml) {
+    if (qml.isEmpty()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         bool strict = scope->strictMode;
@@ -203,7 +210,7 @@ Value Script::run()
         return result;
 
     } else {
-        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml);
+        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject());
         return f->call(Value::undefinedValue(), 0, 0);
     }
 }
@@ -220,7 +227,7 @@ Value Script::qmlBinding()
     if (!parsed)
         parse();
     QV4::ExecutionEngine *v4 = scope->engine;
-    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml));
+    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject()));
 }
 
 QV4::Value Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)

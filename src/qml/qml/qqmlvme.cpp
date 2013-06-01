@@ -1159,7 +1159,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
     try {
-        script->m_program->qml = qmlglobal.asObject();
+        script->m_program->qml = qmlglobal;
         script->m_program->run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
