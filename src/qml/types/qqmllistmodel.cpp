@@ -453,7 +453,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int
             QDateTime dt = propertyValue->v4Value().asDateObject()->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
         } else if (propertyValue->IsObject()) {
-            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().asQObjectWrapper()) {
+            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object;
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
@@ -528,7 +528,7 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
                 e->setDateTimePropertyFast(r, dt);
             }
         } else if (propertyValue->IsObject()) {
-            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().asQObjectWrapper()) {
+            if (QV4::QObjectWrapper *wrapper = propertyValue->v4Value().as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object;
                 const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (r.type == ListLayout::Role::QObject)
@@ -1188,7 +1188,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
         QDateTime dt = d->v4Value().asDateObject()->toQDateTime();;
         roleIndex = setDateTimeProperty(role, dt);
     } else if (d->IsObject()) {
-        QV4::QObjectWrapper *wrapper = d->v4Value().asQObjectWrapper();
+        QV4::QObjectWrapper *wrapper = d->v4Value().as<QV4::QObjectWrapper>();
         if (role.type == ListLayout::Role::QObject && wrapper) {
             QObject *o = wrapper->object;
             roleIndex = setQObjectProperty(role, o);

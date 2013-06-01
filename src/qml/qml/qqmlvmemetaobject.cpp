@@ -1029,7 +1029,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
         // automatically released by the engine until no other references to it exist.
         if (QV4::VariantObject *v = o->as<QV4::VariantObject>()) {
             v->addVmePropertyReference();
-        } else if (QV4::QObjectWrapper *wrapper = o->asQObjectWrapper()) {
+        } else if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
             // We need to track this QObject to signal its deletion
             valueObject = wrapper->object;
 

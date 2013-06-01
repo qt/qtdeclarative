@@ -175,7 +175,6 @@ public:
         Type_MathObject,
         Type_ForeachIteratorObject,
         Type_RegExp,
-        Type_QObject,
 
         Type_QmlSequence
     };
@@ -206,7 +205,6 @@ public:
     ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
     JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
-    QObjectWrapper *asQObjectWrapper() { return type == Type_QObject ? reinterpret_cast<QObjectWrapper*>(this) : 0; }
 
 
     bool isListType() const { return type == Type_QmlSequence; }

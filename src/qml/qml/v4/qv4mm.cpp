@@ -297,7 +297,7 @@ void MemoryManager::mark()
     for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
         if (!weak->refcount)
             continue;
-        QObjectWrapper *qobjectWrapper = weak->value.asQObjectWrapper();
+        QObjectWrapper *qobjectWrapper = weak->value.as<QObjectWrapper>();
         if (!qobjectWrapper)
             continue;
         QObject *qobject = qobjectWrapper->object;
@@ -452,7 +452,7 @@ MemoryManager::~MemoryManager()
 {
     PersistentValuePrivate *weak = m_weakValues;
     while (weak) {
-        if (QObjectWrapper *qobjectWrapper = weak->value.asQObjectWrapper()) {
+        if (QObjectWrapper *qobjectWrapper = weak->value.as<QObjectWrapper>()) {
             weak->ref();
             qobjectWrapper->deleteQObject(/*deleteInstantly*/ true);
             PersistentValuePrivate *n = weak->next;

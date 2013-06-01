@@ -158,7 +158,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         } else if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(jsonObjectFromJS(value));
-        } else if (QV4::QObjectWrapper *wrapper = object->asQObjectWrapper()) {
+        } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object);
         } else if (QV4::QmlContextWrapper *wrapper = object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
@@ -1019,7 +1019,7 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());
     }
-    QV4::QObjectWrapper *wrapper = value.asQObjectWrapper();
+    QV4::QObjectWrapper *wrapper = value.as<QV4::QObjectWrapper>();
     if (!wrapper)
         return 0;
     return wrapper->object;

@@ -268,7 +268,6 @@ struct Q_QML_EXPORT Value
     DateObject *asDateObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
-    QObjectWrapper *asQObjectWrapper() const;
 
     template<typename T>
     T *as() const { Managed *m = asObject(); return m ? m->as<T>() : 0; }
@@ -538,11 +537,6 @@ inline ArrayObject *Value::asArrayObject() const
 inline ErrorObject *Value::asErrorObject() const
 {
     return isObject() ? managed()->asErrorObject() : 0;
-}
-
-inline QObjectWrapper *Value::asQObjectWrapper() const
-{
-    return isObject() ? managed()->asQObjectWrapper() : 0;
 }
 
 // ###

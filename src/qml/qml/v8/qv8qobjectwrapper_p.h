@@ -81,6 +81,8 @@ namespace QV4 {
 
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
+    Q_MANAGED
+
     QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
     ~QObjectWrapper();
 
@@ -103,8 +105,6 @@ private:
     {
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
-
-    static const QV4::ManagedVTable static_vtbl;
 };
 
 struct QObjectMethod : public QV4::FunctionObject

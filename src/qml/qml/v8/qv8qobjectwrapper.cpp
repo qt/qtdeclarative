@@ -87,7 +87,6 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     , object(object)
 {
     this->v8Engine = QV8Engine::get(engine->publicEngine);
-    type = Type_QObject;
     vtbl = &static_vtbl;
 
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
@@ -448,12 +447,12 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 
 bool QV8QObjectWrapper::isQObject(v8::Handle<v8::Object> obj)
 {
-    return obj->v4Value().asQObjectWrapper() != 0;
+    return obj->v4Value().as<QObjectWrapper>() != 0;
 }
 
 QObject *QV8QObjectWrapper::toQObject(v8::Handle<v8::Object> obj)
 {
-    QV4::QObjectWrapper *wrapper =  obj->v4Value().asQObjectWrapper();
+    QV4::QObjectWrapper *wrapper =  obj->v4Value().as<QObjectWrapper>();
     return wrapper?wrapper->object:0;
 }
 
@@ -789,7 +788,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
 static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
                             const v8::AccessorInfo& info)
 {
-    QV4::QObjectWrapper *wrapper = info.This()->v4Value().asQObjectWrapper();
+    QV4::QObjectWrapper *wrapper = info.This()->v4Value().as<QObjectWrapper>();
 
     if (QQmlData::wasDeleted(wrapper->object))
         return; 
@@ -816,7 +815,7 @@ static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
 static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<v8::Value>,
                                     const v8::AccessorInfo& info)
 {
-    QV4::QObjectWrapper *wrapper = info.This()->v4Value().asQObjectWrapper();
+    QV4::QObjectWrapper *wrapper = info.This()->v4Value().as<QObjectWrapper>();
 
     if (QQmlData::wasDeleted(wrapper->object))
         return; 
@@ -1428,7 +1427,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
                 return 10;
         }
 
-        if (obj->asQObjectWrapper()) {
+        if (obj->as<QObjectWrapper>()) {
             switch (conversionType) {
             case QMetaType::QObjectStar:
                 return 0;

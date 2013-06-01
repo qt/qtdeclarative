@@ -1205,7 +1205,7 @@ public:
     {
         QQmlData *ddata = QQmlData::get(this);
         assert(ddata);
-        QV4::QObjectWrapper *thisObject = ddata->v8object.value().asQObjectWrapper();
+        QV4::QObjectWrapper *thisObject = ddata->v8object.value().as<QV4::QObjectWrapper>();
         assert(thisObject);
 
         QQmlData *otherDData = QQmlData::get(other);

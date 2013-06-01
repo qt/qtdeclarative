@@ -171,7 +171,7 @@ Value QtObject::method_isQtObject(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount == 0)
         return QV4::Value::fromBoolean(false);
 
-    return QV4::Value::fromBoolean(ctx->arguments[0].asQObjectWrapper() != 0);
+    return QV4::Value::fromBoolean(ctx->arguments[0].as<QV4::QObjectWrapper>() != 0);
 }
 
 /*!
