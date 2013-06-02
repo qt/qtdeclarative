@@ -53,6 +53,7 @@
 #include "qv4v8_p.h"
 #include "qv4variantobject_p.h"
 #include "qv4regexpobject_p.h"
+#include "qv8engine_p.h"
 
 /*!
   \since 5.0
@@ -924,8 +925,12 @@ bool QJSValue::hasOwnProperty(const QString &name) const
  */
 QObject *QJSValue::toQObject() const
 {
-    // ###
-    return 0;
+    Object *o = d->value.asObject();
+    if (!o)
+        return 0;
+
+    QV8Engine *v8 = d->engine()->publicEngine->handle();
+    return v8->toQObject(d->value);
 }
 
 /*!
@@ -974,8 +979,12 @@ bool QJSValue::isRegExp() const
 */
 bool QJSValue::isQObject() const
 {
-    // ###
-    return false;
+    Object *o = d->value.asObject();
+    if (!o)
+        return false;
+
+    QV8Engine *v8 = d->engine()->publicEngine->handle();
+    return v8->isQObject(d->value);
 }
 
 QT_END_NAMESPACE
