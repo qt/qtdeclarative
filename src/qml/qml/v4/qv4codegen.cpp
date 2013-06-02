@@ -2007,7 +2007,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         f = f->outer;
     }
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && (!f || f->name != name))
+    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && _mode != QmlBinding && (!f || f->name != name))
         return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
@@ -2631,7 +2631,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
         if (args) {
             V4IR::ExprList *next = function->New<V4IR::ExprList>();
-            next->expr = entryBlock->CONST(V4IR::BoolType, mode == EvalCode);
+            next->expr = entryBlock->CONST(V4IR::BoolType, (mode == EvalCode || mode == QmlBinding));
             next->next = args;
             args = next;
 
@@ -2819,7 +2819,7 @@ bool Codegen::visit(EmptyStatement *)
 
 bool Codegen::visit(ExpressionStatement *ast)
 {
-    if (_mode == EvalCode) {
+    if (_mode == EvalCode || _mode == QmlBinding) {
         Result e = expression(ast->expression);
         if (*e)
             move(_block->TEMP(_returnAddress), *e);
@@ -3017,7 +3017,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
-    if (_mode != FunctionCode)
+    if (_mode != FunctionCode && _mode != QmlBinding)
         throwSyntaxError(ast->returnToken, QCoreApplication::translate("qv4codegen", "Return statement outside of function"));
     if (ast->expression) {
         Result expr = expression(ast->expression);

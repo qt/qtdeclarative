@@ -54,11 +54,11 @@ struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(scope), strictMode(false), inheritContext(false), parsed(false)
-        , vmFunction(0) {}
+        , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext), strictMode(true), inheritContext(true), parsed(false)
-        , qml(Value::fromObject(qml)), vmFunction(0) {}
+        , qml(Value::fromObject(qml)), vmFunction(0), parseAsBinding(true) {}
     QString sourceFile;
     int line;
     int column;
@@ -69,6 +69,7 @@ struct Q_QML_EXPORT Script {
     bool parsed;
     QV4::PersistentValue qml;
     Function *vmFunction;
+    bool parseAsBinding;
 
     void parse();
     Value run();

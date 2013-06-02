@@ -78,7 +78,8 @@ public:
     enum Mode {
         GlobalCode,
         EvalCode,
-        FunctionCode
+        FunctionCode,
+        QmlBinding
     };
 
     V4IR::Function *operator()(const QString &fileName,
