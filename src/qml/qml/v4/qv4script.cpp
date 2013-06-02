@@ -119,7 +119,7 @@ void Script::parse()
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);
-    lexer.setCode(sourceCode, line, false);
+    lexer.setCode(sourceCode, line, parseAsBinding);
     Parser parser(engine);
 
     const bool parsed = parser.parseProgram();
