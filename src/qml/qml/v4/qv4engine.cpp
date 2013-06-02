@@ -663,17 +663,41 @@ namespace {
                     continue;
 
                 frame.function = f;
-                frame.line = f->lineNumberForProgramCounter(pc);
+                frame.line = f->lineNumberForProgramCounter(pc - reinterpret_cast<quintptr>(f->code));
             }
 
             return frame;
+        }
+    };
+    struct LineNumberResolver {
+        const ExecutionEngine* engine;
+        QScopedPointer<NativeStackTrace> nativeTrace;
+
+        LineNumberResolver(const ExecutionEngine *engine)
+            : engine(engine)
+        {
+        }
+
+        void resolve(ExecutionEngine::StackFrame *frame, ExecutionContext *context, Function *function)
+        {
+            if (context->interpreterInstructionPointer) {
+                qptrdiff offset = *context->interpreterInstructionPointer - 1 - function->codeData;
+                frame->line = function->lineNumberForProgramCounter(offset);
+            } else {
+                if (!nativeTrace)
+                    nativeTrace.reset(new NativeStackTrace(engine->current));
+
+                NativeFrame nativeFrame = nativeTrace->nextFrame();
+                if (nativeFrame.function == function)
+                    frame->line = nativeFrame.line;
+            }
         }
     };
 }
 
 QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
-    NativeStackTrace nativeTrace(current);
+    LineNumberResolver lineNumbers(this);
 
     QVector<StackFrame> stack;
 
@@ -687,12 +711,8 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
             frame.line = -1;
             frame.column = -1;
 
-            if (callCtx->function->function) {
-                // Try to complete the line number information
-                NativeFrame nativeFrame = nativeTrace.nextFrame();
-                if (nativeFrame.function == callCtx->function->function)
-                    frame.line = nativeFrame.line;
-            }
+            if (callCtx->function->function)
+                lineNumbers.resolve(&frame, callCtx, callCtx->function->function);
 
             stack.append(frame);
             --frameLimit;
@@ -707,10 +727,7 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
         frame.line = -1;
         frame.column = -1;
 
-        // Try to complete the line number information
-        NativeFrame nativeFrame = nativeTrace.nextFrame();
-        if (nativeFrame.function == globalCode)
-            frame.line = nativeFrame.line;
+        lineNumbers.resolve(&frame, rootContext, globalCode);
 
         stack.append(frame);
     }

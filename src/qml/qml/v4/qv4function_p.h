@@ -131,7 +131,7 @@ struct Function {
 
     void mark();
 
-    int lineNumberForProgramCounter(quintptr pc) const;
+    int lineNumberForProgramCounter(qptrdiff offset) const;
 };
 
 }

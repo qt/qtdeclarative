@@ -26,7 +26,14 @@ public:
         , stack(0)
         , stackSize(0)
         , code(code)
-    {}
+    {
+        previousInstructionPointer = context->interpreterInstructionPointer;
+        context->interpreterInstructionPointer = code;
+    }
+    ~FunctionState()
+    {
+        context()->interpreterInstructionPointer = previousInstructionPointer;
+    }
 
     virtual QV4::Value *temp(unsigned idx) { return stack + idx; }
 
@@ -37,6 +44,7 @@ private:
     QV4::Value *stack;
     unsigned stackSize;
     const uchar **code;
+    const uchar **previousInstructionPointer;
 };
 
 #define MOTH_BEGIN_INSTR_COMMON(I) { \

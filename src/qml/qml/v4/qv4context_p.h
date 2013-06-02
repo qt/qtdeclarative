@@ -104,6 +104,8 @@ struct Q_QML_EXPORT ExecutionContext
     };
     EvalCode *currentEvalCode;
 
+    const uchar **interpreterInstructionPointer;
+
     void initBaseContext(Type type, ExecutionEngine *engine)
     {
         this->type = type;
@@ -115,6 +117,7 @@ struct Q_QML_EXPORT ExecutionContext
         outer = 0;
         lookups = 0;
         currentEvalCode = 0;
+        interpreterInstructionPointer = 0;
     }
 
     String * const *formals() const;

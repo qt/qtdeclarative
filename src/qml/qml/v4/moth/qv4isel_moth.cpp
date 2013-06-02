@@ -126,8 +126,15 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     foreach (_block, _function->basicBlocks) {
         _addrs.insert(_block, _codeNext - _codeStart);
 
-        foreach (V4IR::Stmt *s, _block->statements)
+        foreach (V4IR::Stmt *s, _block->statements) {
+            if (s->location.isValid()) {
+                QV4::LineNumberMapping mapping;
+                mapping.codeOffset = _codeNext - _codeStart;
+                mapping.lineNumber = s->location.startLine;
+                _vmFunction->lineNumberMappings.append(mapping);
+            }
             s->accept(this);
+        }
     }
 
     patchJumpAddresses();

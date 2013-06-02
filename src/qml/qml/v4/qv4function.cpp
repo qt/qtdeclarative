@@ -67,15 +67,14 @@ void Function::mark()
 }
 
 namespace QV4 {
-bool operator<(const LineNumberMapping &mapping, quintptr pc)
+bool operator<(const LineNumberMapping &mapping, qptrdiff pc)
 {
     return mapping.codeOffset < pc;
 }
 }
 
-int Function::lineNumberForProgramCounter(quintptr pc) const
+int Function::lineNumberForProgramCounter(qptrdiff offset) const
 {
-    quintptr offset = pc - reinterpret_cast<quintptr>(code);
     QVector<LineNumberMapping>::ConstIterator it = qLowerBound(lineNumberMappings.begin(), lineNumberMappings.end(), offset);
     if (it != lineNumberMappings.constBegin() && lineNumberMappings.count() > 0)
         --it;
