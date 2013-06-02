@@ -148,7 +148,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             case QV8ObjectResource::VisualDataItemType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
-            case QV8ObjectResource::SQLDatabaseType:
             case QV8ObjectResource::ListModelType:
             case QV8ObjectResource::ParticleDataType:
             case QV8ObjectResource::ChangeSetArrayType:

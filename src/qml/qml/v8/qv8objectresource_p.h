@@ -69,7 +69,7 @@ class QV8ObjectResource : public v8::Object::ExternalResource
 {
 public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
-    enum ResourceType { XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
+    enum ResourceType { XMLHttpRequestType, DOMNodeType,
                         ListModelType, Context2DStyleType, Context2DPixelArrayType,
                         ParticleDataType, VisualDataItemType,
                         ChangeSetArrayType };

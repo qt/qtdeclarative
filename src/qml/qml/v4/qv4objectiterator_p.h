@@ -58,7 +58,7 @@ struct Value;
 struct String;
 struct InternalClass;
 
-struct ObjectIterator
+struct Q_QML_EXPORT ObjectIterator
 {
     enum Flags {
         NoFlags = 0,
