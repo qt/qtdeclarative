@@ -119,7 +119,7 @@ void QObjectWrapper::deleteQObject(bool deleteInstantly)
     }
 }
 
-Value QObjectWrapper::getProperty(ExecutionContext *ctx, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
+Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(m_object)) {
         if (hasProperty)
@@ -154,7 +154,7 @@ Value QObjectWrapper::getProperty(ExecutionContext *ctx, String *name, QObjectWr
         return result->v4Value();
     }
 
-    if (name->startsWithUpper()) {
+    if (includeImports && name->startsWithUpper()) {
         // Check for attached properties
         if (context && context->imports) {
             QQmlTypeNameCache::Result r = context->imports->query(propertystring);
@@ -178,7 +178,7 @@ Value QObjectWrapper::getProperty(ExecutionContext *ctx, String *name, QObjectWr
 QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    return that->getProperty(ctx, name, IgnoreRevision, hasProperty);
+    return that->getQmlProperty(ctx, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)

@@ -231,7 +231,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
         if (scopeObject) {
             if (QV4::QObjectWrapper *o = qobjectWrapper->newQObject(scopeObject)->v4Value().as<QV4::QObjectWrapper>()) {
                 bool hasProp = false;
-                QV4::Value result = o->getProperty(o->engine()->current, propertystring.string().asString(), QV4::QObjectWrapper::CheckRevision, &hasProp);
+                QV4::Value result = o->getQmlProperty(o->engine()->current, propertystring.string().asString(), QV4::QObjectWrapper::CheckRevision, &hasProp);
                 if (hasProp) {
                     if (hasProperty)
                         *hasProperty = true;

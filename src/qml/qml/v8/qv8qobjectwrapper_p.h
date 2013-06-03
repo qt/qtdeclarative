@@ -94,7 +94,7 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     void deleteQObject(bool deleteInstantly = false);
 
-    Value getProperty(ExecutionContext *ctx, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
+    Value getQmlProperty(ExecutionContext *ctx, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
 
 private:
     QQmlGuard<QObject> m_object;
