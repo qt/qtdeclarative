@@ -133,7 +133,7 @@ Value QObjectWrapper::getProperty(ExecutionContext *ctx, String *name, QObjectWr
 
         if (!hasProp) {
             int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, m_object, index, QV4::Value::undefinedValue()));
+            method = QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index);
             QV4::Object::put(this, ctx, name, method);
         }
 
@@ -512,21 +512,6 @@ QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
                                                      QQmlContextData *context,
                                                      QV4::QObjectWrapper::RevisionMode revisionMode)
 {
-    // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
-    // will be a faster way of creating QObject method objects.
-    struct MethodClosure {
-       static QV4::Value create(QV8Engine *engine, QObject *object,
-                                           int index) {
-           QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-           return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::undefinedValue()));
-       }
-       static QV4::Value createWithGlobal(QV8Engine *engine, QObject *object,
-                                                     int index) {
-           QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-           return QV4::Value::fromObject(new (v4->memoryManager) QV4::QObjectMethod(v4->rootContext, object, index, QV4::Value::fromObject(QV8Engine::getV4(engine)->qmlContextObject())));
-       }
-    };
-
     if (QQmlData::wasDeleted(object))
         return QV4::Value::emptyValue();
 
@@ -551,15 +536,16 @@ QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
             return QV4::Value::emptyValue();
     }
 
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
     if (result->isFunction() && !result->isVarProperty()) {
         if (result->isVMEFunction()) {
             QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV4Function()) {
-            return MethodClosure::createWithGlobal(engine, object, result->coreIndex);
+            return QV4::QObjectMethod::create(v4->rootContext, object, result->coreIndex, QV4::Value::fromObject(v4->qmlContextObject()));
         } else if (result->isSignalHandler()) {
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
             QV4::QmlSignalHandler *handler = new (v4->memoryManager) QV4::QmlSignalHandler(v4, object, result->coreIndex);
 
             QV4::String *connect = v4->newIdentifier(QStringLiteral("connect"));
@@ -569,7 +555,7 @@ QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
 
             return QV4::Value::fromObject(handler);
         } else {
-            return MethodClosure::create(engine, object, result->coreIndex);
+            return QV4::QObjectMethod::create(v4->rootContext, object, result->coreIndex);
         }
     }
 
@@ -1836,6 +1822,11 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
     } else {
         return QV4::Value::undefinedValue();
     }
+}
+
+Value QObjectMethod::create(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
+{
+    return Value::fromObject(new (scope->engine->memoryManager) QObjectMethod(scope, object, index, qmlGlobal));
 }
 
 QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
