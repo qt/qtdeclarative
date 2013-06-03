@@ -477,18 +477,16 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     if (args->length() < 1)
         args->setReturnValue(QV4::Value::nullValue());
 
-    v8::Handle<v8::Value> value = (*args)[0];
+    QV4::Value value = (*args)[0];
 
     QString result;
     QV8Engine *engine = args->engine();
 
     //Check for Object Type
-    if (value->IsObject()
-    && !value->IsFunction()
-    && !value->IsArray()
-    && !value->IsDate()
-    && !value->IsRegExp()) {
-        QVariant v = engine->toVariant(value->v4Value(), QMetaType::UnknownType);
+    if (value.isObject()
+    && !value.asFunctionObject()
+    && !value.asArrayObject()) {
+        QVariant v = engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
             case QVariant::Vector3D:
@@ -505,9 +503,8 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        v8::Handle<v8::String> jsstr = value->ToString();
-        QString tmp = jsstr->v4Value().toQString();
-        if (value->IsArray())
+        QString tmp = value.toQString();
+        if (value.asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else
             result.append(tmp);

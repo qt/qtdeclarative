@@ -180,7 +180,7 @@ public:
 
     int m_nextId;
 
-    static QV4::Value sendMessage(const v8::Arguments &args);
+    static QV4::Value sendMessage(QV4::SimpleCallContext *ctx);
 
 signals:
     void stopThread();
@@ -231,7 +231,8 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::FunctionObject *createsendconstructor = createsendscript.run().asFunctionObject();
 
     QV4::Value args[] = {
-        V8FUNCTION(QQuickWorkerScriptEnginePrivate::sendMessage, this)->v4Value()
+        QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
+                                                              QQuickWorkerScriptEnginePrivate::sendMessage))
     };
     createsend = createsendconstructor->call(global(), args, 1);
 }
@@ -269,13 +270,13 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &args)
+QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *ctx)
 {
-    WorkerEngine *engine = (WorkerEngine*)V8ENGINE();
+    WorkerEngine *engine = (WorkerEngine*)ctx->engine->publicEngine->handle();
 
-    int id = args[1]->Int32Value();
+    int id = ctx->argument(1).toInt32();
 
-    QByteArray data = QV4::Serialize::serialize(args[2]->v4Value(), engine);
+    QByteArray data = QV4::Serialize::serialize(ctx->argument(2), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
