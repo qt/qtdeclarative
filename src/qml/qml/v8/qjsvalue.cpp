@@ -983,8 +983,7 @@ bool QJSValue::isQObject() const
     if (!o)
         return false;
 
-    QV8Engine *v8 = d->engine()->publicEngine->handle();
-    return v8->isQObject(d->value);
+    return o->as<QV4::QObjectWrapper>() != 0;
 }
 
 QT_END_NAMESPACE

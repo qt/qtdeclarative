@@ -417,11 +417,6 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     v4->functionPrototype->defineDefaultProperty(v4, QStringLiteral("disconnect"), Disconnect);
 }
 
-bool QV8QObjectWrapper::isQObject(v8::Handle<v8::Object> obj)
-{
-    return obj->v4Value().as<QObjectWrapper>() != 0;
-}
-
 QObject *QV8QObjectWrapper::toQObject(v8::Handle<v8::Object> obj)
 {
     QV4::QObjectWrapper *wrapper =  obj->v4Value().as<QObjectWrapper>();

@@ -167,7 +167,6 @@ public:
     void destroy();
 
     v8::Handle<v8::Value> newQObject(QObject *object);
-    bool isQObject(v8::Handle<v8::Object>);
     QObject *toQObject(v8::Handle<v8::Object>);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
