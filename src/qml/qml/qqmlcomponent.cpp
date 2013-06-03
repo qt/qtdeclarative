@@ -1363,6 +1363,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     }
 }
 
+#define V4FUNCTION(function, engine) engine->newBuiltinFunction(engine->rootContext, engine->id_undefined, function)
+
 
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {

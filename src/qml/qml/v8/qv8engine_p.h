@@ -84,8 +84,6 @@ namespace QV4 {
     struct Value;
 }
 
-#define V4FUNCTION(function, engine) new (engine->memoryManager) QV4::BuiltinFunctionOld(engine->rootContext, engine->id_undefined, function)
-
 // Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
 // handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
 // with qPersistentDispose() are tracked.  If you try and do something illegal, like double disposing
