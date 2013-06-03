@@ -277,16 +277,6 @@ public:
     QV8QObjectWrapper *wrapper;
 };
 
-class QV8SignalHandlerResource : public QV8ObjectResource
-{
-    V8_RESOURCE_TYPE(SignalHandlerType)
-public:
-    QV8SignalHandlerResource(QV8Engine *engine, QObject *object, int index);
-
-    QQmlGuard<QObject> object;
-    int index;
-};
-
 namespace {
 
 template<typename A, typename B, typename C, typename D, typename E,
@@ -346,11 +336,6 @@ private:
 
     int type;
 };
-}
-
-QV8SignalHandlerResource::QV8SignalHandlerResource(QV8Engine *engine, QObject *object, int index)
-: QV8ObjectResource(engine), object(object), index(index)
-{
 }
 
 static QAtomicInt objectIdCounter(1);
@@ -428,23 +413,8 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-    v8::Handle<v8::Function> connect = V8FUNCTION(Connect, engine);
-    v8::Handle<v8::Function> disconnect = V8FUNCTION(Disconnect, engine);
-
-    {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->PrototypeTemplate()->Set(v8::String::New("connect"), connect, v8::DontEnum);
-    ft->PrototypeTemplate()->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
-    m_signalHandlerConstructor = ft->GetFunction()->v4Value();
-    }
-
-    {
-    v8::Handle<v8::Object> prototype = v8::Handle<v8::Object>(engine->global())
-            ->Get(v8::String::New("Function"))->ToObject()->Get(v8::String::New("prototype"))->ToObject();
-    prototype->Set(v8::String::New("connect"), connect, v8::DontEnum);
-    prototype->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
-    }
+    v4->functionPrototype->defineDefaultProperty(v4, QStringLiteral("connect"), Connect);
+    v4->functionPrototype->defineDefaultProperty(v4, QStringLiteral("disconnect"), Disconnect);
 }
 
 bool QV8QObjectWrapper::isQObject(v8::Handle<v8::Object> obj)
@@ -598,10 +568,15 @@ QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
         } else if (result->isV4Function()) {
             return MethodClosure::createWithGlobal(engine, object, result->coreIndex);
         } else if (result->isSignalHandler()) {
-            v8::Handle<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor.value().asFunctionObject()->newInstance();
-            QV8SignalHandlerResource *r = new QV8SignalHandlerResource(engine, object, result->coreIndex);
-            handler->SetExternalResource(r);
-            return handler->v4Value();
+            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+            QV4::QmlSignalHandler *handler = new (v4->memoryManager) QV4::QmlSignalHandler(v4, object, result->coreIndex);
+
+            QV4::String *connect = v4->newIdentifier(QStringLiteral("connect"));
+            QV4::String *disconnect = v4->newIdentifier(QStringLiteral("disconnect"));
+            handler->put(connect, v4->functionPrototype->get(connect));
+            handler->put(disconnect, v4->functionPrototype->get(disconnect));
+
+            return QV4::Value::fromObject(handler);
         } else {
             return MethodClosure::create(engine, object, result->coreIndex);
         }
@@ -913,23 +888,21 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     }
 }
 
-QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::Handle<v8::Object> object)
+QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, const Value &value)
 {
-    if (object->IsFunction())
-        return ExtractQtMethod(engine, v8::Handle<v8::Function>::Cast(object));
+    if (QV4::FunctionObject *function = value.asFunctionObject())
+        return ExtractQtMethod(engine, function);
 
-    if (QV8SignalHandlerResource *resource = v8_resource_cast<QV8SignalHandlerResource>(object))
-        return qMakePair(resource->object.data(), resource->index);
+    if (QV4::QmlSignalHandler *handler = value.as<QV4::QmlSignalHandler>())
+        return qMakePair(handler->object(), handler->signalIndex());
 
     return qMakePair((QObject *)0, -1);
 }
 
-QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)
+QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, QV4::FunctionObject *function)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::FunctionObject *v4Function = function->v4Value().asFunctionObject();
-    if (v4Function->subtype == QV4::FunctionObject::WrappedQtMethod) {
-        QObjectMethod *method = static_cast<QObjectMethod*>(v4Function);
+    if (function && function->subtype == QV4::FunctionObject::WrappedQtMethod) {
+        QObjectMethod *method = static_cast<QObjectMethod*>(function);
         return qMakePair(method->object(), method->methodIndex());
     }
 
@@ -1075,14 +1048,15 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
     return -1;
 }
 
-QV4::Value QV8QObjectWrapper::Connect(const v8::Arguments &args)
+QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
 {
-    if (args.Length() == 0)
+    if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
 
-    QV8Engine *engine = V8ENGINE();
+    // ### Eliminate, won't work within worker scripts
+    QV8Engine *engine = QV8Engine::get(ctx->engine->publicEngine);
 
-    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, args.This());
+    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -1095,20 +1069,20 @@ QV4::Value QV8QObjectWrapper::Connect(const v8::Arguments &args)
     if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
-    v8::Handle<v8::Value> functionValue;
-    v8::Handle<v8::Value> functionThisValue;
+    QV4::Value functionValue = QV4::Value::emptyValue();
+    QV4::Value functionThisValue = QV4::Value::emptyValue();
 
-    if (args.Length() == 1) {
-        functionValue = args[0];
-    } else {
-        functionThisValue = args[0];
-        functionValue = args[1];
+    if (ctx->argumentCount == 1) {
+        functionValue = ctx->arguments[0];
+    } else if (ctx->argumentCount >= 2) {
+        functionThisValue = ctx->arguments[0];
+        functionValue = ctx->arguments[1];
     }
 
-    if (!functionValue->IsFunction())
+    if (!functionValue.asFunctionObject())
         V4THROW_ERROR("Function.prototype.connect: target is not a function");
 
-    if (!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
+    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
         V4THROW_ERROR("Function.prototype.connect: target this is not an object");
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
@@ -1125,23 +1099,24 @@ QV4::Value QV8QObjectWrapper::Connect(const v8::Arguments &args)
     }
 
     QV8QObjectConnectionList::Connection connection;
-    if (!functionThisValue.IsEmpty()) 
-        connection.thisObject = functionThisValue->ToObject()->v4Value();
-    connection.function = functionValue->v4Value();
+    if (!functionThisValue.isEmpty())
+        connection.thisObject = functionThisValue;
+    connection.function = functionValue;
 
     slotIter->append(connection);
 
     return QV4::Value::undefinedValue();
 }
 
-QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
+QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
 {
-    if (args.Length() == 0)
+    if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
-    QV8Engine *engine = V8ENGINE();
+    // ### Eliminate, won't work within worker scripts
+    QV8Engine *engine = QV8Engine::get(ctx->engine->publicEngine);
 
-    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, args.This());
+    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -1154,20 +1129,20 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
-    v8::Handle<v8::Value> functionValue;
-    v8::Handle<v8::Value> functionThisValue;
+    QV4::Value functionValue = QV4::Value::emptyValue();
+    QV4::Value functionThisValue = QV4::Value::emptyValue();
 
-    if (args.Length() == 1) {
-        functionValue = args[0];
-    } else {
-        functionThisValue = args[0];
-        functionValue = args[1];
+    if (ctx->argumentCount == 1) {
+        functionValue = ctx->arguments[0];
+    } else if (ctx->argumentCount >= 2) {
+        functionThisValue = ctx->arguments[0];
+        functionValue = ctx->arguments[1];
     }
 
-    if (!functionValue->IsFunction())
+    if (!functionValue.asFunctionObject())
         V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
 
-    if (!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
+    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
         V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
@@ -1183,18 +1158,17 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
 
     QV8QObjectConnectionList::ConnectionList &connections = *slotIter;
 
-    v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(functionValue);
-    QPair<QObject *, int> functionData = ExtractQtMethod(engine, function);
+    QPair<QObject *, int> functionData = ExtractQtMethod(engine, functionValue.asFunctionObject());
 
     if (functionData.second != -1) {
         // This is a QObject function wrapper
         for (int ii = 0; ii < connections.count(); ++ii) {
             QV8QObjectConnectionList::Connection &connection = connections[ii];
 
-            if (connection.thisObject.isEmpty() == functionThisValue.IsEmpty() &&
-                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue->v4Value()))) {
+            if (connection.thisObject.isEmpty() == functionThisValue.isEmpty() &&
+                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue))) {
 
-                QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function.value());
+                QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function.value().asFunctionObject());
                 if (connectedFunctionData == functionData) {
                     // Match!
                     if (connections.connectionsInUse) {
@@ -1213,9 +1187,9 @@ QV4::Value QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
         // This is a normal JS function
         for (int ii = 0; ii < connections.count(); ++ii) {
             QV8QObjectConnectionList::Connection &connection = connections[ii];
-            if (__qmljs_strict_equal(connection.function, function->v4Value()) &&
-                connection.thisObject.isEmpty() == functionThisValue.IsEmpty() &&
-                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue->v4Value()))) {
+            if (__qmljs_strict_equal(connection.function, functionValue) &&
+                connection.thisObject.isEmpty() == functionThisValue.isEmpty() &&
+                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue))) {
                 // Match!
                 if (connections.connectionsInUse) {
                     connection.needsDestroy = true;
@@ -1979,6 +1953,17 @@ Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisOb
 }
 
 DEFINE_MANAGED_VTABLE(QObjectMethod);
+
+QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex)
+    : Object(engine)
+    , m_object(object)
+    , m_signalIndex(signalIndex)
+{
+    vtbl = &static_vtbl;
+    prototype = engine->objectPrototype;
+}
+
+DEFINE_MANAGED_VTABLE(QmlSignalHandler);
 
 QT_END_NAMESPACE
 

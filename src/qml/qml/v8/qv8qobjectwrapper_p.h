@@ -109,6 +109,8 @@ private:
 
 struct QObjectMethod : public QV4::FunctionObject
 {
+    Q_MANAGED
+
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
@@ -132,8 +134,25 @@ private:
     {
         static_cast<QObjectMethod *>(that)->~QObjectMethod();
     }
+};
 
-    static const QV4::ManagedVTable static_vtbl;
+struct QmlSignalHandler : public QV4::Object
+{
+    Q_MANAGED
+
+    QmlSignalHandler(ExecutionEngine *engine, QObject *object, int signalIndex);
+
+    int signalIndex() const { return m_signalIndex; }
+    QObject *object() const { return m_object.data(); }
+
+private:
+    QQmlGuard<QObject> m_object;
+    int m_signalIndex;
+
+    static void destroy(Managed *that)
+    {
+        static_cast<QmlSignalHandler *>(that)->~QmlSignalHandler();
+    }
 };
 
 }
@@ -166,14 +185,13 @@ private:
                                              const QHashedV4String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
-    static QV4::Value Connect(const v8::Arguments &args);
-    static QV4::Value Disconnect(const v8::Arguments &args);
-    static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
-    static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
+    static QV4::Value Connect(QV4::SimpleCallContext *ctx);
+    static QV4::Value Disconnect(QV4::SimpleCallContext *ctx);
+    static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, QV4::FunctionObject *);
+    static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, const QV4::Value &value);
 
     QV8Engine *m_engine;
     quint32 m_id;
-    QV4::PersistentValue m_signalHandlerConstructor;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
