@@ -226,7 +226,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
     } else if (QV4::QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so
         // that others can trivially plug in their elements.
-        QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object);
+        QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object());
         if (lm && lm->agent()) {
             QQmlListModelWorkerAgent *agent = lm->agent();
             agent->addref();

@@ -157,7 +157,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(jsonObjectFromJS(value));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
-            return qVariantFromValue<QObject *>(wrapper->object);
+            return qVariantFromValue<QObject *>(wrapper->object());
         } else if (QV4::QmlContextWrapper *wrapper = object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
         } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
@@ -176,8 +176,8 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             uint32_t length = a->arrayLength();
             for (uint32_t ii = 0; ii < length; ++ii) {
                 QV4::Value arrayItem = a->getIndexed(m_v4Engine->current, ii);
-                if (arrayItem.isObject()) {
-                    list << toQObject(arrayItem);
+                if (QV4::QObjectWrapper *qobjectWrapper = arrayItem.as<QV4::QObjectWrapper>()) {
+                    list << qobjectWrapper->object();
                 } else {
                     list << 0;
                 }
@@ -1021,7 +1021,7 @@ QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
     QV4::QObjectWrapper *wrapper = value.as<QV4::QObjectWrapper>();
     if (!wrapper)
         return 0;
-    return wrapper->object;
+    return wrapper->object();
 }
 
 void QV8Engine::startTimer(const QString &timerName)

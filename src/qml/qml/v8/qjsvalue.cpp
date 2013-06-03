@@ -925,12 +925,11 @@ bool QJSValue::hasOwnProperty(const QString &name) const
  */
 QObject *QJSValue::toQObject() const
 {
-    Object *o = d->value.asObject();
+    QV4::QObjectWrapper *o = d->value.as<QV4::QObjectWrapper>();
     if (!o)
         return 0;
 
-    QV8Engine *v8 = d->engine()->publicEngine->handle();
-    return v8->toQObject(d->value);
+    return o->object();
 }
 
 /*!
@@ -979,11 +978,7 @@ bool QJSValue::isRegExp() const
 */
 bool QJSValue::isQObject() const
 {
-    Object *o = d->value.asObject();
-    if (!o)
-        return false;
-
-    return o->as<QV4::QObjectWrapper>() != 0;
+    return d->value.as<QV4::QObjectWrapper>() != 0;
 }
 
 QT_END_NAMESPACE

@@ -3755,11 +3755,12 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
         v8::Handle<v8::Value> item = (*args)[0];
-        QV8Engine *engine = args->engine();
 
         QQuickItem *itemObj = 0;
-        if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item->v4Value()));
+        if (!item->IsNull()) {
+            if (QV4::QObjectWrapper *qobjectWrapper = item->v4Value().as<QV4::QObjectWrapper>())
+                itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
+        }
 
         if (!itemObj && !item->IsNull()) {
             qmlInfo(this) << "mapFromItem() given argument \"" << item->v4Value().toQString()
@@ -3827,11 +3828,12 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
         v8::Handle<v8::Value> item = (*args)[0];
-        QV8Engine *engine = args->engine();
 
         QQuickItem *itemObj = 0;
-        if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item->v4Value()));
+        if (!item->IsNull()) {
+            if (QV4::QObjectWrapper *qobjectWrapper = item->v4Value().as<QV4::QObjectWrapper>())
+                itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
+        }
 
         if (!itemObj && !item->IsNull()) {
             qmlInfo(this) << "mapToItem() given argument \"" << item->v4Value().toQString()

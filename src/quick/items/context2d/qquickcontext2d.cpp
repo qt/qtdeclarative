@@ -1537,9 +1537,10 @@ static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
 
     r->context->beginPath();
     if (value->IsObject()) {
-        QQuickPath* path = qobject_cast<QQuickPath*>(engine->toQObject(value->v4Value()));
-        if (path)
-            r->context->m_path = path->path();
+        if (QV4::QObjectWrapper *qobjectWrapper = value->v4Value().as<QV4::QObjectWrapper>()) {
+            if (QQuickPath *path = qobject_cast<QQuickPath*>(qobjectWrapper->object()))
+                r->context->m_path = path->path();
+        }
     } else {
         QString path = value->v4Value().toQString();
         QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
@@ -2329,8 +2330,12 @@ static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
 
         pixmap = r->context->createPixmap(url);
     } else if (args[0]->IsObject()) {
-        QQuickImage *imageItem = qobject_cast<QQuickImage*>(engine->toQObject(args[0]->v4Value()));
-        QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(engine->toQObject(args[0]->v4Value()));
+        QQuickImage *imageItem = 0;
+        if (QV4::QObjectWrapper *qobjectWrapper = args[0]->v4Value().as<QV4::QObjectWrapper>())
+            imageItem = qobject_cast<QQuickImage*>(qobjectWrapper->object());
+        QQuickCanvasItem *canvas = 0;
+        if (QV4::QObjectWrapper *qobjectWrapper = args[0]->v4Value().as<QV4::QObjectWrapper>())
+            canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object());
 
         QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
         if (pix && !pix->image.isNull()) {

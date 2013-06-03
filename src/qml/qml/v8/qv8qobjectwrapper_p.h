@@ -83,15 +83,17 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
     Q_MANAGED
 
-    QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
+    QObjectWrapper(ExecutionEngine *v8Engine, QObject *m_object);
     ~QObjectWrapper();
 
     QV8Engine *v8Engine; // ### Remove again.
-    QQmlGuard<QObject> object;
+
+    QObject *object() const { return m_object.data(); }
 
     void deleteQObject(bool deleteInstantly = false);
 
 private:
+    QQmlGuard<QObject> m_object;
     String *m_destroy;
     String *m_toString;
 
@@ -99,7 +101,7 @@ private:
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static void markObjects(Managed *that);
 
-    static Value enumerateProperties(Object *object);
+    static Value enumerateProperties(Object *m_object);
 
     static void destroy(Managed *that)
     {
@@ -167,7 +169,6 @@ public:
     void destroy();
 
     v8::Handle<v8::Value> newQObject(QObject *object);
-    QObject *toQObject(v8::Handle<v8::Object>);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
     inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, RevisionMode);

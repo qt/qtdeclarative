@@ -1031,7 +1031,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
             v->addVmePropertyReference();
         } else if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
             // We need to track this QObject to signal its deletion
-            valueObject = wrapper->object;
+            valueObject = wrapper->object();
 
             // Do we already have a QObject guard for this property?
             if (valueObject && !guard) {

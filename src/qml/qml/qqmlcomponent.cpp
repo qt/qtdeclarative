@@ -1181,8 +1181,10 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QObject *parent = 0;
     QV4::Value valuemap = QV4::Value::emptyValue();
 
-    if (args->length() >= 1)
-        parent = args->engine()->toQObject((*args)[0]);
+    if (args->length() >= 1) {
+        if (QV4::QObjectWrapper *qobjectWrapper = (*args)[0].as<QV4::QObjectWrapper>())
+            parent = qobjectWrapper->object();
+    }
 
     if (args->length() >= 2) {
         QV4::Value v = (*args)[1];
@@ -1301,8 +1303,10 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::Value valuemap = QV4::Value::emptyValue();
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
-    if (args->length() >= 1)
-        parent = args->engine()->toQObject((*args)[0]);
+    if (args->length() >= 1) {
+        if (QV4::QObjectWrapper *qobjectWrapper = (*args)[0].as<QV4::QObjectWrapper>())
+            parent = qobjectWrapper->object();
+    }
 
     if (args->length() >= 2) {
         QV4::Value v = (*args)[1];

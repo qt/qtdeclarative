@@ -997,7 +997,9 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
     if (url.isValid() && url.isRelative())
         url = context->resolvedUrl(url);
 
-    QObject *parentArg = v8engine->toQObject(ctx->arguments[1]);
+    QObject *parentArg = 0;
+    if (QV4::QObjectWrapper *qobjectWrapper = ctx->arguments[1].as<QV4::QObjectWrapper>())
+        parentArg = qobjectWrapper->object();
     if (!parentArg)
         V4THROW_ERROR("Qt.createQmlObject(): Missing parent object");
 
@@ -1111,7 +1113,8 @@ Value QtObject::method_createComponent(SimpleCallContext *ctx)
 
         if (consumedCount < ctx->argumentCount) {
             if (lastArg.isObject()) {
-                parentArg = v8engine->toQObject(lastArg);
+                if (QV4::QObjectWrapper *qobjectWrapper = lastArg.as<QV4::QObjectWrapper>())
+                    parentArg = qobjectWrapper->object();
                 if (!parentArg)
                     ctx->throwError(invalidParent);
             } else if (lastArg.isNull()) {

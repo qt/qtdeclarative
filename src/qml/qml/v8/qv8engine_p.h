@@ -259,7 +259,6 @@ public:
     // Return a JS wrapper for the given QObject \a object
     inline QV4::Value newQObject(QObject *object);
     inline QV4::Value newQObject(QObject *object, const ObjectOwnership ownership);
-    inline QObject *toQObject(const QV4::Value &value);
 
     // Return a JS string for the given QString \a string
     QV4::Value toString(const QString &string);
@@ -352,11 +351,6 @@ private:
 
     Q_DISABLE_COPY(QV8Engine)
 };
-
-QObject *QV8Engine::toQObject(const QV4::Value &value)
-{
-    return value.isObject() ? m_qobjectWrapper.toQObject(value) : 0;
-}
 
 QV4::Value QV8Engine::newQObject(QObject *object)
 {

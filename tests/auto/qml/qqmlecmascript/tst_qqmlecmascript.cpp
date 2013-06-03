@@ -2323,7 +2323,9 @@ void tst_qqmlecmascript::callQtInvokables()
     o->reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QObject()");
-    QCOMPARE(engine->toQObject(ret->v4Value()), (QObject *)o);
+    QV4::QObjectWrapper *qobjectWrapper = ret->v4Value().as<QV4::QObjectWrapper>();
+    QVERIFY(qobjectWrapper);
+    QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 4);
     QCOMPARE(o->actuals().count(), 0);

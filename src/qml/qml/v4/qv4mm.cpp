@@ -300,7 +300,7 @@ void MemoryManager::mark()
         QObjectWrapper *qobjectWrapper = weak->value.as<QObjectWrapper>();
         if (!qobjectWrapper)
             continue;
-        QObject *qobject = qobjectWrapper->object;
+        QObject *qobject = qobjectWrapper->object();
         if (!qobject)
             continue;
         bool keepAlive = QQmlData::keepAliveDuringGarbageCollection(qobject);
