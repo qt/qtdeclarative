@@ -209,12 +209,12 @@ public:
     };
 
     const Role *getRoleOrCreate(const QString &key, const QVariant &data);
-    const Role &getRoleOrCreate(v8::Handle<v8::String> key, Role::DataType type);
+    const Role &getRoleOrCreate(const QV4::Value &key, Role::DataType type);
     const Role &getRoleOrCreate(const QString &key, Role::DataType type);
 
     const Role &getExistingRole(int index) { return *roles.at(index); }
     const Role *getExistingRole(const QString &key);
-    const Role *getExistingRole(v8::Handle<v8::String> key);
+    const Role *getExistingRole(const QV4::Value &key);
 
     int roleCount() const { return roles.count(); }
 
@@ -250,14 +250,14 @@ private:
 
     int setVariantProperty(const ListLayout::Role &role, const QVariant &d);
 
-    int setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Value> d, QV8Engine *eng);
+    int setJsProperty(const ListLayout::Role &role, const QV4::Value &d, QV8Engine *eng);
 
     int setStringProperty(const ListLayout::Role &role, const QString &s);
     int setDoubleProperty(const ListLayout::Role &role, double n);
     int setBoolProperty(const ListLayout::Role &role, bool b);
     int setListProperty(const ListLayout::Role &role, ListModel *m);
     int setQObjectProperty(const ListLayout::Role &role, QObject *o);
-    int setVariantMapProperty(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+    int setVariantMapProperty(const ListLayout::Role &role, QV4::Object *o, QV8Engine *eng);
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
     int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
 
@@ -266,7 +266,7 @@ private:
     void setBoolPropertyFast(const ListLayout::Role &role, bool b);
     void setQObjectPropertyFast(const ListLayout::Role &role, QObject *o);
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
-    void setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+    void setVariantMapFast(const ListLayout::Role &role, QV4::Object *o, QV8Engine *eng);
     void setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt);
 
     void clearProperty(const ListLayout::Role &role);
@@ -302,7 +302,7 @@ public:
     void destroy();
 
     int setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data);
-    int setExistingProperty(int uid, const QString &key, v8::Handle<v8::Value> data, QV8Engine *eng);
+    int setExistingProperty(int uid, const QString &key, const QV4::Value &data, QV8Engine *eng);
 
     QVariant getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV8Engine *eng);
     ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);
@@ -327,11 +327,11 @@ public:
         return elements.count();
     }
 
-    void set(int elementIndex, v8::Handle<v8::Object> object, QVector<int> *roles, QV8Engine *eng);
-    void set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
+    void set(int elementIndex, QV4::Object *object, QVector<int> *roles, QV8Engine *eng);
+    void set(int elementIndex, QV4::Object *object, QV8Engine *eng);
 
-    int append(v8::Handle<v8::Object> object, QV8Engine *eng);
-    void insert(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
+    int append(QV4::Object *object, QV8Engine *eng);
+    void insert(int elementIndex, QV4::Object *object, QV8Engine *eng);
 
     void clear();
     void remove(int index, int count);
