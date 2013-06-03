@@ -1533,7 +1533,6 @@ static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
 {
     QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
     r->context->beginPath();
     if (value->IsObject()) {
@@ -2311,7 +2310,6 @@ static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
     QQuickJSContext2D *r = args.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE();
     qreal sx, sy, sw, sh, dx, dy, dw, dh;
 
     if (!args.Length())
