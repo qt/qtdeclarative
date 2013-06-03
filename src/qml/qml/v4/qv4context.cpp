@@ -532,8 +532,10 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             if (c->activation) {
                 bool hasProperty = false;
                 Value v = c->activation->get(c, name, &hasProperty);
-                if (hasProperty)
+                if (hasProperty) {
+                    *base = c->activation;
                     return v;
+                }
             }
             if (f->function && f->function->isNamedExpression
                 && name->isEqualTo(f->function->name))
@@ -581,6 +583,11 @@ void ExecutionContext::throwSyntaxError(DiagnosticMessage *message)
 void ExecutionContext::throwTypeError()
 {
     throwError(Value::fromObject(engine->newTypeErrorObject(QStringLiteral("Type error"))));
+}
+
+void ExecutionContext::throwTypeError(const QString &message)
+{
+    throwError(Value::fromObject(engine->newTypeErrorObject(message)));
 }
 
 void ExecutionContext::throwUnimplemented(const QString &message)

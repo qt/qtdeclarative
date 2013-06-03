@@ -779,8 +779,13 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
     Object *base;
     Value func = context->getPropertyAndBase(name, &base);
     FunctionObject *o = func.asFunctionObject();
-    if (!o)
-        context->throwTypeError();
+    if (!o) {
+        QString objectAsString = QStringLiteral("[null]");
+        if (base)
+            objectAsString = Value::fromObject(base).toQString();
+        QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
+        context->throwTypeError(msg);
+    }
 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
 
