@@ -83,7 +83,9 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
     Q_MANAGED
 
-    QObjectWrapper(ExecutionEngine *v8Engine, QObject *m_object);
+    enum RevisionMode { IgnoreRevision, CheckRevision };
+
+    QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
     ~QObjectWrapper();
 
     QV8Engine *v8Engine; // ### Remove again.
@@ -91,6 +93,8 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     QObject *object() const { return m_object.data(); }
 
     void deleteQObject(bool deleteInstantly = false);
+
+    Value getProperty(ExecutionContext *ctx, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
 private:
     QQmlGuard<QObject> m_object;
@@ -170,9 +174,8 @@ public:
 
     v8::Handle<v8::Value> newQObject(QObject *object);
 
-    enum RevisionMode { IgnoreRevision, CheckRevision };
-    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, RevisionMode);
-    inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, RevisionMode);
+    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);
+    inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
 
 private:
     friend class QQmlPropertyCache;
@@ -182,9 +185,9 @@ private:
 
     v8::Handle<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
     static QV4::Value GetProperty(QV8Engine *, QObject *,
-                                             const QHashedV4String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
+                                             const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
-                            v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
+                            v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
     static QV4::Value Connect(QV4::SimpleCallContext *ctx);
     static QV4::Value Disconnect(QV4::SimpleCallContext *ctx);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, QV4::FunctionObject *);
@@ -198,7 +201,7 @@ private:
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV4String &string,
-                                                     QQmlContextData *context, RevisionMode mode)
+                                                     QQmlContextData *context, QV4::QObjectWrapper::RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
     if (!dd || !dd->propertyCache ||
@@ -210,7 +213,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHas
 }
 
 bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV4String &string,
-                                    QQmlContextData *context, v8::Handle<v8::Value> value, RevisionMode mode)
+                                    QQmlContextData *context, v8::Handle<v8::Value> value, QV4::QObjectWrapper::RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
     if (!dd || !dd->propertyCache ||

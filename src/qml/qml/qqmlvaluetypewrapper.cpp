@@ -284,7 +284,7 @@ Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *context = r->v8->callingContext();
-        return r->v8->qobjectWrapper()->getProperty(r->type, propertystring, context, QV8QObjectWrapper::IgnoreRevision)->v4Value();
+        return r->v8->qobjectWrapper()->getProperty(r->type, propertystring, context, QV4::QObjectWrapper::IgnoreRevision)->v4Value();
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

@@ -229,10 +229,9 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
         // Search scope object
         if (scopeObject) {
-            QV4::Value wrapper = qobjectWrapper->newQObject(scopeObject)->v4Value();
-            if (QV4::Object *o = wrapper.asObject()) {
+            if (QV4::QObjectWrapper *o = qobjectWrapper->newQObject(scopeObject)->v4Value().as<QV4::QObjectWrapper>()) {
                 bool hasProp = false;
-                QV4::Value result = o->get(o->engine()->current, propertystring.string().asString(), &hasProp);
+                QV4::Value result = o->getProperty(o->engine()->current, propertystring.string().asString(), QV4::QObjectWrapper::CheckRevision, &hasProp);
                 if (hasProp) {
                     if (hasProperty)
                         *hasProperty = true;
@@ -246,7 +245,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
         // Search context object
         if (context->contextObject) {
             QV4::Value result = qobjectWrapper->getProperty(context->contextObject, propertystring,
-                                                                       context, QV8QObjectWrapper::CheckRevision)->v4Value();
+                                                                       context, QV4::QObjectWrapper::CheckRevision)->v4Value();
             if (!result.isEmpty()) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -299,14 +298,14 @@ void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, con
 
         // Search scope object
         if (scopeObject &&
-            qobjectWrapper->setProperty(scopeObject, propertystring, context, value, QV8QObjectWrapper::CheckRevision))
+            qobjectWrapper->setProperty(scopeObject, propertystring, context, value, QV4::QObjectWrapper::CheckRevision))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
             qobjectWrapper->setProperty(context->contextObject, propertystring, context, value,
-                                        QV8QObjectWrapper::CheckRevision))
+                                        QV4::QObjectWrapper::CheckRevision))
             return;
 
         context = context->parent;

@@ -119,24 +119,22 @@ void QObjectWrapper::deleteQObject(bool deleteInstantly)
     }
 }
 
-QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value QObjectWrapper::getProperty(ExecutionContext *ctx, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
 {
-    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-
-    if (QQmlData::wasDeleted(that->m_object)) {
+    if (QQmlData::wasDeleted(m_object)) {
         if (hasProperty)
             *hasProperty = false;
         return QV4::Value::undefinedValue();
     }
 
-    if (name->isEqualTo(that->m_destroy) || name->isEqualTo(that->m_toString)) {
+    if (name->isEqualTo(m_destroy) || name->isEqualTo(m_toString)) {
         bool hasProp = false;
-        QV4::Value method = QV4::Object::get(m, ctx, name, &hasProp);
+        QV4::Value method = QV4::Object::get(this, ctx, name, &hasProp);
 
         if (!hasProp) {
-            int index = name->isEqualTo(that->m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, that->m_object, index, QV4::Value::undefinedValue()));
-            QV4::Object::put(m, ctx, name, method);
+            int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+            method = QV4::Value::fromObject(new (ctx->engine->memoryManager) QV4::QObjectMethod(ctx->engine->rootContext, m_object, index, QV4::Value::undefinedValue()));
+            QV4::Object::put(this, ctx, name, method);
         }
 
         if (hasProperty)
@@ -147,11 +145,9 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
 
     QHashedV4String propertystring(QV4::Value::fromString(name));
 
-    QV8Engine *v8engine = that->v8Engine;
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
 
-    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8engine, that->m_object, propertystring,
-                                                                  context, QV8QObjectWrapper::IgnoreRevision);
+    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8Engine, m_object, propertystring, context, revisionMode);
     if (!result.IsEmpty()) {
         if (hasProperty)
             *hasProperty = true;
@@ -167,16 +163,22 @@ QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
                 if (r.scriptIndex != -1) {
                     return QV4::Value::undefinedValue();
                 } else if (r.type) {
-                    return QmlTypeWrapper::create(v8engine, that->m_object, r.type, QmlTypeWrapper::ExcludeEnums);
+                    return QmlTypeWrapper::create(v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
                 } else if (r.importNamespace) {
-                    return QmlTypeWrapper::create(v8engine, that->m_object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                    return QmlTypeWrapper::create(v8Engine, m_object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
                 }
                 Q_ASSERT(!"Unreachable");
             }
         }
     }
 
-    return QV4::Object::get(m, ctx, name, hasProperty);
+    return QV4::Object::get(this, ctx, name, hasProperty);
+}
+
+QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+{
+    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+    return that->getProperty(ctx, name, IgnoreRevision, hasProperty);
 }
 
 void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
@@ -192,7 +194,7 @@ void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
 
     QV8Engine *v8engine = that->v8Engine;
     QQmlContextData *context = v8engine->callingContext();
-    bool result = QV8QObjectWrapper::SetProperty(v8engine, object, propertystring, context, value, QV8QObjectWrapper::IgnoreRevision);
+    bool result = QV8QObjectWrapper::SetProperty(v8engine, object, propertystring, context, value, QV4::QObjectWrapper::IgnoreRevision);
 
     if (!result) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
@@ -508,7 +510,7 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
 QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
                                                      const QHashedV4String &property,
                                                      QQmlContextData *context,
-                                                     QV8QObjectWrapper::RevisionMode revisionMode)
+                                                     QV4::QObjectWrapper::RevisionMode revisionMode)
 {
     // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
     // will be a faster way of creating QObject method objects.
@@ -543,7 +545,7 @@ QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
 
     QQmlData::flushPendingBinding(object, result->coreIndex);
 
-    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
+    if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
             return QV4::Value::emptyValue();
@@ -721,7 +723,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
 }
 
 bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV4String &property, QQmlContextData *context,
-                                    v8::Handle<v8::Value> value, QV8QObjectWrapper::RevisionMode revisionMode)
+                                    v8::Handle<v8::Value> value, QV4::QObjectWrapper::RevisionMode revisionMode)
 {
     if (QQmlData::wasDeleted(object))
         return false;
@@ -733,7 +735,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
     if (!result)
         return false;
 
-    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
+    if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
             return false;

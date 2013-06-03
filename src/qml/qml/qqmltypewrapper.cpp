@@ -158,7 +158,7 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
                 }
 
                 // check for property.
-                return v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV8QObjectWrapper::IgnoreRevision)->v4Value();
+                return v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV4::QObjectWrapper::IgnoreRevision)->v4Value();
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -183,7 +183,7 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
                     return v8engine->qobjectWrapper()->getProperty(ao, propertystring, context,
-                                                                   QV8QObjectWrapper::IgnoreRevision)->v4Value();
+                                                                   QV4::QObjectWrapper::IgnoreRevision)->v4Value();
 
                 // Fall through to base implementation
             }
@@ -243,7 +243,7 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
             v8engine->qobjectWrapper()->setProperty(ao, propertystring, context, value,
-                                                    QV8QObjectWrapper::IgnoreRevision);
+                                                    QV4::QObjectWrapper::IgnoreRevision);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -252,7 +252,7 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
             v8engine->qobjectWrapper()->setProperty(qobjectSingleton, propertystring, context, value,
-                                                    QV8QObjectWrapper::IgnoreRevision);
+                                                    QV4::QObjectWrapper::IgnoreRevision);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {
