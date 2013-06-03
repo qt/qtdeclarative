@@ -60,6 +60,7 @@
 #include <private/qv4runtime_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4sequenceobject_p.h>
+#include <private/qv4objectproto_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -88,6 +89,7 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 {
     this->v8Engine = QV8Engine::get(engine->publicEngine);
     vtbl = &static_vtbl;
+    prototype = engine->objectPrototype;
 
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
     m_toString = engine->newIdentifier(QStringLiteral("toString"));
