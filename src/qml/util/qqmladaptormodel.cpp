@@ -423,7 +423,7 @@ public:
                 type->model->aim()->index(index, 0, type->model->rootIndex), value, role);
     }
 
-    v8::Handle<v8::Value> get()
+    QV4::Value get()
     {
         if (!type->constructor) {
             QQmlAdaptorModelEngineData * const data = engineData(engine);
@@ -433,7 +433,7 @@ public:
         v8::Handle<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
         ++scriptRef;
-        return data;
+        return data->v4Value();
     }
 
     static v8::Handle<v8::Value> get_hasModelChildren(v8::Handle<v8::String>, const v8::AccessorInfo &info)
@@ -610,12 +610,12 @@ public:
                 data->engine->toVariant(value->v4Value(), QVariant::Invalid));
     }
 
-    v8::Handle<v8::Value> get()
+    QV4::Value get()
     {
         v8::Handle<v8::Object> data = engineData(engine)->constructorListItem.value().asFunctionObject()->newInstance();
         data->SetExternalResource(this);
         ++scriptRef;
-        return data;
+        return data->v4Value();
     }
 
     void setValue(const QString &role, const QVariant &value)
