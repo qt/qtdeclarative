@@ -188,13 +188,13 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 }
 
 #if defined(QT_NO_DEBUG)
-# define VALUE(param) *(VALUEPTR(param))
+# define VALUE(param) (*VALUEPTR(param))
 
 // The non-temp case might need some tweaking for QML: there it would probably be a value instead of a local.
 # define VALUEPTR(param) \
-    param.isTemp() ? stack + param.index \
-                   : (param.isLocal() ? static_cast<QV4::CallContext *>(context)->locals + param.index \
-                                      : getValueRef(context, stack, param))
+    (param.isTemp() ? stack + param.index \
+                    : (param.isLocal() ? static_cast<QV4::CallContext *>(context)->locals + param.index \
+                                       : getValueRef(context, stack, param)))
 #else
 # define VALUE(param) *getValueRef(context, stack, param, stackSize)
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
