@@ -928,3 +928,121 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
         return Value::undefinedValue();
     return Value::fromString(ctx, result);
 }
+
+
+
+QV4::Value JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
+{
+    if (value.isString())
+        return Value::fromString(engine->current, value.toString());
+    else if (value.isDouble())
+        return Value::fromDouble(value.toDouble());
+    else if (value.isBool())
+        return Value::fromBoolean(value.toBool());
+    else if (value.isArray())
+        return fromJsonArray(engine, value.toArray());
+    else if (value.isObject())
+        return fromJsonObject(engine, value.toObject());
+    else if (value.isNull())
+        return Value::nullValue();
+    else
+        return Value::undefinedValue();
+}
+
+QJsonValue JsonObject::toJsonValue(const QV4::Value &value,
+                                       V4ObjectSet &visitedObjects)
+{
+    if (String *s = value.asString())
+        return QJsonValue(s->toQString());
+    else if (value.isNumber())
+        return QJsonValue(value.toNumber());
+    else if (value.isBoolean())
+        return QJsonValue((bool)value.booleanValue());
+    else if (ArrayObject *a = value.asArrayObject())
+        return toJsonArray(a, visitedObjects);
+    else if (Object *o = value.asObject())
+        return toJsonObject(o, visitedObjects);
+    else if (value.isNull())
+        return QJsonValue(QJsonValue::Null);
+    else
+        return QJsonValue(QJsonValue::Undefined);
+}
+
+QV4::Value JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
+{
+    Object *o = engine->newObject();
+    for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
+        o->put(engine->current, engine->newString(it.key()), fromJsonValue(engine, it.value()));
+    return Value::fromObject(o);
+}
+
+QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects)
+{
+    QJsonObject result;
+    if (!o || o->asFunctionObject())
+        return result;
+
+    if (visitedObjects.contains(o)) {
+        // Avoid recursion.
+        // For compatibility with QVariant{List,Map} conversion, we return an
+        // empty object (and no error is thrown).
+        return result;
+    }
+
+    visitedObjects.insert(o);
+
+    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+    while (1) {
+        PropertyAttributes attributes;
+        String *name;
+        uint idx;
+        Property *p = it.next(&name, &idx, &attributes);
+        if (!p)
+            break;
+
+        Value v = o->getValue(o->engine()->current, p, attributes);
+        QString key = name ? name->toQString() : QString::number(idx);
+        result.insert(key, toJsonValue(v, visitedObjects));
+    }
+
+    visitedObjects.remove(o);
+
+    return result;
+}
+
+QV4::Value JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &array)
+{
+    int size = array.size();
+    ArrayObject *a = engine->newArrayObject();
+    a->arrayReserve(size);
+    for (int i = 0; i < size; i++)
+        a->arrayData[i].value = fromJsonValue(engine, array.at(i));
+    a->setArrayLengthUnchecked(size);
+    return Value::fromObject(a);
+}
+
+QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
+{
+    QJsonArray result;
+    if (!a)
+        return result;
+
+    if (visitedObjects.contains(a)) {
+        // Avoid recursion.
+        // For compatibility with QVariant{List,Map} conversion, we return an
+        // empty array (and no error is thrown).
+        return result;
+    }
+
+    visitedObjects.insert(a);
+
+    quint32 length = a->arrayLength();
+    for (quint32 i = 0; i < length; ++i) {
+        Value v = a->getIndexed(i);
+        result.append(toJsonValue(v, visitedObjects));
+    }
+
+    visitedObjects.remove(a);
+
+    return result;
+}

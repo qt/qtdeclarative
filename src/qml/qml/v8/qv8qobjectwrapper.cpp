@@ -61,6 +61,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4sequenceobject_p.h>
 #include <private/qv4objectproto_p.h>
+#include <private/qv4jsonobject_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -1729,13 +1730,13 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
         handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle(value));
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
-        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value));
+        jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(value.asArrayObject()));
         type = callType;
     } else if (callType == QMetaType::QJsonObject) {
-        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value));
+        jsonObjectPtr = new (&allocData) QJsonObject(QV4::JsonObject::toJsonObject(value.asObject()));
         type = callType;
     } else if (callType == QMetaType::QJsonValue) {
-        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value));
+        jsonValuePtr = new (&allocData) QJsonValue(QV4::JsonObject::toJsonValue(value));
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
@@ -1806,11 +1807,11 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
         return handlePtr->toValue();
     } else if (type == QMetaType::QJsonArray) {
-        return engine->jsonArrayToJS(*jsonArrayPtr);
+        return QV4::JsonObject::fromJsonArray(QV8Engine::getV4(engine), *jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {
-        return engine->jsonObjectToJS(*jsonObjectPtr);
+        return QV4::JsonObject::fromJsonObject(QV8Engine::getV4(engine), *jsonObjectPtr);
     } else if (type == QMetaType::QJsonValue) {
-        return engine->jsonValueToJS(*jsonValuePtr);
+        return QV4::JsonObject::fromJsonValue(QV8Engine::getV4(engine), *jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         QV4::Value rv = engine->fromVariant(value);

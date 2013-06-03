@@ -72,7 +72,6 @@
 
 #include "qv8objectresource_p.h"
 #include "qv8qobjectwrapper_p.h"
-#include "qv4jsonwrapper_p.h"
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
 
@@ -292,13 +291,6 @@ public:
     inline QVariant variantFromJS(const QV4::Value &value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
-    QV4::Value jsonValueToJS(const QJsonValue &value);
-    QJsonValue jsonValueFromJS(const QV4::Value &value);
-    QV4::Value jsonObjectToJS(const QJsonObject &object);
-    QJsonObject jsonObjectFromJS(const QV4::Value &value);
-    QV4::Value jsonArrayToJS(const QJsonArray &array);
-    QJsonArray jsonArrayFromJS(const QV4::Value &value);
-
     QV4::Value metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
 
@@ -322,7 +314,6 @@ protected:
     QV4::ExecutionEngine *m_v4Engine;
 
     QV8QObjectWrapper m_qobjectWrapper;
-    QV4JsonWrapper m_jsonWrapper;
 
     QV4::PersistentValue m_freezeObject;
 

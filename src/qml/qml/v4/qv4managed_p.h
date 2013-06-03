@@ -66,7 +66,6 @@ struct DateObject;
 struct FunctionObject;
 struct ErrorObject;
 struct ArgumentsObject;
-struct JSONObject;
 struct Managed;
 struct Value;
 struct Lookup;
@@ -204,8 +203,6 @@ public:
     DateObject *asDateObject() { return type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
     ErrorObject *asErrorObject() { return type == Type_ErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
-    JSONObject *asJSONObject() { return type == Type_JSONObject ? reinterpret_cast<JSONObject *>(this) : 0; }
-
 
     bool isListType() const { return type == Type_QmlSequence; }
 

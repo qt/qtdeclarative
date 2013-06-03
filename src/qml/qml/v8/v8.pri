@@ -6,7 +6,6 @@ HEADERS += \
     $$PWD/qv8profiler_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
-    $$PWD/qv4jsonwrapper_p.h \
     $$PWD/qv4domerrors_p.h \
     $$PWD/qv4sqlerrors_p.h \
     $$PWD/qqmlbuiltinfunctions_p.h \
@@ -15,7 +14,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/qv8engine.cpp \
     $$PWD/qv8qobjectwrapper.cpp \
-    $$PWD/qv4jsonwrapper.cpp \
     $$PWD/qv4domerrors.cpp \
     $$PWD/qv4sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp
