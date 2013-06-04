@@ -88,7 +88,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , debugger(0)
     , globalObject(0)
     , globalCode(0)
-    , externalResourceComparison(0)
     , functionsNeedSort(false)
     , regExpCache(0)
 {

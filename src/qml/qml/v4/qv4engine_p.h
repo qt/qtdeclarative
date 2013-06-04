@@ -203,8 +203,6 @@ struct Q_QML_EXPORT ExecutionEngine
     mutable QVector<Function *> functions;
     mutable bool functionsNeedSort;
 
-    ExternalResourceComparison externalResourceComparison;
-
     RegExpCache *regExpCache;
 
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
