@@ -176,6 +176,17 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
     return QV4::Object::get(this, ctx, name, hasProperty);
 }
 
+QV4::Value QObjectWrapper::wrap(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
+{
+    QQmlEngine *qmlEngine = qobject_cast<QQmlEngine*>(engine->publicEngine);
+    if (!ddata->propertyCache && qmlEngine) {
+        ddata->propertyCache = QQmlEnginePrivate::get(qmlEngine)->cache(object);
+        if (ddata->propertyCache) ddata->propertyCache->addref();
+    }
+
+    return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object));
+}
+
 QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
@@ -780,18 +791,6 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
 
-v8::Handle<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QQmlData *ddata, QV8Engine *engine)
-{
-    if (!ddata->propertyCache && engine->engine()) {
-        ddata->propertyCache = QQmlEnginePrivate::get(engine->engine())->cache(object);
-        if (ddata->propertyCache) ddata->propertyCache->addref();
-    }
-
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::QObjectWrapper *wrapper = new (v4->memoryManager) QV4::QObjectWrapper(v4, object);
-    return QV4::Value::fromObject(wrapper);
-}
-
 /*
 As V8 doesn't support an equality callback, for QObject's we have to return exactly the same
 V8 handle for subsequent calls to newQObject for the same QObject.  To do this we have a two
@@ -826,8 +825,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
                 ddata->jsEngineId == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
-        v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-        ddata->jsWrapper = rv->v4Value();
+        QV4::Value rv = QV4::QObjectWrapper::wrap(v4, ddata, object);
+        ddata->jsWrapper = rv;
         ddata->jsEngineId = v4->m_engineId;
         return rv;
 
@@ -841,8 +840,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
         if ((!found || (*iter)->jsWrapper.isEmpty()) && ddata->jsWrapper.isEmpty()) {
-            v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            ddata->jsWrapper = rv->v4Value();
+            QV4::Value rv = QV4::QObjectWrapper::wrap(v4, ddata, object);
+            ddata->jsWrapper = rv;
             ddata->jsEngineId = v4->m_engineId;
 
             if (found) {
@@ -858,8 +857,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         }
 
         if ((*iter)->jsWrapper.isEmpty()) {
-            v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            (*iter)->jsWrapper = rv->v4Value();
+            (*iter)->jsWrapper = QV4::QObjectWrapper::wrap(v4, ddata, object);
         }
 
         return (*iter)->jsWrapper.value();
