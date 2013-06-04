@@ -66,7 +66,6 @@ namespace QV4 {
 struct Value;
 struct Function;
 struct Object;
-struct ObjectIterator;
 struct BooleanObject;
 struct NumberObject;
 struct StringObject;

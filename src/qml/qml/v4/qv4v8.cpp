@@ -528,10 +528,10 @@ Handle<Array> Object::GetPropertyNames()
     QV4::ArrayObject *array = currentEngine()->newArrayObject();
     ObjectIterator it(o, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
     while (1) {
-        QV4::Value v = it.nextPropertyNameAsString();
-        if (v.isNull())
+        QV4::Value name = it.nextPropertyNameAsString();
+        if (name.isNull())
             break;
-        array->push_back(v);
+        array->push_back(name);
     }
     return QV4::Value::fromObject(array);
 }
@@ -544,10 +544,10 @@ Handle<Array> Object::GetOwnPropertyNames()
     ArrayObject *array = currentEngine()->newArrayObject();
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
-        QV4::Value v = it.nextPropertyNameAsString();
-        if (v.isNull())
+        QV4::Value name = it.nextPropertyNameAsString();
+        if (name.isNull())
             break;
-        array->push_back(v);
+        array->push_back(name);
     }
     return QV4::Value::fromObject(array);
 }

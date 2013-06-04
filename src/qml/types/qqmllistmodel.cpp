@@ -418,15 +418,10 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
     QV4::ExecutionEngine *v4 = object->engine();
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
     while (1) {
-        QV4::String *name;
-        uint index;
-        QV4::PropertyAttributes attrs;
-        QV4::Property *p = it.next(&name, &index, &attrs);
-        if (!p)
+        QV4::Value propertyValue;
+        QV4::Value propertyName = it.nextPropertyNameAsString(&propertyValue);
+        if (propertyName.isNull())
             break;
-
-        QV4::Value propertyName = QV4::Value::fromString(name ? name : v4->newString(QString::number(index)));
-        QV4::Value propertyValue = object->getValue(v4->current, p, attrs);
 
         // Check if this key exists yet
         int roleIndex = -1;
@@ -489,15 +484,10 @@ void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
     QV4::ExecutionEngine *v4 = object->engine();
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
     while (1) {
-        QV4::String *name;
-        uint index;
-        QV4::PropertyAttributes attrs;
-        QV4::Property *p = it.next(&name, &index, &attrs);
-        if (!p)
+        QV4::Value propertyValue;
+        QV4::Value propertyName = it.nextPropertyNameAsString(&propertyValue);
+        if (propertyName.isNull())
             break;
-
-        QV4::Value propertyName = QV4::Value::fromString(name ? name : v4->newString(QString::number(index)));
-        QV4::Value propertyValue = object->getValue(v4->current, p, attrs);
 
         // Add the value now
         if (QV4::String *s = propertyValue.asString()) {

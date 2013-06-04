@@ -82,8 +82,8 @@ struct Q_QML_EXPORT ObjectIterator
 
     ObjectIterator(Object *o, uint flags);
     Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);
-    Value nextPropertyName();
-    Value nextPropertyNameAsString();
+    Value nextPropertyName(Value *value = 0);
+    Value nextPropertyNameAsString(Value *value = 0);
 };
 
 }

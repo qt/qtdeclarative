@@ -351,19 +351,10 @@ Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
-        uint index;
-        String *name;
-        Property *pd = it.next(&name, &index);
-        if (!pd)
+        Value name = it.nextPropertyNameAsString();
+        if (name.isNull())
             break;
-        Value key;
-        if (name) {
-            key = Value::fromString(name);
-        } else {
-            key = Value::fromDouble(index);
-            key = __qmljs_to_string(key, ctx);
-        }
-        a->push_back(key);
+        a->push_back(name);
     }
 
     return Value::fromObject(a);
@@ -567,10 +558,10 @@ ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Val
 
     ObjectIterator it(O, ObjectIterator::NoFlags);
     while (1) {
-        Value v = it.nextPropertyNameAsString();
-        if (v.isNull())
+        Value name = it.nextPropertyNameAsString();
+        if (name.isNull())
             break;
-        array->push_back(v);
+        array->push_back(name);
     }
     return array;
 }

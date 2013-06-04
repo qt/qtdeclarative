@@ -778,18 +778,11 @@ QString Stringify::JO(Object *o)
         ObjectIterator it(o, ObjectIterator::EnumerableOnly);
 
         while (1) {
-            String *name;
-            uint index;
-            PropertyAttributes attrs;
-            Property *pd = it.next(&name, &index, &attrs);
-            if (!pd)
+            Value v;
+            Value name = it.nextPropertyNameAsString(&v);
+            if (name.isNull())
                 break;
-            Value v = o->getValue(ctx, pd, attrs);
-            QString key;
-            if (name)
-                key = name->toQString();
-            else
-                key = QString::number(index);
+            QString key = name.toQString();
             QString member = makeMember(key, v);
             if (!member.isEmpty())
                 partial += member;
@@ -993,15 +986,12 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     while (1) {
-        PropertyAttributes attributes;
-        String *name;
-        uint idx;
-        Property *p = it.next(&name, &idx, &attributes);
-        if (!p)
+        Value v;
+        Value name = it.nextPropertyNameAsString(&v);
+        if (name.isNull())
             break;
 
-        Value v = o->getValue(o->engine()->current, p, attributes);
-        QString key = name ? name->toQString() : QString::number(idx);
+        QString key = name.toQString();
         result.insert(key, toJsonValue(v, visitedObjects));
     }
 

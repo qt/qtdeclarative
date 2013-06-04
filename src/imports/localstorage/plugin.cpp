@@ -268,17 +268,17 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             } else if (Object *object = values.asObject()) {
                 ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 while (1) {
-                    String *name;
-                    uint index;
-                    PropertyAttributes attrs;
-                    Property *p = it.next(&name, &index, &attrs);
-                    if (!p)
+                    Value value;
+                    Value key = it.nextPropertyName(&value);
+                    if (key.isNull())
                         break;
-                    QVariant v = engine->toVariant(object->getValue(ctx, p, attrs), -1);
-                    if (name)
-                        query.bindValue(name->toQString(), v);
-                    else
-                        query.bindValue(index, v);
+                    QVariant v = engine->toVariant(value, -1);
+                    if (key.isString()) {
+                        query.bindValue(key.stringValue()->toQString(), v);
+                    } else {
+                        assert(key.isInteger());
+                        query.bindValue(key.integerValue(), v);
+                    }
                 }
             } else {
                 query.bindValue(0, engine->toVariant(values, -1));

@@ -210,26 +210,38 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
     return 0;
 }
 
-Value ObjectIterator::nextPropertyName()
+Value ObjectIterator::nextPropertyName(Value *value)
 {
+    PropertyAttributes attrs;
     uint index;
     String *name;
-    next(&name, &index);
+    Property *p = next(&name, &index, &attrs);
+    if (!p)
+        return Value::nullValue();
+
+    if (value)
+        *value = object->getValue(object->engine()->current, p, attrs);
+
     if (name)
         return Value::fromString(name);
-    if (index < UINT_MAX)
-        return Value::fromDouble(index);
-    return Value::nullValue();
+    assert(index < UINT_MAX);
+    return Value::fromDouble(index);
 }
 
-Value ObjectIterator::nextPropertyNameAsString()
+Value ObjectIterator::nextPropertyNameAsString(Value *value)
 {
+    PropertyAttributes attrs;
     uint index;
     String *name;
-    next(&name, &index);
+    Property *p = next(&name, &index, &attrs);
+    if (!p)
+        return Value::nullValue();
+
+    if (value)
+        *value = object->getValue(object->engine()->current, p, attrs);
+
     if (name)
         return Value::fromString(name);
-    if (index < UINT_MAX)
-        return __qmljs_to_string(Value::fromDouble(index), object->internalClass->engine->current);
-    return Value::nullValue();
+    assert(index < UINT_MAX);
+    return Value::fromString(object->engine()->newString(QString::number(index)));
 }
