@@ -43,90 +43,69 @@ import QtQuick.Dialogs 1.0
 import "../shared"
 
 Rectangle {
-    width: 580
-    height: 400
+    width: 320
+    height: 200
     color: palette.window
     SystemPalette { id: palette }
     clip: true
 
-    FileDialog {
-        id: fileDialog
-        visible: fileDialogVisible.checked
-        modality: fileDialogModal.checked ? Qt.WindowModal : Qt.NonModal
-        title: fileDialogSelectFolder.checked ? "Choose a folder" :
-            (fileDialogSelectMultiple.checked ? "Choose some files" : "Choose a file")
-        selectExisting: fileDialogSelectExisting.checked
-        selectMultiple: fileDialogSelectMultiple.checked
-        selectFolder: fileDialogSelectFolder.checked
-        nameFilters: [ "Image files (*.png *.jpg)", "All files (*)" ]
-        selectedNameFilter: "All files (*)"
-        onAccepted: { console.log("Accepted: " + fileUrls) }
+    //! [colordialog]
+    ColorDialog {
+        id: colorDialog
+        visible: colorDialogVisible.checked
+        modality: colorDialogModal.checked ? Qt.WindowModal : Qt.NonModal
+        title: "Choose a color"
+        color: "green"
+        showAlphaChannel: colorDialogAlpha.checked
+        onAccepted: { console.log("Accepted: " + color) }
         onRejected: { console.log("Rejected") }
     }
+    //! [colordialog]
 
     Column {
         anchors.fill: parent
         anchors.margins: 12
         spacing: 8
         Text {
-            color: palette.windowText
             font.bold: true
-            text: "File dialog properties:"
+            text: "Color dialog properties:"
         }
         CheckBox {
-            id: fileDialogModal
+            id: colorDialogModal
             text: "Modal"
             checked: true
-            Binding on checked { value: fileDialog.modality != Qt.NonModal }
+            Binding on checked { value: colorDialog.modality != Qt.NonModal }
         }
         CheckBox {
-            id: fileDialogSelectFolder
-            text: "Select Folder"
-            Binding on checked { value: fileDialog.selectFolder }
+            id: colorDialogAlpha
+            text: "Show alpha channel"
+            Binding on checked { value: colorDialog.showAlphaChannel }
         }
         CheckBox {
-            id: fileDialogSelectExisting
-            text: "Select Existing Files"
-            checked: true
-            Binding on checked { value: fileDialog.selectExisting }
-        }
-        CheckBox {
-            id: fileDialogSelectMultiple
-            text: "Select Multiple Files"
-            Binding on checked { value: fileDialog.selectMultiple }
-        }
-        CheckBox {
-            id: fileDialogVisible
+            id: colorDialogVisible
             text: "Visible"
-            Binding on checked { value: fileDialog.visible }
+            Binding on checked { value: colorDialog.visible }
         }
-        Text {
-            color: palette.windowText
-            text: "<b>current view folder:</b> " + fileDialog.folder
-        }
-        Text {
-            color: palette.windowText
-            text: "<b>name filters:</b> {" + fileDialog.nameFilters + "}"
-            width: parent.width
-            wrapMode: Text.Wrap
-        }
-        Text {
-            color: palette.windowText
-            text: "<b>current filter:</b>" + fileDialog.selectedNameFilter
-            width: parent.width
-            wrapMode: Text.Wrap
-        }
-        Text {
-            color: palette.windowText
-            text: "<b>chosen files:</b> " + fileDialog.fileUrls
-            width: parent.width
-            wrapMode: Text.Wrap
-        }
-        Text {
-            color: palette.windowText
-            text: "<b>chosen single path:</b> " + fileDialog.fileUrl
-            width: parent.width
-            wrapMode: Text.Wrap
+        Row {
+            id: colorRow
+            spacing: parent.spacing
+            height: colorLabel.implicitHeight * 2.0
+            Rectangle {
+                color: colorDialog.color
+                height: parent.height
+                width: height * 2
+                border.color: "black"
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: colorDialog.open()
+                }
+            }
+            Text {
+                id: colorLabel
+                color: palette.windowText
+                text: "<b>current color:</b> " + colorDialog.color
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
     }
 
@@ -149,18 +128,17 @@ Rectangle {
             Button {
                 text: "Open"
                 anchors.verticalCenter: parent.verticalCenter
-                onClicked: fileDialog.open()
+                onClicked: colorDialog.open()
             }
             Button {
                 text: "Close"
                 anchors.verticalCenter: parent.verticalCenter
-                onClicked: fileDialog.close()
+                onClicked: colorDialog.close()
             }
             Button {
-                text: "go to /tmp"
+                text: "set to green"
                 anchors.verticalCenter: parent.verticalCenter
-                // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
-                onClicked: fileDialog.folder = "/tmp"
+                onClicked: colorDialog.color = "green"
             }
         }
     }

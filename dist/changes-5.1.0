@@ -43,6 +43,9 @@ Third party components
    as count, which are based off of the data model will no longer update
    immediately if queried. Updates are batched to happen once per frame (or
    when properties are being set).
+
+ - tryCompare now correctly fails when it only gets two parameters
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************

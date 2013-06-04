@@ -42,23 +42,38 @@ import QtQuick 2.0
 
 Item {
     id: display
+    property bool enteringDigits: false
 
     function displayOperator(operator)
     {
         listView.model.append({ "operator": operator, "operand": "" })
+        enteringDigits = true
     }
 
     function newLine(operator, operand)
     {
         listView.model.append({ "operator": operator, "operand": operand })
+        enteringDigits = false
+        listView.positionViewAtEnd()
     }
 
     function appendDigit(digit)
     {
-        if (!listView.model.count)
+        if (!enteringDigits)
             listView.model.append({ "operator": "", "operand": "" })
         var i = listView.model.count - 1;
         listView.model.get(i).operand = listView.model.get(i).operand + digit;
+        enteringDigits = true
+    }
+
+    function clear()
+    {
+        if (enteringDigits) {
+            var i = listView.model.count - 1
+            if (i >= 0)
+                listView.model.remove(i)
+            enteringDigits = false
+        }
     }
 
     Item {
@@ -87,6 +102,7 @@ Item {
         }
 
         Image {
+            id: grip
             source: "images/paper-grip.png"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
@@ -97,7 +113,7 @@ Item {
             id: listView
             x: 16; y: 30
             width: display.width
-            height: display.height
+            height: display.height - 50 - y
             delegate: Item {
                 height: 20
                 width: parent.width

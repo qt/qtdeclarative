@@ -57,7 +57,7 @@ Rectangle {
 
     Item {
         id: pad
-        width: window.width * 0.58
+        width: 180
         NumberPad { y: 10; anchors.horizontalCenter: parent.horizontalCenter }
     }
 
@@ -77,7 +77,7 @@ Rectangle {
     Display {
         id: display
         x: -16
-        width: window.width * 0.42
+        width: window.width - pad.width
         height: parent.height
 
         MouseArea {
@@ -85,7 +85,12 @@ Rectangle {
             property real oldP: 0
             property bool rewind: false
 
-            anchors.fill: parent
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+            }
+            height: 50
             onPositionChanged: {
                 var reverse = startX > window.width / 2
                 var mx = mapToItem(window, mouse.x).x

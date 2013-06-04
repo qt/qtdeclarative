@@ -626,7 +626,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     more information about its position within the Column.
 
     For more information on using Column and other related positioner-types, see
-    \l{Item Layouts}.
+    \l{Item Positioners}.
 
 
     \section1 Using Transitions
@@ -644,7 +644,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     \image verticalpositioner_transition.gif
 
-    \sa Row, Grid, Flow, Positioner, {Qt Quick Examples - Positioners}
+    \sa Row, Grid, Flow, Positioner, ColumnLayout, {Qt Quick Examples - Positioners}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::populate
@@ -795,10 +795,10 @@ void QQuickColumn::reportConflictingAnchors()
     more information about its position within the Row.
 
     For more information on using Row and other related positioner-types, see
-    \l{Item Layouts}.
+    \l{Item Positioners}.
 
 
-    \sa Column, Grid, Flow, Positioner, {Qt Quick Examples - Positioners}
+    \sa Column, Grid, Flow, Positioner, RowLayout, {Qt Quick Examples - Positioners}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::populate
@@ -1028,10 +1028,10 @@ void QQuickRow::reportConflictingAnchors()
     or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
     For more information on using Grid and other related positioner-types, see
-    \l{Item Layouts}.
+    \l{Item Positioners}.
 
 
-    \sa Flow, Row, Column, Positioner, {Qt Quick Examples - Positioners}
+    \sa Flow, Row, Column, Positioner, GridLayout, {Qt Quick Examples - Positioners}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::populate
@@ -1570,7 +1570,7 @@ void QQuickGrid::reportConflictingAnchors()
     or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
     For more information on using Flow and other related positioner-types, see
-    \l{Item Layouts}.
+    \l{Item Positioners}.
 
   \sa Column, Row, Grid, Positioner, {Qt Quick Examples - Positioners}
 */
