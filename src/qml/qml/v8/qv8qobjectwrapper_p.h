@@ -86,8 +86,6 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     ~QObjectWrapper();
 
-    QV8Engine *v8Engine; // ### Remove again.
-
     QObject *object() const { return m_object.data(); }
 
     void deleteQObject(bool deleteInstantly = false);
@@ -98,7 +96,7 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     static Value wrap(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 
 private:
-    QObjectWrapper(ExecutionEngine *v8Engine, QObject *object);
+    QObjectWrapper(ExecutionEngine *engine, QObject *object);
 
     QQmlGuard<QObject> m_object;
     String *m_destroy;

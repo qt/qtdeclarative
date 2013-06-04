@@ -88,7 +88,6 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
 {
-    this->v8Engine = QV8Engine::get(engine->publicEngine);
     vtbl = &static_vtbl;
     prototype = engine->objectPrototype;
 
@@ -145,6 +144,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
     }
 
     QHashedV4String propertystring(QV4::Value::fromString(name));
+    QV8Engine *v8Engine = QV8Engine::get(ctx->engine->publicEngine);
 
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
 
@@ -204,8 +204,8 @@ void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
 
     QHashedV4String propertystring(QV4::Value::fromString(name));
 
-    QV8Engine *v8engine = that->v8Engine;
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
+    QV8Engine *v8engine = QV8Engine::get(ctx->engine->publicEngine);
     bool result = QV8QObjectWrapper::SetProperty(v8engine, object, propertystring, context, value, QV4::QObjectWrapper::IgnoreRevision);
 
     if (!result) {
@@ -224,8 +224,9 @@ QV4::Value QObjectWrapper::enumerateProperties(Object *object)
 
     QStringList result;
 
-    QQmlEnginePrivate *ep = that->v8Engine->engine()
-            ? QQmlEnginePrivate::get(that->v8Engine->engine())
+    QV8Engine *v8Engine = QV8Engine::get(that->engine()->publicEngine);
+    QQmlEnginePrivate *ep = v8Engine->engine()
+            ? QQmlEnginePrivate::get(v8Engine->engine())
             : 0;
 
     QQmlPropertyCache *cache = 0;
@@ -744,7 +745,7 @@ static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
 
     Q_ASSERT(pdata->isWritable() || pdata->isQList());
 
-    StoreProperty(wrapper->v8Engine, object, pdata, value);
+    StoreProperty(QV8Engine::get(wrapper->engine()->publicEngine), object, pdata, value);
 }
 
 static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<v8::Value>,
@@ -755,7 +756,7 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     if (QQmlData::wasDeleted(wrapper->object()))
         return; 
 
-    QV8Engine *v8engine = wrapper->v8Engine;
+    QV8Engine *v8engine = QV8Engine::get(wrapper->engine()->publicEngine);
 
     QString error = QLatin1String("Cannot assign to read-only property \"") +
                     property->v4Value().toQString() + QLatin1Char('\"');
