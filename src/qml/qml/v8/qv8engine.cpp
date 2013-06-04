@@ -98,7 +98,7 @@ QV8Engine::QV8Engine(QJSEngine* qq)
 
     m_v4Engine = new QV4::ExecutionEngine;
     v8::Isolate::SetEngine(m_v4Engine);
-    m_v4Engine->publicEngine = q;
+    m_v4Engine->v8Engine = this;
 
     m_qobjectWrapper.init(this);
 }

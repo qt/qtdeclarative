@@ -200,7 +200,7 @@ Value QtObject::method_rgba(QV4::SimpleCallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return ctx->engine->publicEngine->handle()->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
+    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
 }
 
 /*!
@@ -229,7 +229,7 @@ Value QtObject::method_hsla(QV4::SimpleCallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return ctx->engine->publicEngine->handle()->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
+    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
 }
 
 /*!
@@ -247,7 +247,7 @@ Value QtObject::method_colorEqual(QV4::SimpleCallContext *ctx)
 
     bool ok = false;
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QVariant lhs = v8engine->toVariant(ctx->arguments[0], -1);
     if (lhs.userType() == QVariant::String) {
@@ -290,7 +290,7 @@ Value QtObject::method_rect(QV4::SimpleCallContext *ctx)
     double w = ctx->arguments[2].toNumber();
     double h = ctx->arguments[3].toNumber();
 
-    return ctx->engine->publicEngine->handle()->fromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
 }
 
 /*!
@@ -305,7 +305,7 @@ Value QtObject::method_point(QV4::SimpleCallContext *ctx)
     double x = ctx->arguments[0].toNumber();
     double y = ctx->arguments[1].toNumber();
 
-    return ctx->engine->publicEngine->handle()->fromVariant(QVariant::fromValue(QPointF(x, y)));
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QPointF(x, y)));
 }
 
 /*!
@@ -320,7 +320,7 @@ Value QtObject::method_size(QV4::SimpleCallContext *ctx)
     double w = ctx->arguments[0].toNumber();
     double h = ctx->arguments[1].toNumber();
 
-    return ctx->engine->publicEngine->handle()->fromVariant(QVariant::fromValue(QSizeF(w, h)));
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QSizeF(w, h)));
 }
 
 /*!
@@ -336,7 +336,7 @@ Value QtObject::method_font(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 1 || !ctx->arguments[0].isObject())
         V4THROW_ERROR("Qt.font(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     bool ok = false;
     QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle(ctx->arguments[0]), v8engine, &ok);
     if (!ok)
@@ -360,7 +360,7 @@ Value QtObject::method_vector2d(QV4::SimpleCallContext *ctx)
     xy[1] = ctx->arguments[1].toNumber();
 
     const void *params[] = { xy };
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
 }
 
@@ -379,7 +379,7 @@ Value QtObject::method_vector3d(QV4::SimpleCallContext *ctx)
     xyz[2] = ctx->arguments[2].toNumber();
 
     const void *params[] = { xyz };
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
 }
 
@@ -399,7 +399,7 @@ Value QtObject::method_vector4d(QV4::SimpleCallContext *ctx)
     xyzw[3] = ctx->arguments[3].toNumber();
 
     const void *params[] = { xyzw };
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
 }
 
@@ -419,7 +419,7 @@ Value QtObject::method_quaternion(QV4::SimpleCallContext *ctx)
     sxyz[3] = ctx->arguments[3].toNumber();
 
     const void *params[] = { sxyz };
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
 }
 
@@ -432,7 +432,7 @@ matrix values.
 */
 Value QtObject::method_matrix4x4(QV4::SimpleCallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     if (ctx->argumentCount == 1 && ctx->arguments[0].isObject()) {
         bool ok = false;
@@ -486,7 +486,7 @@ Value QtObject::method_lighter(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 1 && ctx->argumentCount != 2)
         V4THROW_ERROR("Qt.lighter(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     QVariant v = v8engine->toVariant(ctx->arguments[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
@@ -525,7 +525,7 @@ Value QtObject::method_darker(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 1 && ctx->argumentCount != 2)
         V4THROW_ERROR("Qt.darker(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     QVariant v = v8engine->toVariant(ctx->arguments[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
@@ -573,7 +573,7 @@ Value QtObject::method_tint(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 2)
         V4THROW_ERROR("Qt.tint(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     // base color
     QVariant v1 = v8engine->toVariant(ctx->arguments[0], -1);
@@ -623,7 +623,7 @@ Value QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2)
         V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QDate date = v8engine->toVariant(ctx->arguments[0], -1).toDateTime().date();
@@ -666,7 +666,7 @@ Value QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QVariant argVariant = v8engine->toVariant(ctx->arguments[0], -1);
     QTime time;
@@ -790,7 +790,7 @@ Value QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount < 1 || ctx->argumentCount > 2)
         V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QDateTime dt = v8engine->toVariant(ctx->arguments[0], -1).toDateTime();
@@ -822,7 +822,7 @@ Value QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         return QV4::Value::fromBoolean(false);
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QUrl url(method_resolvedUrl(ctx).toQString());
     return v8engine->fromVariant(QQml_guiProvider()->openUrlExternally(url));
@@ -834,7 +834,7 @@ Value QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
 */
 Value QtObject::method_resolvedUrl(QV4::SimpleCallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QUrl url = v8engine->toVariant(ctx->arguments[0], -1).toUrl();
     QQmlEngine *e = v8engine->engine();
@@ -860,7 +860,7 @@ Value QtObject::method_fontFamilies(SimpleCallContext *ctx)
     if (ctx->argumentCount != 0)
         V4THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     return v8engine->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
 }
 
@@ -915,7 +915,7 @@ QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 */
 Value QtObject::method_quit(SimpleCallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QQmlEnginePrivate::get(v8engine->engine())->sendQuit();
     return QV4::Value::undefinedValue();
@@ -973,7 +973,7 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
         }
     };
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     QQmlEngine *engine = v8engine->engine();
 
     QQmlContextData *context = v8engine->callingContext();
@@ -1078,7 +1078,7 @@ Value QtObject::method_createComponent(SimpleCallContext *ctx)
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3)
         ctx->throwError(invalidArgs);
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     QQmlEngine *engine = v8engine->engine();
 
     QQmlContextData *context = v8engine->callingContext();
@@ -1162,7 +1162,7 @@ Value QtObject::method_locale(SimpleCallContext *ctx)
     if (ctx->argumentCount == 1 && !ctx->arguments[0].isString())
         V4THROW_TYPE("locale(): argument (locale code) must be a string");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     if (ctx->argumentCount == 1)
         code = ctx->arguments[0].toQString();
 
@@ -1243,9 +1243,9 @@ Value QtObject::method_get_platform(SimpleCallContext *ctx)
 
     if (!qt->m_platform)
         // Only allocate a platform object once
-        qt->m_platform = new QQmlPlatform(ctx->engine->publicEngine);
+        qt->m_platform = new QQmlPlatform(ctx->engine->v8Engine->publicEngine());
 
-    return ctx->engine->publicEngine->handle()->newQObject(qt->m_platform);
+    return ctx->engine->v8Engine->newQObject(qt->m_platform);
 }
 
 Value QtObject::method_get_application(SimpleCallContext *ctx)
@@ -1260,15 +1260,15 @@ Value QtObject::method_get_application(SimpleCallContext *ctx)
 
     if (!qt->m_application)
         // Only allocate an application object once
-        qt->m_application = QQml_guiProvider()->application(ctx->engine->publicEngine);
+        qt->m_application = QQml_guiProvider()->application(ctx->engine->v8Engine->publicEngine());
 
-    return ctx->engine->publicEngine->handle()->newQObject(qt->m_application);
+    return ctx->engine->v8Engine->newQObject(qt->m_application);
 }
 
 #ifndef QT_NO_IM
 Value QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 {
-    QV8Engine *engine = ctx->engine->publicEngine->handle();
+    QV8Engine *engine = ctx->engine->v8Engine;
     return engine->newQObject(QQml_guiProvider()->inputMethod(), QV8Engine::CppOwnership);
 }
 #endif
@@ -1422,7 +1422,7 @@ QV4::Value ConsoleObject::method_time(SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("console.time(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QString name = ctx->arguments[0].toQString();
     v8engine->startTimer(name);
@@ -1434,7 +1434,7 @@ QV4::Value ConsoleObject::method_timeEnd(SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("console.time(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QString name = ctx->arguments[0].toQString();
     bool wasRunning;
@@ -1453,7 +1453,7 @@ QV4::Value ConsoleObject::method_count(SimpleCallContext *ctx)
         name = ctx->arguments[0].toQString();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
@@ -1664,7 +1664,7 @@ Value GlobalExtensions::method_qsTr(SimpleCallContext *ctx)
     if ((ctx->argumentCount > 2) && !ctx->arguments[2].isNumber())
         V4THROW_ERROR("qsTr(): third argument (n) must be a number");
 
-    QV8Engine *v8engine = ctx->engine->publicEngine->handle();
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     QQmlContextData *ctxt = v8engine->callingContext();
 
     QString path = ctxt->url.toString();

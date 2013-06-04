@@ -144,7 +144,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
     }
 
     QHashedV4String propertystring(QV4::Value::fromString(name));
-    QV8Engine *v8Engine = QV8Engine::get(ctx->engine->publicEngine);
+    QV8Engine *v8Engine = ctx->engine->v8Engine;
 
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
 
@@ -178,7 +178,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
 
 QV4::Value QObjectWrapper::wrap(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
 {
-    QQmlEngine *qmlEngine = qobject_cast<QQmlEngine*>(engine->publicEngine);
+    QQmlEngine *qmlEngine = engine->v8Engine->engine();
     if (!ddata->propertyCache && qmlEngine) {
         ddata->propertyCache = QQmlEnginePrivate::get(qmlEngine)->cache(object);
         if (ddata->propertyCache) ddata->propertyCache->addref();
@@ -205,7 +205,7 @@ void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
     QHashedV4String propertystring(QV4::Value::fromString(name));
 
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
-    QV8Engine *v8engine = QV8Engine::get(ctx->engine->publicEngine);
+    QV8Engine *v8engine = ctx->engine->v8Engine;
     bool result = QV8QObjectWrapper::SetProperty(v8engine, object, propertystring, context, value, QV4::QObjectWrapper::IgnoreRevision);
 
     if (!result) {
@@ -224,7 +224,7 @@ QV4::Value QObjectWrapper::enumerateProperties(Object *object)
 
     QStringList result;
 
-    QV8Engine *v8Engine = QV8Engine::get(that->engine()->publicEngine);
+    QV8Engine *v8Engine = that->engine()->v8Engine;
     QQmlEnginePrivate *ep = v8Engine->engine()
             ? QQmlEnginePrivate::get(v8Engine->engine())
             : 0;
@@ -745,7 +745,7 @@ static void FastValueSetter(v8::Handle<v8::String>, v8::Handle<v8::Value> value,
 
     Q_ASSERT(pdata->isWritable() || pdata->isQList());
 
-    StoreProperty(QV8Engine::get(wrapper->engine()->publicEngine), object, pdata, value);
+    StoreProperty(wrapper->engine()->v8Engine, object, pdata, value);
 }
 
 static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<v8::Value>,
@@ -756,7 +756,7 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     if (QQmlData::wasDeleted(wrapper->object()))
         return; 
 
-    QV8Engine *v8engine = QV8Engine::get(wrapper->engine()->publicEngine);
+    QV8Engine *v8engine = wrapper->engine()->v8Engine;
 
     QString error = QLatin1String("Cannot assign to read-only property \"") +
                     property->v4Value().toQString() + QLatin1Char('\"');
@@ -995,8 +995,7 @@ QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
     if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
 
-    // ### Eliminate, won't work within worker scripts
-    QV8Engine *engine = QV8Engine::get(ctx->engine->publicEngine);
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
     QObject *signalObject = signalInfo.first;
@@ -1055,8 +1054,7 @@ QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
     if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
-    // ### Eliminate, won't work within worker scripts
-    QV8Engine *engine = QV8Engine::get(ctx->engine->publicEngine);
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
     QObject *signalObject = signalInfo.first;
@@ -1334,7 +1332,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         }
     } else if (actual->IsObject()) {
         QV4::Object *obj = actual->v4Value().asObject();
-        QV8Engine *engine = obj->engine()->publicEngine->handle();
+        QV8Engine *engine = obj->engine()->v8Engine;
 
         if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
@@ -1868,7 +1866,7 @@ Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisOb
     if (!ddata)
         return QV4::Value::undefinedValue();
 
-    QV8Engine *v8Engine = QV8Engine::get(context->engine->publicEngine);
+    QV8Engine *v8Engine = context->engine->v8Engine;
 
     QQmlPropertyData method;
 

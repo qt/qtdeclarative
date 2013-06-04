@@ -172,7 +172,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
         return QV4::Value::undefinedValue();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
-    QV8Engine *engine = v4->publicEngine->handle();
+    QV8Engine *engine = v4->v8Engine;
     QQmlContextData *context = engine->callingContext();
 
     if (!context || !context->isJSContext)

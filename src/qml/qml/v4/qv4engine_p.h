@@ -54,7 +54,7 @@ class BumpPointerAllocator;
 
 QT_BEGIN_NAMESPACE
 
-class QJSEngine;
+class QV8Engine;
 
 namespace QQmlJS {
 namespace Debugging {
@@ -127,7 +127,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Function *globalCode;
 
-    QJSEngine *publicEngine;
+    QV8Engine *v8Engine;
 
     Value objectCtor;
     Value stringCtor;

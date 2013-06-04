@@ -605,7 +605,7 @@ QJSEngine* QJSValue::engine() const
 {
     QV4::ExecutionEngine *engine = d->engine();
     if (engine)
-        return engine->publicEngine;
+        return engine->v8Engine->publicEngine();
 }
 
 #endif // QT_DEPRECATED

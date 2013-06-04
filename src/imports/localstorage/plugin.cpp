@@ -192,7 +192,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
 
 static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, uint32_t index, bool *hasProperty = 0)
 {
-    QV8Engine *v8 = v4->publicEngine->handle();
+    QV8Engine *v8 = v4->v8Engine;
 
     if (r->sqlQuery.at() == (int)index || r->sqlQuery.seek(index)) {
         QSqlRecord record = r->sqlQuery.record();
@@ -240,7 +240,7 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
     if (!r || r->type != QQmlSqlDatabaseWrapper::Query)
         V4THROW_REFERENCE("Not a SQLDatabase::Query object");
 
-    QV8Engine *engine = ctx->engine->publicEngine->handle();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (!r->inTransaction)
         V4THROW_SQL(SQLEXCEPTION_DATABASE_ERR,QQmlEngine::tr("executeSql called outside transaction()"));
@@ -318,7 +318,7 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     if (!r || r->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    QV8Engine *engine = ctx->engine->publicEngine->handle();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     QSqlDatabase db = r->database;
     QString from_version = ctx->arguments[0].toQString();
@@ -374,7 +374,7 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
     if (!r || r->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    QV8Engine *engine = ctx->engine->publicEngine->handle();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     FunctionObject *callback = ctx->argumentCount ? ctx->arguments[0].asFunctionObject() : 0;
     if (!callback)

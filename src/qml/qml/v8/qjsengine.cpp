@@ -354,7 +354,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
     QV4::ExecutionEngine *e = vp->engine();
-    QV8Engine *engine = e ? QV8Engine::get(e->publicEngine) : 0;
+    QV8Engine *engine = e ? e->v8Engine : 0;
     if (engine) {
         return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);
     } else {

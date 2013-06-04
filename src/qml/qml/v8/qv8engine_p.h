@@ -222,7 +222,7 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
     typedef QSet<QV4::Object *> V8ObjectSet;
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
-    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
+//    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
     static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
@@ -239,6 +239,7 @@ public:
     void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
+    QJSEngine *publicEngine() { return q; }
     QV4::Value global();
 
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }

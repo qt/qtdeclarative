@@ -197,6 +197,7 @@ private:
 QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent) 
 : QV8Engine(0), p(parent), accessManager(0)
 {
+    m_v4Engine->v8Engine = this;
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine() 
@@ -272,7 +273,7 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 
 QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *ctx)
 {
-    WorkerEngine *engine = (WorkerEngine*)ctx->engine->publicEngine->handle();
+    WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
     int id = ctx->argument(1).toInt32();
 
