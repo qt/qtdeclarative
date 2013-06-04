@@ -196,7 +196,6 @@ private:
     static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, const QV4::Value &value);
 
     QV8Engine *m_engine;
-    quint32 m_id;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;

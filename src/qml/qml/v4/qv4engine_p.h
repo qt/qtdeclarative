@@ -203,6 +203,8 @@ struct Q_QML_EXPORT ExecutionEngine
     mutable QVector<Function *> functions;
     mutable bool functionsNeedSort;
 
+    quint32 m_engineId;
+
     RegExpCache *regExpCache;
 
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the

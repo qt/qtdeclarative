@@ -505,7 +505,7 @@ QV4::WeakValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeS
         // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.
         if (QQmlEngine::objectOwnership(object) == QQmlEngine::JavaScriptOwnership) {
             *shouldBeStrong = false;
-            return &(QQmlData::get(object)->v8object);
+            return &(QQmlData::get(object)->jsWrapper);
         }
 
         // no parent, and has CPP ownership - doesn't have an implicit parent.
@@ -521,7 +521,7 @@ QV4::WeakValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeS
     if (QQmlEngine::objectOwnership(parent) == QQmlEngine::JavaScriptOwnership) {
         // root parent is owned by JS.  It's v8object owns the persistent value in question.
         *shouldBeStrong = false;
-        return &(QQmlData::get(parent)->v8object);
+        return &(QQmlData::get(parent)->jsWrapper);
     } else {
         // root parent has CPP ownership.  The persistent value should not be made weak.
         *shouldBeStrong = true;

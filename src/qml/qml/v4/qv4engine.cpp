@@ -80,6 +80,8 @@
 
 using namespace QV4;
 
+static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
+
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     : memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
@@ -89,6 +91,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , globalObject(0)
     , globalCode(0)
     , functionsNeedSort(false)
+    , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);

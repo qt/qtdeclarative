@@ -1224,7 +1224,7 @@ void QQmlVMEMetaObject::mark()
             if (ref) {
                 QQmlData *ddata = QQmlData::get(ref);
                 if (ddata)
-                    ddata->v8object.markOnce();
+                    ddata->jsWrapper.markOnce();
             }
         }
     }

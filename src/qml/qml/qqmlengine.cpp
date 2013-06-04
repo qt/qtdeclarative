@@ -1531,7 +1531,7 @@ void QQmlData::destroyed(QObject *object)
         delete extendedData;
 
     // Dispose the handle.
-    v8object = QV4::Value::undefinedValue();
+    jsWrapper = QV4::Value::undefinedValue();
 
     if (ownMemory)
         delete this;

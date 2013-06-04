@@ -276,7 +276,7 @@ public:
         delete this;
     }
 
-    QV4::WeakValue v8object;
+    QV4::WeakValue jsWrapper;
     QV8QObjectWrapper *wrapper;
 };
 
@@ -341,10 +341,8 @@ private:
 };
 }
 
-static QAtomicInt objectIdCounter(1);
-
 QV8QObjectWrapper::QV8QObjectWrapper()
-: m_engine(0), m_id(objectIdCounter.fetchAndAddOrdered(1))
+: m_engine(0)
 {
 }
 
@@ -818,17 +816,19 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     if (!ddata) 
         return QV4::Value::undefinedValue();
 
-    if (ddata->v8objectid == m_id && !ddata->v8object.isEmpty()) {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_engine);
+
+    if (ddata->jsEngineId == v4->m_engineId && !ddata->jsWrapper.isEmpty()) {
         // We own the v8object 
-        return ddata->v8object.value();
-    } else if (ddata->v8object.isEmpty() &&
-               (ddata->v8objectid == m_id || // We own the QObject
-                ddata->v8objectid == 0 ||    // No one owns the QObject
+        return ddata->jsWrapper.value();
+    } else if (ddata->jsWrapper.isEmpty() &&
+               (ddata->jsEngineId == v4->m_engineId || // We own the QObject
+                ddata->jsEngineId == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
         v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-        ddata->v8object = rv->v4Value();
-        ddata->v8objectid = m_id;
+        ddata->jsWrapper = rv->v4Value();
+        ddata->jsEngineId = v4->m_engineId;
         return rv;
 
     } else {
@@ -840,10 +840,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if ((!found || (*iter)->v8object.isEmpty()) && ddata->v8object.isEmpty()) {
+        if ((!found || (*iter)->jsWrapper.isEmpty()) && ddata->jsWrapper.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            ddata->v8object = rv->v4Value();
-            ddata->v8objectid = m_id;
+            ddata->jsWrapper = rv->v4Value();
+            ddata->jsEngineId = v4->m_engineId;
 
             if (found) {
                 delete (*iter);
@@ -857,12 +857,12 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
             ddata->hasTaintedV8Object = true;
         }
 
-        if ((*iter)->v8object.isEmpty()) {
+        if ((*iter)->jsWrapper.isEmpty()) {
             v8::Handle<v8::Object> rv = newQObject(object, ddata, m_engine);
-            (*iter)->v8object = rv->v4Value();
+            (*iter)->jsWrapper = rv->v4Value();
         }
 
-        return (*iter)->v8object.value();
+        return (*iter)->jsWrapper.value();
     }
 }
 
