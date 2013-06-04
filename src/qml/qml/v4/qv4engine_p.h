@@ -103,7 +103,7 @@ struct SequencePrototype;
 struct EvalFunction;
 struct Identifiers;
 struct InternalClass;
-
+class MultiplyWrappedQObjectMap;
 class RegExp;
 class RegExpCache;
 
@@ -220,6 +220,11 @@ struct Q_QML_EXPORT ExecutionEngine
         QIntrusiveListNode node;
     };
     QIntrusiveList<ScarceResourceData, &ScarceResourceData::node> scarceResources;
+
+    // Normally the JS wrappers for QObjects are stored in the QQmlData/QObjectPrivate,
+    // but any time a QObject is wrapped a second time in another engine, we have to do
+    // bookkeeping.
+    MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
 
     ExecutionEngine(QQmlJS::EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();

@@ -73,7 +73,6 @@ class QObject;
 class QV8Engine;
 class QQmlData;
 class QV8ObjectResource;
-class QV8QObjectInstance;
 class QV8QObjectConnectionList;
 class QQmlPropertyCache;
 
@@ -167,6 +166,28 @@ private:
     }
 };
 
+class MultiplyWrappedQObjectMap : public QObject,
+                                  private QHash<QObject*, Object*>
+{
+    Q_OBJECT
+public:
+    typedef QHash<QObject*, Object*>::ConstIterator ConstIterator;
+    typedef QHash<QObject*, Object*>::Iterator Iterator;
+
+    ConstIterator begin() const { return QHash<QObject*, Object*>::constBegin(); }
+    Iterator begin() { return QHash<QObject*, Object*>::begin(); }
+    ConstIterator end() const { return QHash<QObject*, Object*>::constEnd(); }
+    Iterator end() { return QHash<QObject*, Object*>::end(); }
+
+    void insert(QObject *key, Object *value);
+    Object *value(QObject *key) const { return QHash<QObject*, Object*>::value(key, 0); }
+    Iterator erase(Iterator it);
+    void remove(QObject *key);
+
+private slots:
+    void removeDestroyedObject(QObject*);
+};
+
 }
 
 class Q_QML_PRIVATE_EXPORT QV8QObjectWrapper
@@ -186,7 +207,6 @@ public:
 private:
     friend class QQmlPropertyCache;
     friend class QV8QObjectConnectionList;
-    friend class QV8QObjectInstance;
     friend struct QV4::QObjectWrapper;
 
     static QV4::Value GetProperty(QV8Engine *, QObject *,
@@ -200,8 +220,6 @@ private:
 
     QV8Engine *m_engine;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
-    typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
-    TaintedHash m_taintedObjects;
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV4String &string,

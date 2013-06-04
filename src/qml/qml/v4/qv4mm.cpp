@@ -342,6 +342,15 @@ std::size_t MemoryManager::sweep()
         weak = weak->next;
     }
 
+    if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
+        for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {
+            if (!it.value()->markBit)
+                it = multiplyWrappedQObjects->erase(it);
+            else
+                ++it;
+        }
+    }
+
     std::size_t freedCount = 0;
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)

@@ -63,6 +63,7 @@
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
+#include <private/qv8qobjectwrapper_p.h>
 
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 #include <execinfo.h>
@@ -93,6 +94,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , functionsNeedSort(false)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
+    , m_multiplyWrappedQObjects(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
@@ -271,6 +273,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete m_multiplyWrappedQObjects;
+    m_multiplyWrappedQObjects = 0;
     delete memoryManager;
     emptyClass->destroy();
     delete identifierCache;

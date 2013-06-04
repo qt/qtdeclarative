@@ -268,29 +268,6 @@ DEFINE_MANAGED_VTABLE(QObjectWrapper);
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread
 
-class QV8QObjectInstance : public QQmlGuard<QObject>
-{
-public:
-    QV8QObjectInstance(QObject *o, QV8QObjectWrapper *w)
-    : QQmlGuard<QObject>(o), wrapper(w)
-    {
-    }
-
-    ~QV8QObjectInstance()
-    {
-    }
-
-    virtual void objectDestroyed(QObject *o)
-    {
-        if (wrapper)
-            wrapper->m_taintedObjects.remove(o);
-        delete this;
-    }
-
-    QV4::WeakValue jsWrapper;
-    QV8QObjectWrapper *wrapper;
-};
-
 namespace {
 
 template<typename A, typename B, typename C, typename D, typename E,
@@ -359,12 +336,6 @@ QV8QObjectWrapper::QV8QObjectWrapper()
 
 QV8QObjectWrapper::~QV8QObjectWrapper()
 {
-    for (TaintedHash::Iterator iter = m_taintedObjects.begin(); 
-         iter != m_taintedObjects.end();
-         ++iter) {
-        (*iter)->wrapper = 0;
-    }
-    m_taintedObjects.clear();
 }
 
 void QV8QObjectWrapper::destroy()
@@ -833,34 +804,28 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     } else {
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
-        TaintedHash::Iterator iter =
-            ddata->hasTaintedV8Object?m_taintedObjects.find(object):m_taintedObjects.end();
-        bool found = iter != m_taintedObjects.end();
+        Object *alternateWrapper = 0;
+        if (v4->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
+            alternateWrapper = v4->m_multiplyWrappedQObjects->value(object);
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if ((!found || (*iter)->jsWrapper.isEmpty()) && ddata->jsWrapper.isEmpty()) {
-            QV4::Value rv = QV4::QObjectWrapper::wrap(v4, ddata, object);
-            ddata->jsWrapper = rv;
+        if (ddata->jsWrapper.isEmpty() && !alternateWrapper) {
+            QV4::Value result = QV4::QObjectWrapper::wrap(v4, ddata, object);
+            ddata->jsWrapper = result;
             ddata->jsEngineId = v4->m_engineId;
+            return result;
+        }
 
-            if (found) {
-                delete (*iter);
-                m_taintedObjects.erase(iter);
-            }
-
-            return rv;
-        } else if (!found) {
-            QV8QObjectInstance *instance = new QV8QObjectInstance(object, this);
-            iter = m_taintedObjects.insert(object, instance);
+        if (!alternateWrapper) {
+            alternateWrapper = QV4::QObjectWrapper::wrap(v4, ddata, object).asObject();
+            if (!v4->m_multiplyWrappedQObjects)
+                v4->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
+            v4->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
             ddata->hasTaintedV8Object = true;
         }
 
-        if ((*iter)->jsWrapper.isEmpty()) {
-            (*iter)->jsWrapper = QV4::QObjectWrapper::wrap(v4, ddata, object);
-        }
-
-        return (*iter)->jsWrapper.value();
+        return QV4::Value::fromObject(alternateWrapper);
     }
 }
 
@@ -1956,6 +1921,31 @@ QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int
 }
 
 DEFINE_MANAGED_VTABLE(QmlSignalHandler);
+
+void MultiplyWrappedQObjectMap::insert(QObject *key, Object *value)
+{
+    QHash<QObject*, Object*>::insert(key, value);
+    connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
+}
+
+MultiplyWrappedQObjectMap::Iterator MultiplyWrappedQObjectMap::erase(MultiplyWrappedQObjectMap::Iterator it)
+{
+    disconnect(it.key(), SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
+    return QHash<QObject*, Object*>::erase(it);
+}
+
+void MultiplyWrappedQObjectMap::remove(QObject *key)
+{
+    Iterator it = find(key);
+    if (it == end())
+        return;
+    erase(it);
+}
+
+void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)
+{
+    QHash<QObject*, Object*>::remove(object);
+}
 
 QT_END_NAMESPACE
 
