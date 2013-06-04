@@ -107,8 +107,6 @@ class MultiplyWrappedQObjectMap;
 class RegExp;
 class RegExpCache;
 
-typedef bool (*ExternalResourceComparison)(const Value &a, const Value &b);
-
 struct Q_QML_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
