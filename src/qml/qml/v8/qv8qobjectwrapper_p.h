@@ -92,10 +92,11 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     Value getQmlProperty(ExecutionContext *ctx, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
 
-    // ### Make private when QV8QObjectWrapper is gone.
-    static Value wrap(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
+    static Value wrap(ExecutionEngine *engine, QObject *object);
 
 private:
+    static Value create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
+
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
 
     QQmlGuard<QObject> m_object;
@@ -196,8 +197,6 @@ public:
 
     void init(QV8Engine *);
     void destroy();
-
-    v8::Handle<v8::Value> newQObject(QObject *object);
 
     inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);
     inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);

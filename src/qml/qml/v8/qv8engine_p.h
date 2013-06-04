@@ -256,10 +256,6 @@ public:
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::Value fromVariant(const QVariant &);
 
-    // Return a JS wrapper for the given QObject \a object
-    inline QV4::Value newQObject(QObject *object);
-    inline QV4::Value newQObject(QObject *object, const ObjectOwnership ownership);
-
     // Return a JS string for the given QString \a string
     QV4::Value toString(const QString &string);
 
@@ -343,25 +339,6 @@ private:
 
     Q_DISABLE_COPY(QV8Engine)
 };
-
-QV4::Value QV8Engine::newQObject(QObject *object)
-{
-    return m_qobjectWrapper.newQObject(object)->v4Value();
-}
-
-QV4::Value QV8Engine::newQObject(QObject *object, const ObjectOwnership ownership)
-{
-    if (!object)
-        return QV4::Value::nullValue();
-
-    QV4::Value result = newQObject(object);
-    QQmlData *ddata = QQmlData::get(object, true);
-    if (ownership == JavaScriptOwnership && ddata) {
-        ddata->indestructible = false;
-        ddata->explicitIndestructibleSet = true;
-    }
-    return result;
-}
 
 QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 {

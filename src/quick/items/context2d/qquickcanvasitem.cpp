@@ -659,7 +659,8 @@ void QQuickCanvasItem::updatePolish()
         d->animationCallbacks.clear();
 
         foreach (int key, animationCallbacks.keys()) {
-            QV4::Value self = QQmlEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this);
+            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
+            QV4::Value self = QV4::QObjectWrapper::wrap(v4, this);
             QV4::Value args[] = { QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t()) };
             QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
             f->call(self, args, 1);

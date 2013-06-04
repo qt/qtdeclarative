@@ -1207,8 +1207,8 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
-    QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
-    v8e->newQObject(object);
+    QV4::ExecutionEngine *v4 = (ep == 0) ? 0 : ep->v4engine();
+    QV4::QObjectWrapper::wrap(v4, object);
 }
 
 void QQmlVMEMetaObject::mark()

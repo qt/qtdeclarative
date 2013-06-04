@@ -119,7 +119,7 @@ Value QmlListWrapper::getIndexed(Managed *m, ExecutionContext *ctx, uint index, 
 
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
     if (index < count && w->property.at)
-        return w->v8->newQObject(w->property.at(&w->property, index));
+        return QV4::QObjectWrapper::wrap(ctx->engine, w->property.at(&w->property, index));
 
     return Value::undefinedValue();
 }

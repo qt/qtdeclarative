@@ -360,7 +360,7 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
     {
         void *ptr = popPtr(data);
         QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
-        QV4::Value rv = engine->newQObject(agent);
+        QV4::Value rv = QV4::QObjectWrapper::wrap(v4, agent);
         // ### Find a better solution then the ugly property
         QQmlListModelWorkerAgent::VariantRef ref(agent);
         QVariant var = qVariantFromValue(ref);

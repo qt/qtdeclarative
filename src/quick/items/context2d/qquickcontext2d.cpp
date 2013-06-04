@@ -478,7 +478,7 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Handle<v8::String>, const v8::Acce
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    return engine->newQObject(r->context->canvas());
+    return QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), r->context->canvas());
 }
 
 /*!

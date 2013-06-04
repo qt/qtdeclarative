@@ -318,7 +318,8 @@ QJSValue QJSEngine::newArray(uint length)
 QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
-    return new QJSValuePrivate(QV8Engine::getV4(d), d->newQObject(object, QV8Engine::JavaScriptOwnership));
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    return new QJSValuePrivate(v4, QV4::QObjectWrapper::wrap(v4, object));
 }
 
 /*!

@@ -176,7 +176,57 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
     return QV4::Object::get(this, ctx, name, hasProperty);
 }
 
-QV4::Value QObjectWrapper::wrap(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
+Value QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
+{
+    if (QQmlData::wasDeleted(object))
+        return QV4::Value::nullValue();
+
+    QQmlData *ddata = QQmlData::get(object, true);
+    if (!ddata)
+        return QV4::Value::undefinedValue();
+
+    if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isEmpty()) {
+        // We own the v8object
+        return ddata->jsWrapper.value();
+    } else if (ddata->jsWrapper.isEmpty() &&
+               (ddata->jsEngineId == engine->m_engineId || // We own the QObject
+                ddata->jsEngineId == 0 ||    // No one owns the QObject
+                !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
+
+        QV4::Value rv = create(engine, ddata, object);
+        ddata->jsWrapper = rv;
+        ddata->jsEngineId = engine->m_engineId;
+        return rv;
+
+    } else {
+        // If this object is tainted, we have to check to see if it is in our
+        // tainted object list
+        Object *alternateWrapper = 0;
+        if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
+            alternateWrapper = engine->m_multiplyWrappedQObjects->value(object);
+
+        // If our tainted handle doesn't exist or has been collected, and there isn't
+        // a handle in the ddata, we can assume ownership of the ddata->v8object
+        if (ddata->jsWrapper.isEmpty() && !alternateWrapper) {
+            QV4::Value result = create(engine, ddata, object);
+            ddata->jsWrapper = result;
+            ddata->jsEngineId = engine->m_engineId;
+            return result;
+        }
+
+        if (!alternateWrapper) {
+            alternateWrapper = create(engine, ddata, object).asObject();
+            if (!engine->m_multiplyWrappedQObjects)
+                engine->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
+            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
+            ddata->hasTaintedV8Object = true;
+        }
+
+        return QV4::Value::fromObject(alternateWrapper);
+    }
+}
+
+QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
 {
     QQmlEngine *qmlEngine = engine->v8Engine->engine();
     if (!ddata->propertyCache && qmlEngine) {
@@ -389,7 +439,7 @@ static inline QV4::Value valueToHandle(QV8Engine *, float v)
 static inline QV4::Value valueToHandle(QV8Engine *, double v)
 { return QV4::Value::fromDouble(v); }
 static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
-{ return e->newQObject(v); }
+{ return QV4::QObjectWrapper::wrap(QV8Engine::getV4(e), v); }
 
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {
@@ -409,11 +459,12 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
                                           QQmlNotifier **notifier)
 {
     Q_ASSERT(!property.isFunction());
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     if (property.isQObject()) {
         QObject *rv = 0;
         ReadFunction(object, property, &rv, notifier);
-        return engine->newQObject(rv);
+        return QV4::QObjectWrapper::wrap(v4, rv);
     } else if (property.isQList()) {
         return QmlListWrapper::create(engine, object, property.coreIndex, property.propType);
     } else if (property.propType == QMetaType::QReal) {
@@ -451,7 +502,7 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
-        return QJSValuePrivate::get(v)->getValue(QV8Engine::getV4(engine));
+        return QJSValuePrivate::get(v)->getValue(v4);
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
@@ -472,7 +523,7 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
 
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::Value retn = QV4::SequencePrototype::newSequence(QV8Engine::getV4(engine), property.propType, object, property.coreIndex, &succeeded);
+        QV4::Value retn = QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded);
         if (succeeded)
             return retn;
     }
@@ -761,73 +812,6 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     QString error = QLatin1String("Cannot assign to read-only property \"") +
                     property->v4Value().toQString() + QLatin1Char('\"');
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
-}
-
-/*
-As V8 doesn't support an equality callback, for QObject's we have to return exactly the same
-V8 handle for subsequent calls to newQObject for the same QObject.  To do this we have a two
-pronged strategy:
-   1. If there is no current outstanding V8 handle to the QObject, we create one and store a 
-      persistent handle in QQmlData::v8object.  We mark the QV8QObjectWrapper that 
-      "owns" this handle by setting the QQmlData::v8objectid to the id of this 
-      QV8QObjectWrapper.
-   2. If another QV8QObjectWrapper has create the handle in QQmlData::v8object we create 
-      an entry in the m_taintedObject hash where we store the handle and mark the object as 
-      "tainted" in the QQmlData::hasTaintedV8Object flag.
-We have to mark the object as tainted to ensure that we search our m_taintedObject hash even
-in the case that the original QV8QObjectWrapper owner of QQmlData::v8object has 
-released the handle.
-*/
-v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
-{
-    if (QQmlData::wasDeleted(object))
-        return QV4::Value::nullValue();
-
-    QQmlData *ddata = QQmlData::get(object, true);
-    if (!ddata) 
-        return QV4::Value::undefinedValue();
-
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_engine);
-
-    if (ddata->jsEngineId == v4->m_engineId && !ddata->jsWrapper.isEmpty()) {
-        // We own the v8object 
-        return ddata->jsWrapper.value();
-    } else if (ddata->jsWrapper.isEmpty() &&
-               (ddata->jsEngineId == v4->m_engineId || // We own the QObject
-                ddata->jsEngineId == 0 ||    // No one owns the QObject
-                !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
-
-        QV4::Value rv = QV4::QObjectWrapper::wrap(v4, ddata, object);
-        ddata->jsWrapper = rv;
-        ddata->jsEngineId = v4->m_engineId;
-        return rv;
-
-    } else {
-        // If this object is tainted, we have to check to see if it is in our
-        // tainted object list
-        Object *alternateWrapper = 0;
-        if (v4->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
-            alternateWrapper = v4->m_multiplyWrappedQObjects->value(object);
-
-        // If our tainted handle doesn't exist or has been collected, and there isn't
-        // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if (ddata->jsWrapper.isEmpty() && !alternateWrapper) {
-            QV4::Value result = QV4::QObjectWrapper::wrap(v4, ddata, object);
-            ddata->jsWrapper = result;
-            ddata->jsEngineId = v4->m_engineId;
-            return result;
-        }
-
-        if (!alternateWrapper) {
-            alternateWrapper = QV4::QObjectWrapper::wrap(v4, ddata, object).asObject();
-            if (!v4->m_multiplyWrappedQObjects)
-                v4->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
-            v4->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
-            ddata->hasTaintedV8Object = true;
-        }
-
-        return QV4::Value::fromObject(alternateWrapper);
-    }
 }
 
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, const Value &value)
@@ -1736,8 +1720,9 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
 
 QV4::Value CallArgument::toValue(QV8Engine *engine)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     if (type == qMetaTypeId<QJSValue>()) {
-        return QJSValuePrivate::get(*qjsValuePtr)->getValue(QV8Engine::getV4(engine));
+        return QJSValuePrivate::get(*qjsValuePtr)->getValue(v4);
     } else if (type == QMetaType::Int) {
         return QV4::Value::fromInt32(int(intValue));
     } else if (type == QMetaType::UInt) {
@@ -1754,26 +1739,26 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         QObject *object = qobjectPtr;
         if (object)
             QQmlData::get(object, true)->setImplicitDestructible();
-        return engine->newQObject(object);
+        return QV4::QObjectWrapper::wrap(v4, object);
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
         // XXX Can this be made more by using Array as a prototype and implementing
         // directly against QList<QObject*>?
         QList<QObject *> &list = *qlistPtr;
-        QV4::ArrayObject *array = QV8Engine::getV4(engine)->newArrayObject();
+        QV4::ArrayObject *array = v4->newArrayObject();
         array->arrayReserve(list.count());
         for (int ii = 0; ii < list.count(); ++ii) 
-            array->arrayData[ii].value = engine->newQObject(list.at(ii));
+            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
         array->arrayDataLen = list.count();
         array->setArrayLengthUnchecked(list.count());
         return QV4::Value::fromObject(array);
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
         return handlePtr->toValue();
     } else if (type == QMetaType::QJsonArray) {
-        return QV4::JsonObject::fromJsonArray(QV8Engine::getV4(engine), *jsonArrayPtr);
+        return QV4::JsonObject::fromJsonArray(v4, *jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {
-        return QV4::JsonObject::fromJsonObject(QV8Engine::getV4(engine), *jsonObjectPtr);
+        return QV4::JsonObject::fromJsonObject(v4, *jsonObjectPtr);
     } else if (type == QMetaType::QJsonValue) {
-        return QV4::JsonObject::fromJsonValue(QV8Engine::getV4(engine), *jsonValuePtr);
+        return QV4::JsonObject::fromJsonValue(v4, *jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         QV4::Value rv = engine->fromVariant(value);

@@ -242,7 +242,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                     if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                         args[ii] = QV4::Value::nullValue();
                     else
-                        args[ii] = engine->newQObject(*reinterpret_cast<QObject* const *>(a[ii + 1]));
+                        args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
                 } else {
                     args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
                 }

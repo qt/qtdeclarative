@@ -204,7 +204,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
                     ep->captureProperty(&context->idValues[propertyIdx].bindings);
                     if (hasProperty)
                         *hasProperty = true;
-                    return engine->newQObject(context->idValues[propertyIdx]);
+                    return QV4::QObjectWrapper::wrap(ctx->engine, context->idValues[propertyIdx]);
                 } else {
 
                     QQmlContextPrivate *cp = context->asQQmlContextPrivate();
@@ -229,7 +229,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
         // Search scope object
         if (scopeObject) {
-            if (QV4::QObjectWrapper *o = qobjectWrapper->newQObject(scopeObject)->v4Value().as<QV4::QObjectWrapper>()) {
+            if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, scopeObject).as<QV4::QObjectWrapper>()) {
                 bool hasProp = false;
                 QV4::Value result = o->getQmlProperty(o->engine()->current, propertystring.string().asString(), QV4::QObjectWrapper::CheckRevision, &hasProp);
                 if (hasProp) {

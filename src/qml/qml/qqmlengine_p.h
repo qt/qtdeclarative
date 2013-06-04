@@ -152,6 +152,7 @@ public:
     int inProgressCreations;
 
     QV8Engine *v8engine() const { return q_func()->handle(); }
+    QV4::ExecutionEngine *v4engine() const { return QV8Engine::getV4(q_func()->handle()); }
 
     QQuickWorkerScriptEngine *getWorkerScriptEngine();
     QQuickWorkerScriptEngine *workerScriptEngine;
@@ -239,6 +240,7 @@ public:
     static void warning(QQmlEnginePrivate *, const QList<QQmlError> &);
 
     inline static QV8Engine *getV8Engine(QQmlEngine *e);
+    inline static QV4::ExecutionEngine *getV4Engine(QQmlEngine *e);
     inline static QQmlEnginePrivate *get(QQmlEngine *e);
     inline static const QQmlEnginePrivate *get(const QQmlEngine *e);
     inline static QQmlEnginePrivate *get(QQmlContext *c);
@@ -465,7 +467,14 @@ QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e)
 { 
     Q_ASSERT(e);
 
-    return e->d_func()->v8engine(); 
+    return e->d_func()->v8engine();
+}
+
+QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)
+{
+    Q_ASSERT(e);
+
+    return e->d_func()->v4engine();
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlEngine *e) 

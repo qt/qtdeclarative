@@ -275,7 +275,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QRegExp:
                 return QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
-                return newQObject(*reinterpret_cast<QObject* const *>(ptr));
+                return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
@@ -321,14 +321,14 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             QV4::ArrayObject *a = m_v4Engine->newArrayObject();
             a->setArrayLength(list.count());
             for (int ii = 0; ii < list.count(); ++ii)
-                a->arrayData[ii].value = newQObject(list.at(ii));
+                a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
             return QV4::Value::fromObject(a);
         }
 
         bool objOk;
         QObject *obj = QQmlMetaType::toQObject(variant, &objOk);
         if (objOk)
-            return newQObject(obj);
+            return QV4::QObjectWrapper::wrap(m_v4Engine, obj);
 
         bool succeeded = false;
         v8::Handle<v8::Value> retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
@@ -703,7 +703,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
         result = QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
         break;
     case QMetaType::QObjectStar:
-        result = newQObject(*reinterpret_cast<QObject* const *>(data));
+        result = QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(data));
         break;
     case QMetaType::QVariant:
         result = variantToJS(*reinterpret_cast<const QVariant*>(data));

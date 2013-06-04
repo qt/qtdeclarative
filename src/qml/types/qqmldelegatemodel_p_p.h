@@ -138,7 +138,7 @@ public:
     int modelIndex() const { return index; }
     void setModelIndex(int idx) { index = idx; emit modelIndexChanged(); }
 
-    virtual v8::Handle<v8::Value> get() { return engine->newQObject(this); }
+    virtual v8::Handle<v8::Value> get() { return QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), this); }
 
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQmlAdaptorModel &, int) { return false; }

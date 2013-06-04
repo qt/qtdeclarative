@@ -2247,7 +2247,7 @@ void tst_qqmlecmascript::callQtInvokables()
     
     QV8Engine *engine = ep->v8engine();
 
-    v8::Handle<v8::Object> object = engine->newQObject(o);
+    v8::Handle<v8::Object> object = QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o);
 
     // Non-existent methods
     o->reset();

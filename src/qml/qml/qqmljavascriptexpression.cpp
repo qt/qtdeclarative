@@ -160,7 +160,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     try {
         QV4::Value This = ep->v8engine()->global();
         if (scopeObject() && requiresThisObject()) {
-            QV4::Value value = ep->v8engine()->newQObject(scopeObject());
+            QV4::Value value = QV4::QObjectWrapper::wrap(ctx->engine, scopeObject());
             if (value.isObject())
                 This = value;
         }

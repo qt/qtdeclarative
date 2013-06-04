@@ -2103,14 +2103,14 @@ QQmlV4Handle QQmlListModel::get(int index) const
     QV4::Value result = QV4::Value::undefinedValue();
 
     if (index >= 0 && index < count()) {
-        QV8Engine *v8engine = engine();
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine());
 
         if (m_dynamicRoles) {
             DynamicRoleModelNode *object = m_modelObjects[index];
-            result = v8engine->newQObject(object);
+            result = QV4::QObjectWrapper::wrap(v4, object);
         } else {
             ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
-            result = v8engine->newQObject(object);
+            result = QV4::QObjectWrapper::wrap(v4, object);
         }
     }
 

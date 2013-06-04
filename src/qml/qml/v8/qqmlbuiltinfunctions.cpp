@@ -1037,7 +1037,7 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
 
     Q_ASSERT(obj);
 
-    return v8engine->newQObject(obj);
+    return QV4::QObjectWrapper::wrap(ctx->engine, obj);
 }
 
 /*!
@@ -1131,7 +1131,7 @@ Value QtObject::method_createComponent(SimpleCallContext *ctx)
     QQmlData::get(c, true)->explicitIndestructibleSet = false;
     QQmlData::get(c)->indestructible = false;
 
-    return v8engine->newQObject(c);
+    return QV4::QObjectWrapper::wrap(ctx->engine, c);
 }
 
 /*!
@@ -1245,7 +1245,7 @@ Value QtObject::method_get_platform(SimpleCallContext *ctx)
         // Only allocate a platform object once
         qt->m_platform = new QQmlPlatform(ctx->engine->v8Engine->publicEngine());
 
-    return ctx->engine->v8Engine->newQObject(qt->m_platform);
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_platform);
 }
 
 Value QtObject::method_get_application(SimpleCallContext *ctx)
@@ -1262,14 +1262,15 @@ Value QtObject::method_get_application(SimpleCallContext *ctx)
         // Only allocate an application object once
         qt->m_application = QQml_guiProvider()->application(ctx->engine->v8Engine->publicEngine());
 
-    return ctx->engine->v8Engine->newQObject(qt->m_application);
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_application);
 }
 
 #ifndef QT_NO_IM
 Value QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 {
-    QV8Engine *engine = ctx->engine->v8Engine;
-    return engine->newQObject(QQml_guiProvider()->inputMethod(), QV8Engine::CppOwnership);
+    QObject *o = QQml_guiProvider()->inputMethod();
+    QQmlEngine::setObjectOwnership(o, QQmlEngine::CppOwnership);
+    return QV4::QObjectWrapper::wrap(ctx->engine, o);
 }
 #endif
 
