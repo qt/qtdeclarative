@@ -34,7 +34,7 @@ qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
-depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtdoc
+depends += qtcore qtxmlpatterns qtqml qtgui qtlinguist qtquickcontrols qtquicklayouts qtdoc qtquickdialogs
 
 headerdirs  += ..
 
@@ -58,3 +58,6 @@ sourcedirs += ../../imports
 #add plugins directory because of dependencies
 headerdirs += ../../plugins
 sourcedirs += ../../plugins
+
+#exclude certain directories
+excludedirs = ../../imports/dialogs

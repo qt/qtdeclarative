@@ -149,6 +149,8 @@ private slots:
     void htmlLists();
     void htmlLists_data();
 
+    void elideBeforeMaximumLineCount();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -3636,6 +3638,18 @@ void tst_qquicktext::htmlLists_data()
     QTest::newRow("unordered list disc") << "<ul type=\"disc\"><li>one</li><li>two</li></ul>" << 2;
     QTest::newRow("unordered list square") << "<ul type=\"square\"><li>one</li><li>two</li></ul>" << 2;
     QTest::newRow("unordered list bad") << "<ul type=\"bad\"><li>one</li><li>two</li></ul>" << 2;
+}
+
+void tst_qquicktext::elideBeforeMaximumLineCount()
+{   // QTBUG-31471
+    QQmlComponent component(&engine, testFile("elideBeforeMaximumLineCount.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickText *item = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(item);
+
+    QCOMPARE(item->lineCount(), 2);
 }
 
 QTEST_MAIN(tst_qquicktext)

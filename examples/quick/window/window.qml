@@ -46,14 +46,11 @@ QtObject {
     property real defaultSpacing: 10
     property SystemPalette palette: SystemPalette { }
 
-    property var splashWindow: Splash { }
-
     property var controlWindow: Window {
         width: 400
         height: col.implicitHeight + defaultSpacing * 2
         color: palette.window
         title: "Control Window"
-        visible: true
         Column {
             id: col
             anchors.fill: parent
@@ -176,5 +173,9 @@ QtObject {
                 onClicked: testWindow.visible = false
             }
         }
+    }
+
+    property var splashWindow: Splash {
+        onTimeout: controlWindow.visible = true
     }
 }

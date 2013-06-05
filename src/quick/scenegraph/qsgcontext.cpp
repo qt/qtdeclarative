@@ -54,6 +54,7 @@
 
 #include <QGuiApplication>
 #include <QOpenGLContext>
+#include <QQuickWindow>
 #include <QtGui/qopenglframebufferobject.h>
 
 #include <private/qqmlglobal_p.h>
@@ -159,15 +160,13 @@ QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
     Q_D(QSGContext);
-    static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
-    static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
-    static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
-    if (doSubpixel)
+    QByteArray mode = qgetenv("QSG_DISTANCEFIELD_ANTIALIASING");
+    if (mode == "subpixel")
         d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
-    else if (doLowQualSubpixel)
+    else if (mode == "subpixel-lowq")
         d->distanceFieldAntialiasing = QSGGlyphNode::LowQualitySubPixelAntialiasing;
-    else if (doGray)
-       d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+    else if (mode == "gray")
+        d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
 }
 
 
@@ -398,6 +397,8 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
+    if (QQuickWindow::hasDefaultAlphaBuffer())
+        format.setAlphaBufferSize(8);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     return format;
 }

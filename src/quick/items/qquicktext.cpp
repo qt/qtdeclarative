@@ -954,7 +954,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
                 // Create the remainder of the unwrapped lines up to maxLineCount to get the
                 // implicit width.
-                if (line.isValid() && layoutText.at(line.textStart() + line.textLength()) != QChar::LineSeparator)
+                const int eol = line.isValid()
+                        ? line.textStart() + line.textLength()
+                        : layoutText.length();
+                if (eol < layoutText.length() && layoutText.at(eol) != QChar::LineSeparator)
                     line = layout.createLine();
                 for (; line.isValid() && unwrappedLineCount <= maxLineCount; ++unwrappedLineCount)
                     line = layout.createLine();

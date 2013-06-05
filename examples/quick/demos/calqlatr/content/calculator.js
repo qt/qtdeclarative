@@ -84,7 +84,7 @@ function operatorPressed(op)
     } else if (previousOperator == "×") {
         digits = Number(curVal) * Number(digits.valueOf())
     } else if (previousOperator == "÷") {
-        digits = Number(Number(curVal) / Number(digits.valueOf())).toString()
+        digits = Number(curVal) / Number(digits.valueOf())
     } else if (previousOperator == "=") {
     }
 
@@ -110,9 +110,9 @@ function operatorPressed(op)
         digits = (Math.abs(digits.valueOf())).toString()
     } else if (op == "Int") {
         digits = (Math.floor(digits.valueOf())).toString()
-    } else if (op == window.plusminus) {
+    } else if (op == "±") {
         digits = (digits.valueOf() * -1).toString()
-    } else if (op == window.squareRoot) {
+    } else if (op == "√") {
         digits = (Math.sqrt(digits.valueOf())).toString()
     } else if (op == "mc") {
         memory = 0;
@@ -130,7 +130,7 @@ function operatorPressed(op)
     } else if (op == "Off") {
         Qt.quit();
     } else if (op == "C") {
-        digits = "0"
+        display.clear()
     } else if (op == "AC") {
         curVal = 0
         memory = 0
