@@ -50,6 +50,7 @@
 #include <QtCore/qnumeric.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../shared/util.h"
@@ -157,10 +158,8 @@ private slots:
     void singletonTypeCaching();
     void singletonTypeImportOrder();
     void singletonTypeResolution();
-#if 0
     void importScripts_data();
     void importScripts();
-#endif
     void scarceResources();
     void scarceResources_data();
     void scarceResources_other();
@@ -295,7 +294,7 @@ private slots:
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
-//    static void verifyContextLifetime(QQmlContextData *ctxt);
+    static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
 };
 
@@ -3778,27 +3777,26 @@ void tst_qqmlecmascript::singletonTypeResolution()
     delete object;
 }
 
-#if 0
 void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
     QQmlContextData *childCtxt = ctxt->childContexts;
 
     if (!ctxt->importedScripts.isEmpty()) {
         QV8Engine *engine = QV8Engine::get(ctxt->engine);
-        foreach (v8::Persistent<v8::Object> qmlglobal, ctxt->importedScripts) {
+        foreach (const QV4::PersistentValue& qmlglobal, ctxt->importedScripts) {
             QQmlContextData *scriptContext, *newContext;
 
-            if (qmlglobal.IsEmpty())
+            if (qmlglobal.isEmpty())
                 continue;
 
-            scriptContext = engine->contextWrapper()->context(qmlglobal);
+            scriptContext = QV4::QmlContextWrapper::getContext(qmlglobal);
 
             {
-                v8::Handle<v8::Object> temporaryScope = engine->qmlScope(scriptContext, NULL);
+                QV4::Value temporaryScope = QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0);
                 Q_UNUSED(temporaryScope)
             }
 
             engine->gc();
-            newContext = engine->contextWrapper()->context(qmlglobal);
+            newContext = QV4::QmlContextWrapper::getContext(qmlglobal);
             QVERIFY(scriptContext == newContext);
         }
     }
@@ -3809,9 +3807,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         childCtxt = childCtxt->nextChild;
     }
 }
-#endif
 
-#if 0
 void tst_qqmlecmascript::importScripts_data()
 {
     QTest::addColumn<QUrl>("testfile");
@@ -4054,7 +4050,6 @@ void tst_qqmlecmascript::importScripts()
 
     engine.setImportPathList(importPathList);
 }
-#endif
 
 void tst_qqmlecmascript::scarceResources_other()
 {

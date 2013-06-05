@@ -567,6 +567,11 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
             }
         }
 
+        if (object.isNull() || object.isUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index.toQString()).arg(object.toQString());
+            ctx->throwTypeError(message);
+        }
+
         o = __qmljs_convert_to_object(ctx, object);
     }
 
@@ -666,6 +671,11 @@ void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &obj
     if (m) {
         res = m->get(ctx, name);
     } else {
+        if (object.isNull() || object.isUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object.toQString());
+            ctx->throwTypeError(message);
+        }
+
         m = __qmljs_convert_to_object(ctx, object);
         res = m->get(ctx, name);
     }
