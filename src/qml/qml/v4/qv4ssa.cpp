@@ -118,6 +118,12 @@ void showMeTheCode(V4IR::Function *function)
                 qout << "// predecessor blocks:";
                 foreach (V4IR::BasicBlock *in, bb->in)
                     qout << " L" << in->index;
+                if (bb->in.isEmpty())
+                    qout << "(none)";
+                if (V4IR::BasicBlock *container = bb->containingGroup())
+                    qout << "; container block: L" << container->index;
+                if (bb->isGroupStart())
+                    qout << "; group start";
                 qout << endl;
             }
             V4IR::Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
@@ -370,6 +376,10 @@ public:
 
     QSet<BasicBlock *> operator[](BasicBlock *n) const {
         return DF[n];
+    }
+
+    BasicBlock *immediateDominator(BasicBlock *bb) const {
+        return idom[bb];
     }
 };
 
@@ -711,7 +721,7 @@ protected:
     }
 };
 
-QHash<int, int> convertToSSA(Function *function)
+QHash<int, int> convertToSSA(Function *function, const DominatorTree &df)
 {
 #ifdef SHOW_SSA
     qout << "Converting function ";
@@ -721,11 +731,6 @@ QHash<int, int> convertToSSA(Function *function)
         qout << "<no name>";
     qout << " to SSA..." << endl;
 #endif // SHOW_SSA
-
-    QVector<BasicBlock *> &nodes = function->basicBlocks;
-
-    // Calculate the dominator tree:
-    DominatorTree df(nodes);
 
     // Collect all applicable variables:
     VariableCollector variables(function);
@@ -1429,20 +1434,37 @@ bool doEdgeSplitting(Function *f)
     }
 }
 
-void scheduleBlocks(QVector<BasicBlock *> &basicBlocks)
+void scheduleBlocks(Function *function, const DominatorTree &df)
 {
-    // FIXME: this should not do DFS scheduling.
     struct I {
+        const DominatorTree &df;
         QSet<BasicBlock *> visited;
         QVector<BasicBlock *> &sequence;
+        BasicBlock *currentGroup;
+        QList<BasicBlock *> postponed;
 
-        I(QVector<BasicBlock *> &sequence): sequence(sequence) {}
+        I(const DominatorTree &df, QVector<BasicBlock *> &sequence)
+            : df(df), sequence(sequence), currentGroup(0)
+        {}
 
         void DFS(BasicBlock *bb) {
+            Q_ASSERT(bb);
             if (visited.contains(bb))
                 return;
-            visited.insert(bb);
-            sequence.append(bb);
+
+            if (bb->containingGroup() != currentGroup) {
+                postponed.append(bb);
+                return;
+            }
+            if (bb->isGroupStart())
+                currentGroup = bb;
+            else if (bb->in.size() > 1)
+                foreach (BasicBlock *inBB, bb->in)
+                    if (!visited.contains(inBB))
+                        return;
+
+            Q_ASSERT(df.immediateDominator(bb) == 0 || sequence.contains(df.immediateDominator(bb)));
+            layout(bb);
             if (Stmt *terminator = bb->terminator()) {
                 if (Jump *j = terminator->asJump()) {
                     Q_ASSERT(bb->out.size() == 1);
@@ -1460,13 +1482,28 @@ void scheduleBlocks(QVector<BasicBlock *> &basicBlocks)
             } else {
                 Q_UNREACHABLE();
             }
+
+            if (bb->isGroupStart()) {
+                currentGroup = bb->containingGroup();
+                QList<BasicBlock *> p = postponed;
+                foreach (BasicBlock *pBB, p)
+                    DFS(pBB);
+            }
+        }
+
+        void layout(BasicBlock *bb) {
+            sequence.append(bb);
+            visited.insert(bb);
+            postponed.removeAll(bb);
         }
     };
 
     QVector<BasicBlock *> sequence;
-    sequence.reserve(basicBlocks.size());
-    I(sequence).DFS(basicBlocks.first());
-    qSwap(basicBlocks, sequence);
+    sequence.reserve(function->basicBlocks.size());
+    I(df, sequence).DFS(function->basicBlocks.first());
+    qSwap(function->basicBlocks, sequence);
+
+    showMeTheCode(function);
 }
 
 /*
@@ -1512,8 +1549,13 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 void QQmlJS::linearize(V4IR::Function *function)
 {
 #if defined(SHOW_SSA)
-    qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!") << endl << flush;
+    qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!") << " with " << function->basicBlocks.size() << " basic blocks." << endl << flush;
 #endif
+
+    for (int i = 0; i < function->basicBlocks.size(); ++i)
+        function->basicBlocks[i]->index = i;
+    showMeTheCode(function);
+
 #if 0
     V4IR::BasicBlock *exitBlock = function->basicBlocks.last();
     assert(exitBlock->isTerminated());
@@ -1645,17 +1687,20 @@ void QQmlJS::linearize(V4IR::Function *function)
 //    splitEdges(function);
 //    showMeTheCode(function);
 
-    showMeTheCode(function);
+//    showMeTheCode(function);
 
     if (!function->hasTry && !function->hasWith) {
 //        qout << "Starting edge splitting..." << endl;
         doEdgeSplitting(function);
+        showMeTheCode(function);
+
+        // Calculate the dominator tree:
+        DominatorTree df(function->basicBlocks);
+
+        QHash<int, int> tempMapping = convertToSSA(function, df);
 //        showMeTheCode(function);
 
 //        qout << "Starting def/uses calculation..." << endl;
-        QHash<int, int> tempMapping = convertToSSA(function);
-//        showMeTheCode(function);
-
         DefUsesCalculator defUses(function);
 
 //        qout << "Cleaning up phi nodes..." << endl;
@@ -1672,13 +1717,15 @@ void QQmlJS::linearize(V4IR::Function *function)
 
 //        qout << "Doing type propagation..." << endl;
         TypePropagation().run(function);
-//        showMeTheCode(function);
-//        scheduleBlocks(function->basicBlocks);
-//        showMeTheCode(function);
+        showMeTheCode(function);
+
+//        qout << "Doing block scheduling..." << endl;
+        scheduleBlocks(function, df);
+        showMeTheCode(function);
 
 //        qout << "Converting out of SSA..." << endl;
         convertOutOfSSA(function, tempMapping);
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
 #ifndef QT_NO_DEBUG
         checkCriticalEdges(function->basicBlocks);
