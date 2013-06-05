@@ -271,7 +271,6 @@ public:
     void itemsMoved(
             const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts);
     void itemsChanged(const QVector<Compositor::Change> &changes);
-    template <typename T> static QV4::Value buildChangeList(const QVector<T> &changes);
     void emitChanges();
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
