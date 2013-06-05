@@ -717,7 +717,7 @@ struct Function {
         DontInsertBlock
     };
 
-    BasicBlock *newBasicBlock(BasicBlockInsertMode mode = InsertBlock);
+    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlockInsertMode mode = InsertBlock);
     const QString *newString(const QString &text);
 
     void RECEIVE(const QString &name) { formals.append(newString(name)); }
@@ -743,10 +743,14 @@ struct BasicBlock {
     QBitArray liveIn;
     QBitArray liveOut;
     int index;
-    int offset;
     AST::SourceLocation nextLocation;
 
-    BasicBlock(Function *function): function(function), index(-1), offset(-1) {}
+    BasicBlock(Function *function, BasicBlock *containingLoop)
+        : function(function)
+        , index(-1)
+        , _containingGroup(containingLoop)
+        , _groupStart(false)
+    {}
     ~BasicBlock() {}
 
     template <typename Instr> inline Instr i(Instr i) { statements.append(i); return i; }
@@ -803,6 +807,19 @@ struct BasicBlock {
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
     void appendStatement(Stmt *statement);
+
+    BasicBlock *containingGroup() const
+    { return _containingGroup; }
+
+    bool isGroupStart() const
+    { return _groupStart; }
+
+    void markAsGroupStart()
+    { _groupStart = true; }
+
+private:
+    BasicBlock *_containingGroup;
+    bool _groupStart;
 };
 
 class CloneExpr: protected V4IR::ExprVisitor

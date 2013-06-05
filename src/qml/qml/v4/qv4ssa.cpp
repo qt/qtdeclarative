@@ -1392,7 +1392,7 @@ bool doEdgeSplitting(Function *f)
 #endif
 
                     // create the basic block:
-                    BasicBlock *newBB = new BasicBlock(f);
+                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup());
                     newBB->index = f->basicBlocks.last()->index + 1;
                     f->basicBlocks.append(newBB);
                     Jump *s = f->New<Jump>();

@@ -254,21 +254,28 @@ protected:
     struct Loop {
         AST::LabelledStatement *labelledStatement;
         AST::Statement *node;
+        V4IR::BasicBlock *groupStartBlock;
         V4IR::BasicBlock *breakBlock;
         V4IR::BasicBlock *continueBlock;
         Loop *parent;
         ScopeAndFinally *scopeAndFinally;
 
-        Loop(AST::Statement *node, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock, Loop *parent)
-            : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
+        Loop(AST::Statement *node, V4IR::BasicBlock *groupStartBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock, Loop *parent)
+            : labelledStatement(0), node(node), groupStartBlock(groupStartBlock), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
     };
 
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
-    void enterLoop(AST::Statement *node, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock);
+    void enterLoop(AST::Statement *node, V4IR::BasicBlock *startBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock);
     void leaveLoop();
-
+    V4IR::BasicBlock *groupStartBlock() const
+    {
+        for (Loop *it = _loop; it; it = it->parent)
+            if (it->groupStartBlock)
+                return it->groupStartBlock;
+        return 0;
+    }
 
     V4IR::Expr *member(V4IR::Expr *base, const QString *name);
     V4IR::Expr *subscript(V4IR::Expr *base, V4IR::Expr *index);

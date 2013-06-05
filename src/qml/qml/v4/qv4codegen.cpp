@@ -561,9 +561,11 @@ void Codegen::leaveEnvironment()
     _env = _env->parent;
 }
 
-void Codegen::enterLoop(Statement *node, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock)
+void Codegen::enterLoop(Statement *node, V4IR::BasicBlock *startBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock)
 {
-    _loop = new Loop(node, breakBlock, continueBlock, _loop);
+    if (startBlock)
+        startBlock->markAsGroupStart();
+    _loop = new Loop(node, startBlock, breakBlock, continueBlock, _loop);
     _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
     _loop->scopeAndFinally = _scopeAndFinally;
     _labelledStatement = 0;
@@ -1158,13 +1160,13 @@ bool Codegen::visit(BinaryExpression *ast)
 {
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
-            V4IR::BasicBlock *iftrue = _function->newBasicBlock();
+            V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock());
             condition(ast->left, iftrue, _expr.iffalse);
             _block = iftrue;
             condition(ast->right, _expr.iftrue, _expr.iffalse);
         } else {
-            V4IR::BasicBlock *iftrue = _function->newBasicBlock();
-            V4IR::BasicBlock *endif = _function->newBasicBlock();
+            V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock());
+            V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock());
 
             const unsigned r = _block->newTemp();
 
@@ -1180,13 +1182,13 @@ bool Codegen::visit(BinaryExpression *ast)
         return false;
     } else if (ast->op == QSOperator::Or) {
         if (_expr.accept(cx)) {
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock();
+            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock());
             condition(ast->left, _expr.iftrue, iffalse);
             _block = iffalse;
             condition(ast->right, _expr.iftrue, _expr.iffalse);
         } else {
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock();
-            V4IR::BasicBlock *endif = _function->newBasicBlock();
+            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock());
+            V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock());
 
             const unsigned r = _block->newTemp();
             move(_block->TEMP(r), *expression(ast->left));
@@ -1336,9 +1338,9 @@ bool Codegen::visit(CallExpression *ast)
 
 bool Codegen::visit(ConditionalExpression *ast)
 {
-    V4IR::BasicBlock *iftrue = _function->newBasicBlock();
-    V4IR::BasicBlock *iffalse = _function->newBasicBlock();
-    V4IR::BasicBlock *endif = _function->newBasicBlock();
+    V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock());
 
     const unsigned t = _block->newTemp();
 
@@ -1815,6 +1817,8 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                                       const QStringList &inheritedLocals)
 {
     qSwap(_mode, mode); // enter function code.
+    Loop *loop = 0;
+    qSwap(_loop, loop);
 
     ScopeAndFinally *scopeAndFinally = 0;
 
@@ -1824,9 +1828,9 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     if (_debugger)
         _debugger->addFunction(function);
-    V4IR::BasicBlock *entryBlock = function->newBasicBlock();
-    V4IR::BasicBlock *exitBlock = function->newBasicBlock(V4IR::Function::DontInsertBlock);
-    V4IR::BasicBlock *throwBlock = function->newBasicBlock();
+    V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
+    V4IR::BasicBlock *throwBlock = function->newBasicBlock(groupStartBlock());
     function->hasDirectEval = _env->hasDirectEval;
     function->usesArgumentsObject = (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
@@ -1879,7 +1883,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     throwArgs->expr = throwBlock->TEMP(returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(V4IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
     throwBlock->JUMP(exitBlock);
-    Loop *loop = 0;
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
@@ -1887,7 +1890,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
     qSwap(_scopeAndFinally, scopeAndFinally);
-    qSwap(_loop, loop);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
@@ -2022,11 +2024,11 @@ bool Codegen::visit(DebuggerStatement *)
 
 bool Codegen::visit(DoWhileStatement *ast)
 {
-    V4IR::BasicBlock *loopbody = _function->newBasicBlock();
-    V4IR::BasicBlock *loopcond = _function->newBasicBlock();
-    V4IR::BasicBlock *loopend = _function->newBasicBlock();
+    V4IR::BasicBlock *loopbody = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *loopcond = _function->newBasicBlock(loopbody);
+    V4IR::BasicBlock *loopend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, loopend, loopcond);
+    enterLoop(ast, loopbody, loopend, loopcond);
 
     _block->JUMP(loopbody);
 
@@ -2063,11 +2065,11 @@ bool Codegen::visit(ExpressionStatement *ast)
 
 bool Codegen::visit(ForEachStatement *ast)
 {
-    V4IR::BasicBlock *foreachin = _function->newBasicBlock();
-    V4IR::BasicBlock *foreachbody = _function->newBasicBlock();
-    V4IR::BasicBlock *foreachend = _function->newBasicBlock();
+    V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin);
+    V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, foreachend, foreachin);
+    enterLoop(ast, foreachin, foreachend, foreachin);
 
     int objectToIterateOn = _block->newTemp();
     move(_block->TEMP(objectToIterateOn), *expression(ast->expression));
@@ -2101,12 +2103,12 @@ bool Codegen::visit(ForEachStatement *ast)
 
 bool Codegen::visit(ForStatement *ast)
 {
-    V4IR::BasicBlock *forcond = _function->newBasicBlock();
-    V4IR::BasicBlock *forbody = _function->newBasicBlock();
-    V4IR::BasicBlock *forstep = _function->newBasicBlock();
-    V4IR::BasicBlock *forend = _function->newBasicBlock();
+    V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond);
+    V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond);
+    V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, forend, forstep);
+    enterLoop(ast, forcond, forend, forstep);
 
     statement(ast->initialiser);
     _block->JUMP(forcond);
@@ -2124,6 +2126,7 @@ bool Codegen::visit(ForStatement *ast)
     _block = forstep;
     statement(ast->expression);
     _block->JUMP(forcond);
+
     _block = forend;
 
     leaveLoop();
@@ -2133,9 +2136,9 @@ bool Codegen::visit(ForStatement *ast)
 
 bool Codegen::visit(IfStatement *ast)
 {
-    V4IR::BasicBlock *iftrue = _function->newBasicBlock();
-    V4IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock() : 0;
-    V4IR::BasicBlock *endif = _function->newBasicBlock();
+    V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(groupStartBlock()) : 0;
+    V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock());
     condition(ast->expression, iftrue, ast->ko ? iffalse : endif);
 
     _block = iftrue;
@@ -2166,8 +2169,8 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
-        V4IR::BasicBlock *breakBlock = _function->newBasicBlock();
-        enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
+        V4IR::BasicBlock *breakBlock = _function->newBasicBlock(groupStartBlock());
+        enterLoop(ast->statement, 0, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
         _block->JUMP(breakBlock);
         _block = breakBlock;
@@ -2179,11 +2182,11 @@ bool Codegen::visit(LabelledStatement *ast)
 
 bool Codegen::visit(LocalForEachStatement *ast)
 {
-    V4IR::BasicBlock *foreachin = _function->newBasicBlock();
-    V4IR::BasicBlock *foreachbody = _function->newBasicBlock();
-    V4IR::BasicBlock *foreachend = _function->newBasicBlock();
+    V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin);
+    V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, foreachend, foreachin);
+    enterLoop(ast, foreachin, foreachend, foreachin);
 
     variableDeclaration(ast->declaration);
 
@@ -2217,12 +2220,12 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
 bool Codegen::visit(LocalForStatement *ast)
 {
-    V4IR::BasicBlock *forcond = _function->newBasicBlock();
-    V4IR::BasicBlock *forbody = _function->newBasicBlock();
-    V4IR::BasicBlock *forstep = _function->newBasicBlock();
-    V4IR::BasicBlock *forend = _function->newBasicBlock();
+    V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond);
+    V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond);
+    V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, forend, forstep);
+    enterLoop(ast, forcond, forend, forstep);
 
     variableDeclarationList(ast->declarations);
     _block->JUMP(forcond);
@@ -2240,6 +2243,7 @@ bool Codegen::visit(LocalForStatement *ast)
     _block = forstep;
     statement(ast->expression);
     _block->JUMP(forcond);
+
     _block = forend;
 
     leaveLoop();
@@ -2263,21 +2267,22 @@ bool Codegen::visit(ReturnStatement *ast)
 
 bool Codegen::visit(SwitchStatement *ast)
 {
-    V4IR::BasicBlock *switchend = _function->newBasicBlock();
+    V4IR::BasicBlock *switchend = _function->newBasicBlock(groupStartBlock());
 
     if (ast->block) {
         Result lhs = expression(ast->expression);
-        V4IR::BasicBlock *switchcond = _block;
+        V4IR::BasicBlock *switchcond = _function->newBasicBlock(groupStartBlock());
+        _block->JUMP(switchcond);
         V4IR::BasicBlock *previousBlock = 0;
 
         QHash<Node *, V4IR::BasicBlock *> blockMap;
 
-        enterLoop(ast, switchend, 0);
+        enterLoop(ast, 0, switchend, 0);
 
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
 
-            _block = _function->newBasicBlock();
+            _block = _function->newBasicBlock(groupStartBlock());
             blockMap[clause] = _block;
 
             if (previousBlock && !previousBlock->isTerminated())
@@ -2290,7 +2295,7 @@ bool Codegen::visit(SwitchStatement *ast)
         }
 
         if (ast->block->defaultClause) {
-            _block = _function->newBasicBlock();
+            _block = _function->newBasicBlock(groupStartBlock());
             blockMap[ast->block->defaultClause] = _block;
 
             if (previousBlock && !previousBlock->isTerminated())
@@ -2305,7 +2310,7 @@ bool Codegen::visit(SwitchStatement *ast)
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
             CaseClause *clause = it->clause;
 
-            _block = _function->newBasicBlock();
+            _block = _function->newBasicBlock(groupStartBlock());
             blockMap[clause] = _block;
 
             if (previousBlock && !previousBlock->isTerminated())
@@ -2326,7 +2331,7 @@ bool Codegen::visit(SwitchStatement *ast)
             CaseClause *clause = it->clause;
             Result rhs = expression(clause->expression);
             V4IR::BasicBlock *iftrue = blockMap[clause];
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock();
+            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock());
             cjump(binop(V4IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
@@ -2335,7 +2340,7 @@ bool Codegen::visit(SwitchStatement *ast)
             CaseClause *clause = it->clause;
             Result rhs = expression(clause->expression);
             V4IR::BasicBlock *iftrue = blockMap[clause];
-            V4IR::BasicBlock *iffalse = _function->newBasicBlock();
+            V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock());
             cjump(binop(V4IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse);
             _block = iffalse;
         }
@@ -2367,12 +2372,12 @@ bool Codegen::visit(TryStatement *ast)
             (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
         throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
 
-    V4IR::BasicBlock *tryBody = _function->newBasicBlock();
-    V4IR::BasicBlock *catchBody =  _function->newBasicBlock();
+    V4IR::BasicBlock *tryBody = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *catchBody =  _function->newBasicBlock(groupStartBlock());
     // We always need a finally body to clean up the exception handler
-    V4IR::BasicBlock *finallyBody = _function->newBasicBlock();
+    V4IR::BasicBlock *finallyBody = _function->newBasicBlock(groupStartBlock());
 
-    V4IR::BasicBlock *throwBlock = _function->newBasicBlock();
+    V4IR::BasicBlock *throwBlock = _function->newBasicBlock(groupStartBlock());
     V4IR::ExprList *throwArgs = _function->New<V4IR::ExprList>();
     throwArgs->expr = throwBlock->TEMP(_returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(V4IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
@@ -2406,7 +2411,7 @@ bool Codegen::visit(TryStatement *ast)
     if (ast->catchExpression) {
         // check if an exception got thrown within catch. Go to finally
         // and then rethrow
-        V4IR::BasicBlock *b = _function->newBasicBlock();
+        V4IR::BasicBlock *b = _function->newBasicBlock(groupStartBlock());
         _block->CJUMP(_block->TEMP(hasException), finallyBody, b);
         _block = b;
     }
@@ -2430,7 +2435,7 @@ bool Codegen::visit(TryStatement *ast)
 
     qSwap(_throwBlock, throwBlock);
 
-    V4IR::BasicBlock *after = _function->newBasicBlock();
+    V4IR::BasicBlock *after = _function->newBasicBlock(groupStartBlock());
     _block = finallyBody;
 
     _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_finish_try, 0, 0), finishTryArgs));
@@ -2438,7 +2443,7 @@ bool Codegen::visit(TryStatement *ast)
     if (ast->finallyExpression && ast->finallyExpression->statement)
         statement(ast->finallyExpression->statement);
 
-    V4IR::BasicBlock *rethrowBlock = _function->newBasicBlock();
+    V4IR::BasicBlock *rethrowBlock = _function->newBasicBlock(groupStartBlock());
     _block->CJUMP(_block->TEMP(hasException), rethrowBlock, after);
     _block = rethrowBlock;
     move(_block->TEMP(_returnAddress), _block->TEMP(exception_to_rethrow));
@@ -2485,11 +2490,11 @@ bool Codegen::visit(VariableStatement *ast)
 
 bool Codegen::visit(WhileStatement *ast)
 {
-    V4IR::BasicBlock *whilecond = _function->newBasicBlock();
-    V4IR::BasicBlock *whilebody = _function->newBasicBlock();
-    V4IR::BasicBlock *whileend = _function->newBasicBlock();
+    V4IR::BasicBlock *whilecond = _function->newBasicBlock(groupStartBlock());
+    V4IR::BasicBlock *whilebody = _function->newBasicBlock(whilecond);
+    V4IR::BasicBlock *whileend = _function->newBasicBlock(groupStartBlock());
 
-    enterLoop(ast, whileend, whilecond);
+    enterLoop(ast, whilecond, whileend, whilecond);
 
     _block->JUMP(whilecond);
     _block = whilecond;
@@ -2509,7 +2514,7 @@ bool Codegen::visit(WithStatement *ast)
 {
     _function->hasWith = true;
 
-    V4IR::BasicBlock *withBlock = _function->newBasicBlock();
+    V4IR::BasicBlock *withBlock = _function->newBasicBlock(groupStartBlock());
 
     _block->JUMP(withBlock);
     _block = withBlock;
@@ -2529,7 +2534,7 @@ bool Codegen::visit(WithStatement *ast)
     --_function->insideWithOrCatch;
     _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
 
-    V4IR::BasicBlock *next = _function->newBasicBlock();
+    V4IR::BasicBlock *next = _function->newBasicBlock(groupStartBlock());
     _block->JUMP(next);
     _block = next;
 
