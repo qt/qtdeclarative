@@ -270,7 +270,7 @@ struct Q_QML_EXPORT Value
     ErrorObject *asErrorObject() const;
 
     template<typename T>
-    T *as() const { Managed *m = asObject(); return m ? m->as<T>() : 0; }
+    T *as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
 
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
