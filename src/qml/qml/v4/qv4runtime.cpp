@@ -822,8 +822,10 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
 
     Value func = baseObject->get(context, name);
     FunctionObject *o = func.asFunctionObject();
-    if (!o)
-        context->throwTypeError();
+    if (!o) {
+        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), thisObject.toQString());
+        context->throwTypeError(error);
+    }
 
     Value res = o->call(context, thisObject, args, argc);
     if (result)
