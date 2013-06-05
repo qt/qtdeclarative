@@ -99,7 +99,7 @@ public:
     void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
     QUrl resolveSourceUrl(QQmlV4Function *args);
-    v8::Handle<v8::Object> extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
+    QV4::Value extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
 
     virtual qreal getImplicitWidth() const;
     virtual qreal getImplicitHeight() const;

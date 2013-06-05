@@ -571,15 +571,15 @@ void QQuickLoader::setSource(QQmlV4Function *args)
 
     bool ipvError = false;
     args->setReturnValue(QV4::Value::undefinedValue());
-    v8::Handle<v8::Object> ipv = d->extractInitialPropertyValues(args, this, &ipvError);
+    QV4::Value ipv = d->extractInitialPropertyValues(args, this, &ipvError);
     if (ipvError)
         return;
 
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
-    if (!ipv.IsEmpty()) {
+    if (!ipv.isEmpty()) {
         d->disposeInitialPropertyValues();
-        d->initialPropertyValues = ipv->v4Value();
+        d->initialPropertyValues = ipv;
         d->qmlGlobalForIpv = args->qmlGlobal();
     }
 
@@ -933,17 +933,17 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
     return context->resolvedUrl(QUrl(arg));
 }
 
-v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
+QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
-    v8::Handle<v8::Object> valuemap;
+    QV4::Value valuemap = QV4::Value::emptyValue();
     if (args->length() >= 2) {
-        v8::Handle<v8::Value> v = (*args)[1];
-        if (!v->IsObject() || v->IsArray()) {
+        QV4::Value v = (*args)[1];
+        if (!v.isObject() || v.asArrayObject()) {
             *error = true;
             qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {
             *error = false;
-            valuemap = v8::Handle<v8::Object>::Cast(v);
+            valuemap = v;
         }
     }
 

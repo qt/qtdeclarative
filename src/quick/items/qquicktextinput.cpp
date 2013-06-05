@@ -1411,17 +1411,17 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
         return;
 
     int i = 0;
-    v8::Handle<v8::Value> arg = (*args)[i];
-    x = arg->NumberValue();
+    QV4::Value arg = (*args)[i];
+    x = arg.toNumber();
 
     if (++i < args->length()) {
         arg = (*args)[i];
-        y = arg->NumberValue();
+        y = arg.toNumber();
     }
 
     if (++i < args->length()) {
         arg = (*args)[i];
-        position = QTextLine::CursorPosition(arg->Int32Value());
+        position = QTextLine::CursorPosition(arg.toInt32());
     }
 
     int pos = d->positionAt(x, y, position);
