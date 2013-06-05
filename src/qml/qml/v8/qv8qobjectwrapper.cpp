@@ -838,7 +838,7 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, QV4:
 class QV8QObjectConnectionList : public QObject, public QQmlGuard<QObject>
 {
 public:
-    QV8QObjectConnectionList(QObject *object, QV8Engine *engine);
+    QV8QObjectConnectionList(QObject *object, QHash<QObject *, QV8QObjectConnectionList *> *allConnections);
     ~QV8QObjectConnectionList();
 
     struct Connection {
@@ -856,9 +856,6 @@ public:
         QV4::PersistentValue thisObject;
         QV4::PersistentValue function;
 
-        void dispose() {
-        }
-
         bool needsDestroy;
     };
 
@@ -868,7 +865,7 @@ public:
         bool connectionsNeedClean;
     };
 
-    QV8Engine *engine;
+    QHash<QObject *, QV8QObjectConnectionList *> *allConnections;
 
     typedef QHash<int, ConnectionList> SlotHash;
     SlotHash slotHash;
@@ -879,9 +876,10 @@ public:
     virtual int qt_metacall(QMetaObject::Call, int, void **);
 };
 
-QV8QObjectConnectionList::QV8QObjectConnectionList(QObject *object, QV8Engine *engine)
-: QQmlGuard<QObject>(object), engine(engine), needsDestroy(false), inUse(0)
+QV8QObjectConnectionList::QV8QObjectConnectionList(QObject *object, QHash<QObject *, QV8QObjectConnectionList *> *allConnections)
+: QQmlGuard<QObject>(object), needsDestroy(false), inUse(0)
 {
+    this->allConnections = allConnections;
 }
 
 QV8QObjectConnectionList::~QV8QObjectConnectionList()
@@ -894,7 +892,7 @@ QV8QObjectConnectionList::~QV8QObjectConnectionList()
 
 void QV8QObjectConnectionList::objectDestroyed(QObject *object)
 {
-    engine->qobjectWrapper()->m_connections.remove(object);
+    allConnections->remove(object);
 
     if (inUse)
         needsDestroy = true;
@@ -922,16 +920,7 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
         int *argsTypes = QQmlPropertyCache::methodParameterTypes(data(), index, dummy, 0);
 
         int argCount = argsTypes?argsTypes[0]:0;
-        QVarLengthArray<QV4::Value, 9> args(argCount);
-
-        for (int ii = 0; ii < argCount; ++ii) {
-            int type = argsTypes[ii + 1];
-            if (type == qMetaTypeId<QVariant>()) {
-                args[ii] = engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
-            } else {
-                args[ii] = engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
-            }
-        }
+        QVarLengthArray<QV4::Value, 9> args;
 
         for (int ii = 0; ii < connections.count(); ++ii) {
             Connection &connection = connections[ii];
@@ -941,15 +930,28 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
             QV4::FunctionObject *f = connection.function.value().asFunctionObject();
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
+
+            if (args.count() != argCount) {
+                args.resize(argCount);
+                for (int ii = 0; ii < argCount; ++ii) {
+                    int type = argsTypes[ii + 1];
+                    if (type == qMetaTypeId<QVariant>()) {
+                        args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    } else {
+                        args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    }
+                }
+            }
+
             try {
-                f->call(v4->current, connection.thisObject.isEmpty() ? engine->global() : connection.thisObject.value(), args.data(), argCount);
+                f->call(v4->current, connection.thisObject.isEmpty() ? Value::fromObject(v4->globalObject) : connection.thisObject.value(), args.data(), argCount);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 QQmlError error;
                 QQmlExpressionPrivate::exceptionToError(e, error);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
-                QQmlEnginePrivate::get(engine->engine())->warning(error);
+                QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
             }
         }
 
@@ -957,12 +959,10 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
         if (connectionList.connectionsInUse == 0 && connectionList.connectionsNeedClean) {
             for (QList<Connection>::Iterator iter = connectionList.begin(); 
                  iter != connectionList.end(); ) {
-                if (iter->needsDestroy) {
-                    iter->dispose();
+                if (iter->needsDestroy)
                     iter = connectionList.erase(iter);
-                } else {
+                else
                     ++iter;
-                }
             }
         }
 
@@ -1014,7 +1014,7 @@ QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
     QHash<QObject *, QV8QObjectConnectionList *> &connections = qobjectWrapper->m_connections;
     QHash<QObject *, QV8QObjectConnectionList *>::Iterator iter = connections.find(signalObject);
     if (iter == connections.end()) 
-        iter = connections.insert(signalObject, new QV8QObjectConnectionList(signalObject, engine));
+        iter = connections.insert(signalObject, new QV8QObjectConnectionList(signalObject, &connections));
 
     QV8QObjectConnectionList *connectionList = *iter;
     QV8QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(signalIndex);
@@ -1099,7 +1099,6 @@ QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
                         connection.needsDestroy = true;
                         connections.connectionsNeedClean = true;
                     } else {
-                        connection.dispose();
                         connections.removeAt(ii);
                     }
                     return QV4::Value::undefinedValue();
@@ -1119,7 +1118,6 @@ QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
                     connection.needsDestroy = true;
                     connections.connectionsNeedClean = true;
                 } else {
-                    connection.dispose();
                     connections.removeAt(ii);
                 }
                 return QV4::Value::undefinedValue();
