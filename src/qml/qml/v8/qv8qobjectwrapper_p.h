@@ -93,6 +93,7 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     void deleteQObject(bool deleteInstantly = false);
 
     Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
+    static Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
     static Value wrap(ExecutionEngine *engine, QObject *object);
 

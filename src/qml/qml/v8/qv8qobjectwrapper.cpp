@@ -412,6 +412,29 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
     }
 }
 
+Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
+{
+    if (QQmlData::wasDeleted(object)) {
+        if (hasProperty)
+            *hasProperty = false;
+        return QV4::Value::nullValue();
+    }
+
+    if (!QQmlData::get(object, true)) {
+        if (hasProperty)
+            *hasProperty = false;
+        return QV4::Value::nullValue();
+    }
+
+    QObjectWrapper *wrapper = wrap(ctx->engine, object).as<QV4::QObjectWrapper>();
+    if (!wrapper) {
+        if (hasProperty)
+            *hasProperty = false;
+        return QV4::Value::nullValue();
+    }
+    return wrapper->getQmlProperty(ctx, qmlContext, name, revisionMode, hasProperty);
+}
+
 Value QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 {
     if (QQmlData::wasDeleted(object))

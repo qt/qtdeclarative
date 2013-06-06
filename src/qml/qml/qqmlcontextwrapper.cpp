@@ -228,14 +228,12 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
         // Search scope object
         if (scopeObject) {
-            if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, scopeObject).as<QV4::QObjectWrapper>()) {
-                bool hasProp = false;
-                QV4::Value result = o->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
-                if (hasProp) {
-                    if (hasProperty)
-                        *hasProperty = true;
-                    return result;
-                }
+            bool hasProp = false;
+            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(ctx, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            if (hasProp) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result;
             }
         }
         scopeObject = 0;
@@ -243,14 +241,12 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
         // Search context object
         if (context->contextObject) {
-            if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, context->contextObject).as<QV4::QObjectWrapper>()) {
-                bool hasProp = false;
-                QV4::Value result = o->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
-                if (hasProp) {
-                    if (hasProperty)
-                        *hasProperty = true;
-                    return result;
-                }
+            bool hasProp = false;
+            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(ctx, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            if (hasProp) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result;
             }
         }
 
