@@ -16,4 +16,4 @@ qtHaveModule(quick) {
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel
 
-qtHaveModule(widgets) : SUBDIRS += widgets
+qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += widgets
