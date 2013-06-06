@@ -241,8 +241,7 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
         QObject *object = w->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
-            v8engine->qobjectWrapper()->setProperty(ao, propertystring, context, value,
-                                                    QV4::QObjectWrapper::IgnoreRevision);
+            QV4::QObjectWrapper::setQmlProperty(ctx, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -250,8 +249,7 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            v8engine->qobjectWrapper()->setProperty(qobjectSingleton, propertystring, context, value,
-                                                    QV4::QObjectWrapper::IgnoreRevision);
+            QV4::QObjectWrapper::setQmlProperty(ctx, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {

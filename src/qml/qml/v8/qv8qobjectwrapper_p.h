@@ -95,6 +95,8 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
     static Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
+    static bool setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
+
     static Value wrap(ExecutionEngine *engine, QObject *object);
 
 private:
@@ -204,30 +206,13 @@ public:
     void init(QV8Engine *);
     void destroy();
 
-    inline bool setProperty(QObject *, const QHashedV4String &, QQmlContextData *, v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
-
 private:
     friend class QQmlPropertyCache;
     friend struct QV4::QObjectWrapper;
     friend struct QV4::QObjectSlotDispatcher;
 
-    static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
-                            v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
-
     QV8Engine *m_engine;
 };
-
-bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV4String &string,
-                                    QQmlContextData *context, v8::Handle<v8::Value> value, QV4::QObjectWrapper::RevisionMode mode)
-{
-    QQmlData *dd = QQmlData::get(object, false);
-    if (!dd || !dd->propertyCache ||
-        dd->propertyCache->property(string, object, context)) {
-        return SetProperty(m_engine, object, string, context, value, mode);
-    } else {
-        return false;
-    }
-}
 
 QT_END_NAMESPACE
 

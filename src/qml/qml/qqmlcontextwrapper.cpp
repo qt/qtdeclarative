@@ -295,14 +295,13 @@ void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, con
 
         // Search scope object
         if (scopeObject &&
-            qobjectWrapper->setProperty(scopeObject, propertystring, context, value, QV4::QObjectWrapper::CheckRevision))
+            QV4::QObjectWrapper::setQmlProperty(ctx, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            qobjectWrapper->setProperty(context->contextObject, propertystring, context, value,
-                                        QV4::QObjectWrapper::CheckRevision))
+            QV4::QObjectWrapper::setQmlProperty(ctx, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return;
 
         context = context->parent;
