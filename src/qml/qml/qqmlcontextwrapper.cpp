@@ -190,7 +190,6 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
-    QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
 
     while (context) {
         // Search context properties
@@ -231,7 +230,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
         if (scopeObject) {
             if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, scopeObject).as<QV4::QObjectWrapper>()) {
                 bool hasProp = false;
-                QV4::Value result = o->getQmlProperty(o->engine()->current, propertystring.string().asString(), QV4::QObjectWrapper::CheckRevision, &hasProp);
+                QV4::Value result = o->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
                 if (hasProp) {
                     if (hasProperty)
                         *hasProperty = true;
@@ -244,12 +243,14 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
 
         // Search context object
         if (context->contextObject) {
-            QV4::Value result = qobjectWrapper->getProperty(context->contextObject, propertystring,
-                                                                       context, QV4::QObjectWrapper::CheckRevision)->v4Value();
-            if (!result.isEmpty()) {
-                if (hasProperty)
-                    *hasProperty = true;
-                return result;
+            if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, context->contextObject).as<QV4::QObjectWrapper>()) {
+                bool hasProp = false;
+                QV4::Value result = o->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+                if (hasProp) {
+                    if (hasProperty)
+                        *hasProperty = true;
+                    return result;
+                }
             }
         }
 

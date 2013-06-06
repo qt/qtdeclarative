@@ -158,7 +158,10 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
                 }
 
                 // check for property.
-                return v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV4::QObjectWrapper::IgnoreRevision)->v4Value();
+                if (QV4::QObjectWrapper *o = QV4::QObjectWrapper::wrap(ctx->engine, qobjectSingleton).as<QV4::QObjectWrapper>())
+                    return o->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::IgnoreRevision);
+                else
+                    return QV4::Value::undefinedValue();
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -181,9 +184,11 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
 
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
-                if (ao)
-                    return v8engine->qobjectWrapper()->getProperty(ao, propertystring, context,
-                                                                   QV4::QObjectWrapper::IgnoreRevision)->v4Value();
+                if (ao) {
+                    QV4::QObjectWrapper *wrapper = QV4::QObjectWrapper::wrap(ctx->engine, ao).as<QV4::QObjectWrapper>();
+                    if (wrapper)
+                        return wrapper->getQmlProperty(ctx, context, name, QV4::QObjectWrapper::IgnoreRevision);
+                }
 
                 // Fall through to base implementation
             }

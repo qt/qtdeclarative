@@ -146,7 +146,7 @@ void QObjectWrapper::deleteQObject(bool deleteInstantly)
     }
 }
 
-Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
+Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(m_object)) {
         if (hasProperty)
@@ -173,9 +173,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
     QHashedV4String propertystring(QV4::Value::fromString(name));
     QV8Engine *v8Engine = ctx->engine->v8Engine;
 
-    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(ctx->engine);
-
-    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8Engine, m_object, propertystring, context, revisionMode);
+    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8Engine, m_object, propertystring, qmlContext, revisionMode);
     if (!result.IsEmpty()) {
         if (hasProperty)
             *hasProperty = true;
@@ -184,8 +182,8 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
 
     if (includeImports && name->startsWithUpper()) {
         // Check for attached properties
-        if (context && context->imports) {
-            QQmlTypeNameCache::Result r = context->imports->query(propertystring);
+        if (qmlContext && qmlContext->imports) {
+            QQmlTypeNameCache::Result r = qmlContext->imports->query(propertystring);
 
             if (r.isValid()) {
                 if (r.scriptIndex != -1) {
@@ -193,7 +191,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, String *name, QObjec
                 } else if (r.type) {
                     return QmlTypeWrapper::create(v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
                 } else if (r.importNamespace) {
-                    return QmlTypeWrapper::create(v8Engine, m_object, context->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                    return QmlTypeWrapper::create(v8Engine, m_object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
                 }
                 Q_ASSERT(!"Unreachable");
             }
@@ -267,7 +265,8 @@ QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObj
 QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    return that->getQmlProperty(ctx, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
+    return that->getQmlProperty(ctx, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)

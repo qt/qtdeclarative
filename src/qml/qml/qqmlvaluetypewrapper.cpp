@@ -45,6 +45,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
@@ -283,8 +284,8 @@ Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
-        QQmlContextData *context = r->v8->callingContext();
-        return r->v8->qobjectWrapper()->getProperty(r->type, propertystring, context, QV4::QObjectWrapper::IgnoreRevision)->v4Value();
+        QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
+        return QV4::QObjectWrapper::wrap(ctx->engine, r->type).as<QV4::QObjectWrapper>()->getQmlProperty(ctx, qmlContext, name, QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
