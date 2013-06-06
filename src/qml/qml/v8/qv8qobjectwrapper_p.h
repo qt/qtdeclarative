@@ -73,7 +73,6 @@ class QObject;
 class QV8Engine;
 class QQmlData;
 class QV8ObjectResource;
-class QV8QObjectConnectionList;
 class QQmlPropertyCache;
 
 namespace QV4 {
@@ -86,6 +85,8 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     enum RevisionMode { IgnoreRevision, CheckRevision };
 
     ~QObjectWrapper();
+
+    static void initializeBindings(ExecutionEngine *engine);
 
     QObject *object() const { return m_object.data(); }
 
@@ -114,6 +115,9 @@ private:
     {
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
+
+    static Value method_connect(SimpleCallContext *ctx);
+    static Value method_disconnect(SimpleCallContext *ctx);
 };
 
 struct QObjectMethod : public QV4::FunctionObject
@@ -204,7 +208,6 @@ public:
 
 private:
     friend class QQmlPropertyCache;
-    friend class QV8QObjectConnectionList;
     friend struct QV4::QObjectWrapper;
     friend struct QV4::QObjectSlotDispatcher;
 
@@ -212,13 +215,8 @@ private:
                                              const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
-    static QV4::Value Connect(QV4::SimpleCallContext *ctx);
-    static QV4::Value Disconnect(QV4::SimpleCallContext *ctx);
-    static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, QV4::FunctionObject *);
-    static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, const QV4::Value &value);
 
     QV8Engine *m_engine;
-    QHash<QObject *, QV8QObjectConnectionList *> m_connections;
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV4String &string,

@@ -84,6 +84,27 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
+static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
+{
+    if (function && function->subtype == QV4::FunctionObject::WrappedQtMethod) {
+        QObjectMethod *method = static_cast<QObjectMethod*>(function);
+        return qMakePair(method->object(), method->methodIndex());
+    }
+
+    return qMakePair((QObject *)0, -1);
+}
+
+static QPair<QObject *, int> extractQtSignal(const Value &value)
+{
+    if (QV4::FunctionObject *function = value.asFunctionObject())
+        return extractQtMethod(function);
+
+    if (QV4::QmlSignalHandler *handler = value.as<QV4::QmlSignalHandler>())
+        return qMakePair(handler->object(), handler->signalIndex());
+
+    return qMakePair((QObject *)0, -1);
+}
+
 QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
@@ -98,6 +119,12 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 QObjectWrapper::~QObjectWrapper()
 {
     deleteQObject();
+}
+
+void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
+{
+    engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("connect"), method_connect);
+    engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
 }
 
 void QObjectWrapper::deleteQObject(bool deleteInstantly)
@@ -303,6 +330,201 @@ QV4::Value QObjectWrapper::enumerateProperties(Object *object)
     return QV4::Value::fromObject(that->engine()->newArrayObject(result));
 }
 
+namespace QV4 {
+
+struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
+{
+    QV4::PersistentValue function;
+    QV4::PersistentValue thisObject;
+    int signalIndex;
+
+    QObjectSlotDispatcher()
+        : QtPrivate::QSlotObjectBase(&impl)
+        , signalIndex(-1)
+    {}
+
+    static void impl(int which, QSlotObjectBase *this_, QObject *r, void **metaArgs, bool *ret)
+    {
+        switch (which) {
+        case Destroy: {
+            delete static_cast<QObjectSlotDispatcher*>(this_);
+        }
+        break;
+        case Call: {
+            QObjectSlotDispatcher *This = static_cast<QObjectSlotDispatcher*>(this_);
+            QVarLengthArray<int, 9> dummy;
+            int *argsTypes = QQmlPropertyCache::methodParameterTypes(r, This->signalIndex, dummy, 0);
+
+            int argCount = argsTypes ? argsTypes[0]:0;
+
+            QV4::FunctionObject *f = This->function.value().asFunctionObject();
+            QV4::ExecutionEngine *v4 = f->internalClass->engine;
+            QV4::ExecutionContext *ctx = v4->current;
+
+            QVarLengthArray<QV4::Value, 9> args(argCount);
+            for (int ii = 0; ii < argCount; ++ii) {
+                int type = argsTypes[ii + 1];
+                if (type == qMetaTypeId<QVariant>()) {
+                    args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                } else {
+                    args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                }
+            }
+
+            try {
+                f->call(v4->current, This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value(), args.data(), argCount);
+            } catch (QV4::Exception &e) {
+                e.accept(ctx);
+                QQmlError error;
+                QQmlExpressionPrivate::exceptionToError(e, error);
+                if (error.description().isEmpty())
+                    error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
+                QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
+            }
+        }
+        break;
+        case Compare: {
+            QObjectSlotDispatcher *connection = static_cast<QObjectSlotDispatcher*>(this_);
+            if (connection->function.isEmpty()) {
+                *ret = false;
+                return;
+            }
+
+            // This is tricky. Normally the metaArgs[0] pointer is a pointer to the _function_
+            // for the new-style QObject::connect. Here we use the engine pointer as sentinel
+            // to distinguish those type of QSlotObjectBase connections from our QML connections.
+            QV4::ExecutionEngine *v4 = reinterpret_cast<QV4::ExecutionEngine*>(metaArgs[0]);
+            if (v4 != connection->function.engine()) {
+                *ret = false;
+                return;
+            }
+
+            QV4::Value function = *reinterpret_cast<QV4::Value*>(metaArgs[1]);
+            QV4::Value thisObject = *reinterpret_cast<QV4::Value*>(metaArgs[2]);
+            QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);
+            int slotIndexToDisconnect = *reinterpret_cast<int*>(metaArgs[4]);
+
+            if (slotIndexToDisconnect != -1) {
+                // This is a QObject function wrapper
+                if (connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+
+                    QPair<QObject *, int> connectedFunctionData = extractQtMethod(connection->function.value().asFunctionObject());
+                    if (connectedFunctionData.first == receiverToDisconnect &&
+                        connectedFunctionData.second == slotIndexToDisconnect) {
+                        *ret = true;
+                        return;
+                    }
+                }
+            } else {
+                // This is a normal JS function
+                if (__qmljs_strict_equal(connection->function, function) &&
+                        connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                    *ret = true;
+                    return;
+                }
+            }
+
+            *ret = false;
+        }
+        break;
+        case NumOperations:
+        break;
+        }
+    };
+};
+
+} // namespace QV4
+
+Value QObjectWrapper::method_connect(SimpleCallContext *ctx)
+{
+    if (ctx->argumentCount == 0)
+        V4THROW_ERROR("Function.prototype.connect: no arguments given");
+
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject);
+    QObject *signalObject = signalInfo.first;
+    int signalIndex = signalInfo.second;
+
+    if (signalIndex < 0)
+        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
+
+    if (!signalObject)
+        V4THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
+
+    if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
+        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
+
+    QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
+    slot->signalIndex = signalIndex;
+
+    if (ctx->argumentCount == 1) {
+        slot->function = ctx->arguments[0];
+    } else if (ctx->argumentCount >= 2) {
+        slot->thisObject = ctx->arguments[0];
+        slot->function = ctx->arguments[1];
+    }
+
+    if (!slot->function.value().asFunctionObject())
+        V4THROW_ERROR("Function.prototype.connect: target is not a function");
+
+    if (!slot->thisObject.isEmpty() && !slot->thisObject.value().isObject())
+        V4THROW_ERROR("Function.prototype.connect: target this is not an object");
+
+    QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
+
+    return QV4::Value::undefinedValue();
+}
+
+Value QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
+{
+    if (ctx->argumentCount == 0)
+        V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
+
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject);
+    QObject *signalObject = signalInfo.first;
+    int signalIndex = signalInfo.second;
+
+    if (signalIndex == -1)
+        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+
+    if (!signalObject)
+        V4THROW_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
+
+    if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
+        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
+
+    QV4::Value functionValue = QV4::Value::emptyValue();
+    QV4::Value functionThisValue = QV4::Value::emptyValue();
+
+    if (ctx->argumentCount == 1) {
+        functionValue = ctx->arguments[0];
+    } else if (ctx->argumentCount >= 2) {
+        functionThisValue = ctx->arguments[0];
+        functionValue = ctx->arguments[1];
+    }
+
+    if (!functionValue.asFunctionObject())
+        V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
+
+    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
+        V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
+
+    QPair<QObject *, int> functionData = extractQtMethod(functionValue.asFunctionObject());
+
+    void *a[] = {
+        ctx->engine,
+        &functionValue,
+        &functionThisValue,
+        functionData.first,
+        &functionData.second
+    };
+
+    QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
+
+    return QV4::Value::undefinedValue();
+}
+
 void QObjectWrapper::markObjects(Managed *that)
 {
     QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
@@ -442,11 +664,6 @@ static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    v4->functionPrototype->defineDefaultProperty(v4, QStringLiteral("connect"), Connect);
-    v4->functionPrototype->defineDefaultProperty(v4, QStringLiteral("disconnect"), Disconnect);
 }
 
 // Load value properties
@@ -810,226 +1027,6 @@ static void FastValueSetterReadOnly(v8::Handle<v8::String> property, v8::Handle<
     QString error = QLatin1String("Cannot assign to read-only property \"") +
                     property->v4Value().toQString() + QLatin1Char('\"');
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
-}
-
-QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, const Value &value)
-{
-    if (QV4::FunctionObject *function = value.asFunctionObject())
-        return ExtractQtMethod(engine, function);
-
-    if (QV4::QmlSignalHandler *handler = value.as<QV4::QmlSignalHandler>())
-        return qMakePair(handler->object(), handler->signalIndex());
-
-    return qMakePair((QObject *)0, -1);
-}
-
-QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, QV4::FunctionObject *function)
-{
-    if (function && function->subtype == QV4::FunctionObject::WrappedQtMethod) {
-        QObjectMethod *method = static_cast<QObjectMethod*>(function);
-        return qMakePair(method->object(), method->methodIndex());
-    }
-
-    return qMakePair((QObject *)0, -1);
-}
-
-namespace QV4 {
-
-struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
-{
-    QV4::PersistentValue function;
-    QV4::PersistentValue thisObject;
-    int signalIndex;
-
-    QObjectSlotDispatcher()
-        : QtPrivate::QSlotObjectBase(&impl)
-        , signalIndex(-1)
-    {}
-
-    static void impl(int which, QSlotObjectBase *this_, QObject *r, void **metaArgs, bool *ret)
-    {
-        switch (which) {
-        case Destroy: {
-            delete static_cast<QObjectSlotDispatcher*>(this_);
-        }
-        break;
-        case Call: {
-            QObjectSlotDispatcher *This = static_cast<QObjectSlotDispatcher*>(this_);
-            QVarLengthArray<int, 9> dummy;
-            int *argsTypes = QQmlPropertyCache::methodParameterTypes(r, This->signalIndex, dummy, 0);
-
-            int argCount = argsTypes ? argsTypes[0]:0;
-
-            QV4::FunctionObject *f = This->function.value().asFunctionObject();
-            QV4::ExecutionEngine *v4 = f->internalClass->engine;
-            QV4::ExecutionContext *ctx = v4->current;
-
-            QVarLengthArray<QV4::Value, 9> args(argCount);
-            for (int ii = 0; ii < argCount; ++ii) {
-                int type = argsTypes[ii + 1];
-                if (type == qMetaTypeId<QVariant>()) {
-                    args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
-                } else {
-                    args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
-                }
-            }
-
-            try {
-                f->call(v4->current, This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value(), args.data(), argCount);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
-                QQmlError error;
-                QQmlExpressionPrivate::exceptionToError(e, error);
-                if (error.description().isEmpty())
-                    error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
-                QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
-            }
-        }
-        break;
-        case Compare: {
-            QObjectSlotDispatcher *connection = static_cast<QObjectSlotDispatcher*>(this_);
-            if (connection->function.isEmpty()) {
-                *ret = false;
-                return;
-            }
-
-            // This is tricky. Normally the metaArgs[0] pointer is a pointer to the _function_
-            // for the new-style QObject::connect. Here we use the engine pointer as sentinel
-            // to distinguish those type of QSlotObjectBase connections from our QML connections.
-            QV4::ExecutionEngine *v4 = reinterpret_cast<QV4::ExecutionEngine*>(metaArgs[0]);
-            if (v4 != connection->function.engine()) {
-                *ret = false;
-                return;
-            }
-
-            QV4::Value function = *reinterpret_cast<QV4::Value*>(metaArgs[1]);
-            QV4::Value thisObject = *reinterpret_cast<QV4::Value*>(metaArgs[2]);
-            QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);
-            int slotIndexToDisconnect = *reinterpret_cast<int*>(metaArgs[4]);
-
-            if (slotIndexToDisconnect != -1) {
-                // This is a QObject function wrapper
-                if (connection->thisObject.isEmpty() == thisObject.isEmpty() &&
-                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
-
-                    QPair<QObject *, int> connectedFunctionData = QV8QObjectWrapper::ExtractQtMethod(v4->v8Engine, connection->function.value().asFunctionObject());
-                    if (connectedFunctionData.first == receiverToDisconnect &&
-                        connectedFunctionData.second == slotIndexToDisconnect) {
-                        *ret = true;
-                        return;
-                    }
-                }
-            } else {
-                // This is a normal JS function
-                if (__qmljs_strict_equal(connection->function, function) &&
-                        connection->thisObject.isEmpty() == thisObject.isEmpty() &&
-                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
-                    *ret = true;
-                    return;
-                }
-            }
-
-            *ret = false;
-        }
-        break;
-        case NumOperations:
-        break;
-        }
-    };
-};
-
-}
-
-QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
-{
-    if (ctx->argumentCount == 0)
-        V4THROW_ERROR("Function.prototype.connect: no arguments given");
-
-    QV8Engine *engine = ctx->engine->v8Engine;
-
-    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
-    QObject *signalObject = signalInfo.first;
-    int signalIndex = signalInfo.second;
-
-    if (signalIndex < 0)
-        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
-
-    if (!signalObject)
-        V4THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
-
-    if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
-
-    QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
-    slot->signalIndex = signalIndex;
-
-    if (ctx->argumentCount == 1) {
-        slot->function = ctx->arguments[0];
-    } else if (ctx->argumentCount >= 2) {
-        slot->thisObject = ctx->arguments[0];
-        slot->function = ctx->arguments[1];
-    }
-
-    if (!slot->function.value().asFunctionObject())
-        V4THROW_ERROR("Function.prototype.connect: target is not a function");
-
-    if (!slot->thisObject.isEmpty() && !slot->thisObject.value().isObject())
-        V4THROW_ERROR("Function.prototype.connect: target this is not an object");
-
-    QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
-
-    return QV4::Value::undefinedValue();
-}
-
-QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
-{
-    if (ctx->argumentCount == 0)
-        V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
-
-    QV8Engine *engine = ctx->engine->v8Engine;
-
-    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, ctx->thisObject);
-    QObject *signalObject = signalInfo.first;
-    int signalIndex = signalInfo.second;
-
-    if (signalIndex == -1)
-        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
-
-    if (!signalObject)
-        V4THROW_ERROR("Function.prototype.disconnect: cannot disconnect from deleted QObject");
-
-    if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
-        V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
-
-    QV4::Value functionValue = QV4::Value::emptyValue();
-    QV4::Value functionThisValue = QV4::Value::emptyValue();
-
-    if (ctx->argumentCount == 1) {
-        functionValue = ctx->arguments[0];
-    } else if (ctx->argumentCount >= 2) {
-        functionThisValue = ctx->arguments[0];
-        functionValue = ctx->arguments[1];
-    }
-
-    if (!functionValue.asFunctionObject())
-        V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
-
-    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
-        V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
-
-    QPair<QObject *, int> functionData = ExtractQtMethod(engine, functionValue.asFunctionObject());
-
-    void *a[] = {
-        ctx->engine,
-        &functionValue,
-        &functionThisValue,
-        functionData.first,
-        &functionData.second
-    };
-
-    QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
-
-    return QV4::Value::undefinedValue();
 }
 
 /*!
