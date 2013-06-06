@@ -210,8 +210,6 @@ private:
     friend struct QV4::QObjectWrapper;
     friend struct QV4::QObjectSlotDispatcher;
 
-    static QV4::Value GetProperty(QV8Engine *, QObject *,
-                                             const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV4String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV4::QObjectWrapper::RevisionMode);
 

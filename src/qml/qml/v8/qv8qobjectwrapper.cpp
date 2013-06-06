@@ -105,6 +105,142 @@ static QPair<QObject *, int> extractQtSignal(const Value &value)
     return qMakePair((QObject *)0, -1);
 }
 
+
+struct ReadAccessor {
+    static inline void Indirect(QObject *object, const QQmlPropertyData &property,
+                                void *output, QQmlNotifier **n)
+    {
+        Q_ASSERT(n == 0);
+        Q_UNUSED(n);
+
+        void *args[] = { output, 0 };
+        QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex, args);
+    }
+
+    static inline void Direct(QObject *object, const QQmlPropertyData &property,
+                              void *output, QQmlNotifier **n)
+    {
+        Q_ASSERT(n == 0);
+        Q_UNUSED(n);
+
+        void *args[] = { output, 0 };
+        object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args);
+    }
+
+    static inline void Accessor(QObject *object, const QQmlPropertyData &property,
+                                void *output, QQmlNotifier **n)
+    {
+        Q_ASSERT(property.accessors);
+
+        property.accessors->read(object, property.accessorData, output);
+        if (n) property.accessors->notifier(object, property.accessorData, n);
+    }
+};
+
+static inline QV4::Value valueToHandle(QV8Engine *, int v)
+{ return QV4::Value::fromInt32(v); }
+static inline QV4::Value valueToHandle(QV8Engine *, uint v)
+{ return QV4::Value::fromUInt32(v); }
+static inline QV4::Value valueToHandle(QV8Engine *, bool v)
+{ return QV4::Value::fromBoolean(v); }
+static inline QV4::Value valueToHandle(QV8Engine *e, const QString &v)
+{ return e->toString(v); }
+static inline QV4::Value valueToHandle(QV8Engine *, float v)
+{ return QV4::Value::fromDouble(v); }
+static inline QV4::Value valueToHandle(QV8Engine *, double v)
+{ return QV4::Value::fromDouble(v); }
+static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
+{ return QV4::QObjectWrapper::wrap(QV8Engine::getV4(e), v); }
+
+// Load value properties
+template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
+                              void *, QQmlNotifier **)>
+static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
+                                          const QQmlPropertyData &property,
+                                          QQmlNotifier **notifier)
+{
+    Q_ASSERT(!property.isFunction());
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
+    if (property.isQObject()) {
+        QObject *rv = 0;
+        ReadFunction(object, property, &rv, notifier);
+        return QV4::QObjectWrapper::wrap(v4, rv);
+    } else if (property.isQList()) {
+        return QmlListWrapper::create(engine, object, property.coreIndex, property.propType);
+    } else if (property.propType == QMetaType::QReal) {
+        qreal v = 0;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::Int || property.isEnum()) {
+        int v = 0;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::Bool) {
+        bool v = false;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::QString) {
+        QString v;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::UInt) {
+        uint v = 0;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::Float) {
+        float v = 0;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.propType == QMetaType::Double) {
+        double v = 0;
+        ReadFunction(object, property, &v, notifier);
+        return valueToHandle(engine, v);
+    } else if (property.isV4Handle()) {
+        QQmlV4Handle handle;
+        ReadFunction(object, property, &handle, notifier);
+        return handle.toValue();
+    } else if (property.propType == qMetaTypeId<QJSValue>()) {
+        QJSValue v;
+        ReadFunction(object, property, &v, notifier);
+        return QJSValuePrivate::get(v)->getValue(v4);
+    } else if (property.isQVariant()) {
+        QVariant v;
+        ReadFunction(object, property, &v, notifier);
+
+        if (QQmlValueTypeFactory::isValueType(v.userType())) {
+            if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
+                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType); // VariantReference value-type.
+        }
+
+        return engine->fromVariant(v);
+    } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
+        Q_ASSERT(notifier == 0);
+
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
+            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType);
+    } else {
+        Q_ASSERT(notifier == 0);
+
+        // see if it's a sequence type
+        bool succeeded = false;
+        QV4::Value retn = QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded);
+        if (succeeded)
+            return retn;
+    }
+
+    if (property.propType == QMetaType::UnknownType) {
+        QMetaProperty p = object->metaObject()->property(property.coreIndex);
+        qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
+                 "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
+        return QV4::Value::undefinedValue();
+    } else {
+        QVariant v(property.propType, (void *)0);
+        ReadFunction(object, property, v.data(), notifier);
+        return engine->fromVariant(v);
+    }
+}
+
 QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Object(engine)
     , m_object(object)
@@ -173,32 +309,107 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
     QHashedV4String propertystring(QV4::Value::fromString(name));
     QV8Engine *v8Engine = ctx->engine->v8Engine;
 
-    v8::Handle<v8::Value> result = QV8QObjectWrapper::GetProperty(v8Engine, m_object, propertystring, qmlContext, revisionMode);
-    if (!result.IsEmpty()) {
-        if (hasProperty)
-            *hasProperty = true;
-        return result->v4Value();
+    QQmlData *ddata = QQmlData::get(m_object, false);
+    QQmlPropertyData local;
+    QQmlPropertyData *result = 0;
+    {
+        QHashedV4String propertystring(Value::fromString(name));
+        if (ddata && ddata->propertyCache)
+            result = ddata->propertyCache->property(propertystring, m_object, qmlContext);
+        else
+            result = QQmlPropertyCache::property(ctx->engine->v8Engine->engine(), m_object, propertystring, qmlContext, local);
     }
 
-    if (includeImports && name->startsWithUpper()) {
-        // Check for attached properties
-        if (qmlContext && qmlContext->imports) {
-            QQmlTypeNameCache::Result r = qmlContext->imports->query(propertystring);
+    if (!result) {
+        if (includeImports && name->startsWithUpper()) {
+            // Check for attached properties
+            if (qmlContext && qmlContext->imports) {
+                QQmlTypeNameCache::Result r = qmlContext->imports->query(propertystring);
 
-            if (r.isValid()) {
-                if (r.scriptIndex != -1) {
-                    return QV4::Value::undefinedValue();
-                } else if (r.type) {
-                    return QmlTypeWrapper::create(v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
-                } else if (r.importNamespace) {
-                    return QmlTypeWrapper::create(v8Engine, m_object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                if (hasProperty)
+                    *hasProperty = true;
+
+                if (r.isValid()) {
+                    if (r.scriptIndex != -1) {
+                        return QV4::Value::undefinedValue();
+                    } else if (r.type) {
+                        return QmlTypeWrapper::create(v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
+                    } else if (r.importNamespace) {
+                        return QmlTypeWrapper::create(v8Engine, m_object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                    }
+                    Q_ASSERT(!"Unreachable");
                 }
-                Q_ASSERT(!"Unreachable");
             }
+        }
+        return QV4::Object::get(this, ctx, name, hasProperty);
+    }
+
+    QQmlData::flushPendingBinding(m_object, result->coreIndex);
+
+    if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
+        if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result)) {
+            if (hasProperty)
+                *hasProperty = false;
+            return QV4::Value::undefinedValue();
         }
     }
 
-    return QV4::Object::get(this, ctx, name, hasProperty);
+    if (hasProperty)
+        *hasProperty = true;
+
+    if (result->isFunction() && !result->isVarProperty()) {
+        if (result->isVMEFunction()) {
+            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
+            Q_ASSERT(vmemo);
+            return vmemo->vmeMethod(result->coreIndex);
+        } else if (result->isV4Function()) {
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex, QV4::Value::fromObject(ctx->engine->qmlContextObject()));
+        } else if (result->isSignalHandler()) {
+            QV4::QmlSignalHandler *handler = new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex);
+
+            QV4::String *connect = ctx->engine->newIdentifier(QStringLiteral("connect"));
+            QV4::String *disconnect = ctx->engine->newIdentifier(QStringLiteral("disconnect"));
+            handler->put(connect, ctx->engine->functionPrototype->get(connect));
+            handler->put(disconnect, ctx->engine->functionPrototype->get(disconnect));
+
+            return QV4::Value::fromObject(handler);
+        } else {
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex);
+        }
+    }
+
+    QQmlEnginePrivate *ep = ctx->engine->v8Engine->engine() ? QQmlEnginePrivate::get(ctx->engine->v8Engine->engine()) : 0;
+
+    if (result->hasAccessors()) {
+        QQmlNotifier *n = 0;
+        QQmlNotifier **nptr = 0;
+
+        if (ep && ep->propertyCapture && result->accessors->notifier)
+            nptr = &n;
+
+        QV4::Value rv = LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *result, nptr);
+
+        if (result->accessors->notifier) {
+            if (n) ep->captureProperty(n);
+        } else {
+            ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+        }
+
+        return rv;
+    }
+
+    if (ep && !result->isConstant())
+        ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+
+    if (result->isVarProperty()) {
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
+        Q_ASSERT(vmemo);
+        return vmemo->vmeProperty(result->coreIndex);
+    } else if (result->isDirect())  {
+        return LoadProperty<ReadAccessor::Direct>(ctx->engine->v8Engine, m_object, *result, 0);
+    } else {
+        return LoadProperty<ReadAccessor::Indirect>(ctx->engine->v8Engine, m_object, *result, 0);
+    }
 }
 
 Value QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
@@ -614,231 +825,9 @@ void QV8QObjectWrapper::destroy()
 {
 }
 
-struct ReadAccessor {
-    static inline void Indirect(QObject *object, const QQmlPropertyData &property,
-                                void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(n == 0);
-        Q_UNUSED(n);
-
-        void *args[] = { output, 0 };
-        QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex, args);
-    }
-
-    static inline void Direct(QObject *object, const QQmlPropertyData &property,
-                              void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(n == 0);
-        Q_UNUSED(n);
-
-        void *args[] = { output, 0 };
-        object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args);
-    }
-
-    static inline void Accessor(QObject *object, const QQmlPropertyData &property,
-                                void *output, QQmlNotifier **n)
-    {
-        Q_ASSERT(property.accessors);
-
-        property.accessors->read(object, property.accessorData, output);
-        if (n) property.accessors->notifier(object, property.accessorData, n);
-    }
-};
-
-static inline QV4::Value valueToHandle(QV8Engine *, int v)
-{ return QV4::Value::fromInt32(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, uint v)
-{ return QV4::Value::fromUInt32(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, bool v)
-{ return QV4::Value::fromBoolean(v); }
-static inline QV4::Value valueToHandle(QV8Engine *e, const QString &v)
-{ return e->toString(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, float v)
-{ return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, double v)
-{ return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
-{ return QV4::QObjectWrapper::wrap(QV8Engine::getV4(e), v); }
-
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
-}
-
-// Load value properties
-template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
-                              void *, QQmlNotifier **)>
-static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
-                                          const QQmlPropertyData &property,
-                                          QQmlNotifier **notifier)
-{
-    Q_ASSERT(!property.isFunction());
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    if (property.isQObject()) {
-        QObject *rv = 0;
-        ReadFunction(object, property, &rv, notifier);
-        return QV4::QObjectWrapper::wrap(v4, rv);
-    } else if (property.isQList()) {
-        return QmlListWrapper::create(engine, object, property.coreIndex, property.propType);
-    } else if (property.propType == QMetaType::QReal) {
-        qreal v = 0;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::Int || property.isEnum()) {
-        int v = 0;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::Bool) {
-        bool v = false;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::QString) {
-        QString v;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::UInt) {
-        uint v = 0;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::Float) {
-        float v = 0;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.propType == QMetaType::Double) {
-        double v = 0;
-        ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
-    } else if (property.isV4Handle()) {
-        QQmlV4Handle handle;
-        ReadFunction(object, property, &handle, notifier);
-        return handle.toValue();
-    } else if (property.propType == qMetaTypeId<QJSValue>()) {
-        QJSValue v;
-        ReadFunction(object, property, &v, notifier);
-        return QJSValuePrivate::get(v)->getValue(v4);
-    } else if (property.isQVariant()) {
-        QVariant v;
-        ReadFunction(object, property, &v, notifier);
-
-        if (QQmlValueTypeFactory::isValueType(v.userType())) {
-            if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
-                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType); // VariantReference value-type.
-        }
-
-        return engine->fromVariant(v);
-    } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
-        Q_ASSERT(notifier == 0);
-
-        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
-            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType);
-    } else {
-        Q_ASSERT(notifier == 0);
-
-        // see if it's a sequence type
-        bool succeeded = false;
-        QV4::Value retn = QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded);
-        if (succeeded)
-            return retn;
-    }
-
-    if (property.propType == QMetaType::UnknownType) {
-        QMetaProperty p = object->metaObject()->property(property.coreIndex);
-        qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
-                 "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
-        return QV4::Value::undefinedValue();
-    } else {
-        QVariant v(property.propType, (void *)0);
-        ReadFunction(object, property, v.data(), notifier);
-        return engine->fromVariant(v);
-    }
-}
-
-QV4::Value QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object,
-                                                     const QHashedV4String &property,
-                                                     QQmlContextData *context,
-                                                     QV4::QObjectWrapper::RevisionMode revisionMode)
-{
-    if (QQmlData::wasDeleted(object))
-        return QV4::Value::emptyValue();
-
-    QQmlPropertyData local;
-    QQmlPropertyData *result = 0;
-    {
-        QQmlData *ddata = QQmlData::get(object, false);
-        if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(property, object, context);
-        else
-            result = QQmlPropertyCache::property(engine->engine(), object, property, context, local);
-    }
-
-    if (!result)
-        return QV4::Value::emptyValue();
-
-    QQmlData::flushPendingBinding(object, result->coreIndex);
-
-    if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
-        QQmlData *ddata = QQmlData::get(object);
-        if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
-            return QV4::Value::emptyValue();
-    }
-
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    if (result->isFunction() && !result->isVarProperty()) {
-        if (result->isVMEFunction()) {
-            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-            Q_ASSERT(vmemo);
-            return vmemo->vmeMethod(result->coreIndex);
-        } else if (result->isV4Function()) {
-            return QV4::QObjectMethod::create(v4->rootContext, object, result->coreIndex, QV4::Value::fromObject(v4->qmlContextObject()));
-        } else if (result->isSignalHandler()) {
-            QV4::QmlSignalHandler *handler = new (v4->memoryManager) QV4::QmlSignalHandler(v4, object, result->coreIndex);
-
-            QV4::String *connect = v4->newIdentifier(QStringLiteral("connect"));
-            QV4::String *disconnect = v4->newIdentifier(QStringLiteral("disconnect"));
-            handler->put(connect, v4->functionPrototype->get(connect));
-            handler->put(disconnect, v4->functionPrototype->get(disconnect));
-
-            return QV4::Value::fromObject(handler);
-        } else {
-            return QV4::QObjectMethod::create(v4->rootContext, object, result->coreIndex);
-        }
-    }
-
-    QQmlEnginePrivate *ep =
-        engine->engine()?QQmlEnginePrivate::get(engine->engine()):0;
-
-    if (result->hasAccessors()) {
-        QQmlNotifier *n = 0;
-        QQmlNotifier **nptr = 0;
-
-        if (ep && ep->propertyCapture && result->accessors->notifier)
-            nptr = &n;
-
-        QV4::Value rv = LoadProperty<ReadAccessor::Accessor>(engine, object, *result, nptr);
-
-        if (result->accessors->notifier) {
-            if (n) ep->captureProperty(n);
-        } else {
-            ep->captureProperty(object, result->coreIndex, result->notifyIndex);
-        }
-
-        return rv;
-    }
-
-    if (ep && !result->isConstant())
-        ep->captureProperty(object, result->coreIndex, result->notifyIndex);
-
-    if (result->isVarProperty()) {
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-        Q_ASSERT(vmemo);
-        return vmemo->vmeProperty(result->coreIndex);
-    } else if (result->isDirect())  {
-        return LoadProperty<ReadAccessor::Direct>(engine, object, *result, 0);
-    } else {
-        return LoadProperty<ReadAccessor::Indirect>(engine, object, *result, 0);
-    }
 }
 
 // Setter for writable properties.  Shared between the interceptor and fast property accessor
