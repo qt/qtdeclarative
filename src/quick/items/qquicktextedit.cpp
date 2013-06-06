@@ -272,6 +272,12 @@ QString QQuickTextEdit::text() const
     The text to display.  If the text format is AutoText the text edit will
     automatically determine whether the text should be treated as
     rich text.  This determination is made using Qt::mightBeRichText().
+
+    The text-property is mostly suitable for setting the initial content and
+    handling modifications to relatively small text content. The append(),
+    insert() and remove() methods provide more fine-grained control and
+    remarkably better performance for modifying especially large rich text
+    content.
 */
 void QQuickTextEdit::setText(const QString &text)
 {
@@ -2531,6 +2537,39 @@ void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
     Q_D(QQuickTextEdit);
     if (d->isLinkHoveredConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+}
+
+/*!
+    \qmlmethod void QtQuick2::TextEdit::append(string text)
+    \since QtQuick 2.2
+
+    Appends a new paragraph with \a text to the end of the TextEdit.
+
+    In order to append without inserting a new paragraph,
+    call \c myTextEdit.insert(myTextEdit.length, text) instead.
+*/
+void QQuickTextEdit::append(const QString &text)
+{
+    Q_D(QQuickTextEdit);
+    QTextCursor cursor(d->document);
+    cursor.beginEditBlock();
+    cursor.movePosition(QTextCursor::End);
+
+    if (!d->document->isEmpty())
+        cursor.insertBlock();
+
+#ifndef QT_NO_TEXTHTMLPARSER
+    if (d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text))) {
+        cursor.insertHtml(text);
+    } else {
+        cursor.insertText(text);
+    }
+#else
+    cursor.insertText(text);
+#endif // QT_NO_TEXTHTMLPARSER
+
+    cursor.endEditBlock();
+    d->control->updateCursorRectangle(false);
 }
 
 QT_END_NAMESPACE

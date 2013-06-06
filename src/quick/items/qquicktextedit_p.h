@@ -314,6 +314,7 @@ public Q_SLOTS:
     void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
+    Q_REVISION(2) void append(const QString &text);
 
 private Q_SLOTS:
     void q_textChanged();
