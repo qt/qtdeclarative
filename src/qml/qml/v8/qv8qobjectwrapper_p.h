@@ -77,6 +77,7 @@ class QV8QObjectConnectionList;
 class QQmlPropertyCache;
 
 namespace QV4 {
+struct QObjectSlotDispatcher;
 
 struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 {
@@ -205,6 +206,7 @@ private:
     friend class QQmlPropertyCache;
     friend class QV8QObjectConnectionList;
     friend struct QV4::QObjectWrapper;
+    friend struct QV4::QObjectSlotDispatcher;
 
     static QV4::Value GetProperty(QV8Engine *, QObject *,
                                              const QHashedV4String &, QQmlContextData *, QV4::QObjectWrapper::RevisionMode);

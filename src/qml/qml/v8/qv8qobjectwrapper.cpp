@@ -391,8 +391,6 @@ QV8QObjectWrapper::~QV8QObjectWrapper()
 
 void QV8QObjectWrapper::destroy()
 {
-    qDeleteAll(m_connections);
-    m_connections.clear();
 }
 
 struct ReadAccessor {
@@ -835,116 +833,49 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, QV4:
     return qMakePair((QObject *)0, -1);
 }
 
-class QV8QObjectConnectionList : public QObject, public QQmlGuard<QObject>
-{
-public:
-    QV8QObjectConnectionList(QObject *object, QHash<QObject *, QV8QObjectConnectionList *> *allConnections);
-    ~QV8QObjectConnectionList();
+namespace QV4 {
 
-    struct Connection {
-        Connection() 
-        : needsDestroy(false) {}
-        Connection(const Connection &other) 
-        : thisObject(other.thisObject), function(other.function), needsDestroy(false) {}
-        Connection &operator=(const Connection &other) {
-            thisObject = other.thisObject;
-            function = other.function;
-            needsDestroy = other.needsDestroy;
-            return *this;
+struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
+{
+    QV4::PersistentValue function;
+    QV4::PersistentValue thisObject;
+    int signalIndex;
+
+    QObjectSlotDispatcher()
+        : QtPrivate::QSlotObjectBase(&impl)
+        , signalIndex(-1)
+    {}
+
+    static void impl(int which, QSlotObjectBase *this_, QObject *r, void **metaArgs, bool *ret)
+    {
+        switch (which) {
+        case Destroy: {
+            delete static_cast<QObjectSlotDispatcher*>(this_);
         }
+        break;
+        case Call: {
+            QObjectSlotDispatcher *This = static_cast<QObjectSlotDispatcher*>(this_);
+            QVarLengthArray<int, 9> dummy;
+            int *argsTypes = QQmlPropertyCache::methodParameterTypes(r, This->signalIndex, dummy, 0);
 
-        QV4::PersistentValue thisObject;
-        QV4::PersistentValue function;
+            int argCount = argsTypes ? argsTypes[0]:0;
 
-        bool needsDestroy;
-    };
-
-    struct ConnectionList : public QList<Connection> {
-        ConnectionList() : connectionsInUse(0), connectionsNeedClean(false) {}
-        int connectionsInUse;
-        bool connectionsNeedClean;
-    };
-
-    QHash<QObject *, QV8QObjectConnectionList *> *allConnections;
-
-    typedef QHash<int, ConnectionList> SlotHash;
-    SlotHash slotHash;
-    bool needsDestroy;
-    int inUse;
-
-    virtual void objectDestroyed(QObject *);
-    virtual int qt_metacall(QMetaObject::Call, int, void **);
-};
-
-QV8QObjectConnectionList::QV8QObjectConnectionList(QObject *object, QHash<QObject *, QV8QObjectConnectionList *> *allConnections)
-: QQmlGuard<QObject>(object), needsDestroy(false), inUse(0)
-{
-    this->allConnections = allConnections;
-}
-
-QV8QObjectConnectionList::~QV8QObjectConnectionList()
-{
-    for (SlotHash::Iterator iter = slotHash.begin(); iter != slotHash.end(); ++iter) {
-        QList<Connection> &connections = *iter;
-    }
-    slotHash.clear();
-}
-
-void QV8QObjectConnectionList::objectDestroyed(QObject *object)
-{
-    allConnections->remove(object);
-
-    if (inUse)
-        needsDestroy = true;
-    else
-        delete this;
-}
-
-int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void **metaArgs)
-{
-    if (method == QMetaObject::InvokeMetaMethod) {
-        SlotHash::Iterator iter = slotHash.find(index);
-        if (iter == slotHash.end())
-            return -1;
-        ConnectionList &connectionList = *iter;
-        if (connectionList.isEmpty())
-            return -1;
-
-        inUse++;
-
-        connectionList.connectionsInUse++;
-
-        QList<Connection> connections = connectionList;
-
-        QVarLengthArray<int, 9> dummy;
-        int *argsTypes = QQmlPropertyCache::methodParameterTypes(data(), index, dummy, 0);
-
-        int argCount = argsTypes?argsTypes[0]:0;
-        QVarLengthArray<QV4::Value, 9> args;
-
-        for (int ii = 0; ii < connections.count(); ++ii) {
-            Connection &connection = connections[ii];
-            if (connection.needsDestroy)
-                continue;
-
-            QV4::FunctionObject *f = connection.function.value().asFunctionObject();
+            QV4::FunctionObject *f = This->function.value().asFunctionObject();
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
 
-            if (args.count() != argCount) {
-                args.resize(argCount);
-                for (int ii = 0; ii < argCount; ++ii) {
-                    int type = argsTypes[ii + 1];
-                    if (type == qMetaTypeId<QVariant>()) {
-                        args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
-                    } else {
-                        args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
-                    }
+            QVarLengthArray<QV4::Value, 9> args(argCount);
+            for (int ii = 0; ii < argCount; ++ii) {
+                int type = argsTypes[ii + 1];
+                if (type == qMetaTypeId<QVariant>()) {
+                    args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                } else {
+                    args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
             try {
-                f->call(v4->current, connection.thisObject.isEmpty() ? Value::fromObject(v4->globalObject) : connection.thisObject.value(), args.data(), argCount);
+                f->call(v4->current, This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value(), args.data(), argCount);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 QQmlError error;
@@ -954,24 +885,59 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
                 QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
             }
         }
-
-        connectionList.connectionsInUse--;
-        if (connectionList.connectionsInUse == 0 && connectionList.connectionsNeedClean) {
-            for (QList<Connection>::Iterator iter = connectionList.begin(); 
-                 iter != connectionList.end(); ) {
-                if (iter->needsDestroy)
-                    iter = connectionList.erase(iter);
-                else
-                    ++iter;
+        break;
+        case Compare: {
+            QObjectSlotDispatcher *connection = static_cast<QObjectSlotDispatcher*>(this_);
+            if (connection->function.isEmpty()) {
+                *ret = false;
+                return;
             }
+
+            // This is tricky. Normally the metaArgs[0] pointer is a pointer to the _function_
+            // for the new-style QObject::connect. Here we use the engine pointer as sentinel
+            // to distinguish those type of QSlotObjectBase connections from our QML connections.
+            QV4::ExecutionEngine *v4 = reinterpret_cast<QV4::ExecutionEngine*>(metaArgs[0]);
+            if (v4 != connection->function.engine()) {
+                *ret = false;
+                return;
+            }
+
+            QV4::Value function = *reinterpret_cast<QV4::Value*>(metaArgs[1]);
+            QV4::Value thisObject = *reinterpret_cast<QV4::Value*>(metaArgs[2]);
+            QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);
+            int slotIndexToDisconnect = *reinterpret_cast<int*>(metaArgs[4]);
+
+            if (slotIndexToDisconnect != -1) {
+                // This is a QObject function wrapper
+                if (connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+
+                    QPair<QObject *, int> connectedFunctionData = QV8QObjectWrapper::ExtractQtMethod(v4->v8Engine, connection->function.value().asFunctionObject());
+                    if (connectedFunctionData.first == receiverToDisconnect &&
+                        connectedFunctionData.second == slotIndexToDisconnect) {
+                        *ret = true;
+                        return;
+                    }
+                }
+            } else {
+                // This is a normal JS function
+                if (__qmljs_strict_equal(connection->function, function) &&
+                        connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                    *ret = true;
+                    return;
+                }
+            }
+
+            *ret = false;
         }
+        break;
+        case NumOperations:
+        break;
+        }
+    };
+};
 
-        inUse--;
-        if (inUse == 0 && needsDestroy)
-            delete this;
-    } 
-
-    return -1;
 }
 
 QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
@@ -994,41 +960,23 @@ QV4::Value QV8QObjectWrapper::Connect(SimpleCallContext *ctx)
     if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
-    QV4::Value functionValue = QV4::Value::emptyValue();
-    QV4::Value functionThisValue = QV4::Value::emptyValue();
+    QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
+    slot->signalIndex = signalIndex;
 
     if (ctx->argumentCount == 1) {
-        functionValue = ctx->arguments[0];
+        slot->function = ctx->arguments[0];
     } else if (ctx->argumentCount >= 2) {
-        functionThisValue = ctx->arguments[0];
-        functionValue = ctx->arguments[1];
+        slot->thisObject = ctx->arguments[0];
+        slot->function = ctx->arguments[1];
     }
 
-    if (!functionValue.asFunctionObject())
+    if (!slot->function.value().asFunctionObject())
         V4THROW_ERROR("Function.prototype.connect: target is not a function");
 
-    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
+    if (!slot->thisObject.isEmpty() && !slot->thisObject.value().isObject())
         V4THROW_ERROR("Function.prototype.connect: target this is not an object");
 
-    QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
-    QHash<QObject *, QV8QObjectConnectionList *> &connections = qobjectWrapper->m_connections;
-    QHash<QObject *, QV8QObjectConnectionList *>::Iterator iter = connections.find(signalObject);
-    if (iter == connections.end()) 
-        iter = connections.insert(signalObject, new QV8QObjectConnectionList(signalObject, &connections));
-
-    QV8QObjectConnectionList *connectionList = *iter;
-    QV8QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(signalIndex);
-    if (slotIter == connectionList->slotHash.end()) {
-        slotIter = connectionList->slotHash.insert(signalIndex, QV8QObjectConnectionList::ConnectionList());
-        QMetaObject::connect(signalObject, signalIndex, connectionList, signalIndex);
-    }
-
-    QV8QObjectConnectionList::Connection connection;
-    if (!functionThisValue.isEmpty())
-        connection.thisObject = functionThisValue;
-    connection.function = functionValue;
-
-    slotIter->append(connection);
+    QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
 
     return QV4::Value::undefinedValue();
 }
@@ -1069,61 +1017,17 @@ QV4::Value QV8QObjectWrapper::Disconnect(SimpleCallContext *ctx)
     if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
         V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
-    QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
-    QHash<QObject *, QV8QObjectConnectionList *> &connectionsList = qobjectWrapper->m_connections;
-    QHash<QObject *, QV8QObjectConnectionList *>::Iterator iter = connectionsList.find(signalObject);
-    if (iter == connectionsList.end()) 
-        return QV4::Value::undefinedValue(); // Nothing to disconnect from
-
-    QV8QObjectConnectionList *connectionList = *iter;
-    QV8QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(signalIndex);
-    if (slotIter == connectionList->slotHash.end()) 
-        return QV4::Value::undefinedValue(); // Nothing to disconnect from
-
-    QV8QObjectConnectionList::ConnectionList &connections = *slotIter;
-
     QPair<QObject *, int> functionData = ExtractQtMethod(engine, functionValue.asFunctionObject());
 
-    if (functionData.second != -1) {
-        // This is a QObject function wrapper
-        for (int ii = 0; ii < connections.count(); ++ii) {
-            QV8QObjectConnectionList::Connection &connection = connections[ii];
+    void *a[] = {
+        ctx->engine,
+        &functionValue,
+        &functionThisValue,
+        functionData.first,
+        &functionData.second
+    };
 
-            if (connection.thisObject.isEmpty() == functionThisValue.isEmpty() &&
-                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue))) {
-
-                QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function.value().asFunctionObject());
-                if (connectedFunctionData == functionData) {
-                    // Match!
-                    if (connections.connectionsInUse) {
-                        connection.needsDestroy = true;
-                        connections.connectionsNeedClean = true;
-                    } else {
-                        connections.removeAt(ii);
-                    }
-                    return QV4::Value::undefinedValue();
-                }
-            }
-        }
-
-    } else {
-        // This is a normal JS function
-        for (int ii = 0; ii < connections.count(); ++ii) {
-            QV8QObjectConnectionList::Connection &connection = connections[ii];
-            if (__qmljs_strict_equal(connection.function, functionValue) &&
-                connection.thisObject.isEmpty() == functionThisValue.isEmpty() &&
-                (connection.thisObject.isEmpty() || __qmljs_strict_equal(connection.thisObject, functionThisValue))) {
-                // Match!
-                if (connections.connectionsInUse) {
-                    connection.needsDestroy = true;
-                    connections.connectionsNeedClean = true;
-                } else {
-                    connections.removeAt(ii);
-                }
-                return QV4::Value::undefinedValue();
-            }
-        }
-    }
+    QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
 
     return QV4::Value::undefinedValue();
 }
