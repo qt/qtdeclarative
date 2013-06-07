@@ -296,6 +296,19 @@ public:
         return true;
     }
 
+    bool containerIsEqualTo(Managed *other)
+    {
+        QQmlSequence<Container> *otherSequence = other->as<QQmlSequence<Container> >();
+        if (!otherSequence)
+            return false;
+        if (m_isReference && otherSequence->m_isReference) {
+            return m_object == otherSequence->m_object && m_propertyIndex == otherSequence->m_propertyIndex;
+        } else if (!m_isReference && !otherSequence->m_isReference) {
+            return this == otherSequence;
+        }
+        return false;
+    }
+
     void sort(QV4::SimpleCallContext *ctx)
     {
         if (m_isReference) {
@@ -443,6 +456,8 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerQueryIndexed(ctx, index); }
     static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(ctx, index); }
+    static bool isEqualTo(Managed *that, Managed *other)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
 
     static void destroy(Managed *that)
     {
