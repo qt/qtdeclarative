@@ -5345,7 +5345,7 @@ void tst_qqmlecmascript::sequenceConversionBindings()
 
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.error.qml");
-        QString warning = QString(QLatin1String("%1:17: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
+        QString warning = QString(QLatin1String("%1:17:27: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
         QQmlComponent component(&engine, qmlFile);
         QObject *object = component.create();
