@@ -205,8 +205,10 @@ QFont qt_font_from_string(const QString& fontString) {
          else if (token.endsWith(QLatin1String("px"))) {
              QString number = token;
              number.remove(QLatin1String("px"));
-             //font.setPointSizeF(number.trimmed().toFloat());
-             font.setPixelSize(number.trimmed().toInt());
+             bool ok = false;
+             float pixelSize = number.trimmed().toFloat(&ok);
+             if (ok)
+                font.setPixelSize(int(pixelSize));
          } else
              font.setFamily(token);
      }

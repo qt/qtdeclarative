@@ -70,4 +70,18 @@ Canvas {
             compare(canvas.contextInPaint, canvas.getContext("2d"));
         }
    }
+
+    TestCase {
+        name: "ContextFontValidation"
+        when: canvas.available
+
+        function test_pixelSize() {
+            wait(100);
+            compare(contextSpy.count, 1);
+
+            var ctx = canvas.getContext("2d");
+            ctx.font = "80.1px sans-serif";
+            compare(ctx.font, "sans-serif,-1,80,5,50,0,0,0,0,0");
+        }
+    }
 }
