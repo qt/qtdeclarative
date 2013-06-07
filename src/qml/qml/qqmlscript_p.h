@@ -512,7 +512,7 @@ public:
 
 }
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlScript::Object::ScriptBlock::Pragmas);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlScript::Object::ScriptBlock::Pragmas)
 
 QT_END_NAMESPACE
 

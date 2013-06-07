@@ -894,7 +894,7 @@ QSGNode *QQuickItemPrivate::childContainerNode()
     return groupNode;
 }
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes)
 
 QT_END_NAMESPACE
 

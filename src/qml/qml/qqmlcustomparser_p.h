@@ -149,7 +149,7 @@ private:
     Flags m_flags;
     friend class QQmlCompiler;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
 
 #if 0
 #define QML_REGISTER_CUSTOM_TYPE(URI, VERSION_MAJ, VERSION_MIN, NAME, TYPE, CUSTOMTYPE) \
