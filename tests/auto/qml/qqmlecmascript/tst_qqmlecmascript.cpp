@@ -1173,7 +1173,7 @@ void tst_qqmlecmascript::nonExistentAttachedObject()
 {
     QQmlComponent component(&engine, testFileUrl("nonExistentAttachedObject.qml"));
 
-    QString warning = component.url().toString() + ":4: Unable to assign [undefined] to QString";
+    QString warning = component.url().toString() + ":4:21: Unable to assign [undefined] to QString";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QObject *object = component.create();
