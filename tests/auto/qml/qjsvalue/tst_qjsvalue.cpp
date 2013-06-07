@@ -2070,7 +2070,6 @@ void tst_QJSValue::equals()
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(1, 2)));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
         QVERIFY(var1.equals(var2));
     }
     {
@@ -2078,12 +2077,6 @@ void tst_QJSValue::equals()
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.equals(var2));
     }
-
-    QJSEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::equals: "
-                         "cannot compare to a value created in "
-                         "a different engine");
-    QCOMPARE(date1.equals(otherEngine.toScriptValue(123)), false);
 }
 
 void tst_QJSValue::strictlyEquals()
@@ -2221,12 +2214,6 @@ void tst_QJSValue::strictlyEquals()
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.strictlyEquals(var2));
     }
-
-    QJSEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::strictlyEquals: "
-                         "cannot compare to a value created in "
-                         "a different engine");
-    QCOMPARE(date1.strictlyEquals(otherEngine.toScriptValue(123)), false);
 }
 
 Q_DECLARE_METATYPE(int*)

@@ -1267,6 +1267,8 @@ void Object::markArrayObjects() const
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine)
 {
+    init(engine);
+
     // Converts a QStringList to JS.
     // The result is a new Array object with length equal to the length
     // of the QStringList, and the elements being the QStringList's

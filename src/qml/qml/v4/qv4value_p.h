@@ -151,6 +151,13 @@ struct Q_QML_EXPORT Value
     inline bool isObject() const { return tag == Object_Type; }
 #endif
     inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
+    inline bool isInt32() const {
+        if (tag == _Integer_Type)
+            return true;
+        if (isDouble() && (int)dbl == dbl)
+            return true;
+        return false;
+    }
 
     Bool booleanValue() const {
         return int_32;

@@ -43,6 +43,7 @@
 #include "qv4functionobject_p.h"
 #include "qv4objectproto_p.h"
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,8 +64,22 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
 
 QVariant VariantObject::toVariant(const QV4::Value &v)
 {
-    VariantObject *o = v.as<QV4::VariantObject>();
-    return o ? o->data : QVariant();
+    if (Object *o = v.asObject())
+        return o->engine()->v8Engine->variantFromJS(v);
+
+    if (v.isString())
+        return QVariant(v.stringValue()->toQString());
+    if (v.isBoolean())
+        return QVariant(v.booleanValue());
+    if (v.isNumber()) {
+        if (v.isInt32())
+            return QVariant(v.toInt32());
+        return QVariant(v.asDouble());
+    }
+    if (v.isNull())
+        return QVariant(QMetaType::VoidStar, 0);
+    assert (v.isUndefined() || v.isEmpty());
+    return QVariant();
 }
 
 bool VariantObject::isScarce() const
@@ -147,7 +162,7 @@ QV4::Value VariantPrototype::method_toString(SimpleCallContext *ctx)
     if (!o)
         return Value::undefinedValue();
     QString result = o->data.toString();
-    if (result.isEmpty())
+    if (result.isEmpty() && !o->data.canConvert(QVariant::String))
         result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->data.typeName()));
     return Value::fromString(ctx->engine->newString(result));
 }

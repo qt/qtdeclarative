@@ -754,8 +754,6 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
         return false;
     if (x.isString())
         return x.stringValue()->isEqualTo(y.stringValue());
-    if (x.isObject())
-        return x.objectValue()->isEqualTo(y.objectValue());
     return false;
 }
 

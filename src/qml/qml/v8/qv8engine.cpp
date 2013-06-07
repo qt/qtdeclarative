@@ -515,6 +515,7 @@ QV4::Value QV8Engine::variantListToJS(const QVariantList &lst)
     a->arrayReserve(lst.size());
     for (int i = 0; i < lst.size(); i++)
         a->arrayData[i].value = variantToJS(lst.at(i));
+    a->arrayDataLen = lst.size();
     a->setArrayLengthUnchecked(lst.size());
     return QV4::Value::fromObject(a);
 }
@@ -538,7 +539,7 @@ QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
 
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
-        QV4::Value v = a->getIndexed(m_v4Engine->current, i);
+        QV4::Value v = a->getIndexed(i);
         result.append(variantFromJS(v, visitedObjects));
     }
 
