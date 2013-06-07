@@ -264,6 +264,27 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
     engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
 }
 
+namespace {
+    struct SafeQMLObjectDeleter : public QObject
+    {
+        SafeQMLObjectDeleter(QObject *objectToDelete)
+            : m_objectToDelete(objectToDelete)
+        {}
+
+        ~SafeQMLObjectDeleter()
+        {
+            QQmlData *ddata = QQmlData::get(m_objectToDelete, false);
+            if (ddata && ddata->ownContext && ddata->context)
+                ddata->context->emitDestruction();
+            // This object is notionally destroyed now
+            ddata->isQueuedForDeletion = true;
+            delete m_objectToDelete;
+        }
+
+        QObject *m_objectToDelete;
+    };
+}
+
 void QObjectWrapper::deleteQObject(bool deleteInstantly)
 {
     if (!m_object)
@@ -272,14 +293,18 @@ void QObjectWrapper::deleteQObject(bool deleteInstantly)
     if (!ddata)
         return;
     if (!m_object->parent() && !ddata->indestructible) {
-        // This object is notionally destroyed now
-        if (ddata->ownContext && ddata->context)
-            ddata->context->emitDestruction();
-        ddata->isQueuedForDeletion = true;
-        if (deleteInstantly)
+        if (deleteInstantly) {
+            QQmlData *ddata = QQmlData::get(m_object, false);
+            if (ddata->ownContext && ddata->context)
+                ddata->context->emitDestruction();
+            // This object is notionally destroyed now
+            ddata->isQueuedForDeletion = true;
             delete m_object;
-        else
-            m_object->deleteLater();
+        } else {
+            QObject *deleter = new SafeQMLObjectDeleter(m_object);
+            deleter->deleteLater();
+            m_object = 0;
+        }
     }
 }
 
@@ -581,7 +606,7 @@ Value QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
         return QV4::Value::undefinedValue();
 
     if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isEmpty()) {
-        // We own the v8object
+        // We own the JS object
         return ddata->jsWrapper.value();
     } else if (ddata->jsWrapper.isEmpty() &&
                (ddata->jsEngineId == engine->m_engineId || // We own the QObject
