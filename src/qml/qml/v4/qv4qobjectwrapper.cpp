@@ -39,8 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qv8qobjectwrapper_p.h"
-#include "qv8engine_p.h"
+#include "qv4qobjectwrapper_p.h"
 
 #include <private/qqmlguard_p.h>
 #include <private/qqmlpropertycache_p.h>
@@ -55,6 +54,7 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qv8engine_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>

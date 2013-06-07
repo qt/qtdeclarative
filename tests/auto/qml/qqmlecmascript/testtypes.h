@@ -63,7 +63,7 @@
 
 #include <private/qqmlengine_p.h>
 #include <private/qv8engine_p.h>
-#include <private/qv8qobjectwrapper_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 class MyQmlAttachedObject : public QObject
 {

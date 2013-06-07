@@ -43,8 +43,7 @@
 #include "qv4object_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
-// ### FIXME: remove when qv8qobjectwrapper port is done.
-#include <private/qv8qobjectwrapper_p.h>
+#include "qv4qobjectwrapper_p.h"
 #include <qqmlengine.h>
 #include "PageAllocation.h"
 #include "StdLibExtras.h"

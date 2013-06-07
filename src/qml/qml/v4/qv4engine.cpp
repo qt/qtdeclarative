@@ -63,7 +63,7 @@
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
-#include <private/qv8qobjectwrapper_p.h>
+#include "qv4qobjectwrapper_p.h"
 
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 #include <execinfo.h>
