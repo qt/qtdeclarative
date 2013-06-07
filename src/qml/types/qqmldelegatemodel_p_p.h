@@ -91,12 +91,11 @@ public:
 class QQmlAdaptorModel;
 class QQDMIncubationTask;
 
-class QQmlDelegateModelItem : public QObject, public QV8ObjectResource
+class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
-    V8_RESOURCE_TYPE(VisualDataItemType)
 public:
     QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex);
     ~QQmlDelegateModelItem();
@@ -129,7 +128,7 @@ public:
     int modelIndex() const { return index; }
     void setModelIndex(int idx) { index = idx; emit modelIndexChanged(); }
 
-    virtual QV4::Value get() { return QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), this); }
+    virtual QV4::Value get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQmlAdaptorModel &, int) { return false; }
@@ -141,6 +140,7 @@ public:
     static QV4::Value set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
     static QV4::Value get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
 
+    QV4::ExecutionEngine *v4;
     QQmlDelegateModelItemMetaType * const metaType;
     QQmlContextData *contextData;
     QObject *object;
@@ -158,6 +158,21 @@ Q_SIGNALS:
 protected:
     void objectDestroyed(QObject *);
 };
+
+struct QQmlDelegateModelItemObject : QV4::Object
+{
+    Q_MANAGED;
+    QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)
+        : Object(engine)
+        , item(item)
+    { vtbl = &static_vtbl; }
+    ~QQmlDelegateModelItemObject();
+
+    static void destroy(Managed *that);
+
+    QQmlDelegateModelItem *item;
+};
+
 
 
 class QQmlDelegateModelPrivate;

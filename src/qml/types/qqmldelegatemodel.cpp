@@ -84,12 +84,12 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     static QV4::Value call(QV4::Managed *that, QV4::ExecutionContext *ctx, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         DelegateModelGroupFunction *f = static_cast<DelegateModelGroupFunction *>(that);
-        QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(v8::Handle<v8::Object>(thisObject));
-        if (!cacheItem)
+        QQmlDelegateModelItemObject *o = thisObject.as<QQmlDelegateModelItemObject>();
+        if (!o)
             ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::Value v = argc ? args[0] : QV4::Value::undefinedValue();
-        return f->code(cacheItem, f->flag, v);
+        return f->code(o->item, f->flag, v);
     }
 };
 
@@ -1665,44 +1665,44 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
 
 QV4::Value QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
 {
-    QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(v8::Handle<v8::Object>(ctx->thisObject));
-    if (!cacheItem)
+    QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
+    if (!o)
         ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-    if (!cacheItem->metaType->model)
+    if (!o->item->metaType->model)
         return QV4::Value::undefinedValue();
 
-    return cacheItem->get();
+    return o->item->get();
 }
 
 QV4::Value QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
 {
-    QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(v8::Handle<v8::Object>(ctx->thisObject));
-    if (!cacheItem)
+    QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
+    if (!o)
         ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     QStringList groups;
-    for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
-        if (cacheItem->groups & (1 << i))
-            groups.append(cacheItem->metaType->groupNames.at(i - 1));
+    for (int i = 1; i < o->item->metaType->groupCount; ++i) {
+        if (o->item->groups & (1 << i))
+            groups.append(o->item->metaType->groupNames.at(i - 1));
     }
 
-    return cacheItem->engine->fromVariant(groups);
+    return ctx->engine->v8Engine->fromVariant(groups);
 }
 
 QV4::Value QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
 {
-    QQmlDelegateModelItem *cacheItem = v8_resource_cast<QQmlDelegateModelItem>(v8::Handle<v8::Object>(ctx->thisObject));
-    if (!cacheItem)
+    QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
+    if (!o)
         ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
     if (!ctx->argumentCount)
         ctx->throwTypeError();
 
-    if (!cacheItem->metaType->model)
+    if (!o->item->metaType->model)
         return QV4::Value::undefinedValue();
-    QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(cacheItem->metaType->model);
+    QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(o->item->metaType->model);
 
     const int groupFlags = model->m_cacheMetaType->parseGroups(ctx->arguments[0]);
-    const int cacheIndex = model->m_cache.indexOf(cacheItem);
+    const int cacheIndex = model->m_cache.indexOf(o->item);
     Compositor::iterator it = model->m_compositor.find(Compositor::Cache, cacheIndex);
     model->setGroups(it, 1, Compositor::Cache, groupFlags);
     return QV4::Value::undefinedValue();
@@ -1742,9 +1742,23 @@ QV4::Value QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uin
 
 //---------------------------------------------------------------------------
 
+DEFINE_MANAGED_VTABLE(QQmlDelegateModelItemObject);
+
+QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
+{
+    item->Dispose();
+}
+
+void QQmlDelegateModelItemObject::destroy(Managed *that)
+{
+    static_cast<QQmlDelegateModelItemObject *>(that)->~QQmlDelegateModelItemObject();
+}
+
+
+
 QQmlDelegateModelItem::QQmlDelegateModelItem(
         QQmlDelegateModelItemMetaType *metaType, int modelIndex)
-    : QV8ObjectResource(metaType->v8Engine)
+    : v4(QV8Engine::getV4(metaType->v8Engine))
     , metaType(metaType)
     , contextData(0)
     , object(0)
@@ -2332,13 +2346,11 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_cacheMetaType->initializePrototype();
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    QV4::Object *o = v4->newObject();
+    QV4::Object *o = new (v4->memoryManager) QQmlDelegateModelItemObject(v4, cacheItem);
     o->prototype = model->m_cacheMetaType->modelItemProto.value().asObject();
-    v8::Handle<v8::Object> handle = QV4::Value::fromObject(o);
-    handle->SetExternalResource(cacheItem);
     ++cacheItem->scriptRef;
 
-    return QQmlV4Handle(handle->v4Value());
+    return QQmlV4Handle(QV4::Value::fromObject(o));
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const
@@ -2346,9 +2358,9 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *ind
     if (value.isNumber()) {
         *index = value.toInt32();
         return true;
-    } else if (/*QV4::Object *object = */value.asObject()) {
-        QQmlDelegateModelItem * const cacheItem = v8_resource_cast<QQmlDelegateModelItem>(v8::Handle<v8::Object>(value));
-        if (QQmlDelegateModelPrivate *model = cacheItem && cacheItem->metaType->model
+    } else if (QQmlDelegateModelItemObject *object = value.as<QQmlDelegateModelItemObject>()) {
+        QQmlDelegateModelItem * const cacheItem = object->item;
+        if (QQmlDelegateModelPrivate *model = cacheItem->metaType->model
                 ? QQmlDelegateModelPrivate::get(cacheItem->metaType->model)
                 : 0) {
             *index = model->m_cache.indexOf(cacheItem);
