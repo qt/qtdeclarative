@@ -546,7 +546,6 @@ void tst_qqmlecmascript::signalArguments()
         emit object->basicSignal();
         QCOMPARE(object->string(), QString("pass"));
         QCOMPARE(object->property("argumentCount").toInt(), 0);
-        QCOMPARE(object->property("calleeCorrect").toBool(), true);
         delete object;
     }
 
@@ -558,7 +557,6 @@ void tst_qqmlecmascript::signalArguments()
         emit object->argumentSignal(19, "Hello world!", 10.25, MyQmlObject::EnumValue4, Qt::RightButton);
         QCOMPARE(object->string(), QString("pass 19 Hello world! 10.25 3 2"));
         QCOMPARE(object->property("argumentCount").toInt(), 5);
-        QCOMPARE(object->property("calleeCorrect").toBool(), true);
         delete object;
     }
 }
