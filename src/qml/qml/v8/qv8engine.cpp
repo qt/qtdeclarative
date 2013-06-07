@@ -491,44 +491,6 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
     m_extensionData[index] = data;
 }
 
-
-QV4::WeakValue *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
-{
-    QQmlData *data = QQmlData::get(object);
-    if (data && data->rootObjectInCreation) { // When the object is still being created it may not show up to the GC.
-        *shouldBeStrong = true;
-        return 0;
-    }
-
-    QObject *parent = object->parent();
-    if (!parent) {
-        // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.
-        if (QQmlEngine::objectOwnership(object) == QQmlEngine::JavaScriptOwnership) {
-            *shouldBeStrong = false;
-            return &(QQmlData::get(object)->jsWrapper);
-        }
-
-        // no parent, and has CPP ownership - doesn't have an implicit parent.
-        *shouldBeStrong = true;
-        return 0;
-    }
-
-    // if it is owned by CPP, it's root parent may still be owned by JS.
-    // in that case, the owner of the persistent handle is the root parent's v8object.
-    while (parent->parent())
-        parent = parent->parent();
-
-    if (QQmlEngine::objectOwnership(parent) == QQmlEngine::JavaScriptOwnership) {
-        // root parent is owned by JS.  It's v8object owns the persistent value in question.
-        *shouldBeStrong = false;
-        return &(QQmlData::get(parent)->jsWrapper);
-    } else {
-        // root parent has CPP ownership.  The persistent value should not be made weak.
-        *shouldBeStrong = true;
-        return 0;
-    }
-}
-
 void QV8Engine::initQmlGlobalObject()
 {
     initializeGlobal(QV4::Value::fromObject(m_v4Engine->globalObject));
