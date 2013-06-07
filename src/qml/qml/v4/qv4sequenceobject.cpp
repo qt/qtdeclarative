@@ -59,8 +59,11 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
         return;
     QQmlError retn;
     retn.setDescription(description);
-    retn.setLine(ctx->currentLineNumber());
-    retn.setUrl(QUrl(ctx->currentFileName()));
+
+    QV4::ExecutionEngine::StackFrame frame = ctx->engine->currentStackFrame();
+
+    retn.setLine(frame.line);
+    retn.setUrl(QUrl(frame.source));
     QQmlEnginePrivate::warning(engine, retn);
 }
 
@@ -218,7 +221,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(ctx, QLatin1String("Index out of range during indexed put"));
+            generateWarning(ctx, QLatin1String("Index out of range during indexed set"));
             return;
         }
 

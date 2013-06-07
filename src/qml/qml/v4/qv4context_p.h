@@ -148,9 +148,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     void mark();
 
-    QString currentFileName() const;
-    int currentLineNumber() const;
-
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
 };
