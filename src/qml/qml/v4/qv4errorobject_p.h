@@ -50,7 +50,7 @@ namespace QV4 {
 
 struct SyntaxErrorObject;
 
-struct ErrorObject: Object {
+struct QV4_JS_CLASS(ErrorObject): Object {
     enum ErrorType {
         Error,
         EvalError,
@@ -62,8 +62,14 @@ struct ErrorObject: Object {
     };
 
     ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t = Error);
+    void initClass(ExecutionEngine *engine);
 
     SyntaxErrorObject *asSyntaxError();
+
+    ExecutionEngine::StackTrace stackTrace;
+    Value stack;
+
+    static Value method_get_stack(SimpleCallContext *ctx);
 };
 
 struct EvalErrorObject: ErrorObject {

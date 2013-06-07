@@ -78,10 +78,39 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorTyp
 {
     type = Type_ErrorObject;
     subtype = t;
+    initClass(engine);
 
     if (!message.isUndefined())
         defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
     defineDefaultProperty(engine, QStringLiteral("name"), Value::fromString(engine, className()));
+
+    stackTrace = engine->stackTrace();
+
+    stack = Value::emptyValue();
+}
+
+Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
+{
+    ErrorObject *This = ctx->thisObject.asErrorObject();
+    if (!This)
+        ctx->throwTypeError();
+    if (This->stack.isEmpty()) {
+        QString trace;
+        for (int i = 0; i < This->stackTrace.count(); ++i) {
+            if (i > 0)
+                trace += QLatin1Char('\n');
+            const ExecutionEngine::StackFrame &frame = This->stackTrace[i];
+            trace += frame.function;
+            trace += QLatin1Char('@');
+            trace += frame.source;
+            if (frame.line >= 0) {
+                trace += QLatin1Char(':');
+                trace += QString::number(frame.line);
+            }
+        }
+        This->stack = Value::fromString(ctx, trace);
+    }
+    return This->stack;
 }
 
 DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
@@ -294,3 +323,5 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
 
     return Value::fromString(ctx, str);
 }
+
+#include "qv4errorobject_p_jsclass.cpp"

@@ -913,7 +913,10 @@ Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionVa
 {
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
-    m_stackTrace = throwingContext->engine->stackTrace();
+    if (ErrorObject *error = exceptionValue.asErrorObject())
+        m_stackTrace = error->stackTrace;
+    else
+        m_stackTrace = throwingContext->engine->stackTrace();
 }
 
 Exception::~Exception()
