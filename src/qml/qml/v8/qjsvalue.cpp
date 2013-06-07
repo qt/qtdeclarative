@@ -622,12 +622,15 @@ QJSValue QJSValue::prototype() const
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
+    if (!o->prototype)
+        return QJSValue(NullValue);
     return new QJSValuePrivate(o->internalClass->engine, Value::fromObject(o->prototype));
 }
 
 /*!
   If this QJSValue is an object, sets the internal prototype
   (\c{__proto__} property) of this object to be \a prototype;
+  if the QJSValue is null, it sets the prototype to null;
   otherwise does nothing.
 
   The internal prototype should not be confused with the public
@@ -641,9 +644,26 @@ void QJSValue::setPrototype(const QJSValue& prototype)
     Object *o = d->value.asObject();
     if (!o)
         return;
+    if (prototype.d->value.isNull()) {
+        o->prototype = 0;
+        return;
+    }
+
     Object *p = prototype.d->value.asObject();
     if (!p)
         return;
+    if (o->engine() != p->engine()) {
+        qWarning("QJSValue::setPrototype() failed: cannot set a prototype created in a different engine");
+        return;
+    }
+    Object *pp = p;
+    while (pp) {
+        if (pp == o) {
+            qWarning("QJSValue::setPrototype() failed: cyclic prototype value");
+            return;
+        }
+        pp = pp->prototype;
+    }
     o->prototype = p;
 }
 
@@ -800,6 +820,12 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     Object *o = d->value.asObject();
     if (!o)
         return;
+
+    ExecutionEngine *otherEngine = value.d->engine();
+    if (otherEngine && otherEngine != o->engine()) {
+        qWarning("QJSValue::setProperty(%s) failed: cannot set value created in a different engine", name.toUtf8().constData());
+        return;
+    }
 
     ExecutionEngine *engine = d->engine();
     String *s = engine->newString(name);
