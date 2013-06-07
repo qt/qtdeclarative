@@ -197,23 +197,6 @@ private slots:
 
 }
 
-class Q_QML_PRIVATE_EXPORT QV8QObjectWrapper
-{
-public:
-    QV8QObjectWrapper();
-    ~QV8QObjectWrapper();
-
-    void init(QV8Engine *);
-    void destroy();
-
-private:
-    friend class QQmlPropertyCache;
-    friend struct QV4::QObjectWrapper;
-    friend struct QV4::QObjectSlotDispatcher;
-
-    QV8Engine *m_engine;
-};
-
 QT_END_NAMESPACE
 
 #endif // QV8QOBJECTWRAPPER_P_H

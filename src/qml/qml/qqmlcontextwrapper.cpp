@@ -286,8 +286,6 @@ void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, con
 
     QHashedV4String propertystring(Value::fromString(name));
 
-    QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
-
     while (context) {
         // Search context properties
         if (context->propertyNames && -1 != context->propertyNames->value(propertystring))

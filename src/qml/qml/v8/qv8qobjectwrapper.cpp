@@ -963,24 +963,6 @@ private:
 };
 }
 
-QV8QObjectWrapper::QV8QObjectWrapper()
-: m_engine(0)
-{
-}
-
-QV8QObjectWrapper::~QV8QObjectWrapper()
-{
-}
-
-void QV8QObjectWrapper::destroy()
-{
-}
-
-void QV8QObjectWrapper::init(QV8Engine *engine)
-{
-    m_engine = engine;
-}
-
 namespace {
 struct CallArgs
 {

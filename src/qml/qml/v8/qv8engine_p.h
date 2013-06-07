@@ -242,8 +242,6 @@ public:
     QJSEngine *publicEngine() { return q; }
     QV4::Value global();
 
-    QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
-
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
     Deletable *listModelData() { return m_listModelData; }
@@ -309,8 +307,6 @@ protected:
     QQmlEngine *m_engine;
 
     QV4::ExecutionEngine *m_v4Engine;
-
-    QV8QObjectWrapper m_qobjectWrapper;
 
     QV4::PersistentValue m_freezeObject;
 

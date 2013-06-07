@@ -101,7 +101,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     m_v4Engine->v8Engine = this;
 
     QV4::QObjectWrapper::initializeBindings(m_v4Engine);
-    m_qobjectWrapper.init(this);
 }
 
 QV8Engine::~QV8Engine()
