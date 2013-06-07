@@ -54,43 +54,20 @@ QT_BEGIN_NAMESPACE
 class QQmlAdaptorModelEngineData : public QV8Engine::Deletable
 {
 public:
-    enum
-    {
-        Index,
-        ModelData,
-        HasModelChildren,
-        StringCount
-    };
-
     QQmlAdaptorModelEngineData(QV8Engine *engine);
     ~QQmlAdaptorModelEngineData();
 
-    v8::Handle<v8::String> index() {
-        QV4::Object *o = strings.value().asObject();
-        QV4::ExecutionContext *ctx = o->engine()->current;
-        return QV4::Value::fromString(o->getIndexed(Index).toString(ctx));
-    }
-    v8::Handle<v8::String> modelData() {
-        QV4::Object *o = strings.value().asObject();
-        QV4::ExecutionContext *ctx = o->engine()->current;
-        return QV4::Value::fromString(o->getIndexed(ModelData).toString(ctx));
-    }
-    v8::Handle<v8::String> hasModelChildren() {
-        QV4::Object *o = strings.value().asObject();
-        QV4::ExecutionContext *ctx = o->engine()->current;
-        return QV4::Value::fromString(o->getIndexed(HasModelChildren).toString(ctx));
-    }
-
-    QV4::PersistentValue constructorListItem;
-    QV4::PersistentValue strings;
+    QV4::ExecutionEngine *v4;
+    QV4::PersistentValue listItemProto;
 };
 
 V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
-static v8::Handle<v8::Value> get_index(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+static QV4::Value get_index(QV4::SimpleCallContext *ctx)
 {
-    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-    V8ASSERT_TYPE(data, "Not a valid VisualData object");
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+    if (!data)
+        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     return QV4::Value::fromInt32(data->index);
 }
@@ -130,9 +107,8 @@ public:
     void setValue(const QString &role, const QVariant &value);
     bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
-    static v8::Handle<v8::Value> get_property(v8::Handle<v8::String>, const v8::AccessorInfo &info);
-    static void set_property(
-            v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info);
+    static QV4::Value get_property(QV4::SimpleCallContext *ctx, uint propertyId);
+    static QV4::Value set_property(QV4::SimpleCallContext *ctx, uint propertyId);
 
     VDMModelDelegateDataType *type;
     QVector<QVariant> cachedData;
@@ -218,23 +194,45 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
+    static QV4::Value get_hasModelChildren(QV4::SimpleCallContext *ctx)
+    {
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+        if (!data)
+            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+
+        const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(data)->type->model;
+        if (data->index >= 0 && *model) {
+            const QAbstractItemModel * const aim = model->aim();
+            return QV4::Value::fromBoolean(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
+        } else {
+            return QV4::Value::fromBoolean(false);
+        }
+    }
+
+
     void initializeConstructor(QQmlAdaptorModelEngineData *const data)
     {
-        constructor = v8::ObjectTemplate::New().get();
-        constructor->SetHasExternalResource(true);
-        constructor->SetAccessor(data->index(), get_index);
+        QV4::ExecutionEngine *v4 = data->v4;
+        QV4::Object *proto = v4->newObject();
+        QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
+                                               QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
+
+        p = proto->insertMember(v4->newString(QStringLiteral("hasModelChildren")),
+                                               QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_hasModelChildren));
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
         for (iterator it = roleNames.constBegin(), end = roleNames.constEnd(); it != end; ++it) {
             const int propertyId = propertyRoles.indexOf(it.value());
             const QByteArray &propertyName = it.key();
 
-            constructor->SetAccessor(
-                    v8::String::New(propertyName.constData(), propertyName.length()),
-                    QQmlDMCachedModelData::get_property,
-                    QQmlDMCachedModelData::set_property,
-                    QV4::Value::fromInt32(propertyId));
+            p = proto->insertMember(v4->newString(QString::fromUtf8(propertyName)),
+                                    QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+            p->setGetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::get_property));
+            p->setSetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::set_property));
         }
+        prototype = QV4::Value::fromObject(proto);
     }
 
     // QAbstractDynamicMetaObject
@@ -249,7 +247,7 @@ public:
         return static_cast<QQmlDMCachedModelData *>(object)->metaCall(call, id, arguments);
     }
 
-    QExplicitlySharedDataPointer<v8::ObjectTemplate> constructor;
+    QV4::PersistentValue prototype;
     QList<int> propertyRoles;
     QList<int> watchedRoleIds;
     QList<QByteArray> watchedRoles;
@@ -343,14 +341,13 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
     }
 }
 
-v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
-        v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint propertyId)
 {
-    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-    V8ASSERT_TYPE(data, "Not a valid VisualData object");
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+    if (!data)
+        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(data);
-    const int propertyId = info.Data()->Int32Value();
     if (data->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
             return data->engine->fromVariant(
@@ -363,21 +360,22 @@ v8::Handle<v8::Value> QQmlDMCachedModelData::get_property(
     return QV4::Value::undefinedValue();
 }
 
-void QQmlDMCachedModelData::set_property(
-        v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint propertyId)
 {
-    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-    V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
+    QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+    if (!data)
+        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+    if (!ctx->argumentCount)
+        ctx->throwTypeError();
 
-    const int propertyId = info.Data()->Int32Value();
     if (data->index == -1) {
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(data);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
-                modelData->cachedData[propertyId] = data->engine->toVariant(value->v4Value(), QVariant::Invalid);
+                modelData->cachedData[propertyId] = data->engine->toVariant(ctx->arguments[0], QVariant::Invalid);
                 QMetaObject::activate(data, data->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
-                modelData->cachedData[0] = data->engine->toVariant(value->v4Value(), QVariant::Invalid);
+                modelData->cachedData[0] = data->engine->toVariant(ctx->arguments[0], QVariant::Invalid);
                 QMetaObject::activate(data, data->metaObject(), 0, 0);
                 QMetaObject::activate(data, data->metaObject(), 1, 0);
             }
@@ -425,29 +423,17 @@ public:
 
     QV4::Value get()
     {
-        if (!type->constructor) {
+        if (type->prototype.isEmpty()) {
             QQmlAdaptorModelEngineData * const data = engineData(engine);
             type->initializeConstructor(data);
-            type->constructor->SetAccessor(data->hasModelChildren(), get_hasModelChildren);
         }
-        v8::Handle<v8::Object> data = type->constructor->NewInstance();
-        data->SetExternalResource(this);
+        QV4::Object *proto = type->prototype.value().asObject();
+        QV4::Object *o = proto->engine()->newObject();
+        o->prototype = proto;
+        QV4::Value data = QV4::Value::fromObject(o);
+        v8::Handle<v8::Object>(data)->SetExternalResource(this);
         ++scriptRef;
-        return data->v4Value();
-    }
-
-    static v8::Handle<v8::Value> get_hasModelChildren(v8::Handle<v8::String>, const v8::AccessorInfo &info)
-    {
-        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-        V8ASSERT_TYPE(data, "Not a valid VisualData object");
-
-        const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(data)->type->model;
-        if (data->index >= 0 && *model) {
-            const QAbstractItemModel * const aim = model->aim();
-            return QV4::Value::fromBoolean(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
-        } else {
-            return QV4::Value::fromBoolean(false);
-        }
+        return data;
     }
 };
 
@@ -593,29 +579,36 @@ public:
         }
     }
 
-    static v8::Handle<v8::Value> get_modelData(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+    static QV4::Value get_modelData(QV4::SimpleCallContext *ctx)
     {
-        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-        V8ASSERT_TYPE(data, "Not a valid VisualData object");
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+        if (!data)
+            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         return data->engine->fromVariant(static_cast<QQmlDMListAccessorData *>(data)->cachedData);
     }
 
-    static void set_modelData(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+    static QV4::Value set_modelData(QV4::SimpleCallContext *ctx)
     {
-        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(info.This());
-        V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
+        QQmlDelegateModelItem *data = v8_resource_cast<QQmlDelegateModelItem>(ctx->thisObject);
+        if (!data)
+            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        if (!ctx->argumentCount)
+            ctx->throwTypeError();
 
-        static_cast<QQmlDMListAccessorData *>(data)->setModelData(
-                data->engine->toVariant(value->v4Value(), QVariant::Invalid));
+
+        static_cast<QQmlDMListAccessorData *>(data)->setModelData(data->engine->toVariant(ctx->arguments[0], QVariant::Invalid));
     }
 
     QV4::Value get()
     {
-        v8::Handle<v8::Object> data = engineData(engine)->constructorListItem.value().asFunctionObject()->newInstance();
-        data->SetExternalResource(this);
+        QQmlAdaptorModelEngineData *data = engineData(engine);
+        QV4::Object *o = data->v4->newObject();
+        o->prototype = data->listItemProto.value().asObject();
+        QV4::Value val = QV4::Value::fromObject(o);
+        v8::Handle<v8::Object>(val)->SetExternalResource(this);
         ++scriptRef;
-        return data->v4Value();
+        return val;
     }
 
     void setValue(const QString &role, const QVariant &value)
@@ -961,22 +954,17 @@ void QQmlAdaptorModel::objectDestroyed(QObject *)
 }
 
 QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
+    : v4(QV8Engine::getV4(e))
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
-    QV4::ArrayObject *a = v4->newArrayObject();
-    strings = QV4::Value::fromObject(a);
-    a->putIndexed(Index, QV4::Value::fromString(v4->newString(QStringLiteral("index"))));
-    a->putIndexed(ModelData, QV4::Value::fromString(v4->newString(QStringLiteral("modelData"))));
-    a->putIndexed(HasModelChildren, QV4::Value::fromString(v4->newString(QStringLiteral("hasModelChildren"))));
-
-    v8::Handle<v8::FunctionTemplate> listItem = v8::FunctionTemplate::New();
-    listItem->InstanceTemplate()->SetHasExternalResource(true);
-    listItem->InstanceTemplate()->SetAccessor(index(), get_index);
-    listItem->InstanceTemplate()->SetAccessor(
-            modelData(),
-            QQmlDMListAccessorData::get_modelData,
-            QQmlDMListAccessorData::set_modelData);
-    constructorListItem = listItem->GetFunction()->v4Value();
+    QV4::Object *proto = v4->newObject();
+    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
+                                           QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
+    p = proto->insertMember(v4->newString(QStringLiteral("modelData")),
+                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::get_modelData));
+    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::set_modelData));
+    listItemProto = QV4::Value::fromObject(proto);
 }
 
 QQmlAdaptorModelEngineData::~QQmlAdaptorModelEngineData()

@@ -169,6 +169,32 @@ protected:
     static const ManagedVTable static_vtbl;
 };
 
+struct IndexedBuiltinFunction: FunctionObject
+{
+    Q_MANAGED
+
+    Value (*code)(SimpleCallContext *ctx, uint index);
+    uint index;
+
+    IndexedBuiltinFunction(ExecutionContext *scope, uint index, Value (*code)(SimpleCallContext *ctx, uint index))
+        : FunctionObject(scope, name)
+        , code(code)
+        , index(index)
+    {
+        vtbl = &static_vtbl;
+        isBuiltinFunction = true;
+    }
+
+    static Value construct(Managed *, ExecutionContext *ctx, Value *, int)
+    {
+        ctx->throwTypeError();
+        return Value::undefinedValue();
+    }
+
+    static Value call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *args, int argc);
+};
+
+
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, Function *function);
 

@@ -446,6 +446,39 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
     return result;
 }
 
+Value IndexedBuiltinFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+{
+    IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
+
+    SimpleCallContext ctx;
+    ctx.initSimpleCallContext(f->scope->engine);
+    ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
+    ctx.thisObject = thisObject;
+    ctx.arguments = args;
+    ctx.argumentCount = argc;
+    context->engine->pushContext(&ctx);
+
+    if (!f->strictMode && !thisObject.isObject()) {
+        // Built-in functions allow for the this object to be null or undefined. This overrides
+        // the behaviour of changing thisObject to the global object if null/undefined and allows
+        // the built-in functions for example to throw a type error if null is passed.
+        if (!thisObject.isUndefined() && !thisObject.isNull())
+            ctx.thisObject = Value::fromObject(thisObject.toObject(context));
+    }
+
+    Value result = Value::undefinedValue();
+    try {
+        result = f->code(&ctx, f->index);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(context);
+        throw;
+    }
+
+    context->engine->popContext();
+    return result;
+}
+
+DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_MANAGED_VTABLE(BoundFunction);
 
