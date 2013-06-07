@@ -3472,13 +3472,13 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_data()
     QTest::newRow("'ciao'") << "'ciao'" << compareStrict;
 
     QString comparePropertiesStrict(
-        "(function(a, b) {"
+        "(function compareMe(a, b) {"
         "  if (typeof b != 'object')"
         "    return a === b;"
         "  var props = Object.getOwnPropertyNames(b);"
         "  for (var i = 0; i < props.length; ++i) {"
         "    var p = props[i];"
-        "    return arguments.callee(a[p], b[p]);"
+        "    return compareMe(a[p], b[p]);"
         "  }"
         "})");
     QTest::newRow("{ foo: 'bar' }") << "({ foo: 'bar' })"  << comparePropertiesStrict;
