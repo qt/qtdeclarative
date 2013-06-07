@@ -301,7 +301,7 @@ QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBinding *This = static_cast<QQmlBinding *>(e);
 
-    return QLatin1Char('"') + QString::fromUtf8(This->m_expression) + QLatin1Char('"');
+    return This->m_url + QLatin1Char(':') + QString::number(This->m_lineNumber) + QLatin1Char(':') + QString::number(This->m_columnNumber);
 }
 
 void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)

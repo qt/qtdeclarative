@@ -972,13 +972,13 @@ void tst_qqmlecmascript::enums()
     {
     QUrl file = testFileUrl("enums.2.qml");
     QString w1 = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'MyEnum' for property 'MyUnregisteredEnumTypeObject::enumProperty'");
-    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9 depends on non-NOTIFYable properties:");
+    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:21 depends on non-NOTIFYable properties:");
     QString w3 = QLatin1String("    MyUnregisteredEnumTypeObject::enumProperty");
-    QString w4 = file.toString() + ":7: Unable to assign [undefined] to int";
-    QString w5 = file.toString() + ":8: Unable to assign [undefined] to int";
-    QString w6 = file.toString() + ":9: Unable to assign [undefined] to int";
-    QString w7 = file.toString() + ":13: Unable to assign [undefined] to [unknown property type]";
-    QString w8 = file.toString() + ":31: Unable to assign int to [unknown property type]";
+    QString w4 = file.toString() + ":7:21: Unable to assign [undefined] to int";
+    QString w5 = file.toString() + ":8:21: Unable to assign [undefined] to int";
+    QString w6 = file.toString() + ":9:21: Unable to assign [undefined] to int";
+    QString w7 = file.toString() + ":13:23: Unable to assign [undefined] to [unknown property type]";
+    QString w8 = file.toString() + ":31:23: Unable to assign int to [unknown property type]";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
@@ -6444,7 +6444,7 @@ void tst_qqmlecmascript::nonNotifyable()
 
     QString expected1 = QLatin1String("QQmlExpression: Expression ") +
                         component.url().toString() +
-                        QLatin1String(":5 depends on non-NOTIFYable properties:");
+                        QLatin1String(":5:24 depends on non-NOTIFYable properties:");
     QString expected2 = QLatin1String("    ") +
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
