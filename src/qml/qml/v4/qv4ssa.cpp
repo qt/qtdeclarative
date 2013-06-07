@@ -197,7 +197,7 @@ void showMeTheCode(V4IR::Function *function)
 using namespace V4IR;
 
 class DominatorTree {
-    int N = 0;
+    int N;
     QHash<BasicBlock *, int> dfnum;
     QVector<BasicBlock *> vertex;
     QHash<BasicBlock *, BasicBlock *> parent;
@@ -360,7 +360,9 @@ class DominatorTree {
     QHash<BasicBlock *, QSet<BasicBlock *> > DF;
 
 public:
-    DominatorTree(const QVector<BasicBlock *> &nodes) {
+    DominatorTree(const QVector<BasicBlock *> &nodes)
+        : N(0)
+    {
         calculateIDoms(nodes);
 
         // compute children of n
