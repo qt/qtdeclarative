@@ -219,7 +219,6 @@ private slots:
     void functionAssignment_afterBinding();
     void eval();
     void function();
-    void functionException();
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
@@ -5767,19 +5766,6 @@ void tst_qqmlecmascript::function()
     QCOMPARE(o->property("test2").toBool(), true);
     QCOMPARE(o->property("test3").toBool(), true);
 
-    delete o;
-}
-
-void tst_qqmlecmascript::functionException()
-{
-    // QTBUG-24037 - shouldn't crash.
-    QString errstr = testFileUrl("v8functionException.qml").toString() + QLatin1String(":13: SyntaxError: Unexpected token ILLEGAL");
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(errstr));
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Exception occurred during compilation of function: dynamicSlot()");
-    QQmlComponent component(&engine, testFileUrl("v8functionException.qml"));
-    QObject *o = component.create();
-    QVERIFY(o != 0);
-    QMetaObject::invokeMethod(o, "dynamicSlot");
     delete o;
 }
 
