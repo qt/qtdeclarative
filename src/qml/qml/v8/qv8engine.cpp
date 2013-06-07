@@ -188,13 +188,13 @@ QV8Engine::~QV8Engine()
 
     qPersistentDispose(m_strongReferencer);
 
+    m_qobjectWrapper.destroy();
     m_jsonWrapper.destroy();
     m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
     m_listWrapper.destroy();
     m_typeWrapper.destroy();
-    m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
     m_stringWrapper.destroy();
 
