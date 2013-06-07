@@ -310,7 +310,7 @@ void QmlContextWrapper::put(Managed *m, ExecutionContext *ctx, String *name, con
     if (wrapper->readOnly) {
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
-        ctx->throwError(Value::fromString(ctx->engine->newString(error)));
+        ctx->throwError(error);
     }
 
     Object::put(m, ctx, name, value);

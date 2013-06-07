@@ -1750,7 +1750,7 @@ void tst_qqmlecmascript::scriptErrors()
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":13: ReferenceError: a is not defined";
     QString warning5 = url + ":11: ReferenceError: a is not defined";
-    QString warning6 = url + ":10: Unable to assign [undefined] to int";
+    QString warning6 = url + ":10:21: Unable to assign [undefined] to int";
     QString warning7 = url + ":15: Error: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
