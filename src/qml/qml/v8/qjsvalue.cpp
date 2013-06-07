@@ -771,7 +771,7 @@ QJSValue QJSValue::property(const QString& name) const
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
-        return QJSValue();
+        return new QJSValuePrivate(engine, e.value());
     }
 }
 
@@ -800,7 +800,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
-        return QJSValue();
+        return new QJSValuePrivate(engine, e.value());
     }
 }
 
