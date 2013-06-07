@@ -1783,7 +1783,6 @@ void tst_QJSValue::call_twoEngines()
     QJSEngine otherEngine;
     QJSValue fun = otherEngine.evaluate("(function() { return 1; })");
     QVERIFY(fun.isCallable());
-    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with thisObject created in "
                          "a different engine");

@@ -488,9 +488,14 @@ QJSValue QJSValue::call(const QJSValueList &args)
     ExecutionEngine *engine = d->engine();
     assert(engine);
 
-    QVarLengthArray<Value> arguments(args.length());
-    for (int i = 0; i < args.size(); ++i)
+    QVarLengthArray<Value, 9> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i) {
+        if (!args.at(i).d->checkEngine(engine)) {
+            qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
+            return QJSValue();
+        }
         arguments[i] = args.at(i).d->getValue(engine);
+    }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
@@ -533,9 +538,19 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     ExecutionEngine *engine = d->engine();
     assert(engine);
 
-    QVarLengthArray<Value> arguments(args.length());
-    for (int i = 0; i < args.size(); ++i)
+    if (!instance.d->checkEngine(engine)) {
+        qWarning("QJSValue::call() failed: cannot call function with thisObject created in a different engine");
+        return QJSValue();
+    }
+
+    QVarLengthArray<Value, 9> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i) {
+        if (!args.at(i).d->checkEngine(engine)) {
+            qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
+            return QJSValue();
+        }
         arguments[i] = args.at(i).d->getValue(engine);
+    }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
@@ -576,9 +591,14 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ExecutionEngine *engine = d->engine();
     assert(engine);
 
-    QVarLengthArray<Value> arguments(args.length());
-    for (int i = 0; i < args.size(); ++i)
+    QVarLengthArray<Value, 9> arguments(args.length());
+    for (int i = 0; i < args.size(); ++i) {
+        if (!args.at(i).d->checkEngine(engine)) {
+            qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
+            return QJSValue();
+        }
         arguments[i] = args.at(i).d->getValue(engine);
+    }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
@@ -821,8 +841,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     if (!o)
         return;
 
-    ExecutionEngine *otherEngine = value.d->engine();
-    if (otherEngine && otherEngine != o->engine()) {
+    if (!value.d->checkEngine(o->engine())) {
         qWarning("QJSValue::setProperty(%s) failed: cannot set value created in a different engine", name.toUtf8().constData());
         return;
     }

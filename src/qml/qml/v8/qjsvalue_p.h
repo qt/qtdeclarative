@@ -97,6 +97,14 @@ public:
         return value;
     }
 
+    bool checkEngine(QV4::ExecutionEngine *otherEngine) {
+        if (!e) {
+            assert(!value.isObject());
+            e = otherEngine;
+        }
+        return (e == otherEngine);
+    }
+
     QV4::ExecutionEngine *engine() const {
         if (!e)
             e = value.engine();
