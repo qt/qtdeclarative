@@ -159,7 +159,7 @@ struct Q_QML_EXPORT Value
         return false;
     }
 
-    Bool booleanValue() const {
+    bool booleanValue() const {
         return int_32;
     }
     double doubleValue() const {
@@ -226,7 +226,7 @@ struct Q_QML_EXPORT Value
     int toInt32() const;
     unsigned int toUInt32() const;
 
-    Bool toBoolean() const;
+    bool toBoolean() const;
     double toInteger() const;
     double toNumber() const;
     QString toQString() const;
@@ -393,7 +393,7 @@ inline Value Value::fromObject(Object *o)
     return v;
 }
 
-inline Bool Value::toBoolean() const
+inline bool Value::toBoolean() const
 {
     switch (type()) {
     case Value::Undefined_Type:
