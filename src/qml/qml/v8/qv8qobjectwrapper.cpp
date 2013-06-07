@@ -62,6 +62,7 @@
 #include <private/qv4sequenceobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4regexpobject_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -1034,9 +1035,9 @@ static QV4::Value CallMethod(QObject *object, int index, int returnType, int arg
 
     The conversion table is copied out of the QtScript callQtMethod() function.
 */
-static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
+static int MatchScore(const QV4::Value &actual, int conversionType)
 {
-    if (actual->IsNumber()) {
+    if (actual.isNumber()) {
         switch (conversionType) {
         case QMetaType::Double:
             return 0;
@@ -1063,7 +1064,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual->IsString()) {
+    } else if (actual.isString()) {
         switch (conversionType) {
         case QMetaType::QString:
             return 0;
@@ -1072,7 +1073,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual->IsBoolean()) {
+    } else if (actual.isBoolean()) {
         switch (conversionType) {
         case QMetaType::Bool:
             return 0;
@@ -1081,7 +1082,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual->IsDate()) {
+    } else if (actual.asDateObject()) {
         switch (conversionType) {
         case QMetaType::QDateTime:
             return 0;
@@ -1092,14 +1093,14 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual->IsRegExp()) {
+    } else if (actual.as<QV4::RegExpObject>()) {
         switch (conversionType) {
         case QMetaType::QRegExp:
             return 0;
         default:
             return 10;
         }
-    } else if (actual->IsArray()) {
+    } else if (actual.asArrayObject()) {
         switch (conversionType) {
         case QMetaType::QJsonArray:
             return 3;
@@ -1114,7 +1115,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual->IsNull()) {
+    } else if (actual.isNull()) {
         switch (conversionType) {
         case QMetaType::VoidStar:
         case QMetaType::QObjectStar:
@@ -1128,14 +1129,13 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
                 return 10;
         }
         }
-    } else if (actual->IsObject()) {
-        QV4::Object *obj = actual->v4Value().asObject();
+    } else if (QV4::Object *obj = actual.asObject()) {
         QV8Engine *engine = obj->engine()->v8Engine;
 
         if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
-            if (engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
+            if (engine->toVariant(actual, -1).userType() == conversionType)
                 return 0;
             else
                 return 10;
@@ -1150,8 +1150,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
             }
         }
 
-        if (QV4::QmlValueTypeWrapper *w = obj->as<QV4::QmlValueTypeWrapper>()) {
-            if (engine->toVariant(actual->v4Value(), -1).userType() == conversionType)
+        if (obj->as<QV4::QmlValueTypeWrapper>()) {
+            if (engine->toVariant(actual, -1).userType() == conversionType)
                 return 0;
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
