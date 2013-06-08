@@ -1065,7 +1065,7 @@ QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) cons
 {
     Q_D(const QQmlEngine);
     QMutexLocker locker(&d->mutex);
-    return d->imageProviders.value(providerId).data();
+    return d->imageProviders.value(providerId.toLower()).data();
 }
 
 /*!
@@ -1077,7 +1077,7 @@ void QQmlEngine::removeImageProvider(const QString &providerId)
 {
     Q_D(QQmlEngine);
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.take(providerId);
+    d->imageProviders.take(providerId.toLower());
 }
 
 /*!
