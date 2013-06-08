@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV8QOBJECTWRAPPER_P_H
-#define QV8QOBJECTWRAPPER_P_H
+#ifndef QV4QOBJECTWRAPPER_P_H
+#define QV4QOBJECTWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -57,7 +57,6 @@
 #include <QtCore/qmetatype.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qhash.h>
-#include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qqmlpropertycache_p.h>
@@ -69,9 +68,7 @@
 QT_BEGIN_NAMESPACE
 
 class QObject;
-class QV8Engine;
 class QQmlData;
-class QV8ObjectResource;
 class QQmlPropertyCache;
 
 namespace QV4 {
@@ -198,6 +195,6 @@ private slots:
 
 QT_END_NAMESPACE
 
-#endif // QV8QOBJECTWRAPPER_P_H
+#endif // QV4QOBJECTWRAPPER_P_H
 
 

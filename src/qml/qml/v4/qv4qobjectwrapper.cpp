@@ -138,20 +138,20 @@ struct ReadAccessor {
     }
 };
 
-static inline QV4::Value valueToHandle(QV8Engine *, int v)
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, int v)
 { return QV4::Value::fromInt32(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, uint v)
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, uint v)
 { return QV4::Value::fromUInt32(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, bool v)
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, bool v)
 { return QV4::Value::fromBoolean(v); }
-static inline QV4::Value valueToHandle(QV8Engine *e, const QString &v)
-{ return e->toString(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, float v)
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *e, const QString &v)
+{ return QV4::Value::fromString(e, v); }
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, float v)
 { return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV8Engine *, double v)
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, double v)
 { return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV8Engine *e, QObject *v)
-{ return QV4::QObjectWrapper::wrap(QV8Engine::getV4(e), v); }
+static inline QV4::Value valueToHandle(QV4::ExecutionEngine *e, QObject *v)
+{ return QV4::QObjectWrapper::wrap(e, v); }
 
 // Load value properties
 template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
@@ -172,31 +172,31 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == QMetaType::QReal) {
         qreal v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::Int || property.isEnum()) {
         int v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::Bool) {
         bool v = false;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::QString) {
         QString v;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::UInt) {
         uint v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::Float) {
         float v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.propType == QMetaType::Double) {
         double v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(engine, v);
+        return valueToHandle(v4, v);
     } else if (property.isV4Handle()) {
         QQmlV4Handle handle;
         ReadFunction(object, property, &handle, notifier);
