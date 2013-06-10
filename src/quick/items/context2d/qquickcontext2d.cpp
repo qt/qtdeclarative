@@ -127,9 +127,9 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
                                        V8THROW_ERROR_SETTER("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-QColor qt_color_from_string(v8::Handle<v8::Value> name)
+QColor qt_color_from_string(const QV4::Value &name)
 {
-    QByteArray str = name->v4Value().toQString().toUtf8();
+    QByteArray str = name.toQString().toUtf8();
 
     char *p = str.data();
     int len = str.length();
@@ -205,13 +205,13 @@ QFont qt_font_from_string(const QString& fontString) {
     // ### TODO:get code from Qt webkit
      const QStringList tokens = fontString.split(QLatin1Char(' '));
      foreach (const QString &token, tokens) {
-         if (token == QLatin1String("italic"))
+         if (token == QStringLiteral("italic"))
              font.setItalic(true);
-         else if (token == QLatin1String("bold"))
+         else if (token == QStringLiteral("bold"))
              font.setBold(true);
-         else if (token.endsWith(QLatin1String("px"))) {
+         else if (token.endsWith(QStringLiteral("px"))) {
              QString number = token;
-             number.remove(QLatin1String("px"));
+             number.remove(QStringLiteral("px"));
              //font.setPointSizeF(number.trimmed().toFloat());
              font.setPixelSize(number.trimmed().toInt());
          } else
@@ -335,53 +335,53 @@ void qt_image_boxblur(QImage& image, int radius, bool quality)
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
 {
-    if (compositeOperator == QLatin1String("source-over")) {
+    if (compositeOperator == QStringLiteral("source-over")) {
         return QPainter::CompositionMode_SourceOver;
-    } else if (compositeOperator == QLatin1String("source-out")) {
+    } else if (compositeOperator == QStringLiteral("source-out")) {
         return QPainter::CompositionMode_SourceOut;
-    } else if (compositeOperator == QLatin1String("source-in")) {
+    } else if (compositeOperator == QStringLiteral("source-in")) {
         return QPainter::CompositionMode_SourceIn;
-    } else if (compositeOperator == QLatin1String("source-atop")) {
+    } else if (compositeOperator == QStringLiteral("source-atop")) {
         return QPainter::CompositionMode_SourceAtop;
-    } else if (compositeOperator == QLatin1String("destination-atop")) {
+    } else if (compositeOperator == QStringLiteral("destination-atop")) {
         return QPainter::CompositionMode_DestinationAtop;
-    } else if (compositeOperator == QLatin1String("destination-in")) {
+    } else if (compositeOperator == QStringLiteral("destination-in")) {
         return QPainter::CompositionMode_DestinationIn;
-    } else if (compositeOperator == QLatin1String("destination-out")) {
+    } else if (compositeOperator == QStringLiteral("destination-out")) {
         return QPainter::CompositionMode_DestinationOut;
-    } else if (compositeOperator == QLatin1String("destination-over")) {
+    } else if (compositeOperator == QStringLiteral("destination-over")) {
         return QPainter::CompositionMode_DestinationOver;
-    } else if (compositeOperator == QLatin1String("lighter")) {
+    } else if (compositeOperator == QStringLiteral("lighter")) {
         return QPainter::CompositionMode_Lighten;
-    } else if (compositeOperator == QLatin1String("copy")) {
+    } else if (compositeOperator == QStringLiteral("copy")) {
         return QPainter::CompositionMode_Source;
-    } else if (compositeOperator == QLatin1String("xor")) {
+    } else if (compositeOperator == QStringLiteral("xor")) {
         return QPainter::CompositionMode_Xor;
-    } else if (compositeOperator == QLatin1String("qt-clear")) {
+    } else if (compositeOperator == QStringLiteral("qt-clear")) {
         return QPainter::CompositionMode_Clear;
-    } else if (compositeOperator == QLatin1String("qt-destination")) {
+    } else if (compositeOperator == QStringLiteral("qt-destination")) {
         return QPainter::CompositionMode_Destination;
-    } else if (compositeOperator == QLatin1String("qt-multiply")) {
+    } else if (compositeOperator == QStringLiteral("qt-multiply")) {
         return QPainter::CompositionMode_Multiply;
-    } else if (compositeOperator == QLatin1String("qt-screen")) {
+    } else if (compositeOperator == QStringLiteral("qt-screen")) {
         return QPainter::CompositionMode_Screen;
-    } else if (compositeOperator == QLatin1String("qt-overlay")) {
+    } else if (compositeOperator == QStringLiteral("qt-overlay")) {
         return QPainter::CompositionMode_Overlay;
-    } else if (compositeOperator == QLatin1String("qt-darken")) {
+    } else if (compositeOperator == QStringLiteral("qt-darken")) {
         return QPainter::CompositionMode_Darken;
-    } else if (compositeOperator == QLatin1String("qt-lighten")) {
+    } else if (compositeOperator == QStringLiteral("qt-lighten")) {
         return QPainter::CompositionMode_Lighten;
-    } else if (compositeOperator == QLatin1String("qt-color-dodge")) {
+    } else if (compositeOperator == QStringLiteral("qt-color-dodge")) {
         return QPainter::CompositionMode_ColorDodge;
-    } else if (compositeOperator == QLatin1String("qt-color-burn")) {
+    } else if (compositeOperator == QStringLiteral("qt-color-burn")) {
         return QPainter::CompositionMode_ColorBurn;
-    } else if (compositeOperator == QLatin1String("qt-hard-light")) {
+    } else if (compositeOperator == QStringLiteral("qt-hard-light")) {
         return QPainter::CompositionMode_HardLight;
-    } else if (compositeOperator == QLatin1String("qt-soft-light")) {
+    } else if (compositeOperator == QStringLiteral("qt-soft-light")) {
         return QPainter::CompositionMode_SoftLight;
-    } else if (compositeOperator == QLatin1String("qt-difference")) {
+    } else if (compositeOperator == QStringLiteral("qt-difference")) {
         return QPainter::CompositionMode_Difference;
-    } else if (compositeOperator == QLatin1String("qt-exclusion")) {
+    } else if (compositeOperator == QStringLiteral("qt-exclusion")) {
         return QPainter::CompositionMode_Exclusion;
     }
     return QPainter::CompositionMode_SourceOver;
@@ -391,53 +391,53 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 {
     switch (op) {
     case QPainter::CompositionMode_SourceOver:
-        return QLatin1String("source-over");
+        return QStringLiteral("source-over");
     case QPainter::CompositionMode_DestinationOver:
-        return QLatin1String("destination-over");
+        return QStringLiteral("destination-over");
     case QPainter::CompositionMode_Clear:
-        return QLatin1String("qt-clear");
+        return QStringLiteral("qt-clear");
     case QPainter::CompositionMode_Source:
-        return QLatin1String("copy");
+        return QStringLiteral("copy");
     case QPainter::CompositionMode_Destination:
-        return QLatin1String("qt-destination");
+        return QStringLiteral("qt-destination");
     case QPainter::CompositionMode_SourceIn:
-        return QLatin1String("source-in");
+        return QStringLiteral("source-in");
     case QPainter::CompositionMode_DestinationIn:
-        return QLatin1String("destination-in");
+        return QStringLiteral("destination-in");
     case QPainter::CompositionMode_SourceOut:
-        return QLatin1String("source-out");
+        return QStringLiteral("source-out");
     case QPainter::CompositionMode_DestinationOut:
-        return QLatin1String("destination-out");
+        return QStringLiteral("destination-out");
     case QPainter::CompositionMode_SourceAtop:
-        return QLatin1String("source-atop");
+        return QStringLiteral("source-atop");
     case QPainter::CompositionMode_DestinationAtop:
-        return QLatin1String("destination-atop");
+        return QStringLiteral("destination-atop");
     case QPainter::CompositionMode_Xor:
-        return QLatin1String("xor");
+        return QStringLiteral("xor");
     case QPainter::CompositionMode_Plus:
-        return QLatin1String("plus");
+        return QStringLiteral("plus");
     case QPainter::CompositionMode_Multiply:
-        return QLatin1String("qt-multiply");
+        return QStringLiteral("qt-multiply");
     case QPainter::CompositionMode_Screen:
-        return QLatin1String("qt-screen");
+        return QStringLiteral("qt-screen");
     case QPainter::CompositionMode_Overlay:
-        return QLatin1String("qt-overlay");
+        return QStringLiteral("qt-overlay");
     case QPainter::CompositionMode_Darken:
-        return QLatin1String("qt-darken");
+        return QStringLiteral("qt-darken");
     case QPainter::CompositionMode_Lighten:
-        return QLatin1String("lighter");
+        return QStringLiteral("lighter");
     case QPainter::CompositionMode_ColorDodge:
-        return QLatin1String("qt-color-dodge");
+        return QStringLiteral("qt-color-dodge");
     case QPainter::CompositionMode_ColorBurn:
-        return QLatin1String("qt-color-burn");
+        return QStringLiteral("qt-color-burn");
     case QPainter::CompositionMode_HardLight:
-        return QLatin1String("qt-hard-light");
+        return QStringLiteral("qt-hard-light");
     case QPainter::CompositionMode_SoftLight:
-        return QLatin1String("qt-soft-light");
+        return QStringLiteral("qt-soft-light");
     case QPainter::CompositionMode_Difference:
-        return QLatin1String("qt-difference");
+        return QStringLiteral("qt-difference");
     case QPainter::CompositionMode_Exclusion:
-        return QLatin1String("qt-exclusion");
+        return QStringLiteral("qt-exclusion");
     default:
         break;
     }
@@ -885,7 +885,7 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
            }
        }
    } else if (value->IsString()) {
-       QColor color = qt_color_from_string(value);
+       QColor color = qt_color_from_string(value->v4Value());
        if (color.isValid() && r->context->state.fillStyle != QBrush(color)) {
             r->context->state.fillStyle = QBrush(color);
             r->context->buffer()->setFillStyle(r->context->state.fillStyle);
@@ -989,7 +989,7 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
             }
         }
     } else if (value->IsString()) {
-        QColor color = qt_color_from_string(value);
+        QColor color = qt_color_from_string(value->v4Value());
         if (color.isValid() && r->context->state.strokeStyle != QBrush(color)) {
              r->context->state.strokeStyle = QBrush(color);
              r->context->buffer()->setStrokeStyle(r->context->state.strokeStyle);
@@ -1274,15 +1274,15 @@ v8::Handle<v8::Value> ctx2d_lineCap(v8::Handle<v8::String>, const v8::AccessorIn
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.lineCap) {
     case Qt::RoundCap:
-        return engine->toString(QLatin1String("round"));
+        return engine->toString(QStringLiteral("round"));
     case Qt::FlatCap:
-        return engine->toString(QLatin1String("butt"));
+        return engine->toString(QStringLiteral("butt"));
     case Qt::SquareCap:
-        return engine->toString(QLatin1String("square"));
+        return engine->toString(QStringLiteral("square"));
     default:
         break;
     }
-    return engine->toString(QLatin1String("butt"));;
+    return engine->toString(QStringLiteral("butt"));;
 }
 
 static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1292,11 +1292,11 @@ static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> valu
 
     QString lineCap = value->v4Value().toQString();
     Qt::PenCapStyle cap;
-    if (lineCap == QLatin1String("round"))
+    if (lineCap == QStringLiteral("round"))
         cap = Qt::RoundCap;
-    else if (lineCap == QLatin1String("butt"))
+    else if (lineCap == QStringLiteral("butt"))
         cap = Qt::FlatCap;
-    else if (lineCap == QLatin1String("square"))
+    else if (lineCap == QStringLiteral("square"))
         cap = Qt::SquareCap;
     else
         return;
@@ -1330,15 +1330,15 @@ v8::Handle<v8::Value> ctx2d_lineJoin(v8::Handle<v8::String>, const v8::AccessorI
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.lineJoin) {
     case Qt::RoundJoin:
-        return engine->toString(QLatin1String("round"));
+        return engine->toString(QStringLiteral("round"));
     case Qt::BevelJoin:
-        return engine->toString(QLatin1String("bevel"));
+        return engine->toString(QStringLiteral("bevel"));
     case Qt::MiterJoin:
-        return engine->toString(QLatin1String("miter"));
+        return engine->toString(QStringLiteral("miter"));
     default:
         break;
     }
-    return engine->toString(QLatin1String("miter"));
+    return engine->toString(QStringLiteral("miter"));
 }
 
 static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1348,11 +1348,11 @@ static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> val
 
     QString lineJoin = value->v4Value().toQString();
     Qt::PenJoinStyle join;
-    if (lineJoin == QLatin1String("round"))
+    if (lineJoin == QStringLiteral("round"))
         join = Qt::RoundJoin;
-    else if (lineJoin == QLatin1String("bevel"))
+    else if (lineJoin == QStringLiteral("bevel"))
         join = Qt::BevelJoin;
-    else if (lineJoin == QLatin1String("miter"))
+    else if (lineJoin == QStringLiteral("miter"))
         join = Qt::SvgMiterJoin;
     else
         return;
@@ -1462,7 +1462,7 @@ static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
     QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QColor color = qt_color_from_string(value);
+    QColor color = qt_color_from_string(value->v4Value());
 
     if (color.isValid() && color != r->context->state.shadowColor) {
         r->context->state.shadowColor = color;
@@ -2064,19 +2064,19 @@ v8::Handle<v8::Value> ctx2d_textAlign(v8::Handle<v8::String>, const v8::Accessor
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.textAlign) {
     case QQuickContext2D::Start:
-        return engine->toString(QLatin1String("start"));
+        return engine->toString(QStringLiteral("start"));
    case QQuickContext2D::End:
-        return engine->toString(QLatin1String("end"));
+        return engine->toString(QStringLiteral("end"));
    case QQuickContext2D::Left:
-        return engine->toString(QLatin1String("left"));
+        return engine->toString(QStringLiteral("left"));
    case QQuickContext2D::Right:
-        return engine->toString(QLatin1String("right"));
+        return engine->toString(QStringLiteral("right"));
    case QQuickContext2D::Center:
-        return engine->toString(QLatin1String("center"));
+        return engine->toString(QStringLiteral("center"));
     default:
         break;
     }
-    return engine->toString(QLatin1String("start"));
+    return engine->toString(QStringLiteral("start"));
 }
 
 static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -2087,15 +2087,15 @@ static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
     QString textAlign = value->v4Value().toQString();
 
     QQuickContext2D::TextAlignType ta;
-    if (textAlign == QLatin1String("start"))
+    if (textAlign == QStringLiteral("start"))
         ta = QQuickContext2D::Start;
-    else if (textAlign == QLatin1String("end"))
+    else if (textAlign == QStringLiteral("end"))
         ta = QQuickContext2D::End;
-    else if (textAlign == QLatin1String("left"))
+    else if (textAlign == QStringLiteral("left"))
         ta = QQuickContext2D::Left;
-    else if (textAlign == QLatin1String("right"))
+    else if (textAlign == QStringLiteral("right"))
         ta = QQuickContext2D::Right;
-    else if (textAlign == QLatin1String("center"))
+    else if (textAlign == QStringLiteral("center"))
         ta = QQuickContext2D::Center;
     else
         return;
@@ -2128,19 +2128,19 @@ v8::Handle<v8::Value> ctx2d_textBaseline(v8::Handle<v8::String>, const v8::Acces
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.textBaseline) {
     case QQuickContext2D::Alphabetic:
-        return engine->toString(QLatin1String("alphabetic"));
+        return engine->toString(QStringLiteral("alphabetic"));
     case QQuickContext2D::Hanging:
-        return engine->toString(QLatin1String("hanging"));
+        return engine->toString(QStringLiteral("hanging"));
     case QQuickContext2D::Top:
-        return engine->toString(QLatin1String("top"));
+        return engine->toString(QStringLiteral("top"));
     case QQuickContext2D::Bottom:
-        return engine->toString(QLatin1String("bottom"));
+        return engine->toString(QStringLiteral("bottom"));
     case QQuickContext2D::Middle:
-        return engine->toString(QLatin1String("middle"));
+        return engine->toString(QStringLiteral("middle"));
     default:
         break;
     }
-    return engine->toString(QLatin1String("alphabetic"));
+    return engine->toString(QStringLiteral("alphabetic"));
 }
 
 static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -2150,15 +2150,15 @@ static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value>
     QString textBaseline = value->v4Value().toQString();
 
     QQuickContext2D::TextBaseLineType tb;
-    if (textBaseline == QLatin1String("alphabetic"))
+    if (textBaseline == QStringLiteral("alphabetic"))
         tb = QQuickContext2D::Alphabetic;
-    else if (textBaseline == QLatin1String("hanging"))
+    else if (textBaseline == QStringLiteral("hanging"))
         tb = QQuickContext2D::Hanging;
-    else if (textBaseline == QLatin1String("top"))
+    else if (textBaseline == QStringLiteral("top"))
         tb = QQuickContext2D::Top;
-    else if (textBaseline == QLatin1String("bottom"))
+    else if (textBaseline == QStringLiteral("bottom"))
         tb = QQuickContext2D::Bottom;
-    else if (textBaseline == QLatin1String("middle"))
+    else if (textBaseline == QStringLiteral("middle"))
         tb = QQuickContext2D::Middle;
     else
         return;
@@ -2744,7 +2744,7 @@ static QV4::Value ctx2d_gradient_addColorStop(const v8::Arguments &args)
         if (args[1]->IsObject()) {
             color = engine->toVariant(args[1]->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
         } else {
-            color = qt_color_from_string(args[1]);
+            color = qt_color_from_string(args[1]->v4Value());
         }
         if (pos < 0.0 || pos > 1.0 || !qIsFinite(pos)) {
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
@@ -3376,7 +3376,7 @@ QV4::Value QQuickContext2D::v4value() const
 
 QStringList QQuickContext2D::contextNames() const
 {
-    return QStringList() << QLatin1String("2d");
+    return QStringList() << QStringLiteral("2d");
 }
 
 void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args)
@@ -3671,7 +3671,7 @@ void QQuickContext2D::reset()
     newState.shadowBlur = 0;
     newState.shadowColor = qRgba(0, 0, 0, 0);
     newState.globalCompositeOperation = QPainter::CompositionMode_SourceOver;
-    newState.font = QFont(QLatin1String("sans-serif"), 10);
+    newState.font = QFont(QStringLiteral("sans-serif"), 10);
     newState.textAlign = QQuickContext2D::Start;
     newState.textBaseline = QQuickContext2D::Alphabetic;
 
