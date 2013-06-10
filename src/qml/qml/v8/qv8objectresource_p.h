@@ -77,6 +77,19 @@ public:
     QV8Engine *engine;
 };
 
+template<class T>
+inline T *v8_resource_cast(v8::Handle<v8::Object> object) {
+    QV8ObjectResource *resource = static_cast<QV8ObjectResource *>(object->GetExternalResource());
+    return (resource && (quint32)resource->resourceType() == (quint32)T::V8ResourceType)?static_cast<T *>(resource):0;
+}
+
+template<class T>
+inline T *v8_resource_check(v8::Handle<v8::Object> object) {
+    T *resource = static_cast<T *>(object->GetExternalResource());
+    Q_ASSERT(resource && resource->resourceType() == (quint32)T::V8ResourceType);
+    return resource;
+}
+
 QT_END_NAMESPACE
 
 #endif // QV8OBJECTRESOURCE_P_H

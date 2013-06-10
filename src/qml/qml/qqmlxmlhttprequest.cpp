@@ -63,6 +63,9 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qdebug.h>
 
+#include <private/qv4v8_p.h>
+#include <private/qv8objectresource_p.h>
+
 #ifndef QT_NO_XMLSTREAMREADER
 
 #define V8THROW_REFERENCE(string) { \

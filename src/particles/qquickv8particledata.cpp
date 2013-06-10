@@ -46,6 +46,8 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 
+#include <private/qv8objectresource_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

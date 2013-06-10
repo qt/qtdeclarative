@@ -51,6 +51,9 @@
 #include <private/qv4sequenceobject_p.h>
 #include <private/qv4objectproto_p.h>
 
+#include <private/qv4v8_p.h>
+#include <private/qv8objectresource_p.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;

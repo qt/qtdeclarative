@@ -78,6 +78,9 @@
 #include <private/qv4include_p.h>
 #include <private/qv4jsonobject_p.h>
 
+#include <private/qv4v8_p.h>
+#include <private/qv8objectresource_p.h>
+
 Q_DECLARE_METATYPE(QList<int>)
 
 
@@ -403,7 +406,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
 
 
-void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
+void QV8Engine::initializeGlobal()
 {
     QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
 
@@ -490,7 +493,7 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
 
 void QV8Engine::initQmlGlobalObject()
 {
-    initializeGlobal(QV4::Value::fromObject(m_v4Engine->globalObject));
+    initializeGlobal();
     freezeObject(QV4::Value::fromObject(m_v4Engine->globalObject));
 }
 

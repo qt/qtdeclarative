@@ -62,7 +62,6 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QThreadStorage>
 
-#include <private/qv8_p.h>
 #include <qjsengine.h>
 #include <qjsvalue.h>
 #include "qjsvalueiterator_p.h"
@@ -70,7 +69,6 @@
 
 #include <private/qqmlpropertycache_p.h>
 
-#include "qv8objectresource_p.h"
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
@@ -136,19 +134,6 @@ namespace QV4 {
         } \
         return rv; \
     } \
-
-template<class T>
-inline T *v8_resource_cast(v8::Handle<v8::Object> object) {
-    QV8ObjectResource *resource = static_cast<QV8ObjectResource *>(object->GetExternalResource());
-    return (resource && (quint32)resource->resourceType() == (quint32)T::V8ResourceType)?static_cast<T *>(resource):0;
-}
-
-template<class T>
-inline T *v8_resource_check(v8::Handle<v8::Object> object) {
-    T *resource = static_cast<T *>(object->GetExternalResource());
-    Q_ASSERT(resource && resource->resourceType() == (quint32)T::V8ResourceType);
-    return resource;
-}
 
 // Used to allow a QObject method take and return raw V8 handles without having to expose
 // v8 in the public API.
@@ -324,7 +309,7 @@ protected:
 
     QVariant toBasicVariant(const QV4::Value &);
 
-    void initializeGlobal(v8::Handle<v8::Object>);
+    void initializeGlobal();
 
 private:
     QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
