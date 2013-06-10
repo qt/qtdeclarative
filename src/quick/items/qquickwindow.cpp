@@ -108,7 +108,7 @@ public:
     }
 
 protected:
-    void timerEvent(QTimerEvent *e)
+    void timerEvent(QTimerEvent *)
     {
         killTimer(m_timer);
         m_timer = 0;
