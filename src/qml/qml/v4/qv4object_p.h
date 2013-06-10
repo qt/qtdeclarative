@@ -171,6 +171,8 @@ struct Q_QML_EXPORT Object: Managed {
     void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int count = 0);
     void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value (*code)(SimpleCallContext *), int count = 0);
+    void defineAccessorProperty(ExecutionEngine *engine, const QString &name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *));
+    void defineAccessorProperty(String *name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);

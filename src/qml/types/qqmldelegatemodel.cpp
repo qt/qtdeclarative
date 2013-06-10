@@ -1592,14 +1592,9 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8Engine);
 
     QV4::Object *proto = v4->newObject();
-    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("model")),
-                                           QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("model")), QQmlDelegateModelItem::get_model));
-    p = proto->insertMember(v4->newString(QStringLiteral("groups")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("groups")), QQmlDelegateModelItem::get_groups));
-    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("groups")), QQmlDelegateModelItem::set_groups));
-    p = proto->insertMember(v4->newString(QStringLiteral("isUnresolved")),
+    proto->defineAccessorProperty(v4, QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
+    proto->defineAccessorProperty(v4, QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
+    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("isUnresolved")),
                             QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, 30, QQmlDelegateModelItem::get_member));
     p = proto->insertMember(v4->newString(QStringLiteral("inItems")),

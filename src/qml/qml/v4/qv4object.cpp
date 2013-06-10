@@ -221,6 +221,23 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
     defineDefaultProperty(s, Value::fromObject(function));
 }
 
+void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
+                                    Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+{
+    String *s = engine->newString(name);
+    defineAccessorProperty(s, getter, setter);
+}
+
+void Object::defineAccessorProperty(String *name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+{
+    ExecutionEngine *v4 = engine();
+    Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    if (getter)
+        p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter));
+    if (setter)
+        p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter));
+}
+
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
     defineReadonlyProperty(engine->newIdentifier(name), value);
