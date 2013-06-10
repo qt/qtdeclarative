@@ -2510,10 +2510,12 @@ QString QQuickTextEdit::hoveredLink() const
     Q_D(const QQuickTextEdit);
     if (const_cast<QQuickTextEditPrivate *>(d)->isLinkHoveredConnected()) {
         return d->control->hoveredLink();
-#ifndef QT_NO_CURSOR
     } else {
-        QPointF pos = QCursor::pos(window()->screen()) - window()->position() - mapToScene(position());
+#ifndef QT_NO_CURSOR
+        QPointF pos = QCursor::pos(window()->screen()) - window()->position() - mapToScene(QPointF(0, 0));
         return d->control->anchorAt(pos);
+#else
+        return QString();
 #endif // QT_NO_CURSOR
     }
 }
