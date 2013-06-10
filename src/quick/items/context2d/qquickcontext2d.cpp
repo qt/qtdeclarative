@@ -232,7 +232,7 @@ public:
     QV4::PersistentValue contextPrototype;
     QV4::PersistentValue constructorGradient;
     QV4::PersistentValue constructorPattern;
-    QV4::PersistentValue constructorPixelArray;
+    QV4::PersistentValue pixelArrayProto;
     QV4::PersistentValue constructorImageData;
 };
 
@@ -274,15 +274,6 @@ public:
     QBrush brush;
     bool patternRepeatX:1;
     bool patternRepeatY:1;
-};
-
-class QV8Context2DPixelArrayResource : public QV8ObjectResource
-{
-    V8_RESOURCE_TYPE(Context2DPixelArrayType)
-public:
-    QV8Context2DPixelArrayResource(QV8Engine *e) : QV8ObjectResource(e) {}
-
-    QImage image;
 };
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
@@ -444,24 +435,41 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
     return QString();
 }
 
+struct QQuickCanvasPixelData : public QV4::Object
+{
+    Q_MANAGED
+    QQuickCanvasPixelData(QV4::ExecutionEngine *engine)
+        : QV4::Object(engine)
+    {
+        vtbl = &static_vtbl;
+    }
+
+    static void destroy(QV4::Managed *that) {
+        static_cast<QQuickCanvasPixelData *>(that)->~QQuickCanvasPixelData();
+    }
+    static QV4::Value getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty);
+
+    QImage image;
+};
+
+DEFINE_MANAGED_VTABLE(QQuickCanvasPixelData);
 
 static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
-    v8::Handle<v8::Object> imageData = ed->constructorImageData.value().asFunctionObject()->newInstance();
-    QV8Context2DPixelArrayResource *r = new QV8Context2DPixelArrayResource(engine);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QQuickCanvasPixelData *pixelData = new (v4->memoryManager) QQuickCanvasPixelData(v4);
+    pixelData->prototype = ed->pixelArrayProto.value().asObject();
+
     if (image.isNull()) {
-        r->image = QImage(w, h, QImage::Format_ARGB32);
-        r->image.fill(0x00000000);
+        pixelData->image = QImage(w, h, QImage::Format_ARGB32);
+        pixelData->image.fill(0x00000000);
     } else {
         Q_ASSERT(image.width() == w && image.height() == h);
-        r->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
+        pixelData->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
-    v8::Handle<v8::Object> pixelData = ed->constructorPixelArray.value().asFunctionObject()->newInstance();
-    pixelData->SetExternalResource(r);
 
-    imageData->SetInternalField(0, pixelData);
-    return imageData->v4Value();
+    return QV4::Value::fromObject(pixelData);
 }
 
 //static script functions
@@ -1216,7 +1224,7 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
             QImage patternTexture;
 
             if (args[0]->IsObject()) {
-                QV8Context2DPixelArrayResource *pixelData = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->Get(v8::String::New("data"))->ToObject());
+                QQuickCanvasPixelData *pixelData = args[0]->ToObject()->Get(v8::String::New("data"))->v4Value().as<QQuickCanvasPixelData>();
                 if (pixelData) {
                     patternTexture = pixelData->image;
                 }
@@ -2337,7 +2345,7 @@ static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
         if (QV4::QObjectWrapper *qobjectWrapper = args[0]->v4Value().as<QV4::QObjectWrapper>())
             canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object());
 
-        QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
+        QQuickCanvasPixelData *pix = args[0]->ToObject()->GetInternalField(0)->ToObject()->v4Value().as<QQuickCanvasPixelData>();;
         if (pix && !pix->image.isNull()) {
             pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
         } else if (imageItem) {
@@ -2438,7 +2446,7 @@ static QV4::Value ctx2d_drawImage(const v8::Arguments &args)
  */
 v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
+    QQuickCanvasPixelData *r = args.This()->GetInternalField(0)->ToObject()->v4Value().as<QQuickCanvasPixelData>();
     if (!r)
         return QV4::Value::fromInt32(0);
     return QV4::Value::fromInt32(r->image.width());
@@ -2450,7 +2458,7 @@ v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::Ac
   */
 v8::Handle<v8::Value> ctx2d_imageData_height(v8::Handle<v8::String>, const v8::AccessorInfo &args)
 {
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
+    QQuickCanvasPixelData *r = args.This()->GetInternalField(0)->ToObject()->v4Value().as<QQuickCanvasPixelData>();
     if (!r)
         return QV4::Value::fromInt32(0);
 
@@ -2484,19 +2492,24 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Handle<v8::String>, const v8::Acc
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
   This property is read only.
 */
-v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+QV4::Value ctx2d_pixelArray_length(QV4::SimpleCallContext *ctx)
 {
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
-    if (!r || r->image.isNull()) return QV4::Value::undefinedValue();
+    QQuickCanvasPixelData *r = ctx->thisObject.as<QQuickCanvasPixelData>();
+    if (!r || r->image.isNull())
+        return QV4::Value::undefinedValue();
 
     return QV4::Value::fromInt32(r->image.width() * r->image.height() * 4);
 }
 
-v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::AccessorInfo& args)
+QV4::Value QQuickCanvasPixelData::getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
+    QQuickCanvasPixelData *r = m->as<QQuickCanvasPixelData>();
+    if (!m)
+        ctx->throwTypeError();
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
+        if (hasProperty)
+            *hasProperty = true;
         const quint32 w = r->image.width();
         const quint32 row = (index / 4) / w;
         const quint32 col = (index / 4) % w;
@@ -2513,12 +2526,14 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::Accesso
             return QV4::Value::fromInt32(qAlpha(*pixel));
         }
     }
+    if (hasProperty)
+        *hasProperty = false;
     return QV4::Value::undefinedValue();
 }
 
 v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8::Value> value, const v8::AccessorInfo& info)
 {
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(info.This());
+    QQuickCanvasPixelData *r = info.This()->v4Value().as<QQuickCanvasPixelData>();
 
     const int v = value->Uint32Value();
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v >= 0 && v <= 255) {
@@ -2571,7 +2586,7 @@ static QV4::Value ctx2d_createImageData(const v8::Arguments &args)
     if (args.Length() == 1) {
         if (args[0]->IsObject()) {
             v8::Handle<v8::Object> imgData = args[0]->ToObject();
-            QV8Context2DPixelArrayResource *pa = v8_resource_cast<QV8Context2DPixelArrayResource>(imgData->GetInternalField(0)->ToObject());
+            QQuickCanvasPixelData *pa = imgData->GetInternalField(0)->ToObject()->v4Value().as<QQuickCanvasPixelData>();
             if (pa) {
                 qreal w = imgData->Get(v8::String::New("width"))->NumberValue();
                 qreal h = imgData->Get(v8::String::New("height"))->NumberValue();
@@ -2647,7 +2662,7 @@ static QV4::Value ctx2d_putImageData(const v8::Arguments &args)
         V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
     v8::Handle<v8::Object> imageData = args[0]->ToObject();
-    QV8Context2DPixelArrayResource *pixelArray = v8_resource_cast<QV8Context2DPixelArrayResource>(imageData->Get(v8::String::New("data"))->ToObject());
+    QQuickCanvasPixelData *pixelArray = imageData->Get(v8::String::New("data"))->ToObject()->v4Value().as<QQuickCanvasPixelData>();
     if (pixelArray) {
         w = imageData->Get(v8::String::New("width"))->NumberValue();
         h = imageData->Get(v8::String::New("height"))->NumberValue();
@@ -3483,6 +3498,8 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
 
 QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
     v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("canvas"), ctx2d_canvas, 0, v8::External::New(engine));
@@ -3562,11 +3579,9 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ftPattern->InstanceTemplate()->SetHasExternalResource(true);
     constructorPattern = ftPattern->GetFunction()->v4Value();
 
-    v8::Handle<v8::FunctionTemplate> ftPixelArray = v8::FunctionTemplate::New();
-    ftPixelArray->InstanceTemplate()->SetHasExternalResource(true);
-    ftPixelArray->InstanceTemplate()->SetAccessor(v8::String::New("length"), ctx2d_pixelArray_length, 0, v8::External::New(engine));
-    ftPixelArray->InstanceTemplate()->SetIndexedPropertyHandler(ctx2d_pixelArray_indexed, ctx2d_pixelArray_indexed_set, 0, 0, 0, v8::External::New(engine));
-    constructorPixelArray = ftPixelArray->GetFunction()->v4Value();
+    QV4::Object *protoPixelArray = v4->newObject();
+    protoPixelArray->defineAccessorProperty(v4->id_length, ctx2d_pixelArray_length, 0);
+    pixelArrayProto = QV4::Value::fromObject(protoPixelArray);
 
     v8::Handle<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::New(engine));

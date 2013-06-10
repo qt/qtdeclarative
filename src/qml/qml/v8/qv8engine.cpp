@@ -143,7 +143,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         if (r) {
             switch (r->resourceType()) {
             case QV8ObjectResource::Context2DStyleType:
-            case QV8ObjectResource::Context2DPixelArrayType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::ParticleDataType:
