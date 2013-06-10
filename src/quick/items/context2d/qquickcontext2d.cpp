@@ -856,7 +856,7 @@ static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Handle<v8::String>, const v8::A
             alphaString += QLatin1Char('0');
         return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
     }
-    return r->context->m_fillStyle;
+    return r->context->m_fillStyle.value();
 }
 
 static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -871,13 +871,13 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
        if (color.isValid()) {
            r->context->state.fillStyle = color;
            r->context->buffer()->setFillStyle(color);
-           r->context->m_fillStyle = value;
+           r->context->m_fillStyle = value->v4Value();
        } else {
            QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
            if (style && style->brush != r->context->state.fillStyle) {
                r->context->state.fillStyle = style->brush;
                r->context->buffer()->setFillStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
-               r->context->m_fillStyle = value;
+               r->context->m_fillStyle = value->v4Value();
                r->context->state.fillPatternRepeatX = style->patternRepeatX;
                r->context->state.fillPatternRepeatY = style->patternRepeatY;
            }
@@ -887,7 +887,7 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
        if (color.isValid() && r->context->state.fillStyle != QBrush(color)) {
             r->context->state.fillStyle = QBrush(color);
             r->context->buffer()->setFillStyle(r->context->state.fillStyle);
-            r->context->m_fillStyle = value;
+            r->context->m_fillStyle = value->v4Value();
        }
    }
 }
@@ -959,7 +959,7 @@ v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Handle<v8::String>, const v8::Access
             alphaString += QLatin1Char('0');
         return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
     }
-    return r->context->m_strokeStyle;
+    return r->context->m_strokeStyle.value();
 }
 
 static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -974,13 +974,13 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
         if (color.isValid()) {
             r->context->state.fillStyle = color;
             r->context->buffer()->setStrokeStyle(color);
-            r->context->m_strokeStyle = value;
+            r->context->m_strokeStyle = value->v4Value();
         } else {
             QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
             if (style && style->brush != r->context->state.strokeStyle) {
                 r->context->state.strokeStyle = style->brush;
                 r->context->buffer()->setStrokeStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
-                r->context->m_strokeStyle = value;
+                r->context->m_strokeStyle = value->v4Value();
                 r->context->state.strokePatternRepeatX = style->patternRepeatX;
                 r->context->state.strokePatternRepeatY = style->patternRepeatY;
 
@@ -991,7 +991,7 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
         if (color.isValid() && r->context->state.strokeStyle != QBrush(color)) {
              r->context->state.strokeStyle = QBrush(color);
              r->context->buffer()->setStrokeStyle(r->context->state.strokeStyle);
-             r->context->m_strokeStyle = value;
+             r->context->m_strokeStyle = value->v4Value();
         }
     }
 }
@@ -1526,7 +1526,7 @@ v8::Handle<v8::Value> ctx2d_path(v8::Handle<v8::String>, const v8::AccessorInfo 
 {
     QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-    return r->context->m_v8path;
+    return r->context->m_v4path.value();
 }
 
 static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
@@ -1544,7 +1544,7 @@ static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
         QString path = value->v4Value().toQString();
         QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
     }
-    r->context->m_v8path = value;
+    r->context->m_v4path = value->v4Value();
 }
 
 //rects

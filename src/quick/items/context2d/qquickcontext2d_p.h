@@ -55,6 +55,7 @@
 #include <private/qv8engine_p.h>
 #include <QtCore/QWaitCondition>
 
+#include <private/qv4value_p.h>
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
 
@@ -233,9 +234,9 @@ public:
     QQuickCanvasItem* m_canvas;
     QQuickContext2DCommandBuffer* m_buffer;
     QPainterPath m_path;
-    v8::Handle<v8::Value> m_fillStyle;
-    v8::Handle<v8::Value> m_strokeStyle;
-    v8::Handle<v8::Value> m_v8path;
+    QV4::PersistentValue m_fillStyle;
+    QV4::PersistentValue m_strokeStyle;
+    QV4::PersistentValue m_v4path;
     QV8Engine *m_v8engine;
     QSurface *m_surface;
     QOpenGLContext *m_glContext;
