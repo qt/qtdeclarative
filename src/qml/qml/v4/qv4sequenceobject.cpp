@@ -255,11 +255,11 @@ public:
             storeReference();
     }
 
-    QV4::PropertyAttributes containerQueryIndexed(QV4::ExecutionContext *ctx, uint index)
+    QV4::PropertyAttributes containerQueryIndexed(uint index) const
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(ctx, QLatin1String("Index out of range during indexed query"));
+            generateWarning(engine()->current, QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
         }
         if (m_isReference) {
@@ -425,7 +425,7 @@ public:
     }
 
 private:
-    void loadReference()
+    void loadReference() const
     {
         Q_ASSERT(m_object);
         Q_ASSERT(m_isReference);
@@ -443,7 +443,7 @@ private:
         QMetaObject::metacall(m_object, QMetaObject::WriteProperty, m_propertyIndex, a);
     }
 
-    Container m_container;
+    mutable Container m_container;
     QQmlGuard<QObject> m_object;
     int m_propertyIndex;
     bool m_isReference;
@@ -452,8 +452,8 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(ctx, index, hasProperty); }
     static void putIndexed(Managed *that, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(ctx, index, value); }
-    static QV4::PropertyAttributes queryIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerQueryIndexed(ctx, index); }
+    static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
+    { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
     static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(ctx, index); }
     static bool isEqualTo(Managed *that, Managed *other)

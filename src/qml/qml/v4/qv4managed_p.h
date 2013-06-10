@@ -99,8 +99,8 @@ struct ManagedVTable
     Value (*getIndexed)(Managed *, ExecutionContext *ctx, uint index, bool *hasProperty);
     void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
     void (*putIndexed)(Managed *, ExecutionContext *ctx, uint index, const Value &value);
-    PropertyAttributes (*query)(Managed *, ExecutionContext *ctx, String *name);
-    PropertyAttributes (*queryIndexed)(Managed *, ExecutionContext *ctx, uint index);
+    PropertyAttributes (*query)(const Managed *, String *name);
+    PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, ExecutionContext *ctx, String *name);
     bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
     void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
@@ -232,6 +232,11 @@ public:
     { vtbl->put(this, ctx, name, value); }
     void putIndexed(ExecutionContext *ctx, uint index, const Value &value)
     { vtbl->putIndexed(this, ctx, index, value); }
+    PropertyAttributes query(String *name) const
+    { return vtbl->query(this, name); }
+    PropertyAttributes queryIndexed(uint index) const
+    { return vtbl->queryIndexed(this, index); }
+
     bool deleteProperty(ExecutionContext *ctx, String *name)
     { return vtbl->deleteProperty(this, ctx, name); }
     bool deleteIndexedProperty(ExecutionContext *ctx, uint index)

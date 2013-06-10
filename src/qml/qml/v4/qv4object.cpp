@@ -74,8 +74,6 @@ Object::Object(ExecutionEngine *engine)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
-    , dynamicPropertyEnumerator(0)
-    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -87,8 +85,6 @@ Object::Object(ExecutionContext *context)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
-    , dynamicPropertyEnumerator(0)
-    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -100,8 +96,6 @@ Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
     , externalResource(0)
-    , dynamicPropertyEnumerator(0)
-    , dynamicPropertyQuery(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -377,11 +371,7 @@ bool Object::__hasProperty__(String *name) const
 {
     if (__getPropertyDescriptor__(name))
         return true;
-
-    if (dynamicPropertyQuery && !dynamicPropertyQuery(this, name).isEmpty())
-        return true;
-
-    return false;
+    return !query(name).isEmpty();
 }
 
 Value Object::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
@@ -404,13 +394,13 @@ void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
     static_cast<Object *>(m)->internalPutIndexed(ctx, index, value);
 }
 
-PropertyAttributes Object::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes Object::query(const Managed *m, String *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return queryIndexed(m, ctx, idx);
+        return queryIndexed(m, idx);
 
-    const Object *o = static_cast<Object *>(m);
+    const Object *o = static_cast<const Object *>(m);
     while (o) {
         uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX)
@@ -421,9 +411,9 @@ PropertyAttributes Object::query(Managed *m, ExecutionContext *ctx, String *name
     return Attr_Invalid;
 }
 
-PropertyAttributes Object::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
 {
-    const Object *o = static_cast<Object *>(m);
+    const Object *o = static_cast<const Object *>(m);
     while (o) {
         uint pidx = o->propertyIndexFromArrayIndex(index);
         if (pidx < UINT_MAX) {
@@ -1310,6 +1300,4 @@ void ForEachIteratorObject::markObjects(Managed *that)
     Object::markObjects(that);
     if (o->it.object)
         o->it.object->mark();
-    if (o->it.dynamicProperties)
-        o->it.dynamicProperties->mark();
 }

@@ -75,8 +75,6 @@ struct Q_QML_EXPORT ObjectIterator
     uint memberIndex;
     uint flags;
 
-    ArrayObject *dynamicProperties;
-    uint dynamicPropertyIndex;
     Property tmpDynamicProperty;
     uint wrappedListLength;
 

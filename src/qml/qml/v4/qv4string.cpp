@@ -154,14 +154,17 @@ void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
     o->putIndexed(ctx, index, value);
 }
 
-PropertyAttributes String::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes String::query(const Managed *m, String *name)
 {
+    uint idx = name->asArrayIndex();
+    if (idx != UINT_MAX)
+        return queryIndexed(m, idx);
     return Attr_Invalid;
 }
 
-PropertyAttributes String::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes String::queryIndexed(const Managed *m, uint index)
 {
-    String *that = static_cast<String *>(m);
+    const String *that = static_cast<const String *>(m);
     return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 

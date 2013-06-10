@@ -154,12 +154,12 @@ void RegExp::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Val
 {
 }
 
-PropertyAttributes RegExp::query(Managed *m, ExecutionContext *ctx, String *name)
+PropertyAttributes RegExp::query(const Managed *m, String *name)
 {
     return Attr_Invalid;
 }
 
-PropertyAttributes RegExp::queryIndexed(Managed *m, ExecutionContext *ctx, uint index)
+PropertyAttributes RegExp::queryIndexed(const Managed *m, uint index)
 {
     return Attr_Invalid;
 }

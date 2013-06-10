@@ -53,16 +53,12 @@ ObjectIterator::ObjectIterator(Object *o, uint flags)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
-    , dynamicProperties(0)
-    , dynamicPropertyIndex(0)
     , wrappedListLength(0)
 {
     tmpDynamicProperty.value = Value::undefinedValue();
     if (current) {
         if (current->asStringObject())
             this->flags |= CurrentIsString;
-        if (current->dynamicPropertyEnumerator)
-            dynamicProperties = current->dynamicPropertyEnumerator(current).asArrayObject();
 
         if (current->isListType()) {
             wrappedListLength = current->get(o->engine()->id_length).toUInt32();
@@ -135,7 +131,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         }
 
         while (arrayIndex < wrappedListLength) {
-            PropertyAttributes a = current->vtbl->queryIndexed(current, current->engine()->current, arrayIndex);
+            PropertyAttributes a = current->queryIndexed(arrayIndex);
             ++arrayIndex;
             if (!(flags & EnumerableOnly) || a.isEnumerable()) {
                 *index = arrayIndex - 1;
@@ -144,28 +140,6 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
                 tmpDynamicProperty.value = current->getIndexed(*index);
                 return &tmpDynamicProperty;
             }
-        }
-
-        if (dynamicProperties) {
-            const int len = dynamicProperties->arrayLength();
-            while (dynamicPropertyIndex < len) {
-                bool exists = false;
-                String *n = dynamicProperties->getIndexed(dynamicPropertyIndex).asString();
-                ++dynamicPropertyIndex;
-                if (!n)
-                    continue;
-                PropertyAttributes a;
-                if (current->dynamicPropertyQuery)
-                    a = current->dynamicPropertyQuery(current, n);
-                if (!(flags & EnumerableOnly) || a.isEnumerable()) {
-                    *name = n;
-                    if (attrs)
-                        *attrs = a;
-                    tmpDynamicProperty.value = current->get(n);
-                    return &tmpDynamicProperty;
-                }
-            }
-            dynamicProperties = 0;
         }
 
         if (memberIndex == internalClass->size) {
@@ -182,10 +156,6 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
 
             arrayIndex = 0;
             memberIndex = 0;
-            dynamicProperties = 0;
-            if (current && current->dynamicPropertyEnumerator)
-                dynamicProperties = current->dynamicPropertyEnumerator(current).asArrayObject();
-            dynamicPropertyIndex = 0;
 
             if (current && current->isListType()) {
                 wrappedListLength = current->get(current->engine()->id_length).toUInt32();

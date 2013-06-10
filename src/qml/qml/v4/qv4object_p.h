@@ -123,8 +123,6 @@ struct Q_QML_EXPORT Object: Managed {
     Property *arrayData;
     SparseArray *sparseArray;
     ExternalResource *externalResource;
-    PropertyEnumeratorFunction dynamicPropertyEnumerator;
-    PropertyQueryFunction dynamicPropertyQuery;
 
     enum {
         InlinePropertySize = 4
@@ -339,6 +337,8 @@ public:
     using Managed::getIndexed;
     using Managed::put;
     using Managed::putIndexed;
+    using Managed::query;
+    using Managed::queryIndexed;
     using Managed::deleteProperty;
     using Managed::deleteIndexedProperty;
     using Managed::getLookup;
@@ -351,8 +351,8 @@ protected:
     static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
-    static PropertyAttributes query(Managed *m, ExecutionContext *ctx, String *name);
-    static PropertyAttributes queryIndexed(Managed *m, ExecutionContext *ctx, uint index);
+    static PropertyAttributes query(const Managed *m, String *name);
+    static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
     static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
     static void getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);

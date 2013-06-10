@@ -908,13 +908,6 @@ public:
         m_template = tmpl;
         if (!m_template)
             m_template = ObjectTemplate::New().get();
-        else {
-            if (m_template->m_fallbackPropertyEnumerator)
-                this->dynamicPropertyEnumerator = enumerateDynamicProperties;
-            if (m_template->m_fallbackPropertyQuery)
-                this->dynamicPropertyQuery = queryDynamicProperty;
-
-        }
 
         foreach (const ObjectTemplate::Accessor &acc, m_template->m_accessors) {
             PropertyAttributes attrs = Attr_Accessor;
@@ -938,21 +931,6 @@ public:
             QV4::Property *pd = this->insertMember(p.name.value().asString(), attrs);
             *pd = QV4::Property::fromValue(p.value);
         }
-    }
-
-    static QV4::Value enumerateDynamicProperties(QV4::Object *object)
-    {
-        V4V8Object<BaseClass> *that = static_cast<V4V8Object<BaseClass> *>(object);
-        return that->m_template->m_fallbackPropertyEnumerator(that->namedAccessorInfo())->v4Value();
-    }
-
-    static QV4::PropertyAttributes queryDynamicProperty(const QV4::Object *object, QV4::String *string)
-    {
-        const V4V8Object<BaseClass> *that = static_cast<const V4V8Object<BaseClass> *>(object);
-        Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(string), that->namedAccessorInfo());
-        if (result.IsEmpty())
-            return QV4::PropertyAttributes();
-        return propertyAttributesToFlags(result);
     }
 
     QExplicitlySharedDataPointer<ObjectTemplate> m_template;
@@ -1074,15 +1052,15 @@ protected:
         return flags;
     }
 
-    static PropertyAttributes query(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name)
+    static PropertyAttributes query(const QV4::Managed *m, QV4::String *name)
     {
-        V4V8Object *that = static_cast<V4V8Object*>(m);
+        const V4V8Object *that = static_cast<const V4V8Object*>(m);
         if (that->m_template->m_namedPropertyQuery) {
             Handle<Value> result = that->m_template->m_namedPropertyQuery(String::New(name), that->namedAccessorInfo());
             if (!result.IsEmpty())
                 return propertyAttributesToFlags(result);
         }
-        PropertyAttributes flags = BaseClass::query(m, ctx, name);
+        PropertyAttributes flags = BaseClass::query(m, name);
         if (flags.type() == PropertyAttributes::Generic && that->m_template->m_fallbackPropertySetter) {
             Handle<Value> result = that->m_template->m_fallbackPropertyQuery(String::New(name), that->fallbackAccessorInfo());
             if (!result.IsEmpty())
@@ -1092,16 +1070,16 @@ protected:
         return flags;
     }
 
-    static PropertyAttributes queryIndexed(QV4::Managed *m, ExecutionContext *ctx, uint index)
+    static PropertyAttributes queryIndexed(const QV4::Managed *m, uint index)
     {
-        V4V8Object *that = static_cast<V4V8Object*>(m);
+        const V4V8Object *that = static_cast<const V4V8Object*>(m);
         if (that->m_template->m_indexedPropertyQuery) {
             Handle<Value> result = that->m_template->m_indexedPropertyQuery(index, that->indexedAccessorInfo());
             if (!result.IsEmpty())
                 return propertyAttributesToFlags(result);
         }
 
-        return BaseClass::queryIndexed(m, ctx, index);
+        return BaseClass::queryIndexed(m, index);
     }
 
     static bool deleteProperty(QV4::Managed *m, ExecutionContext *ctx, QV4::String *name)
@@ -1325,6 +1303,7 @@ void ObjectTemplate::SetFallbackPropertyHandler(NamedPropertyGetter getter, Name
     m_fallbackPropertyQuery = query;
     m_fallbackPropertyDeleter = deleter;
     m_fallbackPropertyEnumerator = enumerator;
+    assert(!enumerator);
     m_fallbackPropertyData = data->v4Value();
 }
 
