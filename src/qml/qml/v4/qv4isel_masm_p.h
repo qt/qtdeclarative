@@ -792,9 +792,10 @@ protected:
     virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value);
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
+    virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void loadThisObject(V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);

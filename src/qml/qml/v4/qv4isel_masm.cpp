@@ -1137,6 +1137,12 @@ void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4
                          Assembler::TrustedImm32(argc));
 }
 
+void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
+{
+    // FIXME: do something more useful with this info
+    copyValue(source, target);
+}
+
 String *InstructionSelection::identifier(const QString &s)
 {
     String *str = engine()->newIdentifier(s);

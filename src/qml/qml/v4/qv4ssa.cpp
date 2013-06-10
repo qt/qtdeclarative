@@ -447,6 +447,7 @@ public:
 
 protected:
     virtual void visitPhi(Phi *) {};
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); };
 
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -683,6 +684,7 @@ protected:
         tempMapping[newIdx] = origIdx;
     }
 
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
     virtual void visitPhi(Phi *s) { renameTemp(s->targetTemp); }
 
     virtual void visitExp(Exp *s) { s->expr->accept(this); }
@@ -894,6 +896,7 @@ protected:
     virtual void visitRegExp(RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
     virtual void visitUnop(Unop *e) { e->expr->accept(this); }
     virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
     virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
@@ -1034,6 +1037,11 @@ protected:
     virtual void visitTemp(Temp *e) {
     }
     virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) {
+        // we do not have type information yet, so:
+        _sideEffect = true;
+    }
+
     virtual void visitUnop(Unop *e) {
         switch (e->op) {
         case V4IR::OpIncrement:
@@ -1181,6 +1189,10 @@ protected:
         setType(e, _ty.type);
     }
     virtual void visitClosure(Closure *) { _ty = TypingResult(ObjectType); } // TODO: VERIFY THIS!
+    virtual void visitConvert(Convert *e) {
+        _ty = run(e->expr);
+    }
+
     virtual void visitUnop(Unop *e) {
         _ty = run(e->expr);
         switch (e->op) {
@@ -1318,19 +1330,69 @@ protected:
 class TypePropagation: public StmtVisitor, public ExprVisitor {
     Type _ty;
 
-    void run(Expr *e, Type requestedType = UnknownType) {
+    void run(Expr *&e, Type requestedType = UnknownType) {
         qSwap(_ty, requestedType);
         e->accept(this);
         qSwap(_ty, requestedType);
+
+        if (requestedType != UnknownType)
+            if (e->type != requestedType)
+                if (requestedType & NumberType) {
+                    qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
+                    addConversion(e, requestedType);
+                }
+    }
+
+    struct Conversion {
+        Expr **expr;
+        Type targetType;
+        Stmt *stmt;
+
+        Conversion(Expr **expr = 0, Type targetType = UnknownType, Stmt *stmt = 0)
+            : expr(expr)
+            , targetType(targetType)
+            , stmt(stmt)
+        {}
+    };
+
+    Stmt *_currStmt;
+    QVector<Conversion> _conversions;
+
+    void addConversion(Expr *&expr, Type targetType) {
+        _conversions.append(Conversion(&expr, targetType, _currStmt));
     }
 
 public:
     TypePropagation() : _ty(UnknownType) {}
 
     void run(Function *f) {
-        foreach (BasicBlock *bb, f->basicBlocks)
-            foreach (Stmt *s, bb->statements)
+        foreach (BasicBlock *bb, f->basicBlocks) {
+            _conversions.clear();
+
+            foreach (Stmt *s, bb->statements) {
+                _currStmt = s;
                 s->accept(this);
+            }
+
+            foreach (const Conversion &conversion, _conversions) {
+                if (conversion.stmt->asMove() && conversion.stmt->asMove()->source->asTemp()) {
+                    *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
+                } else {
+                    Temp *target = bb->TEMP(bb->newTemp());
+                    target->type = conversion.targetType;
+                    Expr *convert = bb->CONVERT(*conversion.expr, conversion.targetType);
+                    Move *convCall = f->New<Move>();
+                    convCall->init(target, convert, OpInvalid);
+
+                    Temp *source = bb->TEMP(target->index);
+                    source->type = conversion.targetType;
+                    *conversion.expr = source;
+
+                    int idx = bb->statements.indexOf(conversion.stmt);
+                    bb->statements.insert(idx, convCall);
+                }
+            }
+        }
     }
 
 protected:
@@ -1345,8 +1407,57 @@ protected:
     virtual void visitName(Name *) {}
     virtual void visitTemp(Temp *) {}
     virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { run(e->expr, e->type); }
     virtual void visitUnop(Unop *e) { run(e->expr, e->type); }
-    virtual void visitBinop(Binop *e) { run(e->left, e->type); run(e->right, e->type); }
+    virtual void visitBinop(Binop *e) {
+        // FIXME: This routine needs more tuning!
+        switch (e->op) {
+        case OpAdd:
+        case OpSub:
+        case OpMul:
+        case OpDiv:
+        case OpMod:
+        case OpBitAnd:
+        case OpBitOr:
+        case OpBitXor:
+        case OpLShift:
+        case OpRShift:
+        case OpURShift:
+            run(e->left, e->type);
+            run(e->right, e->type);
+            break;
+
+        case OpGt:
+        case OpLt:
+        case OpGe:
+        case OpLe:
+            if (e->left->type == DoubleType)
+                run(e->right, DoubleType);
+            else if (e->right->type == DoubleType)
+                run(e->left, DoubleType);
+            else {
+                run(e->left, e->type);
+                run(e->right, e->type);
+            }
+            break;
+
+        case OpEqual:
+        case OpNotEqual:
+        case OpStrictEqual:
+        case OpStrictNotEqual:
+            break;
+
+        case OpInstanceof:
+        case OpIn:
+            run(e->left, e->type);
+            run(e->right, e->type);
+            break;
+
+        default:
+            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
+        }
+    }
     virtual void visitCall(Call *e) {
         run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
@@ -1375,11 +1486,15 @@ protected:
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
         foreach (Expr *e, s->incoming)
-            run(e, ty);
+            if (e->asConst())
+                run(e, ty);
     }
 };
 
 void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *source) {
+    if (target->type != source->type)
+        source = basicBlock->CONVERT(source, target->type);
+
     Move *s = function->New<Move>();
     s->init(target, source, OpInvalid);
     basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
@@ -1672,22 +1787,8 @@ void QQmlJS::linearize(V4IR::Function *function)
             function->basicBlocks[i]->index = i;
     }
 #endif
+
     function->removeSharedExpressions();
-//    if (qgetenv("NO_OPT").isEmpty())
-//        ConstantPropagation().run(function);
-
-//#ifndef QV4_NO_LIVENESS
-//    liveness(function);
-//#endif
-
-//    if (qgetenv("NO_OPT").isEmpty()) {
-//        removeDeadAssignments(function);
-//        removeUnreachableBlocks(function);
-//    }
-
-//    showMeTheCode(function);
-//    splitEdges(function);
-//    showMeTheCode(function);
 
 //    showMeTheCode(function);
 

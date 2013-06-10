@@ -103,6 +103,7 @@ struct RegExp;
 struct Name;
 struct Temp;
 struct Closure;
+struct Convert;
 struct Unop;
 struct Binop;
 struct Call;
@@ -192,6 +193,7 @@ struct ExprVisitor {
     virtual void visitName(Name *) = 0;
     virtual void visitTemp(Temp *) = 0;
     virtual void visitClosure(Closure *) = 0;
+    virtual void visitConvert(Convert *) = 0;
     virtual void visitUnop(Unop *) = 0;
     virtual void visitBinop(Binop *) = 0;
     virtual void visitCall(Call *) = 0;
@@ -226,6 +228,7 @@ struct Expr {
     virtual Name *asName() { return 0; }
     virtual Temp *asTemp() { return 0; }
     virtual Closure *asClosure() { return 0; }
+    virtual Convert *asConvert() { return 0; }
     virtual Unop *asUnop() { return 0; }
     virtual Binop *asBinop() { return 0; }
     virtual Call *asCall() { return 0; }
@@ -363,6 +366,21 @@ struct Closure: Expr {
 
     virtual void accept(ExprVisitor *v) { v->visitClosure(this); }
     virtual Closure *asClosure() { return this; }
+
+    virtual void dump(QTextStream &out);
+};
+
+struct Convert: Expr {
+    Expr *expr;
+
+    void init(Expr *expr, Type type)
+    {
+        this->expr = expr;
+        this->type = type;
+    }
+
+    virtual void accept(ExprVisitor *v) { v->visitConvert(this); }
+    virtual Convert *asConvert() { return this; }
 
     virtual void dump(QTextStream &out);
 };
@@ -786,6 +804,7 @@ struct BasicBlock {
 
     Closure *CLOSURE(Function *function);
 
+    Expr *CONVERT(Expr *expr, Type type);
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);
     Expr *CALL(Expr *base, ExprList *args = 0);
@@ -854,6 +873,7 @@ protected:
     virtual void visitName(Name *);
     virtual void visitTemp(Temp *);
     virtual void visitClosure(Closure *);
+    virtual void visitConvert(Convert *);
     virtual void visitUnop(Unop *);
     virtual void visitBinop(Binop *);
     virtual void visitCall(Call *);

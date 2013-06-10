@@ -149,6 +149,10 @@ void InstructionSelection::visitMove(V4IR::Move *s)
                     callValue(value, c->args, t);
                     return;
                 }
+            } else if (V4IR::Convert *c = s->source->asConvert()) {
+                Q_ASSERT(c->expr->asTemp());
+                convertType(c->expr->asTemp(), t);
+                return;
             }
         } else if (V4IR::Member *m = s->target->asMember()) {
             if (V4IR::Temp *base = m->base->asTemp()) {

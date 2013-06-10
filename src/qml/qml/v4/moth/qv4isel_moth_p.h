@@ -58,6 +58,7 @@ protected:
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);

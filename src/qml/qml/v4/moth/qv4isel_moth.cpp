@@ -187,6 +187,12 @@ void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4
     addInstruction(call);
 }
 
+void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
+{
+    // FIXME: do something more useful with this info
+    copyValue(source, target);
+}
+
 void InstructionSelection::constructActivationProperty(V4IR::Name *func,
                                                        V4IR::ExprList *args,
                                                        V4IR::Temp *result)

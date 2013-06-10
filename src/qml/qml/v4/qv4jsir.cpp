@@ -238,6 +238,11 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
     virtual void visitTemp(Temp *) {}
     virtual void visitClosure(Closure *) {}
 
+    virtual void visitConvert(Convert *e)
+    {
+        e->expr = cleanup(e->expr);
+    }
+
     virtual void visitUnop(Unop *e)
     {
         e->expr = cleanup(e->expr);
@@ -450,6 +455,14 @@ void Closure::dump(QTextStream &out)
     if (name.isEmpty())
         name.sprintf("%p", value);
     out << "closure(" << name << ')';
+}
+
+void Convert::dump(QTextStream &out)
+{
+    out << dumpStart(this);
+    out << "convert(";
+    expr->dump(out);
+    out << ')' << dumpEnd(this);
 }
 
 void Unop::dump(QTextStream &out)
@@ -733,6 +746,13 @@ Closure *BasicBlock::CLOSURE(Function *function)
     return clos;
 }
 
+Expr *BasicBlock::CONVERT(Expr *expr, Type type)
+{
+    Convert *e = function->New<Convert>();
+    e->init(expr, type);
+    return e;
+}
+
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
 { 
     Unop *e = function->New<Unop>();
@@ -979,6 +999,11 @@ void CloneExpr::visitTemp(Temp *e)
 void CloneExpr::visitClosure(Closure *e)
 {
     cloned = block->CLOSURE(e->value);
+}
+
+void CloneExpr::visitConvert(Convert *e)
+{
+    cloned = block->CONVERT(clone(e->expr), e->type);
 }
 
 void CloneExpr::visitUnop(Unop *e)
