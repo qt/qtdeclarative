@@ -230,8 +230,7 @@ public:
     ~QQuickContext2DEngineData();
 
     QV4::PersistentValue contextPrototype;
-    QV4::PersistentValue constructorGradient;
-    QV4::PersistentValue constructorPattern;
+    QV4::PersistentValue gradientProto;
     QV4::PersistentValue pixelArrayProto;
     QV4::PersistentValue constructorImageData;
 };
@@ -262,18 +261,24 @@ protected:
 
 DEFINE_MANAGED_VTABLE(QQuickJSContext2D);
 
-class QV8Context2DStyleResource : public QV8ObjectResource
+class QQuickContext2DStyle : public QV4::Object
 {
-    V8_RESOURCE_TYPE(Context2DStyleType)
+    Q_MANAGED
 public:
-    QV8Context2DStyleResource(QV8Engine *e)
-      : QV8ObjectResource(e)
+    QQuickContext2DStyle(QV4::ExecutionEngine *e)
+      : QV4::Object(e)
       , patternRepeatX(false)
       , patternRepeatY(false)
     {}
     QBrush brush;
     bool patternRepeatX:1;
     bool patternRepeatY:1;
+
+protected:
+    static void destroy(Managed *that)
+    {
+        static_cast<QQuickContext2DStyle *>(that)->~QQuickContext2DStyle();
+    }
 };
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
@@ -883,7 +888,7 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
            r->context->buffer()->setFillStyle(color);
            r->context->m_fillStyle = value->v4Value();
        } else {
-           QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
+           QQuickContext2DStyle *style = value->v4Value().as<QQuickContext2DStyle>();
            if (style && style->brush != r->context->state.fillStyle) {
                r->context->state.fillStyle = style->brush;
                r->context->buffer()->setFillStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
@@ -986,7 +991,7 @@ static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
             r->context->buffer()->setStrokeStyle(color);
             r->context->m_strokeStyle = value->v4Value();
         } else {
-            QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
+            QQuickContext2DStyle *style = value->v4Value().as<QQuickContext2DStyle>();
             if (style && style->brush != r->context->state.strokeStyle) {
                 r->context->state.strokeStyle = style->brush;
                 r->context->buffer()->setStrokeStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
@@ -1030,11 +1035,9 @@ static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
 
 
     QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     if (args.Length() == 4) {
-        QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
-        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
         qreal x0 = args[0]->NumberValue();
         qreal y0 = args[1]->NumberValue();
         qreal x1 = args[2]->NumberValue();
@@ -1044,13 +1047,14 @@ static QV4::Value ctx2d_createLinearGradient(const v8::Arguments &args)
          || !qIsFinite(y0)
          || !qIsFinite(x1)
          || !qIsFinite(y1)) {
-            delete r;
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
         }
+        QQuickContext2DEngineData *ed = engineData(engine);
 
-        r->brush = QLinearGradient(x0, y0, x1, y1);
-        gradient->SetExternalResource(r);
-        return gradient->v4Value();
+        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
+        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->brush = QLinearGradient(x0, y0, x1, y1);
+        return QV4::Value::fromObject(gradient);
     }
 
     return args.ThisV4();
@@ -1076,12 +1080,9 @@ static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
 
 
     QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     if (args.Length() == 6) {
-        QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
-        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
-
         qreal x0 = args[0]->NumberValue();
         qreal y0 = args[1]->NumberValue();
         qreal r0 = args[2]->NumberValue();
@@ -1095,17 +1096,18 @@ static QV4::Value ctx2d_createRadialGradient(const v8::Arguments &args)
          || !qIsFinite(r0)
          || !qIsFinite(r1)
          || !qIsFinite(y1)) {
-            delete r;
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
         }
 
         if (r0 < 0 || r1 < 0)
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
 
+        QQuickContext2DEngineData *ed = engineData(engine);
 
-        r->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
-        gradient->SetExternalResource(r);
-        return gradient->v4Value();
+        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
+        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
+        return QV4::Value::fromObject(gradient);
     }
 
     return args.ThisV4();
@@ -1131,28 +1133,26 @@ static QV4::Value ctx2d_createConicalGradient(const v8::Arguments &args)
 
 
     QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     if (args.Length() == 6) {
-        QQuickContext2DEngineData *ed = engineData(engine);
-        v8::Handle<v8::Object> gradient = ed->constructorGradient.value().asFunctionObject()->newInstance();
-        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
-
         qreal x = args[0]->NumberValue();
         qreal y = args[1]->NumberValue();
         qreal angle = DEGREES(args[2]->NumberValue());
         if (!qIsFinite(x) || !qIsFinite(y)) {
-            delete r;
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
         if (!qIsFinite(angle)) {
-            delete r;
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
-        r->brush = QConicalGradient(x, y, angle);
-        gradient->SetExternalResource(r);
-        return gradient->v4Value();
+        QQuickContext2DEngineData *ed = engineData(engine);
+
+        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
+        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->brush = QConicalGradient(x, y, angle);
+        return QV4::Value::fromObject(gradient);
     }
 
     return args.ThisV4();
@@ -1207,10 +1207,10 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
 
 
     QV8Engine *engine = V8ENGINE();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     if (args.Length() == 2) {
-        QQuickContext2DEngineData *ed = engineData(engine);
-        QV8Context2DStyleResource *styleResouce = new QV8Context2DStyleResource(engine);
+        QQuickContext2DStyle *pattern = new (v4->memoryManager) QQuickContext2DStyle(v4);
 
         QColor color = engine->toVariant(args[0]->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
@@ -1219,7 +1219,7 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
             if (patternMode >= 0 && patternMode < Qt::LinearGradientPattern) {
                 style = static_cast<Qt::BrushStyle>(patternMode);
             }
-            styleResouce->brush = QBrush(color, style);
+            pattern->brush = QBrush(color, style);
         } else {
             QImage patternTexture;
 
@@ -1233,19 +1233,19 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
             }
 
             if (!patternTexture.isNull()) {
-                styleResouce->brush.setTextureImage(patternTexture);
+                pattern->brush.setTextureImage(patternTexture);
 
                 QString repetition = args[1]->v4Value().toQString();
                 if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
-                    styleResouce->patternRepeatX = true;
-                    styleResouce->patternRepeatY = true;
+                    pattern->patternRepeatX = true;
+                    pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("repeat-x")) {
-                    styleResouce->patternRepeatX = true;
+                    pattern->patternRepeatX = true;
                 } else if (repetition == QStringLiteral("repeat-y")) {
-                    styleResouce->patternRepeatY = true;
+                    pattern->patternRepeatY = true;
                 } else if (repetition == QStringLiteral("no-repeat")) {
-                    styleResouce->patternRepeatY = false;
-                    styleResouce->patternRepeatY = false;
+                    pattern->patternRepeatY = false;
+                    pattern->patternRepeatY = false;
                 } else {
                     //TODO: exception: SYNTAX_ERR
                 }
@@ -1253,9 +1253,7 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
             }
         }
 
-        v8::Handle<v8::Object> pattern = ed->constructorPattern.value().asFunctionObject()->newInstance();
-        pattern->SetExternalResource(styleResouce);
-        return pattern->v4Value();
+        return QV4::Value::fromObject(pattern);
 
     }
     return QV4::Value::undefinedValue();
@@ -2740,26 +2738,26 @@ static QV4::Value ctx2d_putImageData(const v8::Arguments &args)
   gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
   \endcode
   */
-static QV4::Value ctx2d_gradient_addColorStop(const v8::Arguments &args)
+static QV4::Value ctx2d_gradient_addColorStop(QV4::SimpleCallContext *ctx)
 {
-    QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(args.This());
+    QQuickContext2DStyle *style = ctx->thisObject.as<QQuickContext2DStyle>();
     if (!style)
         V4THROW_ERROR("Not a CanvasGradient object");
 
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (args.Length() == 2) {
+    if (ctx->argumentCount == 2) {
 
         if (!style->brush.gradient())
             V4THROW_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
         QGradient gradient = *(style->brush.gradient());
-        qreal pos = args[0]->NumberValue();
+        qreal pos = ctx->arguments[0].toNumber();
         QColor color;
 
-        if (args[1]->IsObject()) {
-            color = engine->toVariant(args[1]->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
+        if (ctx->arguments[1].asObject()) {
+            color = engine->toVariant(ctx->arguments[1], qMetaTypeId<QColor>()).value<QColor>();
         } else {
-            color = qt_color_from_string(args[1]->v4Value());
+            color = qt_color_from_string(ctx->arguments[1]);
         }
         if (pos < 0.0 || pos > 1.0 || !qIsFinite(pos)) {
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
@@ -2773,7 +2771,7 @@ static QV4::Value ctx2d_gradient_addColorStop(const v8::Arguments &args)
         style->brush = gradient;
     }
 
-    return args.ThisV4();
+    return ctx->thisObject;
 }
 
 void QQuickContext2D::scale(qreal x,  qreal y)
@@ -3570,18 +3568,13 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     QQuickJSContext2D::initClass(v4Engine, QV4::Value::fromObject(v4Prototype));
     contextPrototype.value().asObject()->prototype->prototype = v4Prototype;
 
-    v8::Handle<v8::FunctionTemplate> ftGradient = v8::FunctionTemplate::New();
-    ftGradient->InstanceTemplate()->SetHasExternalResource(true);
-    ftGradient->PrototypeTemplate()->Set(v8::String::New("addColorStop"), V8FUNCTION(ctx2d_gradient_addColorStop, engine));
-    constructorGradient = ftGradient->GetFunction()->v4Value();
+    QV4::Object *proto = v4->newObject();
+    proto->defineDefaultProperty(v4, QStringLiteral("addColorStop"), ctx2d_gradient_addColorStop, 0);
+    gradientProto = QV4::Value::fromObject(proto);
 
-    v8::Handle<v8::FunctionTemplate> ftPattern = v8::FunctionTemplate::New();
-    ftPattern->InstanceTemplate()->SetHasExternalResource(true);
-    constructorPattern = ftPattern->GetFunction()->v4Value();
-
-    QV4::Object *protoPixelArray = v4->newObject();
-    protoPixelArray->defineAccessorProperty(v4->id_length, ctx2d_pixelArray_length, 0);
-    pixelArrayProto = QV4::Value::fromObject(protoPixelArray);
+    proto = v4->newObject();
+    proto->defineAccessorProperty(v4->id_length, ctx2d_pixelArray_length, 0);
+    pixelArrayProto = QV4::Value::fromObject(proto);
 
     v8::Handle<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::New(engine));
