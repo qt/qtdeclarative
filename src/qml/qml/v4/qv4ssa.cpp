@@ -1659,9 +1659,51 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
     }
 }
 
+void cleanupBasicBlocks(Function *function)
+{
+//        showMeTheCode(function);
+
+    // remove all basic blocks that have no incoming edges, but skip the entry block
+    QVector<BasicBlock *> W = function->basicBlocks;
+    W.removeFirst();
+    QSet<BasicBlock *> toRemove;
+
+    while (!W.isEmpty()) {
+        BasicBlock *bb = W.first();
+        W.removeFirst();
+        if (toRemove.contains(bb))
+            continue;
+        if (bb->in.isEmpty()) {
+            foreach (BasicBlock *outBB, bb->out) {
+                int idx = outBB->in.indexOf(bb);
+                if (idx != -1) {
+                    outBB->in.remove(idx);
+                    W.append(outBB);
+                }
+            }
+            toRemove.insert(bb);
+        }
+    }
+
+    // TODO: merge 2 basic blocks A and B if A has one outgoing edge (to B), B has one incoming
+    // edge (from A), but not when A has more than 1 incoming edge and B has more than one
+    // outgoing edge.
+
+    foreach (BasicBlock *bb, toRemove) {
+        foreach (Stmt *s, bb->statements)
+            s->destroyData();
+        int idx = function->basicBlocks.indexOf(bb);
+        if (idx != -1)
+            function->basicBlocks.remove(idx);
+        delete bb;
+    }
+
+    // re-number all basic blocks:
+    for (int i = 0; i < function->basicBlocks.size(); ++i)
+        function->basicBlocks[i]->index = i;
+}
+
 } // end of anonymous namespace
-
-
 
 void QQmlJS::linearize(V4IR::Function *function)
 {
@@ -1669,124 +1711,12 @@ void QQmlJS::linearize(V4IR::Function *function)
     qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!") << " with " << function->basicBlocks.size() << " basic blocks." << endl << flush;
 #endif
 
+    // Number all basic blocks, so we have nice numbers in the dumps:
     for (int i = 0; i < function->basicBlocks.size(); ++i)
         function->basicBlocks[i]->index = i;
     showMeTheCode(function);
 
-#if 0
-    V4IR::BasicBlock *exitBlock = function->basicBlocks.last();
-    assert(exitBlock->isTerminated());
-    assert(exitBlock->terminator()->asRet());
-
-    QSet<V4IR::BasicBlock *> V;
-    V.insert(exitBlock);
-
-    QVector<V4IR::BasicBlock *> trace;
-
-    for (int i = 0; i < function->basicBlocks.size(); ++i) {
-        V4IR::BasicBlock *block = function->basicBlocks.at(i);
-        if (!block->isTerminated() && (i + 1) < function->basicBlocks.size()) {
-            V4IR::BasicBlock *next = function->basicBlocks.at(i + 1);
-            block->JUMP(next);
-        }
-    }
-
-    struct I { static void trace(V4IR::BasicBlock *block, QSet<V4IR::BasicBlock *> *V,
-                                 QVector<V4IR::BasicBlock *> *output) {
-            if (block == 0 || V->contains(block))
-                return;
-
-            V->insert(block);
-            block->index = output->size();
-            output->append(block);
-
-            if (V4IR::Stmt *term = block->terminator()) {
-                if (V4IR::Jump *j = term->asJump()) {
-                    trace(j->target, V, output);
-                } else if (V4IR::CJump *cj = term->asCJump()) {
-                    if (! V->contains(cj->iffalse))
-                        trace(cj->iffalse, V, output);
-                    else
-                        trace(cj->iftrue, V, output);
-                } else if (V4IR::Try *t = term->asTry()) {
-                    trace(t->tryBlock, V, output);
-                    trace(t->catchBlock, V, output);
-                }
-            }
-
-            // We could do this for each type above, but it is safer to have a
-            // "catchall" here
-            for (int ii = 0; ii < block->out.count(); ++ii)
-                trace(block->out.at(ii), V, output);
-        }
-    };
-
-    I::trace(function->basicBlocks.first(), &V, &trace);
-
-    V.insert(exitBlock);
-    exitBlock->index = trace.size();
-    trace.append(exitBlock);
-
-    QVarLengthArray<V4IR::BasicBlock*> blocksToDelete;
-    foreach (V4IR::BasicBlock *b, function->basicBlocks) {
-        if (!V.contains(b)) {
-            foreach (V4IR::BasicBlock *out, b->out) {
-                int idx = out->in.indexOf(b);
-                if (idx >= 0)
-                    out->in.remove(idx);
-            }
-            blocksToDelete.append(b);
-        }
-    }
-    foreach (V4IR::BasicBlock *b, blocksToDelete)
-        foreach (V4IR::Stmt *s, b->statements)
-            s->destroyData();
-    qDeleteAll(blocksToDelete);
-    function->basicBlocks = trace;
-#else
-    {
-//        showMeTheCode(function);
-
-        // remove all basic blocks that have no incoming edges, but skip the entry block
-        QVector<BasicBlock *> W = function->basicBlocks;
-        W.removeFirst();
-        QSet<BasicBlock *> toRemove;
-
-        while (!W.isEmpty()) {
-            BasicBlock *bb = W.first();
-            W.removeFirst();
-            if (toRemove.contains(bb))
-                continue;
-            if (bb->in.isEmpty()) {
-                foreach (BasicBlock *outBB, bb->out) {
-                    int idx = outBB->in.indexOf(bb);
-                    if (idx != -1) {
-                        outBB->in.remove(idx);
-                        W.append(outBB);
-                    }
-                }
-                toRemove.insert(bb);
-            }
-        }
-
-        // TODO: merge 2 basic blocks A and B if A has one outgoing edge (to B), B has one incoming
-        // edge (from A), but not when A has more than 1 incoming edge and B has more than one
-        // outgoing edge.
-
-        foreach (BasicBlock *bb, toRemove) {
-            foreach (Stmt *s, bb->statements)
-                s->destroyData();
-            int idx = function->basicBlocks.indexOf(bb);
-            if (idx != -1)
-                function->basicBlocks.remove(idx);
-            delete bb;
-        }
-
-        // number all basic blocks:
-        for (int i = 0; i < function->basicBlocks.size(); ++i)
-            function->basicBlocks[i]->index = i;
-    }
-#endif
+    cleanupBasicBlocks(function);
 
     function->removeSharedExpressions();
 
@@ -1820,11 +1750,11 @@ void QQmlJS::linearize(V4IR::Function *function)
 
 //        qout << "Doing type propagation..." << endl;
         TypePropagation().run(function);
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
         scheduleBlocks(function, df);
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
 //        qout << "Converting out of SSA..." << endl;
         convertOutOfSSA(function, tempMapping);
@@ -1836,6 +1766,4 @@ void QQmlJS::linearize(V4IR::Function *function)
 
 //        qout << "Finished." << endl;
     }
-
-    // TODO: remove blocks that only have a JUMP statement, and re-wire their predecessor/successor.
 }
