@@ -72,8 +72,9 @@ QVariant VariantObject::toVariant(const QV4::Value &v)
     if (v.isBoolean())
         return QVariant(v.booleanValue());
     if (v.isNumber()) {
-        if (v.isInt32())
-            return QVariant(v.toInt32());
+        QV4::Value val = v;
+        if (val.isInt32())
+            return QVariant(val.integerValue());
         return QVariant(v.asDouble());
     }
     if (v.isNull())

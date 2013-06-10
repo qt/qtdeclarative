@@ -517,9 +517,9 @@ void QQuickDragAttached::start(QQmlV4Function *args)
     Qt::DropActions supportedActions = d->supportedActions;
     // check arguments for supportedActions, maybe data?
     if (args->length() >= 1) {
-        v8::Handle<v8::Value> v = (*args)[0];
-        if (v->IsInt32()) {
-            supportedActions = Qt::DropActions(v->Int32Value());
+        QV4::Value v = (*args)[0];
+        if (v.isInt32()) {
+            supportedActions = Qt::DropActions(v.integerValue());
             d->overrideActions = true;
         }
     }

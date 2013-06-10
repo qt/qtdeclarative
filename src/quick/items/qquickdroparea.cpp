@@ -421,9 +421,9 @@ void QQuickDropEvent::accept(QQmlV4Function *args)
     Qt::DropAction action = event->dropAction();
 
     if (args->length() >= 1) {
-        v8::Handle<v8::Value> v = (*args)[0];
-        if (v->IsInt32())
-            action = Qt::DropAction(v->Int32Value());
+        QV4::Value v = (*args)[0];
+        if (v.isInt32())
+            action = Qt::DropAction(v.integerValue());
     }
     // get action from arguments.
     event->setDropAction(action);
