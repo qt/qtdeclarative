@@ -254,7 +254,16 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
 
             if (ty->isSingleton()) {
                 QQmlType::SingletonInstanceInfo *siinfo = ty->singletonInstanceInfo();
+                if (!siinfo) {
+                    qWarning() << "Internal error, " << tyName
+                               << "(" << QString::fromUtf8(ty->typeName()) << ")"
+                               << " is singleton, but has no singletonInstanceInfo";
+                    continue;
+                }
                 if (siinfo->qobjectCallback) {
+                    if (verbose)
+                        qDebug() << "Trying to get singleton for " << tyName
+                                 << " (" << siinfo->typeName  << ")";
                     siinfo->init(engine);
                     collectReachableMetaObjects(object, &metas);
                     object = siinfo->qobjectApi(engine);
@@ -263,15 +272,22 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
                     continue; // we don't handle QJSValue singleton types.
                 }
             } else {
+                if (verbose)
+                    qDebug() << "Trying to create object " << tyName
+                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
                 object = ty->create();
             }
 
             inObjectInstantiation.clear();
 
-            if (object)
+            if (object) {
+                if (verbose)
+                    qDebug() << "Got " << tyName
+                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
                 collectReachableMetaObjects(object, &metas);
-            else
+            } else {
                 qWarning() << "Could not create" << tyName;
+            }
         }
     }
 
