@@ -166,6 +166,15 @@ Item {
 }
 \endqml
 
+\li The \c with statement is deprecated. Using the \c with statement will issue a warning
+at loading time and we plan on removing support for it in Qt 5.2. It is generally considered
+a language feature that is not recommended for use due reducing the readability of code and disabling
+many optimizations in the engine. It is also forbidden in ECMAScript 5 strict mode.
+
+\li JavaScript binding expressions are executed in non-strict mode. However we
+plan on changing the default for bindings in Qt 5.2 to execute always in
+ECMAScript 5 strict mode.
+
 \endlist
 
 

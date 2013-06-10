@@ -229,6 +229,9 @@ private:
     QStringHash<Role *> roleHash;
 };
 
+/*!
+\internal
+*/
 class ListElement
 {
 public:
@@ -292,6 +295,9 @@ private:
     friend class ListModel;
 };
 
+/*!
+\internal
+*/
 class ListModel
 {
 public:
@@ -375,4 +381,3 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(ListModel *);
 
 #endif // QQUICKLISTMODEL_P_P_H
-

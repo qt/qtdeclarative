@@ -190,9 +190,6 @@ void tst_qquickanimatedimage::mirror_running()
     QImage frame0_expected = frame0.transformed(transform);
     QImage frame1_expected = frame1.transformed(transform);
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-31370 - sometimes fails on Mac");
-#endif
     QCOMPARE(frame0_flipped, frame0_expected);
     QCOMPARE(frame1_flipped, frame1_expected);
 
@@ -204,29 +201,28 @@ void tst_qquickanimatedimage::mirror_notRunning()
     QFETCH(QUrl, fileUrl);
 
     QQuickView window;
-    window.show();
-
     window.setSource(fileUrl);
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
-    QPixmap screenshot = QPixmap::fromImage(window.grabWindow());
+    QImage screenshot = window.grabWindow();
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
-    QPixmap expected = screenshot.transformed(transform);
+    QImage expected = screenshot.transformed(transform);
 
     int frame = anim->currentFrame();
     bool playing = anim->isPlaying();
     bool paused = anim->isPlaying();
 
     anim->setProperty("mirror", true);
-    screenshot = QPixmap::fromImage(window.grabWindow());
+    screenshot = window.grabWindow();
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-31370 - sometimes fails on Mac");
-#endif
+    screenshot.save("screen.png");
     QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status

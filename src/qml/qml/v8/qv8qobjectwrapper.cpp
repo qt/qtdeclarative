@@ -524,7 +524,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata && ddata->propertyCache)
             result = ddata->propertyCache->property(property, object, context);
-        else
+        if (!result)
             result = QQmlPropertyCache::property(engine->engine(), object, property, context, local);
     }
 

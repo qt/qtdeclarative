@@ -483,7 +483,9 @@ int main(int argc, char ** argv)
             QObject *topLevel = component->create();
             QQuickWindow *window = qobject_cast<QQuickWindow *>(topLevel);
             QQuickView* qxView = 0;
-            if (!window) {
+            if (window) {
+                engine.setIncubationController(window->incubationController());
+            } else {
                 QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
                 if (contentItem) {
                     qxView = new QQuickView(&engine, NULL);

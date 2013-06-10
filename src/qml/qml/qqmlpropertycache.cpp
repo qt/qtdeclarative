@@ -1317,25 +1317,10 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     Q_ASSERT(metaObject);
 
     QQmlPropertyData rv;
-    {
-        const QMetaObject *cmo = metaObject;
-        const QByteArray propertyName = property.toUtf8();
-        while (cmo) {
-            int idx = cmo->indexOfProperty(propertyName);
-            if (idx != -1) {
-                QMetaProperty p = cmo->property(idx);
-                if (p.isScriptable()) {
-                    rv.load(p);
-                    return rv;
-                } else {
-                    while (cmo && cmo->propertyOffset() >= idx)
-                        cmo = cmo->superClass();
-                }
-            } else {
-                cmo = 0;
-            }
-        }
-    }
+
+    /* It's important to check the method list before checking for properties;
+     * otherwise, if the meta object is dynamic, a property will be created even
+     * if not found and it might obscure a method having the same name. */
 
     //Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
@@ -1357,6 +1342,31 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
         }
     }
 
+    {
+        const QMetaObject *cmo = metaObject;
+        const QByteArray propertyName = property.toUtf8();
+        while (cmo) {
+            int idx = cmo->indexOfProperty(propertyName);
+            if (idx != -1) {
+                QMetaProperty p = cmo->property(idx);
+                if (p.isScriptable()) {
+                    rv.load(p);
+                    return rv;
+                } else {
+                    bool changed = false;
+                    while (cmo && cmo->propertyOffset() >= idx) {
+                        cmo = cmo->superClass();
+                        changed = true;
+                    }
+                    /* If the "cmo" variable didn't change, set it to 0 to
+                     * avoid running into an infinite loop */
+                    if (!changed) cmo = 0;
+                }
+            } else {
+                cmo = 0;
+            }
+        }
+    }
     return rv;
 }
 
@@ -1395,7 +1405,8 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
 
     if (cache) {
         rv = cache->property(name, obj, context);
-    } else {
+    }
+    if (!rv) {
         local = qQmlPropertyCacheCreate(obj->metaObject(), qQmlPropertyCacheToString(name));
         if (local.isValid())
             rv = &local;

@@ -60,4 +60,5 @@ headerdirs += ../../plugins
 sourcedirs += ../../plugins
 
 #exclude certain directories
-excludedirs = ../../imports/dialogs
+excludedirs += ../../imports/dialogs \
+               ../../imports/models
