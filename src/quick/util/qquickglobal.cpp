@@ -49,6 +49,9 @@
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
 
+#include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
+
 #ifdef Q_CC_MSVC
 // MSVC2010 warns about 'unused variable t', even if it's used in t->~T()
 #  pragma warning( disable : 4189 )
@@ -315,63 +318,70 @@ public:
 
         if (ok) *ok = false;
         QFont retn;
-        v8::Handle<v8::Object> obj = object.toValue();
+        QV4::Object *obj = object.toValue().asObject();
+        if (!obj) {
+            if (ok)
+                *ok = false;
+            return retn;
+        }
 
-        v8::Handle<v8::Value> vbold = obj->Get(v8::String::New("bold"));
-        v8::Handle<v8::Value> vcap = obj->Get(v8::String::New("capitalization"));
-        v8::Handle<v8::Value> vfam = obj->Get(v8::String::New("family"));
-        v8::Handle<v8::Value> vital = obj->Get(v8::String::New("italic"));
-        v8::Handle<v8::Value> vlspac = obj->Get(v8::String::New("letterSpacing"));
-        v8::Handle<v8::Value> vpixsz = obj->Get(v8::String::New("pixelSize"));
-        v8::Handle<v8::Value> vpntsz = obj->Get(v8::String::New("pointSize"));
-        v8::Handle<v8::Value> vstrk = obj->Get(v8::String::New("strikeout"));
-        v8::Handle<v8::Value> vundl = obj->Get(v8::String::New("underline"));
-        v8::Handle<v8::Value> vweight = obj->Get(v8::String::New("weight"));
-        v8::Handle<v8::Value> vwspac = obj->Get(v8::String::New("wordSpacing"));
+        QV4::ExecutionEngine *v4 = obj->engine();
+
+        QV4::Value vbold = obj->get(v4->newString(QStringLiteral("bold")));
+        QV4::Value vcap = obj->get(v4->newString(QStringLiteral("capitalization")));
+        QV4::Value vfam = obj->get(v4->newString(QStringLiteral("family")));
+        QV4::Value vital = obj->get(v4->newString(QStringLiteral("italic")));
+        QV4::Value vlspac = obj->get(v4->newString(QStringLiteral("letterSpacing")));
+        QV4::Value vpixsz = obj->get(v4->newString(QStringLiteral("pixelSize")));
+        QV4::Value vpntsz = obj->get(v4->newString(QStringLiteral("pointSize")));
+        QV4::Value vstrk = obj->get(v4->newString(QStringLiteral("strikeout")));
+        QV4::Value vundl = obj->get(v4->newString(QStringLiteral("underline")));
+        QV4::Value vweight = obj->get(v4->newString(QStringLiteral("weight")));
+        QV4::Value vwspac = obj->get(v4->newString(QStringLiteral("wordSpacing")));
 
         // pull out the values, set ok to true if at least one valid field is given.
-        if (!vbold.IsEmpty() && !vbold->IsNull() && !vbold->IsUndefined() && vbold->IsBoolean()) {
-            retn.setBold(vbold->BooleanValue());
+        if (vbold.isBoolean()) {
+            retn.setBold(vbold.booleanValue());
             if (ok) *ok = true;
         }
-        if (!vcap.IsEmpty() && !vcap->IsNull() && !vcap->IsUndefined() && vcap->IsInt32()) {
-            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap->Int32Value()));
+        if (vcap.isInt32()) {
+            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap.integerValue()));
             if (ok) *ok = true;
         }
-        if (!vfam.IsEmpty() && !vfam->IsNull() && !vfam->IsUndefined() && vfam->IsString()) {
-            retn.setFamily(vfam->v4Value().toQString());
+        if (vfam.isString()) {
+            retn.setFamily(vfam.toQString());
             if (ok) *ok = true;
         }
-        if (!vital.IsEmpty() && !vital->IsNull() && !vital->IsUndefined() && vital->IsBoolean()) {
-            retn.setItalic(vital->BooleanValue());
+        if (vital.isBoolean()) {
+            retn.setItalic(vital.booleanValue());
             if (ok) *ok = true;
         }
-        if (!vlspac.IsEmpty() && !vlspac->IsNull() && !vlspac->IsUndefined() && vlspac->IsNumber()) {
-            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac->NumberValue());
+        if (vlspac.isNumber()) {
+            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.asDouble());
             if (ok) *ok = true;
         }
-        if (!vpixsz.IsEmpty() && !vpixsz->IsNull() && !vpixsz->IsUndefined() && vpixsz->IsInt32()) {
-            retn.setPixelSize(vpixsz->Int32Value());
+        if (vpixsz.isInt32()) {
+            retn.setPixelSize(vpixsz.integerValue());
             if (ok) *ok = true;
         }
-        if (!vpntsz.IsEmpty() && !vpntsz->IsNull() && !vpntsz->IsUndefined() && vpntsz->IsNumber()) {
-            retn.setPointSize(vpntsz->NumberValue());
+        if (vpntsz.isNumber()) {
+            retn.setPointSize(vpntsz.asDouble());
             if (ok) *ok = true;
         }
-        if (!vstrk.IsEmpty() && !vstrk->IsNull() && !vstrk->IsUndefined() && vstrk->IsBoolean()) {
-            retn.setStrikeOut(vstrk->BooleanValue());
+        if (vstrk.isBoolean()) {
+            retn.setStrikeOut(vstrk.booleanValue());
             if (ok) *ok = true;
         }
-        if (!vundl.IsEmpty() && !vundl->IsNull() && !vundl->IsUndefined() && vundl->IsBoolean()) {
-            retn.setUnderline(vundl->BooleanValue());
+        if (vundl.isBoolean()) {
+            retn.setUnderline(vundl.booleanValue());
             if (ok) *ok = true;
         }
-        if (!vweight.IsEmpty() && !vweight->IsNull() && !vweight->IsUndefined() && vweight->IsInt32()) {
-            retn.setWeight(static_cast<QFont::Weight>(vweight->Int32Value()));
+        if (vweight.isInt32()) {
+            retn.setWeight(static_cast<QFont::Weight>(vweight.integerValue()));
             if (ok) *ok = true;
         }
-        if (!vwspac.IsEmpty() && !vwspac->IsNull() && !vwspac->IsUndefined() && vwspac->IsNumber()) {
-            retn.setWordSpacing(vwspac->NumberValue());
+        if (vwspac.isNumber()) {
+            retn.setWordSpacing(vwspac.asDouble());
             if (ok) *ok = true;
         }
 
@@ -381,20 +391,19 @@ public:
     static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, bool *ok)
     {
         if (ok) *ok = false;
-        v8::Handle<v8::Object> obj = object.toValue();
-        if (!obj->IsArray())
+        QV4::ArrayObject *array = object.toValue().asArrayObject();
+        if (!array)
             return QMatrix4x4();
 
-        v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(obj);
-        if (array->Length() != 16)
+        if (array->arrayLength() != 16)
             return QMatrix4x4();
 
         float matVals[16];
         for (uint32_t i = 0; i < 16; ++i) {
-            v8::Handle<v8::Value> v = array->Get(i);
-            if (!v->IsNumber())
+            QV4::Value v = array->getIndexed(i);
+            if (!v.isNumber())
                 return QMatrix4x4();
-            matVals[i] = v->NumberValue();
+            matVals[i] = v.asDouble();
         }
 
         if (ok) *ok = true;
