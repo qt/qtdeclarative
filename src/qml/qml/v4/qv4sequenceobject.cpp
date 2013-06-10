@@ -76,27 +76,27 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl())
 
-static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, const QString &element)
+static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
-    return QV4::Value::fromString(ctx, element);
+    return QV4::Value::fromString(engine, element);
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, int element)
+static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
 {
     return QV4::Value::fromInt32(element);
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, const QUrl &element)
+static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
 {
-    return QV4::Value::fromString(ctx, element.toString());
+    return QV4::Value::fromString(engine, element.toString());
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, qreal element)
+static QV4::Value convertElementToValue(QV4::ExecutionEngine *, qreal element)
 {
     return QV4::Value::fromDouble(element);
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionContext *ctx, bool element)
+static QV4::Value convertElementToValue(QV4::ExecutionEngine *, bool element)
 {
     return QV4::Value::fromBoolean(element);
 }
@@ -210,7 +210,7 @@ public:
         if (signedIdx < m_container.count()) {
             if (hasProperty)
                 *hasProperty = true;
-            return convertElementToValue(ctx, m_container.at(signedIdx));
+            return convertElementToValue(ctx->engine, m_container.at(signedIdx));
         }
         if (hasProperty)
             *hasProperty = false;
@@ -268,7 +268,29 @@ public:
             loadReference();
         }
         qint32 signedIdx = static_cast<qint32>(index);
-        return (index < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
+        return (signedIdx < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
+    }
+
+    Property *containerAdvanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    {
+        *name = 0;
+        *index = UINT_MAX;
+
+        if (m_isReference) {
+            if (!m_object)
+                return QQmlSequenceBase::advanceIterator(this, it, name, index, attrs);
+            loadReference();
+        }
+
+        if (it->arrayIndex < m_container.count()) {
+            if (attrs)
+                *attrs = QV4::Attr_Data;
+            *index = it->arrayIndex;
+            ++it->arrayIndex;
+            it->tmpDynamicProperty.value = convertElementToValue(engine(), m_container.at(*index));
+            return &it->tmpDynamicProperty;
+        }
+        return QQmlSequenceBase::advanceIterator(this, it, name, index, attrs);
     }
 
     bool containerDeleteIndexedProperty(QV4::ExecutionContext *ctx, uint index)
@@ -335,8 +357,8 @@ public:
             {
                 QV4::Managed *fun = this->m_compareFn.asManaged();
                 QV4::Value argv[2] = {
-                    convertElementToValue(this->m_ctx, lhs),
-                    convertElementToValue(this->m_ctx, rhs)
+                    convertElementToValue(this->m_ctx->engine, lhs),
+                    convertElementToValue(this->m_ctx->engine, rhs)
                 };
                 QV4::Value result = fun->call(this->m_ctx, QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
                 return result.toNumber() < 0;
@@ -458,6 +480,8 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(ctx, index); }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
+    static Property *advanceIterator(Managed *that, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, attrs); }
 
     static void destroy(Managed *that)
     {

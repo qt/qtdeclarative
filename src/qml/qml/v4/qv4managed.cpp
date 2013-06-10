@@ -63,6 +63,7 @@ const ManagedVTable Managed::static_vtbl =
     0,
     0,
     isEqualTo,
+    0,
     "Managed",
 };
 
@@ -198,7 +199,6 @@ bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;
 }
-
 
 Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)
 {

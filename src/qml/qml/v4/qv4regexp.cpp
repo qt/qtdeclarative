@@ -173,3 +173,8 @@ bool RegExp::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index
 {
     return false;
 }
+
+Property *RegExp::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
+{
+    return 0;
+}

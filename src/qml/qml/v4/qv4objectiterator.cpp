@@ -47,24 +47,13 @@ using namespace QV4;
 
 ObjectIterator::ObjectIterator(Object *o, uint flags)
     : object(o)
-    , internalClass(o ? o->internalClass : 0)
     , current(o)
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
-    , wrappedListLength(0)
 {
     tmpDynamicProperty.value = Value::undefinedValue();
-    if (current) {
-        if (current->asStringObject())
-            this->flags |= CurrentIsString;
-
-        if (current->isListType()) {
-            wrappedListLength = current->get(o->engine()->id_length).toUInt32();
-            assert(current->arrayDataLen == 0);
-        }
-    }
 }
 
 Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *attrs)
@@ -76,106 +65,17 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         if (!current)
             break;
 
-        if (flags & CurrentIsString) {
-            StringObject *s = static_cast<StringObject *>(current);
-            uint slen = s->value.stringValue()->toQString().length();
-            while (arrayIndex < slen) {
-                *index = arrayIndex;
-                ++arrayIndex;
-                if (attrs)
-                    *attrs = s->arrayAttributes ? s->arrayAttributes[arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
-                return s->__getOwnProperty__(*index);
-            }
-            flags &= ~CurrentIsString;
-            arrayNode = current->sparseArrayBegin();
-            // iterate until we're past the end of the string
-            while (arrayNode && arrayNode->key() < slen)
-                arrayNode = arrayNode->nextNode();
-        }
-
-        if (!arrayIndex)
-            arrayNode = current->sparseArrayBegin();
-
-        // sparse arrays
-        if (arrayNode) {
-            while (arrayNode != current->sparseArrayEnd()) {
-                int k = arrayNode->key();
-                uint pidx = arrayNode->value;
-                p = current->arrayData + pidx;
-                arrayNode = arrayNode->nextNode();
-                PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
-                if (!(flags & EnumerableOnly) || a.isEnumerable()) {
-                    arrayIndex = k + 1;
-                    *index = k;
-                    if (attrs)
-                        *attrs = a;
-                    return p;
-                }
-            }
-            arrayNode = 0;
-            arrayIndex = UINT_MAX;
-        }
-        // dense arrays
-        while (arrayIndex < current->arrayDataLen) {
-            uint pidx = current->propertyIndexFromArrayIndex(arrayIndex);
-            p = current->arrayData + pidx;
-            PropertyAttributes a = current->arrayAttributes ? current->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
-            ++arrayIndex;
-            if ((!current->arrayAttributes || !current->arrayAttributes[pidx].isGeneric())
-                 && (!(flags & EnumerableOnly) || a.isEnumerable())) {
-                *index = arrayIndex - 1;
-                if (attrs)
-                    *attrs = a;
-                return p;
-            }
-        }
-
-        while (arrayIndex < wrappedListLength) {
-            PropertyAttributes a = current->queryIndexed(arrayIndex);
-            ++arrayIndex;
-            if (!(flags & EnumerableOnly) || a.isEnumerable()) {
-                *index = arrayIndex - 1;
-                if (attrs)
-                    *attrs = a;
-                tmpDynamicProperty.value = current->getIndexed(*index);
-                return &tmpDynamicProperty;
-            }
-        }
-
-        if (memberIndex == internalClass->size) {
-            if (flags & WithProtoChain)
-                current = current->prototype;
-            else
-                current = 0;
-            if (current && current->asStringObject())
-                flags |= CurrentIsString;
-            else
-                flags &= ~CurrentIsString;
-
-            internalClass = current ? current->internalClass : 0;
-
-            arrayIndex = 0;
-            memberIndex = 0;
-
-            if (current && current->isListType()) {
-                wrappedListLength = current->get(current->engine()->id_length).toUInt32();
-                assert(current->arrayDataLen == 0);
-            }
-            continue;
-        }
-        String *n = internalClass->nameMap.at(memberIndex);
-        assert(n);
-        // ### check that it's not a repeated attribute
-
-        p = current->memberData + memberIndex;
-        PropertyAttributes a = internalClass->propertyData[memberIndex];
-        ++memberIndex;
-        if (!(flags & EnumerableOnly) || a.isEnumerable()) {
-            *name = n;
-            if (attrs)
-                *attrs = a;
+        p = current->advanceIterator(this, name, index, attrs);
+        if (p)
             return p;
-        }
+
+        if (flags & WithProtoChain)
+            current = current->prototype;
+        else
+            current = 0;
+
+        arrayIndex = 0;
+        memberIndex = 0;
     }
     return 0;
 }

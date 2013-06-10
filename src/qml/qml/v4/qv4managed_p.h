@@ -54,9 +54,11 @@ class MemoryManager;
 struct String;
 struct Object;
 struct ObjectPrototype;
+struct ObjectIterator;
 struct ExecutionContext;
 struct ScriptFunction;
 struct InternalClass;
+struct Property;
 
 struct BooleanObject;
 struct NumberObject;
@@ -106,6 +108,7 @@ struct ManagedVTable
     void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
     void (*setLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
     bool (*isEqualTo)(Managed *m, Managed *other);
+    Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     const char *className;
 };
 
@@ -128,6 +131,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     getLookup,                                  \
     setLookup,                                  \
     isEqualTo,                                  \
+    advanceIterator,                            \
     #classname                                  \
 }
 
@@ -248,6 +252,8 @@ public:
 
     bool isEqualTo(Managed *other)
     { return vtbl->isEqualTo(this, other); }
+    Property *advanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
+    { return vtbl->advanceIterator(this, it, name, index, attributes); }
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
@@ -290,6 +296,7 @@ public:
 private:
     friend class MemoryManager;
     friend struct Identifiers;
+    friend struct ObjectIterator;
 };
 
 }

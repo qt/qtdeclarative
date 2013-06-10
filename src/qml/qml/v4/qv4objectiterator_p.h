@@ -64,11 +64,9 @@ struct Q_QML_EXPORT ObjectIterator
         NoFlags = 0,
         EnumerableOnly = 0x1,
         WithProtoChain = 0x2,
-        CurrentIsString = 0x4
     };
 
     Object *object;
-    InternalClass *internalClass;
     Object *current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;
@@ -76,7 +74,6 @@ struct Q_QML_EXPORT ObjectIterator
     uint flags;
 
     Property tmpDynamicProperty;
-    uint wrappedListLength;
 
     ObjectIterator(Object *o, uint flags);
     Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);

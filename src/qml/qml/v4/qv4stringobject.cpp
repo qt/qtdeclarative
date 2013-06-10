@@ -99,6 +99,27 @@ Property *StringObject::getIndex(uint index) const
     return &tmpProperty;
 }
 
+Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+{
+    StringObject *s = static_cast<StringObject *>(m);
+    uint slen = s->value.stringValue()->toQString().length();
+    if (it->arrayIndex < slen) {
+        while (it->arrayIndex < slen) {
+            *index = it->arrayIndex;
+            ++it->arrayIndex;
+            if (attrs)
+                *attrs = s->arrayAttributes ? s->arrayAttributes[it->arrayIndex] : PropertyAttributes(Attr_NotWritable|Attr_NotConfigurable);
+            return s->__getOwnProperty__(*index);
+        }
+        it->arrayNode = s->sparseArrayBegin();
+        // iterate until we're past the end of the string
+        while (it->arrayNode && it->arrayNode->key() < slen)
+            it->arrayNode = it->arrayNode->nextNode();
+    }
+
+    return Object::advanceIterator(m, it, name, index, attrs);
+}
+
 void StringObject::markObjects(Managed *that)
 {
     StringObject *o = static_cast<StringObject *>(that);

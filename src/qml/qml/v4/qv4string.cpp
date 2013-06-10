@@ -92,6 +92,7 @@ const ManagedVTable String::static_vtbl =
     0 /*getLookup*/,
     0 /*setLookup*/,
     Managed::isEqualTo,
+    0 /*advanceIterator*/,
     "String",
 };
 

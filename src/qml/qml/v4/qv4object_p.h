@@ -345,6 +345,7 @@ public:
     using Managed::deleteIndexedProperty;
     using Managed::getLookup;
     using Managed::setLookup;
+    using Managed::advanceIterator;
 protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
@@ -359,6 +360,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
     static void getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
     static void setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
 
 
 private:

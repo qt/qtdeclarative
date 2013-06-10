@@ -108,6 +108,10 @@ Value QmlListWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
         return Value::fromUInt32(count);
     }
 
+    uint idx = name->asArrayIndex();
+    if (idx != UINT_MAX)
+        return getIndexed(m, ctx, idx, hasProperty);
+
     return Value::undefinedValue();
 }
 
@@ -139,23 +143,21 @@ void QmlListWrapper::destroy(Managed *that)
     w->~QmlListWrapper();
 }
 
-#if 0
-// ### does this need porting?
-v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)
+Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
 {
-    QV8ListResource *resource = v8_resource_cast<QV8ListResource>(info.This());
-
-    if (!resource || resource->object.isNull()) return v8::Array::New();
-
-    quint32 count = resource->property.count?resource->property.count(&resource->property):0;
-
-    v8::Handle<v8::Array> rv = v8::Array::New(count);
-
-    for (uint ii = 0; ii < count; ++ii)
-        rv->Set(ii, Value::fromDouble(ii));
-
-    return rv;
+    *name = 0;
+    *index = UINT_MAX;
+    QmlListWrapper *w = m->as<QmlListWrapper>();
+    quint32 count = w->property.count ? w->property.count(&w->property) : 0;
+    if (it->arrayIndex < count) {
+        if (attrs)
+            *attrs = QV4::Attr_Data;
+        *index = it->arrayIndex;
+        ++it->arrayIndex;
+        it->tmpDynamicProperty.value = QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index));
+        return &it->tmpDynamicProperty;
+    }
+    return QV4::Object::advanceIterator(m, it, name, index, attrs);
 }
-#endif
 
 QT_END_NAMESPACE

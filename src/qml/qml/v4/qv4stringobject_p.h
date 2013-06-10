@@ -57,6 +57,7 @@ struct StringObject: Object {
     Property *getIndex(uint index) const;
 
 protected:
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
 };

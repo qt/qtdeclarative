@@ -516,6 +516,67 @@ void Object::setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value
     o->put(ctx, l->name, value);
 }
 
+Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+{
+    Object *o = static_cast<Object *>(m);
+    *name = 0;
+    *index = UINT_MAX;
+
+    if (!it->arrayIndex)
+        it->arrayNode = o->sparseArrayBegin();
+
+    // sparse arrays
+    if (it->arrayNode) {
+        while (it->arrayNode != o->sparseArrayEnd()) {
+            int k = it->arrayNode->key();
+            uint pidx = it->arrayNode->value;
+            Property *p = o->arrayData + pidx;
+            it->arrayNode = it->arrayNode->nextNode();
+            PropertyAttributes a = o->arrayAttributes ? o->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
+            if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
+                it->arrayIndex = k + 1;
+                *index = k;
+                if (attrs)
+                    *attrs = a;
+                return p;
+            }
+        }
+        it->arrayNode = 0;
+        it->arrayIndex = UINT_MAX;
+    }
+    // dense arrays
+    while (it->arrayIndex < o->arrayDataLen) {
+        uint pidx = o->propertyIndexFromArrayIndex(it->arrayIndex);
+        Property *p = o->arrayData + pidx;
+        PropertyAttributes a = o->arrayAttributes ? o->arrayAttributes[pidx] : PropertyAttributes(Attr_Data);
+        ++it->arrayIndex;
+        if ((!o->arrayAttributes || !o->arrayAttributes[pidx].isGeneric())
+            && (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable())) {
+            *index = it->arrayIndex - 1;
+            if (attrs)
+                *attrs = a;
+            return p;
+        }
+    }
+
+    while (it->memberIndex < o->internalClass->size) {
+        String *n = o->internalClass->nameMap.at(it->memberIndex);
+        assert(n);
+        // ### check that it's not a repeated attribute
+
+        Property *p = o->memberData + it->memberIndex;
+        PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
+        ++it->memberIndex;
+        if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
+            *name = n;
+            if (attrs)
+                *attrs = a;
+            return p;
+        }
+    }
+
+    return 0;
+}
 
 // Section 8.12.3
 Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty)
