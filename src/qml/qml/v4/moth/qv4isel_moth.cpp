@@ -482,17 +482,13 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
 {
     bool singleArgIsTemp = false;
     if (e && e->next == 0 && e->expr->asTemp()) {
-        // ok, only 1 argument in the call...
-        const int idx = e->expr->asTemp()->index;
-        // We can only pass a reference into the stack, which holds temps that
-        // are not arguments (idx >= 0) nor locals (idx >= localCound).
-        singleArgIsTemp = idx >= _function->locals.size() && e->expr->asTemp()->scope == 0;
+        singleArgIsTemp = e->expr->asTemp()->kind == V4IR::Temp::VirtualRegister;
     }
 
     if (singleArgIsTemp) {
         // We pass single arguments as references to the stack, but only if it's not a local or an argument.
         argc = 1;
-        args = e->expr->asTemp()->index - _function->locals.size();
+        args = e->expr->asTemp()->index;
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = outgoingArgumentTempStart();

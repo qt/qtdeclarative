@@ -280,7 +280,7 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
     }
 };
 
-static QString dumpStart(Expr *e) {
+static QString dumpStart(const Expr *e) {
     if (e->type == UnknownType)
 //        return QStringLiteral("**UNKNOWN**");
         return QString();
@@ -288,14 +288,14 @@ static QString dumpStart(Expr *e) {
         return typeName(e->type) + QStringLiteral("{");
 }
 
-static const char *dumpEnd(Expr *e) {
+static const char *dumpEnd(const Expr *e) {
     if (e->type == UnknownType)
         return "";
     else
         return "}";
 }
 
-void Const::dump(QTextStream &out)
+void Const::dump(QTextStream &out) const
 {
     if (type != UndefinedType && type != NullType)
         out << dumpStart(this);
@@ -320,7 +320,7 @@ void Const::dump(QTextStream &out)
         out << dumpEnd(this);
 }
 
-void String::dump(QTextStream &out)
+void String::dump(QTextStream &out) const
 {
     out << '"' << escape(*value) << '"';
 }
@@ -346,7 +346,7 @@ QString String::escape(const QString &s)
     return r;
 }
 
-void RegExp::dump(QTextStream &out)
+void RegExp::dump(QTextStream &out) const
 {
     char f[3];
     int i = 0;
@@ -427,8 +427,7 @@ static const char *builtin_to_string(Name::Builtin b)
     return "builtin_(###FIXME)";
 };
 
-
-void Name::dump(QTextStream &out)
+void Name::dump(QTextStream &out) const
 {
     if (id)
         out << *id;
@@ -436,20 +435,32 @@ void Name::dump(QTextStream &out)
         out << builtin_to_string(builtin);
 }
 
-void Temp::dump(QTextStream &out)
+void Temp::dump(QTextStream &out) const
 {
     out << dumpStart(this);
-    if (index < 0) {
-        out << '#' << -(index + 1); // negative and 1-based.
-    } else {
-        out << '%' << index; // temp
+    switch (kind) {
+    case Formal:           out << '#' << index; break;
+    case ScopedFormal:     out << '#' << index
+                               << '@' << scope; break;
+    case Local:            out << '$' << index; break;
+    case ScopedLocal:      out << '$' << index
+                               << '@' << scope; break;
+    case VirtualRegister:  out << '%' << index; break;
+    default:               out << "INVALID";
     }
-    if (scope)
-        out << "@" << scope;
     out << dumpEnd(this);
 }
 
-void Closure::dump(QTextStream &out)
+bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
+{
+    if (t1.kind < t2.kind) return true;
+    if (t1.kind > t2.kind) return false;
+    if (t1.index < t2.index) return true;
+    if (t1.index > t2.index) return false;
+    return t1.scope < t2.scope;
+}
+
+void Closure::dump(QTextStream &out) const
 {
     QString name = value->name ? *value->name : QString();
     if (name.isEmpty())
@@ -457,7 +468,7 @@ void Closure::dump(QTextStream &out)
     out << "closure(" << name << ')';
 }
 
-void Convert::dump(QTextStream &out)
+void Convert::dump(QTextStream &out) const
 {
     out << dumpStart(this);
     out << "convert(";
@@ -465,14 +476,14 @@ void Convert::dump(QTextStream &out)
     out << ')' << dumpEnd(this);
 }
 
-void Unop::dump(QTextStream &out)
+void Unop::dump(QTextStream &out) const
 {
     out << dumpStart(this) << opname(op);
     expr->dump(out);
     out << dumpEnd(this);
 }
 
-void Binop::dump(QTextStream &out)
+void Binop::dump(QTextStream &out) const
 {
     out << dumpStart(this);
     left->dump(out);
@@ -481,7 +492,7 @@ void Binop::dump(QTextStream &out)
     out << dumpEnd(this);
 }
 
-void Call::dump(QTextStream &out)
+void Call::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '(';
@@ -493,7 +504,7 @@ void Call::dump(QTextStream &out)
     out << ')';
 }
 
-void New::dump(QTextStream &out)
+void New::dump(QTextStream &out) const
 {
     out << "new ";
     base->dump(out);
@@ -506,7 +517,7 @@ void New::dump(QTextStream &out)
     out << ')';
 }
 
-void Subscript::dump(QTextStream &out)
+void Subscript::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '[';
@@ -514,7 +525,7 @@ void Subscript::dump(QTextStream &out)
     out << ']';
 }
 
-void Member::dump(QTextStream &out)
+void Member::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '.' << *name;
@@ -681,10 +692,24 @@ unsigned BasicBlock::newTemp()
     return function->tempCount++;
 }
 
-Temp *BasicBlock::TEMP(int index, uint scope)
-{ 
+Temp *BasicBlock::TEMP(unsigned index)
+{
     Temp *e = function->New<Temp>();
-    e->init(index, scope);
+    e->init(Temp::VirtualRegister, index, 0);
+    return e;
+}
+
+Temp *BasicBlock::ARG(unsigned index, unsigned scope)
+{
+    Temp *e = function->New<Temp>();
+    e->init(scope ? Temp::ScopedFormal : Temp::Formal, index, scope);
+    return e;
+}
+
+Temp *BasicBlock::LOCAL(unsigned index, unsigned scope)
+{
+    Temp *e = function->New<Temp>();
+    e->init(scope ? Temp::ScopedLocal : Temp::Local, index, scope);
     return e;
 }
 
@@ -993,7 +1018,9 @@ void CloneExpr::visitName(Name *e)
 
 void CloneExpr::visitTemp(Temp *e)
 {
-    cloned = block->TEMP(e->index, e->scope);
+    Temp *t = block->function->New<Temp>();
+    t->init(e->kind, e->index, e->scope);
+    cloned = t;
 }
 
 void CloneExpr::visitClosure(Closure *e)

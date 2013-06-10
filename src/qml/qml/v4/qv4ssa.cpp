@@ -62,14 +62,17 @@
 #define QV4_NO_LIVENESS
 #undef SHOW_SSA
 
+QT_USE_NAMESPACE
+
 using namespace QQmlJS;
 
 namespace {
+using namespace V4IR;
+
 QTextStream qout(stdout, QIODevice::WriteOnly);
 
 void showMeTheCode(V4IR::Function *function)
 {
-    // TODO: maybe we should move this somewhere else?
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
         QVector<V4IR::Stmt *> code;
@@ -193,8 +196,6 @@ void showMeTheCode(V4IR::Function *function)
              << endl;
     }
 }
-
-using namespace V4IR;
 
 class DominatorTree {
     int N;
@@ -386,32 +387,38 @@ public:
 };
 
 class VariableCollector: public StmtVisitor, ExprVisitor {
-    QHash<int, QSet<BasicBlock *> > _defsites;
-    QHash<BasicBlock *, QSet<int> > A_orig;
-    QSet<int> nonLocals;
-    QSet<int> killed;
+    QHash<Temp, QSet<BasicBlock *> > _defsites;
+    QHash<BasicBlock *, QSet<Temp> > A_orig;
+    QSet<Temp> nonLocals;
+    QSet<Temp> killed;
 
     BasicBlock *currentBB;
-    int lastUncollectible;
+    const bool variablesCanEscape;
+    bool isCollectable(Temp *t) const
+    {
+        switch (t->kind) {
+        case Temp::Formal:
+        case Temp::ScopedFormal:
+        case Temp::ScopedLocal:
+            return false;
+        case Temp::Local:
+            return !variablesCanEscape;
+        case Temp::VirtualRegister:
+            return true;
+        default:
+            // PhysicalRegister and StackSlot can only get inserted later.
+            Q_ASSERT(!"Invalid temp kind!");
+            return false;
+        }
+    }
 
 public:
     VariableCollector(Function *function)
-        : lastUncollectible(function->variablesCanEscape() ? function->locals.size() - 1 : -1)
+        : variablesCanEscape(function->variablesCanEscape())
     {
 #ifdef SHOW_SSA
         qout << "Variables collected:" << endl;
 #endif // SHOW_SSA
-
-        if (!function->variablesCanEscape() && false) {
-            BasicBlock *entryBlock = function->basicBlocks.at(0);
-            for (int i = -function->formals.size(); i < 0; ++i) {
-                _defsites[i].insert(entryBlock);
-                A_orig[entryBlock].insert(i);
-#ifdef SHOW_SSA
-                qout << "\t#" << -i << " -> L0" << endl;
-#endif // SHOW_SSA
-            }
-        }
 
         foreach (BasicBlock *bb, function->basicBlocks) {
             currentBB = bb;
@@ -424,26 +431,29 @@ public:
 
 #ifdef SHOW_SSA
         qout << "Non-locals:" << endl;
-        foreach (int nonLocal, nonLocals)
-            qout << "\t" << nonLocal << endl;
+        foreach (const Temp &nonLocal, nonLocals) {
+            qout << "\t";
+            nonLocal.dump(qout);
+            qout << endl;
+        }
 
         qout << "end collected variables." << endl;
 #endif // SHOW_SSA
     }
 
-    QList<int> vars() const {
+    QList<Temp> vars() const {
         return _defsites.keys();
     }
 
-    QSet<BasicBlock *> defsite(int n) const {
+    QSet<BasicBlock *> defsite(const Temp &n) const {
         return _defsites[n];
     }
 
-    QSet<int> inBlock(BasicBlock *n) const {
+    QSet<Temp> inBlock(BasicBlock *n) const {
         return A_orig[n];
     }
 
-    bool isNonLocal(int var) const { return nonLocals.contains(var); }
+    bool isNonLocal(const Temp &var) const { return nonLocals.contains(var); }
 
 protected:
     virtual void visitPhi(Phi *) {};
@@ -483,44 +493,46 @@ protected:
         s->source->accept(this);
 
         if (Temp *t = s->target->asTemp()) {
-            if (t->scope == 0 && lastUncollectible < t->index) {
+            if (isCollectable(t)) {
 #ifdef SHOW_SSA
                 qout << '\t';
                 t->dump(qout);
                 qout << " -> L" << currentBB->index << endl;
 #endif // SHOW_SSA
 
-                _defsites[t->index].insert(currentBB);
-                A_orig[currentBB].insert(t->index);
+                _defsites[*t].insert(currentBB);
+                A_orig[currentBB].insert(*t);
 
                 // For semi-pruned SSA:
-                killed.insert(t->index);
+                killed.insert(*t);
             }
         }
     }
 
     virtual void visitTemp(Temp *t)
     {
-        if (t->scope == 0 && lastUncollectible < t->index)
-            if (!killed.contains(t->index))
-                nonLocals.insert(t->index);
+        if (isCollectable(t))
+            if (!killed.contains(*t))
+                nonLocals.insert(*t);
     }
 };
 
-void insertPhiNode(int a, BasicBlock *y, Function *f) {
-#ifdef SHOW_SSA
-    qout << "-> inserted phi node for variable " << a << " in block " << y->index << endl;
+void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
+#if defined(SHOW_SSA)
+    qout << "-> inserted phi node for variable ";
+    a.dump(qout);
+    qout << " in block " << y->index << endl;
 #endif
 
     Phi *phiNode = f->New<Phi>();
     phiNode->targetTemp = f->New<Temp>();
-    phiNode->targetTemp->init(a);
+    phiNode->targetTemp->init(a.kind, a.index, 0);
     y->statements.prepend(phiNode);
 
     phiNode->incoming.resize(y->in.size());
     for (int i = 0, ei = y->in.size(); i < ei; ++i) {
         Temp *t = f->New<Temp>();
-        t->init(a);
+        t->init(a.kind, a.index, 0);
         phiNode->incoming[i] = t;
     }
 }
@@ -528,14 +540,28 @@ void insertPhiNode(int a, BasicBlock *y, Function *f) {
 class VariableRenamer: public StmtVisitor, public ExprVisitor
 {
     Function *function;
-    QHash<int, QStack<int> > stack;
+    QHash<Temp, QStack<unsigned> > stack;
     QSet<BasicBlock *> seen;
 
-    QHash<int, unsigned> defCounts;
-    QHash<int, int> tempMapping;
+    QHash<Temp, unsigned> defCounts;
 
-    int lastUncollectible;
-
+    const bool variablesCanEscape;
+    bool isRenamable(Temp *t) const
+    {
+        switch (t->kind) {
+        case Temp::Formal:
+        case Temp::ScopedFormal:
+        case Temp::ScopedLocal:
+            return false;
+        case Temp::Local:
+            return !variablesCanEscape;
+        case Temp::VirtualRegister:
+            return true;
+        default:
+            Q_ASSERT(!"Invalid temp kind!");
+            return false;
+        }
+    }
     int nextFreeTemp() {
         const int next = function->tempCount++;
 //        qDebug()<<"Next free temp:"<<next;
@@ -576,28 +602,36 @@ class VariableRenamer: public StmtVisitor, public ExprVisitor
      */
 
 public:
-    VariableRenamer(Function *f) {
-        function = f;
+    VariableRenamer(Function *f)
+        : function(f)
+        , variablesCanEscape(f->variablesCanEscape())
+    {
+        if (!variablesCanEscape) {
+            Temp t;
+            t.init(Temp::Local, 0, 0);
+            for (int i = 0, ei = f->locals.size(); i != ei; ++i) {
+                t.index = i;
+                stack[t].push(nextFreeTemp());
+            }
+        }
 
-        int a = f->variablesCanEscape() ? f->locals.size() : a = 0;
-        lastUncollectible = a - 1;
-
-        for (; a < f->tempCount; ++a) {
-            stack[a].push(a);
+        Temp t;
+        t.init(Temp::VirtualRegister, 0, 0);
+        for (int i = 0, ei = f->tempCount; i != ei; ++i) {
+            t.index = i;
+            stack[t].push(i);
         }
     }
 
-    QHash<int, int> run() {
+    void run() {
         foreach (BasicBlock *n, function->basicBlocks)
             rename(n);
 
 #ifdef SHOW_SSA
-        qout << "Temp to local mapping:" << endl;
-        foreach (int key, tempMapping.keys())
-            qout << '\t' << key << " -> " << tempMapping[key] << endl;
+//        qout << "Temp to local mapping:" << endl;
+//        foreach (int key, tempMapping.keys())
+//            qout << '\t' << key << " -> " << tempMapping[key] << endl;
 #endif
-
-        return tempMapping;
     }
 
     void rename(BasicBlock *n) {
@@ -610,7 +644,7 @@ public:
         foreach (Stmt *s, n->statements)
             s->accept(this);
 
-        QHash<int, unsigned> dc = defCounts;
+        QHash<Temp, unsigned> dc = defCounts;
         defCounts.clear();
 
         // [2]:
@@ -619,10 +653,11 @@ public:
             Q_ASSERT(j >= 0 && j < Y->in.size());
             foreach (Stmt *s, Y->statements) {
                 if (Phi *phi = s->asPhi()) {
-                    int &a = phi->incoming[j]->asTemp()->index;
-                    int newTmp = stack[a].top();
+                    Temp *t = phi->incoming[j]->asTemp();
+                    unsigned newTmp = stack[*t].top();
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
-                    a = newTmp;
+                    t->index = newTmp;
+                    t->kind = Temp::VirtualRegister;
                 } else {
                     break;
                 }
@@ -634,7 +669,7 @@ public:
             rename(X);
 
         // [4]:
-        for (QHash<int, unsigned>::const_iterator i = dc.begin(), ei = dc.end(); i != ei; ++i) {
+        for (QHash<Temp, unsigned>::const_iterator i = dc.begin(), ei = dc.end(); i != ei; ++i) {
 //            qDebug()<<i.key() <<" -> " << i.value();
             for (unsigned j = 0, ej = i.value(); j < ej; ++j)
                 stack[i.key()].pop();
@@ -643,9 +678,10 @@ public:
 
 protected:
     virtual void visitTemp(Temp *e) { // only called for uses, not defs
-        if (e->scope == 0 && lastUncollectible < e->index) {
+        if (isRenamable(e)) {
 //            qDebug()<<"I: replacing use of"<<e->index<<"with"<<stack[e->index].top();
-            e->index = stack[e->index].top();
+            e->index = stack[*e].top();
+            e->kind = Temp::VirtualRegister;
         }
     }
 
@@ -661,27 +697,14 @@ protected:
     }
 
     void renameTemp(Temp *t) {
-        if (t->scope == 0 && lastUncollectible < t->index) {
-            int &a = t->index;
-            defCounts[a] = defCounts.value(a, 0) + 1;
+        if (isRenamable(t)) {
+            defCounts[*t] = defCounts.value(*t, 0) + 1;
             const int newIdx = nextFreeTemp();
-            stack[a].push(newIdx);
-            updateLocalMapping(a, newIdx);
+            stack[*t].push(newIdx);
 //            qDebug()<<"I: replacing def of"<<a<<"with"<<newIdx;
-            a = newIdx;
+            t->kind = Temp::VirtualRegister;
+            t->index = newIdx;
         }
-    }
-
-    void updateLocalMapping(int origIdx, int newIdx) {
-        if (origIdx < function->locals.size()) {
-            tempMapping[newIdx] = origIdx;
-            return;
-        }
-
-        int next = tempMapping.value(newIdx, INT32_MIN);
-        if (next == INT32_MIN)
-            return;
-        tempMapping[newIdx] = origIdx;
     }
 
     virtual void visitConvert(Convert *e) { e->expr->accept(this); }
@@ -725,7 +748,7 @@ protected:
     }
 };
 
-QHash<int, int> convertToSSA(Function *function, const DominatorTree &df)
+void convertToSSA(Function *function, const DominatorTree &df)
 {
 #ifdef SHOW_SSA
     qout << "Converting function ";
@@ -740,8 +763,8 @@ QHash<int, int> convertToSSA(Function *function, const DominatorTree &df)
     VariableCollector variables(function);
 
     // Place phi functions:
-    QHash<BasicBlock *, QSet<int> > A_phi;
-    foreach (int a, variables.vars()) {
+    QHash<BasicBlock *, QSet<Temp> > A_phi;
+    foreach (Temp a, variables.vars()) {
         if (!variables.isNonLocal(a))
             continue; // for semi-pruned SSA
 
@@ -759,9 +782,10 @@ QHash<int, int> convertToSSA(Function *function, const DominatorTree &df)
             }
         }
     }
+    showMeTheCode(function);
 
     // Rename variables:
-    return VariableRenamer(function).run();
+    VariableRenamer(function).run();
 }
 
 class DefUsesCalculator: public StmtVisitor, public ExprVisitor {
@@ -773,40 +797,53 @@ public:
     };
 
 private:
-    int _lastUncollectible;
-    QHash<int, DefUse> _defUses;
-    QHash<Stmt *, QList<int> > _usesPerStatement;
+    const bool _variablesCanEscape;
+    QHash<Temp, DefUse> _defUses;
+    QHash<Stmt *, QList<Temp> > _usesPerStatement;
 
     BasicBlock *_block;
     Stmt *_stmt;
 
+    bool isCollectible(Temp *t) const {
+        switch (t->kind) {
+        case Temp::Formal:
+        case Temp::ScopedFormal:
+        case Temp::ScopedLocal:
+            return false;
+        case Temp::Local:
+            return !_variablesCanEscape;
+        case Temp::VirtualRegister:
+            return true;
+        default:
+            Q_UNREACHABLE();
+            return false;
+        }
+    }
+
     void addUse(Temp *t) {
         Q_ASSERT(t);
-        if (t->scope || t->index <= _lastUncollectible)
+        if (!isCollectible(t))
             return;
 
-        _defUses[t->index].uses.append(_stmt);
-        _usesPerStatement[_stmt].append(t->index);
+        _defUses[*t].uses.append(_stmt);
+        _usesPerStatement[_stmt].append(*t);
     }
 
     void addDef(Temp *t) {
-        if (t->scope || t->index <= _lastUncollectible)
+        if (!isCollectible(t))
             return;
 
-        Q_ASSERT(!_defUses.contains(t->index) || _defUses.value(t->index).defStmt == 0 || _defUses.value(t->index).defStmt == _stmt);
+        Q_ASSERT(!_defUses.contains(*t) || _defUses.value(*t).defStmt == 0 || _defUses.value(*t).defStmt == _stmt);
 
-        DefUse &defUse = _defUses[t->index];
+        DefUse &defUse = _defUses[*t];
         defUse.defStmt = _stmt;
         defUse.blockOfStatement = _block;
     }
 
 public:
-    DefUsesCalculator(Function *function) {
-        if (function->variablesCanEscape())
-            _lastUncollectible = function->locals.size() - 1;
-        else
-            _lastUncollectible = -1;
-
+    DefUsesCalculator(Function *function)
+        : _variablesCanEscape(function->variablesCanEscape())
+    {
         foreach (BasicBlock *bb, function->basicBlocks) {
             _block = bb;
             foreach (Stmt *stmt, bb->statements) {
@@ -815,7 +852,7 @@ public:
             }
         }
 
-        QMutableHashIterator<int, DefUse> it(_defUses);
+        QMutableHashIterator<Temp, DefUse> it(_defUses);
         while (it.hasNext()) {
             it.next();
             if (!it.value().defStmt)
@@ -823,40 +860,41 @@ public:
         }
     }
 
-    QList<int> defs() const {
+    QList<Temp> defs() const {
         return _defUses.keys();
     }
 
-    void removeDef(int var) {
+    void removeDef(const Temp &var) {
         _defUses.remove(var);
     }
 
-    void addUses(int variable, QList<Stmt *>newUses)
+    void addUses(const Temp &variable, const QList<Stmt *> &newUses)
     { _defUses[variable].uses.append(newUses); }
 
-    int useCount(int variable) const
+    int useCount(const Temp &variable) const
     { return _defUses[variable].uses.size(); }
 
-    Stmt *defStmt(int variable) const
+    Stmt *defStmt(const Temp &variable) const
     { return _defUses[variable].defStmt; }
 
-    BasicBlock *defStmtBlock(int variable) const
+    BasicBlock *defStmtBlock(const Temp &variable) const
     { return _defUses[variable].blockOfStatement; }
 
-    void removeUse(Stmt *usingStmt, int var)
+    void removeUse(Stmt *usingStmt, const Temp &var)
     { _defUses[var].uses.removeAll(usingStmt); }
 
-    QList<int> usedVars(Stmt *s) const
+    QList<Temp> usedVars(Stmt *s) const
     { return _usesPerStatement[s]; }
 
-    QList<Stmt *> uses(int var) const
+    QList<Stmt *> uses(const Temp &var) const
     { return _defUses[var].uses; }
 
     void dump() const
     {
-        foreach (int var, _defUses.keys()) {
+        foreach (const Temp &var, _defUses.keys()) {
             const DefUse &du = _defUses[var];
-            qout<<var<<" -> defined in block "<<du.blockOfStatement->index<<", statement: ";
+            var.dump(qout);
+            qout<<" -> defined in block "<<du.blockOfStatement->index<<", statement: ";
             du.defStmt->dump(qout);
             qout<<endl<<"     uses:"<<endl;
             foreach (Stmt *s, du.uses) {
@@ -917,7 +955,7 @@ protected:
 bool hasPhiOnlyUses(Phi *phi, const DefUsesCalculator &defUses, QSet<Phi *> &collectedPhis)
 {
     collectedPhis.insert(phi);
-    foreach (Stmt *use, defUses.uses(phi->targetTemp->index)) {
+    foreach (Stmt *use, defUses.uses(*phi->targetTemp)) {
         if (Phi *dependentPhi = use->asPhi()) {
             if (!collectedPhis.contains(dependentPhi)) {
                 if (!hasPhiOnlyUses(dependentPhi, defUses, collectedPhis))
@@ -933,7 +971,7 @@ bool hasPhiOnlyUses(Phi *phi, const DefUsesCalculator &defUses, QSet<Phi *> &col
 void cleanupPhis(DefUsesCalculator &defUses)
 {
     QLinkedList<Phi *> phis;
-    foreach (int def, defUses.defs())
+    foreach (const Temp &def, defUses.defs())
         if (Phi *phi = defUses.defStmt(def)->asPhi())
             phis.append(phi);
 
@@ -949,38 +987,34 @@ void cleanupPhis(DefUsesCalculator &defUses)
     }
 
     foreach (Phi *phi, toRemove) {
-        int targetVar = phi->targetTemp->index;
+        Temp targetVar = *phi->targetTemp;
 
         BasicBlock *bb = defUses.defStmtBlock(targetVar);
         int idx = bb->statements.indexOf(phi);
         bb->statements.remove(idx);
 
-        foreach (int usedVar, defUses.usedVars(phi))
+        foreach (const Temp &usedVar, defUses.usedVars(phi))
             defUses.removeUse(phi, usedVar);
         defUses.removeDef(targetVar);
     }
 }
 
 class DeadCodeElimination: public ExprVisitor {
-    int _lastUncollectible;
+    const bool variablesCanEscape;
     DefUsesCalculator &_defUses;
-    QVector<int> _worklist;
+    QVector<Temp> _worklist;
 
 public:
     DeadCodeElimination(DefUsesCalculator &defUses, Function *function)
-        : _defUses(defUses)
+        : variablesCanEscape(function->variablesCanEscape())
+        , _defUses(defUses)
     {
-        _worklist = QVector<int>::fromList(_defUses.defs());
-
-        if (function->variablesCanEscape())
-            _lastUncollectible = function->locals.size() - 1;
-        else
-            _lastUncollectible = -1;
+        _worklist = QVector<Temp>::fromList(_defUses.defs());
     }
 
     void run() {
         while (!_worklist.isEmpty()) {
-            const int v = _worklist.first();
+            const Temp v = _worklist.first();
             _worklist.removeFirst();
 
             if (_defUses.useCount(v) == 0) {
@@ -989,12 +1023,16 @@ public:
                 if (!s) {
                     _defUses.removeDef(v);
                 } else if (!hasSideEffect(s)) {
-//                    qDebug()<<"-- defining stmt for"<<v<<"has no side effect";
+#ifdef SHOW_SSA
+                    qout<<"-- defining stmt for";
+                    v.dump(qout);
+                    qout<<"has no side effect"<<endl;
+#endif
                     QVector<Stmt *> &stmts = _defUses.defStmtBlock(v)->statements;
                     int idx = stmts.indexOf(s);
                     if (idx != -1)
                         stmts.remove(idx);
-                    foreach (int usedVar, _defUses.usedVars(s)) {
+                    foreach (const Temp &usedVar, _defUses.usedVars(s)) {
                         _defUses.removeUse(s, usedVar);
                         _worklist.append(usedVar);
                     }
@@ -1016,10 +1054,27 @@ private:
         // TODO: check if this can be moved to IR building.
         _sideEffect = false;
         if (Move *move = s->asMove()) {
-            if (Temp *t = move->target->asTemp())
-                if (t->index <= _lastUncollectible || t->scope)
+            if (Temp *t = move->target->asTemp()) {
+                switch (t->kind) {
+                case Temp::Formal:
+                case Temp::ScopedFormal:
+                case Temp::ScopedLocal:
                     return true;
-            move->source->accept(this);
+                case Temp::Local:
+                    if (variablesCanEscape)
+                        return true;
+                    else
+                        break;
+                case Temp::VirtualRegister:
+                    break;
+                default:
+                    Q_ASSERT(!"Invalid temp kind!");
+                    return true;
+                }
+                move->source->accept(this);
+            } else {
+                return true;
+            }
         }
         return _sideEffect;
     }
@@ -1073,8 +1128,9 @@ protected:
 };
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
+    bool _variablesCanEscape;
     const DefUsesCalculator &_defUses;
-    QHash<int, int> _tempTypes;
+    QHash<Temp, int> _tempTypes;
     QSet<Stmt *> _worklist;
     struct TypingResult {
         int type;
@@ -1084,13 +1140,15 @@ class TypeInference: public StmtVisitor, public ExprVisitor {
         explicit TypingResult(int type = UnknownType): type(type), fullyTyped(type != UnknownType) {}
     };
     TypingResult _ty;
-    int _localCount;
 
 public:
-    TypeInference(const DefUsesCalculator &defUses): _defUses(defUses), _ty(UnknownType) {}
+    TypeInference(const DefUsesCalculator &defUses)
+        : _defUses(defUses)
+        , _ty(UnknownType)
+    {}
 
     void run(Function *function) {
-        _localCount = function->variablesCanEscape() ? function->locals.size() : 0;
+        _variablesCanEscape = function->variablesCanEscape();
 
         // TODO: the worklist handling looks a bit inefficient... check if there is something better
         _worklist.clear();
@@ -1145,28 +1203,41 @@ private:
         return ty;
     }
 
+    bool isAlwaysAnObject(Temp *t) {
+        switch (t->kind) {
+        case Temp::Formal:
+        case Temp::ScopedFormal:
+        case Temp::ScopedLocal:
+            return true;
+        case Temp::Local:
+            return _variablesCanEscape;
+        default:
+            return false;
+        }
+    }
+
     void setType(Expr *e, int ty) {
         if (Temp *t = e->asTemp()) {
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
-            if (t->scope || t->index < _localCount) {
+            if (isAlwaysAnObject(t)) {
                 e->type = ObjectType;
             } else {
                 e->type = (Type) ty;
 
-                if (_tempTypes[t->index] != ty) {
-                    _tempTypes[t->index] = ty;
+                if (_tempTypes[*t] != ty) {
+                    _tempTypes[*t] = ty;
 
 #if defined(SHOW_SSA)
-                    foreach (Stmt *s, _defUses.uses(t->index)) {
+                    foreach (Stmt *s, _defUses.uses(*t)) {
                         qout << "Pushing back dependent stmt: ";
                         s->dump(qout);
                         qout << endl;
                     }
 #endif
 
-                    _worklist += QSet<Stmt *>::fromList(_defUses.uses(t->index));
+                    _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
                 }
             }
         } else {
@@ -1180,12 +1251,10 @@ protected:
     virtual void visitRegExp(RegExp *) { _ty = TypingResult(ObjectType); }
     virtual void visitName(Name *) { _ty = TypingResult(ObjectType); }
     virtual void visitTemp(Temp *e) {
-        if (e->scope)
-            _ty = TypingResult(ObjectType);
-        else if (e->index < _localCount)
+        if (isAlwaysAnObject(e))
             _ty = TypingResult(ObjectType);
         else
-            _ty = TypingResult(_tempTypes.value(e->index, UnknownType));
+            _ty = TypingResult(_tempTypes.value(*e, UnknownType));
         setType(e, _ty.type);
     }
     virtual void visitClosure(Closure *) { _ty = TypingResult(ObjectType); } // TODO: VERIFY THIS!
@@ -1338,7 +1407,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
         if (requestedType != UnknownType)
             if (e->type != requestedType)
                 if (requestedType & NumberType) {
-                    //qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
+//                    qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
                     addConversion(e, requestedType);
                 }
     }
@@ -1628,7 +1697,7 @@ void scheduleBlocks(Function *function, const DominatorTree &df)
  * has to be replaced by a phase in the specific ISel back-ends and do register allocation at the
  * same time. That way the huge number of redundant moves generated by this function are eliminated.
  */
-void convertOutOfSSA(Function *function, const QHash<int, int> &tempMapping) {
+void convertOutOfSSA(Function *function) {
     // We assume that edge-splitting is already done.
     foreach (BasicBlock *bb, function->basicBlocks) {
         QVector<Stmt *> &stmts = bb->statements;
@@ -1725,12 +1794,12 @@ void QQmlJS::linearize(V4IR::Function *function)
     if (!function->hasTry && !function->hasWith) {
 //        qout << "Starting edge splitting..." << endl;
         doEdgeSplitting(function);
-        showMeTheCode(function);
+//        showMeTheCode(function);
 
         // Calculate the dominator tree:
         DominatorTree df(function->basicBlocks);
 
-        QHash<int, int> tempMapping = convertToSSA(function, df);
+        convertToSSA(function, df);
 //        showMeTheCode(function);
 
 //        qout << "Starting def/uses calculation..." << endl;
@@ -1757,7 +1826,7 @@ void QQmlJS::linearize(V4IR::Function *function)
 //        showMeTheCode(function);
 
 //        qout << "Converting out of SSA..." << endl;
-        convertOutOfSSA(function, tempMapping);
+        convertOutOfSSA(function);
 //        showMeTheCode(function);
 
 #ifndef QT_NO_DEBUG

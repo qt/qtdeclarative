@@ -898,7 +898,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     } else {
         const int index = _env->findMember(ast->name.toString());
         assert(index != -1);
-        move(_block->TEMP(index), initializer);
+        move(_block->LOCAL(index, 0), initializer);
     }
 }
 
@@ -1437,11 +1437,11 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         int index = e->findMember(name);
         assert (index < e->members.size());
         if (index != -1) {
-            return _block->TEMP(index, scope);
+            return _block->LOCAL(index, scope);
         }
         const int argIdx = f->indexOfArgument(&name);
         if (argIdx != -1)
-            return _block->TEMP(-(argIdx + 1), scope);
+            return _block->ARG(argIdx, scope);
         ++scope;
         e = e->parent;
         f = f->outer;
@@ -1841,12 +1841,13 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_mode == FunctionCode) {
+        unsigned t = 0;
         for (Environment::MemberMap::iterator it = _env->members.begin(); it != _env->members.end(); ++it) {
             const QString &local = it.key();
             function->LOCAL(local);
-            unsigned t = entryBlock->newTemp();
             (*it).index = t;
-            entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(V4IR::UndefinedType, 0));
+            entryBlock->MOVE(entryBlock->LOCAL(t, 0), entryBlock->CONST(V4IR::UndefinedType, 0));
+            ++t;
         }
     } else {
         if (!_env->isStrict) {
@@ -1908,7 +1909,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                      _block->CLOSURE(function));
             } else {
                 assert(member.index >= 0);
-                move(_block->TEMP(member.index), _block->CLOSURE(function));
+                move(_block->LOCAL(member.index, 0), _block->CLOSURE(function));
             }
         }
     }

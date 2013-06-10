@@ -158,19 +158,26 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
             --scope;
         }
     }
-    if (t->index < 0) {
-        const int arg = -t->index - 1;
+    switch (t->kind) {
+    case V4IR::Temp::Formal:
+    case V4IR::Temp::ScopedFormal: {
         loadPtr(Address(context, offsetof(CallContext, arguments)), reg);
-        offset = arg * sizeof(Value);
-    } else if (t->index < f->locals.size()) {
+        offset = t->index * sizeof(Value);
+    } break;
+    case V4IR::Temp::Local:
+    case V4IR::Temp::ScopedLocal: {
         loadPtr(Address(context, offsetof(CallContext, locals)), reg);
         offset = t->index * sizeof(Value);
-    } else {
+    } break;
+    case V4IR::Temp::VirtualRegister: {
         assert(t->scope == 0);
-        const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size() + 1;
+        const int arg = _function->maxNumberOfArguments + t->index + 1;
         offset = - sizeof(Value) * (arg + 1);
         offset -= sizeof(void*) * calleeSavedRegisterCount;
         reg = LocalsRegister;
+    } break;
+    default:
+        Q_UNIMPLEMENTED();
     }
     return Pointer(reg, offset);
 }
@@ -574,7 +581,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     Assembler* oldAssembler = _as;
     _as = new Assembler(_function, _vmFunction, engine());
 
-    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) + 1;
+    int locals = (_function->tempCount + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;
     qSwap(_locals, locals);
     _as->enterStandardStackFrame(_locals);

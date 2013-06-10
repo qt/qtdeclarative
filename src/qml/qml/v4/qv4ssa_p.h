@@ -44,10 +44,12 @@
 
 #include "qv4jsir_p.h"
 
+QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 
 void linearize(V4IR::Function *function);
 
-}
+} // QQmlJS namespace
+QT_END_NAMESPACE
 
 #endif // QV4SSA_P_H

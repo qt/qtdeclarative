@@ -235,7 +235,7 @@ struct Expr {
     virtual New *asNew() { return 0; }
     virtual Subscript *asSubscript() { return 0; }
     virtual Member *asMember() { return 0; }
-    virtual void dump(QTextStream &out) = 0;
+    virtual void dump(QTextStream &out) const = 0;
 };
 
 struct ExprList {
@@ -261,7 +261,7 @@ struct Const: Expr {
     virtual void accept(ExprVisitor *v) { v->visitConst(this); }
     virtual Const *asConst() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct String: Expr {
@@ -275,7 +275,7 @@ struct String: Expr {
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
     virtual String *asString() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
     static QString escape(const QString &s);
 };
 
@@ -299,7 +299,7 @@ struct RegExp: Expr {
     virtual void accept(ExprVisitor *v) { v->visitRegExp(this); }
     virtual RegExp *asRegExp() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Name: Expr {
@@ -336,15 +336,29 @@ struct Name: Expr {
     virtual bool isLValue() { return true; }
     virtual Name *asName() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Temp: Expr {
-    int index;
-    int scope; // how many scopes outside the current one?
+    enum Kind {
+        Formal = 0,
+        ScopedFormal,
+        Local,
+        ScopedLocal,
+        VirtualRegister
+    };
 
-    void init(int index, int scope = 0)
+    unsigned index;
+    unsigned scope : 29; // how many scopes outside the current one?
+    unsigned kind  : 3;
+
+    void init(unsigned kind, unsigned index, unsigned scope)
     {
+        Q_ASSERT((kind == ScopedLocal && scope != 0) ||
+                 (kind == ScopedFormal && scope != 0) ||
+                 (scope == 0));
+
+        this->kind = kind;
         this->index = index;
         this->scope = scope;
     }
@@ -353,8 +367,16 @@ struct Temp: Expr {
     virtual bool isLValue() { return true; }
     virtual Temp *asTemp() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
+
+inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
+{ return t1.index == t2.index && t1.scope == t2.scope && t1.kind == t2.kind; }
+
+inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
+{ return t.index ^ (t.kind | (t.scope << 3)) ^ seed; }
+
+bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW;
 
 struct Closure: Expr {
     Function *value;
@@ -367,7 +389,7 @@ struct Closure: Expr {
     virtual void accept(ExprVisitor *v) { v->visitClosure(this); }
     virtual Closure *asClosure() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Convert: Expr {
@@ -382,7 +404,7 @@ struct Convert: Expr {
     virtual void accept(ExprVisitor *v) { v->visitConvert(this); }
     virtual Convert *asConvert() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Unop: Expr {
@@ -398,7 +420,7 @@ struct Unop: Expr {
     virtual void accept(ExprVisitor *v) { v->visitUnop(this); }
     virtual Unop *asUnop() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Binop: Expr {
@@ -416,7 +438,7 @@ struct Binop: Expr {
     virtual void accept(ExprVisitor *v) { v->visitBinop(this); }
     virtual Binop *asBinop() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Call: Expr {
@@ -438,7 +460,7 @@ struct Call: Expr {
     virtual void accept(ExprVisitor *v) { v->visitCall(this); }
     virtual Call *asCall() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct New: Expr {
@@ -460,7 +482,7 @@ struct New: Expr {
     virtual void accept(ExprVisitor *v) { v->visitNew(this); }
     virtual New *asNew() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Subscript: Expr {
@@ -477,7 +499,7 @@ struct Subscript: Expr {
     virtual bool isLValue() { return true; }
     virtual Subscript *asSubscript() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Member: Expr {
@@ -494,7 +516,7 @@ struct Member: Expr {
     virtual bool isLValue() { return true; }
     virtual Member *asMember() { return this; }
 
-    virtual void dump(QTextStream &out);
+    virtual void dump(QTextStream &out) const;
 };
 
 struct Stmt {
@@ -791,7 +813,9 @@ struct BasicBlock {
 
     unsigned newTemp();
 
-    Temp *TEMP(int index, uint scope = 0);
+    Temp *TEMP(unsigned kind);
+    Temp *ARG(unsigned index, unsigned scope);
+    Temp *LOCAL(unsigned index, unsigned scope);
 
     Expr *CONST(Type type, double value);
     Expr *STRING(const QString *value);

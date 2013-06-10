@@ -97,17 +97,15 @@ private:
         if (V4IR::Const *c = e->asConst()) {
             return Param::createValue(convertToValue(c));
         } else if (V4IR::Temp *t = e->asTemp()) {
-            const int index = t->index;
-            if (index < 0) {
-                return Param::createArgument(-index - 1, t->scope);
-            } else if (!t->scope) {
-                const int localCount = _function->locals.size();
-                if (index < localCount)
-                    return Param::createLocal(index);
-                else
-                    return Param::createTemp(index - localCount);
-            } else {
-                return Param::createScopedLocal(t->index, t->scope);
+            switch (t->kind) {
+            case V4IR::Temp::Formal:
+            case V4IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
+            case V4IR::Temp::Local: return Param::createLocal(t->index);
+            case V4IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
+            case V4IR::Temp::VirtualRegister: return Param::createTemp(t->index);
+            default:
+                Q_UNIMPLEMENTED();
+                return Param();
             }
         } else {
             Q_UNIMPLEMENTED();
@@ -126,7 +124,7 @@ private:
     void simpleMove(V4IR::Move *);
     void prepareCallArgs(V4IR::ExprList *, quint32 &, quint32 &);
 
-    int outgoingArgumentTempStart() const { return _function->tempCount - _function->locals.size(); }
+    int outgoingArgumentTempStart() const { return _function->tempCount; }
     int scratchTempIndex() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
     int frameSize() const { return scratchTempIndex() + 1; }
 

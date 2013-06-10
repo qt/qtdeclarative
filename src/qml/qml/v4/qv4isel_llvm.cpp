@@ -928,13 +928,19 @@ llvm::Value *InstructionSelection::getLLVMCondition(V4IR::Expr *expr)
 
 llvm::Value *InstructionSelection::getLLVMTemp(V4IR::Temp *temp)
 {
-    if (temp->index < 0) {
-        const int index = -temp->index -1;
+    // TODO
+    assert(!"TODO!");
+    Q_UNREACHABLE();
+    return 0;
+#if 0
+    if (temp->idx < 0) {
+        const int index = -temp->idx -1;
         return CreateCall2(getRuntimeFunction("__qmljs_llvm_get_argument"),
                            _llvmFunction->arg_begin(), getInt32(index));
     }
 
-    return _tempMap[temp->index];
+    return _tempMap[temp->idx];
+#endif
 }
 
 llvm::Value *InstructionSelection::getStringPtr(const QString &s)
