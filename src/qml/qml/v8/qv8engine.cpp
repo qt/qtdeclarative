@@ -142,7 +142,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         QV8ObjectResource *r = (QV8ObjectResource *)v8::Handle<v8::Value>(value)->ToObject()->GetExternalResource();
         if (r) {
             switch (r->resourceType()) {
-            case QV8ObjectResource::Context2DStyleType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::ParticleDataType:

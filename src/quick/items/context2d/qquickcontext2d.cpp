@@ -69,8 +69,6 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 
-#include <private/qv8objectresource_p.h>
-
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
 #endif
