@@ -233,7 +233,6 @@ public:
     QV4::PersistentValue contextPrototype;
     QV4::PersistentValue gradientProto;
     QV4::PersistentValue pixelArrayProto;
-    QV4::PersistentValue constructorImageData;
 };
 
 V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
@@ -380,6 +379,7 @@ public:
     bool patternRepeatX:1;
     bool patternRepeatY:1;
 
+    static QV4::Value gradient_proto_addColorStop(QV4::SimpleCallContext *ctx);
 protected:
     static void destroy(Managed *that)
     {
@@ -548,30 +548,61 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
     return QString();
 }
 
-struct QQuickCanvasPixelData : public QV4::Object
+struct QQuickJSContext2DPixelData : public QV4::Object
 {
     Q_MANAGED
-    QQuickCanvasPixelData(QV4::ExecutionEngine *engine)
+    QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
     }
 
     static void destroy(QV4::Managed *that) {
-        static_cast<QQuickCanvasPixelData *>(that)->~QQuickCanvasPixelData();
+        static_cast<QQuickJSContext2DPixelData *>(that)->~QQuickJSContext2DPixelData();
     }
     static QV4::Value getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty);
+    static void putIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value);
+
+    static QV4::Value proto_get_length(QV4::SimpleCallContext *ctx);
 
     QImage image;
 };
 
-DEFINE_MANAGED_VTABLE(QQuickCanvasPixelData);
+DEFINE_MANAGED_VTABLE(QQuickJSContext2DPixelData);
+
+struct QQuickJSContext2DImageData : public QV4::Object
+{
+    Q_MANAGED
+    QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
+        : QV4::Object(engine)
+    {
+        vtbl = &static_vtbl;
+
+        defineAccessorProperty(engine, QStringLiteral("width"), method_get_width, 0);
+        defineAccessorProperty(engine, QStringLiteral("height"), method_get_height, 0);
+        defineAccessorProperty(engine, QStringLiteral("data"), method_get_data, 0);
+    }
+
+    static QV4::Value method_get_width(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_height(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_data(QV4::SimpleCallContext *ctx);
+
+    static void markObjects(Managed *that) {
+        static_cast<QQuickJSContext2DImageData *>(that)->pixelData.mark();
+    }
+
+
+
+    QV4::Value pixelData;
+};
+
+DEFINE_MANAGED_VTABLE(QQuickJSContext2DImageData);
 
 static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QQuickCanvasPixelData *pixelData = new (v4->memoryManager) QQuickCanvasPixelData(v4);
+    QQuickJSContext2DPixelData *pixelData = new (v4->memoryManager) QQuickJSContext2DPixelData(v4);
     pixelData->prototype = ed->pixelArrayProto.value().asObject();
 
     if (image.isNull()) {
@@ -582,7 +613,9 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
         pixelData->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
-    return QV4::Value::fromObject(pixelData);
+    QQuickJSContext2DImageData *imageData = new (v4->memoryManager) QQuickJSContext2DImageData(v4);
+    imageData->pixelData = QV4::Value::fromObject(pixelData);
+    return QV4::Value::fromObject(imageData);
 }
 
 //static script functions
@@ -1333,7 +1366,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleCallConte
             QImage patternTexture;
 
             if (QV4::Object *o = ctx->arguments[0].asObject()) {
-                QQuickCanvasPixelData *pixelData = o->get(ctx->engine->newString(QStringLiteral("data"))).as<QQuickCanvasPixelData>();
+                QQuickJSContext2DPixelData *pixelData = o->get(ctx->engine->newString(QStringLiteral("data"))).as<QQuickJSContext2DPixelData>();
                 if (pixelData) {
                     patternTexture = pixelData->image;
                 }
@@ -2350,8 +2383,8 @@ QV4::Value QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCallContext
     if (ctx->argumentCount == 1) {
         QFontMetrics fm(r->context->state.font);
         uint width = fm.width(ctx->arguments[0].toQString());
-        QV4::Object *tm = v8::Isolate::GetEngine()->newObject();
-        tm->put(v8::Isolate::GetEngine()->current, v8::Isolate::GetEngine()->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
+        QV4::Object *tm = ctx->engine->newObject();
+        tm->put(ctx->engine->current, ctx->engine->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
         return QV4::Value::fromObject(tm);
     }
     return QV4::Value::undefinedValue();
@@ -2439,22 +2472,23 @@ QV4::Value QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallContext *
 
         pixmap = r->context->createPixmap(url);
     } else if (ctx->arguments[0].isObject()) {
-        QQuickImage *imageItem = 0;
-        if (QV4::QObjectWrapper *qobjectWrapper = ctx->arguments[0].as<QV4::QObjectWrapper>())
-            imageItem = qobject_cast<QQuickImage*>(qobjectWrapper->object());
-        QQuickCanvasItem *canvas = 0;
-        if (QV4::QObjectWrapper *qobjectWrapper = ctx->arguments[0].as<QV4::QObjectWrapper>())
-            canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object());
-
-        QQuickCanvasPixelData *pix = v8::Handle<v8::Object>(ctx->arguments[0])->GetInternalField(0)->v4Value().as<QQuickCanvasPixelData>();;
-        if (pix && !pix->image.isNull()) {
-            pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
-        } else if (imageItem) {
-            pixmap.take(r->context->createPixmap(imageItem->source()));
-        } else if (canvas) {
-            QImage img = canvas->toImage();
-            if (!img.isNull())
-                pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
+        if (QV4::QObjectWrapper *qobjectWrapper = ctx->arguments[0].as<QV4::QObjectWrapper>()) {
+            if (QQuickImage *imageItem = qobject_cast<QQuickImage*>(qobjectWrapper->object())) {
+                pixmap.take(r->context->createPixmap(imageItem->source()));
+            } else if (QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object())) {
+                QImage img = canvas->toImage();
+                if (!img.isNull())
+                    pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
+            } else {
+                V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+            }
+        } else if (QQuickJSContext2DImageData *imageData = ctx->arguments[0].as<QQuickJSContext2DImageData>()) {
+            QQuickJSContext2DPixelData *pix = imageData->pixelData.as<QQuickJSContext2DPixelData>();
+            if (pix && !pix->image.isNull()) {
+                pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
+            } else {
+                V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+            }
         } else {
             V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
@@ -2545,9 +2579,12 @@ QV4::Value QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallContext *
   \qmlproperty int QtQuick2::CanvasImageData::width
   Holds the actual width dimension of the data in the ImageData object, in device pixels.
  */
-v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+QV4::Value QQuickJSContext2DImageData::method_get_width(QV4::SimpleCallContext *ctx)
 {
-    QQuickCanvasPixelData *r = args.This()->GetInternalField(0)->v4Value().as<QQuickCanvasPixelData>();
+    QQuickJSContext2DImageData *imageData = ctx->thisObject.as<QQuickJSContext2DImageData>();
+    if (!imageData)
+        ctx->throwTypeError();
+    QQuickJSContext2DPixelData *r = imageData->pixelData.as<QQuickJSContext2DPixelData>();
     if (!r)
         return QV4::Value::fromInt32(0);
     return QV4::Value::fromInt32(r->image.width());
@@ -2557,12 +2594,14 @@ v8::Handle<v8::Value> ctx2d_imageData_width(v8::Handle<v8::String>, const v8::Ac
   \qmlproperty int QtQuick2::CanvasImageData::height
   Holds the actual height dimension of the data in the ImageData object, in device pixels.
   */
-v8::Handle<v8::Value> ctx2d_imageData_height(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+QV4::Value QQuickJSContext2DImageData::method_get_height(QV4::SimpleCallContext *ctx)
 {
-    QQuickCanvasPixelData *r = args.This()->GetInternalField(0)->v4Value().as<QQuickCanvasPixelData>();
+    QQuickJSContext2DImageData *imageData = ctx->thisObject.as<QQuickJSContext2DImageData>();
+    if (!imageData)
+        ctx->throwTypeError();
+    QQuickJSContext2DPixelData *r = imageData->pixelData.as<QQuickJSContext2DPixelData>();
     if (!r)
         return QV4::Value::fromInt32(0);
-
     return QV4::Value::fromInt32(r->image.height());
 }
 
@@ -2570,9 +2609,12 @@ v8::Handle<v8::Value> ctx2d_imageData_height(v8::Handle<v8::String>, const v8::A
   \qmlproperty object QtQuick2::CanvasImageData::data
   Holds the one-dimensional array containing the data in RGBA order, as integers in the range 0 to 255.
  */
-v8::Handle<v8::Value> ctx2d_imageData_data(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+QV4::Value QQuickJSContext2DImageData::method_get_data(QV4::SimpleCallContext *ctx)
 {
-    return args.This()->GetInternalField(0);
+    QQuickJSContext2DImageData *imageData = ctx->thisObject.as<QQuickJSContext2DImageData>();
+    if (!imageData)
+        ctx->throwTypeError();
+    return imageData->pixelData;
 }
 
 /*!
@@ -2593,18 +2635,18 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Handle<v8::String>, const v8::Acc
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
   This property is read only.
 */
-QV4::Value ctx2d_pixelArray_length(QV4::SimpleCallContext *ctx)
+QV4::Value QQuickJSContext2DPixelData::proto_get_length(QV4::SimpleCallContext *ctx)
 {
-    QQuickCanvasPixelData *r = ctx->thisObject.as<QQuickCanvasPixelData>();
+    QQuickJSContext2DPixelData *r = ctx->thisObject.as<QQuickJSContext2DPixelData>();
     if (!r || r->image.isNull())
         return QV4::Value::undefinedValue();
 
     return QV4::Value::fromInt32(r->image.width() * r->image.height() * 4);
 }
 
-QV4::Value QQuickCanvasPixelData::getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+QV4::Value QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    QQuickCanvasPixelData *r = m->as<QQuickCanvasPixelData>();
+    QQuickJSContext2DPixelData *r = m->as<QQuickJSContext2DPixelData>();
     if (!m)
         ctx->throwTypeError();
 
@@ -2632,11 +2674,13 @@ QV4::Value QQuickCanvasPixelData::getIndexed(QV4::Managed *m, QV4::ExecutionCont
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8::Value> value, const v8::AccessorInfo& info)
+void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
 {
-    QQuickCanvasPixelData *r = info.This()->v4Value().as<QQuickCanvasPixelData>();
+    QQuickJSContext2DPixelData *r = m->as<QQuickJSContext2DPixelData>();
+    if (!r)
+        ctx->throwTypeError();
 
-    const int v = value->Uint32Value();
+    const int v = value.toInt32();
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v >= 0 && v <= 255) {
         const quint32 w = r->image.width();
         const quint32 row = (index / 4) / w;
@@ -2659,7 +2703,6 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Handle<v8
             break;
         }
     }
-    return QV4::Value::undefinedValue();
 }
 /*!
   \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
@@ -2685,12 +2728,11 @@ QV4::Value QQuickJSContext2DPrototype::method_createImageData(QV4::SimpleCallCon
     QV8Engine *engine = ctx->engine->v8Engine;
 
     if (ctx->argumentCount == 1) {
-        if (ctx->arguments[0].isObject()) {
-            v8::Handle<v8::Object> imgData = ctx->arguments[0];
-            QQuickCanvasPixelData *pa = imgData->GetInternalField(0)->v4Value().as<QQuickCanvasPixelData>();
+        if (QQuickJSContext2DImageData *imgData = ctx->arguments[0].as<QQuickJSContext2DImageData>()) {
+            QQuickJSContext2DPixelData *pa = imgData->pixelData.as<QQuickJSContext2DPixelData>();
             if (pa) {
-                qreal w = imgData->Get(v8::String::New("width"))->v4Value().toNumber();
-                qreal h = imgData->Get(v8::String::New("height"))->v4Value().toNumber();
+                qreal w = pa->image.width();
+                qreal h = pa->image.height();
                 return qt_create_image_data(w, h, engine, QImage());
             }
         } else if (ctx->arguments[0].isString()) {
@@ -2762,11 +2804,14 @@ QV4::Value QQuickJSContext2DPrototype::method_putImageData(QV4::SimpleCallContex
     if (!qIsFinite(dx) || !qIsFinite(dy))
         V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
-    v8::Handle<v8::Object> imageData = ctx->arguments[0];
-    QQuickCanvasPixelData *pixelArray = imageData->Get(v8::String::New("data"))->v4Value().as<QQuickCanvasPixelData>();
+    QQuickJSContext2DImageData *imageData = ctx->arguments[0].as<QQuickJSContext2DImageData>();
+    if (!imageData)
+        return ctx->thisObject;
+
+    QQuickJSContext2DPixelData *pixelArray = imageData->pixelData.as<QQuickJSContext2DPixelData>();
     if (pixelArray) {
-        w = imageData->Get(v8::String::New("width"))->v4Value().toNumber();
-        h = imageData->Get(v8::String::New("height"))->v4Value().toNumber();
+        w = pixelArray->image.width();
+        h = pixelArray->image.height();
 
         if (ctx->argumentCount == 7) {
             dirtyX = ctx->arguments[3].toNumber();
@@ -2841,7 +2886,7 @@ QV4::Value QQuickJSContext2DPrototype::method_putImageData(QV4::SimpleCallContex
   gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
   \endcode
   */
-static QV4::Value ctx2d_gradient_addColorStop(QV4::SimpleCallContext *ctx)
+QV4::Value QQuickContext2DStyle::gradient_proto_addColorStop(QV4::SimpleCallContext *ctx)
 {
     QQuickContext2DStyle *style = ctx->thisObject.as<QQuickContext2DStyle>();
     if (!style)
@@ -3605,19 +3650,12 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     QQuickJSContext2D::initClass(v4, contextPrototype.value());
 
     QV4::Object *proto = v4->newObject();
-    proto->defineDefaultProperty(v4, QStringLiteral("addColorStop"), ctx2d_gradient_addColorStop, 0);
+    proto->defineDefaultProperty(v4, QStringLiteral("addColorStop"), QQuickContext2DStyle::gradient_proto_addColorStop, 0);
     gradientProto = QV4::Value::fromObject(proto);
 
     proto = v4->newObject();
-    proto->defineAccessorProperty(v4->id_length, ctx2d_pixelArray_length, 0);
+    proto->defineAccessorProperty(v4->id_length, QQuickJSContext2DPixelData::proto_get_length, 0);
     pixelArrayProto = QV4::Value::fromObject(proto);
-
-    v8::Handle<v8::FunctionTemplate> ftImageData = v8::FunctionTemplate::New();
-    ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::New(engine));
-    ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("height"), ctx2d_imageData_height, 0, v8::External::New(engine));
-    ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("data"), ctx2d_imageData_data, 0, v8::External::New(engine));
-    ftImageData->InstanceTemplate()->SetInternalFieldCount(1);
-    constructorImageData = ftImageData->GetFunction()->v4Value();
 }
 
 QQuickContext2DEngineData::~QQuickContext2DEngineData()
