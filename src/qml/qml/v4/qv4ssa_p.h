@@ -46,9 +46,81 @@
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
+namespace V4IR {
 
-void linearize(V4IR::Function *function);
+class LifeTimeInterval {
+    struct Range {
+        int start;
+        int end;
 
+        Range(int start = Invalid, int end = Invalid)
+            : start(start)
+            , end(end)
+        {}
+    };
+
+    Temp _temp;
+    QList<Range> _ranges;
+    int _reg;
+
+public:
+    static const int Invalid = -1;
+
+    LifeTimeInterval()
+        : _reg(Invalid)
+    {}
+
+    void setTemp(const Temp &temp) { this->_temp = temp; }
+    Temp temp() const { return _temp; }
+
+    void setFrom(Stmt *from);
+    void addRange(Stmt *from, Stmt *to);
+
+    int start() const { return _ranges.first().start; }
+    int end() const { return _ranges.last().end; }
+
+    int reg() const { return _reg; }
+    void setReg(int reg) { _reg = reg; }
+
+    void dump() const;
+    static bool lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
+};
+
+class Optimizer
+{
+public:
+    struct SSADeconstructionMove
+    {
+        Expr *source;
+        Temp *target;
+
+        bool needsConversion() const
+        { return target->type != source->type; }
+    };
+
+public:
+    Optimizer(Function *function)
+        : function(function)
+        , inSSA(false)
+    {}
+
+    void run();
+    void convertOutOfSSA();
+
+    bool isInSSA() const
+    { return inSSA; }
+
+    QList<SSADeconstructionMove> ssaDeconstructionMoves(BasicBlock *basicBlock);
+
+    QList<LifeTimeInterval> lifeRanges() const;
+
+private:
+    Function *function;
+    bool inSSA;
+    QHash<BasicBlock *, BasicBlock *> startEndLoops;
+};
+
+} // V4IR namespace
 } // QQmlJS namespace
 QT_END_NAMESPACE
 

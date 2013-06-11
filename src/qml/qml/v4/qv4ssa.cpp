@@ -46,7 +46,6 @@
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
-#include <QtCore/QBitArray>
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <qv4runtime_p.h>
@@ -65,24 +64,24 @@
 QT_USE_NAMESPACE
 
 using namespace QQmlJS;
+using namespace V4IR;
 
 namespace {
-using namespace V4IR;
 
 QTextStream qout(stdout, QIODevice::WriteOnly);
 
-void showMeTheCode(V4IR::Function *function)
+void showMeTheCode(Function *function)
 {
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
-        QVector<V4IR::Stmt *> code;
-        QHash<V4IR::Stmt *, V4IR::BasicBlock *> leader;
+        QVector<Stmt *> code;
+        QHash<Stmt *, BasicBlock *> leader;
 
-        foreach (V4IR::BasicBlock *block, function->basicBlocks) {
+        foreach (BasicBlock *block, function->basicBlocks) {
             if (block->statements.isEmpty())
                 continue;
             leader.insert(block->statements.first(), block);
-            foreach (V4IR::Stmt *s, block->statements) {
+            foreach (Stmt *s, block->statements) {
                 code.append(s);
             }
         }
@@ -107,9 +106,9 @@ void showMeTheCode(V4IR::Function *function)
         }
 
         for (int i = 0; i < code.size(); ++i) {
-            V4IR::Stmt *s = code.at(i);
+            Stmt *s = code.at(i);
 
-            if (V4IR::BasicBlock *bb = leader.value(s)) {
+            if (BasicBlock *bb = leader.value(s)) {
                 qout << endl;
                 QByteArray str;
                 str.append('L');
@@ -119,17 +118,17 @@ void showMeTheCode(V4IR::Function *function)
                     str.append(' ');
                 qout << str;
                 qout << "// predecessor blocks:";
-                foreach (V4IR::BasicBlock *in, bb->in)
+                foreach (BasicBlock *in, bb->in)
                     qout << " L" << in->index;
                 if (bb->in.isEmpty())
                     qout << "(none)";
-                if (V4IR::BasicBlock *container = bb->containingGroup())
+                if (BasicBlock *container = bb->containingGroup())
                     qout << "; container block: L" << container->index;
                 if (bb->isGroupStart())
                     qout << "; group start";
                 qout << endl;
             }
-            V4IR::Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
+            Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
 //            if (n && s->asJump() && s->asJump()->target == leader.value(n)) {
 //                continue;
 //            }
@@ -138,7 +137,9 @@ void showMeTheCode(V4IR::Function *function)
             QBuffer buf(&str);
             buf.open(QIODevice::WriteOnly);
             QTextStream out(&buf);
-            s->dump(out, V4IR::Stmt::MIR);
+            if (s->id > 0)
+                out << s->id << ": ";
+            s->dump(out, Stmt::MIR);
             out.flush();
 
             if (s->location.isValid())
@@ -464,32 +465,30 @@ protected:
     virtual void visitRegExp(RegExp *) {}
     virtual void visitName(Name *) {}
     virtual void visitClosure(Closure *) {}
-    virtual void visitUnop(V4IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(V4IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitSubscript(V4IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(V4IR::Member *e) { e->base->accept(this); }
-    virtual void visitExp(V4IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(V4IR::Enter *s) { s->expr->accept(this); }
-    virtual void visitLeave(V4IR::Leave *) {}
-    virtual void visitJump(V4IR::Jump *) {}
-    virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(V4IR::Try *) { // ### TODO
+    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(Member *e) { e->base->accept(this); }
+    virtual void visitExp(Exp *s) { s->expr->accept(this); }
+    virtual void visitJump(Jump *) {}
+    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(Ret *s) { s->expr->accept(this); }
+    virtual void visitTry(Try *) { // ### TODO
     }
 
-    virtual void visitCall(V4IR::Call *e) {
+    virtual void visitCall(Call *e) {
         e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
+        for (ExprList *it = e->args; it; it = it->next)
             it->expr->accept(this);
     }
 
-    virtual void visitNew(V4IR::New *e) {
+    virtual void visitNew(New *e) {
         e->base->accept(this);
-        for (V4IR::ExprList *it = e->args; it; it = it->next)
+        for (ExprList *it = e->args; it; it = it->next)
             it->expr->accept(this);
     }
 
-    virtual void visitMove(V4IR::Move *s) {
+    virtual void visitMove(Move *s) {
         s->source->accept(this);
 
         if (Temp *t = s->target->asTemp()) {
@@ -711,8 +710,6 @@ protected:
     virtual void visitPhi(Phi *s) { renameTemp(s->targetTemp); }
 
     virtual void visitExp(Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(Enter *) { Q_UNIMPLEMENTED(); abort(); }
-    virtual void visitLeave(Leave *) { Q_UNIMPLEMENTED(); abort(); }
 
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
@@ -909,8 +906,6 @@ public:
 
 protected:
     virtual void visitExp(Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(Enter *) {}
-    virtual void visitLeave(Leave *) {}
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
@@ -1103,8 +1098,8 @@ protected:
 
     virtual void visitUnop(Unop *e) {
         switch (e->op) {
-        case V4IR::OpIncrement:
-        case V4IR::OpDecrement:
+        case OpIncrement:
+        case OpDecrement:
             _sideEffect = true;
             break;
 
@@ -1363,8 +1358,6 @@ protected:
     }
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
-    virtual void visitEnter(Enter *s) { _ty = run(s->expr); }
-    virtual void visitLeave(Leave *) { _ty = TypingResult(MissingType); }
     virtual void visitMove(Move *s) {
         TypingResult sourceTy = run(s->source);
         Q_ASSERT(s->op == OpInvalid);
@@ -1544,8 +1537,6 @@ protected:
     virtual void visitSubscript(Subscript *e) { run(e->base); run(e->index); }
     virtual void visitMember(Member *e) { run(e->base); }
     virtual void visitExp(Exp *s) { run(s->expr); }
-    virtual void visitEnter(Enter *s) { run(s->expr); }
-    virtual void visitLeave(Leave *) {}
     virtual void visitMove(Move *s) {
         run(s->target);
         run(s->source, s->target->type);
@@ -1563,15 +1554,6 @@ protected:
                 run(e, ty);
     }
 };
-
-void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *source) {
-    if (target->type != source->type)
-        source = basicBlock->CONVERT(source, target->type);
-
-    Move *s = function->New<Move>();
-    s->init(target, source, OpInvalid);
-    basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
-}
 
 void doEdgeSplitting(Function *f)
 {
@@ -1624,17 +1606,22 @@ void doEdgeSplitting(Function *f)
     }
 }
 
-void scheduleBlocks(Function *function, const DominatorTree &df)
+QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const DominatorTree &df)
 {
     struct I {
         const DominatorTree &df;
+        QHash<BasicBlock *, BasicBlock *> &startEndLoops;
         QSet<BasicBlock *> visited;
         QVector<BasicBlock *> &sequence;
         BasicBlock *currentGroup;
         QList<BasicBlock *> postponed;
 
-        I(const DominatorTree &df, QVector<BasicBlock *> &sequence)
-            : df(df), sequence(sequence), currentGroup(0)
+        I(const DominatorTree &df, QVector<BasicBlock *> &sequence,
+          QHash<BasicBlock *, BasicBlock *> &startEndLoops)
+            : df(df)
+            , sequence(sequence)
+            , startEndLoops(startEndLoops)
+            , currentGroup(0)
         {}
 
         void DFS(BasicBlock *bb) {
@@ -1675,6 +1662,7 @@ void scheduleBlocks(Function *function, const DominatorTree &df)
 
             if (bb->isGroupStart()) {
                 currentGroup = bb->containingGroup();
+                startEndLoops.insert(bb, sequence.last());
                 QList<BasicBlock *> p = postponed;
                 foreach (BasicBlock *pBB, p)
                     DFS(pBB);
@@ -1690,32 +1678,12 @@ void scheduleBlocks(Function *function, const DominatorTree &df)
 
     QVector<BasicBlock *> sequence;
     sequence.reserve(function->basicBlocks.size());
-    I(df, sequence).DFS(function->basicBlocks.first());
+    QHash<BasicBlock *, BasicBlock *> startEndLoops;
+    I(df, sequence, startEndLoops).DFS(function->basicBlocks.first());
     qSwap(function->basicBlocks, sequence);
 
     showMeTheCode(function);
-}
-
-/*
- * Quick function to convert out of SSA, so we can put the stuff through the ISel phases. This
- * has to be replaced by a phase in the specific ISel back-ends and do register allocation at the
- * same time. That way the huge number of redundant moves generated by this function are eliminated.
- */
-void convertOutOfSSA(Function *function) {
-    // We assume that edge-splitting is already done.
-    foreach (BasicBlock *bb, function->basicBlocks) {
-        QVector<Stmt *> &stmts = bb->statements;
-        while (!stmts.isEmpty()) {
-            Stmt *s = stmts.first();
-            if (Phi *phi = s->asPhi()) {
-                stmts.removeFirst();
-                for (int i = 0, ei = phi->incoming.size(); i != ei; ++i)
-                    insertMove(function, bb->in[i], phi->targetTemp, phi->incoming[i]);
-            } else {
-                break;
-            }
-        }
-    }
+    return startEndLoops;
 }
 
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
@@ -1776,12 +1744,260 @@ void cleanupBasicBlocks(Function *function)
         function->basicBlocks[i]->index = i;
 }
 
-} // end of anonymous namespace
+class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
+    const bool variablesCanEscape;
 
-void QQmlJS::linearize(V4IR::Function *function)
+public:
+    QList<Temp> inputs;
+    QList<Temp> outputs;
+
+    InputOutputCollector(bool variablesCanEscape): variablesCanEscape(variablesCanEscape) {}
+
+    void collect(Stmt *s) {
+        inputs.clear();
+        outputs.clear();
+        s->accept(this);
+    }
+
+protected:
+    virtual void visitConst(Const *) {}
+    virtual void visitString(String *) {}
+    virtual void visitRegExp(RegExp *) {}
+    virtual void visitName(Name *) {}
+    virtual void visitTemp(Temp *e) {
+        switch (e->kind) {
+        case Temp::Local:
+            if (!variablesCanEscape)
+                inputs.append(*e);
+            break;
+
+        case Temp::VirtualRegister:
+            inputs.append(*e);
+            break;
+
+        default:
+            break;
+        }
+    }
+    virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
+    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
+    virtual void visitCall(Call *e) {
+        e->base->accept(this);
+        for (ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitNew(New *e) {
+        e->base->accept(this);
+        for (ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitSubscript(Subscript *e) { e->base->accept(this); e->index->accept(this); }
+    virtual void visitMember(Member *e) { e->base->accept(this); }
+    virtual void visitExp(Exp *s) { s->expr->accept(this); }
+    virtual void visitMove(Move *s) {
+        s->source->accept(this);
+        if (Temp *t = s->target->asTemp()) {
+            if ((t->kind == Temp::Local && !variablesCanEscape) || t->kind == Temp::VirtualRegister)
+                outputs.append(*t);
+            else
+                s->target->accept(this);
+        } else {
+            s->target->accept(this);
+        }
+    }
+    virtual void visitJump(Jump *) {}
+    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(Ret *s) { s->expr->accept(this); }
+    virtual void visitTry(Try *) {}
+    virtual void visitPhi(Phi *s) {
+        // Handled separately
+    }
+};
+
+/*
+ * The algorithm is described in:
+ *
+ *   Linear Scan Register Allocation on SSA Form
+ *   Christian Wimmer & Michael Franz, CGO'10, April 24-28, 2010
+ *
+ * There is one slight difference w.r.t. the phi-nodes: in the artice, the phi nodes are attached
+ * to the basic-blocks. Therefore, in the algorithm in the article, the ranges for input parameters
+ * for phi nodes run from their definition upto the branch instruction into the block with the phi
+ * node. In our representation, phi nodes are mostly treaded as normal instructions, so we have to
+ * enlarge the range to cover the phi node itself.
+ */
+class LifeRanges {
+    typedef QSet<Temp> LiveRegs;
+
+    QHash<BasicBlock *, LiveRegs> _liveIn;
+    QHash<Temp, LifeTimeInterval> _intervals;
+    QList<LifeTimeInterval> _sortedRanges;
+
+public:
+    LifeRanges(Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
+    {
+        int id = 0;
+        foreach (BasicBlock *bb, function->basicBlocks) {
+            foreach (Stmt *s, bb->statements) {
+                if (s->asPhi())
+                    s->id = id + 1;
+                else
+                    s->id = ++id;
+            }
+        }
+
+        for (int i = function->basicBlocks.size() - 1; i >= 0; --i) {
+            BasicBlock *bb = function->basicBlocks[i];
+            buildIntervals(bb, startEndLoops.value(bb, 0), function->variablesCanEscape());
+        }
+
+        _sortedRanges.reserve(_intervals.size());
+        for (QHash<Temp, LifeTimeInterval>::const_iterator i = _intervals.begin(), ei = _intervals.end(); i != ei; ++i) {
+            LifeTimeInterval range = i.value();
+            range.setTemp(i.key());
+            _sortedRanges.append(range);
+        }
+        qSort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
+    }
+
+    QList<LifeTimeInterval> ranges() const { return _sortedRanges; }
+
+    void dump() const
+    {
+        qout << "Life ranges:" << endl;
+        qout << "Intervals:" << endl;
+        foreach (const LifeTimeInterval &range, _sortedRanges) {
+            range.dump();
+            qout << endl;
+        }
+
+        foreach (BasicBlock *bb, _liveIn.keys()) {
+            qout << "L" << bb->index <<" live-in: ";
+            QList<Temp> live = QList<Temp>::fromSet(_liveIn.value(bb));
+            qSort(live);
+            for (int i = 0; i < live.size(); ++i) {
+                if (i > 0) qout << ", ";
+                live[i].dump(qout);
+            }
+            qout << endl;
+        }
+    }
+
+private:
+    void buildIntervals(BasicBlock *bb, BasicBlock *loopEnd, bool variablesCanEscape)
+    {
+        LiveRegs live;
+        foreach (BasicBlock *successor, bb->out) {
+            live.unite(_liveIn[successor]);
+            const int bbIndex = successor->in.indexOf(bb);
+            Q_ASSERT(bbIndex >= 0);
+
+            foreach (Stmt *s, successor->statements) {
+                if (Phi *phi = s->asPhi()) {
+                    if (Temp *t = phi->incoming[bbIndex]->asTemp())
+                        live.insert(*t);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        foreach (const Temp &opd, live)
+            _intervals[opd].addRange(bb->statements.first(), bb->statements.last());
+
+        InputOutputCollector collector(variablesCanEscape);
+        for (int i = bb->statements.size() - 1; i >= 0; --i) {
+            Stmt *s = bb->statements[i];
+            if (Phi *phi = s->asPhi()) {
+                live.remove(*phi->targetTemp);
+                continue;
+            }
+            collector.collect(s);
+            foreach (const Temp &opd, collector.outputs) {
+                _intervals[opd].setFrom(s);
+                live.remove(opd);
+            }
+            foreach (const Temp &opd, collector.inputs) {
+                _intervals[opd].addRange(bb->statements.first(), s);
+                live.insert(opd);
+            }
+        }
+
+        if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
+            foreach (const Temp &opd, live)
+                _intervals[opd].addRange(bb->statements.first(), loopEnd->statements.last());
+        }
+
+        _liveIn[bb] = live;
+    }
+};
+} // anonymous namespace
+
+void LifeTimeInterval::setFrom(Stmt *from) {
+    Q_ASSERT(from && from->id > 0);
+
+    if (_ranges.isEmpty()) // this is the case where there is no use, only a define
+        _ranges.push_front(Range(from->id, from->id));
+    else
+        _ranges.first().start = from->id;
+}
+
+void LifeTimeInterval::addRange(Stmt *from, Stmt *to) {
+    Q_ASSERT(from && from->id > 0);
+    Q_ASSERT(to && to->id > 0);
+    Q_ASSERT(to->id >= from->id);
+
+    if (_ranges.isEmpty()) {
+        _ranges.push_front(Range(from->id, to->id));
+        return;
+    }
+
+    Range *p = &_ranges.first();
+    if (to->id + 1 >= p->start && p->end + 1 >= from->id) {
+        p->start = qMin(p->start, from->id);
+        p->end = qMax(p->end, to->id);
+        while (_ranges.count() > 1) {
+            Range *p1 = &_ranges[1];
+            if (p->end + 1 < p1->start || p1->end + 1 < p->start)
+                break;
+            p1->start = qMin(p->start, p1->start);
+            p1->end = qMax(p->end, p1->end);
+            _ranges.pop_front();
+            p = &_ranges.first();
+        }
+    } else {
+        Q_ASSERT(to->id < p->start);
+        _ranges.push_front(Range(from->id, to->id));
+    }
+}
+
+void LifeTimeInterval::dump() const {
+    _temp.dump(qout);
+    qout << ": ";
+    if (_ranges.isEmpty())
+        qout << "(none)";
+    for (int i = 0; i < _ranges.size(); ++i) {
+        if (i > 0) qout << ", ";
+        qout << _ranges[i].start << " - " << _ranges[i].end;
+    }
+    if (_reg != Invalid)
+        qout << " (register " << _reg << ")";
+}
+
+bool LifeTimeInterval::lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2) {
+    if (r1._ranges.first().start == r2._ranges.first().start)
+        return r1._ranges.last().end < r2._ranges.last().end;
+    else
+        return r1._ranges.first().start < r2._ranges.first().start;
+}
+
+void Optimizer::run()
 {
 #if defined(SHOW_SSA)
-    qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!") << " with " << function->basicBlocks.size() << " basic blocks." << endl << flush;
+    qout << "##### NOW IN FUNCTION " << (_function->name ? qPrintable(*_function->name) : "anonymous!")
+         << " with " << _function->basicBlocks.size() << " basic blocks." << endl << flush;
 #endif
 
     // Number all basic blocks, so we have nice numbers in the dumps:
@@ -1826,11 +2042,7 @@ void QQmlJS::linearize(V4IR::Function *function)
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
-        scheduleBlocks(function, df);
-//        showMeTheCode(function);
-
-//        qout << "Converting out of SSA..." << endl;
-        convertOutOfSSA(function);
+        startEndLoops = scheduleBlocks(function, df);
 //        showMeTheCode(function);
 
 #ifndef QT_NO_DEBUG
@@ -1838,5 +2050,73 @@ void QQmlJS::linearize(V4IR::Function *function)
 #endif
 
 //        qout << "Finished." << endl;
+        inSSA = true;
+    } else {
+        inSSA = false;
     }
+}
+
+namespace {
+void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *source) {
+    if (target->type != source->type)
+        source = basicBlock->CONVERT(source, target->type);
+
+    Move *s = function->New<Move>();
+    s->init(target, source, OpInvalid);
+    basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
+}
+}
+
+/*
+ * Quick function to convert out of SSA, so we can put the stuff through the ISel phases. This
+ * has to be replaced by a phase in the specific ISel back-ends and do register allocation at the
+ * same time. That way the huge number of redundant moves generated by this function are eliminated.
+ */
+void Optimizer::convertOutOfSSA() {
+    // We assume that edge-splitting is already done.
+    foreach (BasicBlock *bb, function->basicBlocks) {
+        QVector<Stmt *> &stmts = bb->statements;
+        while (!stmts.isEmpty()) {
+            Stmt *s = stmts.first();
+            if (Phi *phi = s->asPhi()) {
+                stmts.removeFirst();
+                for (int i = 0, ei = phi->incoming.size(); i != ei; ++i)
+                    insertMove(function, bb->in[i], phi->targetTemp, phi->incoming[i]);
+            } else {
+                break;
+            }
+        }
+    }
+}
+
+QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicBlock *basicBlock)
+{
+    QList<SSADeconstructionMove> moves;
+
+    foreach (BasicBlock *outEdge, basicBlock->out) {
+        int inIdx = outEdge->in.indexOf(basicBlock);
+        Q_ASSERT(inIdx >= 0);
+        foreach (Stmt *s, outEdge->statements) {
+            if (Phi *phi = s->asPhi()) {
+                SSADeconstructionMove m;
+                m.source = phi->incoming[inIdx];
+                m.target = phi->targetTemp;
+                moves.append(m);
+            } else {
+                break;
+            }
+        }
+    }
+
+    return moves;
+}
+
+QList<LifeTimeInterval> Optimizer::lifeRanges() const
+{
+    Q_ASSERT(isInSSA());
+
+    LifeRanges lifeRanges(function, startEndLoops);
+//    lifeRanges.dump();
+//    showMeTheCode(function);
+    return lifeRanges.ranges();
 }

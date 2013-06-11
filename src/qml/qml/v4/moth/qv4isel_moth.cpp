@@ -42,6 +42,7 @@
 #include "qv4isel_util_p.h"
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
+#include "qv4ssa_p.h"
 #include <private/qv4functionobject_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4debugging_p.h>
@@ -120,8 +121,72 @@ inline QV4::BinOp aluOpFunction(V4IR::AluOp op)
         return 0;
     }
 };
-
 } // anonymous namespace
+
+// TODO: extend to optimize out temp-to-temp moves, where the lifetime of one temp ends at that statement.
+//       To handle that, add a hint when such a move will occur, and add a stmt for the hint.
+//       Then when asked for a register, check if the active statement is the terminating statement, and if so, apply the hint.
+//       This generalises the hint usage for Phi removal too, when the phi is passed in there as the current statement.
+class QQmlJS::Moth::StackSlotAllocator
+{
+    QHash<V4IR::Temp, int> _slotForTemp;
+    QHash<V4IR::Temp, int> _hints;
+    QVector<int> _activeSlots;
+
+    QHash<V4IR::Temp, V4IR::LifeTimeInterval> _intervals;
+
+public:
+    StackSlotAllocator(const QList<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
+        : _activeSlots(maxTempCount)
+    {
+        _intervals.reserve(ranges.size());
+        foreach (const V4IR::LifeTimeInterval &r, ranges)
+            _intervals[r.temp()] = r;
+    }
+
+    void addHint(const V4IR::Temp &hintedSlotOfTemp, const V4IR::Temp &newTemp)
+    {
+        if (hintedSlotOfTemp.kind != V4IR::Temp::VirtualRegister
+                || newTemp.kind != V4IR::Temp::VirtualRegister)
+            return;
+
+        if (_slotForTemp.contains(newTemp) || _hints.contains(newTemp))
+            return;
+
+        int hintedSlot = _slotForTemp.value(hintedSlotOfTemp, -1);
+        Q_ASSERT(hintedSlot >= 0);
+        _hints[newTemp] = hintedSlot;
+    }
+
+    int stackSlotFor(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
+        int idx = _slotForTemp.value(*t, -1);
+        if (idx == -1)
+            idx = allocateSlot(t, currentStmt);
+        Q_ASSERT(idx >= 0);
+        return idx;
+    }
+
+private:
+    int allocateSlot(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
+        const V4IR::LifeTimeInterval &interval = _intervals[*t];
+        int idx = _hints.value(*t, -1);
+        if (idx != -1 && _activeSlots[idx] <= currentStmt->id) {
+            _slotForTemp[*t] = idx;
+            _activeSlots[idx] = interval.end();
+            return idx;
+        }
+
+        for (int i = 0, ei = _activeSlots.size(); i != ei; ++i) {
+            if (_activeSlots[i] < currentStmt->id) {
+                _slotForTemp[*t] = i;
+                _activeSlots[i] = interval.end();
+                return i;
+            }
+        }
+
+        return -1;
+    }
+};
 
 InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
     : EvalInstructionSelection(engine, module)
@@ -131,6 +196,8 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     , _codeStart(0)
     , _codeNext(0)
     , _codeEnd(0)
+    , _stackSlotAllocator(0)
+    , _currentStatement(0)
 {
 }
 
@@ -160,6 +227,15 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(codeNext, _codeNext);
     qSwap(codeEnd, _codeEnd);
 
+    V4IR::Optimizer opt(_function);
+    opt.run();
+    StackSlotAllocator *stackSlotAllocator = 0;
+    if (opt.isInSSA())
+        stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
+    qSwap(_stackSlotAllocator, stackSlotAllocator);
+    V4IR::Stmt *cs = 0;
+    qSwap(_currentStatement, cs);
+
     int locals = frameSize();
     assert(locals >= 0);
 
@@ -179,15 +255,32 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
                 mapping.lineNumber = s->location.startLine;
                 _vmFunction->lineNumberMappings.append(mapping);
             }
+
+            if (opt.isInSSA() && s->asTerminator()) {
+                foreach (const V4IR::Optimizer::SSADeconstructionMove &move,
+                         opt.ssaDeconstructionMoves(_block)) {
+                    Q_ASSERT(move.source->asTemp()); // FIXME: support Const exprs in Phi nodes.
+                    if (move.needsConversion())
+                        convertType(move.source->asTemp(), move.target);
+                    else
+                        copyValue(move.source->asTemp(), move.target);
+                }
+            }
+
+            _currentStatement = s;
             s->accept(this);
         }
     }
 
+    // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
 
     _vmFunction->code = VME::exec;
     _vmFunction->codeData = squeezeCode();
 
+    qSwap(_currentStatement, cs);
+    qSwap(_stackSlotAllocator, stackSlotAllocator);
+    delete stackSlotAllocator;
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
@@ -234,6 +327,9 @@ void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4
 
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
+    if (_stackSlotAllocator)
+        _stackSlotAllocator->addHint(*source, *target);
+
     // FIXME: do something more useful with this info
     copyValue(source, target);
 }
@@ -370,10 +466,14 @@ void InstructionSelection::setElement(V4IR::Temp *source, V4IR::Temp *targetBase
 
 void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
+    if (_stackSlotAllocator)
+        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
+
     Instruction::MoveTemp move;
     move.source = getParam(sourceTemp);
     move.result = getResultParam(targetTemp);
-    addInstruction(move);
+    if (move.source != move.result)
+        addInstruction(move);
 }
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
@@ -533,7 +633,7 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
     if (singleArgIsTemp) {
         // We pass single arguments as references to the stack, but only if it's not a local or an argument.
         argc = 1;
-        args = e->expr->asTemp()->index;
+        args = getParam(e->expr).index;
     } else if (e) {
         // We need to move all the temps into the function arg array
         int argLocation = outgoingArgumentTempStart();
@@ -942,4 +1042,29 @@ QV4::String *InstructionSelection::identifier(const QString &s)
     QV4::String *str = engine()->newIdentifier(s);
     _vmFunction->identifiers.append(str);
     return str;
+}
+
+Instr::Param InstructionSelection::getParam(V4IR::Expr *e) {
+    typedef Instr::Param Param;
+    assert(e);
+
+    if (V4IR::Const *c = e->asConst()) {
+        return Param::createValue(convertToValue(c));
+    } else if (V4IR::Temp *t = e->asTemp()) {
+        switch (t->kind) {
+        case V4IR::Temp::Formal:
+        case V4IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
+        case V4IR::Temp::Local: return Param::createLocal(t->index);
+        case V4IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
+        case V4IR::Temp::VirtualRegister:
+            return Param::createTemp(_stackSlotAllocator ?
+                        _stackSlotAllocator->stackSlotFor(t, _currentStatement) : t->index);
+        default:
+            Q_UNIMPLEMENTED();
+            return Param();
+        }
+    } else {
+        Q_UNIMPLEMENTED();
+        return Param();
+    }
 }

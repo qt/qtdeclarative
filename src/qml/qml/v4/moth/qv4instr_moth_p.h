@@ -189,6 +189,12 @@ union Instr
             p.index = idx;
             return p;
         }
+
+        inline bool operator==(const Param &other) const
+        { return type == other.type && scope == other.scope && index == other.index; }
+
+        inline bool operator!=(const Param &other) const
+        { return !(*this == other); }
     };
 
     enum Type {

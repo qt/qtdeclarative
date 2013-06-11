@@ -192,16 +192,6 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         s->expr = cleanup(s->expr);
     }
 
-    virtual void visitEnter(Enter *s)
-    {
-        s->expr = cleanup(s->expr);
-    }
-
-    virtual void visitLeave(Leave *)
-    {
-        // nothing to do for Leave statements
-    }
-
     virtual void visitMove(Move *s)
     {
         s->target = cleanup(s->target);
@@ -538,19 +528,6 @@ void Exp::dump(QTextStream &out, Mode)
     out << ';';
 }
 
-void Enter::dump(QTextStream &out, Mode)
-{
-    out << "%enter(";
-    expr->dump(out);
-    out << ");";
-}
-
-void Leave::dump(QTextStream &out, Mode)
-{
-    out << "%leave";
-    out << ';';
-}
-
 void Move::dump(QTextStream &out, Mode)
 {
     target->dump(out);
@@ -831,28 +808,6 @@ Stmt *BasicBlock::EXP(Expr *expr)
 
     Exp *s = function->New<Exp>();
     s->init(expr);
-    appendStatement(s);
-    return s;
-}
-
-Stmt *BasicBlock::ENTER(Expr *expr)
-{
-    if (isTerminated())
-        return 0;
-
-    Enter *s = function->New<Enter>();
-    s->init(expr);
-    appendStatement(s);
-    return s;
-}
-
-Stmt *BasicBlock::LEAVE()
-{
-    if (isTerminated())
-        return 0;
-
-    Leave *s = function->New<Leave>();
-    s->init();
     appendStatement(s);
     return s;
 }

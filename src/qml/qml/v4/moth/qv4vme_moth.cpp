@@ -318,6 +318,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = static_cast<QV4::Value *>(alloca(stackSize * sizeof(QV4::Value)));
+        memset(stack, 0, stackSize * sizeof(QV4::Value));
         state.setStack(stack, stackSize);
     MOTH_END_INSTR(Push)
 
@@ -352,6 +353,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
+        TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
         QV4::Value *args = stack + instr.args;
         __qmljs_call_activation_property(context, VALUEPTR(instr.result), instr.name, args, instr.argc);
     MOTH_END_INSTR(CallActivationProperty)

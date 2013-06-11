@@ -93,12 +93,10 @@ class Q_QML_EXPORT InstructionSelection: protected V4IR::StmtVisitor
 public:
     virtual ~InstructionSelection() = 0;
 
-    virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); abort(); }
+    virtual void visitPhi(V4IR::Phi *) {}
 
 public: // visitor methods for StmtVisitor:
     virtual void visitMove(V4IR::Move *s);
-    virtual void visitEnter(V4IR::Enter *);
-    virtual void visitLeave(V4IR::Leave *);
     virtual void visitExp(V4IR::Exp *s);
 
 public: // to implement by subclasses:

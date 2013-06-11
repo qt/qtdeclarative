@@ -47,6 +47,7 @@
 #include "qv4unwindhelper_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
+#include "qv4ssa_p.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
@@ -580,6 +581,10 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
     _as = new Assembler(_function, _vmFunction, engine());
+
+    V4IR::Optimizer opt(_function);
+    opt.run();
+    opt.convertOutOfSSA();
 
     int locals = (_function->tempCount + _function->maxNumberOfArguments) + 1;
     locals = (locals + 1) & ~1;

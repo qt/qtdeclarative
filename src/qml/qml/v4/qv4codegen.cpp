@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qv4codegen_p.h"
-#include "qv4ssa_p.h"
 #include "qv4util_p.h"
 #include "qv4debugging_p.h"
 
@@ -509,10 +508,6 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
         }
     }
 
-    foreach (V4IR::Function *function, _module->functions) {
-        linearize(function);
-    }
-
     qDeleteAll(_envMap);
     _envMap.clear();
 
@@ -537,10 +532,6 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
     V4IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     if (_debugger)
         _debugger->setSourceLocation(function, ast->functionToken.startLine, ast->functionToken.startColumn);
-
-    foreach (V4IR::Function *function, _module->functions) {
-        linearize(function);
-    }
 
     qDeleteAll(_envMap);
     _envMap.clear();

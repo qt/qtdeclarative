@@ -112,8 +112,6 @@ struct Member;
 
 // statements
 struct Exp;
-struct Enter;
-struct Leave;
 struct Move;
 struct Jump;
 struct CJump;
@@ -204,8 +202,6 @@ struct ExprVisitor {
 struct StmtVisitor {
     virtual ~StmtVisitor() {}
     virtual void visitExp(Exp *) = 0;
-    virtual void visitEnter(Enter *) = 0;
-    virtual void visitLeave(Leave *) = 0;
     virtual void visitMove(Move *) = 0;
     virtual void visitJump(Jump *) = 0;
     virtual void visitCJump(CJump *) = 0;
@@ -532,17 +528,16 @@ struct Stmt {
     };
 
     Data *d;
+    int id;
     AST::SourceLocation location;
 
-    Stmt(): d(0) {}
+    Stmt(): d(0), id(-1) {}
     virtual ~Stmt() { Q_UNREACHABLE(); }
     virtual Stmt *asTerminator() { return 0; }
 
     virtual void accept(StmtVisitor *) = 0;
     virtual Exp *asExp() { return 0; }
     virtual Move *asMove() { return 0; }
-    virtual Enter *asEnter() { return 0; }
-    virtual Leave *asLeave() { return 0; }
     virtual Jump *asJump() { return 0; }
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
@@ -584,29 +579,6 @@ struct Move: Stmt {
 
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
     virtual Move *asMove() { return this; }
-
-    virtual void dump(QTextStream &out, Mode);
-};
-
-struct Enter: Stmt {
-    Expr *expr;
-
-    void init(Expr *expr)
-    {
-        this->expr = expr;
-    }
-
-    virtual void accept(StmtVisitor *v) { v->visitEnter(this); }
-    virtual Enter *asEnter() { return this; }
-
-    virtual void dump(QTextStream &out, Mode);
-};
-
-struct Leave: Stmt {
-    void init() {}
-
-    virtual void accept(StmtVisitor *v) { v->visitLeave(this); }
-    virtual Leave *asLeave() { return this; }
 
     virtual void dump(QTextStream &out, Mode);
 };
@@ -836,8 +808,6 @@ struct BasicBlock {
     Expr *MEMBER(Expr *base, const QString *name);
 
     Stmt *EXP(Expr *expr);
-    Stmt *ENTER(Expr *expr);
-    Stmt *LEAVE();
 
     Stmt *MOVE(Expr *target, Expr *source, AluOp op = V4IR::OpInvalid);
 

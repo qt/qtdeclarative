@@ -54,6 +54,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Moth {
 
+class StackSlotAllocator;
+
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::InstructionSelection,
         public EvalInstructionSelection
@@ -132,29 +134,7 @@ private:
         Instruction();
     };
 
-    Instr::Param getParam(V4IR::Expr *e)
-    {
-        typedef Instr::Param Param;
-        assert(e);
-
-        if (V4IR::Const *c = e->asConst()) {
-            return Param::createValue(convertToValue(c));
-        } else if (V4IR::Temp *t = e->asTemp()) {
-            switch (t->kind) {
-            case V4IR::Temp::Formal:
-            case V4IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
-            case V4IR::Temp::Local: return Param::createLocal(t->index);
-            case V4IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
-            case V4IR::Temp::VirtualRegister: return Param::createTemp(t->index);
-            default:
-                Q_UNIMPLEMENTED();
-                return Param();
-            }
-        } else {
-            Q_UNIMPLEMENTED();
-            return Param();
-        }
-    }
+    Instr::Param getParam(V4IR::Expr *e);
 
     Instr::Param getResultParam(V4IR::Temp *result)
     {
@@ -190,6 +170,9 @@ private:
     uchar *_codeStart;
     uchar *_codeNext;
     uchar *_codeEnd;
+
+    StackSlotAllocator *_stackSlotAllocator;
+    V4IR::Stmt *_currentStatement;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

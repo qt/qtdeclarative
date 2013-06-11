@@ -245,16 +245,6 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::visitEnter(Enter *)
-{
-    Q_UNREACHABLE();
-}
-
-void InstructionSelection::visitLeave(Leave *)
-{
-    Q_UNREACHABLE();
-}
-
 void InstructionSelection::visitExp(V4IR::Exp *s)
 {
     if (V4IR::Call *c = s->expr->asCall()) {
