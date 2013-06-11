@@ -52,7 +52,7 @@ static QString internal(QLatin1String("You've stumbled onto an internal implemen
 
 class QV8ContextResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(ContextType);
+    V8_RESOURCE_TYPE(ContextType)
 
 public:
     QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);

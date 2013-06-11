@@ -128,7 +128,7 @@ void QQuickContents::calcGeometry(QQuickItem *changed)
 
 class QQuickTransformPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickTransform);
+    Q_DECLARE_PUBLIC(QQuickTransform)
 public:
     static QQuickTransformPrivate* get(QQuickTransform *transform) { return transform->d_func(); }
 

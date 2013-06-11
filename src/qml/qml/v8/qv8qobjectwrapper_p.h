@@ -76,7 +76,7 @@ class QQmlPropertyCache;
 
 class QV8QObjectResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(QObjectType);
+    V8_RESOURCE_TYPE(QObjectType)
 
 public:
     QV8QObjectResource(QV8Engine *engine, QObject *object);
