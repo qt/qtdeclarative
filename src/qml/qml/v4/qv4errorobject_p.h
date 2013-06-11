@@ -69,7 +69,7 @@ struct QV4_JS_CLASS(ErrorObject): Object {
     ExecutionEngine::StackTrace stackTrace;
     Value stack;
 
-    static Value method_get_stack(SimpleCallContext *ctx);
+    static Value method_get_stack(SimpleCallContext *ctx) QV4_ANNOTATE(attributes QV4::Attr_NotEnumerable);
 };
 
 struct EvalErrorObject: ErrorObject {
