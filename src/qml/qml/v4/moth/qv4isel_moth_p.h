@@ -139,6 +139,7 @@ private:
     V4IR::Function *_function;
     QV4::Function *_vmFunction;
     V4IR::BasicBlock *_block;
+    V4IR::BasicBlock *_nextBlock;
 
     QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
     QHash<V4IR::BasicBlock *, ptrdiff_t> _addrs;

@@ -99,7 +99,7 @@ InstructionSelection::~InstructionSelection()
 
 void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
 {
-    V4IR::BasicBlock *block;
+    V4IR::BasicBlock *block = 0, *nextBlock = 0;
 
     QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > patches;
     QHash<V4IR::BasicBlock *, ptrdiff_t> addrs;
@@ -112,6 +112,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
+    qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
     qSwap(codeStart, _codeStart);
@@ -125,7 +126,9 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     push.value = quint32(locals);
     addInstruction(push);
 
-    foreach (_block, _function->basicBlocks) {
+    for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
+        _block = _function->basicBlocks[i];
+        _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
 
         foreach (V4IR::Stmt *s, _block->statements) {
@@ -147,6 +150,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_function, function);
     qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
+    qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
     qSwap(addrs, _addrs);
     qSwap(codeStart, _codeStart);
@@ -512,6 +516,9 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
 
 void InstructionSelection::visitJump(V4IR::Jump *s)
 {
+    if (s->target == _nextBlock)
+        return;
+
     Instruction::Jump jump;
     jump.offset = 0;
     ptrdiff_t loc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
@@ -542,7 +549,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
     ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
     _patches[s->iftrue].append(trueLoc);
 
-    if (_block->index + 1 != s->iffalse->index) {
+    if (s->iffalse != _nextBlock) {
         Instruction::Jump jump;
         jump.offset = 0;
         ptrdiff_t falseLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
