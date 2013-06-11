@@ -1338,7 +1338,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
         if (requestedType != UnknownType)
             if (e->type != requestedType)
                 if (requestedType & NumberType) {
-                    qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
+                    //qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
                     addConversion(e, requestedType);
                 }
     }
