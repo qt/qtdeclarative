@@ -223,7 +223,7 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
-class MemberAccessorGetterSetter : public FunctionObject
+class Q_QML_EXPORT MemberAccessorGetterSetter : public FunctionObject
 {
 public:
     typedef Value (* GetterSetterFunction)(QV4::SimpleCallContext *ctx);

@@ -124,7 +124,7 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
                                 V4THROW_ERROR("Not a Context2D object");
 
 #define CHECK_CONTEXT_SETTER(r)     if (!r || !r->context || !r->context->bufferValid()) \
-                                       V8THROW_ERROR_SETTER("Not a Context2D object");
+                                       V4THROW_ERROR("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
 QColor qt_color_from_string(const QV4::Value &name)
@@ -252,6 +252,46 @@ public:
 
     static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
+    static QV4::Value method_get_globalAlpha(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_globalAlpha(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_globalCompositeOperation(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_globalCompositeOperation(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_fillStyle(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_fillStyle(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_fillRule(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_fillRule(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_strokeStyle(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_strokeStyle(QV4::SimpleCallContext *ctx);
+
+    static QV4::Value method_get_lineCap(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_lineCap(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_lineJoin(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_lineJoin(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_lineWidth(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_lineWidth(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_miterLimit(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_miterLimit(QV4::SimpleCallContext *ctx);
+
+    static QV4::Value method_get_shadowBlur(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_shadowBlur(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_shadowColor(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_shadowColor(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_shadowOffsetX(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_shadowOffsetX(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_shadowOffsetY(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_shadowOffsetY(QV4::SimpleCallContext *ctx);
+
+    // should these two be on the proto?
+    static QV4::Value method_get_path(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_path(QV4::SimpleCallContext *ctx);
+
+    static QV4::Value method_get_font(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_font(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_textAlign(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_textAlign(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_get_textBaseline(QV4::SimpleCallContext *ctx);
+    static QV4::Value method_set_textBaseline(QV4::SimpleCallContext *ctx);
+
 protected:
     static void destroy(Managed *that)
     {
@@ -280,6 +320,8 @@ protected:
         static_cast<QQuickContext2DStyle *>(that)->~QQuickContext2DStyle();
     }
 };
+
+DEFINE_MANAGED_VTABLE(QQuickContext2DStyle);
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
 {
@@ -753,28 +795,29 @@ static QV4::Value ctx2d_shear(const v8::Arguments &args)
      The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
      The default value is 1.0.
 */
-static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_globalAlpha(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
     return QV4::Value::fromDouble(r->context->state.globalAlpha);
 }
 
-static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_globalAlpha(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    qreal globalAlpha = value->NumberValue();
+    double globalAlpha = ctx->argument(0).toNumber();
 
     if (!qIsFinite(globalAlpha))
-        return;
+        return QV4::Value::undefinedValue();
 
     if (globalAlpha >= 0.0 && globalAlpha <= 1.0 && r->context->state.globalAlpha != globalAlpha) {
         r->context->state.globalAlpha = globalAlpha;
         r->context->buffer()->setGlobalAlpha(r->context->state.globalAlpha);
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -803,31 +846,29 @@ static void ctx2d_globalAlpha_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
      extension composition modes are provided as "vendorName-operationName" syntax, for example: QPainter::CompositionMode_Exclusion is provided as
      "qt-exclusion".
 */
-static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_globalCompositeOperation(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    return engine->toString(qt_composite_mode_to_string(r->context->state.globalCompositeOperation));
+    return QV4::Value::fromString(ctx->engine->newString(qt_composite_mode_to_string(r->context->state.globalCompositeOperation)));
 }
 
-static void ctx2d_globalCompositeOperation_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_globalCompositeOperation(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString mode = value->v4Value().toQString();
+    QString mode = ctx->argument(0).toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
     if (cm == QPainter::CompositionMode_SourceOver && mode != QStringLiteral("source-over"))
-        return;
+        return QV4::Value::undefinedValue();
 
     if (cm != r->context->state.globalCompositeOperation) {
         r->context->state.globalCompositeOperation = cm;
         r->context->buffer()->setGlobalCompositeOperation(cm);
     }
+    return QV4::Value::undefinedValue();
 }
 
 // colors and styles
@@ -853,58 +894,59 @@ static void ctx2d_globalCompositeOperation_set(v8::Handle<v8::String>, v8::Handl
      \sa createPattern()
      \sa strokeStyle
  */
-static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_fillStyle(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
     QColor color = r->context->state.fillStyle.color();
     if (color.isValid()) {
         if (color.alpha() == 255)
-            return engine->toString(color.name());
+            return QV4::Value::fromString(ctx->engine->newString(color.name()));
         QString alphaString = QString::number(color.alphaF(), 'f');
         while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
         if (alphaString.endsWith(QLatin1Char('.')))
             alphaString += QLatin1Char('0');
-        return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
+        QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
+        return QV4::Value::fromString(ctx->engine->newString(str));
     }
     return r->context->m_fillStyle.value();
 }
 
-static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_fillStyle(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
+    QV4::Value value = ctx->argument(0);
+    QV8Engine *engine = ctx->engine->v8Engine;
 
-   if (value->IsObject()) {
-       QColor color = engine->toVariant(value->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
+   if (value.asObject()) {
+       QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->context->state.fillStyle = color;
            r->context->buffer()->setFillStyle(color);
-           r->context->m_fillStyle = value->v4Value();
+           r->context->m_fillStyle = value;
        } else {
-           QQuickContext2DStyle *style = value->v4Value().as<QQuickContext2DStyle>();
+           QQuickContext2DStyle *style = value.as<QQuickContext2DStyle>();
            if (style && style->brush != r->context->state.fillStyle) {
                r->context->state.fillStyle = style->brush;
                r->context->buffer()->setFillStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
-               r->context->m_fillStyle = value->v4Value();
+               r->context->m_fillStyle = value;
                r->context->state.fillPatternRepeatX = style->patternRepeatX;
                r->context->state.fillPatternRepeatY = style->patternRepeatY;
            }
        }
-   } else if (value->IsString()) {
-       QColor color = qt_color_from_string(value->v4Value());
+   } else if (value.isString()) {
+       QColor color = qt_color_from_string(value);
        if (color.isValid() && r->context->state.fillStyle != QBrush(color)) {
             r->context->state.fillStyle = QBrush(color);
             r->context->buffer()->setFillStyle(r->context->state.fillStyle);
-            r->context->m_fillStyle = value->v4Value();
+            r->context->m_fillStyle = value;
        }
    }
+   return QV4::Value::undefinedValue();
 }
 /*!
     \qmlproperty enumeration QtQuick2::Context2D::fillRule
@@ -918,30 +960,33 @@ static void ctx2d_fillStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
 
      \sa fillStyle
  */
-static v8::Handle<v8::Value> ctx2d_fillRule(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_fillRule(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
+    QV8Engine *engine = ctx->engine->v8Engine;
     return engine->fromVariant(r->context->state.fillRule);
 }
 
-static void ctx2d_fillRule_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_fillRule(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    if ((value->IsString() && value->v4Value().toQString() == QStringLiteral("WindingFill"))
-      ||(value->IsNumber() && value->NumberValue() == Qt::WindingFill)) {
+    QV4::Value value = ctx->argument(0);
+
+    if ((value.isString() && value.toQString() == QStringLiteral("WindingFill"))
+        || (value.isInt32() && value.integerValue() == Qt::WindingFill)) {
         r->context->state.fillRule = Qt::WindingFill;
-    } else if ((value->IsString() && value->v4Value().toQString() == QStringLiteral("OddEvenFill"))
-               ||(value->IsNumber() && value->NumberValue() == Qt::OddEvenFill)) {
+    } else if ((value.isString() && value.toQString() == QStringLiteral("OddEvenFill"))
+               || (value.isInt32() && value.integerValue() == Qt::OddEvenFill)) {
         r->context->state.fillRule = Qt::OddEvenFill;
     } else {
         //error
     }
     r->context->m_path.setFillRule(r->context->state.fillRule);
+    return QV4::Value::undefinedValue();
 }
 /*!
     \qmlproperty variant QtQuick2::Context2D::strokeStyle
@@ -956,59 +1001,60 @@ static void ctx2d_fillRule_set(v8::Handle<v8::String>, v8::Handle<v8::Value> val
      \sa createPattern()
      \sa fillStyle
  */
-v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_strokeStyle(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
     QColor color = r->context->state.strokeStyle.color();
     if (color.isValid()) {
         if (color.alpha() == 255)
-            return engine->toString(color.name());
+            return QV4::Value::fromString(ctx->engine->newString(color.name()));
         QString alphaString = QString::number(color.alphaF(), 'f');
         while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
         if (alphaString.endsWith(QLatin1Char('.')))
             alphaString += QLatin1Char('0');
-        return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
+        QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
+        return QV4::Value::fromString(ctx->engine->newString(str));
     }
     return r->context->m_strokeStyle.value();
 }
 
-static void ctx2d_strokeStyle_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_strokeStyle(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
+    QV8Engine *engine = ctx->engine->v8Engine;
+    QV4::Value value = ctx->argument(0);
 
-    if (value->IsObject()) {
-        QColor color = engine->toVariant(value->v4Value(), qMetaTypeId<QColor>()).value<QColor>();
+    if (value.asObject()) {
+        QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->context->state.fillStyle = color;
             r->context->buffer()->setStrokeStyle(color);
-            r->context->m_strokeStyle = value->v4Value();
+            r->context->m_strokeStyle = value;
         } else {
-            QQuickContext2DStyle *style = value->v4Value().as<QQuickContext2DStyle>();
+            QQuickContext2DStyle *style = value.as<QQuickContext2DStyle>();
             if (style && style->brush != r->context->state.strokeStyle) {
                 r->context->state.strokeStyle = style->brush;
                 r->context->buffer()->setStrokeStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
-                r->context->m_strokeStyle = value->v4Value();
+                r->context->m_strokeStyle = value;
                 r->context->state.strokePatternRepeatX = style->patternRepeatX;
                 r->context->state.strokePatternRepeatY = style->patternRepeatY;
 
             }
         }
-    } else if (value->IsString()) {
-        QColor color = qt_color_from_string(value->v4Value());
+    } else if (value.isString()) {
+        QColor color = qt_color_from_string(value);
         if (color.isValid() && r->context->state.strokeStyle != QBrush(color)) {
              r->context->state.strokeStyle = QBrush(color);
              r->context->buffer()->setStrokeStyle(r->context->state.strokeStyle);
-             r->context->m_strokeStyle = value->v4Value();
+             r->context->m_strokeStyle = value;
         }
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -1271,32 +1317,29 @@ static QV4::Value ctx2d_createPattern(const v8::Arguments &args)
     \endlist
     Other values are ignored.
 */
-v8::Handle<v8::Value> ctx2d_lineCap(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_lineCap(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.lineCap) {
     case Qt::RoundCap:
-        return engine->toString(QStringLiteral("round"));
-    case Qt::FlatCap:
-        return engine->toString(QStringLiteral("butt"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("round")));
     case Qt::SquareCap:
-        return engine->toString(QStringLiteral("square"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("square")));
+    case Qt::FlatCap:
     default:
         break;
     }
-    return engine->toString(QStringLiteral("butt"));;
+    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("butt")));
 }
 
-static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_lineCap(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString lineCap = value->v4Value().toQString();
+    QString lineCap = ctx->argument(0).toQString();
     Qt::PenCapStyle cap;
     if (lineCap == QStringLiteral("round"))
         cap = Qt::RoundCap;
@@ -1305,12 +1348,13 @@ static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> valu
     else if (lineCap == QStringLiteral("square"))
         cap = Qt::SquareCap;
     else
-        return;
+        return QV4::Value::undefinedValue();
 
     if (cap != r->context->state.lineCap) {
         r->context->state.lineCap = cap;
         r->context->buffer()->setLineCap(cap);
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -1327,32 +1371,29 @@ static void ctx2d_lineCap_set(v8::Handle<v8::String>, v8::Handle<v8::Value> valu
     \endlist
     Other values are ignored.
 */
-v8::Handle<v8::Value> ctx2d_lineJoin(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_lineJoin(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.lineJoin) {
     case Qt::RoundJoin:
-        return engine->toString(QStringLiteral("round"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("round")));
     case Qt::BevelJoin:
-        return engine->toString(QStringLiteral("bevel"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("bevel")));
     case Qt::MiterJoin:
-        return engine->toString(QStringLiteral("miter"));
     default:
         break;
     }
-    return engine->toString(QStringLiteral("miter"));
+    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("miter")));
 }
 
-static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_lineJoin(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString lineJoin = value->v4Value().toQString();
+    QString lineJoin = ctx->argument(0).toQString();
     Qt::PenJoinStyle join;
     if (lineJoin == QStringLiteral("round"))
         join = Qt::RoundJoin;
@@ -1361,38 +1402,39 @@ static void ctx2d_lineJoin_set(v8::Handle<v8::String>, v8::Handle<v8::Value> val
     else if (lineJoin == QStringLiteral("miter"))
         join = Qt::SvgMiterJoin;
     else
-        return;
+        return QV4::Value::undefinedValue();
 
     if (join != r->context->state.lineJoin) {
         r->context->state.lineJoin = join;
         r->context->buffer()->setLineJoin(join);
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
     \qmlproperty real QtQuick2::Context2D::lineWidth
      Holds the current line width. Values that are not finite values greater than zero are ignored.
  */
-v8::Handle<v8::Value> ctx2d_lineWidth(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_lineWidth(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
 
     return QV4::Value::fromDouble(r->context->state.lineWidth);
 }
 
-static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_lineWidth(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    qreal w = value->NumberValue();
+    qreal w = ctx->argument(0).toNumber();
 
     if (w > 0 && qIsFinite(w) && w != r->context->state.lineWidth) {
         r->context->state.lineWidth = w;
         r->context->buffer()->setLineWidth(w);
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -1400,26 +1442,26 @@ static void ctx2d_lineWidth_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
      Holds the current miter limit ratio.
      The default miter limit value is 10.0.
  */
-v8::Handle<v8::Value> ctx2d_miterLimit(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_miterLimit(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
 
     return QV4::Value::fromDouble(r->context->state.miterLimit);
 }
 
-static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_miterLimit(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    qreal ml = value->NumberValue();
+    qreal ml = ctx->argument(0).toNumber();
 
     if (ml > 0 && qIsFinite(ml) && ml != r->context->state.miterLimit) {
         r->context->state.miterLimit = ml;
         r->context->buffer()->setMiterLimit(ml);
     }
+    return QV4::Value::undefinedValue();
 }
 
 // shadows
@@ -1427,53 +1469,52 @@ static void ctx2d_miterLimit_set(v8::Handle<v8::String>, v8::Handle<v8::Value> v
     \qmlproperty real QtQuick2::Context2D::shadowBlur
      Holds the current level of blur applied to shadows
  */
-v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_shadowBlur(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
 
     return QV4::Value::fromDouble(r->context->state.shadowBlur);
 }
 
-static void ctx2d_shadowBlur_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_shadowBlur(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
-    qreal blur = value->NumberValue();
+
+    qreal blur = ctx->argument(0).toNumber();
 
     if (blur > 0 && qIsFinite(blur) && blur != r->context->state.shadowBlur) {
         r->context->state.shadowBlur = blur;
         r->context->buffer()->setShadowBlur(blur);
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
     \qmlproperty string QtQuick2::Context2D::shadowColor
      Holds the current shadow color.
  */
-v8::Handle<v8::Value> ctx2d_shadowColor(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_shadowColor(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    return engine->toString(r->context->state.shadowColor.name());
+    return QV4::Value::fromString(ctx->engine->newString(r->context->state.shadowColor.name()));
 }
 
-static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_shadowColor(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QColor color = qt_color_from_string(value->v4Value());
+    QColor color = qt_color_from_string(ctx->argument(0));
 
     if (color.isValid() && color != r->context->state.shadowColor) {
         r->context->state.shadowColor = color;
         r->context->buffer()->setShadowColor(color);
     }
+    return QV4::Value::undefinedValue();
 }
 
 
@@ -1483,25 +1524,25 @@ static void ctx2d_shadowColor_set(v8::Handle<v8::String>, v8::Handle<v8::Value> 
 
      \sa shadowOffsetY
  */
-v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_shadowOffsetX(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
 
     return QV4::Value::fromDouble(r->context->state.shadowOffsetX);
 }
 
-static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_shadowOffsetX(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetX = value->NumberValue();
+    qreal offsetX = ctx->argument(0).toNumber();
     if (qIsFinite(offsetX) && offsetX != r->context->state.shadowOffsetX) {
         r->context->state.shadowOffsetX = offsetX;
         r->context->buffer()->setShadowOffsetX(offsetX);
     }
+    return QV4::Value::undefinedValue();
 }
 /*!
     \qmlproperty qreal QtQuick2::Context2D::shadowOffsetY
@@ -1509,50 +1550,51 @@ static void ctx2d_shadowOffsetX_set(v8::Handle<v8::String>, v8::Handle<v8::Value
 
      \sa shadowOffsetX
  */
-v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_shadowOffsetY(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-
 
     return QV4::Value::fromDouble(r->context->state.shadowOffsetY);
 }
 
-static void ctx2d_shadowOffsetY_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_shadowOffsetY(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetY = value->NumberValue();
+    qreal offsetY = ctx->argument(0).toNumber();
     if (qIsFinite(offsetY) && offsetY != r->context->state.shadowOffsetY) {
         r->context->state.shadowOffsetY = offsetY;
         r->context->buffer()->setShadowOffsetY(offsetY);
     }
+    return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> ctx2d_path(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_path(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
+
     return r->context->m_v4path.value();
 }
 
-static void ctx2d_path_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_path(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
+    QV4::Value value = ctx->argument(0);
     r->context->beginPath();
-    if (value->IsObject()) {
-        if (QV4::QObjectWrapper *qobjectWrapper = value->v4Value().as<QV4::QObjectWrapper>()) {
-            if (QQuickPath *path = qobject_cast<QQuickPath*>(qobjectWrapper->object()))
-                r->context->m_path = path->path();
-        }
+    if (QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>()) {
+        if (QQuickPath *path = qobject_cast<QQuickPath*>(qobjectWrapper->object()))
+            r->context->m_path = path->path();
     } else {
-        QString path = value->v4Value().toQString();
+        QString path = value.toQString();
         QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
     }
-    r->context->m_v4path = value->v4Value();
+    r->context->m_v4path = value;
+    return QV4::Value::undefinedValue();
 }
 
 //rects
@@ -2027,26 +2069,25 @@ static QV4::Value ctx2d_caretBlinkRate(const v8::Arguments &args)
   The default font value is "10px sans-serif".
   See \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
   */
-v8::Handle<v8::Value> ctx2d_font(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_font(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    return engine->toString(r->context->state.font.toString());
+    return QV4::Value::fromString(ctx->engine->newString(r->context->state.font.toString()));
 }
 
-static void ctx2d_font_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_font(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString fs = value->v4Value().toQString();
+    QString fs = ctx->argument(0).toQString();
     QFont font = qt_font_from_string(fs);
     if (font != r->context->state.font) {
         r->context->state.font = font;
     }
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -2063,34 +2104,33 @@ static void ctx2d_font_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, 
   \endlist
   Other values are ignored. The default value is "start".
   */
-v8::Handle<v8::Value> ctx2d_textAlign(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_textAlign(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
     switch (r->context->state.textAlign) {
+    case QQuickContext2D::End:
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("end")));
+    case QQuickContext2D::Left:
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("left")));
+    case QQuickContext2D::Right:
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("right")));
+    case QQuickContext2D::Center:
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("center")));
     case QQuickContext2D::Start:
-        return engine->toString(QStringLiteral("start"));
-   case QQuickContext2D::End:
-        return engine->toString(QStringLiteral("end"));
-   case QQuickContext2D::Left:
-        return engine->toString(QStringLiteral("left"));
-   case QQuickContext2D::Right:
-        return engine->toString(QStringLiteral("right"));
-   case QQuickContext2D::Center:
-        return engine->toString(QStringLiteral("center"));
     default:
         break;
     }
-    return engine->toString(QStringLiteral("start"));
+    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("start")));
 }
 
-static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_textAlign(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString textAlign = value->v4Value().toQString();
+    QString textAlign = ctx->argument(0).toQString();
 
     QQuickContext2D::TextAlignType ta;
     if (textAlign == QStringLiteral("start"))
@@ -2104,11 +2144,12 @@ static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
     else if (textAlign == QStringLiteral("center"))
         ta = QQuickContext2D::Center;
     else
-        return;
+        return QV4::Value::undefinedValue();
 
-    if (ta != r->context->state.textAlign) {
+    if (ta != r->context->state.textAlign)
         r->context->state.textAlign = ta;
-    }
+
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -2126,34 +2167,32 @@ static void ctx2d_textAlign_set(v8::Handle<v8::String>, v8::Handle<v8::Value> va
   \endlist
   Other values are ignored. The default value is "alphabetic".
   */
-v8::Handle<v8::Value> ctx2d_textBaseline(v8::Handle<v8::String>, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_get_textBaseline(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
     switch (r->context->state.textBaseline) {
-    case QQuickContext2D::Alphabetic:
-        return engine->toString(QStringLiteral("alphabetic"));
     case QQuickContext2D::Hanging:
-        return engine->toString(QStringLiteral("hanging"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("hanging")));
     case QQuickContext2D::Top:
-        return engine->toString(QStringLiteral("top"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("top")));
     case QQuickContext2D::Bottom:
-        return engine->toString(QStringLiteral("bottom"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("bottom")));
     case QQuickContext2D::Middle:
-        return engine->toString(QStringLiteral("middle"));
+        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("middle")));
+    case QQuickContext2D::Alphabetic:
     default:
         break;
     }
-    return engine->toString(QStringLiteral("alphabetic"));
+    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("alphabetic")));
 }
 
-static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)
+QV4::Value QQuickJSContext2D::method_set_textBaseline(QV4::SimpleCallContext *ctx)
 {
-    QQuickJSContext2D *r = info.This()->v4Value().as<QQuickJSContext2D>();
+    QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
-    QString textBaseline = value->v4Value().toQString();
+    QString textBaseline = ctx->argument(0).toQString();
 
     QQuickContext2D::TextBaseLineType tb;
     if (textBaseline == QStringLiteral("alphabetic"))
@@ -2167,11 +2206,12 @@ static void ctx2d_textBaseline_set(v8::Handle<v8::String>, v8::Handle<v8::Value>
     else if (textBaseline == QStringLiteral("middle"))
         tb = QQuickContext2D::Middle;
     else
-        return;
+        return QV4::Value::undefinedValue();
 
-    if (tb != r->context->state.textBaseline) {
+    if (tb != r->context->state.textBaseline)
         r->context->state.textBaseline = tb;
-    }
+
+    return QV4::Value::undefinedValue();
 }
 
 /*!
@@ -3511,24 +3551,10 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("transform"), V8FUNCTION(ctx2d_transform, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("translate"), V8FUNCTION(ctx2d_translate, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("shear"), V8FUNCTION(ctx2d_shear, engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("globalAlpha"), ctx2d_globalAlpha, ctx2d_globalAlpha_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("globalCompositeOperation"), ctx2d_globalCompositeOperation, ctx2d_globalCompositeOperation_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("fillRule"), ctx2d_fillRule, ctx2d_fillRule_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("fillStyle"), ctx2d_fillStyle, ctx2d_fillStyle_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("strokeStyle"), ctx2d_strokeStyle, ctx2d_strokeStyle_set, v8::External::New(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createLinearGradient"), V8FUNCTION(ctx2d_createLinearGradient, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createRadialGradient"), V8FUNCTION(ctx2d_createRadialGradient, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createConicalGradient"), V8FUNCTION(ctx2d_createConicalGradient, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createPattern"), V8FUNCTION(ctx2d_createPattern, engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineCap"), ctx2d_lineCap, ctx2d_lineCap_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineJoin"), ctx2d_lineJoin, ctx2d_lineJoin_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineWidth"), ctx2d_lineWidth, ctx2d_lineWidth_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("miterLimit"), ctx2d_miterLimit, ctx2d_miterLimit_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowBlur"), ctx2d_shadowBlur, ctx2d_shadowBlur_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowColor"), ctx2d_shadowColor, ctx2d_shadowColor_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowOffsetX"), ctx2d_shadowOffsetX, ctx2d_shadowOffsetX_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowOffsetY"), ctx2d_shadowOffsetY, ctx2d_shadowOffsetY_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("path"), ctx2d_path, ctx2d_path_set, v8::External::New(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("clearRect"), V8FUNCTION(ctx2d_clearRect, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("fillRect"), V8FUNCTION(ctx2d_fillRect, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("strokeRect"), V8FUNCTION(ctx2d_strokeRect, engine));
@@ -3551,9 +3577,6 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("drawFocusRing"), V8FUNCTION(ctx2d_drawFocusRing, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("caretBlinkRate"), V8FUNCTION(ctx2d_caretBlinkRate, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("setCaretSelectionRect"), V8FUNCTION(ctx2d_setCaretSelectionRect, engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("font"), ctx2d_font, ctx2d_font_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("textAlign"), ctx2d_textAlign, ctx2d_textAlign_set, v8::External::New(engine));
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("textBaseline"), ctx2d_textBaseline, ctx2d_textBaseline_set, v8::External::New(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("fillText"), V8FUNCTION(ctx2d_fillText, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("measureText"), V8FUNCTION(ctx2d_measureText, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("strokeText"), V8FUNCTION(ctx2d_strokeText, engine));
