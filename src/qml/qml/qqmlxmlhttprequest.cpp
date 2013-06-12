@@ -100,8 +100,6 @@ struct QQmlXMLHttpRequestData {
     QV4::PersistentValue textPrototype;
     QV4::PersistentValue cdataPrototype;
     QV4::PersistentValue documentPrototype;
-
-    QV4::Value newNode();
 };
 
 static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
@@ -124,17 +122,6 @@ QQmlXMLHttpRequestData::QQmlXMLHttpRequestData()
 
 QQmlXMLHttpRequestData::~QQmlXMLHttpRequestData()
 {
-}
-
-QV4::Value QQmlXMLHttpRequestData::newNode()
-{
-    if (nodeFunction.isEmpty()) {
-        v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-        ft->InstanceTemplate()->SetHasExternalResource(true);
-        nodeFunction = ft->GetFunction()->v4Value();
-    }
-
-    return nodeFunction.value().asFunctionObject()->newInstance();
 }
 
 namespace {
@@ -271,21 +258,41 @@ public:
 
 DEFINE_MANAGED_VTABLE(NodeList);
 
-class Node
+class NodePrototype : public Object
 {
+    Q_MANAGED
 public:
-    // JS API
-    static v8::Handle<v8::Value> nodeName(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> nodeValue(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> nodeType(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    NodePrototype(ExecutionEngine *engine)
+        : Object(engine)
+    {
+        vtbl = &static_vtbl;
+        defineAccessorProperty(engine, QStringLiteral("nodeName"), method_get_nodeName, 0);
+        defineAccessorProperty(engine, QStringLiteral("nodeValue"), method_get_nodeValue, 0);
+        defineAccessorProperty(engine, QStringLiteral("nodeType"), method_get_nodeType, 0);
 
-    static v8::Handle<v8::Value> parentNode(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> childNodes(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> firstChild(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> lastChild(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> previousSibling(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> nextSibling(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> attributes(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+        defineAccessorProperty(engine, QStringLiteral("parentNode"), method_get_parentNode, 0);
+        defineAccessorProperty(engine, QStringLiteral("childNodes"), method_get_childNodes, 0);
+        defineAccessorProperty(engine, QStringLiteral("firstChild"), method_get_firstChild, 0);
+        defineAccessorProperty(engine, QStringLiteral("lastChild"), method_get_lastChild, 0);
+        defineAccessorProperty(engine, QStringLiteral("previousSibling"), method_get_previousSibling, 0);
+        defineAccessorProperty(engine, QStringLiteral("nextSibling"), method_get_nextSibling, 0);
+        defineAccessorProperty(engine, QStringLiteral("attributes"), method_get_attributes, 0);
+    }
+
+    static void initClass(ExecutionEngine *engine);
+
+    // JS API
+    static Value method_get_nodeName(SimpleCallContext *ctx);
+    static Value method_get_nodeValue(SimpleCallContext *ctx);
+    static Value method_get_nodeType(SimpleCallContext *ctx);
+
+    static Value method_get_parentNode(SimpleCallContext *ctx);
+    static Value method_get_childNodes(SimpleCallContext *ctx);
+    static Value method_get_firstChild(SimpleCallContext *ctx);
+    static Value method_get_lastChild(SimpleCallContext *ctx);
+    static Value method_get_previousSibling(SimpleCallContext *ctx);
+    static Value method_get_nextSibling(SimpleCallContext *ctx);
+    static Value method_get_attributes(SimpleCallContext *ctx);
 
     //static v8::Handle<v8::Value> ownerDocument(v8::Local<v8::String>, const v8::AccessorInfo& args);
     //static v8::Handle<v8::Value> namespaceURI(v8::Local<v8::String>, const v8::AccessorInfo& args);
@@ -294,13 +301,39 @@ public:
     //static v8::Handle<v8::Value> baseURI(v8::Local<v8::String>, const v8::AccessorInfo& args);
     //static v8::Handle<v8::Value> textContent(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
+    static Value getProto(ExecutionEngine *v4);
+
+};
+
+DEFINE_MANAGED_VTABLE(NodePrototype);
+
+class Node : public Object
+{
+    Q_MANAGED
+
+    Node(ExecutionEngine *engine, NodeImpl *data)
+        : Object(engine)
+        , d(data)
+    {
+        vtbl = &static_vtbl;
+
+        if (d)
+            d->addref();
+    }
+    ~Node() {
+        if (d)
+            d->release();
+    }
+
+    // JS API
+    static void destroy(Managed *that) {
+        that->as<Node>()->~Node();
+    }
+
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
     static Value create(QV8Engine *, NodeImpl *);
 
-    Node();
     Node(const Node &o);
-    ~Node();
     bool isNull() const;
 
     NodeImpl *d;
@@ -309,83 +342,72 @@ private:
     Node &operator=(const Node &);
 };
 
+DEFINE_MANAGED_VTABLE(Node);
+
 class Element : public Node
 {
 public:
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static Value prototype(ExecutionEngine *);
 };
 
 class Attr : public Node
 {
 public:
     // JS API
-    static v8::Handle<v8::Value> name(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> specified(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> value(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> ownerElement(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> schemaTypeInfo(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> isId(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    static Value name(SimpleCallContext *ctx);
+//    static v8::Handle<v8::Value> specified(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    static Value value(SimpleCallContext *ctx);
+    static Value ownerElement(SimpleCallContext *ctx);
+//    static v8::Handle<v8::Value> schemaTypeInfo(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+//    static v8::Handle<v8::Value> isId(v8::Handle<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static Value prototype(ExecutionEngine *);
 };
 
 class CharacterData : public Node
 {
 public:
     // JS API
-    static v8::Handle<v8::Value> length(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    static Value length(SimpleCallContext *ctx);
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static Value prototype(ExecutionEngine *v4);
 };
 
 class Text : public CharacterData
 {
 public:
     // JS API
-    static v8::Handle<v8::Value> isElementContentWhitespace(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> wholeText(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    static Value isElementContentWhitespace(SimpleCallContext *ctx);
+    static Value wholeText(SimpleCallContext *ctx);
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static Value prototype(ExecutionEngine *);
 };
 
 class CDATA : public Text
 {
 public:
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static Value prototype(ExecutionEngine *v4);
 };
 
 class Document : public Node
 {
 public:
     // JS API
-    static v8::Handle<v8::Value> xmlVersion(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> xmlEncoding(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> xmlStandalone(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> documentElement(v8::Handle<v8::String>, const v8::AccessorInfo& args);
+    static Value xmlVersion(SimpleCallContext *ctx);
+    static Value xmlEncoding(SimpleCallContext *ctx);
+    static Value xmlStandalone(SimpleCallContext *ctx);
+    static Value documentElement(SimpleCallContext *ctx);
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
-    static v8::Handle<v8::Value> load(QV8Engine *engine, const QByteArray &data);
+    static Value prototype(ExecutionEngine *);
+    static Value load(QV8Engine *engine, const QByteArray &data);
 };
 
-}
-
-class QQmlDOMNodeResource : public QV8ObjectResource, public Node
-{
-    V8_RESOURCE_TYPE(DOMNodeType);
-public:
-    QQmlDOMNodeResource(QV8Engine *e);
-
-};
-
-QQmlDOMNodeResource::QQmlDOMNodeResource(QV8Engine *e)
-: QV8ObjectResource(e)
-{
 }
 
 void NodeImpl::addref() 
@@ -398,29 +420,35 @@ void NodeImpl::release()
     D(document);
 }
 
-v8::Handle<v8::Value> Node::nodeName(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
 
+    QString name;
     switch (r->d->type) {
     case NodeImpl::Document:
-        return v8::String::New("#document");
+        name = QStringLiteral("#document");
+        break;
     case NodeImpl::CDATA:
-        return v8::String::New("#cdata-section");
+        name = QStringLiteral("#cdata-section");
+        break;
     case NodeImpl::Text:
-        return v8::String::New("#text");
+        name = QStringLiteral("#text");
+        break;
     default:
-        return engine->toString(r->d->name);
+        name = r->d->name;
+        break;
     }
+    return Value::fromString(ctx->engine->newString(name));
 }
 
-v8::Handle<v8::Value> Node::nodeValue(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
 
     if (r->d->type == NodeImpl::Document ||
         r->d->type == NodeImpl::DocumentFragment ||
@@ -431,60 +459,72 @@ v8::Handle<v8::Value> Node::nodeValue(v8::Handle<v8::String>, const v8::Accessor
         r->d->type == NodeImpl::Notation)
         return QV4::Value::nullValue();
 
-    return engine->toString(r->d->data);
+    return Value::fromString(ctx->engine->newString(r->d->data));
 }
 
-v8::Handle<v8::Value> Node::nodeType(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
     return QV4::Value::fromInt32(r->d->type);
 }
 
-v8::Handle<v8::Value> Node::parentNode(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->parent) return Node::create(engine, r->d->parent);
     else return QV4::Value::nullValue();
 }
 
-v8::Handle<v8::Value> Node::childNodes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return NodeList::create(engine, r->d);
 }
 
-v8::Handle<v8::Value> Node::firstChild(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->children.isEmpty()) return QV4::Value::nullValue();
     else return Node::create(engine, r->d->children.first());
 }
 
-v8::Handle<v8::Value> Node::lastChild(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->children.isEmpty()) return QV4::Value::nullValue();
     else return Node::create(engine, r->d->children.last());
 }
 
-v8::Handle<v8::Value> Node::previousSibling(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (!r->d->parent) return QV4::Value::nullValue();
 
@@ -498,11 +538,13 @@ v8::Handle<v8::Value> Node::previousSibling(v8::Handle<v8::String>, const v8::Ac
     return QV4::Value::nullValue();
 }
 
-v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (!r->d->parent) return QV4::Value::nullValue();
 
@@ -516,11 +558,13 @@ v8::Handle<v8::Value> Node::nextSibling(v8::Handle<v8::String>, const v8::Access
     return QV4::Value::nullValue();
 }
 
-v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NodePrototype::method_get_attributes(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->type != NodeImpl::Element)
         return QV4::Value::nullValue();
@@ -528,45 +572,27 @@ v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::Accesso
         return NamedNodeMap::create(engine, r->d, r->d->attributes);
 }
 
-v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
+Value NodePrototype::getProto(ExecutionEngine *v4)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->nodePrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetAccessor(v8::String::New("nodeName"), nodeName,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("nodeValue"), nodeValue,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("nodeType"), nodeType,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("parentNode"), parentNode,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("childNodes"), childNodes,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("firstChild"), firstChild,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("lastChild"), lastChild,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("previousSibling"), previousSibling,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("nextSibling"), nextSibling,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("attributes"), attributes,
-                                      0, v8::External::New(engine));
-        d->nodePrototype = p->v4Value();
-        engine->freezeObject(d->nodePrototype);
+        Object *p = new (v4->memoryManager) NodePrototype(v4);
+        d->nodePrototype = Value::fromObject(p);
+        v4->v8Engine->freezeObject(d->nodePrototype.value());
     }
     return d->nodePrototype.value();
 }
 
 Value Node::create(QV8Engine *engine, NodeImpl *data)
 {
+    ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
     QQmlXMLHttpRequestData *d = xhrdata(engine);
-    v8::Handle<v8::Object> instance = d->newNode();
+    Node *instance = new (v4->memoryManager) Node(v4, data);
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance->SetPrototype(Attr::prototype(engine));
+        instance->prototype = Attr::prototype(v4).asObject();
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -578,177 +604,161 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::ProcessingInstruction:
         return QV4::Value::undefinedValue();
     case NodeImpl::CDATA:
-        instance->SetPrototype(CDATA::prototype(engine));
+        instance->prototype = CDATA::prototype(v4).asObject();
         break;
     case NodeImpl::Text:
-        instance->SetPrototype(Text::prototype(engine));
+        instance->prototype = Text::prototype(v4).asObject();
         break;
     case NodeImpl::Element:
-        instance->SetPrototype(Element::prototype(engine));
+        instance->prototype = Element::prototype(v4).asObject();
         break;
     }
 
-    QQmlDOMNodeResource *r = new QQmlDOMNodeResource(engine);
-    r->d = data;
-    if (data) A(data);
-    instance->SetExternalResource(r);
-
-    return instance->v4Value();
+    return Value::fromObject(instance);
 }
 
-v8::Handle<v8::Object> Element::prototype(QV8Engine *engine)
+Value Element::prototype(ExecutionEngine *engine)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->elementPrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetPrototype(Node::prototype(engine));
-        p->SetAccessor(v8::String::New("tagName"), nodeName,
-                                         0, v8::External::New(engine));
-        d->elementPrototype = p->v4Value();
-        engine->freezeObject(d->elementPrototype);
+        Object *p = engine->newObject();
+        p->prototype = NodePrototype::getProto(engine).asObject();
+        p->defineAccessorProperty(engine, QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
+        d->elementPrototype = Value::fromObject(p);
+        engine->v8Engine->freezeObject(d->elementPrototype.value());
     }
     return d->elementPrototype.value();
 }
 
-v8::Handle<v8::Object> Attr::prototype(QV8Engine *engine)
+Value Attr::prototype(ExecutionEngine *engine)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->attrPrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetPrototype(Node::prototype(engine));
-        p->SetAccessor(v8::String::New("name"), name,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("value"), value,
-                                      0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("ownerElement"), ownerElement,
-                                      0, v8::External::New(engine));
-        d->attrPrototype = p->v4Value();
-        engine->freezeObject(d->attrPrototype);
+        Object *p = engine->newObject();
+        p->prototype = NodePrototype::getProto(engine).asObject();
+        p->defineAccessorProperty(engine, QStringLiteral("name"), name, 0);
+        p->defineAccessorProperty(engine, QStringLiteral("value"), value, 0);
+        p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), ownerElement, 0);
+        d->attrPrototype = Value::fromObject(p);
+        engine->v8Engine->freezeObject(d->attrPrototype.value());
     }
     return d->attrPrototype.value();
 }
 
-v8::Handle<v8::Value> Attr::name(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value Attr::name(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return engine->toString(r->d->name);
 }
 
-v8::Handle<v8::Value> Attr::value(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value Attr::value(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return engine->toString(r->d->data);
 }
 
-v8::Handle<v8::Value> Attr::ownerElement(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value Attr::ownerElement(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return Node::create(engine, r->d->parent);
 }
 
-v8::Handle<v8::Value> CharacterData::length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value CharacterData::length(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
     Q_UNUSED(engine)
     return QV4::Value::fromInt32(r->d->data.length());
 }
 
-v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
+Value CharacterData::prototype(ExecutionEngine *v4)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->characterDataPrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetPrototype(Node::prototype(engine));
-        p->SetAccessor(v8::String::New("data"), nodeValue,
-                                               0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("length"), length,
-                                               0, v8::External::New(engine));
-        d->characterDataPrototype = p->v4Value();
-        engine->freezeObject(d->characterDataPrototype);
+        Object *p = v4->newObject();
+        p->prototype = NodePrototype::getProto(v4).asObject();
+        p->defineAccessorProperty(v4, QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("length"), length, 0);
+        d->characterDataPrototype = Value::fromObject(p);
+        v4->v8Engine->freezeObject(d->characterDataPrototype);
     }
     return d->characterDataPrototype.value();
 }
 
-v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value Text::isElementContentWhitespace(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
-    Q_UNUSED(engine)
+
     return QV4::Value::fromBoolean(r->d->data.trimmed().isEmpty());
 }
 
-v8::Handle<v8::Value> Text::wholeText(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value Text::wholeText(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return engine->toString(r->d->data);
 }
 
-v8::Handle<v8::Object> Text::prototype(QV8Engine *engine)
+Value Text::prototype(ExecutionEngine *v4)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->textPrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetPrototype(CharacterData::prototype(engine));
-        p->SetAccessor(v8::String::New("isElementContentWhitespace"), isElementContentWhitespace,
-                                               0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("wholeText"), wholeText,
-                                               0, v8::External::New(engine));
-        d->textPrototype = p->v4Value();
-        engine->freezeObject(d->textPrototype);
+        Object *p = v4->newObject();
+        p->prototype = CharacterData::prototype(v4).asObject();
+        p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), isElementContentWhitespace, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("wholeText"), wholeText, 0);
+        d->textPrototype = Value::fromObject(p);
+        v4->v8Engine->freezeObject(d->textPrototype);
     }
     return d->textPrototype.value();
 }
 
-v8::Handle<v8::Object> CDATA::prototype(QV8Engine *engine)
+Value CDATA::prototype(ExecutionEngine *v4)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    // ### why not just use TextProto???
+    QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->cdataPrototype.isEmpty()) {
-        QV4::Object *p = QV8Engine::getV4(engine)->newObject();
-        p->prototype = Text::prototype(engine)->v4Value().asObject();
+        Object *p = v4->newObject();
+        p->prototype = Text::prototype(v4).asObject();
         d->cdataPrototype = QV4::Value::fromObject(p);
-        engine->freezeObject(d->cdataPrototype);
+        v4->v8Engine->freezeObject(d->cdataPrototype);
     }
     return d->cdataPrototype.value();
 }
 
-v8::Handle<v8::Object> Document::prototype(QV8Engine *engine)
+Value Document::prototype(ExecutionEngine *v4)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
+    QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->documentPrototype.isEmpty()) {
-        v8::Handle<v8::Object> p = v8::Object::New();
-        p->SetPrototype(Node::prototype(engine));
-        p->SetAccessor(v8::String::New("xmlVersion"), xmlVersion,
-                                          0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("xmlEncoding"), xmlEncoding,
-                                          0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("xmlStandalone"), xmlStandalone,
-                                          0, v8::External::New(engine));
-        p->SetAccessor(v8::String::New("documentElement"), documentElement,
-                                          0, v8::External::New(engine));
-        d->documentPrototype = p->v4Value();
-        engine->freezeObject(d->documentPrototype);
+        Object *p = v4->newObject();
+        p->prototype = NodePrototype::getProto(v4).asObject();
+        p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), xmlVersion, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), xmlEncoding, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), xmlStandalone, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("documentElement"), documentElement, 0);
+        d->documentPrototype = Value::fromObject(p);
+        v4->v8Engine->freezeObject(d->documentPrototype);
     }
     return d->documentPrototype.value();
 }
 
-v8::Handle<v8::Value> Document::load(QV8Engine *engine, const QByteArray &data)
+Value Document::load(QV8Engine *engine, const QByteArray &data)
 {
     Q_ASSERT(engine);
+    ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     DocumentImpl *document = 0;
     QStack<NodeImpl *> nodeStack;
@@ -827,28 +837,16 @@ v8::Handle<v8::Value> Document::load(QV8Engine *engine, const QByteArray &data)
         return QV4::Value::nullValue();
     }
 
-    v8::Handle<v8::Object> instance = xhrdata(engine)->newNode();
-    QQmlDOMNodeResource *r = new QQmlDOMNodeResource(engine);
-    r->d = document;
-    instance->SetExternalResource(r);
-    instance->SetPrototype(Document::prototype(engine));
-    return instance;
-}
-
-Node::Node()
-: d(0)
-{
+    Object *instance = new (v4->memoryManager) Node(v4, document);
+    instance->prototype = Document::prototype(v4).asObject();
+    return Value::fromObject(instance);
 }
 
 Node::Node(const Node &o)
-: d(o.d)
+    : Object(o.engine()), d(o.d)
 {
-    if (d) A(d);
-}
-
-Node::~Node()
-{
-    if (d) D(d);
+    if (d)
+        d->addref();
 }
 
 bool Node::isNull() const
@@ -949,38 +947,38 @@ Value NodeList::create(QV8Engine *engine, NodeImpl *data)
     return Value::fromObject(instance);
 }
 
-v8::Handle<v8::Value> Document::documentElement(v8::Handle<v8::String>, const v8::AccessorInfo& args)
+Value Document::documentElement(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
 }
 
-v8::Handle<v8::Value> Document::xmlStandalone(v8::Handle<v8::String>, const v8::AccessorInfo& args)
+Value Document::xmlStandalone(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
     Q_UNUSED(engine)
     return QV4::Value::fromBoolean(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
-v8::Handle<v8::Value> Document::xmlVersion(v8::Handle<v8::String>, const v8::AccessorInfo& args)
+Value Document::xmlVersion(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
 }
 
-v8::Handle<v8::Value> Document::xmlEncoding(v8::Handle<v8::String>, const v8::AccessorInfo& args)
+Value Document::xmlEncoding(SimpleCallContext *ctx)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
+    Node *r = ctx->thisObject.as<Node>();
     if (!r || r->d->type != NodeImpl::Document) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     return engine->toString(static_cast<DocumentImpl *>(r->d)->encoding);
 }

@@ -245,7 +245,6 @@ public:
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
-        type = Type_Object;
     }
     QQuickContext2D* context;
 
