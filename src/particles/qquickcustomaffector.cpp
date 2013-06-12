@@ -143,13 +143,16 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     if (m_onceOff)
         dt = 1.0;
 
-    v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
+    QQmlEngine *qmlEngine = ::qmlEngine(this);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+
+    QV4::ArrayObject *array = v4->newArrayObject(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
-        array->Set(i, toAffect[i]->v4Value().toValue());
+        array->putIndexed(i, toAffect[i]->v4Value().toValue());
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QQmlV4Handle(array->v4Value()), dt);
+        emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
@@ -157,12 +160,12 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
             affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QQmlV4Handle(array->v4Value()), simulationDelta);
+            emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), simulationDelta);
         }
         m_system->timeInt = realTime;
         if (dt > 0.0) {
             affectProperties(toAffect, dt);
-            emit affectParticles(QQmlV4Handle(array->v4Value()), dt);
+            emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), dt);
         }
     }
 
