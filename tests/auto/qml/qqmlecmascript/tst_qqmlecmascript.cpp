@@ -2180,9 +2180,9 @@ static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, c
         function->call(engine->global(), args, 1);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
-        return false;
+        return true;
     }
-    return true;
+    return false;
 }
 
 static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o, 
