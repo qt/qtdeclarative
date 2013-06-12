@@ -96,6 +96,7 @@ public:
     virtual void exec() { m_dialog.exec(); }
 
     virtual bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
+        m_dialog.winId();
         m_dialog.windowHandle()->setTransientParent(parent);
         m_dialog.windowHandle()->setFlags(f);
         m_dialog.setWindowModality(m);
