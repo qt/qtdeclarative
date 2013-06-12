@@ -663,6 +663,8 @@ void QSGPlainTexture::bind()
     QImage tmp = (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied)
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    if (tmp.width() * 4 != tmp.bytesPerLine())
+        tmp = tmp.copy();
 
 #ifndef QSG_NO_RENDER_TIMING
     qint64 convertTime = 0;
