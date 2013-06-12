@@ -63,7 +63,7 @@ class QQuickParticleData;
 class QQuickParticleSystemAnimation;
 class QQuickStochasticEngine;
 class QQuickSprite;
-class QQuickV8ParticleData;
+class QQuickV4ParticleData;
 class QQuickParticleGroup;
 class QQuickImageParticle;
 
@@ -231,7 +231,7 @@ public:
     QQmlV4Handle v4Value();
     void extendLife(float time);
 private:
-    QQuickV8ParticleData* v8Datum;
+    QQuickV4ParticleData* v8Datum;
 };
 
 class Q_AUTOTEST_EXPORT QQuickParticleSystem : public QQuickItem

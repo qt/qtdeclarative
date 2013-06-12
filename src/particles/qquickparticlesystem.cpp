@@ -46,7 +46,7 @@
 #include "qquickparticlepainter_p.h"
 #include <private/qquickspriteengine_p.h>
 #include <private/qquicksprite_p.h>
-#include "qquickv8particledata_p.h"
+#include "qquickv4particledata_p.h"
 #include "qquickparticlegroup_p.h"
 
 #include "qquicktrailemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
@@ -530,7 +530,7 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
 QQmlV4Handle QQuickParticleData::v4Value()
 {
     if (!v8Datum)
-        v8Datum = new QQuickV8ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);
+        v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);
     return v8Datum->v4Value();
 }
 //sets the x accleration without affecting the instantaneous x velocity or position

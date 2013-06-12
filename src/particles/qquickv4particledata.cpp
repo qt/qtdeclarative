@@ -40,13 +40,11 @@
 ****************************************************************************/
 
 #include <math.h>
-#include "qquickv8particledata_p.h"
+#include "qquickv4particledata_p.h"
 #include "qquickparticlesystem_p.h"//for QQuickParticleData
 #include <QDebug>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
-
-#include <private/qv8objectresource_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -273,13 +271,23 @@ QT_BEGIN_NAMESPACE
 
 
 //### Particle data handles are not locked to within certain scopes like QQuickContext2D, but there's no way to reload either...
-class QV8ParticleDataResource : public QV8ObjectResource
+struct QV4ParticleData : public QV4::Object
 {
-    V8_RESOURCE_TYPE(ParticleDataType)
-public:
-    QV8ParticleDataResource(QV8Engine *e) : QV8ObjectResource(e) {}
+    Q_MANAGED
+    QV4ParticleData(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
+        : Object(engine)
+    {
+        vtbl = &static_vtbl;
+        this->datum = datum;
+    }
+
     QQuickParticleData* datum;//TODO: Guard needed?
+
+    static void destroy(Managed *that)
+    { that->as<QV4ParticleData>()->~QV4ParticleData(); }
 };
+
+DEFINE_MANAGED_VTABLE(QV4ParticleData);
 
 class QV8ParticleDataDeletable : public QV8Engine::Deletable
 {
@@ -287,111 +295,116 @@ public:
     QV8ParticleDataDeletable(QV8Engine *engine);
     ~QV8ParticleDataDeletable();
 
-    QV4::PersistentValue constructor;
+    QV4::PersistentValue proto;
 };
 
-static QV4::Value particleData_discard(const v8::Arguments &args)
+static QV4::Value particleData_discard(QV4::SimpleCallContext *ctx)
 {
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>();
 
     if (!r || !r->datum)
-        V4THROW_ERROR("Not a valid ParticleData object");
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     r->datum->lifeSpan = 0; //Don't kill(), because it could still be in the middle of being created
     return QV4::Value::undefinedValue();
 }
 
-static QV4::Value particleData_lifeLeft(const v8::Arguments &args)
+static QV4::Value particleData_lifeLeft(QV4::SimpleCallContext *ctx)
 {
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>();
     if (!r || !r->datum)
-        V4THROW_ERROR("Not a valid ParticleData object");
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     return QV4::Value::fromDouble(r->datum->lifeLeft());
 }
 
-static QV4::Value particleData_curSize(const v8::Arguments &args)
+static QV4::Value particleData_curSize(QV4::SimpleCallContext *ctx)
 {
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(args.This());
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>();
     if (!r || !r->datum)
-        V4THROW_ERROR("Not a valid ParticleData object");
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     return QV4::Value::fromDouble(r->datum->curSize());
 }
-#define COLOR_GETTER_AND_SETTER(VAR, NAME) static v8::Handle<v8::Value> particleData_get_ ## NAME (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
+#define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::Value particleData_get_ ## NAME (QV4::SimpleCallContext *ctx) \
 { \
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum) \
-        V8THROW_ERROR("Not a valid ParticleData object"); \
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
     return QV4::Value::fromDouble((r->datum->color. VAR )/255.0);\
 }\
 \
-static void particleData_set_ ## NAME (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
+static QV4::Value particleData_set_ ## NAME (QV4::SimpleCallContext *ctx)\
 {\
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum)\
-        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum->color. VAR = qMin(255, qMax(0, (int)floor(value->NumberValue() * 255.0)));\
+    r->datum->color. VAR = qMin(255, qMax(0, (int)floor(ctx->argument(0).toNumber() * 255.0)));\
+    return QV4::Value::undefinedValue(); \
 }
 
 
-#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
+#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static QV4::Value particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum) \
-        V8THROW_ERROR("Not a valid ParticleData object"); \
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
     return QV4::Value::fromBoolean(r->datum-> VARIABLE);\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
+static QV4::Value particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum)\
-        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> VARIABLE = value->BooleanValue() ? 1.0 : 0.0;\
+    r->datum-> VARIABLE = ctx->argument(0).toBoolean() ? 1.0 : 0.0;\
+    return QV4::Value::undefinedValue(); \
 }
 
-#define FLOAT_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
+#define FLOAT_GETTER_AND_SETTER(VARIABLE) static QV4::Value particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum) \
-        V8THROW_ERROR("Not a valid ParticleData object"); \
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
     return QV4::Value::fromDouble(r->datum-> VARIABLE);\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
+static QV4::Value particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum)\
-        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> VARIABLE = value->NumberValue();\
+    r->datum-> VARIABLE = ctx->argument(0).toNumber();\
+    return QV4::Value::undefinedValue(); \
 }
 
-#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Handle<v8::String>, const v8::AccessorInfo &info) \
+#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static QV4::Value particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum) \
-        V8THROW_ERROR("Not a valid ParticleData object"); \
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
     return QV4::Value::fromDouble(r->datum-> GETTER ());\
 }\
 \
-static void particleData_set_ ## VARIABLE (v8::Handle<v8::String>, v8::Handle<v8::Value> value, const v8::AccessorInfo &info)\
+static QV4::Value particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
     if (!r || !r->datum)\
-        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> SETTER ( value->NumberValue() );\
+    r->datum-> SETTER ( ctx->argument(0).toNumber() );\
+    return QV4::Value::undefinedValue(); \
 }
 
-#define REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::New(ENGINE))
+#define REGISTER_ACCESSOR(PROTO, ENGINE, VARIABLE, NAME) \
+    PROTO ->defineAccessorProperty( ENGINE, QStringLiteral( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE )
 
 COLOR_GETTER_AND_SETTER(r, red)
 COLOR_GETTER_AND_SETTER(g, green)
@@ -430,47 +443,49 @@ FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
-    v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->PrototypeTemplate()->Set(v8::String::New("discard"), V8FUNCTION(particleData_discard, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("lifeLeft"), V8FUNCTION(particleData_lifeLeft, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("currentSize"), V8FUNCTION(particleData_curSize, engine));
-    REGISTER_ACCESSOR(ft, engine, x, initialX);
-    REGISTER_ACCESSOR(ft, engine, y, initialY);
-    REGISTER_ACCESSOR(ft, engine, t, t);
-    REGISTER_ACCESSOR(ft, engine, lifeSpan, lifeSpan);
-    REGISTER_ACCESSOR(ft, engine, size, startSize);
-    REGISTER_ACCESSOR(ft, engine, endSize, endSize);
-    REGISTER_ACCESSOR(ft, engine, vx, initialVX);
-    REGISTER_ACCESSOR(ft, engine, vy, initialVY);
-    REGISTER_ACCESSOR(ft, engine, ax, initialAX);
-    REGISTER_ACCESSOR(ft, engine, ay, initialAY);
-    REGISTER_ACCESSOR(ft, engine, xx, xDeformationVectorX);
-    REGISTER_ACCESSOR(ft, engine, xy, xDeformationVectorY);
-    REGISTER_ACCESSOR(ft, engine, yx, yDeformationVectorX);
-    REGISTER_ACCESSOR(ft, engine, yy, yDeformationVectorY);
-    REGISTER_ACCESSOR(ft, engine, rotation, rotation);
-    REGISTER_ACCESSOR(ft, engine, rotationVelocity, rotationVelocity);
-    REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
-    REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
-    REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);
-    REGISTER_ACCESSOR(ft, engine, frameAt, frameAt);
-    REGISTER_ACCESSOR(ft, engine, frameCount, frameCount);
-    REGISTER_ACCESSOR(ft, engine, animT, animationT);
-    REGISTER_ACCESSOR(ft, engine, r, r);
-    REGISTER_ACCESSOR(ft, engine, update, update);
-    REGISTER_ACCESSOR(ft, engine, curX, x);
-    REGISTER_ACCESSOR(ft, engine, curVX, vx);
-    REGISTER_ACCESSOR(ft, engine, curAX, ax);
-    REGISTER_ACCESSOR(ft, engine, curY, y);
-    REGISTER_ACCESSOR(ft, engine, curVY, vy);
-    REGISTER_ACCESSOR(ft, engine, curAY, ay);
-    REGISTER_ACCESSOR(ft, engine, red, red);
-    REGISTER_ACCESSOR(ft, engine, green, green);
-    REGISTER_ACCESSOR(ft, engine, blue, blue);
-    REGISTER_ACCESSOR(ft, engine, alpha, alpha);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Object *p = v4->newObject();
 
-    constructor = ft->GetFunction()->v4Value();
+    p->defineDefaultProperty(v4, QStringLiteral("discard"), particleData_discard);
+    p->defineDefaultProperty(v4, QStringLiteral("lifeLeft"), particleData_lifeLeft);
+    p->defineDefaultProperty(v4, QStringLiteral("currentSize"), particleData_curSize);
+
+    REGISTER_ACCESSOR(p, v4, x, initialX);
+    REGISTER_ACCESSOR(p, v4, y, initialY);
+    REGISTER_ACCESSOR(p, v4, t, t);
+    REGISTER_ACCESSOR(p, v4, lifeSpan, lifeSpan);
+    REGISTER_ACCESSOR(p, v4, size, startSize);
+    REGISTER_ACCESSOR(p, v4, endSize, endSize);
+    REGISTER_ACCESSOR(p, v4, vx, initialVX);
+    REGISTER_ACCESSOR(p, v4, vy, initialVY);
+    REGISTER_ACCESSOR(p, v4, ax, initialAX);
+    REGISTER_ACCESSOR(p, v4, ay, initialAY);
+    REGISTER_ACCESSOR(p, v4, xx, xDeformationVectorX);
+    REGISTER_ACCESSOR(p, v4, xy, xDeformationVectorY);
+    REGISTER_ACCESSOR(p, v4, yx, yDeformationVectorX);
+    REGISTER_ACCESSOR(p, v4, yy, yDeformationVectorY);
+    REGISTER_ACCESSOR(p, v4, rotation, rotation);
+    REGISTER_ACCESSOR(p, v4, rotationVelocity, rotationVelocity);
+    REGISTER_ACCESSOR(p, v4, autoRotate, autoRotate);
+    REGISTER_ACCESSOR(p, v4, animIdx, animationIndex);
+    REGISTER_ACCESSOR(p, v4, frameDuration, frameDuration);
+    REGISTER_ACCESSOR(p, v4, frameAt, frameAt);
+    REGISTER_ACCESSOR(p, v4, frameCount, frameCount);
+    REGISTER_ACCESSOR(p, v4, animT, animationT);
+    REGISTER_ACCESSOR(p, v4, r, r);
+    REGISTER_ACCESSOR(p, v4, update, update);
+    REGISTER_ACCESSOR(p, v4, curX, x);
+    REGISTER_ACCESSOR(p, v4, curVX, vx);
+    REGISTER_ACCESSOR(p, v4, curAX, ax);
+    REGISTER_ACCESSOR(p, v4, curY, y);
+    REGISTER_ACCESSOR(p, v4, curVY, vy);
+    REGISTER_ACCESSOR(p, v4, curAY, ay);
+    REGISTER_ACCESSOR(p, v4, red, red);
+    REGISTER_ACCESSOR(p, v4, green, green);
+    REGISTER_ACCESSOR(p, v4, blue, blue);
+    REGISTER_ACCESSOR(p, v4, alpha, alpha);
+
+    proto = QV4::Value::fromObject(p);
 }
 
 QV8ParticleDataDeletable::~QV8ParticleDataDeletable()
@@ -480,23 +495,23 @@ QV8ParticleDataDeletable::~QV8ParticleDataDeletable()
 V8_DEFINE_EXTENSION(QV8ParticleDataDeletable, particleV8Data);
 
 
-QQuickV8ParticleData::QQuickV8ParticleData(QV8Engine* engine, QQuickParticleData* datum)
+QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData* datum)
 {
     if (!engine || !datum)
         return;
 
     QV8ParticleDataDeletable *d = particleV8Data(engine);
-    m_v4Value = d->constructor.value().asFunctionObject()->newInstance();
-    QV8ParticleDataResource *r = new QV8ParticleDataResource(engine);
-    r->datum = datum;
-    v8::Handle<v8::Object>(m_v4Value)->SetExternalResource(r);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Object *o = new (v4->memoryManager) QV4ParticleData(v4, datum);
+    o->prototype = d->proto.value().asObject();
+    m_v4Value = QV4::Value::fromObject(o);
 }
 
-QQuickV8ParticleData::~QQuickV8ParticleData()
+QQuickV4ParticleData::~QQuickV4ParticleData()
 {
 }
 
-QQmlV4Handle QQuickV8ParticleData::v4Value()
+QQmlV4Handle QQuickV4ParticleData::v4Value()
 {
     return QQmlV4Handle(m_v4Value);
 }

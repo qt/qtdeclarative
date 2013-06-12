@@ -49,10 +49,10 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickParticleData;
-class QQuickV8ParticleData {
+class QQuickV4ParticleData {
 public:
-    QQuickV8ParticleData(QV8Engine*,QQuickParticleData*);
-    ~QQuickV8ParticleData();
+    QQuickV4ParticleData(QV8Engine*,QQuickParticleData*);
+    ~QQuickV4ParticleData();
     QQmlV4Handle v4Value();
 private:
     QV4::PersistentValue m_v4Value;

@@ -25,7 +25,7 @@ HEADERS += \
     $$PWD/qquickturbulence_p.h \
     $$PWD/qquickwander_p.h \
     $$PWD/qquickcumulativedirection_p.h \
-    $$PWD/qquickv8particledata_p.h \
+    $$PWD/qquickv4particledata_p.h \
     $$PWD/qquickrectangleextruder_p.h \
     $$PWD/qquickparticlegroup_p.h \
     $$PWD/qquickgroupgoal_p.h \
@@ -58,7 +58,7 @@ SOURCES += \
     $$PWD/qquickturbulence.cpp \
     $$PWD/qquickwander.cpp \
     $$PWD/qquickcumulativedirection.cpp \
-    $$PWD/qquickv8particledata.cpp \
+    $$PWD/qquickv4particledata.cpp \
     $$PWD/qquickrectangleextruder.cpp \
     $$PWD/qquickparticlegroup.cpp \
     $$PWD/qquickgroupgoal.cpp

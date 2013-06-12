@@ -144,7 +144,6 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             switch (r->resourceType()) {
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
-            case QV8ObjectResource::ParticleDataType:
                 return QVariant();
             }
         } else if (typeHint == QMetaType::QJsonObject
