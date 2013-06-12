@@ -346,12 +346,9 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
         case QQuickContext2D::ClearRect:
         {
             QPainter::CompositionMode  cm = p->compositionMode();
-            qreal alpha = p->opacity();
-            p->setCompositionMode(QPainter::CompositionMode_Source);
-            p->setOpacity(0);
-            p->fillRect(takeRect(), QColor(qRgba(0, 0, 0, 0)));
+            p->setCompositionMode(QPainter::CompositionMode_Clear);
+            p->fillRect(takeRect(), Qt::white);
             p->setCompositionMode(cm);
-            p->setOpacity(alpha);
             break;
         }
         case QQuickContext2D::FillRect:
