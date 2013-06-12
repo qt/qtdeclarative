@@ -63,8 +63,12 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qdebug.h>
 
+#include <private/qv4objectproto_p.h>
+
 #include <private/qv4v8_p.h>
 #include <private/qv8objectresource_p.h>
+
+using namespace QV4;
 
 #ifndef QT_NO_XMLSTREAMREADER
 
@@ -89,8 +93,6 @@ struct QQmlXMLHttpRequestData {
 
     QV4::PersistentValue nodeFunction;
 
-    QV4::PersistentValue namedNodeMapPrototype;
-    QV4::PersistentValue nodeListPrototype;
     QV4::PersistentValue nodePrototype;
     QV4::PersistentValue elementPrototype;
     QV4::PersistentValue attrPrototype;
@@ -99,7 +101,7 @@ struct QQmlXMLHttpRequestData {
     QV4::PersistentValue cdataPrototype;
     QV4::PersistentValue documentPrototype;
 
-    v8::Handle<v8::Object> newNode();
+    QV4::Value newNode();
 };
 
 static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
@@ -107,12 +109,13 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
     return (QQmlXMLHttpRequestData *)engine->xmlHttpRequestData();
 }
 
-static v8::Handle<v8::Object> constructMeObject(v8::Handle<v8::Object> thisObj, QV8Engine *e)
+static QV4::Value constructMeObject(const QV4::Value &thisObj, QV8Engine *e)
 {
-    v8::Handle<v8::Object> meObj = v8::Object::New();
-    meObj->Set(v8::String::New("ThisObject"), thisObj);
-    meObj->Set(v8::String::New("ActivationObject"), QV4::QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
-    return meObj;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+    QV4::Object *meObj = v4->newObject();
+    meObj->put(v4->newString(QStringLiteral("ThisObject")), thisObj);
+    meObj->put(v4->newString(QStringLiteral("ActivationObject")), QV4::QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
+    return QV4::Value::fromObject(meObj);
 }
 
 QQmlXMLHttpRequestData::QQmlXMLHttpRequestData()
@@ -123,7 +126,7 @@ QQmlXMLHttpRequestData::~QQmlXMLHttpRequestData()
 {
 }
 
-v8::Handle<v8::Object> QQmlXMLHttpRequestData::newNode()
+QV4::Value QQmlXMLHttpRequestData::newNode()
 {
     if (nodeFunction.isEmpty()) {
         v8::Handle<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -198,30 +201,75 @@ public:
     void release() { QQmlRefCount::release(); }
 };
 
-class NamedNodeMap
+class NamedNodeMap : public Object
 {
+    Q_MANAGED
 public:
-    // JS API
-    static v8::Handle<v8::Value> length(v8::Handle<v8::String>, const v8::AccessorInfo& args);
-    static v8::Handle<v8::Value> indexed(uint32_t index, const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> named(v8::Handle<v8::String> property, const v8::AccessorInfo& args);
+    NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
+        : Object(engine)
+        , d(data)
+        , list(list)
+    {
+        vtbl = &static_vtbl;
+
+        if (d)
+            d->addref();
+    }
+    ~NamedNodeMap() {
+        if (d)
+            d->release();
+    }
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
-    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *, QList<NodeImpl *> *);
+    static Value create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
+
+    // JS API
+    static void destroy(Managed *that) {
+        that->as<NamedNodeMap>()->~NamedNodeMap();
+    }
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+
+    QList<NodeImpl *> list; // Only used in NamedNodeMap
+    NodeImpl *d;
 };
 
-class NodeList 
+DEFINE_MANAGED_VTABLE(NamedNodeMap);
+
+class NodeList : public Object
 {
+    Q_MANAGED
 public:
+    NodeList(ExecutionEngine *engine, NodeImpl *data)
+        : Object(engine)
+        , d(data)
+    {
+        vtbl = &static_vtbl;
+
+        if (d)
+            d->addref();
+    }
+    ~NodeList() {
+        if (d)
+            d->release();
+    }
+
     // JS API
+    static void destroy(Managed *that) {
+        that->as<NodeList>()->~NodeList();
+    }
+    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
     static v8::Handle<v8::Value> length(v8::Handle<v8::String>, const v8::AccessorInfo& args);
     static v8::Handle<v8::Value> indexed(uint32_t index, const v8::AccessorInfo& info);
 
     // C++ API
-    static v8::Handle<v8::Object> prototype(QV8Engine *);
-    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *);
+    static Value create(QV8Engine *, NodeImpl *);
+
+    NodeImpl *d;
 };
+
+DEFINE_MANAGED_VTABLE(NodeList);
 
 class Node
 {
@@ -248,7 +296,7 @@ public:
 
     // C++ API
     static v8::Handle<v8::Object> prototype(QV8Engine *);
-    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *);
+    static Value create(QV8Engine *, NodeImpl *);
 
     Node();
     Node(const Node &o);
@@ -333,21 +381,12 @@ class QQmlDOMNodeResource : public QV8ObjectResource, public Node
 public:
     QQmlDOMNodeResource(QV8Engine *e);
 
-    QList<NodeImpl *> *list; // Only used in NamedNodeMap
 };
 
 QQmlDOMNodeResource::QQmlDOMNodeResource(QV8Engine *e)
-: QV8ObjectResource(e), list(0)
+: QV8ObjectResource(e)
 {
 }
-
-QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(Node)
-Q_DECLARE_METATYPE(NodeList)
-Q_DECLARE_METATYPE(NamedNodeMap)
-
-QT_BEGIN_NAMESPACE
 
 void NodeImpl::addref() 
 {
@@ -486,7 +525,7 @@ v8::Handle<v8::Value> Node::attributes(v8::Handle<v8::String>, const v8::Accesso
     if (r->d->type != NodeImpl::Element)
         return QV4::Value::nullValue();
     else
-        return NamedNodeMap::create(engine, r->d, &r->d->attributes);
+        return NamedNodeMap::create(engine, r->d, r->d->attributes);
 }
 
 v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
@@ -520,7 +559,7 @@ v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
     return d->nodePrototype.value();
 }
 
-v8::Handle<v8::Value> Node::create(QV8Engine *engine, NodeImpl *data)
+Value Node::create(QV8Engine *engine, NodeImpl *data)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine);
     v8::Handle<v8::Object> instance = d->newNode();
@@ -554,7 +593,7 @@ v8::Handle<v8::Value> Node::create(QV8Engine *engine, NodeImpl *data)
     if (data) A(data);
     instance->SetExternalResource(r);
 
-    return instance;
+    return instance->v4Value();
 }
 
 v8::Handle<v8::Object> Element::prototype(QV8Engine *engine)
@@ -817,116 +856,97 @@ bool Node::isNull() const
     return d == 0;
 }
 
-v8::Handle<v8::Value> NamedNodeMap::length(v8::Handle<v8::String>, const v8::AccessorInfo &args)
+Value NamedNodeMap::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
-    Q_UNUSED(engine)
-    return QV4::Value::fromInt32(r->list->count());
-}
+    NamedNodeMap *r = m->as<NamedNodeMap>();
+    if (!r)
+        ctx->throwTypeError();
 
-v8::Handle<v8::Value> NamedNodeMap::indexed(uint32_t index, const v8::AccessorInfo& args)
-{
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || !r->list) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    QV8Engine *engine = ctx->engine->v8Engine;
 
-    if ((int)index < r->list->count()) {
-        return Node::create(engine, r->list->at(index));
-    } else {
-        return QV4::Value::undefinedValue();
+    if ((int)index < r->list.count()) {
+        if (hasProperty)
+            *hasProperty = true;
+        return Node::create(engine, r->list.at(index));
     }
-}
-
-v8::Handle<v8::Value> NamedNodeMap::named(v8::Handle<v8::String> property, const v8::AccessorInfo& args)
-{
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r || !r->list) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
-
-    QString str = property->v4Value().toQString();
-    for (int ii = 0; ii < r->list->count(); ++ii) {
-        if (r->list->at(ii)->name == str) {
-            return Node::create(engine, r->list->at(ii));
-        }
-    }
-
+    if (hasProperty)
+        *hasProperty = false;
     return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Object> NamedNodeMap::prototype(QV8Engine *engine)
+Value NamedNodeMap::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
-    if (d->namedNodeMapPrototype.isEmpty()) {
-        v8::Handle<v8::ObjectTemplate> ot = v8::ObjectTemplate::New();
-        ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::New(engine));
-        ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::New(engine));
-        ot->SetFallbackPropertyHandler(named, 0, 0, 0, 0, v8::External::New(engine));
-        d->namedNodeMapPrototype = ot->NewInstance()->v4Value();
-        engine->freezeObject(d->namedNodeMapPrototype);
+    NamedNodeMap *r = m->as<NamedNodeMap>();
+    if (!r)
+        ctx->throwTypeError();
+
+    name->makeIdentifier(ctx);
+    if (name->isEqualTo(ctx->engine->id_length))
+        return QV4::Value::fromInt32(r->list.count());
+
+    QV8Engine *engine = ctx->engine->v8Engine;
+
+    QString str = name->toQString();
+    for (int ii = 0; ii < r->list.count(); ++ii) {
+        if (r->list.at(ii)->name == str) {
+            if (hasProperty)
+                *hasProperty = true;
+            return Node::create(engine, r->list.at(ii));
+        }
     }
-    return d->namedNodeMapPrototype.value();
+
+    if (hasProperty)
+        *hasProperty = false;
+    return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, QList<NodeImpl *> *list)
+Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
-    v8::Handle<v8::Object> instance = d->newNode();
-    instance->SetPrototype(NamedNodeMap::prototype(engine));
-    QQmlDOMNodeResource *r = new QQmlDOMNodeResource(engine);
-    r->d = data;
-    r->list = list;
-    if (data) A(data);
-    instance->SetExternalResource(r);
-    return instance;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
+    NamedNodeMap *instance = new (v4->memoryManager) NamedNodeMap(v4, data, list);
+    instance->prototype = v4->objectPrototype;
+    return Value::fromObject(instance);
 }
 
-v8::Handle<v8::Value> NodeList::indexed(uint32_t index, const v8::AccessorInfo& args)
+Value NodeList::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
+    NodeList *r = m->as<NodeList>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
 
     if ((int)index < r->d->children.count()) {
+        if (hasProperty)
+            *hasProperty = true;
         return Node::create(engine, r->d->children.at(index));
-    } else {
-        return QV4::Value::undefinedValue();
     }
+    if (hasProperty)
+        *hasProperty = false;
+    return QV4::Value::undefinedValue();
 }
 
-v8::Handle<v8::Value> NodeList::length(v8::Handle<v8::String>, const v8::AccessorInfo& args)
+Value NodeList::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
 {
-    QQmlDOMNodeResource *r = v8_resource_cast<QQmlDOMNodeResource>(args.This());
-    if (!r) return QV4::Value::undefinedValue();
-    QV8Engine *engine = V8ENGINE();
-    Q_UNUSED(engine)
-    return QV4::Value::fromInt32(r->d->children.count());
+    NodeList *r = m->as<NodeList>();
+    if (!r)
+        ctx->throwTypeError();
+
+    name->makeIdentifier(ctx);
+
+    if (name->isEqualTo(ctx->engine->id_length))
+        return QV4::Value::fromInt32(r->d->children.count());
+    return Object::get(m, ctx, name, hasProperty);
 }
 
-v8::Handle<v8::Object> NodeList::prototype(QV8Engine *engine)
+Value NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine);
-    if (d->nodeListPrototype.isEmpty()) {
-        v8::Handle<v8::ObjectTemplate> ot = v8::ObjectTemplate::New();
-        ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::New(engine));
-        ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::New(engine));
-        d->nodeListPrototype = ot->NewInstance()->v4Value();
-        engine->freezeObject(d->nodeListPrototype);
-    }
-    return d->nodeListPrototype.value();
-}
-
-v8::Handle<v8::Value> NodeList::create(QV8Engine *engine, NodeImpl *data)
-{
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
-    v8::Handle<v8::Object> instance = d->newNode();
-    instance->SetPrototype(NodeList::prototype(engine));
-    QQmlDOMNodeResource *r = new QQmlDOMNodeResource(engine);
-    r->d = data;
-    if (data) A(data);
-    instance->SetExternalResource(r);
-    return instance;
+    ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    NodeList *instance = new (v4->memoryManager) NodeList(v4, data);
+    instance->prototype = v4->objectPrototype;
+    return Value::fromObject(instance);
 }
 
 v8::Handle<v8::Value> Document::documentElement(v8::Handle<v8::String>, const v8::AccessorInfo& args)
@@ -1544,7 +1564,7 @@ static QV4::Value qmlxmlhttprequest_open(const v8::Arguments &args)
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(constructMeObject(args.This(), engine), method, url);
+    return r->open(constructMeObject(args.This()->v4Value(), engine), method, url);
 }
 
 static QV4::Value qmlxmlhttprequest_setRequestHeader(const v8::Arguments &args)
@@ -1610,7 +1630,7 @@ static QV4::Value qmlxmlhttprequest_send(const v8::Arguments &args)
     if (args.Length() > 0)
         data = args[0]->v4Value().toQString().toUtf8();
 
-    return r->send(constructMeObject(args.This(), engine), data);
+    return r->send(constructMeObject(args.This()->v4Value(), engine), data);
 }
 
 static QV4::Value qmlxmlhttprequest_abort(const v8::Arguments &args)
@@ -1619,7 +1639,7 @@ static QV4::Value qmlxmlhttprequest_abort(const v8::Arguments &args)
     if (!r)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    return r->abort(constructMeObject(args.This(), r->engine));
+    return r->abort(constructMeObject(args.This()->v4Value(), r->engine));
 }
 
 static QV4::Value qmlxmlhttprequest_getResponseHeader(const v8::Arguments &args)
