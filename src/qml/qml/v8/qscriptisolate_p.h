@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    Q_DISABLE_COPY(QScriptIsolate);
+    Q_DISABLE_COPY(QScriptIsolate)
     const QV8Engine *m_engine;
     const OperationMode m_mode;
 };

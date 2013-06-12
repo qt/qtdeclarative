@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
 class QV8ListResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(ListType);
+    V8_RESOURCE_TYPE(ListType)
 public:
     QV8ListResource(QV8Engine *engine) : QV8ObjectResource(engine) {}
 

@@ -18,7 +18,7 @@ qhp.QtQml.indexRoot           =
 qhp.QtQml.filterAttributes    = qtqml $QT_VERSION qtrefdoc
 qhp.QtQml.customFilters.Qt.name = QtQml $QT_VERSION
 qhp.QtQml.customFilters.Qt.filterAttributes = qtqml $QT_VERSION
-qhp.QtQml.subprojects         = classes examples
+qhp.QtQml.subprojects         = qmltypes classes examples
 qhp.QtQml.subprojects.classes.title = C++ Classes
 qhp.QtQml.subprojects.classes.indexTitle = Qt QML C++ Classes
 qhp.QtQml.subprojects.classes.selectors = class fake:headerfile
@@ -26,15 +26,21 @@ qhp.QtQml.subprojects.classes.sortPages = true
 qhp.QtQml.subprojects.examples.title = Examples
 qhp.QtQml.subprojects.examples.indexTitle = Qt Quick Code Samples
 qhp.QtQml.subprojects.examples.selectors = fake:example
+qhp.QtQml.subprojects.qmltypes.title = QML Types
+qhp.QtQml.subprojects.qmltypes.indexTitle = Qt QML QML Types
+qhp.QtQml.subprojects.qmltypes.selectors = fake:qmlclass
+qhp.QtQml.subprojects.qmltypes.sortPages = true
 
 
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
 depends += qtcore qtxmlpatterns qtgui qtquick qtdoc
 
-headerdirs  += ..
+headerdirs  += .. \
+               ../../imports/models
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               ../../imports/models
 
 exampledirs += ../../../examples/qml \
                ../ \

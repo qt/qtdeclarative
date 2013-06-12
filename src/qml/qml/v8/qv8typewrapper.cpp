@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QV8TypeResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(TypeType);
+    V8_RESOURCE_TYPE(TypeType)
 
 public:
     QV8TypeResource(QV8Engine *engine);

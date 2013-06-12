@@ -344,8 +344,8 @@ protected:
     QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=0);
 
 private:
-    Q_DISABLE_COPY(QQmlApplication);
-    Q_DECLARE_PRIVATE(QQmlApplication);
+    Q_DISABLE_COPY(QQmlApplication)
+    Q_DECLARE_PRIVATE(QQmlApplication)
 };
 
 class QQmlApplicationPrivate : public QObjectPrivate

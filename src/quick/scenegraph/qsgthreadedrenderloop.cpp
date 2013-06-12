@@ -574,6 +574,7 @@ void QSGRenderThread::syncAndRender()
         int waitTime = vsyncDelta - (int) waitTimer.elapsed();
         if (waitTime > 0)
             msleep(waitTime);
+        emit wm->timeToIncubate();
         return;
     }
 
@@ -600,6 +601,7 @@ void QSGRenderThread::syncAndRender()
         d->fireFrameSwapped();
     }
     RLDEBUG("    Render:  - rendering done");
+    emit wm->timeToIncubate();
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing)
@@ -723,7 +725,7 @@ QSGContext *QSGThreadedRenderLoop::sceneGraphContext() const
     return m_thread->sg;
 }
 
-bool QSGThreadedRenderLoop::anyoneShowing()
+bool QSGThreadedRenderLoop::anyoneShowing() const
 {
     for (int i=0; i<m_windows.size(); ++i) {
         QQuickWindow *c = m_windows.at(i).window;
@@ -731,6 +733,11 @@ bool QSGThreadedRenderLoop::anyoneShowing()
             return true;
     }
     return false;
+}
+
+bool QSGThreadedRenderLoop::interleaveIncubation() const
+{
+    return m_animation_driver->isRunning() && anyoneShowing();
 }
 
 void QSGThreadedRenderLoop::animationStarted()
@@ -1011,7 +1018,6 @@ void QSGThreadedRenderLoop::polishAndSync()
         RLDEBUG("GUI:  - animations advancing");
         m_animation_driver->advance();
         RLDEBUG("GUI:  - animations done");
-
         // We need to trigger another sync to keep animations running...
         maybePostPolishRequest();
     } else if (m_sync_triggered_update) {

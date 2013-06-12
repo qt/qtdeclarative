@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 class QV8ValueTypeResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(ValueTypeType);
+    V8_RESOURCE_TYPE(ValueTypeType)
 
 public:
     enum ObjectType { Reference, Copy };

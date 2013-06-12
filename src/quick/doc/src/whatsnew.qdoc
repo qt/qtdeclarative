@@ -44,6 +44,15 @@ features introduced by the new import and new classes in Qt 5.1:
 \li New \l TextEdit properties: selectByKeyboard and textDocument
 \li A \l Window declared inside another Window or \l Item will automatically be
     transient for (centered upon) the outer window.
+\li These types are now part of \l{Qt QML}:
+    \list
+    \li \l {VisualItemModel}
+    \li \l {VisualDataModel} - Encapsulates a model and a delegate
+    \li \l {VisualDataGroup}
+    \endlist
+    These types are kept due to compatibility reasons and are replaced by the
+    \l{Qt QML Models QML Types}{Qt QML Models} types.
+    \endlist
 \endlist
 
 \section2 New Submodules

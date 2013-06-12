@@ -56,19 +56,19 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{QtQuick.XmlListModel 2}{XML List Model} - contains types
+    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
     for creating models from XML data
-    \li \l{QtQuick.LocalStorage 2}{Local Storage} - a submodule
+    \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
-    \li \l{QtQuick.Particles 2}{Particles} - provides a particle
+    \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
     system for QML applications
-    \li \l{QtQuick.Window 2}{Window} - contains types for creating
+    \li \l{Qt Quick Window QML Types}{Window} - contains types for creating
     top-level windows and accessing screen information
-    \li \l{QtQuick.Dialogs 1}{Dialogs} - contains types for creating and
+    \li \l{Qt Quick Dialogs QML Types}{Dialogs} - contains types for creating and
     interacting with system dialogs
-    \li \l{QtQuick.Controls 1.0}{Controls} - provides a set of reusable
+    \li \l{Qt Quick Controls QML Types}{Controls} - provides a set of reusable
     UI components
-    \li \l{QtQuick.Layouts 1.0}{Layouts} - contains types that are used
+    \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used
     to arrange items in the user interface
     \endlist
 
@@ -234,13 +234,26 @@ Animation paths
 
 \section2 Model/View Types And Data Storage And Access
 
-Models And Model Data
+QML Lists and Models
+
+The \l{Qt QML Models QML Types}{Qt QML Models} submodule provides the types for
+structuring data with models and lists.
 \list
-\li \l {QtQml2::ListModel}{ListModel} - Defines a list of data
-\li \l {QtQml2::ListElement}{ListElement} - Defines a data item in a \l {QtQml2::ListModel}{ListModel}
+\li \l ListModel - Defines a list of data
+\li \l ListElement - Defines a data item in a \l ListModel
+\endlist
+
+These QML types are part of Qt Quick for backwards compatibility, but for
+newer applications, \l{Qt QML Models QML Types}{Qt QML Models} provides
+the same functionality.
+\list
 \li \l {VisualItemModel} - Contains items that already defines its own visual delegate
 \li \l {VisualDataModel} - Encapsulates a model and a delegate
 \li \l {VisualDataGroup} - Encapsulates a filtered set of visual data items
+\endlist
+
+XML Lists
+\list
 \li \l {XmlListModel} - Specifies a model using XPath expressions
 \li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
 \endlist

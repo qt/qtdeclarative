@@ -39,13 +39,14 @@ a summary of the new changes:
 \li New properties for \l Qt.application: arguments, name, and version.
 \endlist
 
-\section2 New Submodules
+\section2 New Submodule
 
-The Qt QML Models is a new submodule in Qt 5.1 and provides several QML types
-for handling data with models and lists.
+The \l{Qt QML Models QML Types}{Qt QML Models} is a new submodule in Qt 5.1 and
+provides several QML types for handling data with models and lists. These types
+replace types such as \l VisualItem, \l VisualDataModel, and \l VisualDataGroup.
 
 \list
-\li \l{QtQml.Models}{Models}
+\li \l{Qt QML Models QML Types}{Models}
 \endlist
 
 The \l{What's New in Qt 5.1} has more information about the Qt 5.1 release.

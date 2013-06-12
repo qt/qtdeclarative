@@ -213,7 +213,7 @@ private:
     friend class QQmlPropertyCache;
     quint32 flags;
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyRawData::Flags);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyRawData::Flags)
 
 class QQmlPropertyData : public QQmlPropertyRawData
 {

@@ -209,6 +209,7 @@ public:
     uint persistentSceneGraph : 1;
 
     uint lastWheelEventAccepted : 1;
+    bool componentCompleted : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;

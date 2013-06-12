@@ -121,15 +121,16 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 /*!
     \qmltype VisualDataModel
     \instantiates QQmlDelegateModel
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Encapsulates a model and delegate
 
     The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in a model.
 
-    This type is provided by \c {QtQuick 2} for compatibility reasons. The same implementation
-    is now primarily available as DelegateModel in the QtQml.Models module.
+    This type is provided by the \l{Qt QML} module due to compatibility reasons.
+    The same implementation is now primarily available as DelegateModel in the
+    \l{Qt QML Models QML Types}{Qt QML Models} module.
 
     \sa {QtQml.Models2::DelegateModel}
 */
@@ -138,12 +139,6 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     \instantiates QQmlDelegateModel
     \inqmlmodule QtQml.Models 2
     \brief Encapsulates a model and delegate
-
-    The DelegateModel type encapsulates a model and the delegate that will
-    be instantiated for items in the model.
-
-    This element is also available as DelegateModel in the \c QtQuick module. For full details,
-    see the \l DelegateModel documentation.
 
     The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
@@ -158,6 +153,9 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The example below illustrates using a DelegateModel with a ListView.
 
     \snippet delegatemodel/visualdatamodel.qml 0
+
+    \note This type is also available as \l VisualDataModel in the \l{Qt QML}
+    module due to compatibility reasons.
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
@@ -856,7 +854,8 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         delete cacheItem->object;
         cacheItem->object = 0;
         cacheItem->scriptRef -= 1;
-        cacheItem->contextData->destroy();
+        if (cacheItem->contextData)
+            cacheItem->contextData->destroy();
         cacheItem->contextData = 0;
 
         if (!cacheItem->isReferenced()) {
@@ -2169,14 +2168,31 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 }
 
 /*!
-    \qmltype DelegateModelGroup
+    \qmltype VisualDataGroup
     \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
-    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
-    delegate items, as well as sort and filter these delegate items.
+    The VisualDataGroup type provides a means to address the model data of a
+    model's delegate items, as well as sort and filter these delegate items.
+
+    This type is provided by the \l{Qt QML} module due to compatibility reasons.
+    The same implementation is now primarily available as \l DelegateModelGroup
+    in the \l{Qt QML Models QML Types}{Qt QML Models} module.
+
+    \sa {QtQml.Models2::DelegateModelGroup}
+*/
+/*!
+    \qmltype DelegateModelGroup
+    \instantiates QQmlDelegateModelGroup
+    \inqmlmodule QtQml.Models 2
+    \ingroup qtquick-models
+    \brief Encapsulates a filtered set of visual data items
+
+    The DelegateModelGroup type provides a means to address the model data of a
+    DelegateModel's delegate items, as well as sort and filter these delegate
+    items.
 
     The initial set of instantiable delegate items in a DelegateModel is represented
     by its \l {QtQml.Models2::DelegateModel::items}{items} group, which normally directly reflects
@@ -2200,24 +2216,11 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     type or to cherry-pick specific items that should be instantiated irregardless of whether
     they're currently within a view's visible area.
 
+    \note This type is also available as \l VisualDataGroup in the \l{Qt QML}
+    module due to compatibility reasons.
+
     \sa {QML Dynamic View Ordering Tutorial}
 */
-/*!
-    \qmltype DelegateModelGroup
-    \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQml.Models 2
-    \brief Encapsulates a filtered set of visual data items
-
-    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
-    delegate items, as well as sort and filter these delegate items.
-
-    This element is also available as DelegateModelGroup in the \c QtQuick module. For full details,
-    see the \l DelegateModelGroup documentation.
-
-    \sa {QtQuick::DelegateModelGroup}
-*/
-
-
 QQmlDelegateModelGroup::QQmlDelegateModelGroup(QObject *parent)
     : QObject(*new QQmlDelegateModelGroupPrivate, parent)
 {

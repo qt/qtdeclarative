@@ -2363,6 +2363,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     } else if (args[0]->IsObject()) {
         QQuickImage *imageItem = qobject_cast<QQuickImage*>(engine->toQObject(args[0]->ToObject()));
         QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(engine->toQObject(args[0]->ToObject()));
+        QUrl url(engine->toString(args[0]));
 
         QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
         if (pix && !pix->image.isNull()) {
@@ -2373,6 +2374,8 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
             QImage img = canvas->toImage();
             if (!img.isNull())
                 pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
+        } else if (url.isValid()) {
+            pixmap = r->context->createPixmap(url);
         } else {
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
@@ -2624,7 +2627,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod CanvasImageData QtQuick2::Canvas::getImageData(real sx, real sy, real sw, real sh)
+  \qmlmethod CanvasImageData QtQuick2::Context2D::getImageData(real sx, real sy, real sw, real sh)
   Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
   */
 static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)

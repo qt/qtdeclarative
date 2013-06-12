@@ -25,20 +25,20 @@
 **
 ****************************************************************************/
 /*!
-    \title Qt Quick ColorDialog and FileDialog Examples
-    \example colorandfiledialogs
-    \brief This example demonstrates the color and file dialog types in QML
-    \image qml-colorandfiledialogs-example.jpg
+    \title Qt Quick Dialog Examples
+    \example dialogs
+    \brief This example demonstrates the dialog types in QML
+    \image dialogs-example.jpg
     \ingroup qtquickdialog_examples
 
-    This example demonstrates the color and file system dialogs in the \l{Qt Quick Dialogs}
+    This example demonstrates the system dialogs in the \l{Qt Quick Dialogs}
     module. The appearance and behavior is platform-dependent.
 
     A \l FileDialog is used to choose a single file, multiple files or a
     single directory, depending on how it is configured.
-    \snippet colorandfiledialogs/FileDialogs.qml filedialog
+    \snippet dialogs/FileDialogs.qml filedialog
 
     A \l ColorDialog is used to choose a color, with or without alpha (transparency)
     depending on how it is configured.
-    \snippet colorandfiledialogs/ColorDialogs.qml colordialog
+    \snippet dialogs/ColorDialogs.qml colordialog
 */

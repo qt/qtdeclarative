@@ -169,7 +169,7 @@ public:
 /*!
     \qmltype VisualItemModel
     \instantiates QQmlObjectModel
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQuick 2
     \brief Defines a set of objects to be used as a model
 
     The VisualItemModel type encapsulates contains the objects to be used

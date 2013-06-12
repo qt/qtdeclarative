@@ -102,6 +102,11 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
 #endif
 }
 
+bool QSGWindowsRenderLoop::interleaveIncubation() const
+{
+    return m_animationDriver->isRunning() && anyoneShowing();
+}
+
 QSGWindowsRenderLoop::WindowData *QSGWindowsRenderLoop::windowData(QQuickWindow *window)
 {
     for (int i=0; i<m_windows.size(); ++i) {
@@ -390,6 +395,8 @@ void QSGWindowsRenderLoop::render()
         // and thus another render pass, so to keep things running,
         // make sure there is another frame pending.
         maybePostUpdateTimer();
+
+        emit timeToIncubate();
     }
 }
 

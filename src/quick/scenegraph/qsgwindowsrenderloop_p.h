@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGWindowsRenderLoop : public QObject, public QSGRenderLoop
+class QSGWindowsRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
 public:
@@ -80,6 +80,9 @@ public:
     void resize(QQuickWindow *, const QSize &) { }
 
     bool event(QEvent *event);
+    bool anyoneShowing() const;
+
+    bool interleaveIncubation() const;
 
 public slots:
     void started();
@@ -93,7 +96,6 @@ private:
 
     void handleObscurity();
     void maybePostUpdateTimer();
-    bool anyoneShowing() const;
     WindowData *windowData(QQuickWindow *window);
 
     QList<WindowData> m_windows;

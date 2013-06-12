@@ -46,6 +46,13 @@ Third party components
 
  - tryCompare now correctly fails when it only gets two parameters
 
+ - If a QObject has a property and a slot (or invokable method) with the same
+   name, in QML the previous behavior was to let the property obscure the
+   method; from Qt 5.1 things work in the opposite way, that is a property can
+   never obscure a method having the same name. This is especially important
+   for objects having dynamic properties, such as QQmlPropertyMap. This change
+   was a consequence of the fix for QTBUG-29836.
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************

@@ -330,7 +330,7 @@ public:
 
 class QQmlDOMNodeResource : public QV8ObjectResource, public Node
 {
-    V8_RESOURCE_TYPE(DOMNodeType);
+    V8_RESOURCE_TYPE(DOMNodeType)
 public:
     QQmlDOMNodeResource(QV8Engine *e);
 

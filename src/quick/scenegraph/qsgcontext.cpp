@@ -47,7 +47,9 @@
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
+#include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
+#include <QtQuick/QSGFlatColorMaterial>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -261,7 +263,33 @@ void QSGContext::initialize(QOpenGLContext *context)
     Q_ASSERT(!d->gl);
     d->gl = context;
 
+    precompileMaterials();
+
     emit initialized();
+}
+
+#define QSG_PRECOMPILE_MATERIAL(name) { name m; prepareMaterial(&m); }
+
+/*
+ * Some glsl compilers take their time compiling materials, and
+ * the way the scene graph is being processed, these materials
+ * get compiled when they are first taken into use. This can
+ * easily lead to skipped frames. By precompiling the most
+ * common materials, we potentially add a few milliseconds to the
+ * start up, and reduce the chance of avoiding skipped frames
+ * later on.
+ */
+void QSGContext::precompileMaterials()
+{
+    if (qEnvironmentVariableIsEmpty("QSG_NO_MATERIAL_PRELOADING")) {
+        QSG_PRECOMPILE_MATERIAL(QSGVertexColorMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGFlatColorMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGOpaqueTextureMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGTextureMaterial);
+        QSG_PRECOMPILE_MATERIAL(SmoothTextureMaterial);
+        QSG_PRECOMPILE_MATERIAL(SmoothColorMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGDistanceFieldTextMaterial);
+    }
 }
 
 

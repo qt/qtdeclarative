@@ -19,10 +19,9 @@ qhp.QtQuickDialogs.customFilters.Qt.filterAttributes = qtquickdialogs $QT_VERSIO
 
 qhp.QtQuickDialogs.subprojects = qtquickdialogsqmltypes
 qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.title = QML Types
-qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.indexTitle = Qt Quick Dialogs
+qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.indexTitle = Qt Quick Dialogs QML Types
 qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.selectors = fake:qmlclass
 qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.sortPages = true
-qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.type = manual
 
 depends = qtqml qtquick qtgui qtwidgets qtdoc
 

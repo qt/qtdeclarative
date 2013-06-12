@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
  */
 class QV8SequenceResource : public QV8ObjectResource
 {
-    V8_RESOURCE_TYPE(SequenceType);
+    V8_RESOURCE_TYPE(SequenceType)
 
 public:
     virtual ~QV8SequenceResource() {}

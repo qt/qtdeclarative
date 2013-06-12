@@ -2280,7 +2280,11 @@ bool QQuickFlickablePrivate::isViewMoving() const
     within the timeout, both the press and release will be delivered.
 
     Note that for nested Flickables with pressDelay set, the pressDelay of
-    outer Flickables is overridden by the innermost Flickable.
+    outer Flickables is overridden by the innermost Flickable. If the drag
+    exceeds the platform drag threshold, the press event will be delivered
+    regardless of this property.
+
+    \sa QStyleHints
 */
 int QQuickFlickable::pressDelay() const
 {
