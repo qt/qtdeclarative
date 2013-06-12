@@ -514,7 +514,7 @@ v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
                                       0, v8::External::New(engine));
         p->SetAccessor(v8::String::New("attributes"), attributes,
                                       0, v8::External::New(engine));
-        d->nodeListPrototype = p->v4Value();
+        d->nodePrototype = p->v4Value();
         engine->freezeObject(d->nodePrototype);
     }
     return d->nodePrototype.value();
