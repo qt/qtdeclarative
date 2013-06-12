@@ -683,7 +683,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 {
     Q_D(QQuickCanvasItem);
 
-    if (!d->context) {
+    if (!d->context || d->canvasWindow.size().isEmpty()) {
         delete oldNode;
         return 0;
     }
