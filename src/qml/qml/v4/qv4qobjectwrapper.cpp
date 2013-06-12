@@ -696,42 +696,26 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
         return QV4::Object::query(m, name);
 }
 
-QV4::Value QObjectWrapper::enumerateProperties(Object *object)
+Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
 {
-    QObjectWrapper *that = static_cast<QObjectWrapper*>(object);
+    *name = 0;
+    *index = UINT_MAX;
 
-    if (that->m_object.isNull())
-        return QV4::Value::undefinedValue();
+    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
-    QStringList result;
+    if (!that->m_object)
+        return QV4::Object::advanceIterator(m, it, name, index, attributes);
 
-    QV8Engine *v8Engine = that->engine()->v8Engine;
-    QQmlEnginePrivate *ep = v8Engine->engine()
-            ? QQmlEnginePrivate::get(v8Engine->engine())
-            : 0;
-
-    QQmlPropertyCache *cache = 0;
-    QQmlData *ddata = QQmlData::get(that->m_object);
-    if (ddata)
-        cache = ddata->propertyCache;
-
-    if (!cache) {
-        cache = ep ? ep->cache(that->m_object) : 0;
-        if (cache) {
-            if (ddata) { cache->addref(); ddata->propertyCache = cache; }
-        } else {
-            // Not cachable - fall back to QMetaObject (eg. dynamic meta object)
-            const QMetaObject *mo = that->m_object->metaObject();
-            int pc = mo->propertyCount();
-            int po = mo->propertyOffset();
-            for (int i=po; i<pc; ++i)
-                result << QString::fromUtf8(mo->property(i).name());
-        }
-    } else {
-        result = cache->propertyNames();
+    const QMetaObject *mo = that->m_object->metaObject();
+    if (it->arrayIndex < mo->propertyCount()) {
+        *name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
+        ++it->arrayIndex;
+        if (attributes)
+            *attributes = QV4::Attr_Data;
+        it->tmpDynamicProperty.value = that->get(*name);
+        return &it->tmpDynamicProperty;
     }
-
-    return QV4::Value::fromObject(that->engine()->newArrayObject(result));
+    return QV4::Object::advanceIterator(m, it, name, index, attributes);
 }
 
 namespace QV4 {

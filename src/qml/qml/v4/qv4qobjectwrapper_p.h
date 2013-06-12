@@ -96,6 +96,8 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     static Value wrap(ExecutionEngine *engine, QObject *object);
 
+    using Object::get;
+
 private:
     static Value create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 
@@ -110,9 +112,8 @@ private:
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     static void markObjects(Managed *that);
-
-    static Value enumerateProperties(Object *m_object);
 
     static void destroy(Managed *that)
     {
