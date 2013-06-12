@@ -55,7 +55,6 @@
 
 #include <QtCore/qglobal.h>
 #include <private/qv4object_p.h>
-#include <qv4v8_p.h>
 
 class QQmlEngine;
 class QV8Engine;

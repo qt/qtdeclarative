@@ -50,7 +50,6 @@ SOURCES += \
     $$PWD/qv4unwindhelper.cpp \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
-    $$PWD/qv4v8.cpp \
     $$PWD/qv4executableallocator.cpp \
     $$PWD/qv4sequenceobject.cpp \
     $$PWD/qv4include.cpp \
@@ -102,7 +101,6 @@ HEADERS += \
     $$PWD/qv4unwindhelper_p-arm.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
-    $$PWD/qv4v8_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h \

@@ -42,7 +42,6 @@
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickapplication_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qv8_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtGui/QGuiApplication>

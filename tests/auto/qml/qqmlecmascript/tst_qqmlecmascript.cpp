@@ -2163,7 +2163,7 @@ void tst_qqmlecmascript::regExpBug()
     }
 }
 
-static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, const char *source)
+static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2176,7 +2176,7 @@ static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, c
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        QV4::Value args[] = { o->v4Value() };
+        QV4::Value args[] = { o };
         function->call(engine->global(), args, 1);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -2185,8 +2185,8 @@ static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, c
     return false;
 }
 
-static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o, 
-                                  const char *source, v8::Handle<v8::Value> result)
+static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
+                                  const char *source, const QV4::Value &result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2198,16 +2198,16 @@ static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        QV4::Value args[] = { o->v4Value() };
+        QV4::Value args[] = { o };
         QV4::Value value = function->call(engine->global(), args, 1);
-        return __qmljs_strict_equal(value, result->v4Value());
+        return __qmljs_strict_equal(value, result);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
     return false;
 }
 
-static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::Object> o, 
+static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
                                              const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
@@ -2218,14 +2218,14 @@ static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::O
     try {
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
-            return v8::Handle<v8::Value>();
-        QV4::Value args[] = { o->v4Value() };
+            return QV4::Value::emptyValue();
+        QV4::Value args[] = { o };
         QV4::Value value = function->call(engine->global(), args, 1);
         return value;
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
-    return v8::Handle<v8::Value>();
+    return QV4::Value::emptyValue();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
@@ -2243,7 +2243,7 @@ void tst_qqmlecmascript::callQtInvokables()
     
     QV8Engine *engine = ep->v8engine();
 
-    v8::Handle<v8::Object> object = QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o);
+    QV4::Value object = QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o);
 
     // Non-existent methods
     o->reset();
@@ -2308,9 +2308,9 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QPointF()");
-    QVERIFY(!ret.IsEmpty());
-    QCOMPARE(engine->toVariant(ret->v4Value(), -1), QVariant(QPointF(123, 4.5)));
+    QV4::Value ret = EVALUATE("object.method_NoArgs_QPointF()");
+    QVERIFY(!ret.isEmpty());
+    QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
     QCOMPARE(o->actuals().count(), 0);
@@ -2318,8 +2318,8 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QObject()");
-    QV4::QObjectWrapper *qobjectWrapper = ret->v4Value().as<QV4::QObjectWrapper>();
+    QV4::Value ret = EVALUATE("object.method_NoArgs_QObject()");
+    QV4::QObjectWrapper *qobjectWrapper = ret.as<QV4::QObjectWrapper>();
     QVERIFY(qobjectWrapper);
     QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
@@ -2335,9 +2335,9 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QScriptValue()");
-    QVERIFY(ret->IsString());
-    QCOMPARE(ret->v4Value().toQString(), QString("Hello world"));
+    QV4::Value ret = EVALUATE("object.method_NoArgs_QScriptValue()");
+    QVERIFY(ret.isString());
+    QCOMPARE(ret.toQString(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);

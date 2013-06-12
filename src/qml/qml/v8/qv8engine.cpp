@@ -97,7 +97,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     qMetaTypeId<QList<int> >();
 
     m_v4Engine = new QV4::ExecutionEngine;
-    v8::Isolate::SetEngine(m_v4Engine);
     m_v4Engine->v8Engine = this;
 
     QV4::QObjectWrapper::initializeBindings(m_v4Engine);
@@ -114,7 +113,6 @@ QV8Engine::~QV8Engine()
     delete m_listModelData;
     m_listModelData = 0;
 
-    v8::Isolate::SetEngine(0);
     delete m_v4Engine;
 }
 

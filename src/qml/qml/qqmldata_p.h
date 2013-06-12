@@ -55,7 +55,6 @@
 
 #include <private/qtqmlglobal_p.h>
 #include <private/qobject_p.h>
-#include <private/qv8_p.h>
 
 #include <private/qv4value_p.h>
 

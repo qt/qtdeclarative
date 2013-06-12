@@ -53,7 +53,6 @@
 // We mean it.
 //
 
-#include <private/qv8_p.h>
 #include <QtCore/qglobal.h>
 #include <QtQml/qqmlerror.h>
 #include <private/qqmlengine_p.h>

@@ -48,8 +48,6 @@
 
 #include <private/qqmlcomponent_p.h>
 
-#include <private/qv8_p.h>
-
 QT_BEGIN_NAMESPACE
 
 static const QQuickItemPrivate::ChangeTypes watchedChanges

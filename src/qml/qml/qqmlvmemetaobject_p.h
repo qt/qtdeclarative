@@ -71,8 +71,6 @@
 #include <private/qv8engine_p.h>
 #include <private/qflagpointer_p.h>
 
-#include <private/qv8_p.h>
-
 #include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE

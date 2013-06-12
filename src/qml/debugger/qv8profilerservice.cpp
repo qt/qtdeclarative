@@ -42,7 +42,6 @@
 #include "qv8profilerservice_p.h"
 #include "qqmldebugservice_p_p.h"
 #include <private/qv8profiler_p.h>
-#include <private/qv8_p.h>
 
 #include <QtCore/QHash>
 #include <QtCore/QMutex>
@@ -201,7 +200,7 @@ void QV8ProfilerService::startProfiling(const QString &title)
     if (d->m_ongoing.contains(title))
         return;
 
-    v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
+//    v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     // ### FIXME: v4
 //    v8::CpuProfiler::StartProfiling(v8title);
 

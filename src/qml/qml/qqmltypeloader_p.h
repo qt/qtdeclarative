@@ -60,7 +60,6 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 
-#include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlscript_p.h>
 #include <private/qqmlimport_p.h>

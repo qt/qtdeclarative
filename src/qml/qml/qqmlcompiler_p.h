@@ -55,7 +55,6 @@
 
 #include "qqml.h"
 #include "qqmlerror.h"
-#include <private/qv8_p.h>
 #include "qqmlinstruction_p.h"
 #include "qqmlscript_p.h"
 #include "qqmlengine_p.h"

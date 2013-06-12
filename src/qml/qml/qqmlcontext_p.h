@@ -70,8 +70,6 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlguard_p.h>
 
-#include <private/qv8_p.h>
-
 
 QT_BEGIN_NAMESPACE
 

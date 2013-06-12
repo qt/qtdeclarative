@@ -64,7 +64,6 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qtypeinfo.h>
 
-#include <private/qv8_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qfinitestack_p.h>
 
