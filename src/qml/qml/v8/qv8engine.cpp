@@ -277,9 +277,9 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
-                v8::Handle<v8::Value> retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
+                QV4::Value retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
                 if (succeeded)
-                    return retn->v4Value();
+                    return retn;
                 return arrayFromStringList(this, *reinterpret_cast<const QStringList *>(ptr));
                 }
             case QMetaType::QVariantList:
@@ -329,9 +329,9 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             return QV4::QObjectWrapper::wrap(m_v4Engine, obj);
 
         bool succeeded = false;
-        v8::Handle<v8::Value> retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
+        QV4::Value retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
         if (succeeded)
-            return retn->v4Value();
+            return retn;
 
         if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
             return QV4::QmlValueTypeWrapper::create(this, variant, vt);
