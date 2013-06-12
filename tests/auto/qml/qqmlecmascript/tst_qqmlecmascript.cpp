@@ -3928,7 +3928,7 @@ void tst_qqmlecmascript::importScripts_data()
     QTest::newRow("malformed import statement")
             << testFileUrl("jsimportfail/malformedImport.qml")
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1: SyntaxError: Unexpected token ."))
+            << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1:1: Syntax error"))
             << QStringList()
             << QVariantList();
 

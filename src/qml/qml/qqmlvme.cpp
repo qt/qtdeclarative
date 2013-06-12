@@ -1071,17 +1071,15 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
-    QV4::ExecutionContext *ctx = v4->current;
 
     // If compilation throws an error, a surrounding catch will record it.
     // pass 0 as the QML object, we set it later before calling run()
     QV4::Script *program = new QV4::Script(v4, 0, m_programSource, urlString, 1);
     try {
         program->parse();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (QV4::Exception &) {
         delete program;
-        return;
+        throw;
     }
 
     m_program = program;
@@ -1148,8 +1146,18 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
     }
 
-    if (!script->isInitialized())
-        script->initialize(parentCtxt->engine);
+    if (!script->isInitialized()) {
+        QV4::ExecutionContext *ctx = QV8Engine::getV4(parentCtxt->engine)->current;
+        try {
+            script->initialize(parentCtxt->engine);
+        } catch (QV4::Exception &e) {
+            e.accept(ctx);
+            QQmlError error;
+            QQmlExpressionPrivate::exceptionToError(e, error);
+            if (error.isValid())
+                ep->warning(error);
+        }
+    }
 
     if (!script->m_program)
         return QV4::PersistentValue();
