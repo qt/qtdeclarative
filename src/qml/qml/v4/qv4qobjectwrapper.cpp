@@ -330,18 +330,10 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
     }
 
     if (name->isEqualTo(m_destroy) || name->isEqualTo(m_toString)) {
-        bool hasProp = false;
-        QV4::Value method = QV4::Object::get(this, ctx, name, &hasProp);
-
-        if (!hasProp) {
-            int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-            method = QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index);
-            QV4::Object::put(this, ctx, name, method);
-        }
-
+        int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+        QV4::Value method = QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index);
         if (hasProperty)
             *hasProperty = true;
-
         return method;
     }
 
