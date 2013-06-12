@@ -6694,6 +6694,7 @@ void tst_qqmlecmascript::withStatement()
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != 0);
 
+        QEXPECT_FAIL("", "The with statement is not allowed in strict mode", Abort);
         QCOMPARE(object->value(), 123);
     }
 }
