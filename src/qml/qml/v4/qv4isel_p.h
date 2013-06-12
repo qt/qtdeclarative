@@ -88,10 +88,10 @@ public:
 };
 
 namespace V4IR {
-class Q_QML_EXPORT InstructionSelection: protected V4IR::StmtVisitor
+class Q_QML_EXPORT IRDecoder: protected V4IR::StmtVisitor
 {
 public:
-    virtual ~InstructionSelection() = 0;
+    virtual ~IRDecoder() = 0;
 
     virtual void visitPhi(V4IR::Phi *) {}
 

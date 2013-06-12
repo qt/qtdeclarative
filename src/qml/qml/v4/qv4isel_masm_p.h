@@ -777,7 +777,7 @@ private:
 };
 
 class Q_QML_EXPORT InstructionSelection:
-        protected V4IR::InstructionSelection,
+        protected V4IR::IRDecoder,
         public EvalInstructionSelection
 {
 public:

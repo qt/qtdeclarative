@@ -57,7 +57,7 @@ namespace Moth {
 class StackSlotAllocator;
 
 class Q_QML_EXPORT InstructionSelection:
-        public V4IR::InstructionSelection,
+        public V4IR::IRDecoder,
         public EvalInstructionSelection
 {
 public:

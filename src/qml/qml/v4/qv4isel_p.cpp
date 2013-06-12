@@ -116,7 +116,7 @@ QV4::Function *EvalInstructionSelection::vmFunction(Function *f) {
     return function;
 }
 
-void InstructionSelection::visitMove(V4IR::Move *s)
+void IRDecoder::visitMove(V4IR::Move *s)
 {
     if (s->op == V4IR::OpInvalid) {
         if (V4IR::Name *n = s->target->asName()) {
@@ -241,11 +241,11 @@ void InstructionSelection::visitMove(V4IR::Move *s)
     assert(!"TODO");
 }
 
-InstructionSelection::~InstructionSelection()
+IRDecoder::~IRDecoder()
 {
 }
 
-void InstructionSelection::visitExp(V4IR::Exp *s)
+void IRDecoder::visitExp(V4IR::Exp *s)
 {
     if (V4IR::Call *c = s->expr->asCall()) {
         // These are calls where the result is ignored.
@@ -268,7 +268,7 @@ void InstructionSelection::visitExp(V4IR::Exp *s)
     }
 }
 
-void InstructionSelection::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
+void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
 {
     V4IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
