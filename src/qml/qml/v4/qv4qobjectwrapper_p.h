@@ -70,6 +70,7 @@ QT_BEGIN_NAMESPACE
 class QObject;
 class QQmlData;
 class QQmlPropertyCache;
+class QQmlPropertyData;
 
 namespace QV4 {
 struct QObjectSlotDispatcher;
@@ -100,12 +101,15 @@ private:
 
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
 
+    QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
+
     QQmlGuard<QObject> m_object;
     String *m_destroy;
     String *m_toString;
 
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static PropertyAttributes query(const Managed *, String *name);
     static void markObjects(Managed *that);
 
     static Value enumerateProperties(Object *m_object);

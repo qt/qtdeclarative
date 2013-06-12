@@ -308,6 +308,19 @@ void QObjectWrapper::deleteQObject(bool deleteInstantly)
     }
 }
 
+QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
+{
+    QHashedV4String propertystring(QV4::Value::fromString(name));
+
+    QQmlData *ddata = QQmlData::get(m_object, false);
+    if (!ddata)
+        return 0;
+    if (ddata && ddata->propertyCache)
+        return ddata->propertyCache->property(propertystring, m_object, qmlContext);
+    else
+        return QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, propertystring, qmlContext, *local);
+}
+
 Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(m_object)) {
@@ -332,24 +345,14 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
         return method;
     }
 
-    QHashedV4String propertystring(QV4::Value::fromString(name));
-    QV8Engine *v8Engine = ctx->engine->v8Engine;
-
-    QQmlData *ddata = QQmlData::get(m_object, false);
     QQmlPropertyData local;
-    QQmlPropertyData *result = 0;
-    {
-        QHashedV4String propertystring(Value::fromString(name));
-        if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(propertystring, m_object, qmlContext);
-        else
-            result = QQmlPropertyCache::property(ctx->engine->v8Engine->engine(), m_object, propertystring, qmlContext, local);
-    }
+    QQmlPropertyData *result = findProperty(ctx->engine, qmlContext, name, revisionMode, &local);
 
     if (!result) {
         if (includeImports && name->startsWithUpper()) {
             // Check for attached properties
             if (qmlContext && qmlContext->imports) {
+                QHashedV4String propertystring(QV4::Value::fromString(name));
                 QQmlTypeNameCache::Result r = qmlContext->imports->query(propertystring);
 
                 if (hasProperty)
@@ -359,9 +362,9 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
                     if (r.scriptIndex != -1) {
                         return QV4::Value::undefinedValue();
                     } else if (r.type) {
-                        return QmlTypeWrapper::create(v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
+                        return QmlTypeWrapper::create(ctx->engine->v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
-                        return QmlTypeWrapper::create(v8Engine, m_object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
+                        return QmlTypeWrapper::create(ctx->engine->v8Engine, m_object, qmlContext->imports, r.importNamespace, QmlTypeWrapper::ExcludeEnums);
                     }
                     Q_ASSERT(!"Unreachable");
                 }
@@ -371,6 +374,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
     }
 
     QQmlData::flushPendingBinding(m_object, result->coreIndex);
+    QQmlData *ddata = QQmlData::get(m_object, false);
 
     if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result)) {
@@ -677,6 +681,19 @@ void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
                         name->toQString() + QLatin1Char('\"');
         ctx->throwError(error);
     }
+}
+
+PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
+{
+    const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
+    ExecutionEngine *engine = that->engine();
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
+    QQmlPropertyData local;
+    if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
+        || name->isEqualTo(that->m_destroy) || name->isEqualTo(that->m_toString))
+        return QV4::Attr_Data;
+    else
+        return QV4::Object::query(m, name);
 }
 
 QV4::Value QObjectWrapper::enumerateProperties(Object *object)
