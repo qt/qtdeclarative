@@ -163,6 +163,7 @@ void FileInfoThread::setShowDotAndDotDot(bool on)
     QMutexLocker locker(&mutex);
     showDotAndDotDot = on;
     folderUpdate = true;
+    needUpdate = true;
     condition.wakeAll();
 }
 
