@@ -233,6 +233,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 120; height: 120
         fillMode: Image.Tile
+        horizontalAlignment: Image.AlignLeft
+        verticalAlignment: Image.AlignTop
         source: "qtlogo.png"
     }
     \endqml
@@ -244,6 +246,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 120; height: 120
         fillMode: Image.TileVertically
+        verticalAlignment: Image.AlignTop
         source: "qtlogo.png"
     }
     \endqml
@@ -255,6 +258,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 120; height: 120
         fillMode: Image.TileHorizontally
+        verticalAlignment: Image.AlignLeft
         source: "qtlogo.png"
     }
     \endqml
@@ -460,7 +464,7 @@ qreal QQuickImage::paintedHeight() const
     \qmlproperty enumeration QtQuick2::Image::horizontalAlignment
     \qmlproperty enumeration QtQuick2::Image::verticalAlignment
 
-    Sets the horizontal and vertical alignment of the image. By default, the image is top-left aligned.
+    Sets the horizontal and vertical alignment of the image. By default, the image is center aligned.
 
     The valid values for \c horizontalAlignment are \c Image.AlignLeft, \c Image.AlignRight and \c Image.AlignHCenter.
     The valid values for \c verticalAlignment are \c Image.AlignTop, \c Image.AlignBottom
