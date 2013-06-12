@@ -61,4 +61,5 @@ sourcedirs += ../../plugins
 
 #exclude certain directories
 excludedirs += ../../imports/dialogs \
-               ../../imports/models
+               ../../imports/models \
+               ../../../examples/quick/dialogs
