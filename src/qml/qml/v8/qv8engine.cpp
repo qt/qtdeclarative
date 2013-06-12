@@ -78,9 +78,6 @@
 #include <private/qv4include_p.h>
 #include <private/qv4jsonobject_p.h>
 
-#include <private/qv4v8_p.h>
-#include <private/qv8objectresource_p.h>
-
 Q_DECLARE_METATYPE(QList<int>)
 
 
@@ -139,14 +136,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, value)));
 
     if (QV4::Object *object = value.asObject()) {
-        QV8ObjectResource *r = (QV8ObjectResource *)v8::Handle<v8::Value>(value)->ToObject()->GetExternalResource();
-        if (r) {
-            switch (r->resourceType()) {
-            case QV8ObjectResource::XMLHttpRequestType:
-            case QV8ObjectResource::DOMNodeType:
-                return QVariant();
-            }
-        } else if (typeHint == QMetaType::QJsonObject
+        if (typeHint == QMetaType::QJsonObject
                    && !value.asArrayObject() && !value.asFunctionObject()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {

@@ -51,9 +51,6 @@
 #include <private/qv4sequenceobject_p.h>
 #include <private/qv4objectproto_p.h>
 
-#include <private/qv4v8_p.h>
-#include <private/qv8objectresource_p.h>
-
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -255,14 +252,6 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
             for (uint32_t ii = 0; ii < seqLength; ++ii)
                 serialize(data, o->getIndexed(ii), engine); // sequence elements
 
-            return;
-        }
-
-        v8::Handle<v8::Object> v8object(v);
-        QV8ObjectResource *r = static_cast<QV8ObjectResource *>(v8object->GetExternalResource());
-        if (r) {
-            // not a sequence.
-            push(data, valueheader(WorkerUndefined));
             return;
         }
 
