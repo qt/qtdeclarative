@@ -121,12 +121,7 @@ struct V8AccessorGetter: FunctionObject {
         V8AccessorGetter *getter = static_cast<V8AccessorGetter*>(that);
         AccessorInfo info(thisObject, getter->data.value());
         QV4::Value result = QV4::Value::undefinedValue();
-        try {
-            result = getter->getter(getter->name.value(), info)->v4Value();
-        } catch (QV4::Exception &e) {
-            e.accept(context);
-        }
-        return result;
+        return getter->getter(getter->name.value(), info)->v4Value();
     }
 
 protected:
@@ -157,11 +152,7 @@ struct V8AccessorSetter: FunctionObject {
             return QV4::Value::undefinedValue();
         V8AccessorSetter *setter = static_cast<V8AccessorSetter*>(that);
         AccessorInfo info(thisObject, setter->data.value());
-        try {
-            setter->setter(setter->name.value(), args[0], info);
-        } catch (QV4::Exception &e) {
-            e.accept(context);
-        }
+        setter->setter(setter->name.value(), args[0], info);
         return QV4::Value::undefinedValue();
     }
 
