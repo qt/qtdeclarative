@@ -89,6 +89,13 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         Q_MANAGED_CHECK \
         static const QV4::ManagedVTable static_vtbl;
 
+struct GCDeletable
+{
+    GCDeletable() : next(0), lastCall(false) {}
+    virtual ~GCDeletable() {}
+    GCDeletable *next;
+    bool lastCall;
+};
 
 struct ManagedVTable
 {
@@ -96,6 +103,7 @@ struct ManagedVTable
     Value (*construct)(Managed *, ExecutionContext *context, Value *args, int argc);
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
+    void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
     Value (*get)(Managed *, ExecutionContext *ctx, String *name, bool *hasProperty);
     Value (*getIndexed)(Managed *, ExecutionContext *ctx, uint index, bool *hasProperty);
@@ -119,6 +127,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     construct,                                  \
     markObjects,                                \
     destroy,                                    \
+    0,                                          \
     hasInstance,                                \
     get,                                        \
     getIndexed,                                 \
@@ -135,6 +144,29 @@ const QV4::ManagedVTable classname::static_vtbl =    \
     #classname                                  \
 }
 
+#define DEFINE_MANAGED_VTABLE_WITH_DELETABLES(classname) \
+const QV4::ManagedVTable classname::static_vtbl =    \
+{                                               \
+    call,                                       \
+    construct,                                  \
+    markObjects,                                \
+    destroy,                                    \
+    collectDeletables,                          \
+    hasInstance,                                \
+    get,                                        \
+    getIndexed,                                 \
+    put,                                        \
+    putIndexed,                                 \
+    query,                                      \
+    queryIndexed,                               \
+    deleteProperty,                             \
+    deleteIndexedProperty,                      \
+    getLookup,                                  \
+    setLookup,                                  \
+    isEqualTo,                                  \
+    advanceIterator,                            \
+    #classname                                  \
+}
 
 struct Q_QML_EXPORT Managed
 {

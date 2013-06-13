@@ -51,6 +51,7 @@ const ManagedVTable Managed::static_vtbl =
     construct,
     0 /*markObjects*/,
     destroy,
+    0 /*collectDeletables*/,
     hasInstance,
     0,
     0,

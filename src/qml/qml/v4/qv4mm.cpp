@@ -318,7 +318,7 @@ void MemoryManager::mark()
     }
 }
 
-std::size_t MemoryManager::sweep()
+std::size_t MemoryManager::sweep(bool lastSweep)
 {
     PersistentValuePrivate *weak = m_weakValues;
     while (weak) {
@@ -351,9 +351,11 @@ std::size_t MemoryManager::sweep()
     }
 
     std::size_t freedCount = 0;
+    GCDeletable *deletable = 0;
+    GCDeletable **firstDeletable = &deletable;
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
+        freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
 
     ExecutionContext *ctx = m_contextList;
     ExecutionContext **n = &m_contextList;
@@ -369,10 +371,18 @@ std::size_t MemoryManager::sweep()
         ctx = next;
     }
 
+    deletable = *firstDeletable;
+    while (deletable) {
+        GCDeletable *next = deletable->next;
+        deletable->lastCall = lastSweep;
+        delete deletable;
+        deletable = next;
+    }
+
     return freedCount;
 }
 
-std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
+std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
     std::size_t freedCount = 0;
@@ -397,6 +407,8 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
+                if (m->vtbl->collectDeletables)
+                    m->vtbl->collectDeletables(m, deletable);
                 m->vtbl->destroy(m);
 
                 m->setNextFree(*f);
@@ -458,18 +470,6 @@ void MemoryManager::setEnableGC(bool enableGC)
 
 MemoryManager::~MemoryManager()
 {
-    PersistentValuePrivate *weak = m_weakValues;
-    while (weak) {
-        if (QObjectWrapper *qobjectWrapper = weak->value.as<QObjectWrapper>()) {
-            weak->ref();
-            qobjectWrapper->deleteQObject(/*deleteInstantly*/ true);
-            PersistentValuePrivate *n = weak->next;
-            weak->deref();
-            weak = n;
-        } else
-            weak = weak->next;
-    }
-
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
         PersistentValuePrivate *n = persistent->next;
@@ -479,7 +479,7 @@ MemoryManager::~MemoryManager()
         persistent = n;
     }
 
-    sweep();
+    sweep(/*lastSweep*/true);
 #ifdef V4_USE_VALGRIND
     VALGRIND_DESTROY_MEMPOOL(this);
 #endif

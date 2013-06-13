@@ -253,59 +253,10 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     m_toString = engine->newIdentifier(QStringLiteral("toString"));
 }
 
-QObjectWrapper::~QObjectWrapper()
-{
-    deleteQObject();
-}
-
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
     engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("connect"), method_connect);
     engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
-}
-
-namespace {
-    struct SafeQMLObjectDeleter : public QObject
-    {
-        SafeQMLObjectDeleter(QObject *objectToDelete)
-            : m_objectToDelete(objectToDelete)
-        {}
-
-        ~SafeQMLObjectDeleter()
-        {
-            QQmlData *ddata = QQmlData::get(m_objectToDelete, false);
-            if (ddata && ddata->ownContext && ddata->context)
-                ddata->context->emitDestruction();
-            // This object is notionally destroyed now
-            ddata->isQueuedForDeletion = true;
-            delete m_objectToDelete;
-        }
-
-        QObject *m_objectToDelete;
-    };
-}
-
-void QObjectWrapper::deleteQObject(bool deleteInstantly)
-{
-    if (!m_object)
-        return;
-    QQmlData *ddata = QQmlData::get(m_object, false);
-    if (!ddata)
-        return;
-    if (!m_object->parent() && !ddata->indestructible) {
-        if (deleteInstantly) {
-            QQmlData *ddata = QQmlData::get(m_object, false);
-            if (ddata->ownContext && ddata->context)
-                ddata->context->emitDestruction();
-            // This object is notionally destroyed now
-            ddata->isQueuedForDeletion = true;
-            delete m_object;
-        } else {
-            QObject *deleter = new SafeQMLObjectDeleter(m_object);
-            deleter->deleteLater();
-            m_object = 0;
-        }
-    }
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
@@ -916,7 +867,50 @@ void QObjectWrapper::markObjects(Managed *that)
     QV4::Object::markObjects(that);
 }
 
-DEFINE_MANAGED_VTABLE(QObjectWrapper);
+namespace {
+    struct QObjectDeleter : public QV4::GCDeletable
+    {
+        QObjectDeleter(QObject *o)
+            : m_objectToDelete(o)
+        {}
+        ~QObjectDeleter()
+        {
+            QQmlData *ddata = QQmlData::get(m_objectToDelete, false);
+            if (ddata && ddata->ownContext && ddata->context)
+                ddata->context->emitDestruction();
+            // This object is notionally destroyed now
+            ddata->isQueuedForDeletion = true;
+            if (lastCall)
+                delete m_objectToDelete;
+            else
+                m_objectToDelete->deleteLater();
+        }
+
+        QObject *m_objectToDelete;
+    };
+}
+
+void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
+{
+    QObjectWrapper *This = static_cast<QObjectWrapper*>(m);
+    QQmlGuard<QObject> &object = This->m_object;
+    if (!object)
+        return;
+
+    QQmlData *ddata = QQmlData::get(object, false);
+    if (!ddata)
+        return;
+
+    if (object->parent() || ddata->indestructible)
+        return;
+
+    QObjectDeleter *deleter = new QObjectDeleter(object);
+    object = 0;
+    deleter->next = *deletable;
+    *deletable = deleter;
+}
+
+DEFINE_MANAGED_VTABLE_WITH_DELETABLES(QObjectWrapper);
 
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread

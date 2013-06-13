@@ -81,13 +81,9 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
 
-    ~QObjectWrapper();
-
     static void initializeBindings(ExecutionEngine *engine);
 
     QObject *object() const { return m_object.data(); }
-
-    void deleteQObject(bool deleteInstantly = false);
 
     Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
     static Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
@@ -114,7 +110,7 @@ private:
     static PropertyAttributes query(const Managed *, String *name);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     static void markObjects(Managed *that);
-
+    static void collectDeletables(Managed *m, GCDeletable **deletable);
     static void destroy(Managed *that)
     {
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
