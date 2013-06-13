@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 #ifndef QV4BOOLEANOBJECT_H
-#define QV4BOOLEANOBJECT_H
+#define QBOOLEANOBJECT_H
 
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
@@ -49,15 +49,21 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct QV4_JS_CLASS(BooleanPrototype): BooleanObject
+struct BooleanCtor: FunctionObject
 {
-    QV4_ANNOTATE(argc 1)
-    BooleanPrototype(ExecutionEngine *engine): BooleanObject(engine, Value::fromBoolean(false)) {}
-    void initClass(ExecutionEngine *engine, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
+    BooleanCtor(ExecutionContext *scope);
 
-    static Value ctor_method_construct(Managed *, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+struct BooleanPrototype: BooleanObject
+{
+    BooleanPrototype(ExecutionEngine *engine): BooleanObject(engine, Value::fromBoolean(false)) {}
+    void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *ctx);
     static Value method_valueOf(SimpleCallContext *ctx);
@@ -68,4 +74,4 @@ struct QV4_JS_CLASS(BooleanPrototype): BooleanObject
 
 QT_END_NAMESPACE
 
-#endif // QV4BOOLEANOBJECT_H
+#endif // QV4ECMAOBJECTS_P_H

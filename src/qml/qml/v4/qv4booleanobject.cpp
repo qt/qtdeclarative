@@ -43,16 +43,33 @@
 
 using namespace QV4;
 
-Value BooleanPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
+DEFINE_MANAGED_VTABLE(BooleanCtor);
+
+BooleanCtor::BooleanCtor(ExecutionContext *scope)
+    : FunctionObject(scope, scope->engine->newIdentifier("Boolean"))
+{
+    vtbl = &static_vtbl;
+}
+
+Value BooleanCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     bool n = argc ? args[0].toBoolean() : false;
     return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanPrototype::ctor_method_call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
+Value BooleanCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
     bool value = argc ? argv[0].toBoolean() : 0;
     return Value::fromBoolean(value);
+}
+
+void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
+{
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
+    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
 Value BooleanPrototype::method_toString(SimpleCallContext *ctx)
@@ -78,5 +95,3 @@ Value BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 
     return thisObject->value;
 }
-
-#include "qv4booleanobject_p_jsclass.cpp"
