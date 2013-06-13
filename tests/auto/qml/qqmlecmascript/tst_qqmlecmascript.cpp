@@ -3529,7 +3529,7 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_twoEngines()
     object->setProperty("compare", compare);
     object->setProperty("pass", false);
 
-    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
+    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
     emit object->signalWithVariant(QVariant::fromValue(value));
     QVERIFY(!object->property("pass").toBool());
 }

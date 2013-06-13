@@ -92,6 +92,10 @@ public:
     QV4::Value getValue(QV4::ExecutionEngine *e) {
         if (!this->e)
             this->e = e;
+        else if (this->e != e) {
+            qWarning("JSValue can't be reassigned to another engine.");
+            return QV4::Value::emptyValue();
+        }
         if (value.asString() == &string)
             value = QV4::Value::fromString(e->newString(string.toQString()));
         return value;
