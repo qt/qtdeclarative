@@ -236,10 +236,9 @@ public:
 V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 
-class QV4_JS_CLASS(QQuickJSContext2D) : public QV4::Object
+class QQuickJSContext2D : public QV4::Object
 {
     Q_MANAGED
-    QV4_ANNOTATE(staticInitClass true)
 public:
     QQuickJSContext2D(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -247,8 +246,6 @@ public:
         vtbl = &static_vtbl;
     }
     QQuickContext2D* context;
-
-    static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
     static QV4::Value method_get_globalAlpha(QV4::SimpleCallContext *ctx);
     static QV4::Value method_set_globalAlpha(QV4::SimpleCallContext *ctx);
@@ -300,7 +297,7 @@ protected:
 DEFINE_MANAGED_VTABLE(QQuickJSContext2D);
 
 
-struct QV4_JS_CLASS(QQuickJSContext2DPrototype) : public QV4::Object
+struct QQuickJSContext2DPrototype : public QV4::Object
 {
     Q_MANAGED
 public:
@@ -308,10 +305,51 @@ public:
         : QV4::Object(engine)
     {
         prototype = engine->objectPrototype;
-        initClass(engine);
+        defineDefaultProperty(engine, QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
+        defineDefaultProperty(engine, QStringLiteral("restore"), method_restore, 0);
+        defineDefaultProperty(engine, QStringLiteral("moveTo"), method_moveTo, 0);
+        defineDefaultProperty(engine, QStringLiteral("lineTo"), method_lineTo, 0);
+        defineDefaultProperty(engine, QStringLiteral("caretBlinkRate"), method_caretBlinkRate, 0);
+        defineDefaultProperty(engine, QStringLiteral("clip"), method_clip, 0);
+        defineDefaultProperty(engine, QStringLiteral("setTransform"), method_setTransform, 0);
+        defineDefaultProperty(engine, QStringLiteral("text"), method_text, 0);
+        defineDefaultProperty(engine, QStringLiteral("roundedRect"), method_roundedRect, 0);
+        defineDefaultProperty(engine, QStringLiteral("createPattern"), method_createPattern, 0);
+        defineDefaultProperty(engine, QStringLiteral("stroke"), method_stroke, 0);
+        defineDefaultProperty(engine, QStringLiteral("arc"), method_arc, 0);
+        defineDefaultProperty(engine, QStringLiteral("createImageData"), method_createImageData, 0);
+        defineDefaultProperty(engine, QStringLiteral("measureText"), method_measureText, 0);
+        defineDefaultProperty(engine, QStringLiteral("ellipse"), method_ellipse, 0);
+        defineDefaultProperty(engine, QStringLiteral("fill"), method_fill, 0);
+        defineDefaultProperty(engine, QStringLiteral("save"), method_save, 0);
+        defineDefaultProperty(engine, QStringLiteral("scale"), method_scale, 0);
+        defineDefaultProperty(engine, QStringLiteral("drawImage"), method_drawImage, 0);
+        defineDefaultProperty(engine, QStringLiteral("transform"), method_transform, 0);
+        defineDefaultProperty(engine, QStringLiteral("fillText"), method_fillText, 0);
+        defineDefaultProperty(engine, QStringLiteral("strokeText"), method_strokeText, 0);
+        defineDefaultProperty(engine, QStringLiteral("translate"), method_translate, 0);
+        defineDefaultProperty(engine, QStringLiteral("createRadialGradient"), method_createRadialGradient, 0);
+        defineDefaultProperty(engine, QStringLiteral("shear"), method_shear, 0);
+        defineDefaultProperty(engine, QStringLiteral("isPointInPath"), method_isPointInPath, 0);
+        defineDefaultProperty(engine, QStringLiteral("bezierCurveTo"), method_bezierCurveTo, 0);
+        defineDefaultProperty(engine, QStringLiteral("resetTransform"), method_resetTransform, 0);
+        defineDefaultProperty(engine, QStringLiteral("arcTo"), method_arcTo, 0);
+        defineDefaultProperty(engine, QStringLiteral("fillRect"), method_fillRect, 0);
+        defineDefaultProperty(engine, QStringLiteral("createConicalGradient"), method_createConicalGradient, 0);
+        defineDefaultProperty(engine, QStringLiteral("drawFocusRing"), method_drawFocusRing, 0);
+        defineDefaultProperty(engine, QStringLiteral("beginPath"), method_beginPath, 0);
+        defineDefaultProperty(engine, QStringLiteral("clearRect"), method_clearRect, 0);
+        defineDefaultProperty(engine, QStringLiteral("rect"), method_rect, 0);
+        defineDefaultProperty(engine, QStringLiteral("reset"), method_reset, 0);
+        defineDefaultProperty(engine, QStringLiteral("rotate"), method_rotate, 0);
+        defineDefaultProperty(engine, QStringLiteral("setCaretSelectionRect"), method_setCaretSelectionRect, 0);
+        defineDefaultProperty(engine, QStringLiteral("putImageData"), method_putImageData, 0);
+        defineDefaultProperty(engine, QStringLiteral("getImageData"), method_getImageData, 0);
+        defineDefaultProperty(engine, QStringLiteral("createLinearGradient"), method_createLinearGradient, 0);
+        defineDefaultProperty(engine, QStringLiteral("strokeRect"), method_strokeRect, 0);
+        defineDefaultProperty(engine, QStringLiteral("closePath"), method_closePath, 0);
+        defineAccessorProperty(engine, QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, 0);
     }
-
-    void initClass(QV4::ExecutionEngine *engine);
 
     static QV4::Value method_get_canvas(QV4::SimpleCallContext *ctx);
     static QV4::Value method_restore(QV4::SimpleCallContext *ctx);
@@ -3643,10 +3681,27 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
-    contextPrototype = QV4::Value::fromObject(new (v4->memoryManager) QQuickJSContext2DPrototype(v4));
-    QQuickJSContext2D::initClass(v4, contextPrototype.value());
+    QV4::Object *proto = new (v4->memoryManager) QQuickJSContext2DPrototype(v4);
+    proto->defineAccessorProperty(v4, QStringLiteral("strokeStyle"), QQuickJSContext2D::method_get_strokeStyle, QQuickJSContext2D::method_set_strokeStyle);
+    proto->defineAccessorProperty(v4, QStringLiteral("font"), QQuickJSContext2D::method_get_font, QQuickJSContext2D::method_set_font);
+    proto->defineAccessorProperty(v4, QStringLiteral("fillRule"), QQuickJSContext2D::method_get_fillRule, QQuickJSContext2D::method_set_fillRule);
+    proto->defineAccessorProperty(v4, QStringLiteral("globalAlpha"), QQuickJSContext2D::method_get_globalAlpha, QQuickJSContext2D::method_set_globalAlpha);
+    proto->defineAccessorProperty(v4, QStringLiteral("lineCap"), QQuickJSContext2D::method_get_lineCap, QQuickJSContext2D::method_set_lineCap);
+    proto->defineAccessorProperty(v4, QStringLiteral("shadowOffsetX"), QQuickJSContext2D::method_get_shadowOffsetX, QQuickJSContext2D::method_set_shadowOffsetX);
+    proto->defineAccessorProperty(v4, QStringLiteral("shadowOffsetY"), QQuickJSContext2D::method_get_shadowOffsetY, QQuickJSContext2D::method_set_shadowOffsetY);
+    proto->defineAccessorProperty(v4, QStringLiteral("globalCompositeOperation"), QQuickJSContext2D::method_get_globalCompositeOperation, QQuickJSContext2D::method_set_globalCompositeOperation);
+    proto->defineAccessorProperty(v4, QStringLiteral("miterLimit"), QQuickJSContext2D::method_get_miterLimit, QQuickJSContext2D::method_set_miterLimit);
+    proto->defineAccessorProperty(v4, QStringLiteral("fillStyle"), QQuickJSContext2D::method_get_fillStyle, QQuickJSContext2D::method_set_fillStyle);
+    proto->defineAccessorProperty(v4, QStringLiteral("shadowColor"), QQuickJSContext2D::method_get_shadowColor, QQuickJSContext2D::method_set_shadowColor);
+    proto->defineAccessorProperty(v4, QStringLiteral("textBaseline"), QQuickJSContext2D::method_get_textBaseline, QQuickJSContext2D::method_set_textBaseline);
+    proto->defineAccessorProperty(v4, QStringLiteral("path"), QQuickJSContext2D::method_get_path, QQuickJSContext2D::method_set_path);
+    proto->defineAccessorProperty(v4, QStringLiteral("lineJoin"), QQuickJSContext2D::method_get_lineJoin, QQuickJSContext2D::method_set_lineJoin);
+    proto->defineAccessorProperty(v4, QStringLiteral("lineWidth"), QQuickJSContext2D::method_get_lineWidth, QQuickJSContext2D::method_set_lineWidth);
+    proto->defineAccessorProperty(v4, QStringLiteral("textAlign"), QQuickJSContext2D::method_get_textAlign, QQuickJSContext2D::method_set_textAlign);
+    proto->defineAccessorProperty(v4, QStringLiteral("shadowBlur"), QQuickJSContext2D::method_get_shadowBlur, QQuickJSContext2D::method_set_shadowBlur);
+    contextPrototype = QV4::Value::fromObject(proto);
 
-    QV4::Object *proto = v4->newObject();
+    proto = v4->newObject();
     proto->defineDefaultProperty(v4, QStringLiteral("addColorStop"), QQuickContext2DStyle::gradient_proto_addColorStop, 0);
     gradientProto = QV4::Value::fromObject(proto);
 
@@ -3782,7 +3837,5 @@ QQuickContext2DCommandBuffer* QQuickContext2D::nextBuffer()
     QMutexLocker lock(&m_mutex);
     return m_bufferQueue.isEmpty() ? 0 : m_bufferQueue.dequeue();
 }
-
-#include "qquickcontext2d_jsclass.cpp"
 
 QT_END_NAMESPACE
