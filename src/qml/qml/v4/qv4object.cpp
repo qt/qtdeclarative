@@ -720,8 +720,12 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
     }
 
   reject:
-    if (ctx->strictMode)
-        ctx->throwTypeError();
+    if (ctx->strictMode) {
+        QString message = QStringLiteral("Cannot assign to read-only property \"");
+        message += name->toQString();
+        message += QLatin1Char('\"');
+        ctx->throwTypeError(message);
+    }
 }
 
 void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value)
