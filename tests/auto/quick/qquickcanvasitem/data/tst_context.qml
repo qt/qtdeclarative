@@ -80,6 +80,8 @@ Canvas {
             compare(contextSpy.count, 1);
 
             var ctx = canvas.getContext("2d");
+            compare(ctx.font, "sans-serif,-1,10,5,50,0,0,0,0,0");
+
             ctx.font = "80.1px sans-serif";
             compare(ctx.font, "sans-serif,-1,80,5,50,0,0,0,0,0");
         }

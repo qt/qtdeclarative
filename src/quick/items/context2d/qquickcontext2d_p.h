@@ -130,10 +130,11 @@ public:
             , shadowBlur(0)
             , shadowColor(qRgba(0, 0, 0, 0))
             , globalCompositeOperation(QPainter::CompositionMode_SourceOver)
-            , font(QFont(QLatin1String("sans-serif"), 10))
+            , font(QFont(QLatin1String("sans-serif")))
             , textAlign(QQuickContext2D::Start)
             , textBaseline(QQuickContext2D::Alphabetic)
         {
+            font.setPixelSize(10);
         }
 
         QTransform matrix;

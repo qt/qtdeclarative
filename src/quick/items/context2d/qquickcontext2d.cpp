@@ -3676,7 +3676,6 @@ void QQuickContext2D::pushState()
 void QQuickContext2D::reset()
 {
     QQuickContext2D::State newState;
-    newState.matrix = QTransform();
 
     m_path = QPainterPath();
 
@@ -3687,28 +3686,6 @@ void QQuickContext2D::reset()
     defaultClipPath.addRect(r);
     newState.clipPath = defaultClipPath;
     newState.clipPath.setFillRule(Qt::WindingFill);
-
-    newState.strokeStyle = QColor("#000000");
-    newState.fillStyle = QColor("#000000");
-    newState.fillPatternRepeatX = false;
-    newState.fillPatternRepeatY = false;
-    newState.strokePatternRepeatX = false;
-    newState.strokePatternRepeatY = false;
-    newState.invertibleCTM = true;
-    newState.fillRule = Qt::WindingFill;
-    newState.globalAlpha = 1.0;
-    newState.lineWidth = 1;
-    newState.lineCap = Qt::FlatCap;
-    newState.lineJoin = Qt::MiterJoin;
-    newState.miterLimit = 10;
-    newState.shadowOffsetX = 0;
-    newState.shadowOffsetY = 0;
-    newState.shadowBlur = 0;
-    newState.shadowColor = qRgba(0, 0, 0, 0);
-    newState.globalCompositeOperation = QPainter::CompositionMode_SourceOver;
-    newState.font = QFont(QLatin1String("sans-serif"), 10);
-    newState.textAlign = QQuickContext2D::Start;
-    newState.textBaseline = QQuickContext2D::Alphabetic;
 
     m_stateStack.clear();
     m_stateStack.push(newState);
