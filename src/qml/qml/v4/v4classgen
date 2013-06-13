@@ -84,28 +84,15 @@ class Accessor():
         managedType = "type"
         if len(obj) > 0:
             managedType = obj + "internalType()"
-        out.write("    {\n")
-        out.write("        QV4::FunctionObject *wrappedGetter = 0;\n")
-        out.write("        QV4::FunctionObject *wrappedSetter = 0;\n")
-        out.write("\n")
+
+        getter = "0"
         if self.getter:
-            out.write("        wrappedGetter = new (engine->memoryManager) QV4::MemberAccessorGetterSetter(engine->rootContext, &%s::%s, %s);\n" % (parsedClass.name, self.getter.fullMethodName(), managedType))
+            getter = "%s::%s" % (parsedClass.name, self.getter.fullMethodName())
+        setter = "0"
         if self.setter:
-            out.write("        wrappedSetter = new (engine->memoryManager) QV4::MemberAccessorGetterSetter(engine->rootContext, &%s::%s, %s);\n" % (parsedClass.name, self.setter.fullMethodName(), managedType))
+            setter = "%s::%s" % (parsedClass.name, self.setter.fullMethodName())
 
-        attributes = ["QV4::Attr_Accessor"];
-
-        if self.getter and "attributes" in self.getter.options:
-            attributes = attributes + [self.getter.options["attributes"]]
-        if self.setter and "attributes" in self.setter.options:
-            attributes = attributes + [self.setter.options["attributes"]]
-
-        out.write("        QV4::PropertyAttributes attrs = %s;\n" % "|".join(attributes))
-
-        out.write("        QV4::Property *pd = %sinsertMember(engine->newIdentifier(QStringLiteral(\"%s\")), attrs);\n" % (obj, self.name));
-        out.write("        pd->setGetter(wrappedGetter);\n");
-        out.write("        pd->setSetter(wrappedSetter);\n");
-        out.write("    }\n");
+        out.write("    %sdefineAccessorProperty(engine, QStringLiteral(\"%s\"), %s, %s);\n" % (obj, self.name, getter, setter))
 
 def parseOptions(options):
     options = options.split(" ")

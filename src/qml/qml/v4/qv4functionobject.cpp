@@ -543,34 +543,3 @@ void BoundFunction::markObjects(Managed *that)
             m->mark();
     FunctionObject::markObjects(that);
 }
-
-
-Value MemberAccessorGetterSetter::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
-{
-    MemberAccessorGetterSetter *getterSetter = static_cast<MemberAccessorGetterSetter *>(that);
-
-    Object *thisO = thisObject.asObject();
-    if (!thisO || thisO->internalType() != getterSetter->managedType)
-        context->throwTypeError();
-
-    QV4::SimpleCallContext ctx;
-    ctx.initSimpleCallContext(context->engine);
-    ctx.strictMode = true;
-    ctx.thisObject = thisObject;
-    ctx.arguments = args;
-    ctx.argumentCount = argc;
-    context->engine->pushContext(&ctx);
-
-    QV4::Value result = QV4::Value::undefinedValue();
-    try {
-        result = getterSetter->getterSetter(&ctx);
-    } catch (QV4::Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
-    }
-    context->engine->popContext();
-    return result;
-}
-
-
-DEFINE_MANAGED_VTABLE(MemberAccessorGetterSetter);

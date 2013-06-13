@@ -223,26 +223,6 @@ struct BoundFunction: FunctionObject {
     static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
 };
 
-class Q_QML_EXPORT MemberAccessorGetterSetter : public FunctionObject
-{
-public:
-    typedef Value (* GetterSetterFunction)(QV4::SimpleCallContext *ctx);
-
-    MemberAccessorGetterSetter(ExecutionContext *scope, GetterSetterFunction getterSetter, int managedType)
-        : FunctionObject(scope)
-        , managedType(managedType)
-    {
-        this->vtbl = &static_vtbl;
-        this->getterSetter = getterSetter;
-    }
-
-    static QV4::Value call(Managed *that, ExecutionContext *context, const QV4::Value &thisObject, QV4::Value *args, int argc);
-protected:
-    GetterSetterFunction getterSetter;
-    const int managedType;
-    static const ManagedVTable static_vtbl;
-};
-
 }
 
 QT_END_NAMESPACE
