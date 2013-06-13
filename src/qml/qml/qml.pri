@@ -134,9 +134,6 @@ HEADERS += \
     $$PWD/qqmlvaluetypewrapper_p.h \
     $$PWD/qqmltypewrapper_p.h
 
-JS_CLASS_SOURCES += \
-    $$PWD/qqmllocale.cpp
-
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(ftw/ftw.pri)

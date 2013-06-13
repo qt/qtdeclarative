@@ -54,10 +54,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV4_JS_CLASS(QQmlLocaleData) : public QV4::Object
+class QQmlLocaleData : public QV4::Object
 {
     Q_MANAGED
-    QV4_ANNOTATE(managedTypeName QmlLocale staticInitClass true)
 public:
     QQmlLocaleData(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
@@ -74,8 +73,6 @@ public:
             ctx->throwTypeError();
         return thisObject->locale;
     }
-
-    static void initClass(QV4::ExecutionEngine *engine, const QV4::Value &obj);
 
     static QV4::Value method_currencySymbol(QV4::SimpleCallContext *ctx);
     static QV4::Value method_dateTimeFormat(QV4::SimpleCallContext *ctx);
@@ -671,8 +668,34 @@ public:
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
     QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
-    prototype = QV4::Value::fromObject(eng->newObject());
-    QQmlLocaleData::initClass(eng, prototype.value());
+    QV4::Object *o = eng->newObject();
+    prototype = QV4::Value::fromObject(o);
+
+    o->defineDefaultProperty(eng, QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("standaloneMonthName"), QQmlLocaleData::method_standaloneMonthName, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("dayName"), QQmlLocaleData::method_dayName, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("timeFormat"), QQmlLocaleData::method_timeFormat, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("monthName"), QQmlLocaleData::method_monthName, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("currencySymbol"), QQmlLocaleData::method_currencySymbol, 0);
+    o->defineDefaultProperty(eng, QStringLiteral("dateTimeFormat"), QQmlLocaleData::method_dateTimeFormat, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("name"), QQmlLocaleData::method_get_name, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("positiveSign"), QQmlLocaleData::method_get_positiveSign, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("uiLanguages"), QQmlLocaleData::method_get_uiLanguages, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("firstDayOfWeek"), QQmlLocaleData::method_get_firstDayOfWeek, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("pmText"), QQmlLocaleData::method_get_pmText, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("percent"), QQmlLocaleData::method_get_percent, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("textDirection"), QQmlLocaleData::method_get_textDirection, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("weekDays"), QQmlLocaleData::method_get_weekDays, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("negativeSign"), QQmlLocaleData::method_get_negativeSign, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("groupSeparator"), QQmlLocaleData::method_get_groupSeparator, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("amText"), QQmlLocaleData::method_get_amText, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, 0);
+    o->defineAccessorProperty(eng, QStringLiteral("exponential"), QQmlLocaleData::method_get_exponential, 0);
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
@@ -1047,7 +1070,5 @@ QV4::Value QQmlLocale::localeCompare(QV4::SimpleCallContext *ctx)
         value stands for the official United States imperial units.
     \endlist
 */
-
-#include "qqmllocale_jsclass.cpp"
 
 QT_END_NAMESPACE
