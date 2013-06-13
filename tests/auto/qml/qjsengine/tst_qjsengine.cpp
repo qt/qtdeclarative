@@ -1835,7 +1835,7 @@ void tst_QJSEngine::jsForInStatement_mutateWhileIterating()
         QJSValue ret = eng.evaluate("o = { p: 123 }; r = [];"
                                         "for (var p in o) { r[r.length] = p; o.q = 456; } r");
         QStringList lst = qjsvalue_cast<QStringList>(ret);
-        QCOMPARE(lst.size(), 1);
+        QCOMPARE(lst.size(), 2);
         QCOMPARE(lst.at(0), QString::fromLatin1("p"));
     }
 
