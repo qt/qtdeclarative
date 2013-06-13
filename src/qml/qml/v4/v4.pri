@@ -111,7 +111,6 @@ OTHER_FILES += \
     $$PWD/v4classgen
 
 JS_CLASS_SOURCES += $$PWD/qv4dateobject_p.h \
-                    $$PWD/qv4stringobject_p.h \
                     $$PWD/qv4variantobject_p.h \
                     $$PWD/qv4sequenceobject_p.h \
                     $$PWD/qv4errorobject_p.h

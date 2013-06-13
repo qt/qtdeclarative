@@ -127,7 +127,15 @@ void StringObject::markObjects(Managed *that)
     Object::markObjects(that);
 }
 
-Value StringPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
+DEFINE_MANAGED_VTABLE(StringCtor);
+
+StringCtor::StringCtor(ExecutionContext *scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("String")))
+{
+    vtbl = &static_vtbl;
+}
+
+Value StringCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
 {
     Value value;
     if (argc)
@@ -137,7 +145,7 @@ Value StringPrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, V
     return Value::fromObject(ctx->engine->newStringObject(value));
 }
 
-Value StringPrototype::ctor_method_call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
+Value StringCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
 {
     Value value;
     if (argc)
@@ -145,6 +153,35 @@ Value StringPrototype::ctor_method_call(Managed *, ExecutionContext *parentCtx, 
     else
         value = Value::fromString(parentCtx, QString());
     return value;
+}
+
+void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
+{
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromCharCode"), method_fromCharCode, 1);
+
+    defineDefaultProperty(engine, QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(engine, QStringLiteral("toString"), method_toString);
+    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_toString); // valueOf and toString are identical
+    defineDefaultProperty(engine, QStringLiteral("charAt"), method_charAt, 1);
+    defineDefaultProperty(engine, QStringLiteral("charCodeAt"), method_charCodeAt, 1);
+    defineDefaultProperty(engine, QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(engine, QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(engine, QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(engine, QStringLiteral("localeCompare"), method_localeCompare, 1);
+    defineDefaultProperty(engine, QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(engine, QStringLiteral("replace"), method_replace, 2);
+    defineDefaultProperty(engine, QStringLiteral("search"), method_search, 1);
+    defineDefaultProperty(engine, QStringLiteral("slice"), method_slice, 2);
+    defineDefaultProperty(engine, QStringLiteral("split"), method_split, 2);
+    defineDefaultProperty(engine, QStringLiteral("substr"), method_substr, 2);
+    defineDefaultProperty(engine, QStringLiteral("substring"), method_substring, 2);
+    defineDefaultProperty(engine, QStringLiteral("toLowerCase"), method_toLowerCase);
+    defineDefaultProperty(engine, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
+    defineDefaultProperty(engine, QStringLiteral("toUpperCase"), method_toUpperCase);
+    defineDefaultProperty(engine, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
+    defineDefaultProperty(engine, QStringLiteral("trim"), method_trim);
 }
 
 static QString getThisString(ExecutionContext *ctx)
@@ -678,7 +715,7 @@ Value StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
     return method_toUpperCase(ctx);
 }
 
-Value StringPrototype::ctor_method_fromCharCode(SimpleCallContext *context)
+Value StringPrototype::method_fromCharCode(SimpleCallContext *context)
 {
     QString str(context->argumentCount, Qt::Uninitialized);
     QChar *ch = str.data();
@@ -708,5 +745,3 @@ Value StringPrototype::method_trim(SimpleCallContext *ctx)
 
     return Value::fromString(ctx, QString(chars + start, end - start + 1));
 }
-
-#include "qv4stringobject_p_jsclass.cpp"

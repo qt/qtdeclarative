@@ -177,7 +177,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorPrototype->prototype = objectPrototype;
 
     objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
-    stringCtor = Value::fromObject(StringPrototype::newConstructor(rootContext));
+    stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
     numberCtor = Value::fromObject(new (memoryManager) NumberCtor(rootContext));
     booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
     arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
@@ -209,7 +209,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorCtor.objectValue()->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
-    stringPrototype->initClass(this, stringCtor);
+    stringPrototype->init(this, stringCtor);
     numberPrototype->init(rootContext, numberCtor);
     booleanPrototype->init(rootContext, booleanCtor);
     arrayPrototype->init(rootContext, arrayCtor);

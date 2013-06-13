@@ -62,36 +62,41 @@ protected:
     static void markObjects(Managed *that);
 };
 
-struct QV4_JS_CLASS(StringPrototype): StringObject
+struct StringCtor: FunctionObject
 {
-    QV4_ANNOTATE(argc 1)
+    StringCtor(ExecutionContext *scope);
 
+    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+struct StringPrototype: StringObject
+{
     StringPrototype(ExecutionEngine *engine): StringObject(engine, Value::fromString(engine, QString())) {}
-    void initClass(ExecutionEngine *engine, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
+    void init(ExecutionEngine *engine, const Value &ctor);
 
-    static Value ctor_method_construct(Managed *that, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-    static Value method_toString(SimpleCallContext *context) QV4_ANNOTATE(alias valueOf);
-    static Value method_charAt(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_charCodeAt(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_concat(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_indexOf(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_lastIndexOf(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_localeCompare(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_match(SimpleCallContext *context) QV4_ARGC(1);
-    static Value method_replace(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_search(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_slice(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_split(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_substr(SimpleCallContext *context) QV4_ARGC(2);
-    static Value method_substring(SimpleCallContext *context) QV4_ARGC(2);
+    static Value method_toString(SimpleCallContext *context);
+    static Value method_charAt(SimpleCallContext *context);
+    static Value method_charCodeAt(SimpleCallContext *context);
+    static Value method_concat(SimpleCallContext *context);
+    static Value method_indexOf(SimpleCallContext *context);
+    static Value method_lastIndexOf(SimpleCallContext *context);
+    static Value method_localeCompare(SimpleCallContext *context);
+    static Value method_match(SimpleCallContext *context);
+    static Value method_replace(SimpleCallContext *ctx);
+    static Value method_search(SimpleCallContext *ctx);
+    static Value method_slice(SimpleCallContext *ctx);
+    static Value method_split(SimpleCallContext *ctx);
+    static Value method_substr(SimpleCallContext *context);
+    static Value method_substring(SimpleCallContext *context);
     static Value method_toLowerCase(SimpleCallContext *ctx);
     static Value method_toLocaleLowerCase(SimpleCallContext *ctx);
     static Value method_toUpperCase(SimpleCallContext *ctx);
     static Value method_toLocaleUpperCase(SimpleCallContext *ctx);
-    static Value ctor_method_fromCharCode(SimpleCallContext *context) QV4_ARGC(1);
+    static Value method_fromCharCode(SimpleCallContext *context);
     static Value method_trim(SimpleCallContext *ctx);
 };
 
