@@ -192,31 +192,153 @@ QColor qt_color_from_string(v8::Local<v8::Value> name)
     return QColor();
 }
 
-QFont qt_font_from_string(const QString& fontString) {
-    QFont font;
-     // ### this is simplified and incomplete
-    // ### TODO:get code from Qt webkit
-     const QStringList tokens = fontString.split(QLatin1Char(' '));
-     foreach (const QString &token, tokens) {
-         if (token == QLatin1String("italic"))
-             font.setItalic(true);
-         else if (token == QLatin1String("bold"))
-             font.setBold(true);
-         else if (token.endsWith(QLatin1String("px"))) {
-             QString number = token;
-             number.remove(QLatin1String("px"));
-             bool ok = false;
-             float pixelSize = number.trimmed().toFloat(&ok);
-             if (ok)
-                font.setPixelSize(int(pixelSize));
-         } else
-             font.setFamily(token);
-     }
-
-     return font;
+static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
+{
+    const QString trimmedToken = fontSizeToken.trimmed();
+    QString unit = trimmedToken.right(2);
+    QString value = trimmedToken.left(fontSizeToken.size() - 2);
+    bool ok = false;
+    float size = value.trimmed().toFloat(&ok);
+    if (ok) {
+        int intSize = int(size);
+        if (unit.compare(QLatin1String("px")) == 0) {
+            font.setPixelSize(intSize);
+            return true;
+        } else if (unit.compare(QLatin1String("pt")) == 0) {
+            font.setPointSize(intSize);
+            return true;
+        }
+    }
+    qWarning().nospace() << "Context2D: A font size of " << fontSizeToken << " is invalid.";
+    return false;
 }
 
+static bool qSetFontFamilyFromToken(QFont &font, const QString &fontFamilyToken)
+{
+    const QString trimmedToken = fontFamilyToken.trimmed();
+    QFontDatabase fontDatabase;
+    if (fontDatabase.hasFamily(trimmedToken)) {
+        font.setFamily(trimmedToken);
+        return true;
+    } else {
+        // Can't find a family matching this name; if it's a generic family,
+        // try searching for the default family for it by using style hints.
+        QFont tmp;
+        int styleHint = -1;
+        if (fontFamilyToken.compare(QLatin1String("serif")) == 0) {
+            styleHint = QFont::Serif;
+        } else if (fontFamilyToken.compare(QLatin1String("sans-serif")) == 0) {
+            styleHint = QFont::SansSerif;
+        } else if (fontFamilyToken.compare(QLatin1String("cursive")) == 0) {
+            styleHint = QFont::Cursive;
+        } else if (fontFamilyToken.compare(QLatin1String("monospace")) == 0) {
+            styleHint = QFont::Monospace;
+        } else if (fontFamilyToken.compare(QLatin1String("fantasy")) == 0) {
+            styleHint = QFont::Fantasy;
+        }
+        if (styleHint != -1) {
+            tmp.setStyleHint(static_cast<QFont::StyleHint>(styleHint));
+            font.setFamily(tmp.defaultFamily());
+            return true;
+        }
+    }
+    qWarning().nospace() << "Context2D: The font family " << fontFamilyToken << " is invalid.";
+    return false;
+}
 
+enum FontToken
+{
+    NoTokens = 0x00,
+    FontStyle = 0x01,
+    FontVariant = 0x02,
+    FontWeight = 0x04
+};
+
+#define Q_TRY_SET_TOKEN(token, value, setStatement) \
+if (!(usedTokens & token)) { \
+    usedTokens |= token; \
+    setStatement; \
+} else { \
+    qWarning().nospace() << "Context2D: Duplicate token " << QLatin1String(value) << " found in font string."; \
+    return currentFont; \
+}
+
+/*!
+    Parses a font string based on the CSS shorthand font property.
+
+    See: http://www.w3.org/TR/css3-fonts/#font-prop
+*/
+static QFont qt_font_from_string(const QString& fontString, const QFont &currentFont) {
+    const QStringList tokens = fontString.split(QLatin1Char(' '));
+    if (tokens.size() < 2) {
+        qWarning().nospace() << "Context2D: Insufficent amount of tokens in font string.";
+        return currentFont;
+    }
+
+    QFont newFont;
+    QStringList remainingTokens = tokens;
+    int usedTokens = NoTokens;
+    // Optional properties can be in any order, but font-size and font-family must be last.
+    while (remainingTokens.size() > 2) {
+        const QString token = remainingTokens.takeFirst();
+        if (token.compare(QLatin1String("normal")) == 0) {
+            if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
+                // Could be font-style, font-variant or font-weight.
+                if (!(usedTokens & FontStyle)) {
+                    // QFont::StyleNormal is the default for QFont::style.
+                    usedTokens = usedTokens | FontStyle;
+                } else if (!(usedTokens & FontVariant)) {
+                    // QFont::MixedCase is the default for QFont::capitalization.
+                    usedTokens |= FontVariant;
+                } else if (!(usedTokens & FontWeight)) {
+                    // QFont::Normal is the default for QFont::weight.
+                    usedTokens |= FontWeight;
+                }
+            } else {
+                qWarning().nospace() << "Context2D: Duplicate token \"normal\" found in font string.";
+                return currentFont;
+            }
+        } else if (token.compare(QLatin1String("bold")) == 0) {
+            Q_TRY_SET_TOKEN(FontWeight, "bold", newFont.setBold(true))
+        } else if (token.compare(QLatin1String("italic")) == 0) {
+            Q_TRY_SET_TOKEN(FontStyle, "italic", newFont.setStyle(QFont::StyleItalic))
+        } else if (token.compare(QLatin1String("oblique")) == 0) {
+            Q_TRY_SET_TOKEN(FontStyle, "oblique", newFont.setStyle(QFont::StyleOblique))
+        } else if (token.compare(QLatin1String("small-caps")) == 0) {
+            Q_TRY_SET_TOKEN(FontVariant, "small-caps", newFont.setCapitalization(QFont::SmallCaps))
+        } else {
+            bool conversionOk = false;
+            int weight = token.toInt(&conversionOk);
+            if (conversionOk) {
+                if (weight >= 0 && weight <= 99) {
+                    Q_TRY_SET_TOKEN(FontWeight, "<font-weight>", newFont.setWeight(weight))
+                    continue;
+                } else {
+                    qWarning().nospace() << "Context2D: Invalid font weight " << weight << " found in font string; "
+                        << "must be between 0 and 99, inclusive.";
+                    return currentFont;
+                }
+            }
+            // The token is invalid or in the wrong place/order in the font string.
+            qWarning().nospace() << "Context2D: Invalid or misplaced token " << token << " found in font string.";
+            return currentFont;
+        }
+    }
+    if (remainingTokens.size() == 2) {
+        // Order must be: font-size font-family.
+        if (!qSetFontSizeFromToken(newFont, remainingTokens.first())) {
+            return currentFont;
+        }
+        if (!qSetFontFamilyFromToken(newFont, remainingTokens.last())) {
+            return currentFont;
+        }
+        return newFont;
+    } else {
+        qWarning().nospace() << "Context2D: Missing font-size and/or font-family tokens in font string.";
+        return currentFont;
+    }
+    return newFont;
+}
 
 class QQuickContext2DEngineData : public QV8Engine::Deletable
 {
@@ -2038,13 +2160,28 @@ static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
 
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
 }
-// text
-/*!
-  \qmlproperty string QtQuick2::Context2D::font
-  Holds the current font settings.
 
-  The default font value is "10px sans-serif".
-  See \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
+/*!
+    \qmlproperty string QtQuick2::Context2D::font
+    Holds the current font settings.
+
+    A subset of the
+    \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
+    is supported:
+
+    \list
+        \li font-style (optional):
+        normal | italic | oblique
+        \li font-variant (optional): normal | small-caps
+        \li font-weight (optional): normal | bold | 0 ... 99
+        \li font-size: Npx | Npt (where N is a positive number)
+        \li font-family: See \l {http://www.w3.org/TR/CSS2/fonts.html#propdef-font-family}
+    \endlist
+
+    Note that font-size and font-family are mandatory and must be in the order
+    they are shown in above.
+
+    The default font value is "10px sans-serif".
   */
 v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -2063,7 +2200,7 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     QString fs = engine->toString(value);
-    QFont font = qt_font_from_string(fs);
+    QFont font = qt_font_from_string(fs, r->context->state.font);
     if (font != r->context->state.font) {
         r->context->state.font = font;
     }
