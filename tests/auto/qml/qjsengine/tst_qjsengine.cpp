@@ -121,7 +121,6 @@ private slots:
     void jsForInStatement_mutateWhileIterating();
     void jsForInStatement_arrays();
     void jsForInStatement_nullAndUndefined();
-    void jsFunctionDeclarationAsStatement();
     void stringObjects();
     void jsStringPrototypeReplaceBugs();
     void getterSetterThisObject_global();
@@ -1888,47 +1887,6 @@ void tst_QJSEngine::jsForInStatement_nullAndUndefined()
         QJSValue ret = eng.evaluate("r = true; for (var p in null) r = false; r");
         QVERIFY(ret.isBool());
         QVERIFY(ret.toBool());
-    }
-}
-
-void tst_QJSEngine::jsFunctionDeclarationAsStatement()
-{
-    // ECMA-262 does not allow function declarations to be used as statements,
-    // but several popular implementations (including JSC) do. See the NOTE
-    // at the beginning of chapter 12 in ECMA-262 5th edition, where it's
-    // recommended that implementations either disallow this usage or issue
-    // a warning.
-    // Since we had a bug report long ago about QtScript not supporting this
-    // "feature" (and thus deviating from other implementations), we still
-    // check this behavior.
-
-    QJSEngine eng;
-    QVERIFY(eng.globalObject().property("bar").isUndefined());
-    eng.evaluate("function foo(arg) {\n"
-                 "  if (arg == 'bar')\n"
-                 "    function bar() { return 'bar'; }\n"
-                 "  else\n"
-                 "    function baz() { return 'baz'; }\n"
-                 "  return (arg == 'bar') ? bar : baz;\n"
-                 "}");
-    QVERIFY(eng.globalObject().property("bar").isUndefined());
-    QVERIFY(eng.globalObject().property("baz").isUndefined());
-    QVERIFY(eng.evaluate("foo").isCallable());
-    {
-        QJSValue ret = eng.evaluate("foo('bar')");
-        QVERIFY(ret.isCallable());
-        QJSValue ret2 = ret.call();
-        QCOMPARE(ret2.toString(), QString::fromLatin1("bar"));
-        QVERIFY(eng.globalObject().property("bar").isUndefined());
-        QVERIFY(eng.globalObject().property("baz").isUndefined());
-    }
-    {
-        QJSValue ret = eng.evaluate("foo('baz')");
-        QVERIFY(ret.isCallable());
-        QJSValue ret2 = ret.call();
-        QCOMPARE(ret2.toString(), QString::fromLatin1("baz"));
-        QVERIFY(eng.globalObject().property("bar").isUndefined());
-        QVERIFY(eng.globalObject().property("baz").isUndefined());
     }
 }
 
