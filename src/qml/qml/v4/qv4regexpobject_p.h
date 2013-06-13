@@ -93,20 +93,27 @@ protected:
     static void markObjects(Managed *that);
 };
 
-struct QV4_JS_CLASS(RegExpPrototype): RegExpObject
+
+struct RegExpCtor: FunctionObject
 {
-    QV4_ANNOTATE(argc 2)
+    RegExpCtor(ExecutionContext *scope);
+
+    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+struct RegExpPrototype: RegExpObject
+{
     RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
-    void initClass(ExecutionEngine *engine, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
+    void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value ctor_method_construct(Managed *that, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-    static Value method_exec(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_test(SimpleCallContext *ctx) QV4_ARGC(1);
+    static Value method_exec(SimpleCallContext *ctx);
+    static Value method_test(SimpleCallContext *ctx);
     static Value method_toString(SimpleCallContext *ctx);
-    static Value method_compile(SimpleCallContext *ctx) QV4_ARGC(2);
+    static Value method_compile(SimpleCallContext *ctx);
 };
 
 }
