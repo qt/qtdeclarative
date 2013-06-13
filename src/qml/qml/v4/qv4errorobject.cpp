@@ -78,7 +78,7 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorTyp
 {
     type = Type_ErrorObject;
     subtype = t;
-    initClass(engine);
+    defineAccessorProperty(engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message.isUndefined())
         defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
@@ -323,5 +323,3 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
 
     return Value::fromString(ctx, str);
 }
-
-#include "qv4errorobject_p_jsclass.cpp"
