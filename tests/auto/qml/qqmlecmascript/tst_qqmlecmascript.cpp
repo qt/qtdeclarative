@@ -2171,6 +2171,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
+    program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
 
@@ -2194,6 +2195,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
+    program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
     try {
@@ -2217,6 +2219,7 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
+    program.inheritContext = true;
     try {
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
