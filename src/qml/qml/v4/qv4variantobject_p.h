@@ -81,12 +81,12 @@ public:
     static bool isEqualTo(Managed *m, Managed *other);
 };
 
-struct QV4_JS_CLASS(VariantPrototype) : VariantObject
+struct VariantPrototype : VariantObject
 {
 public:
     VariantPrototype(ExecutionEngine *engine);
 
-    void initClass(ExecutionEngine *engine);
+    void init(ExecutionEngine *engine);
 
     static Value method_preserve(SimpleCallContext *ctx);
     static Value method_destroy(SimpleCallContext *ctx);

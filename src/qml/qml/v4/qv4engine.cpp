@@ -224,7 +224,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     typeErrorPrototype->init(this, typeErrorCtor);
     uRIErrorPrototype->init(this, uRIErrorCtor);
 
-    variantPrototype->initClass(this);
+    variantPrototype->init(this);
     sequencePrototype->init(this);
 
     //

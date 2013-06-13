@@ -138,6 +138,14 @@ VariantPrototype::VariantPrototype(ExecutionEngine *engine)
     prototype = engine->objectPrototype;
 }
 
+void VariantPrototype::init(ExecutionEngine *engine)
+{
+    defineDefaultProperty(engine, QStringLiteral("preserve"), method_preserve, 0);
+    defineDefaultProperty(engine, QStringLiteral("destroy"), method_destroy, 0);
+    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(engine, QStringLiteral("toString"), method_toString, 0);
+}
+
 QV4::Value VariantPrototype::method_preserve(SimpleCallContext *ctx)
 {
     VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
@@ -191,7 +199,5 @@ QV4::Value VariantPrototype::method_valueOf(SimpleCallContext *ctx)
     }
     return ctx->thisObject;
 }
-
-#include "qv4variantobject_p_jsclass.cpp"
 
 QT_END_NAMESPACE
