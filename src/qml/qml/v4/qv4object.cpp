@@ -587,12 +587,6 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
 
     name->makeIdentifier(ctx);
 
-    if (name->isEqualTo(ctx->engine->id___proto__)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Value::fromObject(prototype);
-    }
-
     Object *o = this;
     while (o) {
         uint idx = o->internalClass->find(name);

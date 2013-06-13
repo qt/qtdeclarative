@@ -126,6 +126,11 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 1);
     defineDefaultProperty(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 0);
     defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 0);
+
+    ExecutionEngine *v4 = ctx->engine;
+    Property *p = insertMember(v4->id___proto__, Attr_Accessor|Attr_NotEnumerable);
+    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_get_proto));
+    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto));
 }
 
 Value ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
@@ -453,6 +458,47 @@ Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 
     Property pd = Property::fromAccessor(0, f);
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
+    return Value::undefinedValue();
+}
+
+Value ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
+{
+    Object *o = ctx->thisObject.asObject();
+    if (!o)
+        ctx->throwTypeError();
+
+    return Value::fromObject(o->prototype);
+}
+
+Value ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
+{
+    Object *o = ctx->thisObject.asObject();
+    if (!o)
+        ctx->throwTypeError();
+
+    Value proto = ctx->argument(0);
+    bool ok = false;
+    if (proto.isNull()) {
+        o->prototype = 0;
+        ok = true;
+    } else if (Object *p = proto.asObject()) {
+        if (o->prototype == p) {
+            ok = true;
+        } else if (o->extensible) {
+            Object *pp = p;
+            while (pp) {
+                if (pp == o)
+                    break;
+                pp = pp->prototype;
+            }
+            if (!pp) {
+                ok = true;
+                o->prototype = p;
+            }
+        }
+    }
+    if (!ok)
+        ctx->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
     return Value::undefinedValue();
 }
 

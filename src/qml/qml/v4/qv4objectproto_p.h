@@ -90,6 +90,9 @@ struct ObjectPrototype: Object
     static Value method_defineGetter(SimpleCallContext *ctx);
     static Value method_defineSetter(SimpleCallContext *ctx);
 
+    static Value method_get_proto(SimpleCallContext *ctx);
+    static Value method_set_proto(SimpleCallContext *ctx);
+
     static void toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs);
     static Value fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
 
