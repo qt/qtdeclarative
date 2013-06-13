@@ -6699,7 +6699,13 @@ void tst_qqmlecmascript::switchStatement()
 void tst_qqmlecmascript::withStatement()
 {
     {
-        QQmlComponent component(&engine, testFileUrl("withStatement.1.qml"));
+        QUrl url = testFileUrl("withStatement.1.qml");
+        QString warning = url.toString() + ":12:1: 'with' statement is not allowed in strict mode";
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+        warning = url.toString() + ":12:12: Unable to assign [undefined] to int";
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+
+        QQmlComponent component(&engine, url);
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != 0);
 
