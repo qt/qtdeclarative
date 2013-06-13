@@ -50,15 +50,18 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct StringObject: Object {
+    Q_MANAGED
+
     Value value;
     mutable Property tmpProperty;
     StringObject(ExecutionEngine *engine, const Value &value);
 
     Property *getIndex(uint index) const;
 
+    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+
 protected:
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);
-    static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
 };
 

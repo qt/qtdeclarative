@@ -919,7 +919,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     ExecutionEngine *engine = d->engine();
-    String *s = engine->newIdentifier(name);
+    String *s = engine->newString(name);
     return o->deleteProperty(engine->current, s);
 }
 

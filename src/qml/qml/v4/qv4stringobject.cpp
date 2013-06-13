@@ -99,6 +99,20 @@ Property *StringObject::getIndex(uint index) const
     return &tmpProperty;
 }
 
+bool StringObject::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+{
+    StringObject *o = m->asStringObject();
+    if (!o)
+        ctx->throwTypeError();
+
+    if (index < o->value.stringValue()->toQString().length()) {
+        if (ctx->strictMode)
+            ctx->throwTypeError();
+        return false;
+    }
+    return true;
+}
+
 Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
 {
     StringObject *s = static_cast<StringObject *>(m);
