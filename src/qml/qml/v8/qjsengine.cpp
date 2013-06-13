@@ -65,6 +65,7 @@
 #include <qmutex.h>
 #include <qwaitcondition.h>
 #include <private/qqmlglobal_p.h>
+#include <qqmlengine.h>
 
 #undef Q_D
 #undef Q_Q
@@ -319,6 +320,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QQmlEngine::setObjectOwnership(object, QQmlEngine::JavaScriptOwnership);
     return new QJSValuePrivate(v4, QV4::QObjectWrapper::wrap(v4, object));
 }
 
