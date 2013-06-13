@@ -481,7 +481,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     if (!result->isWritable() && !result->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
                         name->toQString() + QLatin1Char('\"');
-        ctx->throwError(error);
+        ctx->throwTypeError(error);
     }
 
     QQmlBinding *newBinding = 0;

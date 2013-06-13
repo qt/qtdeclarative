@@ -1750,7 +1750,7 @@ void tst_qqmlecmascript::scriptErrors()
     QString warning4 = url + ":13: ReferenceError: a is not defined";
     QString warning5 = url + ":11: ReferenceError: a is not defined";
     QString warning6 = url + ":10:21: Unable to assign [undefined] to int";
-    QString warning7 = url + ":15: Error: Cannot assign to read-only property \"trueProperty\"";
+    QString warning7 = url + ":15: TypeError: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
     QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
@@ -3619,7 +3619,7 @@ void tst_qqmlecmascript::singletonType_data()
             << testFileUrl("singletontype/qobjectSingletonTypeWriting.qml")
             << QString()
             << (QStringList() <<
-                    QString(testFileUrl("singletontype/qobjectSingletonTypeWriting.qml").toString() + QLatin1String(":15: Error: Cannot assign to read-only property \"qobjectTestProperty\"")))
+                    QString(testFileUrl("singletontype/qobjectSingletonTypeWriting.qml").toString() + QLatin1String(":15: TypeError: Cannot assign to read-only property \"qobjectTestProperty\"")))
             << (QStringList() << "readOnlyProperty" << "writableProperty" << "writableFinalProperty")
             << (QVariantList() << 20 << 50 << 10)
             << (QStringList() << "firstProperty" << "secondProperty")
