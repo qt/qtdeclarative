@@ -44,7 +44,7 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
-
+#include <double-conversion.h>
 
 using namespace QV4;
 
@@ -213,13 +213,23 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     if (!thisObject)
         ctx->throwTypeError();
 
-    double fdigits = 0;
+    Value fraction = ctx->argument(0);
+    int fdigits = -1;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger();
+    if (!fraction.isUndefined()) {
+        int fdigits = ctx->argument(0).toInt32();
+        if (fdigits < 0 || fdigits > 20) {
+            String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range"));
+            ctx->throwRangeError(Value::fromString(error));
+        }
+    }
 
-    QString z = QString::number(thisObject->value.asDouble(), 'e', int (fdigits));
-    return Value::fromString(ctx, z);
+    char str[100];
+    double_conversion::StringBuilder builder(str, sizeof(str));
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(thisObject->value.asDouble(), fdigits, &builder);
+    QString result = QString::fromLatin1(builder.Finalize());
+
+    return Value::fromString(ctx, result);
 }
 
 Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
@@ -228,10 +238,20 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     if (!thisObject)
         ctx->throwTypeError();
 
-    double fdigits = 0;
+    Value prec = ctx->argument(0);
+    if (prec.isUndefined())
+        return __qmljs_to_string(thisObject->value, ctx);
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger();
+    double precision = prec.toInt32();
+    if (precision < 1 || precision > 21) {
+        String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range"));
+        ctx->throwRangeError(Value::fromString(error));
+    }
 
-    return Value::fromString(ctx, QString::number(thisObject->value.asDouble(), 'g', int (fdigits)));
+    char str[100];
+    double_conversion::StringBuilder builder(str, sizeof(str));
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(thisObject->value.asDouble(), precision, &builder);
+    QString result = QString::fromLatin1(builder.Finalize());
+
+    return Value::fromString(ctx, result);
 }
