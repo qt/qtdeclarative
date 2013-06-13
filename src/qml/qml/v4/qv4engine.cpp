@@ -225,7 +225,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     uRIErrorPrototype->init(this, uRIErrorCtor);
 
     variantPrototype->initClass(this);
-    sequencePrototype->initClass(this);
+    sequencePrototype->init(this);
 
     //
     // set up the global object

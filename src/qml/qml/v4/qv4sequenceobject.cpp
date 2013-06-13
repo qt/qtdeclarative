@@ -159,12 +159,12 @@ template <> bool convertValueToElement(const QV4::Value &value)
 }
 
 template <typename Container>
-class QQmlSequence : public QQmlSequenceBase
+class QQmlSequence : public QV4::Object
 {
     Q_MANAGED
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QQmlSequenceBase(engine)
+        : QV4::Object(engine)
         , m_container(container)
         , m_object(0)
         , m_propertyIndex(-1)
@@ -173,11 +173,11 @@ public:
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
         prototype = engine->sequencePrototype;
-        initClass(engine);
+        init(engine);
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QQmlSequenceBase(engine)
+        : QV4::Object(engine)
         , m_object(object)
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
@@ -186,7 +186,12 @@ public:
         vtbl = &static_vtbl;
         prototype = engine->sequencePrototype;
         loadReference();
-        initClass(engine);
+        init(engine);
+    }
+
+    void init(ExecutionEngine *engine)
+    {
+        defineAccessorProperty(engine, QStringLiteral("length"), method_get_length, method_set_length);
     }
 
     QV4::Value containerGetIndexed(QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
@@ -278,7 +283,7 @@ public:
 
         if (m_isReference) {
             if (!m_object)
-                return QQmlSequenceBase::advanceIterator(this, it, name, index, attrs);
+                return QV4::Object::advanceIterator(this, it, name, index, attrs);
             loadReference();
         }
 
@@ -290,7 +295,7 @@ public:
             it->tmpDynamicProperty.value = convertElementToValue(engine(), m_container.at(*index));
             return &it->tmpDynamicProperty;
         }
-        return QQmlSequenceBase::advanceIterator(this, it, name, index, attrs);
+        return QV4::Object::advanceIterator(this, it, name, index, attrs);
     }
 
     bool containerDeleteIndexedProperty(QV4::ExecutionContext *ctx, uint index)
@@ -382,56 +387,65 @@ public:
             storeReference();
     }
 
-    QV4::Value lengthGetter(QV4::SimpleCallContext*)
+    static QV4::Value method_get_length(QV4::SimpleCallContext *ctx)
     {
-        if (m_isReference) {
-            if (!m_object)
+        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        if (!This)
+            ctx->throwTypeError();
+
+        if (This->m_isReference) {
+            if (!This->m_object)
                 return QV4::Value::fromInt32(0);
-            loadReference();
+            This->loadReference();
         }
-        return QV4::Value::fromInt32(m_container.count());
+        return QV4::Value::fromInt32(This->m_container.count());
     }
 
-    void lengthSetter(QV4::SimpleCallContext* ctx)
+    static QV4::Value method_set_length(QV4::SimpleCallContext* ctx)
     {
+        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        if (!This)
+            ctx->throwTypeError();
+
         quint32 newLength = ctx->arguments[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
-            return;
+            return QV4::Value::undefinedValue();
         }
         /* Read the sequence from the QObject property if we're a reference */
-        if (m_isReference) {
-            if (!m_object)
-                return;
-            loadReference();
+        if (This->m_isReference) {
+            if (!This->m_object)
+                return QV4::Value::undefinedValue();
+            This->loadReference();
         }
         /* Determine whether we need to modify the sequence */
         qint32 newCount = static_cast<qint32>(newLength);
-        qint32 count = m_container.count();
+        qint32 count = This->m_container.count();
         if (newCount == count) {
-            return;
+            return QV4::Value::undefinedValue();
         } else if (newCount > count) {
             /* according to ECMA262r3 we need to insert */
             /* undefined values increasing length to newLength. */
             /* We cannot, so we insert default-values instead. */
-            m_container.reserve(newCount);
+            This->m_container.reserve(newCount);
             while (newCount > count++) {
-                m_container.append(typename Container::value_type());
+                This->m_container.append(typename Container::value_type());
             }
         } else {
             /* according to ECMA262r3 we need to remove */
             /* elements until the sequence is the required length. */
             while (newCount < count) {
                 count--;
-                m_container.removeAt(count);
+                This->m_container.removeAt(count);
             }
         }
         /* write back if required. */
-        if (m_isReference) {
+        if (This->m_isReference) {
             /* write back.  already checked that object is non-null, so skip that check here. */
-            storeReference();
+            This->storeReference();
         }
+        return QV4::Value::undefinedValue();
     }
 
     QVariant toVariant() const
@@ -517,6 +531,12 @@ SequencePrototype::SequencePrototype(ExecutionEngine *engine)
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
+void SequencePrototype::init(QV4::ExecutionEngine *engine)
+{
+    defineDefaultProperty(engine, QStringLiteral("sort"), method_sort, 1);
+    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
+}
+
 QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
     QV4::Object *o = ctx->thisObject.asObject();
@@ -535,38 +555,6 @@ QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 
 #undef CALL_SORT
     return ctx->thisObject;
-}
-
-QV4::Value QQmlSequenceBase::method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly)
-{
-    QV4::Object *o = ctx->thisObject.asObject();
-    if (!o)
-        ctx->throwTypeError();
-#define CALL_LENGTH_GETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
-        return s->lengthGetter(ctx); \
-    } else
-
-    FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_GETTER)
-#undef CALL_LENGTH_GETTER
-
-    return QV4::Value::undefinedValue();
-}
-
-QV4::Value QQmlSequenceBase::method_set_length(QV4::SimpleCallContext* ctx)
-{
-    QV4::Object *o = ctx->thisObject.asObject();
-    if (!o)
-        ctx->throwTypeError();
-#define CALL_LENGTH_SETTER(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-    if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
-        s->lengthSetter(ctx); \
-    } else
-
-    FOREACH_QML_SEQUENCE_TYPE(CALL_LENGTH_SETTER)
-#undef CALL_LENGTH_SETTER
-
-    return QV4::Value::undefinedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -659,7 +647,5 @@ int SequencePrototype::metaTypeForSequence(QV4::Object *object)
 }
 
 #undef MAP_META_TYPE
-
-#include "qv4sequenceobject_p_jsclass.cpp"
 
 QT_END_NAMESPACE

@@ -63,32 +63,18 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-class QV4_JS_CLASS(QQmlSequenceBase) : public QV4::Object
-{
-public:
-    QQmlSequenceBase(QV4::ExecutionEngine *engine)
-        : QV4::Object(engine)
-    {}
-
-    void initClass(QV4::ExecutionEngine *engine);
-
-    static QV4::Value method_get_length(QV4::SimpleCallContext* ctx) QV4_ANNOTATE(attributes QV4::Attr_ReadOnly);
-
-    static QV4::Value method_set_length(QV4::SimpleCallContext* ctx);
-};
-
-struct QV4_JS_CLASS(SequencePrototype) : public QV4::Object
+struct SequencePrototype : public QV4::Object
 {
     SequencePrototype(QV4::ExecutionEngine *engine);
 
-    void initClass(QV4::ExecutionEngine *engine);
+    void init(QV4::ExecutionEngine *engine);
 
     static QV4::Value method_valueOf(QV4::SimpleCallContext *ctx)
     {
         return QV4::Value::fromString(ctx->thisObject.toString(ctx));
     }
 
-    static QV4::Value method_sort(QV4::SimpleCallContext *ctx) QV4_ARGC(1);
+    static QV4::Value method_sort(QV4::SimpleCallContext *ctx);
 
     static bool isSequenceType(int sequenceTypeId);
     static QV4::Value newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
