@@ -65,9 +65,21 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         if (!current)
             break;
 
-        p = current->advanceIterator(this, name, index, attrs);
-        if (p)
+        while (p = current->advanceIterator(this, name, index, attrs)) {
+            // check the property is not already defined earlier in the proto chain
+            if (current != object) {
+                Property *pp;
+                if (*name) {
+                    pp = object->__getPropertyDescriptor__(*name);
+                } else {
+                    assert (*index != UINT_MAX);
+                    pp = object->__getPropertyDescriptor__(*index);
+                }
+                if (pp != p)
+                    continue;
+            }
             return p;
+        }
 
         if (flags & WithProtoChain)
             current = current->prototype;
