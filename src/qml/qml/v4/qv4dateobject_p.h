@@ -59,23 +59,27 @@ struct DateObject: Object {
     QDateTime toQDateTime() const;
 };
 
-struct QV4_JS_CLASS(DatePrototype): DateObject
+struct DateCtor: FunctionObject
 {
-    QV4_ANNOTATE(argc 7)
+    DateCtor(ExecutionContext *scope);
 
+    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+struct DatePrototype: DateObject
+{
     DatePrototype(ExecutionEngine *engine): DateObject(engine, Value::fromDouble(qSNaN())) {}
     void init(ExecutionContext *ctx, const Value &ctor);
-    void initClass(ExecutionEngine *ctx, const Value &ctor);
-    static Object *newConstructor(ExecutionContext *scope);
 
     static double getThisDate(ExecutionContext *ctx);
 
-    static Value ctor_method_construct(Managed *, ExecutionContext *context, Value *args, int argc);
-    static Value ctor_method_call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-
-    static Value ctor_method_parse(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value ctor_method_UTC(SimpleCallContext *ctx) QV4_ARGC(7);
-    static Value ctor_method_now(SimpleCallContext *ctx);
+    static Value method_parse(SimpleCallContext *ctx);
+    static Value method_UTC(SimpleCallContext *ctx);
+    static Value method_now(SimpleCallContext *ctx);
 
     static Value method_toString(SimpleCallContext *ctx);
     static Value method_toDateString(SimpleCallContext *ctx);
@@ -103,25 +107,25 @@ struct QV4_JS_CLASS(DatePrototype): DateObject
     static Value method_getMilliseconds(SimpleCallContext *ctx);
     static Value method_getUTCMilliseconds(SimpleCallContext *ctx);
     static Value method_getTimezoneOffset(SimpleCallContext *ctx);
-    static Value method_setTime(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setMilliseconds(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setUTCMilliseconds(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setSeconds(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_setUTCSeconds(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_setMinutes(SimpleCallContext *ctx) QV4_ARGC(3);
-    static Value method_setUTCMinutes(SimpleCallContext *ctx) QV4_ARGC(3);
-    static Value method_setHours(SimpleCallContext *ctx) QV4_ARGC(4);
-    static Value method_setUTCHours(SimpleCallContext *ctx) QV4_ARGC(4);
-    static Value method_setDate(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setUTCDate(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setMonth(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_setUTCMonth(SimpleCallContext *ctx) QV4_ARGC(2);
-    static Value method_setYear(SimpleCallContext *ctx) QV4_ARGC(1);
-    static Value method_setFullYear(SimpleCallContext *ctx) QV4_ARGC(3);
-    static Value method_setUTCFullYear(SimpleCallContext *ctx) QV4_ARGC(3);
-    static Value method_toUTCString(SimpleCallContext *ctx) QV4_ANNOTATE(alias toGMTString);
+    static Value method_setTime(SimpleCallContext *ctx);
+    static Value method_setMilliseconds(SimpleCallContext *ctx);
+    static Value method_setUTCMilliseconds(SimpleCallContext *ctx);
+    static Value method_setSeconds(SimpleCallContext *ctx);
+    static Value method_setUTCSeconds(SimpleCallContext *ctx);
+    static Value method_setMinutes(SimpleCallContext *ctx);
+    static Value method_setUTCMinutes(SimpleCallContext *ctx);
+    static Value method_setHours(SimpleCallContext *ctx);
+    static Value method_setUTCHours(SimpleCallContext *ctx);
+    static Value method_setDate(SimpleCallContext *ctx);
+    static Value method_setUTCDate(SimpleCallContext *ctx);
+    static Value method_setMonth(SimpleCallContext *ctx);
+    static Value method_setUTCMonth(SimpleCallContext *ctx);
+    static Value method_setYear(SimpleCallContext *ctx);
+    static Value method_setFullYear(SimpleCallContext *ctx);
+    static Value method_setUTCFullYear(SimpleCallContext *ctx);
+    static Value method_toUTCString(SimpleCallContext *ctx);
     static Value method_toISOString(SimpleCallContext *ctx);
-    static Value method_toJSON(SimpleCallContext *ctx) QV4_ARGC(1);
+    static Value method_toJSON(SimpleCallContext *ctx);
 };
 
 }

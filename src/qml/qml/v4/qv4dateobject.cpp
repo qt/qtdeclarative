@@ -651,7 +651,15 @@ QDateTime DateObject::toQDateTime() const
     return ToDateTime(value.asDouble(), Qt::LocalTime);
 }
 
-Value DatePrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
+DEFINE_MANAGED_VTABLE(DateCtor);
+
+DateCtor::DateCtor(ExecutionContext *scope)
+    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Date")))
+{
+    vtbl = &static_vtbl;
+}
+
+Value DateCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
 {
     double t = 0;
 
@@ -689,7 +697,7 @@ Value DatePrototype::ctor_method_construct(Managed *, ExecutionContext *ctx, Val
     return Value::fromObject(d);
 }
 
-Value DatePrototype::ctor_method_call(Managed *, ExecutionContext *ctx, const Value &, Value *, int)
+Value DateCtor::call(Managed *, ExecutionContext *ctx, const Value &, Value *, int)
 {
     double t = currentTime();
     return Value::fromString(ctx, ToString(t));
@@ -697,9 +705,61 @@ Value DatePrototype::ctor_method_call(Managed *, ExecutionContext *ctx, const Va
 
 void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(7));
     LocalTZA = getLocalTZA();
 
-    initClass(ctx->engine, ctor);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("parse"), method_parse, 1);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
+    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("now"), method_now, 0);
+
+    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getTime"), method_getTime, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getYear"), method_getYear, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getFullYear"), method_getFullYear, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getMonth"), method_getMonth, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getDate"), method_getDate, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCDate"), method_getUTCDate, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getDay"), method_getDay, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCDay"), method_getUTCDay, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getHours"), method_getHours, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCHours"), method_getUTCHours, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getMinutes"), method_getMinutes, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getSeconds"), method_getSeconds, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
+    defineDefaultProperty(ctx, QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
+    defineDefaultProperty(ctx, QStringLiteral("setTime"), method_setTime, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setSeconds"), method_setSeconds, 2);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
+    defineDefaultProperty(ctx, QStringLiteral("setMinutes"), method_setMinutes, 3);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
+    defineDefaultProperty(ctx, QStringLiteral("setHours"), method_setHours, 4);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCHours"), method_setUTCHours, 4);
+    defineDefaultProperty(ctx, QStringLiteral("setDate"), method_setDate, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCDate"), method_setUTCDate, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setMonth"), method_setMonth, 2);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
+    defineDefaultProperty(ctx, QStringLiteral("setYear"), method_setYear, 1);
+    defineDefaultProperty(ctx, QStringLiteral("setFullYear"), method_setFullYear, 3);
+    defineDefaultProperty(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
+    defineDefaultProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toISOString"), method_toISOString, 0);
+    defineDefaultProperty(ctx, QStringLiteral("toJSON"), method_toJSON, 1);
 }
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)
@@ -712,12 +772,12 @@ double DatePrototype::getThisDate(ExecutionContext *ctx)
     }
 }
 
-Value DatePrototype::ctor_method_parse(SimpleCallContext *ctx)
+Value DatePrototype::method_parse(SimpleCallContext *ctx)
 {
     return Value::fromDouble(ParseString(ctx->argument(0).toString(ctx)->toQString()));
 }
 
-Value DatePrototype::ctor_method_UTC(SimpleCallContext *ctx)
+Value DatePrototype::method_UTC(SimpleCallContext *ctx)
 {
     const int numArgs = ctx->argumentCount;
     if (numArgs >= 2) {
@@ -737,7 +797,7 @@ Value DatePrototype::ctor_method_UTC(SimpleCallContext *ctx)
     return Value::undefinedValue();
 }
 
-Value DatePrototype::ctor_method_now(SimpleCallContext *ctx)
+Value DatePrototype::method_now(SimpleCallContext *ctx)
 {
     Q_UNUSED(ctx);
     double t = currentTime();
@@ -1248,5 +1308,3 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 
     return toIso->call(ctx, ctx->thisObject, 0, 0);
 }
-
-#include "qv4dateobject_p_jsclass.cpp"

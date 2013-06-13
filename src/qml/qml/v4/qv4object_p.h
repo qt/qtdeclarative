@@ -433,11 +433,6 @@ inline void Object::setArrayLengthUnchecked(uint l)
     }
 }
 
-// Macros used for JS class annotation
-#define QV4_JS_CLASS(ClassName) ClassName
-#define QV4_ANNOTATE(...)
-#define QV4_ARGC(...)
-
 }
 
 QT_END_NAMESPACE

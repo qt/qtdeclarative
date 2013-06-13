@@ -274,5 +274,3 @@ src/qml/RegExpJitTables.h
 src/qml/udis86_itab.c
 src/qml/udis86_itab.h
 
-# Generated V4 JS bindings
-*_jsclass.cpp

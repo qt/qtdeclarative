@@ -107,19 +107,6 @@ HEADERS += \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h
 
-OTHER_FILES += \
-    $$PWD/v4classgen
-
-JS_CLASS_SOURCES += $$PWD/qv4dateobject_p.h
-
-js_class_bindings.output = ${QMAKE_FILE_BASE}_jsclass.cpp
-js_class_bindings.input = JS_CLASS_SOURCES
-js_class_bindings.script = $$PWD/v4classgen
-js_class_bindings.commands = python $$js_class_bindings.script ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
-js_class_bindings.depends += $$js_class_bindings.script $$PWD/qv4managed_p.h
-js_class_bindings.CONFIG += no_link
-QMAKE_EXTRA_COMPILERS += js_class_bindings
-
 llvm-libs {
 
 SOURCES += \
