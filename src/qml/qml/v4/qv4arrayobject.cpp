@@ -462,7 +462,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
             bool exists;
             Value v = instance->getIndexed(ctx, k + deleteCount, &exists);
             if (exists)
-                instance->arraySet(k + itemCount, v);
+                instance->putIndexed(k + itemCount, v);
             else
                 instance->deleteIndexedProperty(ctx, k + itemCount);
         }
@@ -474,7 +474,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
             bool exists;
             Value v = instance->getIndexed(ctx, k + deleteCount - 1, &exists);
             if (exists)
-                instance->arraySet(k + itemCount - 1, v);
+                instance->putIndexed(k + itemCount - 1, v);
             else
                 instance->deleteIndexedProperty(ctx, k + itemCount - 1);
             --k;
@@ -482,7 +482,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     }
 
     for (uint i = 0; i < itemCount; ++i)
-        instance->arraySet(start + i, ctx->argument(i + 2));
+        instance->putIndexed(start + i, ctx->argument(i + 2));
 
     ctx->strictMode = true;
     instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
