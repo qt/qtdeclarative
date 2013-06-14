@@ -856,13 +856,34 @@ Value QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     return QV4::Value::undefinedValue();
 }
 
+static void markChildQObjectsRecursively(QObject *parent)
+{
+    const QObjectList &children = parent->children();
+    for (int i = 0; i < children.count(); ++i) {
+        QObject *child = children.at(i);
+        QQmlData *ddata = QQmlData::get(child, /*create*/false);
+        if (ddata)
+            ddata->jsWrapper.markOnce();
+        markChildQObjectsRecursively(child);
+    }
+}
+
 void QObjectWrapper::markObjects(Managed *that)
 {
     QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
 
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(This->m_object);
-    if (vme)
-        vme->mark();
+    if (QObject *o = This->m_object.data()) {
+        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
+        if (vme)
+            vme->mark();
+
+        // Children usually don't need to be marked, the gc keeps them alive.
+        // But in the rare case of a "floating" QObject without a parent that
+        // _gets_ marked (we've been called here!) then we also need to
+        // propagate the marking down to the children recursively.
+        if (!o->parent())
+            markChildQObjectsRecursively(o);
+    }
 
     QV4::Object::markObjects(that);
 }
