@@ -4,7 +4,7 @@ Item {
     property Text text: myText
 
     property Rectangle rectangle1: myText
-    property Rectangle rectangle2: eval('getMyText()') // eval to force non-shared (v8) binding
+    property Rectangle rectangle2: getMyText()
 
     function getMyText() { return myText; }
 
