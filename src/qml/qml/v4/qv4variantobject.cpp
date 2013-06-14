@@ -94,7 +94,7 @@ void VariantObject::destroy(Managed *that)
     VariantObject *v = static_cast<VariantObject *>(that);
     if (v->isScarce())
         v->node.remove();
-    Object::destroy(that);
+    v->~VariantObject();
 }
 
 bool VariantObject::isEqualTo(Managed *m, Managed *other)
