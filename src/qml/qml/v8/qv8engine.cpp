@@ -667,7 +667,7 @@ QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
         break;
     default:
         if (type == qMetaTypeId<QJSValue>()) {
-            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->value;
+            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->getValue(m_v4Engine);
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {

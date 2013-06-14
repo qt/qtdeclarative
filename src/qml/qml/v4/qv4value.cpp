@@ -345,6 +345,10 @@ PersistentValuePrivate::PersistentValuePrivate(const Value &v, bool weak)
     }
 }
 
+PersistentValuePrivate::~PersistentValuePrivate()
+{
+}
+
 void PersistentValuePrivate::removeFromList()
 {
     if (prev) {

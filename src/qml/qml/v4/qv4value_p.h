@@ -563,6 +563,7 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 struct PersistentValuePrivate
 {
     PersistentValuePrivate(const Value &v, bool weak = false);
+    virtual ~PersistentValuePrivate();
     Value value;
     uint refcount;
     PersistentValuePrivate **prev;
