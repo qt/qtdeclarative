@@ -175,8 +175,8 @@ private slots:
     void propertyVarReparentNullContext();
     void propertyVarCircular();
     void propertyVarCircular2();
-//    void propertyVarInheritance();
-//    void propertyVarInheritance2();
+    void propertyVarInheritance();
+    void propertyVarInheritance2();
     void elementAssign();
     void objectPassThroughSignals();
     void objectConversion();
@@ -4858,17 +4858,8 @@ void tst_qqmlecmascript::propertyVarCircular2()
     delete object;
 }
 
-#if 0
-void tst_qqmlecmascript::propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter)
-{
-    *(int*)(parameter) += 1;
-    qPersistentDispose(object);
-}
-
 void tst_qqmlecmascript::propertyVarInheritance()
 {
-    int propertyVarWeakRefCallbackCount = 0;
-
     // enforce behaviour regarding element inheritance - ensure handle disposal.
     // The particular component under test here has a chain of references.
     QQmlComponent component(&engine, testFileUrl("propertyVar.inherit.qml"));
@@ -4880,21 +4871,22 @@ void tst_qqmlecmascript::propertyVarInheritance()
     // we want to be able to track when the varProperties array of the last metaobject is disposed
     QObject *cco5 = object->property("varProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
     QObject *ico5 = object->property("varProperty").value<QObject*>()->property("inheritanceVarProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
+    QVERIFY(cco5);
+    QVERIFY(ico5);
     QQmlVMEMetaObject *icovmemo = QQmlVMEMetaObject::get(ico5);
     QQmlVMEMetaObject *ccovmemo = QQmlVMEMetaObject::get(cco5);
-    v8::Persistent<v8::Value> icoCanaryHandle;
-    v8::Persistent<v8::Value> ccoCanaryHandle;
+    QV4::WeakValue icoCanaryHandle;
+    QV4::WeakValue ccoCanaryHandle;
     {
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        icoCanaryHandle = qPersistentNew(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
-        ccoCanaryHandle = qPersistentNew(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
-        // we make them weak and invoke the gc, but we should not hit the weak-callback yet
-        // as the varproperties array of each vmemo still references the resource.
-        icoCanaryHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
-        ccoCanaryHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
+        icoCanaryHandle = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
+        ccoCanaryHandle = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
+        QVERIFY(!icoCanaryHandle.isEmpty());
+        QVERIFY(!ccoCanaryHandle.isEmpty());
         gc(engine);
-        QVERIFY(propertyVarWeakRefCallbackCount == 0);
+        QVERIFY(!icoCanaryHandle.isEmpty());
+        QVERIFY(!ccoCanaryHandle.isEmpty());
     }
     // now we deassign the var prop, which should trigger collection of item subtrees.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
@@ -4902,7 +4894,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
     QCoreApplication::processEvents();
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
-    QCOMPARE(propertyVarWeakRefCallbackCount, 2);                  // should have been called for both, since all refs should be weak.
+    QVERIFY(icoCanaryHandle.isEmpty());
+    QVERIFY(ccoCanaryHandle.isEmpty());
     delete object;
     // since there are no parent vmemo's to keep implicit references alive, and the only handles
     // to what remains are weak, all varProperties arrays must have been collected.
@@ -4910,8 +4903,6 @@ void tst_qqmlecmascript::propertyVarInheritance()
 
 void tst_qqmlecmascript::propertyVarInheritance2()
 {
-    int propertyVarWeakRefCallbackCount = 0;
-
     // The particular component under test here does NOT have a chain of references; the
     // only link between rootObject and childObject is that rootObject is the parent of childObject.
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.2.qml"));
@@ -4926,23 +4917,21 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QVERIFY(childObject != 0);
     QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
-    v8::Persistent<v8::Value> childObjectVarArrayValueHandle;
+    QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        propertyVarWeakRefCallbackCount = 0;                           // reset callback count.
-        childObjectVarArrayValueHandle = qPersistentNew(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
-        childObjectVarArrayValueHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
+        childObjectVarArrayValueHandle = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
+        QVERIFY(!childObjectVarArrayValueHandle.isEmpty());
         gc(engine);
-        QVERIFY(propertyVarWeakRefCallbackCount == 0);                 // should not have been collected yet.
+        QVERIFY(!childObjectVarArrayValueHandle.isEmpty()); // should not have been collected yet.
         QCOMPARE(childObject->property("vp").value<QObject*>(), rootObject);
         QCOMPARE(childObject->property("textCanary").toInt(), 10);
     }
     QMetaObject::invokeMethod(object, "deassignCircular");
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
     QCoreApplication::processEvents();
-    QVERIFY(propertyVarWeakRefCallbackCount == 1);                 // should have been collected now.
+    QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
     delete object;
 }
-#endif
 
 // Ensure that QObject type conversion works on binding assignment
 void tst_qqmlecmascript::elementAssign()

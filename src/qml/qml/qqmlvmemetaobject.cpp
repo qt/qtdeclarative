@@ -1228,6 +1228,9 @@ void QQmlVMEMetaObject::mark()
             }
         }
     }
+
+    if (QQmlVMEMetaObject *parent = parentVMEMetaObject())
+        parent->mark();
 }
 
 void QQmlVMEMetaObject::allocateVarPropertiesArray()
