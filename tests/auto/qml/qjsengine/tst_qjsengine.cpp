@@ -923,7 +923,6 @@ void tst_QJSEngine::evaluate()
         ret = eng.evaluate(code);
     QCOMPARE(ret.isError(), expectHadError);
     if (ret.isError()) {
-        QEXPECT_FAIL("", "we have no more lineNumber property ", Continue);
         QVERIFY(ret.property("lineNumber").strictlyEquals(eng.toScriptValue(expectErrorLineNumber)));
     }
 }
@@ -1605,8 +1604,6 @@ void tst_QJSEngine::errorConstructors()
             QJSValue ret = eng.evaluate(code);
             QVERIFY(ret.isError());
             QVERIFY(ret.toString().startsWith(name));
-            //QTBUG-6138: JSC doesn't assign lineNumber when errors are not thrown
-            QEXPECT_FAIL("", "we have no more lineNumber property ", Continue);
             QCOMPARE(ret.property("lineNumber").toInt(), i+2);
         }
     }

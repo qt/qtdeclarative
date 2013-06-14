@@ -582,6 +582,13 @@ void ExecutionContext::throwReferenceError(Value value)
     throwError(Value::fromObject(engine->newReferenceErrorObject(msg)));
 }
 
+void ExecutionContext::throwReferenceError(Value value, const QString &fileName, int line)
+{
+    String *s = value.toString(this);
+    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    throwError(Value::fromObject(engine->newReferenceErrorObject(msg, fileName, line)));
+}
+
 void ExecutionContext::throwRangeError(Value value)
 {
     String *s = value.toString(this);

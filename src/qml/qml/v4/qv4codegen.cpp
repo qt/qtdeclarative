@@ -2616,7 +2616,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
     if (_context)
-        _context->throwReferenceError(QV4::Value::fromString(_context, detail));
+        _context->throwReferenceError(QV4::Value::fromString(_context, detail), _fileName, loc.startLine);
     else if (_errorHandler)
         throwSyntaxError(loc, detail);
     else

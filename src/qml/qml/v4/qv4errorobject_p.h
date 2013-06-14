@@ -83,6 +83,7 @@ struct RangeErrorObject: ErrorObject {
 struct ReferenceErrorObject: ErrorObject {
     ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
+    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber);
 };
 
 struct SyntaxErrorObject: ErrorObject {

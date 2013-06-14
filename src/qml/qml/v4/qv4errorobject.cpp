@@ -85,6 +85,10 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorTyp
     defineDefaultProperty(engine, QStringLiteral("name"), Value::fromString(engine, className()));
 
     stackTrace = engine->stackTrace();
+    if (!stackTrace.isEmpty()) {
+        defineDefaultProperty(engine, QStringLiteral("fileName"), Value::fromString(engine, stackTrace.at(0).source));
+        defineDefaultProperty(engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
+    }
 
     stack = Value::emptyValue();
 }
@@ -137,6 +141,10 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *m
 {
     vtbl = &static_vtbl;
     prototype = ctx->engine->syntaxErrorPrototype;
+    if (message) {
+        defineDefaultProperty(ctx->engine, QStringLiteral("fileName"), Value::fromString(ctx, message->fileName));
+        defineDefaultProperty(ctx->engine, QStringLiteral("lineNumber"), Value::fromInt32(message->startLine));
+    }
 }
 
 
@@ -169,6 +177,14 @@ ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QStrin
     : ErrorObject(engine, Value::fromString(engine, message), ReferenceError)
 {
     prototype = engine->referenceErrorPrototype;
+}
+
+ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber)
+    : ErrorObject(engine, Value::fromString(engine, msg), ReferenceError)
+{
+    prototype = engine->referenceErrorPrototype;
+    defineDefaultProperty(engine, QStringLiteral("fileName"), Value::fromString(engine->rootContext, fileName));
+    defineDefaultProperty(engine, QStringLiteral("lineNumber"), Value::fromInt32(lineNumber));
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const Value &message)

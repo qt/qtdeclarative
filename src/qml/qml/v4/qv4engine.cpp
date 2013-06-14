@@ -532,6 +532,12 @@ Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
     return new (memoryManager) ReferenceErrorObject(this, message);
 }
 
+Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber)
+{
+    return new (memoryManager) ReferenceErrorObject(this, message, fileName, lineNumber);
+}
+
+
 Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
     return new (memoryManager) TypeErrorObject(this, message);
