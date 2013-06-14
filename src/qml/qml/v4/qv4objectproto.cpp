@@ -124,8 +124,8 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 1);
     defineDefaultProperty(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 1);
     defineDefaultProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 1);
-    defineDefaultProperty(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 0);
-    defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 0);
+    defineDefaultProperty(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 2);
+    defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     ExecutionEngine *v4 = ctx->engine;
     Property *p = insertMember(v4->id___proto__, Attr_Accessor|Attr_NotEnumerable);
@@ -437,7 +437,12 @@ Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
     if (!f)
         ctx->throwTypeError();
 
-    Object *o = ctx->thisObject.toObject(ctx);
+    Object *o = ctx->thisObject.asObject();
+    if (!o) {
+        if (!ctx->thisObject.isUndefined())
+            return Value::undefinedValue();
+        o = ctx->engine->globalObject;
+    }
 
     Property pd = Property::fromAccessor(f, 0);
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
@@ -454,7 +459,12 @@ Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
     if (!f)
         ctx->throwTypeError();
 
-    Object *o = ctx->thisObject.toObject(ctx);
+    Object *o = ctx->thisObject.asObject();
+    if (!o) {
+        if (!ctx->thisObject.isUndefined())
+            return Value::undefinedValue();
+        o = ctx->engine->globalObject;
+    }
 
     Property pd = Property::fromAccessor(0, f);
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
