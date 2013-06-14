@@ -2158,6 +2158,15 @@ bool Codegen::visit(IfStatement *ast)
 
 bool Codegen::visit(LabelledStatement *ast)
 {
+    // check that no outer loop contains the label
+    Loop *l = _loop;
+    while (l) {
+        if (l->labelledStatement->label == ast->label) {
+            QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
+            throwSyntaxError(ast->firstSourceLocation(), error);
+        }
+        l = l->parent;
+    }
     _labelledStatement = ast;
 
     if (AST::cast<AST::SwitchStatement *>(ast->statement) ||
