@@ -220,6 +220,8 @@ void CallContext::initQmlContext(ExecutionEngine *engine, Object *qml, FunctionO
     lookups = function->function->lookups;
 
     locals = (Value *)(this + 1);
+    if (function->varCount)
+        std::fill(locals, locals + function->varCount, Value::undefinedValue());
 }
 
 
