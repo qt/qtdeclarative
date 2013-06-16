@@ -1844,7 +1844,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
             function->LOCAL(local);
             unsigned t = entryBlock->newTemp();
             (*it).index = t;
-            entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(V4IR::UndefinedType, 0));
         }
     } else {
         if (!_env->isStrict) {
