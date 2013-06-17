@@ -3,7 +3,8 @@ TEMPLATE = subdirs
 SUBDIRS += \
     folderlistmodel \
     localstorage \
-    models
+    models \
+    settings
 
 qtHaveModule(quick) {
     SUBDIRS += \
