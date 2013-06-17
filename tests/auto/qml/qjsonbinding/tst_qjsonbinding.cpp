@@ -457,13 +457,13 @@ void tst_qjsonbinding::writeProperty_javascriptExpression_data()
             << "array" << "(function() { var a = [10, 20]; a.__proto__ = { proto_foo: 123 }; return a; })()"
             << "[10,20]";
 
-    // Non-enumerable properties should be included.
+    // Non-enumerable properties should not be included.
     QTest::newRow("value = object with non-enumerable property")
             << "value" << "Object.defineProperty({}, 'foo', { value: 123, enumerable: false })"
-            << "{\"foo\":123}";
+            << "{}";
     QTest::newRow("object = object with non-enumerable property")
             << "object" << "Object.defineProperty({}, 'foo', { value: 123, enumerable: false })"
-            << "{\"foo\":123}";
+            << "{}";
 
     // Cyclic data structures are permitted, but the cyclic links become
     // empty objects.

@@ -345,7 +345,7 @@ bool JsonParser::parseValue(Value *val)
 
     switch ((json++)->unicode()) {
     case 'n':
-        if (end - json < 4) {
+        if (end - json < 3) {
             lastError = QJsonParseError::IllegalValue;
             return false;
         }
@@ -360,7 +360,7 @@ bool JsonParser::parseValue(Value *val)
         lastError = QJsonParseError::IllegalValue;
         return false;
     case 't':
-        if (end - json < 4) {
+        if (end - json < 3) {
             lastError = QJsonParseError::IllegalValue;
             return false;
         }
@@ -375,7 +375,7 @@ bool JsonParser::parseValue(Value *val)
         lastError = QJsonParseError::IllegalValue;
         return false;
     case 'f':
-        if (end - json < 5) {
+        if (end - json < 4) {
             lastError = QJsonParseError::IllegalValue;
             return false;
         }
@@ -1007,6 +1007,7 @@ QV4::Value JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &
     a->arrayReserve(size);
     for (int i = 0; i < size; i++)
         a->arrayData[i].value = fromJsonValue(engine, array.at(i));
+    a->arrayDataLen = size;
     a->setArrayLengthUnchecked(size);
     return Value::fromObject(a);
 }
