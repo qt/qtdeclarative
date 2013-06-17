@@ -340,7 +340,9 @@ struct Temp: Expr {
         ScopedFormal,
         Local,
         ScopedLocal,
-        VirtualRegister
+        VirtualRegister,
+        PhysicalRegister,
+        StackSlot
     };
 
     unsigned index;
