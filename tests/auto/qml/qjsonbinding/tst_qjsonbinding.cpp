@@ -428,7 +428,7 @@ void tst_qjsonbinding::writeProperty_javascriptExpression_data()
     QTest::newRow("object = object with function property")
             << "object" << "{ foo: function() {} }" << "{}";
     QTest::newRow("array = array with function property")
-            << "array" << "[function() {}]" << "[]";
+            << "array" << "[function() {}]" << "[null]";
 
     // Inherited properties should not be included.
     QTest::newRow("value = object with inherited property")

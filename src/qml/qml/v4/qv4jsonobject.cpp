@@ -992,7 +992,8 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
             break;
 
         QString key = name.toQString();
-        result.insert(key, toJsonValue(v, visitedObjects));
+        if (!v.asFunctionObject())
+            result.insert(key, toJsonValue(v, visitedObjects));
     }
 
     visitedObjects.remove(o);
@@ -1030,7 +1031,7 @@ QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
         Value v = a->getIndexed(i);
-        result.append(toJsonValue(v, visitedObjects));
+        result.append(toJsonValue(v.asFunctionObject() ? QV4::Value::nullValue() : v, visitedObjects));
     }
 
     visitedObjects.remove(a);
