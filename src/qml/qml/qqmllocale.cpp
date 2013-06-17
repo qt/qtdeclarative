@@ -383,8 +383,7 @@ QV4::Value QQmlDateExtension::timeZoneUpdated(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount != 0)
         V4THROW_ERROR("Locale: Date.timeZoneUpdated(): Invalid arguments");
 
-    // ### Anything we need to do here?
-    //v8::Date::DateTimeConfigurationChangeNotification();
+    QV4::DatePrototype::timezoneUpdated();
 
     return QV4::Value::undefinedValue();
 }
@@ -531,6 +530,7 @@ QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext *ctx)
             day = 0;
         result->arrayData[i].value = QV4::Value::fromInt32(day);
     }
+    result->arrayDataLen = days.size();
     result->setArrayLengthUnchecked(days.size());
 
     return QV4::Value::fromObject(result);
@@ -544,6 +544,7 @@ QV4::Value QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext *ctx)
     result->arrayReserve(langs.size());
     for (int i = 0; i < langs.size(); ++i)
         result->arrayData[i].value = QV4::Value::fromString(ctx, langs.at(i));
+    result->arrayDataLen = langs.size();
     result->setArrayLengthUnchecked(langs.size());
 
     return QV4::Value::fromObject(result);

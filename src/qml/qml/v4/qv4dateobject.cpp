@@ -1308,3 +1308,8 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 
     return toIso->call(ctx, ctx->thisObject, 0, 0);
 }
+
+void DatePrototype::timezoneUpdated()
+{
+    LocalTZA = getLocalTZA();
+}

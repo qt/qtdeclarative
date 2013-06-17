@@ -126,6 +126,8 @@ struct DatePrototype: DateObject
     static Value method_toUTCString(SimpleCallContext *ctx);
     static Value method_toISOString(SimpleCallContext *ctx);
     static Value method_toJSON(SimpleCallContext *ctx);
+
+    static void timezoneUpdated();
 };
 
 }
