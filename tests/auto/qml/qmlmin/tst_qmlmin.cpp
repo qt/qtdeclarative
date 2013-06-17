@@ -94,6 +94,7 @@ void tst_qmlmin::initTestCase()
     excludedDirs << "doc/src/snippets/qtquick1/visualdatamodel_rootindex";
     excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     excludedDirs << "doc/src/snippets/qtquick1/imports";
+    excludedDirs << "tests/manual/v4";
 
     // Add invalid files (i.e. files with syntax errors)
     invalidFiles << "tests/auto/quick/qquickloader/data/InvalidSourceComponent.qml";
