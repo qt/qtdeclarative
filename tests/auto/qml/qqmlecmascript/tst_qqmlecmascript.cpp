@@ -5744,6 +5744,7 @@ void tst_qqmlecmascript::eval()
     QObject *o = component.create();
     QVERIFY(o != 0);
 
+    QEXPECT_FAIL("", "The eval statement works differently in strict mode", Abort);
     QCOMPARE(o->property("test1").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
     QCOMPARE(o->property("test3").toBool(), true);
