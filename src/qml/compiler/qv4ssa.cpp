@@ -107,6 +107,7 @@ void showMeTheCode(Function *function)
 
         for (int i = 0; i < code.size(); ++i) {
             Stmt *s = code.at(i);
+            Q_ASSERT(s);
 
             if (BasicBlock *bb = leader.value(s)) {
                 qout << endl;
@@ -780,7 +781,6 @@ void convertToSSA(Function *function, const DominatorTree &df)
             }
         }
     }
-    showMeTheCode(function);
 
     // Rename variables:
     VariableRenamer(function).run();
@@ -1456,8 +1456,15 @@ public:
                     source->type = conversion.targetType;
                     *conversion.expr = source;
 
-                    int idx = bb->statements.indexOf(conversion.stmt);
-                    bb->statements.insert(idx, convCall);
+                    if (Phi *phi = conversion.stmt->asPhi()) {
+                        int idx = phi->d->incoming.indexOf(*conversion.expr);
+                        Q_ASSERT(idx != -1);
+                        QVector<Stmt *> &stmts = bb->in[idx]->statements;
+                        stmts.insert(stmts.size() - 1, convCall);
+                    } else {
+                        int idx = bb->statements.indexOf(conversion.stmt);
+                        bb->statements.insert(idx, convCall);
+                    }
                 }
             }
         }
@@ -1551,9 +1558,8 @@ protected:
     virtual void visitTry(Try *) {}
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
-        foreach (Expr *e, s->d->incoming)
-            if (e->asConst())
-                run(e, ty);
+        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
+            run(s->d->incoming[i], ty);
     }
 };
 
@@ -1684,7 +1690,6 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
     I(df, sequence, startEndLoops).DFS(function->basicBlocks.first());
     qSwap(function->basicBlocks, sequence);
 
-    showMeTheCode(function);
     return startEndLoops;
 }
 
@@ -1871,7 +1876,7 @@ public:
         qout << "Life ranges:" << endl;
         qout << "Intervals:" << endl;
         foreach (const LifeTimeInterval &range, _sortedRanges) {
-            range.dump();
+            range.dump(qout);
             qout << endl;
         }
 
@@ -1907,7 +1912,7 @@ private:
         }
 
         foreach (const Temp &opd, live)
-            _intervals[opd].addRange(bb->statements.first(), bb->statements.last());
+            _intervals[opd].addRange(bb->statements.first()->id, bb->statements.last()->id);
 
         InputOutputCollector collector(variablesCanEscape);
         for (int i = bb->statements.size() - 1; i >= 0; --i) {
@@ -1922,14 +1927,14 @@ private:
                 live.remove(opd);
             }
             foreach (const Temp &opd, collector.inputs) {
-                _intervals[opd].addRange(bb->statements.first(), s);
+                _intervals[opd].addRange(bb->statements.first()->id, s->id);
                 live.insert(opd);
             }
         }
 
         if (loopEnd) { // Meaning: bb is a loop header, because loopEnd is set to non-null.
             foreach (const Temp &opd, live)
-                _intervals[opd].addRange(bb->statements.first(), loopEnd->statements.last());
+                _intervals[opd].addRange(bb->statements.first()->id, loopEnd->statements.last()->id);
         }
 
         _liveIn[bb] = live;
@@ -1940,26 +1945,30 @@ private:
 void LifeTimeInterval::setFrom(Stmt *from) {
     Q_ASSERT(from && from->id > 0);
 
-    if (_ranges.isEmpty()) // this is the case where there is no use, only a define
+    if (_ranges.isEmpty()) { // this is the case where there is no use, only a define
         _ranges.push_front(Range(from->id, from->id));
-    else
+        if (_end == Invalid)
+            _end = from->id;
+    } else {
         _ranges.first().start = from->id;
+    }
 }
 
-void LifeTimeInterval::addRange(Stmt *from, Stmt *to) {
-    Q_ASSERT(from && from->id > 0);
-    Q_ASSERT(to && to->id > 0);
-    Q_ASSERT(to->id >= from->id);
+void LifeTimeInterval::addRange(int from, int to) {
+    Q_ASSERT(from > 0);
+    Q_ASSERT(to > 0);
+    Q_ASSERT(to >= from);
 
     if (_ranges.isEmpty()) {
-        _ranges.push_front(Range(from->id, to->id));
+        _ranges.push_front(Range(from, to));
+        _end = to;
         return;
     }
 
     Range *p = &_ranges.first();
-    if (to->id + 1 >= p->start && p->end + 1 >= from->id) {
-        p->start = qMin(p->start, from->id);
-        p->end = qMax(p->end, to->id);
+    if (to + 1 >= p->start && p->end + 1 >= from) {
+        p->start = qMin(p->start, from);
+        p->end = qMax(p->end, to);
         while (_ranges.count() > 1) {
             Range *p1 = &_ranges[1];
             if (p->end + 1 < p1->start || p1->end + 1 < p->start)
@@ -1970,22 +1979,64 @@ void LifeTimeInterval::addRange(Stmt *from, Stmt *to) {
             p = &_ranges.first();
         }
     } else {
-        Q_ASSERT(to->id < p->start);
-        _ranges.push_front(Range(from->id, to->id));
+        if (to < p->start) {
+            _ranges.push_front(Range(from, to));
+        } else {
+            Q_ASSERT(from > _ranges.last().end);
+            _ranges.push_back(Range(from, to));
+        }
     }
+
+    _end = _ranges.last().end;
 }
 
-void LifeTimeInterval::dump() const {
-    _temp.dump(qout);
-    qout << ": ";
+LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
+{
+    Q_ASSERT(atPosition < newStart || newStart == Invalid);
+
+    if (_ranges.isEmpty() || atPosition < _ranges.first().start)
+        return LifeTimeInterval();
+
+    LifeTimeInterval newInterval = *this;
+    newInterval.setSplitFromInterval(true);
+
+    for (int i = 0, ei = _ranges.size(); i < ei; ++i) {
+        if (_ranges[i].covers(atPosition)) {
+            while (_ranges.size() > i + 1)
+                _ranges.removeLast();
+            while (newInterval._ranges.size() > ei - i)
+                newInterval._ranges.removeFirst();
+            break;
+        }
+    }
+
+    if (newInterval._ranges.first().end == atPosition)
+        newInterval._ranges.removeFirst();
+
+    if (newStart == Invalid) {
+        newInterval._ranges.clear();
+        newInterval._end = Invalid;
+    } else {
+        newInterval._ranges.first().start = newStart;
+        _end = newStart;
+    }
+
+    _ranges.last().end = atPosition;
+
+    return newInterval;
+}
+
+void LifeTimeInterval::dump(QTextStream &out) const {
+    _temp.dump(out);
+    out << ": ends at " << _end << " with ranges ";
     if (_ranges.isEmpty())
-        qout << "(none)";
+        out << "(none)";
     for (int i = 0; i < _ranges.size(); ++i) {
-        if (i > 0) qout << ", ";
-        qout << _ranges[i].start << " - " << _ranges[i].end;
+        if (i > 0) out << ", ";
+        out << _ranges[i].start << " - " << _ranges[i].end;
     }
     if (_reg != Invalid)
-        qout << " (register " << _reg << ")";
+        out << " (register " << _reg << ")";
 }
 
 bool LifeTimeInterval::lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2) {
@@ -1993,6 +2044,11 @@ bool LifeTimeInterval::lessThan(const LifeTimeInterval &r1, const LifeTimeInterv
         return r1._ranges.last().end < r2._ranges.last().end;
     else
         return r1._ranges.first().start < r2._ranges.first().start;
+}
+
+bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval &r1, const LifeTimeInterval &r2)
+{
+    return r1.temp() < r2.temp();
 }
 
 void Optimizer::run()
@@ -2021,6 +2077,7 @@ void Optimizer::run()
         // Calculate the dominator tree:
         DominatorTree df(function->basicBlocks);
 
+//        qout << "Converting to SSA..." << endl;
         convertToSSA(function, df);
 //        showMeTheCode(function);
 
@@ -2092,7 +2149,7 @@ void Optimizer::convertOutOfSSA() {
     }
 }
 
-QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicBlock *basicBlock)
+QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicBlock *basicBlock) const
 {
     QList<SSADeconstructionMove> moves;
 
@@ -2102,6 +2159,7 @@ QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicB
         foreach (Stmt *s, outEdge->statements) {
             if (Phi *phi = s->asPhi()) {
                 SSADeconstructionMove m;
+                m.phi = phi;
                 m.source = phi->d->incoming[inIdx];
                 m.target = phi->targetTemp;
                 moves.append(m);
@@ -2122,4 +2180,9 @@ QList<LifeTimeInterval> Optimizer::lifeRanges() const
 //    lifeRanges.dump();
 //    showMeTheCode(function);
     return lifeRanges.ranges();
+}
+
+void Optimizer::showMeTheCode(Function *function)
+{
+    ::showMeTheCode(function);
 }

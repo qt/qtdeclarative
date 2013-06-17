@@ -11,7 +11,8 @@ HEADERS += \
     $$PWD/qv4instr_moth_p.h \
     $$PWD/qv4isel_moth_p.h \
     $$PWD/qv4isel_util_p.h \
-    $$PWD/qv4ssa_p.h
+    $$PWD/qv4ssa_p.h \
+    $$PWD/qv4regalloc_p.h
 
 SOURCES += \
     $$PWD/qv4codegen.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
     $$PWD/qv4isel_moth.cpp \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
-    $$PWD/qv4ssa.cpp
+    $$PWD/qv4ssa.cpp \
+    $$PWD/qv4regalloc.cpp
 
 include(../../3rdparty/masm/masm.pri)

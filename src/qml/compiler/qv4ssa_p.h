@@ -45,10 +45,13 @@
 #include "qv4jsir_p.h"
 
 QT_BEGIN_NAMESPACE
+class QTextStream;
+
 namespace QQmlJS {
 namespace V4IR {
 
 class LifeTimeInterval {
+public:
     struct Range {
         int start;
         int end;
@@ -57,33 +60,59 @@ class LifeTimeInterval {
             : start(start)
             , end(end)
         {}
-    };
 
+        bool covers(int position) const { return start <= position && position <= end; }
+    };
+    typedef QList<Range> Ranges;
+
+private:
     Temp _temp;
-    QList<Range> _ranges;
+    Ranges _ranges;
+    int _end;
     int _reg;
+    unsigned _isFixedInterval : 1;
+    unsigned _isSplitFromInterval : 1;
 
 public:
-    static const int Invalid = -1;
+    enum { Invalid = -1 };
 
     LifeTimeInterval()
-        : _reg(Invalid)
+        : _end(Invalid)
+        , _reg(Invalid)
+        , _isFixedInterval(0)
+        , _isSplitFromInterval(0)
     {}
+
+    bool isValid() const { return _end != Invalid; }
 
     void setTemp(const Temp &temp) { this->_temp = temp; }
     Temp temp() const { return _temp; }
+    bool isFP() const { return _temp.type == V4IR::DoubleType; }
 
     void setFrom(Stmt *from);
-    void addRange(Stmt *from, Stmt *to);
+    void addRange(int from, int to);
+    Ranges ranges() const { return _ranges; }
 
     int start() const { return _ranges.first().start; }
-    int end() const { return _ranges.last().end; }
+    int end() const { return _end; }
+    bool covers(int position) const
+    { foreach (const Range &r, _ranges) if (r.covers(position)) return true; return false; }
+
+    int firstPossibleUsePosition(bool isPhiTarget) const { return start() + (isSplitFromInterval() || isPhiTarget ? 0 : 1); }
 
     int reg() const { return _reg; }
-    void setReg(int reg) { _reg = reg; }
+    void setReg(int reg) { Q_ASSERT(!_isFixedInterval); _reg = reg; }
 
-    void dump() const;
+    bool isFixedInterval() const { return _isFixedInterval; }
+    void setFixedInterval(bool isFixedInterval) { _isFixedInterval = isFixedInterval; }
+
+    LifeTimeInterval split(int atPosition, int newStart);
+    bool isSplitFromInterval() const { return _isSplitFromInterval; }
+    void setSplitFromInterval(bool isSplitFromInterval) { _isSplitFromInterval = isSplitFromInterval; }
+
+    void dump(QTextStream &out) const;
     static bool lessThan(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
+    static bool lessThanForTemp(const LifeTimeInterval &r1, const LifeTimeInterval &r2);
 };
 
 class Optimizer
@@ -91,6 +120,7 @@ class Optimizer
 public:
     struct SSADeconstructionMove
     {
+        Stmt *phi;
         Expr *source;
         Temp *target;
 
@@ -110,9 +140,13 @@ public:
     bool isInSSA() const
     { return inSSA; }
 
-    QList<SSADeconstructionMove> ssaDeconstructionMoves(BasicBlock *basicBlock);
+    QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
+
+    QList<SSADeconstructionMove> ssaDeconstructionMoves(BasicBlock *basicBlock) const;
 
     QList<LifeTimeInterval> lifeRanges() const;
+
+    static void showMeTheCode(Function *function);
 
 private:
     Function *function;

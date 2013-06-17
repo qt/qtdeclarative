@@ -569,18 +569,20 @@ struct Move: Stmt {
     Expr *target; // LHS - Temp, Name, Member or Subscript
     Expr *source;
     AluOp op;
+    bool swap;
 
     void init(Expr *target, Expr *source, AluOp op)
     {
         this->target = target;
         this->source = source;
         this->op = op;
+        this->swap = false;
     }
 
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
     virtual Move *asMove() { return this; }
 
-    virtual void dump(QTextStream &out, Mode);
+    virtual void dump(QTextStream &out, Mode mode = HIR);
 };
 
 struct Jump: Stmt {

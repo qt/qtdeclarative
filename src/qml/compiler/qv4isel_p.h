@@ -154,8 +154,8 @@ public: // to implement by subclasses:
     virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp) = 0;
     virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName) = 0;
 
-private:
-    void callBuiltin(V4IR::Call *c, V4IR::Temp *temp);
+protected:
+    virtual void callBuiltin(V4IR::Call *c, V4IR::Temp *result);
 };
 } // namespace IR
 

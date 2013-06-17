@@ -438,6 +438,9 @@ void Temp::dump(QTextStream &out) const
     case ScopedLocal:      out << '$' << index
                                << '@' << scope; break;
     case VirtualRegister:  out << '%' << index; break;
+    case PhysicalRegister: out << (type == DoubleType ? "fp" : "r")
+                               << index; break;
+    case StackSlot:        out << '&' << index; break;
     default:               out << "INVALID";
     }
     out << dumpEnd(this);
@@ -530,13 +533,18 @@ void Exp::dump(QTextStream &out, Mode)
     out << ';';
 }
 
-void Move::dump(QTextStream &out, Mode)
+void Move::dump(QTextStream &out, Mode mode)
 {
+    Q_UNUSED(mode);
+
     target->dump(out);
     out << ' ';
     if (op != OpInvalid)
         out << opname(op);
-    out << "= ";
+    if (swap)
+        out << "<=> ";
+    else
+        out << "= ";
 //    if (source->type != target->type)
 //        out << typeName(source->type) << "_to_" << typeName(target->type) << '(';
     source->dump(out);

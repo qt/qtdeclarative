@@ -49,6 +49,7 @@
 #include "qv4function_p.h"
 #include "qv4ssa_p.h"
 #include "qv4exception_p.h"
+#include "qv4regalloc_p.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
@@ -661,8 +662,24 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     V4IR::Optimizer opt(_function);
     opt.run();
     if (opt.isInSSA()) {
-#if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX)) && 0
-        // TODO: add a register allocator here.
+#if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX)) && 0 // TODO: masm cannot handle registers yet.
+        static const QVector<int> intRegisters = QVector<int>()
+                << JSC::X86Registers::edi
+                << JSC::X86Registers::esi
+                << JSC::X86Registers::edx
+                << JSC::X86Registers::r9
+                << JSC::X86Registers::r8
+                << JSC::X86Registers::r13
+                << JSC::X86Registers::r15;
+        static const QVector<int> fpRegisters = QVector<int>()
+                << JSC::X86Registers::xmm1
+                << JSC::X86Registers::xmm2
+                << JSC::X86Registers::xmm3
+                << JSC::X86Registers::xmm4
+                << JSC::X86Registers::xmm5
+                << JSC::X86Registers::xmm6
+                << JSC::X86Registers::xmm7;
+        RegisterAllocator(intRegisters, fpRegisters).run(_function, opt);
 #else
         // No register allocator available for this platform, so:
         opt.convertOutOfSSA();
