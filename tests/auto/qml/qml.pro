@@ -33,6 +33,7 @@ PRIVATETESTS += \
     qqmlecmascript \
     qqmlcontext \
     qqmlexpression \
+    qqmldirparser \
     qqmlglobal \
     qqmlinstruction \
     qqmllanguage \
