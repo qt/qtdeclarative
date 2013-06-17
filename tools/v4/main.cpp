@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
     QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
 #endif // QMLJS_WITH_LLVM
     bool enableDebugging = false;
+    bool runAsQml = false;
 
     if (!args.isEmpty()) {
         if (args.first() == QLatin1String("-d") || args.first() == QLatin1String("--debug")) {
@@ -298,6 +299,11 @@ int main(int argc, char *argv[])
 
         if (args.first() == QLatin1String("--interpret")) {
             mode = use_moth;
+            args.removeFirst();
+        }
+
+        if (args.first() == QLatin1String("--qml")) {
+            runAsQml = true;
             args.removeFirst();
         }
 
@@ -388,6 +394,7 @@ int main(int argc, char *argv[])
 
                 try {
                     QV4::Script script(ctx, code, fn);
+                    script.parseAsBinding = runAsQml;
                     script.parse();
                     QV4::Value result = script.run();
                     if (!result.isUndefined()) {
