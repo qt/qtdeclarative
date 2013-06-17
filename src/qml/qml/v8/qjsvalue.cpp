@@ -53,6 +53,27 @@
 #include "qv4variantobject_p.h"
 #include "qv4regexpobject_p.h"
 #include "qv8engine_p.h"
+#include <private/qv4mm_p.h>
+
+QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
+{
+    if (!this->e)
+        this->e = e;
+    else if (this->e != e) {
+        qWarning("JSValue can't be reassigned to another engine.");
+        return QV4::Value::emptyValue();
+    }
+    if (value.asString() == &string) {
+        value = QV4::Value::fromString(e->newString(string.toQString()));
+        PersistentValuePrivate **listRoot = &e->memoryManager->m_persistentValues;
+        prev = listRoot;
+        next = *listRoot;
+        *prev = this;
+        if (next)
+            next->prev = &this->next;
+    }
+    return value;
+}
 
 /*!
   \since 5.0
