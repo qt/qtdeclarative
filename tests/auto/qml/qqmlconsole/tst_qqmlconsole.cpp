@@ -80,11 +80,11 @@ void tst_qqmlconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, "{\"a\":\"hello\",\"d\":1}");
     QTest::ignoreMessage(QtDebugMsg, "undefined");
     QTest::ignoreMessage(QtDebugMsg, "12");
-    QTest::ignoreMessage(QtDebugMsg, "function () { return 5;}");
+    QTest::ignoreMessage(QtDebugMsg, "function() { [code] }");
     QTest::ignoreMessage(QtDebugMsg, "true");
     // Printing QML object prints out the class/type of QML object with the memory address
 //    QTest::ignoreMessage(QtDebugMsg, "QtObject_QML_0(0xABCD..)");
-    QTest::ignoreMessage(QtDebugMsg, "[object Object]");
+//    QTest::ignoreMessage(QtDebugMsg, "[object Object]");
     QTest::ignoreMessage(QtDebugMsg, "1 pong! [object Object]");
     QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] [object Object] 2");
 
@@ -99,8 +99,8 @@ void tst_qqmlconsole::tracing()
     QUrl testUrl = testFileUrl("tracing.qml");
 
     QString traceText =
-            QString::fromLatin1("tracing (%1:%2:%3)\n").arg(testUrl.toString()).arg(50).arg(17) +
-            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(54).arg(9);
+            QString::fromLatin1("tracing (%1:%2)\n").arg(testUrl.toString()).arg(50) +
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(54);
 
     QTest::ignoreMessage(QtDebugMsg, qPrintable(traceText));
 
@@ -130,11 +130,11 @@ void tst_qqmlconsole::assert()
 
     // assert()
     QString assert1 = "This will fail\n" +
-            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(54).arg(17);
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(54);
 
     QString assert2 = "This will fail too\n" +
-            QString::fromLatin1("assertFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(47).arg(17) +
-            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(59).arg(9);
+            QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(47) +
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(59);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));
@@ -151,11 +151,11 @@ void tst_qqmlconsole::exception()
 
     // exception()
     QString exception1 = "Exception 1\n" +
-            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(51).arg(21);
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(51);
 
     QString exception2 = "Exception 2\n" +
-            QString::fromLatin1("exceptionFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(46).arg(17) +
-            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(56).arg(9);
+            QString::fromLatin1("exceptionFail (%1:%2)\n").arg(testUrl.toString()).arg(46) +
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(56);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception2));

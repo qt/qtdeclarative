@@ -60,6 +60,7 @@
 #include <private/qv4context_p.h>
 #include <private/qv4stringobject_p.h>
 #include <private/qv4mm_p.h>
+#include <private/qv4jsonobject_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
@@ -1309,11 +1310,19 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
     for (int i = 0; i < stackTrace.count(); i++) {
         const QV4::ExecutionEngine::StackFrame &frame = stackTrace.at(i);
 
-        QString stackFrame =
-                QString::fromLatin1("%1 (%2:%3:%4)\n").arg(frame.function,
-                                                         frame.source,
-                                                         QString::number(frame.line),
-                                                         QString::number(frame.column));
+        QString stackFrame;
+        if (frame.column >= 0)
+            stackFrame = QString::fromLatin1("%1 (%2:%3:%4)").arg(frame.function,
+                                                             frame.source,
+                                                             QString::number(frame.line),
+                                                             QString::number(frame.column));
+        else
+            stackFrame = QString::fromLatin1("%1 (%2:%3)").arg(frame.function,
+                                                             frame.source,
+                                                             QString::number(frame.line));
+
+        if (i)
+            stack += QChar('\n');
         stack += stackFrame;
     }
     return stack;
@@ -1330,7 +1339,10 @@ static QV4::Value writeToConsole(ConsoleLogTypes logType, SimpleCallContext *ctx
             result.append(QLatin1Char(' '));
 
         QV4::Value value = ctx->arguments[i];
-        result.append(value.toQString());
+        if (value.asArrayObject())
+            result.append(QStringLiteral("[") + value.toQString() + QStringLiteral("]"));
+        else
+            result.append(value.toQString());
     }
 
     if (printStack) {
