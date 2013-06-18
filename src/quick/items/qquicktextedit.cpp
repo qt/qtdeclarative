@@ -2512,12 +2512,13 @@ QString QQuickTextEdit::hoveredLink() const
         return d->control->hoveredLink();
     } else {
 #ifndef QT_NO_CURSOR
-        QPointF pos = QCursor::pos(window()->screen()) - window()->position() - mapToScene(QPointF(0, 0));
-        return d->control->anchorAt(pos);
-#else
-        return QString();
+        if (QQuickWindow *wnd = window()) {
+            QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
+            return d->control->anchorAt(pos);
+        }
 #endif // QT_NO_CURSOR
     }
+    return QString();
 }
 
 void QQuickTextEdit::hoverEnterEvent(QHoverEvent *event)
