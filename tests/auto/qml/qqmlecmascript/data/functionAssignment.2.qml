@@ -19,11 +19,11 @@ MyQmlObject {
     property bool assignWrongType: false
     property bool assignWrongTypeToValueType: false
 
+    function myFunction() {
+        return aNumber * 10;
+    }
 
     onAssignToPropertyChanged: {
-        function myFunction() {
-            return aNumber * 10;
-        }
         a = Qt.binding(myFunction);
     }
 
@@ -54,17 +54,17 @@ MyQmlObject {
 
     // detecting errors:
 
+    function myEmptyFunction() {
+    }
     onAssignFuncWithoutReturnChanged: {
-        function myFunction() {
-        }
-        a = Qt.binding(myFunction);
+        a = Qt.binding(myEmptyFunction);
     }
 
+    function myStringFunction() {
+        return 'a string';
+    }
     onAssignWrongTypeChanged: {
-        function myFunction() {
-            return 'a string';
-        }
-        aNumber = Qt.binding(myFunction);
+        aNumber = Qt.binding(myStringFunction);
     }
 
     onAssignWrongTypeToValueTypeChanged: {
