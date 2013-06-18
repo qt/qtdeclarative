@@ -90,22 +90,10 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     QV8Engine *v8; // ### temporary, remove
     bool readOnly;
     bool ownsContext;
+    bool isNullWrapper;
 
     QQmlGuardedContextData context;
     QQmlGuard<QObject> scopeObject;
-};
-
-struct QmlContextNullWrapper : QmlContextWrapper
-{
-    Q_MANAGED
-    QmlContextNullWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false)
-        : QmlContextWrapper(engine, context, scopeObject, ownsContext)
-    {
-        vtbl = &static_vtbl;
-    }
-
-    using Object::get;
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
 };
 
 }

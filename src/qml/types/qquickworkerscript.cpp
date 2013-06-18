@@ -300,7 +300,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
 
         script->object = QV4::QmlContextWrapper::urlScope(workerEngine, script->source);
 
-        QV4::QmlContextWrapper *w = script->object.value().asObject()->as<QV4::QmlContextNullWrapper>();
+        QV4::QmlContextWrapper *w = script->object.value().asObject()->as<QV4::QmlContextWrapper>();
         w->setReadOnly(false);
 
         QV4::Object *api = v4->newObject();

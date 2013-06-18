@@ -52,6 +52,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4context_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -173,7 +174,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
 
     QV4::ExecutionEngine *v4 = ctx->engine;
     QV8Engine *engine = v4->v8Engine;
-    QQmlContextData *context = engine->callingContext();
+    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(v4);
 
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
