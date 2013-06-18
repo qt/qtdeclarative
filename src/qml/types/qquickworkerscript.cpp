@@ -352,8 +352,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;
-        error.setDescription(e.value().toQString());
-// ###        QQmlExpressionPrivate::exceptionToError(e, error);
+        QQmlExpressionPrivate::exceptionToError(e, error);
         reportScriptException(script, error);
     }
 }
@@ -379,11 +378,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         if (activation.isEmpty())
             return;
 
-        // XXX ???
-        // workerEngine->baseUrl = url;
-
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
-
         QV4::Script program(v4, activation.asObject(), sourceCode, url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;

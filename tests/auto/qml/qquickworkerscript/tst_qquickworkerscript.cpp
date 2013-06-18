@@ -257,7 +257,7 @@ void tst_QQuickWorkerScript::scriptError_onLoad()
     QVERIFY(worker != 0);
 
     QTRY_COMPARE(qquickworkerscript_lastWarning,
-            testFileUrl("script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Unexpected identifier"));
+            testFileUrl("script_error_onLoad.js").toString() + QLatin1String(":3:10: Expected token `,'"));
 
     qInstallMessageHandler(previousMsgHandler);
     qApp->processEvents();

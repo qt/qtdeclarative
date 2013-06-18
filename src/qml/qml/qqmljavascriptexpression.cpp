@@ -86,6 +86,7 @@ void QQmlDelayedError::setError(const QV4::Exception &e)
         QV4::ExecutionEngine::StackFrame frame = trace.first();
         m_error.setUrl(QUrl(frame.source));
         m_error.setLine(frame.line);
+        m_error.setColumn(frame.column);
     }
 
     m_error.setColumn(-1);
@@ -306,7 +307,7 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
             QV4::ExecutionEngine::StackFrame frame = trace.first();
             error.setUrl(QUrl(frame.source));
             error.setLine(frame.line);
-            error.setColumn(-1);
+            error.setColumn(frame.column);
         }
         error.setDescription(e.value().toQString());
     }
