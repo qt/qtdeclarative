@@ -1805,8 +1805,10 @@ bool Codegen::visit(VoidExpression *ast)
     return false;
 }
 
-bool Codegen::visit(FunctionDeclaration * /*ast*/)
+bool Codegen::visit(FunctionDeclaration * ast)
 {
+    if (_mode == QmlBinding)
+        move(_block->TEMP(_returnAddress), _block->NAME(ast->name.toString(), 0, 0));
     _expr.accept(nx);
     return false;
 }
