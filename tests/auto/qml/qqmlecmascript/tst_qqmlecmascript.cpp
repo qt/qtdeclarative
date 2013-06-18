@@ -5710,11 +5710,11 @@ void tst_qqmlecmascript::functionAssignmentfromJS_invalid()
     QVERIFY(!o->property("a").isValid());
 
     QString url = component.url().toString();
-    QString warning = url + ":67:17: Unable to assign QString to int";
+    QString warning = url + ":67: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongType", true);
 
-    warning = url + ":71:29: Unable to assign QString to int";
+    warning = url + ":71: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongTypeToValueType", true);
 
