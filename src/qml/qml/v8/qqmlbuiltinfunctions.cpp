@@ -1170,6 +1170,39 @@ Value QtObject::method_locale(SimpleCallContext *ctx)
     return QQmlLocale::locale(v8engine, code);
 }
 
+namespace {
+
+struct BindingFunction : public QV4::FunctionObject
+{
+    Q_MANAGED
+    BindingFunction(FunctionObject *originalFunction)
+        : QV4::FunctionObject(originalFunction->scope, originalFunction->name)
+        , originalFunction(originalFunction)
+    {
+        vtbl = &static_vtbl;
+        bindingKeyFlag = true;
+    }
+
+    static Value call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
+    {
+        BindingFunction *This = static_cast<BindingFunction*>(that);
+        return This->originalFunction->call(ctx, thisObject, argv, argc);
+    }
+
+    static void markObjects(Managed *that)
+    {
+        BindingFunction *This = static_cast<BindingFunction*>(that);
+        This->originalFunction->mark();
+        QV4::FunctionObject::markObjects(that);
+    }
+
+    QV4::FunctionObject *originalFunction;
+};
+
+DEFINE_MANAGED_VTABLE(BindingFunction);
+
+}
+
 /*!
     \qmlmethod Qt::binding(function)
 
@@ -1218,17 +1251,13 @@ Value QtObject::method_locale(SimpleCallContext *ctx)
 */
 Value QtObject::method_binding(SimpleCallContext *ctx)
 {
-    QString code;
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("binding() requires 1 argument");
     QV4::FunctionObject *f = ctx->arguments[0].asFunctionObject();
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    if (f->bindingKeyFlag)
-        V4THROW_ERROR("function passed to binding() can only be bound once"); // FIXME: With v8 we cloned the binding argument
-    f->bindingKeyFlag = true;
-    return QV4::Value::fromObject(f);
+    return QV4::Value::fromObject(new (ctx->engine->memoryManager) BindingFunction(f));
 }
 
 
