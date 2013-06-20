@@ -11,17 +11,17 @@ QtObject {
         // Attempt to overwrite and delete values
         var x = new XMLHttpRequest();
 
-        x.UNSENT = 9;
-        x.OPENED = 9;
-        x.HEADERS_RECEIVED = 9;
-        x.LOADING = 9;
-        x.DONE = 9;
+        try { x.UNSENT = 9; } catch (e) {}
+        try { x.OPENED = 9; } catch (e) {}
+        try { x.HEADERS_RECEIVED = 9; } catch (e) {}
+        try { x.LOADING = 9; } catch (e) {}
+        try { x.DONE = 9; } catch (e) {}
 
-        delete x.UNSENT;
-        delete x.OPENED;
-        delete x.HEADERS_RECEIVED;
-        delete x.LOADING;
-        delete x.DONE;
+        try { delete x.UNSENT; } catch (e) {}
+        try { delete x.OPENED; } catch (e) {}
+        try { delete x.HEADERS_RECEIVED; } catch (e) {}
+        try { delete x.LOADING; } catch (e) {}
+        try { delete x.DONE; } catch (e) {}
 
         unsent = x.UNSENT
         opened = x.OPENED
