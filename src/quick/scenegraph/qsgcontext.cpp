@@ -286,8 +286,8 @@ void QSGContext::precompileMaterials()
         QSG_PRECOMPILE_MATERIAL(QSGFlatColorMaterial);
         QSG_PRECOMPILE_MATERIAL(QSGOpaqueTextureMaterial);
         QSG_PRECOMPILE_MATERIAL(QSGTextureMaterial);
-        QSG_PRECOMPILE_MATERIAL(SmoothTextureMaterial);
-        QSG_PRECOMPILE_MATERIAL(SmoothColorMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGSmoothTextureMaterial);
+        QSG_PRECOMPILE_MATERIAL(QSGSmoothColorMaterial);
         QSG_PRECOMPILE_MATERIAL(QSGDistanceFieldTextMaterial);
     }
 }

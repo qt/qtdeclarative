@@ -87,24 +87,24 @@ protected:
 };
 
 
-SmoothTextureMaterial::SmoothTextureMaterial()
+QSGSmoothTextureMaterial::QSGSmoothTextureMaterial()
 {
     setFlag(RequiresFullMatrixExceptTranslate, true);
     setFlag(Blending, true);
 }
 
-void SmoothTextureMaterial::setTexture(QSGTexture *texture)
+void QSGSmoothTextureMaterial::setTexture(QSGTexture *texture)
 {
     m_texture = texture;
 }
 
-QSGMaterialType *SmoothTextureMaterial::type() const
+QSGMaterialType *QSGSmoothTextureMaterial::type() const
 {
     static QSGMaterialType type;
     return &type;
 }
 
-QSGMaterialShader *SmoothTextureMaterial::createShader() const
+QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
 {
     return new SmoothTextureMaterialShader;
 }

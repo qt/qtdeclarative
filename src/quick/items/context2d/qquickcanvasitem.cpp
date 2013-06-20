@@ -645,7 +645,7 @@ void QQuickCanvasItem::updatePolish()
 
     Q_D(QQuickCanvasItem);
 
-    if (d->context)
+    if (d->context && d->renderStrategy != QQuickCanvasItem::Cooperative)
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
 
     if (d->animationCallbacks.size() > 0 && isVisible()) {
@@ -683,7 +683,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 {
     Q_D(QQuickCanvasItem);
 
-    if (!d->context) {
+    if (!d->context || d->canvasWindow.size().isEmpty()) {
         delete oldNode;
         return 0;
     }
@@ -697,8 +697,10 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     else
         node->setFiltering(QSGTexture::Nearest);
 
-    if (d->renderStrategy == QQuickCanvasItem::Cooperative)
+    if (d->renderStrategy == QQuickCanvasItem::Cooperative) {
+        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
         d->context->flush();
+    }
 
     node->setTexture(d->context->texture());
     node->markDirty(QSGNode::DirtyMaterial);

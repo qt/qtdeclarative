@@ -156,7 +156,7 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
     if (a == b || !length)
         return true;
 
-    register union {
+    union {
         const quint16 *w;
         const quint32 *d;
         quintptr value;
@@ -181,7 +181,7 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
 
         // both addresses are 4-bytes aligned
         // do a fast 32-bit comparison
-        register const quint32 *e = sa.d + (length >> 1);
+        const quint32 *e = sa.d + (length >> 1);
         for ( ; sa.d != e; ++sa.d, ++sb.d) {
             if (*sa.d != *sb.d)
                 return false;
@@ -191,7 +191,7 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
         return (length & 1) ? *sa.w == *sb.w : true;
     } else {
         // one of the addresses isn't 4-byte aligned but the other is
-        register const quint16 *e = sa.w + length;
+        const quint16 *e = sa.w + length;
         for ( ; sa.w != e; ++sa.w, ++sb.w) {
             if (*sa.w != *sb.w)
                 return false;

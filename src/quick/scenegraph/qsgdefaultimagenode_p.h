@@ -48,10 +48,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class SmoothTextureMaterial : public QSGTextureMaterial
+class Q_QUICK_PRIVATE_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
 {
 public:
-    SmoothTextureMaterial();
+    QSGSmoothTextureMaterial();
 
     void setTexture(QSGTexture *texture);
 
@@ -90,7 +90,7 @@ private:
 
     QSGOpaqueTextureMaterial m_material;
     QSGTextureMaterial m_materialO;
-    SmoothTextureMaterial m_smoothMaterial;
+    QSGSmoothTextureMaterial m_smoothMaterial;
 
     uint m_antialiasing : 1;
     uint m_mirror : 1;
