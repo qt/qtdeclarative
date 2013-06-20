@@ -50,15 +50,13 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4variantobject_p.h>
+#include <private/qv4qmlextensions_p.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(QmlValueTypeWrapper);
-
-PersistentValue QmlValueTypeWrapper::proto;
-
 
 class QmlValueTypeReference : public QmlValueTypeWrapper
 {
@@ -133,12 +131,12 @@ static bool readReferenceValue(const QmlValueTypeReference *reference)
 
 void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (!proto.isEmpty())
+    if (v4->qmlExtensions()->valueTypeWrapperPrototype)
         return;
 
     Object *o = v4->newObject();
     o->defineDefaultProperty(v4, QStringLiteral("toString"), method_toString, 1);
-    proto = Value::fromObject(o);
+    v4->qmlExtensions()->valueTypeWrapperPrototype = o;
 }
 
 Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
@@ -147,7 +145,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, 
     initProto(v4);
 
     QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
-    r->prototype = proto.value().objectValue();
+    r->prototype = v4->qmlExtensions()->valueTypeWrapperPrototype;
     r->type = type; r->object = object; r->property = property;
     return Value::fromObject(r);
 }
@@ -158,7 +156,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValu
     initProto(v4);
 
     QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
-    r->prototype = proto.value().objectValue();
+    r->prototype = v4->qmlExtensions()->valueTypeWrapperPrototype;
     r->type = type; r->value = value;
     return Value::fromObject(r);
 }

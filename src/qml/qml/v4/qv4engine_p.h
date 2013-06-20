@@ -106,6 +106,7 @@ struct InternalClass;
 class MultiplyWrappedQObjectMap;
 class RegExp;
 class RegExpCache;
+struct QmlExtensions;
 
 struct Q_QML_EXPORT ExecutionEngine
 {
@@ -297,6 +298,11 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *newClass(const InternalClass &other);
 
     Function *functionForProgramCounter(quintptr pc) const;
+
+    QmlExtensions *qmlExtensions();
+
+private:
+    QmlExtensions *m_qmlExtensions;
 };
 
 inline void ExecutionEngine::pushContext(SimpleCallContext *context)

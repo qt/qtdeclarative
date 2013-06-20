@@ -64,6 +64,7 @@
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
+#include "qv4qmlextensions_p.h"
 
 #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 #include <execinfo.h>
@@ -95,6 +96,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
+    , m_qmlExtensions(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
@@ -276,6 +278,7 @@ ExecutionEngine::~ExecutionEngine()
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete memoryManager;
+    delete m_qmlExtensions;
     emptyClass->destroy();
     delete identifierCache;
     delete bumperPointerAllocator;
@@ -877,6 +880,9 @@ void ExecutionEngine::markObjects()
 
     variantPrototype->mark();
     sequencePrototype->mark();
+
+    if (m_qmlExtensions)
+        m_qmlExtensions->markObjects();
 }
 
 namespace {
@@ -912,6 +918,13 @@ Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
     if (it != functions.constEnd())
         return *it;
     return 0;
+}
+
+QmlExtensions *ExecutionEngine::qmlExtensions()
+{
+    if (!m_qmlExtensions)
+        m_qmlExtensions = new QmlExtensions;
+    return m_qmlExtensions;
 }
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)

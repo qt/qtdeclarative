@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the V4VM module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,69 +38,29 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QV4QMLEXTENSIONS_P_H
+#define QV4QMLEXTENSIONS_P_H
 
-#ifndef QQMLVALUETYPEWRAPPER_P_H
-#define QQMLVALUETYPEWRAPPER_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
-#include <private/qtqmlglobal_p.h>
-
-#include <private/qv4value_p.h>
-#include <private/qv4object_p.h>
+#include <qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlValueType;
-class QV8Engine;
-
 namespace QV4 {
+struct Object;
 
-struct Q_QML_EXPORT QmlValueTypeWrapper : Object
+struct Q_QML_EXPORT QmlExtensions
 {
-    Q_MANAGED
-protected:
-    enum ObjectType { Reference, Copy };
-    QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
-    ~QmlValueTypeWrapper();
+    QmlExtensions()
+        : valueTypeWrapperPrototype(0)
+    {}
 
-public:
+    Object *valueTypeWrapperPrototype;
 
-    static Value create(QV8Engine *v8, QObject *, int, QQmlValueType *);
-    static Value create(QV8Engine *v8, const QVariant &, QQmlValueType *);
-
-    QVariant toVariant() const;
-    bool isEqual(const QVariant& value);
-
-
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
-    static void destroy(Managed *that);
-    static bool isEqualTo(Managed *m, Managed *other);
-
-    static QV4::Value method_toString(SimpleCallContext *ctx);
-
-    QV8Engine *v8;
-    ObjectType objectType;
-    mutable QQmlValueType *type;
-
-    static void initProto(ExecutionEngine *v4);
+    void markObjects();
 };
 
-}
+} // namespace QV4
 
 QT_END_NAMESPACE
 
-#endif // QV8VALUETYPEWRAPPER_P_H
-
-
+#endif
