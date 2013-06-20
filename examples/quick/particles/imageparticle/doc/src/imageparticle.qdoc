@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \title Qt Quick Particles Examples - Affectors
+    \title Qt Quick Particles Examples - Image Particles
     \example particles/imageparticle
     \brief This is a collection of examples using Affectors in the QML particle system.
     \image qml-imageparticle-example.png
