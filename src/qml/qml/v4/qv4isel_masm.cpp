@@ -931,7 +931,7 @@ void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::T
     String *propertyName = identifier(*name->id);
     if (useFastLookups && name->global) {
         uint index = addGlobalLookup(propertyName);
-        generateLookupCall(index, offsetof(QV4::Lookup, globalGetter), Assembler::PointerToValue(temp));
+        generateLookupCall(index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::PointerToValue(temp));
         return;
     }
     generateFunctionCall(Assembler::Void, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToValue(temp), propertyName);

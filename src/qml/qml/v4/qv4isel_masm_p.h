@@ -879,7 +879,7 @@ private:
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
 
-         _as->generateFunctionCallImp(Assembler::Void, "lookup getter/setter", getterSetter, lookupAddr, Assembler::ContextRegister, arg1, arg2);
+         _as->generateFunctionCallImp(Assembler::Void, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
     }
 
     template <typename Arg1>

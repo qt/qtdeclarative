@@ -86,7 +86,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 }
 
 
-void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
+void Lookup::getterGeneric(QV4::Lookup *l, QV4::Value *result, const QV4::Value &object)
 {
     if (Object *o = object.asObject()) {
         o->getLookup(l, result);
@@ -95,8 +95,9 @@ void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *re
 
     Value res;
     if (Managed *m = object.asManaged()) {
-        res = m->get(ctx, l->name);
+        res = m->get(m->engine()->current, l->name);
     } else {
+        ExecutionContext *ctx = l->name->engine()->current;
         Object *o = __qmljs_convert_to_object(ctx, object);
         res = o->get(ctx, l->name);
     }
@@ -104,7 +105,7 @@ void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *re
         *result = res;
 }
 
-void Lookup::getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter0(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -114,10 +115,10 @@ void Lookup::getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Valu
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
-void Lookup::getter1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter1(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
@@ -128,10 +129,10 @@ void Lookup::getter1(Lookup *l, ExecutionContext *ctx, Value *result, const Valu
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
-void Lookup::getter2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getter2(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -147,10 +148,10 @@ void Lookup::getter2(Lookup *l, ExecutionContext *ctx, Value *result, const Valu
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
-void Lookup::getterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -159,17 +160,17 @@ void Lookup::getterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, co
             if (!getter)
                 res = Value::undefinedValue();
             else
-                res = getter->call(ctx, object, 0, 0);
+                res = getter->call(getter->engine()->current, object, 0, 0);
             if (result)
                 *result = res;
             return;
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
-void Lookup::getterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
@@ -179,17 +180,17 @@ void Lookup::getterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, co
             if (!getter)
                 res = Value::undefinedValue();
             else
-                res = getter->call(ctx, object, 0, 0);
+                res = getter->call(getter->engine()->current, object, 0, 0);
             if (result)
                 *result = res;
             return;
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
-void Lookup::getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object)
+void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
@@ -202,7 +203,7 @@ void Lookup::getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, co
                     if (!getter)
                         res = Value::undefinedValue();
                     else
-                        res = getter->call(ctx, object, 0, 0);
+                        res = getter->call(getter->engine()->current, object, 0, 0);
                     if (result)
                         *result = res;
                     return;
@@ -211,7 +212,7 @@ void Lookup::getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, co
         }
     }
     l->getter = getterGeneric;
-    getterGeneric(l, ctx, result, object);
+    getterGeneric(l, result, object);
 }
 
 
@@ -338,24 +339,27 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
     globalGetterGeneric(l, ctx, result);
 }
 
-void Lookup::setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
+void Lookup::setterGeneric(Lookup *l, const Value &object, const Value &value)
 {
-    Object *o = object.toObject(ctx);
+    Object *o = object.asObject();
+    if (!o) {
+        o = __qmljs_convert_to_object(l->name->engine()->current, object);
+        o->put(l->name, value);
+        return;
+    }
     o->setLookup(l, value);
-    return;
 }
 
-void Lookup::setter0(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
+void Lookup::setter0(Lookup *l, const Value &object, const Value &value)
 {
-    Object *o = object.toObject(ctx);
-
-    if (o->internalClass == l->classList[0]) {
+    Object *o = object.asObject();
+    if (o && o->internalClass == l->classList[0]) {
         o->memberData[l->index].value = value;
         return;
     }
 
     l->setter = setterGeneric;
-    setterGeneric(l, ctx, object, value);
+    setterGeneric(l, object, value);
 }
 
 QT_END_NAMESPACE

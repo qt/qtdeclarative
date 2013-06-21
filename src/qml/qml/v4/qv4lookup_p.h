@@ -55,22 +55,22 @@ namespace QV4 {
 struct Lookup {
     enum { Size = 3 };
     union {
-        void (*getter)(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+        void (*getter)(Lookup *l, Value *result, const Value &object);
         void (*globalGetter)(Lookup *l, ExecutionContext *ctx, Value *result);
-        void (*setter)(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &v);
+        void (*setter)(Lookup *l, const Value &object, const Value &v);
     };
     InternalClass *classList[Size];
     int level;
     uint index;
     String *name;
 
-    static void getterGeneric(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getter0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getter1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getter2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
-    static void getterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result, const Value &object);
+    static void getterGeneric(Lookup *l, Value *result, const Value &object);
+    static void getter0(Lookup *l, Value *result, const Value &object);
+    static void getter1(Lookup *l, Value *result, const Value &object);
+    static void getter2(Lookup *l, Value *result, const Value &object);
+    static void getterAccessor0(Lookup *l, Value *result, const Value &object);
+    static void getterAccessor1(Lookup *l, Value *result, const Value &object);
+    static void getterAccessor2(Lookup *l, Value *result, const Value &object);
 
     static void globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
     static void globalGetter0(Lookup *l, ExecutionContext *ctx, Value *result);
@@ -80,8 +80,8 @@ struct Lookup {
     static void globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result);
     static void globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
 
-    static void setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value);
-    static void setter0(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value);
+    static void setterGeneric(Lookup *l, const Value &object, const Value &value);
+    static void setter0(Lookup *l, const Value &object, const Value &value);
 
     Property *lookup(Object *obj, PropertyAttributes *attrs);
 
