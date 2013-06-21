@@ -104,7 +104,7 @@ struct ManagedVTable
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
-    bool (*hasInstance)(Managed *, ExecutionContext *ctx, const Value &value);
+    bool (*hasInstance)(Managed *, const Value &value);
     Value (*get)(Managed *, ExecutionContext *ctx, String *name, bool *hasProperty);
     Value (*getIndexed)(Managed *, ExecutionContext *ctx, uint index, bool *hasProperty);
     void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
@@ -257,8 +257,8 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
-    inline bool hasInstance(ExecutionContext *ctx, const Value &v) {
-        return vtbl->hasInstance(this, ctx, v);
+    inline bool hasInstance(const Value &v) {
+        return vtbl->hasInstance(this, v);
     }
     Value construct(ExecutionContext *context, Value *args, int argc);
     Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
@@ -288,7 +288,7 @@ public:
     { return vtbl->advanceIterator(this, it, name, index, attributes); }
 
     static void destroy(Managed *that) { that->_data = 0; }
-    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
+    static bool hasInstance(Managed *that, const Value &value);
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
     static void getLookup(Managed *, ExecutionContext *context, Lookup *, Value *);

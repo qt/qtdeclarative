@@ -209,7 +209,7 @@ void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value &left,
     if (!o)
         ctx->throwTypeError();
 
-    bool r = o->hasInstance(ctx, left);
+    bool r = o->hasInstance(left);
     *result = Value::fromBoolean(r);
 }
 

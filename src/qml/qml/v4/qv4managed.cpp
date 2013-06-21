@@ -171,9 +171,9 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::hasInstance(Managed *, ExecutionContext *ctx, const Value &)
+bool Managed::hasInstance(Managed *m, const Value &)
 {
-    ctx->throwTypeError();
+    m->engine()->current->throwTypeError();
 }
 
 Value Managed::construct(Managed *, ExecutionContext *context, Value *, int)

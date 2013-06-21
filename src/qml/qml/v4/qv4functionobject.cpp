@@ -97,7 +97,7 @@ Value FunctionObject::newInstance()
     return construct(internalClass->engine->current, 0, 0);
 }
 
-bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
+bool FunctionObject::hasInstance(Managed *that, const Value &value)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
 
@@ -105,6 +105,7 @@ bool FunctionObject::hasInstance(Managed *that, ExecutionContext *ctx, const Val
     if (!v)
         return false;
 
+    ExecutionContext *ctx = f->engine()->current;
     Object *o = f->get(ctx, ctx->engine->id_prototype).asObject();
     if (!o)
         ctx->throwTypeError();
@@ -526,10 +527,10 @@ Value BoundFunction::construct(Managed *that, ExecutionContext *context, Value *
     return f->target->construct(context, newArgs, f->boundArgs.size() + argc);
 }
 
-bool BoundFunction::hasInstance(Managed *that, ExecutionContext *ctx, const Value &value)
+bool BoundFunction::hasInstance(Managed *that, const Value &value)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    return FunctionObject::hasInstance(f->target, ctx, value);
+    return FunctionObject::hasInstance(f->target, value);
 }
 
 void BoundFunction::markObjects(Managed *that)

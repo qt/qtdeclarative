@@ -132,7 +132,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 protected:
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
-    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
+    static bool hasInstance(Managed *that, const Value &value);
 };
 
 struct FunctionCtor: FunctionObject
@@ -220,7 +220,7 @@ struct BoundFunction: FunctionObject {
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *);
     static void markObjects(Managed *that);
-    static bool hasInstance(Managed *that, ExecutionContext *ctx, const Value &value);
+    static bool hasInstance(Managed *that, const Value &value);
 };
 
 }
