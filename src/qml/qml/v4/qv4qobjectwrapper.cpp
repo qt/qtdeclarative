@@ -650,8 +650,18 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         return QV4::Object::advanceIterator(m, it, name, index, attributes);
 
     const QMetaObject *mo = that->m_object->metaObject();
-    if (it->arrayIndex < mo->propertyCount()) {
+    const int propertyCount = mo->propertyCount();
+    if (it->arrayIndex < propertyCount) {
         *name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
+        ++it->arrayIndex;
+        if (attributes)
+            *attributes = QV4::Attr_Data;
+        it->tmpDynamicProperty.value = that->get(*name);
+        return &it->tmpDynamicProperty;
+    }
+    const int methodCount = mo->methodCount();
+    if (it->arrayIndex < propertyCount + methodCount) {
+        *name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
