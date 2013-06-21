@@ -387,8 +387,8 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
     needsActivation = function->needsActivation();
 
     if (strictMode) {
-        CallContext *k = ctx->engine->newCallContext(this, ctx->thisObject, 0, 0);
-        ctx = k;
+        FunctionObject *e = engine->newScriptFunction(ctx, function);
+        return e->call(ctx->thisObject, 0, 0);
     }
 
     ExecutionContext::EvalCode evalCode;
