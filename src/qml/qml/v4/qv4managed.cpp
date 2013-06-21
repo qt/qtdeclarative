@@ -186,14 +186,14 @@ Value Managed::call(Managed *, ExecutionContext *context, const Value &, Value *
     context->throwTypeError();
 }
 
-void Managed::getLookup(Managed *, ExecutionContext *context, Lookup *, Value *)
+void Managed::getLookup(Managed *m, Lookup *, Value *)
 {
-    context->throwTypeError();
+    m->engine()->current->throwTypeError();
 }
 
-void Managed::setLookup(Managed *, ExecutionContext *ctx, Lookup *, const Value &)
+void Managed::setLookup(Managed *m, Lookup *, const Value &)
 {
-    ctx->throwTypeError();
+    m->engine()->current->throwTypeError();
 }
 
 bool Managed::isEqualTo(Managed *, Managed *)

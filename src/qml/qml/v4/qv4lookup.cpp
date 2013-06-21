@@ -89,7 +89,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 void Lookup::getterGeneric(QV4::Lookup *l, ExecutionContext *ctx, QV4::Value *result, const QV4::Value &object)
 {
     if (Object *o = object.asObject()) {
-        o->getLookup(ctx, l, result);
+        o->getLookup(l, result);
         return;
     }
 
@@ -341,7 +341,7 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
 void Lookup::setterGeneric(Lookup *l, ExecutionContext *ctx, const Value &object, const Value &value)
 {
     Object *o = object.toObject(ctx);
-    o->setLookup(ctx, l, value);
+    o->setLookup(l, value);
     return;
 }
 

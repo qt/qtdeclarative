@@ -358,8 +358,8 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static void getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
-    static void setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
+    static void getLookup(Managed *m, Lookup *l, Value *result);
+    static void setLookup(Managed *m, Lookup *l, const Value &v);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
 
 

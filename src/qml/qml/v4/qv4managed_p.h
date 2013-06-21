@@ -113,8 +113,8 @@ struct ManagedVTable
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
-    void (*setLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
+    void (*getLookup)(Managed *m, Lookup *l, Value *result);
+    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     bool (*isEqualTo)(Managed *m, Managed *other);
     Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     const char *className;
@@ -277,10 +277,10 @@ public:
     { return vtbl->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtbl->deleteIndexedProperty(this, index); }
-    void getLookup(ExecutionContext *ctx, Lookup *l, Value *result)
-    { vtbl->getLookup(this, ctx, l, result); }
-    void setLookup(ExecutionContext *ctx, Lookup *l, const Value &v)
-    { vtbl->setLookup(this, ctx, l, v); }
+    void getLookup(Lookup *l, Value *result)
+    { vtbl->getLookup(this, l, result); }
+    void setLookup(Lookup *l, const Value &v)
+    { vtbl->setLookup(this, l, v); }
 
     bool isEqualTo(Managed *other)
     { return vtbl->isEqualTo(this, other); }
@@ -291,8 +291,8 @@ public:
     static bool hasInstance(Managed *that, const Value &value);
     static Value construct(Managed *, ExecutionContext *context, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
-    static void getLookup(Managed *, ExecutionContext *context, Lookup *, Value *);
-    static void setLookup(Managed *, ExecutionContext *ctx, Lookup *l, const Value &v);
+    static void getLookup(Managed *m, Lookup *, Value *);
+    static void setLookup(Managed *m, Lookup *l, const Value &v);
     static bool isEqualTo(Managed *m, Managed *other);
 
     uint internalType() const {

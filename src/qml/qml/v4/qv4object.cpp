@@ -461,7 +461,7 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-void Object::getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result)
+void Object::getLookup(Managed *m, Lookup *l, Value *result)
 {
     Object *o = static_cast<Object *>(m);
     PropertyAttributes attrs;
@@ -486,7 +486,7 @@ void Object::getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *resu
                 l->getter = Lookup::getterAccessor2;
             if (result)
                 *result = p->value;
-            Value res = o->getValue(ctx, p, attrs);
+            Value res = o->getValue(o->engine()->current, p, attrs);
             if (result)
                 *result = res;
             return;
@@ -496,7 +496,7 @@ void Object::getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *resu
     }
 }
 
-void Object::setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &value)
+void Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Object *o = static_cast<Object *>(m);
 
@@ -511,12 +511,12 @@ void Object::setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(ctx, o->memberData + idx, o->internalClass->propertyData[idx], value);
+            o->putValue(o->engine()->current, o->memberData + idx, o->internalClass->propertyData[idx], value);
             return;
         }
     }
 
-    o->put(ctx, l->name, value);
+    o->put(o->engine()->current, l->name, value);
 }
 
 Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
