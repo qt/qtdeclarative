@@ -75,8 +75,10 @@ using namespace QV4;
 
 ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t)
     : Object(engine)
+    , stack(0)
 {
     type = Type_ErrorObject;
+    vtbl = &static_vtbl;
     subtype = t;
     defineAccessorProperty(engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
@@ -89,8 +91,6 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorTyp
         defineDefaultProperty(engine, QStringLiteral("fileName"), Value::fromString(engine, stackTrace.at(0).source));
         defineDefaultProperty(engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
     }
-
-    stack = Value::emptyValue();
 }
 
 Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
@@ -98,7 +98,7 @@ Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
     ErrorObject *This = ctx->thisObject.asErrorObject();
     if (!This)
         ctx->throwTypeError();
-    if (This->stack.isEmpty()) {
+    if (!This->stack) {
         QString trace;
         for (int i = 0; i < This->stackTrace.count(); ++i) {
             if (i > 0)
@@ -112,10 +112,20 @@ Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
                 trace += QString::number(frame.line);
             }
         }
-        This->stack = Value::fromString(ctx, trace);
+        This->stack = ctx->engine->newString(trace);
     }
-    return This->stack;
+    return Value::fromString(This->stack);
 }
+
+void ErrorObject::markObjects(Managed *that)
+{
+    ErrorObject *This = that->asErrorObject();
+    if (This->stack)
+        This->stack->mark();
+    Object::markObjects(that);
+}
+
+DEFINE_MANAGED_VTABLE(ErrorObject);
 
 DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 

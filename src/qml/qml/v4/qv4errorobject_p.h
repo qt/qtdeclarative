@@ -51,6 +51,8 @@ namespace QV4 {
 struct SyntaxErrorObject;
 
 struct ErrorObject: Object {
+    Q_MANAGED
+
     enum ErrorType {
         Error,
         EvalError,
@@ -66,9 +68,11 @@ struct ErrorObject: Object {
     SyntaxErrorObject *asSyntaxError();
 
     ExecutionEngine::StackTrace stackTrace;
-    Value stack;
+    String *stack;
 
     static Value method_get_stack(SimpleCallContext *ctx);
+    static void markObjects(Managed *that);
+    static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
 
 struct EvalErrorObject: ErrorObject {
