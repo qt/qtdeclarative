@@ -170,12 +170,12 @@ PropertyAttributes String::queryIndexed(const Managed *m, uint index)
     return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
-bool String::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+bool String::deleteProperty(Managed *, String *)
 {
     return false;
 }
 
-bool String::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+bool String::deleteIndexedProperty(Managed *m, uint index)
 {
     return false;
 }

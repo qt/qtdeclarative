@@ -164,12 +164,12 @@ PropertyAttributes RegExp::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool RegExp::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+bool RegExp::deleteProperty(Managed *, String *)
 {
     return false;
 }
 
-bool RegExp::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+bool RegExp::deleteIndexedProperty(Managed *m, uint index)
 {
     return false;
 }

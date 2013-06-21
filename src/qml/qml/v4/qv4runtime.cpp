@@ -159,7 +159,7 @@ void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value 
     if (Object *o = base.asObject()) {
         uint n = index.asArrayIndex();
         if (n < UINT_MAX) {
-            Value res = Value::fromBoolean(o->deleteIndexedProperty(ctx, n));
+            Value res = Value::fromBoolean(o->deleteIndexedProperty(n));
             if (result)
                 *result = res;
             return;
@@ -173,7 +173,7 @@ void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value 
 void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name)
 {
     Object *obj = base.toObject(ctx);
-    Value res = Value::fromBoolean(obj->deleteProperty(ctx, name));
+    Value res = Value::fromBoolean(obj->deleteProperty(name));
     if (result)
         *result = res;
 }

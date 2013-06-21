@@ -937,7 +937,7 @@ bool QJSValue::deleteProperty(const QString &name)
 
     ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
-    return o->deleteProperty(engine->current, s);
+    return o->deleteProperty(s);
 }
 
 /*!

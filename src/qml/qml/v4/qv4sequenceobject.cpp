@@ -298,7 +298,7 @@ public:
         return QV4::Object::advanceIterator(this, it, name, index, attrs);
     }
 
-    bool containerDeleteIndexedProperty(QV4::ExecutionContext *ctx, uint index)
+    bool containerDeleteIndexedProperty(uint index)
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX)
@@ -490,8 +490,8 @@ private:
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(ctx, index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
-    static bool deleteIndexedProperty(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(ctx, index); }
+    static bool deleteIndexedProperty(QV4::Managed *that, uint index)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index); }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
     static Property *advanceIterator(Managed *that, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)

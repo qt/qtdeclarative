@@ -117,8 +117,8 @@ protected:
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *, String *);
+    static bool deleteIndexedProperty(Managed *m, uint index);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
 
 private:

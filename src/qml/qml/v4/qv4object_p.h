@@ -356,8 +356,8 @@ protected:
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *m, ExecutionContext *ctx, String *name);
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteProperty(Managed *m, String *name);
+    static bool deleteIndexedProperty(Managed *m, uint index);
     static void getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
     static void setLookup(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
@@ -368,8 +368,8 @@ private:
     Value internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty);
     void internalPut(ExecutionContext *ctx, String *name, const Value &value);
     void internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value);
-    bool internalDeleteProperty(ExecutionContext *ctx, String *name);
-    bool internalDeleteIndexedProperty(ExecutionContext *ctx, uint index);
+    bool internalDeleteProperty(String *name);
+    bool internalDeleteIndexedProperty(uint index);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;

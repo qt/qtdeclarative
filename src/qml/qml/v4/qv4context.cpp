@@ -235,7 +235,7 @@ bool ExecutionContext::deleteProperty(String *name)
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
             if (w->withObject->__hasProperty__(name))
-                return w->withObject->deleteProperty(this, name);
+                return w->withObject->deleteProperty(name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
@@ -252,11 +252,11 @@ bool ExecutionContext::deleteProperty(String *name)
                         return false;
             }
             if (c->activation && c->activation->__hasProperty__(name))
-                return c->activation->deleteProperty(this, name);
+                return c->activation->deleteProperty(name);
         } else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             if (g->global->__hasProperty__(name))
-                return g->global->deleteProperty(this, name);
+                return g->global->deleteProperty(name);
         }
     }
 

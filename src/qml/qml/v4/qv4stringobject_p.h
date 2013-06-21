@@ -58,7 +58,7 @@ struct StringObject: Object {
 
     Property *getIndex(uint index) const;
 
-    static bool deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index);
+    static bool deleteIndexedProperty(Managed *m, uint index);
 
 protected:
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);

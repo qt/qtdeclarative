@@ -99,15 +99,15 @@ Property *StringObject::getIndex(uint index) const
     return &tmpProperty;
 }
 
-bool StringObject::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+bool StringObject::deleteIndexedProperty(Managed *m, uint index)
 {
     StringObject *o = m->asStringObject();
     if (!o)
-        ctx->throwTypeError();
+        m->engine()->current->throwTypeError();
 
     if (index < o->value.stringValue()->toQString().length()) {
-        if (ctx->strictMode)
-            ctx->throwTypeError();
+        if (m->engine()->current->strictMode)
+            m->engine()->current->throwTypeError();
         return false;
     }
     return true;

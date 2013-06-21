@@ -451,14 +451,14 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool Object::deleteProperty(Managed *m, ExecutionContext *ctx, String *name)
+bool Object::deleteProperty(Managed *m, String *name)
 {
-    return static_cast<Object *>(m)->internalDeleteProperty(ctx, name);
+    return static_cast<Object *>(m)->internalDeleteProperty(name);
 }
 
-bool Object::deleteIndexedProperty(Managed *m, ExecutionContext *ctx, uint index)
+bool Object::deleteIndexedProperty(Managed *m, uint index)
 {
-    return static_cast<Object *>(m)->internalDeleteIndexedProperty(ctx, index);
+    return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
 void Object::getLookup(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result)
@@ -796,13 +796,13 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
+bool Object::internalDeleteProperty(String *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return deleteIndexedProperty(ctx, idx);
+        return deleteIndexedProperty(idx);
 
-    name->makeIdentifier(ctx);
+    name->makeIdentifier(engine()->current);
 
     uint memberIdx = internalClass->find(name);
     if (memberIdx != UINT_MAX) {
@@ -811,15 +811,15 @@ bool Object::internalDeleteProperty(ExecutionContext *ctx, String *name)
             memmove(memberData + memberIdx, memberData + memberIdx + 1, (internalClass->size - memberIdx)*sizeof(Property));
             return true;
         }
-        if (ctx->strictMode)
-            ctx->throwTypeError();
+        if (engine()->current->strictMode)
+            engine()->current->throwTypeError();
         return false;
     }
 
     return true;
 }
 
-bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
+bool Object::internalDeleteIndexedProperty(uint index)
 {
     uint pidx = propertyIndexFromArrayIndex(index);
     if (pidx == UINT_MAX)
@@ -839,8 +839,8 @@ bool Object::internalDeleteIndexedProperty(ExecutionContext *ctx, uint index)
         return true;
     }
 
-    if (ctx->strictMode)
-        ctx->throwTypeError();
+    if (engine()->current->strictMode)
+        engine()->current->throwTypeError();
     return false;
 }
 

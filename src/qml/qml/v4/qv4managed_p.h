@@ -111,8 +111,8 @@ struct ManagedVTable
     void (*putIndexed)(Managed *, ExecutionContext *ctx, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
-    bool (*deleteProperty)(Managed *m, ExecutionContext *ctx, String *name);
-    bool (*deleteIndexedProperty)(Managed *m, ExecutionContext *ctx, uint index);
+    bool (*deleteProperty)(Managed *m, String *name);
+    bool (*deleteIndexedProperty)(Managed *m, uint index);
     void (*getLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, Value *result);
     void (*setLookup)(Managed *m, ExecutionContext *ctx, Lookup *l, const Value &v);
     bool (*isEqualTo)(Managed *m, Managed *other);
@@ -273,10 +273,10 @@ public:
     PropertyAttributes queryIndexed(uint index) const
     { return vtbl->queryIndexed(this, index); }
 
-    bool deleteProperty(ExecutionContext *ctx, String *name)
-    { return vtbl->deleteProperty(this, ctx, name); }
-    bool deleteIndexedProperty(ExecutionContext *ctx, uint index)
-    { return vtbl->deleteIndexedProperty(this, ctx, index); }
+    bool deleteProperty(String *name)
+    { return vtbl->deleteProperty(this, name); }
+    bool deleteIndexedProperty(uint index)
+    { return vtbl->deleteIndexedProperty(this, index); }
     void getLookup(ExecutionContext *ctx, Lookup *l, Value *result)
     { vtbl->getLookup(this, ctx, l, result); }
     void setLookup(ExecutionContext *ctx, Lookup *l, const Value &v)
