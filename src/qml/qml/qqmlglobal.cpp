@@ -432,6 +432,16 @@ QString QQmlApplication::version() const
     return QCoreApplication::instance()->applicationVersion();
 }
 
+QString QQmlApplication::organization() const
+{
+    return QCoreApplication::instance()->organizationName();
+}
+
+QString QQmlApplication::domain() const
+{
+    return QCoreApplication::instance()->organizationDomain();
+}
+
 void QQmlApplication::setName(const QString &arg)
 {
     QCoreApplication::instance()->setApplicationName(arg);
@@ -442,6 +452,18 @@ void QQmlApplication::setVersion(const QString &arg)
 {
     QCoreApplication::instance()->setApplicationVersion(arg);
     emit versionChanged(); //Note that we don't get notified if it's changed from C++
+}
+
+void QQmlApplication::setOrganization(const QString &arg)
+{
+    QCoreApplication::instance()->setOrganizationName(arg);
+    emit organizationChanged(); //Note that we don't get notified if it's changed from C++
+}
+
+void QQmlApplication::setDomain(const QString &arg)
+{
+    QCoreApplication::instance()->setOrganizationDomain(arg);
+    emit domainChanged(); //Note that we don't get notified if it's changed from C++
 }
 
 QT_END_NAMESPACE

@@ -132,26 +132,42 @@ void tst_qqmlapplicationengine::applicationProperties()
     QCoreApplication* coreApp = QCoreApplication::instance();
     QString originalName = coreApp->applicationName();
     QString originalVersion = coreApp->applicationVersion();
+    QString originalOrganization = coreApp->organizationName();
+    QString originalDomain = coreApp->organizationDomain();
     QString firstName = QLatin1String("Test A");
     QString firstVersion = QLatin1String("0.0A");
+    QString firstOrganization = QLatin1String("Org A");
+    QString firstDomain = QLatin1String("a.org");
     QString secondName = QLatin1String("Test B");
     QString secondVersion = QLatin1String("0.0B");
+    QString secondOrganization = QLatin1String("Org B");
+    QString secondDomain = QLatin1String("b.org");
 
     coreApp->setApplicationName(firstName);
     coreApp->setApplicationVersion(firstVersion);
+    coreApp->setOrganizationName(firstOrganization);
+    coreApp->setOrganizationDomain(firstDomain);
 
     QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("applicationTest.qml"));
     QObject* root = test->rootObjects().at(0);
     QVERIFY(root);
     QCOMPARE(root->property("originalName").toString(), firstName);
     QCOMPARE(root->property("originalVersion").toString(), firstVersion);
+    QCOMPARE(root->property("originalOrganization").toString(), firstOrganization);
+    QCOMPARE(root->property("originalDomain").toString(), firstDomain);
     QCOMPARE(root->property("currentName").toString(), secondName);
     QCOMPARE(root->property("currentVersion").toString(), secondVersion);
+    QCOMPARE(root->property("currentOrganization").toString(), secondOrganization);
+    QCOMPARE(root->property("currentDomain").toString(), secondDomain);
     QCOMPARE(coreApp->applicationName(), secondName);
     QCOMPARE(coreApp->applicationVersion(), secondVersion);
+    QCOMPARE(coreApp->organizationName(), secondOrganization);
+    QCOMPARE(coreApp->organizationDomain(), secondDomain);
 
     coreApp->setApplicationName(originalName);
     coreApp->setApplicationVersion(originalVersion);
+    coreApp->setOrganizationName(originalOrganization);
+    coreApp->setOrganizationDomain(originalDomain);
     delete test;
 }
 

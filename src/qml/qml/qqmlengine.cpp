@@ -451,7 +451,15 @@ The following functions are also on the Qt object.
     \row
     \li \c application.version
     \li This is the application version set on the QCoreApplication instance. This property can be written
-    to in order to set the application name.
+    to in order to set the application version.
+    \row
+    \li \c application.organization
+    \li This is the organization name set on the QCoreApplication instance. This property can be written
+    to in order to set the organization name.
+    \row
+    \li \c application.domain
+    \li This is the organization domain set on the QCoreApplication instance. This property can be written
+    to in order to set the organization domain.
     \endtable
 
     The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
