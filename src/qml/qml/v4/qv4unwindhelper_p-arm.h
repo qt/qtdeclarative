@@ -3,6 +3,7 @@
 
 #include "qv4unwindhelper_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4function_p.h"
 #include <wtf/Platform.h>
 
 #include <QMap>
@@ -13,8 +14,8 @@
 
 #if USE(LIBUNWIND_DEBUG)
 #include <libunwind.h>
-#endif
 #include <execinfo.h>
+#endif
 
 namespace QV4 {
 

@@ -66,7 +66,8 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
 
-#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || defined(Q_OS_MAC)
+#define HAVE_GNU_BACKTRACE
 #include <execinfo.h>
 #endif
 
@@ -604,7 +605,7 @@ namespace {
             engine = context->engine;
             currentNativeFrame = 0;
 
-#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+#if defined(HAVE_GNU_BACKTRACE)
             UnwindHelper::prepareForUnwind(context);
 
             nativeFrameCount = backtrace(&trace[0], sizeof(trace) / sizeof(trace[0]));

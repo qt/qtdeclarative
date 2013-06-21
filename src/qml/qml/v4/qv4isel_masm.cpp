@@ -507,7 +507,7 @@ void Assembler::link(QV4::Function *vmFunc)
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
-#if OS(LINUX)
+#if OS(LINUX) && !defined(Q_OS_ANDROID)
         char* disasmOutput = 0;
         size_t disasmLength = 0;
         FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
@@ -536,7 +536,7 @@ void Assembler::link(QV4::Function *vmFunc)
         vmFunc->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
-#if OS(LINUX) || OS(MAC_OS_X)
+#if (OS(LINUX) && !defined(Q_OS_ANDROID)) || OS(MAC_OS_X)
 #  if OS(MAC_OS_X)
         char *disasmOutput = memStream.buf.data();
 #  endif
