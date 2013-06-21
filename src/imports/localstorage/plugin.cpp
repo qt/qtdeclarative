@@ -104,7 +104,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
     static void destroy(Managed *that) {
         static_cast<QQmlSqlDatabaseWrapper *>(that)->~QQmlSqlDatabaseWrapper();
     }
@@ -216,13 +216,13 @@ static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngin
     }
 }
 
-Value QQmlSqlDatabaseWrapper::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QQmlSqlDatabaseWrapper *r = m->as<QQmlSqlDatabaseWrapper>();
     if (!r || r->type != QQmlSqlDatabaseWrapper::Rows)
-        return Object::getIndexed(m, ctx, index, hasProperty);
+        return Object::getIndexed(m, index, hasProperty);
 
-    return qmlsqldatabase_rows_index(r, ctx->engine, index, hasProperty);
+    return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty);
 }
 
 static Value qmlsqldatabase_rows_item(SimpleCallContext *ctx)

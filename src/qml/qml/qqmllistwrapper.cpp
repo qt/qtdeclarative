@@ -110,20 +110,21 @@ Value QmlListWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(m, ctx, idx, hasProperty);
+        return getIndexed(m, idx, hasProperty);
 
     return Value::undefinedValue();
 }
 
-Value QmlListWrapper::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
-        ctx->throwTypeError();
+        e->current->throwTypeError();
 
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
     if (index < count && w->property.at)
-        return QV4::QObjectWrapper::wrap(ctx->engine, w->property.at(&w->property, index));
+        return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
 
     return Value::undefinedValue();
 }

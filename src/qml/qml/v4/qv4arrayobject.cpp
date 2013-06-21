@@ -194,7 +194,7 @@ Value ArrayPrototype::method_join(SimpleCallContext *ctx)
             if (i)
                 R += r4;
 
-            Value e = a->getIndexed(ctx, i);
+            Value e = a->getIndexed(i);
             if (! (e.isUndefined() || e.isNull()))
                 R += e.toString(ctx)->toQString();
         }
@@ -232,7 +232,7 @@ Value ArrayPrototype::method_pop(SimpleCallContext *ctx)
         return Value::undefinedValue();
     }
 
-    Value result = instance->getIndexed(ctx, len - 1);
+    Value result = instance->getIndexed(len - 1);
 
     instance->deleteIndexedProperty(len - 1);
     if (instance->isArrayObject())
@@ -310,8 +310,8 @@ Value ArrayPrototype::method_reverse(SimpleCallContext *ctx)
 
     for (; lo < hi; ++lo, --hi) {
         bool loExists, hiExists;
-        Value lval = instance->getIndexed(ctx, lo, &loExists);
-        Value hval = instance->getIndexed(ctx, hi, &hiExists);
+        Value lval = instance->getIndexed(lo, &loExists);
+        Value hval = instance->getIndexed(hi, &hiExists);
         if (hiExists)
             instance->putIndexed(ctx, lo, hval);
         else
@@ -366,7 +366,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
         // do it the slow way
         for (uint k = 1; k < len; ++k) {
             bool exists;
-            Value v = instance->getIndexed(ctx, k, &exists);
+            Value v = instance->getIndexed(k, &exists);
             if (exists)
                 instance->putIndexed(ctx, k - 1, v);
             else
@@ -410,7 +410,7 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
     uint n = 0;
     for (uint i = start; i < end; ++i) {
         bool exists;
-        Value v = o->getIndexed(ctx, i, &exists);
+        Value v = o->getIndexed(i, &exists);
         if (exists) {
             result->arraySet(n, v);
         }
@@ -449,7 +449,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     newArray->arrayReserve(deleteCount);
     Property *pd = newArray->arrayData;
     for (uint i = 0; i < deleteCount; ++i) {
-        pd->value = instance->getIndexed(ctx, start + i);
+        pd->value = instance->getIndexed(start + i);
         ++pd;
     }
     newArray->arrayDataLen = deleteCount;
@@ -460,7 +460,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
     if (itemCount < deleteCount) {
         for (uint k = start; k < len - deleteCount; ++k) {
             bool exists;
-            Value v = instance->getIndexed(ctx, k + deleteCount, &exists);
+            Value v = instance->getIndexed(k + deleteCount, &exists);
             if (exists)
                 instance->putIndexed(k + itemCount, v);
             else
@@ -472,7 +472,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
         uint k = len - deleteCount;
         while (k > start) {
             bool exists;
-            Value v = instance->getIndexed(ctx, k + deleteCount - 1, &exists);
+            Value v = instance->getIndexed(k + deleteCount - 1, &exists);
             if (exists)
                 instance->putIndexed(k + itemCount - 1, v);
             else
@@ -525,7 +525,7 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
     } else {
         for (uint k = len; k > 0; --k) {
             bool exists;
-            Value v = instance->getIndexed(ctx, k - 1, &exists);
+            Value v = instance->getIndexed(k - 1, &exists);
             if (exists)
                 instance->putIndexed(ctx, k + ctx->argumentCount - 1, v);
             else
@@ -573,7 +573,7 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     if (instance->isStringObject()) {
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
-            Value v = instance->getIndexed(ctx, k, &exists);
+            Value v = instance->getIndexed(k, &exists);
             if (exists && __qmljs_strict_equal(v, searchValue))
                 return Value::fromDouble(k);
         }
@@ -613,7 +613,7 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
     for (uint k = fromIndex; k > 0;) {
         --k;
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (exists && __qmljs_strict_equal(v, searchValue))
             return Value::fromDouble(k);
     }
@@ -635,7 +635,7 @@ Value ArrayPrototype::method_every(SimpleCallContext *ctx)
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (!exists)
             continue;
 
@@ -663,7 +663,7 @@ Value ArrayPrototype::method_some(SimpleCallContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (!exists)
             continue;
 
@@ -692,7 +692,7 @@ Value ArrayPrototype::method_forEach(SimpleCallContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (!exists)
             continue;
 
@@ -723,7 +723,7 @@ Value ArrayPrototype::method_map(SimpleCallContext *ctx)
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (!exists)
             continue;
 
@@ -755,7 +755,7 @@ Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        Value v = instance->getIndexed(ctx, k, &exists);
+        Value v = instance->getIndexed(k, &exists);
         if (!exists)
             continue;
 
@@ -789,7 +789,7 @@ Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
     } else {
         bool kPresent = false;
         while (k < len && !kPresent) {
-            Value v = instance->getIndexed(ctx, k, &kPresent);
+            Value v = instance->getIndexed(k, &kPresent);
             if (kPresent)
                 acc = v;
             ++k;
@@ -800,7 +800,7 @@ Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
 
     while (k < len) {
         bool kPresent;
-        Value v = instance->getIndexed(ctx, k, &kPresent);
+        Value v = instance->getIndexed(k, &kPresent);
         if (kPresent) {
             Value args[4];
             args[0] = acc;
@@ -837,7 +837,7 @@ Value ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
     } else {
         bool kPresent = false;
         while (k > 0 && !kPresent) {
-            Value v = instance->getIndexed(ctx, k - 1, &kPresent);
+            Value v = instance->getIndexed(k - 1, &kPresent);
             if (kPresent)
                 acc = v;
             --k;
@@ -848,7 +848,7 @@ Value ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
 
     while (k > 0) {
         bool kPresent;
-        Value v = instance->getIndexed(ctx, k - 1, &kPresent);
+        Value v = instance->getIndexed(k - 1, &kPresent);
         if (kPresent) {
             Value args[4];
             args[0] = acc;

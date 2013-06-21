@@ -253,7 +253,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (Object *arr = arg.asObject()) {
         quint32 len = arr->get(ctx, ctx->engine->id_length).toUInt32();
         for (quint32 i = 0; i < len; ++i) {
-            Value a = arr->getIndexed(ctx, i);
+            Value a = arr->getIndexed(i);
             args.append(a);
         }
     } else if (!(arg.isUndefined() || arg.isNull())) {

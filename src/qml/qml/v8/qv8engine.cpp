@@ -156,7 +156,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             QList<QObject *> list;
             uint32_t length = a->arrayLength();
             for (uint32_t ii = 0; ii < length; ++ii) {
-                QV4::Value arrayItem = a->getIndexed(m_v4Engine->current, ii);
+                QV4::Value arrayItem = a->getIndexed(ii);
                 if (QV4::QObjectWrapper *qobjectWrapper = arrayItem.as<QV4::QObjectWrapper>()) {
                     list << qobjectWrapper->object();
                 } else {
@@ -382,7 +382,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
         int length = a->arrayLength();
         for (int ii = 0; ii < length; ++ii)
-            rv << toVariant(a->getIndexed(m_v4Engine->current, ii), -1);
+            rv << toVariant(a->getIndexed(ii), -1);
         return rv;
     }
     if (!value.asFunctionObject())

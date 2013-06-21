@@ -595,7 +595,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static void destroy(QV4::Managed *that) {
         static_cast<QQuickJSContext2DPixelData *>(that)->~QQuickJSContext2DPixelData();
     }
-    static QV4::Value getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty);
+    static QV4::Value getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
     static void putIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value);
 
     static QV4::Value proto_get_length(QV4::SimpleCallContext *ctx);
@@ -2679,11 +2679,11 @@ QV4::Value QQuickJSContext2DPixelData::proto_get_length(QV4::SimpleCallContext *
     return QV4::Value::fromInt32(r->image.width() * r->image.height() * 4);
 }
 
-QV4::Value QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+QV4::Value QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
 {
     QQuickJSContext2DPixelData *r = m->as<QQuickJSContext2DPixelData>();
     if (!m)
-        ctx->throwTypeError();
+        m->engine()->current->throwTypeError();
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
         if (hasProperty)

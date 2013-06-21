@@ -827,7 +827,7 @@ QString Stringify::JA(ArrayObject *a)
     uint len = a->arrayLength();
     for (uint i = 0; i < len; ++i) {
         bool exists;
-        Value v = a->getIndexed(ctx, i, &exists);
+        Value v = a->getIndexed(i, &exists);
         if (!exists) {
             partial += QStringLiteral("null");
             continue;
@@ -891,7 +891,7 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
         if (o->isArrayObject()) {
             uint arrayLen = o->arrayLength();
             for (uint i = 0; i < arrayLen; ++i) {
-                Value v = o->getIndexed(ctx, i);
+                Value v = o->getIndexed(i);
                 if (v.asNumberObject() || v.asStringObject() || v.isNumber())
                     v = __qmljs_to_string(v, ctx);
                 if (v.isString()) {

@@ -194,11 +194,11 @@ public:
         defineAccessorProperty(engine, QStringLiteral("length"), method_get_length, method_set_length);
     }
 
-    QV4::Value containerGetIndexed(QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+    QV4::Value containerGetIndexed(uint index, bool *hasProperty)
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(ctx, QLatin1String("Index out of range during indexed get"));
+            generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
             return QV4::Value::undefinedValue();
@@ -215,7 +215,7 @@ public:
         if (signedIdx < m_container.count()) {
             if (hasProperty)
                 *hasProperty = true;
-            return convertElementToValue(ctx->engine, m_container.at(signedIdx));
+            return convertElementToValue(engine(), m_container.at(signedIdx));
         }
         if (hasProperty)
             *hasProperty = false;
@@ -484,8 +484,8 @@ private:
     int m_propertyIndex;
     bool m_isReference;
 
-    static QV4::Value getIndexed(QV4::Managed *that, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(ctx, index, hasProperty); }
+    static QV4::Value getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
     static void putIndexed(Managed *that, QV4::ExecutionContext *ctx, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(ctx, index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)

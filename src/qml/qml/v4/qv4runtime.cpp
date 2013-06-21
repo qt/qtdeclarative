@@ -585,7 +585,7 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
             }
         }
 
-        Value res = o->getIndexed(ctx, idx);
+        Value res = o->getIndexed(idx);
         if (result)
             *result = res;
         return;
@@ -1084,7 +1084,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
         return __qmljs_builtin_post_increment_member(context, result, base, s);
     }
 
-    Value v = o->getIndexed(context, idx);
+    Value v = o->getIndexed(idx);
 
     if (v.isInteger() && v.integerValue() < INT_MAX) {
         if (result)
@@ -1164,7 +1164,7 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
         return __qmljs_builtin_post_decrement_member(context, result, base, s);
     }
 
-    Value v = o->getIndexed(context, idx);
+    Value v = o->getIndexed(idx);
 
     if (v.isInteger() && v.integerValue() > INT_MIN) {
         if (result)

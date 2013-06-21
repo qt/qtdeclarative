@@ -122,16 +122,17 @@ Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProp
     return ctx->engine->stringPrototype->getValue(Value::fromString(that), ctx, pd, attrs);
 }
 
-Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
+    ExecutionEngine *engine = that->engine();
     if (index < that->_text.length()) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromString(ctx, that->toQString().mid(index, 1));
+        return Value::fromString(engine->newString(that->toQString().mid(index, 1)));
     }
     PropertyAttributes attrs;
-    Property *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(index, &attrs);
+    Property *pd = engine->stringPrototype->__getPropertyDescriptor__(index, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -139,7 +140,7 @@ Value String::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *ha
     }
     if (hasProperty)
         *hasProperty = true;
-    return ctx->engine->stringPrototype->getValue(Value::fromString(that), ctx, pd, attrs);
+    return engine->stringPrototype->getValue(Value::fromString(that), engine->current, pd, attrs);
 }
 
 void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)

@@ -375,7 +375,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->getIndexed(context, 0, (bool *)0);
+        Value matchStr = result.objectValue()->getIndexed(0);
         a->arraySet(n, matchStr);
         ++n;
     }

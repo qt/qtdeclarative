@@ -179,7 +179,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = getIndexed(ctx, idx, &hasProperty);
+        Value v = getIndexed(idx, &hasProperty);
         Value result;
         op(ctx, &result, v, rhs);
         putIndexed(ctx, idx, result);
@@ -399,9 +399,9 @@ Value Object::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProp
     return static_cast<Object *>(m)->internalGet(ctx, name, hasProperty);
 }
 
-Value Object::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value Object::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    return static_cast<Object *>(m)->internalGetIndexed(ctx, index, hasProperty);
+    return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
 void Object::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
@@ -586,7 +586,7 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(ctx, idx, hasProperty);
+        return getIndexed(idx, hasProperty);
 
     name->makeIdentifier(ctx);
 
@@ -607,7 +607,7 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
     return Value::undefinedValue();
 }
 
-Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
+Value Object::internalGetIndexed(uint index, bool *hasProperty)
 {
     Property *pd = 0;
     PropertyAttributes attrs = Attr_Data;
@@ -635,7 +635,7 @@ Value Object::internalGetIndexed(ExecutionContext *ctx, uint index, bool *hasPro
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(ctx, pd, attrs);
+        return getValue(engine()->current, pd, attrs);
     }
 
     if (hasProperty)
@@ -1054,7 +1054,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
-            Value value = o->getIndexed(ctx, i, &exists);
+            Value value = o->getIndexed(i, &exists);
             if (exists && __qmljs_strict_equal(value, v))
                 return Value::fromDouble(i);
         }
@@ -1114,7 +1114,7 @@ void Object::arrayConcat(const ArrayObject *other)
         if (other->arrayAttributes) {
             for (int i = 0; i < arrayDataLen; ++i) {
                 bool exists;
-                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(internalClass->engine->current, i, &exists);
+                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(i, &exists);
                 if (arrayAttributes)
                     arrayAttributes[oldSize + i] = Attr_Data;
                 if (!exists) {
@@ -1366,7 +1366,7 @@ QStringList ArrayObject::toQStringList() const
 
     uint32_t length = arrayLength();
     for (uint32_t i = 0; i < length; ++i)
-        result.append(const_cast<ArrayObject *>(this)->getIndexed(engine->current, i).toString(engine->current)->toQString());
+        result.append(const_cast<ArrayObject *>(this)->getIndexed(i).toString(engine->current)->toQString());
     return result;
 }
 

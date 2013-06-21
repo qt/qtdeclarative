@@ -206,7 +206,7 @@ Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)
     return vtbl->get(this, ctx, name, hasProperty);
 }
 
-Value Managed::getIndexed(ExecutionContext *ctx, uint index, bool *hasProperty)
+Value Managed::getIndexed(uint index, bool *hasProperty)
 {
-    return vtbl->getIndexed(this, ctx, index, hasProperty);
+    return vtbl->getIndexed(this, index, hasProperty);
 }

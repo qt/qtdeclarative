@@ -204,7 +204,7 @@ public:
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
     NodeImpl *d;
@@ -235,7 +235,7 @@ public:
         that->as<NodeList>()->~NodeList();
     }
     static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty);
+    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
     static Value create(QV8Engine *, NodeImpl *);
@@ -842,13 +842,14 @@ bool Node::isNull() const
     return d == 0;
 }
 
-Value NamedNodeMap::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = v4->v8Engine;
 
     if ((int)index < r->list.count()) {
         if (hasProperty)
@@ -895,13 +896,14 @@ Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeIm
     return Value::fromObject(instance);
 }
 
-Value NodeList::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = v4->v8Engine;
 
     if ((int)index < r->d->children.count()) {
         if (hasProperty)

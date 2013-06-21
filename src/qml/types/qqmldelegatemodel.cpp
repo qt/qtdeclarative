@@ -3106,11 +3106,12 @@ public:
     virtual quint32 count() const = 0;
     virtual const QQmlChangeSet::Change &at(int index) const = 0;
 
-    static QV4::Value getIndexed(QV4::Managed *m, QV4::ExecutionContext *ctx, uint index, bool *hasProperty)
+    static QV4::Value getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
     {
+        QV4::ExecutionEngine *v4 = m->engine();
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)
-            ctx->throwTypeError();
+            v4->current->throwTypeError();
 
         if (index >= array->count()) {
             if (hasProperty)
@@ -3120,8 +3121,7 @@ public:
 
         const QQmlChangeSet::Change &change = array->at(index);
 
-        QV4::Object *changeProto = engineData(array->engine()->v8Engine)->changeProto.value().asObject();
-        QV4::ExecutionEngine *v4 = changeProto->engine();
+        QV4::Object *changeProto = engineData(v4->v8Engine)->changeProto.value().asObject();
         QQmlDelegateModelGroupChange *object = new (v4->memoryManager) QQmlDelegateModelGroupChange(v4);
         object->prototype = changeProto;
         object->change = change;

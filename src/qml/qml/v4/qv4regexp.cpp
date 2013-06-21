@@ -141,7 +141,7 @@ Value RegExp::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProp
     return Value::undefinedValue();
 }
 
-Value RegExp::getIndexed(Managed *m, ExecutionContext *ctx, uint index, bool *hasProperty)
+Value RegExp::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     return Value::undefinedValue();
 }
