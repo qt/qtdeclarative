@@ -304,9 +304,11 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
             QV4::ArrayObject *a = m_v4Engine->newArrayObject();
-            a->setArrayLength(list.count());
+            a->arrayReserve(list.count());
             for (int ii = 0; ii < list.count(); ++ii)
                 a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
+            a->arrayDataLen = list.count();
+            a->setArrayLengthUnchecked(list.count());
             return QV4::Value::fromObject(a);
         }
 
