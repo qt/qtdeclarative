@@ -144,11 +144,11 @@ Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
     return engine->stringPrototype->getValue(Value::fromString(that), engine->current, pd, attrs);
 }
 
-void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void String::put(Managed *m, String *name, const Value &value)
 {
     String *that = static_cast<String *>(m);
-    Object *o = ctx->engine->newStringObject(Value::fromString(that));
-    o->put(ctx, name, value);
+    Object *o = that->engine()->newStringObject(Value::fromString(that));
+    o->put(name, value);
 }
 
 void String::putIndexed(Managed *m, uint index, const Value &value)

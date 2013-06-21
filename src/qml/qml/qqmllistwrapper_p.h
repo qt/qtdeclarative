@@ -82,7 +82,7 @@ public:
 
     static Value get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void put(Managed *m, String *name, const Value &value);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     static void destroy(Managed *that);
 

@@ -65,7 +65,7 @@ using namespace QV4;
 #define V4THROW_SQL(error, desc) { \
     Value v = Value::fromString(ctx, desc); \
     Object *ex = ctx->engine->newErrorObject(v); \
-    ex->put(ctx, ctx->engine->newIdentifier(QStringLiteral("code")), Value::fromInt32(error)); \
+    ex->put(ctx->engine->newIdentifier(QStringLiteral("code")), Value::fromInt32(error)); \
     ctx->throwError(Value::fromObject(ex)); \
 }
 
@@ -201,9 +201,9 @@ static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngin
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             if (v.isNull()) {
-                row->put(v4->current, v4->newIdentifier(record.fieldName(ii)), Value::nullValue());
+                row->put(v4->newIdentifier(record.fieldName(ii)), Value::nullValue());
             } else {
-                row->put(v4->current, v4->newIdentifier(record.fieldName(ii)), v8->fromVariant(v));
+                row->put(v4->newIdentifier(record.fieldName(ii)), v8->fromVariant(v));
             }
         }
         if (hasProperty)
@@ -294,9 +294,9 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             Object *resultObject = ctx->engine->newObject();
             result = Value::fromObject(resultObject);
             // XXX optimize
-            resultObject->put(ctx, ctx->engine->newIdentifier("rowsAffected"), Value::fromInt32(query.numRowsAffected()));
-            resultObject->put(ctx, ctx->engine->newIdentifier("insertId"), engine->toString(query.lastInsertId().toString()));
-            resultObject->put(ctx, ctx->engine->newIdentifier("rows"), Value::fromObject(rows));
+            resultObject->put(ctx->engine->newIdentifier("rowsAffected"), Value::fromInt32(query.numRowsAffected()));
+            resultObject->put(ctx->engine->newIdentifier("insertId"), engine->toString(query.lastInsertId().toString()));
+            resultObject->put(ctx->engine->newIdentifier("rows"), Value::fromObject(rows));
         } else {
             err = true;
         }

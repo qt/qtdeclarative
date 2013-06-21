@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 #define V4THROW_DOM(error, string) { \
     QV4::Value v = QV4::Value::fromString(ctx, QStringLiteral(string)); \
     QV4::Object *ex = ctx->engine->newErrorObject(v); \
-    ex->put(ctx, ctx->engine->newIdentifier(QStringLiteral("code")), QV4::Value::fromInt32(error)); \
+    ex->put(ctx->engine->newIdentifier(QStringLiteral("code")), QV4::Value::fromInt32(error)); \
     ctx->throwError(QV4::Value::fromObject(ex)); \
 }
 

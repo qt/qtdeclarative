@@ -107,7 +107,7 @@ struct ManagedVTable
     bool (*hasInstance)(Managed *, const Value &value);
     Value (*get)(Managed *, String *name, bool *hasProperty);
     Value (*getIndexed)(Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
+    void (*put)(Managed *, String *name, const Value &value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
@@ -264,8 +264,8 @@ public:
     Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
     Value get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
-    void put(ExecutionContext *ctx, String *name, const Value &value)
-    { vtbl->put(this, ctx, name, value); }
+    void put(String *name, const Value &value)
+    { vtbl->put(this, name, value); }
     void putIndexed(uint index, const Value &value)
     { vtbl->putIndexed(this, index, value); }
     PropertyAttributes query(String *name) const

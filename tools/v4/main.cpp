@@ -137,7 +137,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exce
                 std::cerr << qPrintable(msg->buildFullMessage(ctx)->toQString()) << std::endl;
             }
         } else {
-            std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx, ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+            std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
         }
     }
 
@@ -379,12 +379,10 @@ int main(int argc, char *argv[])
         QV4::Object *globalObject = vm.globalObject;
         QV4::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
         print->prototype = ctx->engine->objectPrototype;
-        globalObject->put(ctx, vm.newIdentifier(QStringLiteral("print")),
-                                  QV4::Value::fromObject(print));
+        globalObject->put(vm.newIdentifier(QStringLiteral("print")), QV4::Value::fromObject(print));
         QV4::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
         gc->prototype = ctx->engine->objectPrototype;
-        globalObject->put(ctx, vm.newIdentifier(QStringLiteral("gc")),
-                                  QV4::Value::fromObject(gc));
+        globalObject->put(vm.newIdentifier(QStringLiteral("gc")), QV4::Value::fromObject(gc));
 
         foreach (const QString &fn, args) {
             QFile file(fn);

@@ -308,11 +308,12 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 #undef VALUE_TYPE_ACCESSOR
 }
 
-void QmlValueTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
+    ExecutionEngine *v4 = m->engine();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
     QByteArray propName = name->toQString().toUtf8();
     if (r->objectType == QmlValueTypeWrapper::Reference) {
@@ -335,7 +336,7 @@ void QmlValueTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, c
             if (!f->bindingKeyFlag) {
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
-                ctx->throwError(r->v8->toString(error));
+                v4->current->throwError(r->v8->toString(error));
             }
 
             QQmlContextData *context = r->v8->callingContext();
@@ -349,7 +350,6 @@ void QmlValueTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, c
             cacheData.valueTypeCoreIndex = index;
             cacheData.valueTypePropType = p.userType();
 
-            QV4::ExecutionEngine *v4 = ctx->engine;
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
             newBinding = new QQmlBinding(value, reference->object, context,

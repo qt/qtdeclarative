@@ -358,7 +358,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         return exec->call(context, Value::fromObject(rx), &arg, 1);
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
-    rx->put(context, lastIndex, Value::fromInt32(0));
+    rx->put(lastIndex, Value::fromInt32(0));
     ArrayObject *a = context->engine->newArrayObject();
 
     double previousLastIndex = 0;
@@ -371,7 +371,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         double thisIndex = rx->get(lastIndex, 0).toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(context, lastIndex, Value::fromDouble(previousLastIndex));
+            rx->put(lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }

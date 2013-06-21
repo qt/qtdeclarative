@@ -312,7 +312,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
         if (ctx->type == Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             if (w->__hasProperty__(name)) {
-                w->put(ctx, name, value);
+                w->put(name, value);
                 return;
             }
         } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
@@ -338,14 +338,14 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             }
 
             if (activation && (ctx->type == Type_QmlContext || activation->__hasProperty__(name))) {
-                activation->put(this, name, value);
+                activation->put(name, value);
                 return;
             }
         }
     }
     if (strictMode || name->isEqualTo(engine->id_this))
         throwReferenceError(Value::fromString(name));
-    engine->globalObject->put(this, name, value);
+    engine->globalObject->put(name, value);
 }
 
 Value ExecutionContext::getProperty(String *name)

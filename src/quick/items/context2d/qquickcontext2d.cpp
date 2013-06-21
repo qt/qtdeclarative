@@ -2419,7 +2419,7 @@ QV4::Value QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCallContext
         QFontMetrics fm(r->context->state.font);
         uint width = fm.width(ctx->arguments[0].toQString());
         QV4::Object *tm = ctx->engine->newObject();
-        tm->put(ctx->engine->current, ctx->engine->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
+        tm->put(ctx->engine->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
         return QV4::Value::fromObject(tm);
     }
     return QV4::Value::undefinedValue();

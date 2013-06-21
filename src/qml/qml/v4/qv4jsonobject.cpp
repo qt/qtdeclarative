@@ -965,7 +965,7 @@ QV4::Value JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject
 {
     Object *o = engine->newObject();
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
-        o->put(engine->current, engine->newString(it.key()), fromJsonValue(engine, it.value()));
+        o->put(engine->newString(it.key()), fromJsonValue(engine, it.value()));
     return Value::fromObject(o);
 }
 

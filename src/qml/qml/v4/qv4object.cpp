@@ -128,7 +128,7 @@ void Object::destroy(Managed *that)
 
 void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
 {
-    put(ctx, ctx->engine->newString(name), value);
+    put(ctx->engine->newString(name), value);
 }
 
 Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const Property *p, PropertyAttributes attrs)
@@ -171,7 +171,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const V
     Value v = get(name);
     Value result;
     op(ctx, &result, v, rhs);
-    put(ctx, name, result);
+    put(name, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
@@ -404,9 +404,9 @@ Value Object::getIndexed(Managed *m, uint index, bool *hasProperty)
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void Object::put(Managed *m, String *name, const Value &value)
 {
-    static_cast<Object *>(m)->internalPut(ctx, name, value);
+    static_cast<Object *>(m)->internalPut(name, value);
 }
 
 void Object::putIndexed(Managed *m, uint index, const Value &value)
@@ -516,7 +516,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         }
     }
 
-    o->put(o->engine()->current, l->name, value);
+    o->put(l->name, value);
 }
 
 Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
@@ -645,13 +645,13 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value)
+void Object::internalPut(String *name, const Value &value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(ctx);
+    name->makeIdentifier(engine()->current);
 
     uint member = internalClass->find(name);
     Property *pd = 0;
@@ -669,11 +669,11 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
+        else if (isArrayObject() && name->isEqualTo(engine()->id_length)) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok)
-                ctx->throwRangeError(value);
+                engine()->current->throwRangeError(value);
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
@@ -706,7 +706,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 
         Value args[1];
         args[0] = value;
-        pd->setter()->call(ctx, Value::fromObject(this), args, 1);
+        pd->setter()->call(engine()->current, Value::fromObject(this), args, 1);
         return;
     }
 
@@ -717,11 +717,11 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
     }
 
   reject:
-    if (ctx->strictMode) {
+    if (engine()->current->strictMode) {
         QString message = QStringLiteral("Cannot assign to read-only property \"");
         message += name->toQString();
         message += QLatin1Char('\"');
-        ctx->throwTypeError(message);
+        engine()->current->throwTypeError(message);
     }
 }
 

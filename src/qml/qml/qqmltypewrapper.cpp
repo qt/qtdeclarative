@@ -226,13 +226,14 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 }
 
 
-void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
+    QV4::ExecutionEngine *v4 = m->engine();
     if (!w)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
-    QV8Engine *v8engine = w->v8;
+    QV8Engine *v8engine = v4->v8Engine;
     QQmlContextData *context = v8engine->callingContext();
 
     QHashedV4String propertystring(Value::fromString(name));
@@ -242,7 +243,7 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
         QObject *object = w->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
-            QV4::QObjectWrapper::setQmlProperty(ctx, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -250,15 +251,14 @@ void QmlTypeWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const 
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            QV4::QObjectWrapper::setQmlProperty(ctx, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
-                ctx->throwError(error);
+                v4->current->throwError(error);
             } else {
-                QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
-                apiprivate->put(engine->current, name, value);
+                apiprivate->put(name, value);
             }
         }
     }

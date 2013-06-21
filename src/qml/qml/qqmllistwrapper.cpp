@@ -130,11 +130,10 @@ Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-void QmlListWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void QmlListWrapper::put(Managed *m, String *name, const Value &value)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
-    Q_UNUSED(ctx);
     Q_UNUSED(name);
     Q_UNUSED(value);
 }

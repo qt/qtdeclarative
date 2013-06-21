@@ -612,18 +612,19 @@ QV4::Value QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
     return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)
+void QObjectWrapper::put(Managed *m, String *name, const Value &value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+    ExecutionEngine *v4 = m->engine();
 
     if (QQmlData::wasDeleted(that->m_object))
         return;
 
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
-    if (!setQmlProperty(ctx, qmlContext, that->m_object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
+    if (!setQmlProperty(v4->current, qmlContext, that->m_object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
                         name->toQString() + QLatin1Char('\"');
-        ctx->throwError(error);
+        v4->current->throwError(error);
     }
 }
 

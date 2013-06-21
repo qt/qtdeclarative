@@ -106,7 +106,7 @@ private:
     String *m_toString;
 
     static Value get(Managed *m, String *name, bool *hasProperty);
-    static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
+    static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     static void markObjects(Managed *that);

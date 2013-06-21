@@ -228,7 +228,7 @@ Value ArrayPrototype::method_pop(SimpleCallContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx, ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
 
@@ -238,7 +238,7 @@ Value ArrayPrototype::method_pop(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
 
@@ -252,11 +252,11 @@ Value ArrayPrototype::method_push(SimpleCallContext *ctx)
         double l = len;
         for (double i = 0; i < ctx->argumentCount; ++i) {
             Value idx = Value::fromDouble(l + i);
-            instance->put(ctx, idx.toString(ctx), ctx->argument(i));
+            instance->put(idx.toString(ctx), ctx->argument(i));
         }
         double newLen = l + ctx->argumentCount;
         if (!instance->isArrayObject())
-            instance->put(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+            instance->put(ctx->engine->id_length, Value::fromDouble(newLen));
         else
             ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
         return Value::fromDouble(newLen);
@@ -293,7 +293,7 @@ Value ArrayPrototype::method_push(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
     else
-        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len));
+        instance->put(ctx->engine->id_length, Value::fromDouble(len));
 
     if (len < INT_MAX)
         return Value::fromInt32(len);
@@ -331,7 +331,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx, ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx->engine->id_length, Value::fromInt32(0));
         return Value::undefinedValue();
     }
 
@@ -378,7 +378,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx->engine->id_length, Value::fromDouble(len - 1));
     return result;
 }
 
@@ -485,7 +485,7 @@ Value ArrayPrototype::method_splice(SimpleCallContext *ctx)
         instance->putIndexed(start + i, ctx->argument(i + 2));
 
     ctx->strictMode = true;
-    instance->put(ctx, ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
+    instance->put(ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
 
     return Value::fromObject(newArray);
 }
@@ -539,7 +539,7 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else
-        instance->put(ctx, ctx->engine->id_length, Value::fromDouble(newLen));
+        instance->put(ctx->engine->id_length, Value::fromDouble(newLen));
 
     if (newLen < INT_MAX)
         return Value::fromInt32(newLen);

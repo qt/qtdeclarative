@@ -544,7 +544,7 @@ String *__qmljs_convert_to_string(ExecutionContext *ctx, const Value &value)
 void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *name, const Value &value)
 {
     Object *o = object.toObject(ctx);
-    o->put(ctx, name, value);
+    o->put(name, value);
 }
 
 void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &object, const Value &index)
@@ -636,7 +636,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
     }
 
     String *name = index.toString(ctx);
-    o->put(ctx, name, value);
+    o->put(name, value);
 }
 
 void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const Value &in)
@@ -1070,7 +1070,7 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *res
         v = Value::fromDouble(d + 1);
     }
 
-    o->put(context, name, v);
+    o->put(name, v);
 }
 
 void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *result, const Value &base, const Value *index)
@@ -1150,7 +1150,7 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *res
         v = Value::fromDouble(d - 1);
     }
 
-    o->put(context, name, v);
+    o->put(name, v);
 }
 
 void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *result, const Value &base, const Value &index)

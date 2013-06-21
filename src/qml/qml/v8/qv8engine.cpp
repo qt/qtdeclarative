@@ -209,7 +209,7 @@ static QV4::Value objectFromVariantMap(QV8Engine *engine, const QVariantMap &map
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
     QV4::Object *o = e->newObject();
     for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
-        o->put(e->current, e->newString(iter.key()), engine->fromVariant(iter.value()));
+        o->put(e->newString(iter.key()), engine->fromVariant(iter.value()));
     return QV4::Value::fromObject(o);
 }
 
