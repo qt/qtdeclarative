@@ -5744,7 +5744,6 @@ void tst_qqmlecmascript::eval()
     QObject *o = component.create();
     QVERIFY(o != 0);
 
-    QEXPECT_FAIL("", "The eval statement works differently in strict mode", Abort);
     QCOMPARE(o->property("test1").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
     QCOMPARE(o->property("test3").toBool(), true);
@@ -6690,16 +6689,10 @@ void tst_qqmlecmascript::withStatement()
 {
     {
         QUrl url = testFileUrl("withStatement.1.qml");
-        QString warning = url.toString() + ":12:1: 'with' statement is not allowed in strict mode";
-        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
-        warning = url.toString() + ":12:12: Unable to assign [undefined] to int";
-        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
-
         QQmlComponent component(&engine, url);
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != 0);
 
-        QEXPECT_FAIL("", "The with statement is not allowed in strict mode", Abort);
         QCOMPARE(object->value(), 123);
     }
 }
