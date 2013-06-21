@@ -1283,7 +1283,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     }
 
     _as->leaveStandardStackFrame(_locals);
-#if !defined(RETURN_VALUE_IN_REGISTER)
+#if !defined(ARGUMENTS_IN_REGISTERS) && !defined(RETURN_VALUE_IN_REGISTER)
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...
     _as->pop(Assembler::ScratchRegister);
