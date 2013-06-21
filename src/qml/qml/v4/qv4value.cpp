@@ -269,7 +269,7 @@ PersistentValue::~PersistentValue()
 }
 
 WeakValue::WeakValue(const Value &val)
-    : d(new PersistentValuePrivate(val, /*weak*/true))
+    : d(new PersistentValuePrivate(val, /*engine*/0, /*weak*/true))
 {
 }
 
@@ -299,7 +299,7 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
 WeakValue &WeakValue::operator =(const Value &other)
 {
     if (!d) {
-        d = new PersistentValuePrivate(other, /*weak*/true);
+        d = new PersistentValuePrivate(other, /*engine*/0, /*weak*/true);
         return *this;
     }
     d = d->detach(other, /*weak*/true);
@@ -323,17 +323,20 @@ void WeakValue::markOnce()
     m->mark();
 }
 
-PersistentValuePrivate::PersistentValuePrivate(const Value &v, bool weak)
+PersistentValuePrivate::PersistentValuePrivate(const Value &v, ExecutionEngine *e, bool weak)
     : value(v)
     , refcount(1)
     , prev(0)
     , next(0)
+    , engine(e)
 {
-    Managed *m = v.asManaged();
-    if (!m)
-        return;
+    if (!engine) {
+        Managed *m = v.asManaged();
+        if (!m)
+            return;
 
-    ExecutionEngine *engine = m->engine();
+        engine = m->engine();
+    }
     if (engine) {
         PersistentValuePrivate **listRoot = weak ? &engine->memoryManager->m_weakValues : &engine->memoryManager->m_persistentValues;
 
@@ -394,6 +397,6 @@ PersistentValuePrivate *PersistentValuePrivate::detach(const QV4::Value &value, 
         return this;
     }
     --refcount;
-    return new PersistentValuePrivate(value, weak);
+    return new PersistentValuePrivate(value, engine, weak);
 }
 

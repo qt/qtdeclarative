@@ -474,6 +474,7 @@ MemoryManager::~MemoryManager()
     while (persistent) {
         PersistentValuePrivate *n = persistent->next;
         persistent->value = Value::undefinedValue();
+        persistent->engine = 0;
         persistent->prev = 0;
         persistent->next = 0;
         persistent = n;

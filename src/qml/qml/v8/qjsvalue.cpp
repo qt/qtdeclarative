@@ -57,15 +57,15 @@
 
 QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
 {
-    if (!this->e)
-        this->e = e;
-    else if (this->e != e) {
+    if (!this->engine)
+        this->engine = e;
+    else if (this->engine != e) {
         qWarning("JSValue can't be reassigned to another engine.");
         return QV4::Value::emptyValue();
     }
     if (value.asString() == &string) {
-        value = QV4::Value::fromString(e->newString(string.toQString()));
-        PersistentValuePrivate **listRoot = &e->memoryManager->m_persistentValues;
+        value = QV4::Value::fromString(engine->newString(string.toQString()));
+        PersistentValuePrivate **listRoot = &engine->memoryManager->m_persistentValues;
         prev = listRoot;
         next = *listRoot;
         *prev = this;
@@ -375,8 +375,7 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    QV4::ExecutionEngine *e = d->engine();
-    QV4::ExecutionContext *ctx = e ? e->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toNumber();
     } catch (Exception &e) {
@@ -399,8 +398,7 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    QV4::ExecutionEngine *e = d->engine();
-    QV4::ExecutionContext *ctx = e ? e->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toBoolean();
     } catch (Exception &e) {
@@ -423,8 +421,7 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    QV4::ExecutionEngine *e = d->engine();
-    QV4::ExecutionContext *ctx = e ? e->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toInt32();
     } catch (Exception &e) {
@@ -447,8 +444,7 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    QV4::ExecutionEngine *e = d->engine();
-    QV4::ExecutionContext *ctx = e ? e->current : 0;
+    QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
     try {
         return d->value.toUInt32();
     } catch (Exception &e) {
@@ -505,7 +501,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     if (!f)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     assert(engine);
 
     QVarLengthArray<Value, 9> arguments(args.length());
@@ -555,7 +551,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     if (!f)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     assert(engine);
 
     if (!instance.d->checkEngine(engine)) {
@@ -608,7 +604,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     if (!f)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     assert(engine);
 
     QVarLengthArray<Value, 9> arguments(args.length());
@@ -643,7 +639,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
 */
 QJSEngine* QJSValue::engine() const
 {
-    QV4::ExecutionEngine *engine = d->engine();
+    QV4::ExecutionEngine *engine = d->engine;
     if (engine)
         return engine->v8Engine->publicEngine();
 }
@@ -798,7 +794,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX)
@@ -833,7 +829,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
         QV4::Value v = arrayIndex == UINT_MAX ? o->get(ctx, engine->id_uintMax) : o->getIndexed(ctx, arrayIndex);
@@ -866,7 +862,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
@@ -901,7 +897,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
         if (arrayIndex != UINT_MAX)
@@ -939,7 +935,7 @@ bool QJSValue::deleteProperty(const QString &name)
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     return o->deleteProperty(engine->current, s);
 }
@@ -956,7 +952,7 @@ bool QJSValue::hasProperty(const QString &name) const
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     String *s = engine->newIdentifier(name);
     return o->__hasProperty__(s);
 }
@@ -973,7 +969,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine();
+    ExecutionEngine *engine = d->engine;
     String *s = engine->newIdentifier(name);
     return o->__getOwnProperty__(s);
 }

@@ -562,10 +562,11 @@ inline Value Managed::call(ExecutionContext *context, const Value &thisObject, V
 
 struct PersistentValuePrivate
 {
-    PersistentValuePrivate(const Value &v, bool weak = false);
+    PersistentValuePrivate(const Value &v, ExecutionEngine *engine = 0, bool weak = false);
     virtual ~PersistentValuePrivate();
     Value value;
     uint refcount;
+    QV4::ExecutionEngine *engine;
     PersistentValuePrivate **prev;
     PersistentValuePrivate *next;
 
@@ -573,6 +574,14 @@ struct PersistentValuePrivate
     void ref() { ++refcount; }
     void deref();
     PersistentValuePrivate *detach(const QV4::Value &value, bool weak = false);
+
+    bool checkEngine(QV4::ExecutionEngine *otherEngine) {
+        if (!engine) {
+            Q_ASSERT(!value.isObject());
+            engine = otherEngine;
+        }
+        return (engine == otherEngine);
+    }
 };
 
 class Q_QML_EXPORT PersistentValue
