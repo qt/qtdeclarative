@@ -151,11 +151,11 @@ void String::put(Managed *m, ExecutionContext *ctx, String *name, const Value &v
     o->put(ctx, name, value);
 }
 
-void String::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+void String::putIndexed(Managed *m, uint index, const Value &value)
 {
     String *that = static_cast<String *>(m);
-    Object *o = ctx->engine->newStringObject(Value::fromString(that));
-    o->putIndexed(ctx, index, value);
+    Object *o = m->engine()->newStringObject(Value::fromString(that));
+    o->putIndexed(index, value);
 }
 
 PropertyAttributes String::query(const Managed *m, String *name)

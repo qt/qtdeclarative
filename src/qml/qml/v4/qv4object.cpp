@@ -182,7 +182,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, c
         Value v = getIndexed(idx, &hasProperty);
         Value result;
         op(ctx, &result, v, rhs);
-        putIndexed(ctx, idx, result);
+        putIndexed(idx, result);
         return;
     }
     String *name = index.toString(ctx);
@@ -409,9 +409,9 @@ void Object::put(Managed *m, ExecutionContext *ctx, String *name, const Value &v
     static_cast<Object *>(m)->internalPut(ctx, name, value);
 }
 
-void Object::putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value)
+void Object::putIndexed(Managed *m, uint index, const Value &value)
 {
-    static_cast<Object *>(m)->internalPutIndexed(ctx, index, value);
+    static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
 PropertyAttributes Object::query(const Managed *m, String *name)
@@ -649,7 +649,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return putIndexed(ctx, idx, value);
+        return putIndexed(idx, value);
 
     name->makeIdentifier(ctx);
 
@@ -725,7 +725,7 @@ void Object::internalPut(ExecutionContext *ctx, String *name, const Value &value
     }
 }
 
-void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value)
+void Object::internalPutIndexed(uint index, const Value &value)
 {
     Property *pd = 0;
     PropertyAttributes attrs;
@@ -783,7 +783,7 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
 
         Value args[1];
         args[0] = value;
-        pd->setter()->call(ctx, Value::fromObject(this), args, 1);
+        pd->setter()->call(engine()->current, Value::fromObject(this), args, 1);
         return;
     }
 
@@ -791,8 +791,8 @@ void Object::internalPutIndexed(ExecutionContext *ctx, uint index, const Value &
     return;
 
   reject:
-    if (ctx->strictMode)
-        ctx->throwTypeError();
+    if (engine()->current->strictMode)
+        engine()->current->throwTypeError();
 }
 
 // Section 8.12.7

@@ -287,7 +287,7 @@ Value ArrayPrototype::method_push(SimpleCallContext *ctx)
         }
     } else {
         for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->putIndexed(ctx, len + i, ctx->argument(i));
+            instance->putIndexed(len + i, ctx->argument(i));
         len += ctx->argumentCount;
     }
     if (instance->isArrayObject())
@@ -313,11 +313,11 @@ Value ArrayPrototype::method_reverse(SimpleCallContext *ctx)
         Value lval = instance->getIndexed(lo, &loExists);
         Value hval = instance->getIndexed(hi, &hiExists);
         if (hiExists)
-            instance->putIndexed(ctx, lo, hval);
+            instance->putIndexed(lo, hval);
         else
             instance->deleteIndexedProperty(lo);
         if (loExists)
-            instance->putIndexed(ctx, hi, lval);
+            instance->putIndexed(hi, lval);
         else
             instance->deleteIndexedProperty(hi);
     }
@@ -368,7 +368,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
             bool exists;
             Value v = instance->getIndexed(k, &exists);
             if (exists)
-                instance->putIndexed(ctx, k - 1, v);
+                instance->putIndexed(k - 1, v);
             else
                 instance->deleteIndexedProperty(k - 1);
         }
@@ -527,12 +527,12 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
             bool exists;
             Value v = instance->getIndexed(k - 1, &exists);
             if (exists)
-                instance->putIndexed(ctx, k + ctx->argumentCount - 1, v);
+                instance->putIndexed(k + ctx->argumentCount - 1, v);
             else
                 instance->deleteIndexedProperty(k + ctx->argumentCount - 1);
         }
         for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->putIndexed(ctx, i, ctx->argument(i));
+            instance->putIndexed(i, ctx->argument(i));
     }
 
     uint newLen = len + ctx->argumentCount;

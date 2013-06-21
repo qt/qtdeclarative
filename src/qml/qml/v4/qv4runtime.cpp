@@ -631,7 +631,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
                 return;
             }
         }
-        o->putIndexed(ctx, idx, value);
+        o->putIndexed(idx, value);
         return;
     }
 
@@ -1097,7 +1097,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
         v = Value::fromDouble(d + 1);
     }
 
-    o->putIndexed(context, idx, v);
+    o->putIndexed(idx, v);
 }
 
 void __qmljs_builtin_post_decrement(Value *result, Value *val)
@@ -1177,7 +1177,7 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
         v = Value::fromDouble(d - 1);
     }
 
-    o->putIndexed(context, idx, v);
+    o->putIndexed(idx, v);
 }
 
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx)

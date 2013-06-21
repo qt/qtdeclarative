@@ -901,7 +901,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     QV4::ExecutionContext *ctx = engine->current;
     try {
         if (arrayIndex != UINT_MAX)
-            o->putIndexed(ctx, arrayIndex, value.d->getValue(engine));
+            o->putIndexed(arrayIndex, value.d->getValue(engine));
         else
             o->put(ctx, engine->id_uintMax, value.d->getValue(engine));
     } catch (QV4::Exception &e) {
