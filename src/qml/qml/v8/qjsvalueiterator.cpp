@@ -180,7 +180,7 @@ QJSValue QJSValueIterator::value() const
     QV4::ExecutionEngine *engine = o->internalClass->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = o->getValue(ctx, d_ptr->currentValue, d_ptr->currentAttributes);
+        QV4::Value v = o->getValue(d_ptr->currentValue, d_ptr->currentAttributes);
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);

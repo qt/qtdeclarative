@@ -155,12 +155,12 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionContext *ctx, const QString &name, const Value &value);
 
-    static Value getValue(const Value &thisObject, ExecutionContext *ctx, const Property *p, PropertyAttributes attrs);
-    Value getValue(ExecutionContext *ctx, const Property *p, PropertyAttributes attrs) const {
-        return getValue(Value::fromObject(const_cast<Object *>(this)), ctx, p, attrs);
+    static Value getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
+    Value getValue(const Property *p, PropertyAttributes attrs) const {
+        return getValue(Value::fromObject(const_cast<Object *>(this)), p, attrs);
     }
 
-    void putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes attrs, const Value &value);
+    void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
 
     void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs);
     void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs);

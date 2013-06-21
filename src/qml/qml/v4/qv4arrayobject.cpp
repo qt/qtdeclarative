@@ -340,7 +340,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (pidx < UINT_MAX && (!instance->arrayAttributes || !instance->arrayAttributes[0].isGeneric()))
             front = instance->arrayData + pidx;
 
-    Value result = front ? instance->getValue(ctx, front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Value::undefinedValue();
+    Value result = front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Value::undefinedValue();
 
     bool protoHasArray = false;
     Object *p = instance;

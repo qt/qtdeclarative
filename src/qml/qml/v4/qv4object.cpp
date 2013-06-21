@@ -131,7 +131,7 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
     put(ctx->engine->newString(name), value);
 }
 
-Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const Property *p, PropertyAttributes attrs)
+Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
         return p->value;
@@ -139,16 +139,16 @@ Value Object::getValue(const Value &thisObject, ExecutionContext *ctx, const Pro
     if (!getter)
         return Value::undefinedValue();
 
-    return getter->call(ctx, thisObject, 0, 0);
+    return getter->call(getter->engine()->current, thisObject, 0, 0);
 }
 
-void Object::putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes attrs, const Value &value)
+void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
             Value args[1];
             args[0] = value;
-            pd->set->call(ctx, Value::fromObject(this), args, 1);
+            pd->set->call(engine()->current, Value::fromObject(this), args, 1);
             return;
         }
         goto reject;
@@ -161,8 +161,8 @@ void Object::putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes at
     return;
 
   reject:
-    if (ctx->strictMode)
-        ctx->throwTypeError();
+    if (engine()->current->strictMode)
+        engine()->current->throwTypeError();
 
 }
 
@@ -486,7 +486,7 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getterAccessor2;
             if (result)
                 *result = p->value;
-            Value res = o->getValue(o->engine()->current, p, attrs);
+            Value res = o->getValue(p, attrs);
             if (result)
                 *result = res;
             return;
@@ -511,7 +511,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->engine()->current, o->memberData + idx, o->internalClass->propertyData[idx], value);
+            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], value);
             return;
         }
     }
@@ -596,7 +596,7 @@ Value Object::internalGet(String *name, bool *hasProperty)
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(engine()->current, o->memberData + idx, o->internalClass->propertyData.at(idx));
+            return getValue(o->memberData + idx, o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype;
@@ -635,7 +635,7 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(engine()->current, pd, attrs);
+        return getValue(pd, attrs);
     }
 
     if (hasProperty)
@@ -1060,7 +1060,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
-            Value value = o->getValue(ctx, arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
+            Value value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
             if (__qmljs_strict_equal(value, v))
                 return Value::fromDouble(n->key());
         }
@@ -1072,7 +1072,7 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         pd += fromIndex;
         while (pd < end) {
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
-                Value value = o->getValue(ctx, pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
+                Value value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
                 if (__qmljs_strict_equal(value, v))
                     return Value::fromDouble(pd - arrayData);
             }
@@ -1154,11 +1154,11 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
                 while (--len > i)
                     if (!arrayAttributes[len].isGeneric())
                         break;
-                arrayData[i].value = getValue(context, arrayData + len, arrayAttributes[len]);
+                arrayData[i].value = getValue(arrayData + len, arrayAttributes[len]);
                 arrayAttributes[i] = Attr_Data;
                 arrayAttributes[len].clear();
             } else if (arrayAttributes[i].isAccessor()) {
-                arrayData[i].value = getValue(context, arrayData + i, arrayAttributes[i]);
+                arrayData[i].value = getValue(arrayData + i, arrayAttributes[i]);
                 arrayAttributes[i] = Attr_Data;
             }
         }

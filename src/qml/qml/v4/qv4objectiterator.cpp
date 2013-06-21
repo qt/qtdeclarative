@@ -102,7 +102,7 @@ Value ObjectIterator::nextPropertyName(Value *value)
         return Value::nullValue();
 
     if (value)
-        *value = object->getValue(object->engine()->current, p, attrs);
+        *value = object->getValue(p, attrs);
 
     if (name)
         return Value::fromString(name);
@@ -120,7 +120,7 @@ Value ObjectIterator::nextPropertyNameAsString(Value *value)
         return Value::nullValue();
 
     if (value)
-        *value = object->getValue(object->engine()->current, p, attrs);
+        *value = object->getValue(p, attrs);
 
     if (name)
         return Value::fromString(name);

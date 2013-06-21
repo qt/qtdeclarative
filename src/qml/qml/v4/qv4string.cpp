@@ -120,7 +120,7 @@ Value String::get(Managed *m, String *name, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return v4->stringPrototype->getValue(Value::fromString(that), v4->current, pd, attrs);
+    return v4->stringPrototype->getValue(Value::fromString(that), pd, attrs);
 }
 
 Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -141,7 +141,7 @@ Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return engine->stringPrototype->getValue(Value::fromString(that), engine->current, pd, attrs);
+    return engine->stringPrototype->getValue(Value::fromString(that), pd, attrs);
 }
 
 void String::put(Managed *m, String *name, const Value &value)

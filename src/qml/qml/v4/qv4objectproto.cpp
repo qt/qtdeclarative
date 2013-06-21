@@ -220,7 +220,7 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
             break;
         Property n;
         PropertyAttributes nattrs;
-        toPropertyDescriptor(ctx, o->getValue(ctx, pd, attrs), &n, &nattrs);
+        toPropertyDescriptor(ctx, o->getValue(pd, attrs), &n, &nattrs);
         bool ok;
         if (name)
             ok = O.objectValue()->__defineOwnProperty__(ctx, name, n, nattrs);

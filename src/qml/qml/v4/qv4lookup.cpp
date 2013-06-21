@@ -238,7 +238,7 @@ void Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result
                 l->globalGetter = globalGetterAccessor1;
             else if (l->level == 2)
                 l->globalGetter = globalGetterAccessor2;
-            Value res = o->getValue(ctx, p, attrs);
+            Value res = o->getValue(p, attrs);
             if (result)
                 *result = res;
             return;
