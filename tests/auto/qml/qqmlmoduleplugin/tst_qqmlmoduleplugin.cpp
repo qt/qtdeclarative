@@ -535,7 +535,7 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
         << "import com.nokia.InvalidFirstCommandModule 1.0\n"
            "MyPluginType {}"
         << QString()
-        << ":1:1: module identifier directive must be the first command in a qmldir file";
+        << ":1:1: module identifier directive must be the first directive in a qmldir file";
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
