@@ -588,7 +588,7 @@ Value Object::internalGet(String *name, bool *hasProperty)
     if (idx != UINT_MAX)
         return getIndexed(idx, hasProperty);
 
-    name->makeIdentifier(engine()->current);
+    name->makeIdentifier();
 
     Object *o = this;
     while (o) {
@@ -651,7 +651,7 @@ void Object::internalPut(String *name, const Value &value)
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier(engine()->current);
+    name->makeIdentifier();
 
     uint member = internalClass->find(name);
     Property *pd = 0;
@@ -802,7 +802,7 @@ bool Object::internalDeleteProperty(String *name)
     if (idx != UINT_MAX)
         return deleteIndexedProperty(idx);
 
-    name->makeIdentifier(engine()->current);
+    name->makeIdentifier();
 
     uint memberIdx = internalClass->find(name);
     if (memberIdx != UINT_MAX) {
@@ -851,7 +851,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
     if (idx != UINT_MAX)
         return __defineOwnProperty__(ctx, idx, p, attrs);
 
-    name->makeIdentifier(ctx);
+    name->makeIdentifier();
 
     Property *current;
     PropertyAttributes *cattrs;

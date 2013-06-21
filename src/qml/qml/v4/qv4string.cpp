@@ -208,9 +208,9 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-void String::makeIdentifierImpl(const ExecutionContext *ctx)
+void String::makeIdentifierImpl()
 {
-    ctx->engine->identifierCache->toIdentifier(this);
+    engine()->identifierCache->toIdentifier(this);
 }
 
 void String::createHashValue() const

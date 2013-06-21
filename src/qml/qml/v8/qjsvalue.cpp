@@ -800,7 +800,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (idx < UINT_MAX)
         return property(idx);
 
-    s->makeIdentifier(engine->current);
+    s->makeIdentifier();
     QV4::ExecutionContext *ctx = engine->current;
     try {
         QV4::Value v = o->get(s);
@@ -871,7 +871,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     }
 
     QV4::ExecutionContext *ctx = engine->current;
-    s->makeIdentifier(ctx);
+    s->makeIdentifier();
     try {
         o->put(s, value.d->getValue(engine));
     } catch (QV4::Exception &e) {

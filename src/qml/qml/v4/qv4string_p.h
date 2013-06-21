@@ -99,13 +99,13 @@ struct Q_QML_EXPORT String : public Managed {
     }
     uint toUInt(bool *ok) const;
 
-    void makeIdentifier(const ExecutionContext *ctx) {
+    void makeIdentifier() {
         if (identifier != UINT_MAX)
             return;
-        makeIdentifierImpl(ctx);
+        makeIdentifierImpl();
     }
 
-    void makeIdentifierImpl(const ExecutionContext *ctx);
+    void makeIdentifierImpl();
 
     void createHashValue() const;
     static uint createHashValue(const QChar *ch, int length);

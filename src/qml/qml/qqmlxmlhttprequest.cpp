@@ -868,7 +868,7 @@ Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
     if (!r)
         v4->current->throwTypeError();
 
-    name->makeIdentifier(v4->current);
+    name->makeIdentifier();
     if (name->isEqualTo(v4->id_length))
         return Value::fromInt32(r->list.count());
 
@@ -923,7 +923,7 @@ Value NodeList::get(Managed *m, String *name, bool *hasProperty)
     if (!r)
         v4->current->throwTypeError();
 
-    name->makeIdentifier(v4->current);
+    name->makeIdentifier();
 
     if (name->isEqualTo(v4->id_length))
         return Value::fromInt32(r->d->children.count());
