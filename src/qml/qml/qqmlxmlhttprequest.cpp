@@ -203,7 +203,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
@@ -234,7 +234,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NodeList>()->~NodeList();
     }
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
@@ -861,17 +861,18 @@ Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value NamedNodeMap::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
     NamedNodeMap *r = m->as<NamedNodeMap>();
+    QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
-    name->makeIdentifier(ctx);
-    if (name->isEqualTo(ctx->engine->id_length))
+    name->makeIdentifier(v4->current);
+    if (name->isEqualTo(v4->id_length))
         return Value::fromInt32(r->list.count());
 
-    QV8Engine *engine = ctx->engine->v8Engine;
+    QV8Engine *engine = v4->v8Engine;
 
     QString str = name->toQString();
     for (int ii = 0; ii < r->list.count(); ++ii) {
@@ -915,17 +916,18 @@ Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value NodeList::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
+    QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
-    name->makeIdentifier(ctx);
+    name->makeIdentifier(v4->current);
 
-    if (name->isEqualTo(ctx->engine->id_length))
+    if (name->isEqualTo(v4->id_length))
         return Value::fromInt32(r->d->children.count());
-    return Object::get(m, ctx, name, hasProperty);
+    return Object::get(m, name, hasProperty);
 }
 
 Value NodeList::create(QV8Engine *engine, NodeImpl *data)

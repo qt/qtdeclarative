@@ -114,11 +114,12 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, co
 }
 
 
-Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
+    QV4::ExecutionEngine *v4 = m->engine();
     if (!w)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
     if (hasProperty)
         *hasProperty = true;
@@ -158,13 +159,13 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(ctx, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision);
+                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision);
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                 QV4::Object *o = QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine).asObject();
                 if (o)
-                    return o->get(engine->current, name);
+                    return o->get(name);
             }
 
             // Fall through to base implementation
@@ -182,7 +183,7 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(ctx, context, ao, name, QV4::QObjectWrapper::IgnoreRevision);
+                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision);
 
                 // Fall through to base implementation
             }
@@ -221,7 +222,7 @@ Value QmlTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool 
 
     if (hasProperty)
         *hasProperty = false;
-    return Object::get(m, ctx, name, hasProperty);
+    return Object::get(m, name, hasProperty);
 }
 
 

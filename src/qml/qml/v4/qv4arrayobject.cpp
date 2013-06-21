@@ -120,7 +120,7 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
     if (o->isArrayObject())
         return o->arrayLength();
-    return o->get(ctx, ctx->engine->id_length).toUInt32();
+    return o->get(ctx->engine->id_length).toUInt32();
 }
 
 Value ArrayPrototype::method_isArray(SimpleCallContext *ctx)
@@ -387,7 +387,7 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx);
 
     ArrayObject *result = ctx->engine->newArrayObject();
-    uint len = o->get(ctx, ctx->engine->id_length).toUInt32();
+    uint len = o->get(ctx->engine->id_length).toUInt32();
     double s = ctx->argument(0).toInteger();
     uint start;
     if (s < 0)

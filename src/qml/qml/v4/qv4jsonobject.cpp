@@ -700,7 +700,7 @@ QString Stringify::Str(const QString &key, Value value)
     QString result;
 
     if (Object *o = value.asObject()) {
-        FunctionObject *toJSON = o->get(ctx, ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
+        FunctionObject *toJSON = o->get(ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
             Value arg = Value::fromString(ctx, key);
             value = toJSON->call(ctx, value, &arg, 1);
@@ -790,7 +790,7 @@ QString Stringify::JO(Object *o)
     } else {
         for (int i = 0; i < propertyList.size(); ++i) {
             bool exists;
-            Value v = o->get(ctx, propertyList.at(i), &exists);
+            Value v = o->get(propertyList.at(i), &exists);
             if (!exists)
                 continue;
             QString member = makeMember(propertyList.at(i)->toQString(), v);

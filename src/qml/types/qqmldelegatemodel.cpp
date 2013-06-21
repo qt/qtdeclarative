@@ -3131,19 +3131,19 @@ public:
         return QV4::Value::fromObject(object);
     }
 
-    static QV4::Value get(QV4::Managed *m, QV4::ExecutionContext *ctx, QV4::String *name, bool *hasProperty)
+    static QV4::Value get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
     {
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)
-            ctx->throwTypeError();
+            m->engine()->current->throwTypeError();
 
-        if (name == ctx->engine->id_length) {
+        if (name == m->engine()->id_length) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Value::fromInt32(array->count());
         }
 
-        return Object::get(m, ctx, name, hasProperty);
+        return Object::get(m, name, hasProperty);
     }
     static void destroy(Managed *that) {
         QQmlDelegateModelGroupChangeArray *array = that->as<QQmlDelegateModelGroupChangeArray>();

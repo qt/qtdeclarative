@@ -244,11 +244,12 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     }
 }
 
-Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
+    QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
     QHashedV4String propertystring(Value::fromString(name));
 
@@ -278,12 +279,12 @@ Value QmlValueTypeWrapper::get(Managed *m, ExecutionContext *ctx, String *name, 
     }
 
     if (!result)
-        return Object::get(m, ctx, name, hasProperty);
+        return Object::get(m, name, hasProperty);
 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
-        QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
-        return QV4::QObjectWrapper::getQmlProperty(ctx, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision);
+        QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
+        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

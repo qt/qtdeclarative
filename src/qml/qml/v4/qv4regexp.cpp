@@ -136,7 +136,7 @@ void RegExp::markObjects(Managed *that)
 {
 }
 
-Value RegExp::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value RegExp::get(Managed *m, String *name, bool *hasProperty)
 {
     return Value::undefinedValue();
 }

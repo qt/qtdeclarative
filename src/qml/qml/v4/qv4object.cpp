@@ -168,7 +168,7 @@ void Object::putValue(ExecutionContext *ctx, Property *pd, PropertyAttributes at
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
 {
-    Value v = get(ctx, name);
+    Value v = get(name);
     Value result;
     op(ctx, &result, v, rhs);
     put(ctx, name, result);
@@ -394,9 +394,9 @@ bool Object::__hasProperty__(String *name) const
     return !query(name).isEmpty();
 }
 
-Value Object::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value Object::get(Managed *m, String *name, bool *hasProperty)
 {
-    return static_cast<Object *>(m)->internalGet(ctx, name, hasProperty);
+    return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
 
 Value Object::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -582,13 +582,13 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
 }
 
 // Section 8.12.3
-Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty)
+Value Object::internalGet(String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return getIndexed(idx, hasProperty);
 
-    name->makeIdentifier(ctx);
+    name->makeIdentifier(engine()->current);
 
     Object *o = this;
     while (o) {
@@ -596,7 +596,7 @@ Value Object::internalGet(ExecutionContext *ctx, String *name, bool *hasProperty
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(ctx, o->memberData + idx, o->internalClass->propertyData.at(idx));
+            return getValue(engine()->current, o->memberData + idx, o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype;

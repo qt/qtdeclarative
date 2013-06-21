@@ -105,7 +105,7 @@ struct ManagedVTable
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, const Value &value);
-    Value (*get)(Managed *, ExecutionContext *ctx, String *name, bool *hasProperty);
+    Value (*get)(Managed *, String *name, bool *hasProperty);
     Value (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, ExecutionContext *ctx, String *name, const Value &value);
     void (*putIndexed)(Managed *, ExecutionContext *ctx, uint index, const Value &value);
@@ -262,7 +262,7 @@ public:
     }
     Value construct(ExecutionContext *context, Value *args, int argc);
     Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
-    Value get(ExecutionContext *ctx, String *name, bool *hasProperty = 0);
+    Value get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
     void put(ExecutionContext *ctx, String *name, const Value &value)
     { vtbl->put(this, ctx, name, value); }

@@ -95,11 +95,11 @@ void Lookup::getterGeneric(QV4::Lookup *l, QV4::Value *result, const QV4::Value 
 
     Value res;
     if (Managed *m = object.asManaged()) {
-        res = m->get(m->engine()->current, l->name);
+        res = m->get(l->name);
     } else {
         ExecutionContext *ctx = l->name->engine()->current;
         Object *o = __qmljs_convert_to_object(ctx, object);
-        res = o->get(ctx, l->name);
+        res = o->get(l->name);
     }
     if (result)
         *result = res;

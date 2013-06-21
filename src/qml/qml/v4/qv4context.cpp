@@ -362,7 +362,7 @@ Value ExecutionContext::getProperty(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(ctx, name, &hasProperty);
+            Value v = w->get(name, &hasProperty);
             if (hasProperty) {
                 return v;
             }
@@ -389,7 +389,7 @@ Value ExecutionContext::getProperty(String *name)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(c, name, &hasProperty);
+                Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v;
             }
@@ -401,7 +401,7 @@ Value ExecutionContext::getProperty(String *name)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(g, name, &hasProperty);
+            Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v;
         }
@@ -424,7 +424,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(ctx, name, &hasProperty);
+            Value v = w->get(name, &hasProperty);
             if (hasProperty) {
                 return v;
             }
@@ -451,7 +451,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(c, name, &hasProperty);
+                Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v;
             }
@@ -463,7 +463,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(g, name, &hasProperty);
+            Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v;
         }
@@ -486,7 +486,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(ctx, name, &hasProperty);
+            Value v = w->get(name, &hasProperty);
             if (hasProperty) {
                 *base = w;
                 return v;
@@ -514,7 +514,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(c, name, &hasProperty);
+                Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty) {
                     *base = c->activation;
                     return v;
@@ -528,7 +528,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(g, name, &hasProperty);
+            Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v;
         }

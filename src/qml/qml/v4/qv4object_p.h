@@ -327,8 +327,8 @@ public:
     void arrayReserve(uint n);
     void ensureArrayAttributes();
 
-    inline Value get(String *name)
-    { return vtbl->get(this, engine()->current, name, 0); }
+    inline Value get(String *name, bool *hasProperty = 0)
+    { return vtbl->get(this, name, hasProperty); }
     inline Value getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
     inline void put(String *name, const Value &v)
@@ -350,7 +350,7 @@ protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static Value get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty);
+    static Value get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, ExecutionContext *ctx, String *name, const Value &value);
     static void putIndexed(Managed *m, ExecutionContext *ctx, uint index, const Value &value);
@@ -364,7 +364,7 @@ protected:
 
 
 private:
-    Value internalGet(ExecutionContext *ctx, String *name, bool *hasProperty);
+    Value internalGet(String *name, bool *hasProperty);
     Value internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(ExecutionContext *ctx, String *name, const Value &value);
     void internalPutIndexed(ExecutionContext *ctx, uint index, const Value &value);

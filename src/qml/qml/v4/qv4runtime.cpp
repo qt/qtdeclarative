@@ -469,14 +469,14 @@ Value __qmljs_object_default_value(Object *object, int typeHint)
 
     ExecutionContext *ctx = engine->current;
 
-    Value conv = object->get(ctx, meth1);
+    Value conv = object->get(meth1);
     if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
-    conv = object->get(ctx, meth2);
+    conv = object->get(meth2);
     if (FunctionObject *o = conv.asFunctionObject()) {
         Value r = o->call(ctx, Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
@@ -592,7 +592,7 @@ void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &obje
     }
 
     String *name = index.toString(ctx);
-    Value res = o->get(ctx, name);
+    Value res = o->get(name);
     if (result)
         *result = res;
 }
@@ -669,7 +669,7 @@ void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &obj
     Value res;
     Managed *m = object.asManaged();
     if (m) {
-        res = m->get(ctx, name);
+        res = m->get(name);
     } else {
         if (object.isNull() || object.isUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object.toQString());
@@ -677,7 +677,7 @@ void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &obj
         }
 
         m = __qmljs_convert_to_object(ctx, object);
-        res = m->get(ctx, name);
+        res = m->get(name);
     }
     if (result)
         *result = res;
@@ -818,7 +818,7 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
         thisObject = Value::fromObject(static_cast<Object *>(baseObject));
     }
 
-    Value func = baseObject->get(context, name);
+    Value func = baseObject->get(name);
     FunctionObject *o = func.asFunctionObject();
     if (!o) {
         QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), thisObject.toQString());
@@ -861,7 +861,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     Object *baseObject = that.toObject(context);
     Value thisObject = Value::fromObject(baseObject);
 
-    Value func = baseObject->get(context, index.toString(context));
+    Value func = baseObject->get(index.toString(context));
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
@@ -921,7 +921,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 {
     Object *thisObject = base.toObject(context);
 
-    Value func = thisObject->get(context, name);
+    Value func = thisObject->get(name);
     if (Object *f = func.asObject()) {
         Value res = f->construct(context, args, argc);
         if (result)
@@ -1005,7 +1005,7 @@ void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, con
 {
     Object *obj = base.toObject(context);
     Value res;
-    __qmljs_builtin_typeof(context, &res, obj->get(context, name));
+    __qmljs_builtin_typeof(context, &res, obj->get(name));
     if (result)
         *result = res;
 }
@@ -1015,7 +1015,7 @@ void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, co
     String *name = index.toString(context);
     Object *obj = base.toObject(context);
     Value res;
-    __qmljs_builtin_typeof(context, &res, obj->get(context, name));
+    __qmljs_builtin_typeof(context, &res, obj->get(name));
     if (result)
         *result = res;
 }
@@ -1057,7 +1057,7 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *res
 {
     Object *o = base.toObject(context);
 
-    Value v = o->get(context, name);
+    Value v = o->get(name);
 
     if (v.isInteger() && v.integerValue() < INT_MAX) {
         if (result)
@@ -1137,7 +1137,7 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *res
 {
     Object *o = base.toObject(context);
 
-    Value v = o->get(context, name);
+    Value v = o->get(name);
 
     if (v.isInteger() && v.integerValue() > INT_MIN) {
         if (result)

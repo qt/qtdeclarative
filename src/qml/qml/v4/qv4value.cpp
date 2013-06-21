@@ -220,7 +220,7 @@ String *Value::toString(ExecutionContext *ctx) const
 
 Value Value::property(ExecutionContext *ctx, String *name) const
 {
-    return isObject() ? objectValue()->get(ctx, name) : undefinedValue();
+    return isObject() ? objectValue()->get(name) : undefinedValue();
 }
 
 

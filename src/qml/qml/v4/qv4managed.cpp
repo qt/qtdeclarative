@@ -201,9 +201,9 @@ bool Managed::isEqualTo(Managed *, Managed *)
     return false;
 }
 
-Value Managed::get(ExecutionContext *ctx, String *name, bool *hasProperty)
+Value Managed::get(String *name, bool *hasProperty)
 {
-    return vtbl->get(this, ctx, name, hasProperty);
+    return vtbl->get(this, name, hasProperty);
 }
 
 Value Managed::getIndexed(uint index, bool *hasProperty)

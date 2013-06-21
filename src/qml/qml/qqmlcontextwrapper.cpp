@@ -126,17 +126,18 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 }
 
 
-Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlContextWrapper *resource = m->as<QmlContextWrapper>();
+    QV4::ExecutionEngine *v4 = m->engine();
     if (!resource)
-        ctx->throwTypeError();
+        v4->current->throwTypeError();
 
     if (resource->isNullWrapper)
-        return Object::get(m, ctx, name, hasProperty);
+        return Object::get(m, name, hasProperty);
 
     bool hasProp;
-    Value result = Object::get(m, ctx, name, &hasProp);
+    Value result = Object::get(m, name, &hasProp);
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
@@ -206,7 +207,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
                     ep->captureProperty(&context->idValues[propertyIdx].bindings);
                     if (hasProperty)
                         *hasProperty = true;
-                    return QV4::QObjectWrapper::wrap(ctx->engine, context->idValues[propertyIdx]);
+                    return QV4::QObjectWrapper::wrap(v4, context->idValues[propertyIdx]);
                 } else {
 
                     QQmlContextPrivate *cp = context->asQQmlContextPrivate();
@@ -232,7 +233,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
-            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(ctx, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -245,7 +246,7 @@ Value QmlContextWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bo
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(ctx, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;

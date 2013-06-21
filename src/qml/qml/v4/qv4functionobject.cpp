@@ -106,7 +106,7 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
         return false;
 
     ExecutionContext *ctx = f->engine()->current;
-    Object *o = f->get(ctx, ctx->engine->id_prototype).asObject();
+    Object *o = f->get(ctx->engine->id_prototype).asObject();
     if (!o)
         ctx->throwTypeError();
 
@@ -127,7 +127,7 @@ Value FunctionObject::construct(Managed *that, ExecutionContext *context, Value 
     FunctionObject *f = static_cast<FunctionObject *>(that);
 
     Object *obj = context->engine->newObject();
-    Value proto = f->get(context, context->engine->id_prototype);
+    Value proto = f->get(context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     return Value::fromObject(obj);
@@ -251,7 +251,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     QVector<Value> args;
 
     if (Object *arr = arg.asObject()) {
-        quint32 len = arr->get(ctx, ctx->engine->id_length).toUInt32();
+        quint32 len = arr->get(ctx->engine->id_length).toUInt32();
         for (quint32 i = 0; i < len; ++i) {
             Value a = arr->getIndexed(i);
             args.append(a);
@@ -351,7 +351,7 @@ Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value 
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
     Object *obj = context->engine->newObject();
-    Value proto = f->get(context, context->engine->id_prototype);
+    Value proto = f->get(context->engine->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
@@ -490,7 +490,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
-    int len = target->get(scope, scope->engine->id_length).toUInt32();
+    int len = target->get(scope->engine->id_length).toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;

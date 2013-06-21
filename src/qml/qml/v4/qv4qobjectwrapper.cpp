@@ -313,7 +313,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
                 }
             }
         }
-        return QV4::Object::get(this, ctx, name, hasProperty);
+        return QV4::Object::get(this, name, hasProperty);
     }
 
     QQmlData::flushPendingBinding(m_object, result->coreIndex);
@@ -604,11 +604,12 @@ QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObj
     return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object));
 }
 
-QV4::Value QObjectWrapper::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+QV4::Value QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
-    return that->getQmlProperty(ctx, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    ExecutionEngine *v4 = m->engine();
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
+    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, ExecutionContext *ctx, String *name, const Value &value)

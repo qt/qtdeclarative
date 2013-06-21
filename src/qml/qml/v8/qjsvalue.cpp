@@ -803,7 +803,7 @@ QJSValue QJSValue::property(const QString& name) const
     s->makeIdentifier(engine->current);
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = o->get(ctx, s);
+        QV4::Value v = o->get(s);
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -832,7 +832,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = arrayIndex == UINT_MAX ? o->get(ctx, engine->id_uintMax) : o->getIndexed(arrayIndex);
+        QV4::Value v = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);

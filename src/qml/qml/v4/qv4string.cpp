@@ -102,16 +102,17 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
-Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProperty)
+Value String::get(Managed *m, String *name, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
-    if (name == ctx->engine->id_length) {
+    ExecutionEngine *v4 = m->engine();
+    if (name == v4->id_length) {
         if (hasProperty)
             *hasProperty = true;
         return Value::fromInt32(that->_text.length());
     }
     PropertyAttributes attrs;
-    Property *pd = ctx->engine->stringPrototype->__getPropertyDescriptor__(name, &attrs);
+    Property *pd = v4->stringPrototype->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -119,7 +120,7 @@ Value String::get(Managed *m, ExecutionContext *ctx, String *name, bool *hasProp
     }
     if (hasProperty)
         *hasProperty = true;
-    return ctx->engine->stringPrototype->getValue(Value::fromString(that), ctx, pd, attrs);
+    return v4->stringPrototype->getValue(Value::fromString(that), v4->current, pd, attrs);
 }
 
 Value String::getIndexed(Managed *m, uint index, bool *hasProperty)

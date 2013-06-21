@@ -351,7 +351,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = context->engine->regExpPrototype->get(context, context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    FunctionObject *exec = context->engine->regExpPrototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
     Value arg = Value::fromString(s);
     if (!global)
@@ -368,7 +368,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         if (result.isNull())
             break;
         assert(result.isObject());
-        double thisIndex = rx->get(context, lastIndex, 0).toInteger();
+        double thisIndex = rx->get(lastIndex, 0).toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
             rx->put(context, lastIndex, Value::fromDouble(previousLastIndex));
