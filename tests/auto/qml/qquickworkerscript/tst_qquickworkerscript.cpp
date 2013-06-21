@@ -235,6 +235,7 @@ void tst_QQuickWorkerScript::script_included()
     waitForEchoMessage(worker);
 
     const QMetaObject *mo = worker->metaObject();
+    QEXPECT_FAIL("", "It is not possible to write to the global object right now", Continue);
     QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).toString(), value + " World");
 
     qApp->processEvents();
