@@ -77,6 +77,7 @@ Object::Object(ExecutionEngine *engine)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
+    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
 Object::Object(ExecutionContext *context)
@@ -88,6 +89,7 @@ Object::Object(ExecutionContext *context)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
+    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
 Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
@@ -104,6 +106,7 @@ Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
         memberDataAlloc = internalClass->size;
         memberData = new Property[memberDataAlloc];
     }
+    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
 Object::~Object()
