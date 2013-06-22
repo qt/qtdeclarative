@@ -1457,13 +1457,11 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
     try {
         Object *o = me.asObject();
         if (!o)
-            __qmljs_throw(ctx, Value::fromObject(
-                          v4->newErrorObject(Value::fromString(ctx, QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject")))));
+            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
         Object *thisObj = o->get(v4->newString(QStringLiteral("ThisObject"))).asObject();
         if (!thisObj)
-            __qmljs_throw(ctx, Value::fromObject(
-                          v4->newErrorObject(Value::fromString(ctx, QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject")))));
+            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
         FunctionObject *callback = thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))).asFunctionObject();
         if (!callback) {

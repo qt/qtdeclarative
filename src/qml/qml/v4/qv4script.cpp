@@ -170,7 +170,7 @@ void Script::parse()
 
     if (!vmFunction)
         // ### FIX file/line number
-        __qmljs_throw(v4->current, QV4::Value::fromObject(v4->newSyntaxErrorObject(v4->current, 0)));
+        v4->current->throwError(QV4::Value::fromObject(v4->newSyntaxErrorObject(v4->current, 0)));
 }
 
 Value Script::run()
