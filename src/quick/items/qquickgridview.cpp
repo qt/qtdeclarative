@@ -65,19 +65,8 @@ QT_BEGIN_NAMESPACE
 class FxGridItemSG : public FxViewItem
 {
 public:
-    FxGridItemSG(QQuickItem *i, QQuickGridView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
+    FxGridItemSG(QQuickItem *i, QQuickGridView *v, bool own) : FxViewItem(i, v, own), view(v) {
         attached = static_cast<QQuickGridViewAttached*>(qmlAttachedPropertiesObject<QQuickGridView>(item));
-        if (trackGeometry) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-        }
-    }
-
-    ~FxGridItemSG() {
-        if (trackGeom) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-        }
     }
 
     qreal position() const {
@@ -470,7 +459,7 @@ FxViewItem *QQuickGridViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 {
     Q_Q(QQuickGridView);
     Q_UNUSED(modelIndex);
-    return new FxGridItemSG(item, q, false, false);
+    return new FxGridItemSG(item, q, false);
 }
 
 void QQuickGridViewPrivate::initializeViewItem(FxViewItem *item)
@@ -478,8 +467,7 @@ void QQuickGridViewPrivate::initializeViewItem(FxViewItem *item)
     QQuickItemViewPrivate::initializeViewItem(item);
 
     // need to track current items that are animating
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item->item);
-    itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+    item->trackGeometry(true);
 }
 
 bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer)
@@ -739,7 +727,8 @@ void QQuickGridViewPrivate::createHighlight()
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
-            FxGridItemSG *newHighlight = new FxGridItemSG(item, q, true, true);
+            FxGridItemSG *newHighlight = new FxGridItemSG(item, q, true);
+            newHighlight->trackGeometry(true);
             if (autoHighlight)
                 resetHighlightPosition();
             highlightXAnimator = new QSmoothedAnimation;
@@ -817,7 +806,8 @@ void QQuickGridViewPrivate::updateFooter()
         QQuickItem *item = createComponentItem(footerComponent, 1.0);
         if (!item)
             return;
-        footer = new FxGridItemSG(item, q, true, true);
+        footer = new FxGridItemSG(item, q, true);
+        footer->trackGeometry(true);
         created = true;
     }
 
@@ -861,7 +851,8 @@ void QQuickGridViewPrivate::updateHeader()
         QQuickItem *item = createComponentItem(headerComponent, 1.0);
         if (!item)
             return;
-        header = new FxGridItemSG(item, q, true, true);
+        header = new FxGridItemSG(item, q, true);
+        header->trackGeometry(true);
         created = true;
     }
 
