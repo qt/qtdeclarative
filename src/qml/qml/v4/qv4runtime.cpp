@@ -746,13 +746,14 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
 {
     TRACE2(x, y);
 
-    if (x.isDouble() || y.isDouble())
-        return x.asDouble() == y.asDouble();
-    if (x.rawValue() == y.rawValue())
+    if (x.rawValue() == y.rawValue()) {
+        if (x.isDouble())
+            return !std::isnan(x.doubleValue());
         return true;
-    if (x.type() != y.type())
-        return false;
-    if (x.isString())
+    }
+    if (x.isNumber() && y.isNumber())
+        return x.asDouble() == y.asDouble();
+    if (x.isString() && y.isString())
         return x.stringValue()->isEqualTo(y.stringValue());
     return false;
 }
