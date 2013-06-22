@@ -218,10 +218,11 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RegExpCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
+Value RegExpCtor::construct(Managed *m, Value *argv, int argc)
 {
     Value r = argc > 0 ? argv[0] : Value::undefinedValue();
     Value f = argc > 1 ? argv[1] : Value::undefinedValue();
+    ExecutionContext *ctx = m->engine()->current;
     if (RegExpObject *re = r.as<RegExpObject>()) {
         if (!f.isUndefined())
             ctx->throwTypeError();
@@ -268,7 +269,7 @@ Value RegExpCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisOb
             return argv[0];
     }
 
-    return construct(that, ctx, argv, argc);
+    return construct(that, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -346,7 +347,7 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx, ctx->arguments, ctx->argumentCount).as<RegExpObject>();
+    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(ctx->arguments, ctx->argumentCount).as<RegExpObject>();
 
     r->value = re->value;
     r->global = re->global;

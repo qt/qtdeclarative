@@ -69,7 +69,7 @@ struct StringCtor: FunctionObject
 {
     StringCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *m, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
 protected:

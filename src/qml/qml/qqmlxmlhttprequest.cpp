@@ -1556,15 +1556,15 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (c->proto)
             c->proto->mark();
     }
-    static Value construct(Managed *that, ExecutionContext *context, Value *, int)
+    static Value construct(Managed *that, Value *, int)
     {
         QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
         if (!ctor)
-            context->throwTypeError();
+            that->engine()->current->throwTypeError();
 
-        QV8Engine *engine = context->engine->v8Engine;
+        QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
-        QQmlXMLHttpRequestWrapper *w = new (context->engine->memoryManager) QQmlXMLHttpRequestWrapper(context->engine, r);
+        QQmlXMLHttpRequestWrapper *w = new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r);
         w->prototype = ctor->proto;
         return Value::fromObject(w);
     }

@@ -889,7 +889,7 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
     l->globalGetter(l, context, &func);
 
     if (Object *f = func.asObject()) {
-        Value res = f->construct(context, args, argc);
+        Value res = f->construct(args, argc);
         if (result)
             *result = res;
         return;
@@ -908,7 +908,7 @@ void __qmljs_construct_activation_property(ExecutionContext *context, Value *res
 void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc)
 {
     if (Object *f = func.asObject()) {
-        Value res = f->construct(context, args, argc);
+        Value res = f->construct(args, argc);
         if (result)
             *result = res;
         return;
@@ -923,7 +923,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 
     Value func = thisObject->get(name);
     if (Object *f = func.asObject()) {
-        Value res = f->construct(context, args, argc);
+        Value res = f->construct(args, argc);
         if (result)
             *result = res;
         return;

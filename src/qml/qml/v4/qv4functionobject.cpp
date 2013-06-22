@@ -94,7 +94,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
 
 Value FunctionObject::newInstance()
 {
-    return construct(internalClass->engine->current, 0, 0);
+    return construct(0, 0);
 }
 
 bool FunctionObject::hasInstance(Managed *that, const Value &value)
@@ -122,12 +122,13 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
     return false;
 }
 
-Value FunctionObject::construct(Managed *that, ExecutionContext *context, Value *, int)
+Value FunctionObject::construct(Managed *that, Value *, int)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
+    ExecutionEngine *v4 = f->engine();
 
-    Object *obj = context->engine->newObject();
-    Value proto = f->get(context->engine->id_prototype);
+    Object *obj = v4->newObject();
+    Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
     return Value::fromObject(obj);
@@ -165,11 +166,12 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 }
 
 // 15.3.2
-Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, int argc)
+Value FunctionCtor::construct(Managed *that, Value *args, int argc)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
-    MemoryManager::GCBlocker gcBlocker(ctx->engine->memoryManager);
+    MemoryManager::GCBlocker gcBlocker(f->engine()->memoryManager);
 
+    ExecutionContext *ctx = f->engine()->current;
     QString arguments;
     QString body;
     if (argc > 0) {
@@ -191,28 +193,29 @@ Value FunctionCtor::construct(Managed *that, ExecutionContext *ctx, Value *args,
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        ctx->throwSyntaxError(0);
+        f->engine()->current->throwSyntaxError(0);
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
+    ExecutionEngine *v4 = f->engine();
     if (!fe)
-        ctx->throwSyntaxError(0);
+        v4->current->throwSyntaxError(0);
 
     QQmlJS::V4IR::Module module;
 
-    QQmlJS::Codegen cg(ctx, f->strictMode);
+    QQmlJS::Codegen cg(v4->current, f->strictMode);
     QQmlJS::V4IR::Function *irf = cg(QString(), function, fe, &module);
 
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(ctx->engine->iselFactory->create(ctx->engine, &module));
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
     QV4::Function *vmf = isel->vmFunction(irf);
 
-    return Value::fromObject(ctx->engine->newScriptFunction(ctx->engine->rootContext, vmf));
+    return Value::fromObject(v4->newScriptFunction(v4->rootContext, vmf));
 }
 
 // 15.3.1: This is equivalent to new Function(...)
 Value FunctionCtor::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
 {
-    return construct(that, context, args, argc);
+    return construct(that, args, argc);
 }
 
 FunctionPrototype::FunctionPrototype(ExecutionContext *ctx)
@@ -346,17 +349,19 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     }
 }
 
-Value ScriptFunction::construct(Managed *that, ExecutionContext *context, Value *args, int argc)
+Value ScriptFunction::construct(Managed *that, Value *args, int argc)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
-    Object *obj = context->engine->newObject();
-    Value proto = f->get(context->engine->id_prototype);
+    ExecutionEngine *v4 = f->engine();
+    Object *obj = v4->newObject();
+    Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
         obj->prototype = proto.objectValue();
 
+    ExecutionContext *context = v4->current;
     quintptr stackSpace[stackContextSize/sizeof(quintptr)];
-    ExecutionContext *ctx = context->engine->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
+    ExecutionContext *ctx = v4->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
 
     Value result;
     try {
@@ -410,9 +415,9 @@ BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Va
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunctionOld::construct(Managed *, ExecutionContext *ctx, Value *, int)
+Value BuiltinFunctionOld::construct(Managed *f, Value *, int)
 {
-    ctx->throwTypeError();
+    f->engine()->current->throwTypeError();
     return Value::undefinedValue();
 }
 
@@ -517,14 +522,14 @@ Value BoundFunction::call(Managed *that, ExecutionContext *context, const Value 
     return f->target->call(context, f->boundThis, newArgs, f->boundArgs.size() + argc);
 }
 
-Value BoundFunction::construct(Managed *that, ExecutionContext *context, Value *args, int argc)
+Value BoundFunction::construct(Managed *that, Value *args, int argc)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
     memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
 
-    return f->target->construct(context, newArgs, f->boundArgs.size() + argc);
+    return f->target->construct(newArgs, f->boundArgs.size() + argc);
 }
 
 bool BoundFunction::hasInstance(Managed *that, const Value &value)

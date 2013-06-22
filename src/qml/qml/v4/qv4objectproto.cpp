@@ -79,17 +79,18 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(Managed *that, ExecutionContext *ctx, Value *args, int argc)
+Value ObjectCtor::construct(Managed *that, Value *args, int argc)
 {
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
+    ExecutionEngine *v4 = that->engine();
     if (!argc || args[0].isUndefined() || args[0].isNull()) {
-        Object *obj = ctx->engine->newObject();
-        Value proto = ctor->get(ctx->engine->id_prototype);
+        Object *obj = v4->newObject();
+        Value proto = ctor->get(v4->id_prototype);
         if (proto.isObject())
             obj->prototype = proto.objectValue();
         return Value::fromObject(obj);
     }
-    return __qmljs_to_object(ctx, args[0]);
+    return __qmljs_to_object(v4->current, args[0]);
 }
 
 Value ObjectCtor::call(Managed *, ExecutionContext *ctx, const Value &/*thisObject*/, Value *args, int argc)

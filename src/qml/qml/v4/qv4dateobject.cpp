@@ -659,7 +659,7 @@ DateCtor::DateCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
+Value DateCtor::construct(Managed *m, Value *args, int argc)
 {
     double t = 0;
 
@@ -693,7 +693,7 @@ Value DateCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int arg
         t = TimeClip(UTC(t));
     }
 
-    Object *d = ctx->engine->newDateObject(Value::fromDouble(t));
+    Object *d = m->engine()->newDateObject(Value::fromDouble(t));
     return Value::fromObject(d);
 }
 

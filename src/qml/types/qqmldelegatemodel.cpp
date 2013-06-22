@@ -75,9 +75,9 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         isBuiltinFunction = true;
     }
 
-    static QV4::Value construct(QV4::Managed *, QV4::ExecutionContext *ctx, QV4::Value *, int)
+    static QV4::Value construct(QV4::Managed *m, QV4::Value *, int)
     {
-        ctx->throwTypeError();
+        m->engine()->current->throwTypeError();
         return QV4::Value::undefinedValue();
     }
 

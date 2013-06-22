@@ -619,7 +619,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->construct(ctx, arguments.data(), arguments.size());
+        result = f->construct(arguments.data(), arguments.size());
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();

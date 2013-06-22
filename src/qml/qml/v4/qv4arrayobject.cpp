@@ -52,16 +52,17 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int argc)
+Value ArrayCtor::construct(Managed *m, Value *argv, int argc)
 {
-    ArrayObject *a = ctx->engine->newArrayObject();
+    ExecutionEngine *v4 = m->engine();
+    ArrayObject *a = v4->newArrayObject();
     uint len;
     if (argc == 1 && argv[0].isNumber()) {
         bool ok;
         len = argv[0].asArrayLength(&ok);
 
         if (!ok)
-            ctx->throwRangeError(argv[0]);
+            v4->current->throwRangeError(argv[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
@@ -77,9 +78,9 @@ Value ArrayCtor::construct(Managed *, ExecutionContext *ctx, Value *argv, int ar
     return Value::fromObject(a);
 }
 
-Value ArrayCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
+Value ArrayCtor::call(Managed *that, ExecutionContext *, const Value &, Value *argv, int argc)
 {
-    return construct(that, ctx, argv, argc);
+    return construct(that, argv, argc);
 }
 
 ArrayPrototype::ArrayPrototype(ExecutionContext *context)

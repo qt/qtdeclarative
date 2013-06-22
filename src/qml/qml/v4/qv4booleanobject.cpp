@@ -51,10 +51,10 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value BooleanCtor::construct(Managed *, ExecutionContext *ctx, Value *args, int argc)
+Value BooleanCtor::construct(Managed *m, Value *args, int argc)
 {
     bool n = argc ? args[0].toBoolean() : false;
-    return Value::fromObject(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
+    return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
 Value BooleanCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)

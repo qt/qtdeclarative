@@ -114,13 +114,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     Value newInstance();
 
-    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *that, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
-    inline Value construct(ExecutionContext *context, Value *args, int argc) {
-        return vtbl->construct(this, context, args, argc);
-    }
     inline Value construct(Value *args, int argc) {
-        return vtbl->construct(this, engine()->current, args, argc);
+        return vtbl->construct(this, args, argc);
     }
     inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
         return vtbl->call(this, context, thisObject, args, argc);
@@ -139,7 +136,7 @@ struct FunctionCtor: FunctionObject
 {
     FunctionCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *that, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
 protected:
@@ -162,7 +159,7 @@ struct BuiltinFunctionOld: FunctionObject {
 
     BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
 
-    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
 protected:
@@ -185,9 +182,9 @@ struct IndexedBuiltinFunction: FunctionObject
         isBuiltinFunction = true;
     }
 
-    static Value construct(Managed *, ExecutionContext *ctx, Value *, int)
+    static Value construct(Managed *m, Value *, int)
     {
-        ctx->throwTypeError();
+        m->engine()->current->throwTypeError();
         return Value::undefinedValue();
     }
 
@@ -198,7 +195,7 @@ struct IndexedBuiltinFunction: FunctionObject
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, Function *function);
 
-    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
 protected:
@@ -214,7 +211,7 @@ struct BoundFunction: FunctionObject {
     ~BoundFunction() {}
 
 
-    static Value construct(Managed *, ExecutionContext *context, Value *args, int argc);
+    static Value construct(Managed *, Value *args, int argc);
     static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
 
     static const ManagedVTable static_vtbl;

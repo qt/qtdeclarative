@@ -100,7 +100,7 @@ struct GCDeletable
 struct ManagedVTable
 {
     Value (*call)(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
-    Value (*construct)(Managed *, ExecutionContext *context, Value *args, int argc);
+    Value (*construct)(Managed *, Value *args, int argc);
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
@@ -260,7 +260,7 @@ public:
     inline bool hasInstance(const Value &v) {
         return vtbl->hasInstance(this, v);
     }
-    Value construct(ExecutionContext *context, Value *args, int argc);
+    Value construct(Value *args, int argc);
     Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
     Value get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
@@ -289,7 +289,7 @@ public:
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const Value &value);
-    static Value construct(Managed *, ExecutionContext *context, Value *, int);
+    static Value construct(Managed *m, Value *, int);
     static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
     static void getLookup(Managed *m, Lookup *, Value *);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
