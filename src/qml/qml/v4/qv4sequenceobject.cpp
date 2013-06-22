@@ -365,7 +365,7 @@ public:
                     convertElementToValue(this->m_ctx->engine, lhs),
                     convertElementToValue(this->m_ctx->engine, rhs)
                 };
-                QV4::Value result = fun->call(this->m_ctx, QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
+                QV4::Value result = fun->call(QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
                 return result.toNumber() < 0;
             }
 

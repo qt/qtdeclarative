@@ -139,7 +139,7 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    return getter->call(getter->engine()->current, thisObject, 0, 0);
+    return getter->call(thisObject, 0, 0);
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
@@ -148,7 +148,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
         if (pd->set) {
             Value args[1];
             args[0] = value;
-            pd->set->call(engine()->current, Value::fromObject(this), args, 1);
+            pd->set->call(Value::fromObject(this), args, 1);
             return;
         }
         goto reject;
@@ -706,7 +706,7 @@ void Object::internalPut(String *name, const Value &value)
 
         Value args[1];
         args[0] = value;
-        pd->setter()->call(engine()->current, Value::fromObject(this), args, 1);
+        pd->setter()->call(Value::fromObject(this), args, 1);
         return;
     }
 
@@ -783,7 +783,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
 
         Value args[1];
         args[0] = value;
-        pd->setter()->call(engine()->current, Value::fromObject(this), args, 1);
+        pd->setter()->call(Value::fromObject(this), args, 1);
         return;
     }
 

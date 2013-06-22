@@ -262,7 +262,7 @@ Value RegExpCtor::construct(Managed *m, Value *argv, int argc)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
+Value RegExpCtor::call(Managed *that, const Value &, Value *argv, int argc)
 {
     if (argc > 0 && argv[0].as<RegExpObject>()) {
         if (argc == 1 || argv[1].isUndefined())

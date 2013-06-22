@@ -93,11 +93,11 @@ Value ObjectCtor::construct(Managed *that, Value *args, int argc)
     return __qmljs_to_object(v4->current, args[0]);
 }
 
-Value ObjectCtor::call(Managed *, ExecutionContext *ctx, const Value &/*thisObject*/, Value *args, int argc)
+Value ObjectCtor::call(Managed *m, const Value &/*thisObject*/, Value *args, int argc)
 {
     if (!argc || args[0].isUndefined() || args[0].isNull())
-        return Value::fromObject(ctx->engine->newObject());
-    return __qmljs_to_object(ctx, args[0]);
+        return Value::fromObject(m->engine()->newObject());
+    return __qmljs_to_object(m->engine()->current, args[0]);
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -386,7 +386,7 @@ Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
         ctx->throwTypeError();
-    return f->call(ctx, Value::fromObject(o), 0, 0);
+    return f->call(Value::fromObject(o), 0, 0);
 }
 
 Value ObjectPrototype::method_valueOf(SimpleCallContext *ctx)

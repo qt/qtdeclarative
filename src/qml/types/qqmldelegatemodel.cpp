@@ -81,12 +81,12 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         return QV4::Value::undefinedValue();
     }
 
-    static QV4::Value call(QV4::Managed *that, QV4::ExecutionContext *ctx, const QV4::Value &thisObject, QV4::Value *args, int argc)
+    static QV4::Value call(QV4::Managed *that, const QV4::Value &thisObject, QV4::Value *args, int argc)
     {
         DelegateModelGroupFunction *f = static_cast<DelegateModelGroupFunction *>(that);
         QQmlDelegateModelItemObject *o = thisObject.as<QQmlDelegateModelItemObject>();
         if (!o)
-            ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            that->engine()->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::Value v = argc ? args[0] : QV4::Value::undefinedValue();
         return f->code(o->item, f->flag, v);

@@ -1477,7 +1477,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext)
-            callback->call(v4->current, activationObject, 0, 0);
+            callback->call(activationObject, 0, 0);
 
         // if the callingContext object is no longer valid, then it has been
         // deleted explicitly (e.g., by a Loader deleting the itemContext when
@@ -1569,7 +1569,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return Value::fromObject(w);
     }
 
-    static Value call(Managed *, ExecutionContext *, const Value &, Value *, int) {
+    static Value call(Managed *, const Value &, Value *, int) {
         return Value::undefinedValue();
     }
 

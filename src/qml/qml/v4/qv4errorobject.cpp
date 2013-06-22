@@ -240,7 +240,7 @@ Value ErrorCtor::construct(Managed *m, Value *args, int argc)
     return Value::fromObject(m->engine()->newErrorObject(argc ? args[0] : Value::undefinedValue()));
 }
 
-Value ErrorCtor::call(Managed *that, ExecutionContext *ctx, const Value &, Value *args, int argc)
+Value ErrorCtor::call(Managed *that, const Value &, Value *args, int argc)
 {
     return that->construct(args, argc);
 }

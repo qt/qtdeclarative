@@ -71,7 +71,7 @@ struct QmlBindingWrapper : FunctionObject
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
     }
 
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
     static void markObjects(Managed *m)
     {
         QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
@@ -89,9 +89,9 @@ private:
 
 DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
 
-Value QmlBindingWrapper::call(Managed *that, ExecutionContext *ctx, const Value &, Value *, int)
+Value QmlBindingWrapper::call(Managed *that, const Value &, Value *, int)
 {
-    ExecutionEngine *engine = ctx->engine;
+    ExecutionEngine *engine = that->engine();
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
 
     ExecutionContext *qmlScope = engine->newQmlContext(This, This->qml);

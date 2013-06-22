@@ -516,7 +516,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(ctx, Value::fromObject(engine->globalObject), arguments.data(), arguments.size());
+        result = f->call(Value::fromObject(engine->globalObject), arguments.data(), arguments.size());
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();
@@ -571,7 +571,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(ctx, instance.d->getValue(engine), arguments.data(), arguments.size());
+        result = f->call(instance.d->getValue(engine), arguments.data(), arguments.size());
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();

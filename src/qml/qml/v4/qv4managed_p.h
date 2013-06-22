@@ -99,7 +99,7 @@ struct GCDeletable
 
 struct ManagedVTable
 {
-    Value (*call)(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    Value (*call)(Managed *, const Value &thisObject, Value *args, int argc);
     Value (*construct)(Managed *, Value *args, int argc);
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
@@ -261,7 +261,7 @@ public:
         return vtbl->hasInstance(this, v);
     }
     Value construct(Value *args, int argc);
-    Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    Value call(const Value &thisObject, Value *args, int argc);
     Value get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
     void put(String *name, const Value &value)
@@ -290,7 +290,7 @@ public:
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const Value &value);
     static Value construct(Managed *m, Value *, int);
-    static Value call(Managed *, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *m, const Value &, Value *, int);
     static void getLookup(Managed *m, Lookup *, Value *);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static bool isEqualTo(Managed *m, Managed *other);

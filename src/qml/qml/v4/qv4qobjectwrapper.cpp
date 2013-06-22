@@ -715,7 +715,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             }
 
             try {
-                f->call(v4->current, This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value(), args.data(), argCount);
+                f->call(This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value(), args.data(), argCount);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 QQmlError error;
@@ -1689,14 +1689,15 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args
     return QV4::Value::undefinedValue();
 }
 
-Value QObjectMethod::call(Managed *m, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value QObjectMethod::call(Managed *m, const Value &thisObject, Value *args, int argc)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
-    return This->callInternal(context, thisObject, args, argc);
+    return This->callInternal(thisObject, args, argc);
 }
 
-Value QObjectMethod::callInternal(ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value QObjectMethod::callInternal(const Value &, Value *args, int argc)
 {
+    ExecutionContext *context = engine()->current;
     if (m_index == DestroyMethod)
         return method_destroy(context, args, argc);
     else if (m_index == ToStringMethod)

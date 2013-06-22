@@ -246,7 +246,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
     QV4::Value v = QV4::Value::undefinedValue();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
     try {
-        v = f->call(ctx, global(), args, 1);
+        v = f->call(global(), args, 1);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         v = e.value();
@@ -348,7 +348,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
     try {
-        workerEngine->onmessage.value().asFunctionObject()->call(f->internalClass->engine->current, workerEngine->global(), args, 2);
+        workerEngine->onmessage.value().asFunctionObject()->call(workerEngine->global(), args, 2);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;

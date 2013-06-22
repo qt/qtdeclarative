@@ -57,7 +57,7 @@ Value BooleanCtor::construct(Managed *m, Value *args, int argc)
     return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
+Value BooleanCtor::call(Managed *, const Value &, Value *argv, int argc)
 {
     bool value = argc ? argv[0].toBoolean() : 0;
     return Value::fromBoolean(value);

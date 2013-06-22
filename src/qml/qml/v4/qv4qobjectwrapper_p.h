@@ -141,9 +141,9 @@ private:
     int m_index;
     QV4::PersistentValue m_qmlGlobal;
 
-    static Value call(Managed *, ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    static Value call(Managed *, const Value &thisObject, Value *args, int argc);
 
-    Value callInternal(ExecutionContext *context, const Value &thisObject, Value *args, int argc);
+    Value callInternal(const Value &, Value *args, int argc);
 
     static void destroy(Managed *that)
     {

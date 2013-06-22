@@ -1218,7 +1218,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
         QV4::Value args[] = { object, valuemap };
-        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
+        f.asFunctionObject()->call(QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 
     d->completeCreate();
@@ -1363,7 +1363,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
         QV4::Value args[] = { object, valuemap };
-        f.asFunctionObject()->call(v4engine->current, QV4::Value::fromObject(v4engine->globalObject), args, 2);
+        f.asFunctionObject()->call(QV4::Value::fromObject(v4engine->globalObject), args, 2);
     }
 }
 
@@ -1459,7 +1459,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
 
         QV4::Value f = QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
         QV4::Value args[] = { QV4::QObjectWrapper::wrap(v4, o), valuemap };
-        f.asFunctionObject()->call(v4->current, QV4::Value::fromObject(v4->globalObject), args, 2);
+        f.asFunctionObject()->call(QV4::Value::fromObject(v4->globalObject), args, 2);
     }
 }
     

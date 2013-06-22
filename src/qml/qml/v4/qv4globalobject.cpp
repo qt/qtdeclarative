@@ -352,11 +352,12 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
-Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject*/, Value *args, int argc, bool directCall)
+Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
         return Value::undefinedValue();
 
+    ExecutionContext *parentContext = engine()->current;
     ExecutionEngine *engine = parentContext->engine;
     ExecutionContext *ctx = parentContext;
 
@@ -421,10 +422,10 @@ Value EvalFunction::evalCall(ExecutionContext *parentContext, Value /*thisObject
 }
 
 
-Value EvalFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value EvalFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
 {
     // indirect call
-    return static_cast<EvalFunction *>(that)->evalCall(context, thisObject, args, argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(thisObject, args, argc, false);
 }
 
 

@@ -52,10 +52,10 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
     EvalFunction(ExecutionContext *scope);
 
-    Value evalCall(ExecutionContext *context, Value thisObject, Value *args, int argc, bool directCall);
+    Value evalCall(Value thisObject, Value *args, int argc, bool directCall);
 
     using Managed::construct;
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
 protected:
     static const ManagedVTable static_vtbl;

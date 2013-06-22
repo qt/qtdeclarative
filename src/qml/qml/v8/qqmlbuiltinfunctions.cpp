@@ -1183,10 +1183,10 @@ struct BindingFunction : public QV4::FunctionObject
         bindingKeyFlag = true;
     }
 
-    static Value call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *argv, int argc)
+    static Value call(Managed *that, const Value &thisObject, Value *argv, int argc)
     {
         BindingFunction *This = static_cast<BindingFunction*>(that);
-        return This->originalFunction->call(ctx, thisObject, argv, argc);
+        return This->originalFunction->call(thisObject, argv, argc);
     }
 
     static void markObjects(Managed *that)

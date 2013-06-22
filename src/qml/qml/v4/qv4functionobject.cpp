@@ -134,7 +134,7 @@ Value FunctionObject::construct(Managed *that, Value *, int)
     return Value::fromObject(obj);
 }
 
-Value FunctionObject::call(Managed *, ExecutionContext *, const Value &, Value *, int)
+Value FunctionObject::call(Managed *, const Value &, Value *, int)
 {
     return Value::undefinedValue();
 }
@@ -213,7 +213,7 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value FunctionCtor::call(Managed *that, const Value &, Value *args, int argc)
 {
     return construct(that, args, argc);
 }
@@ -268,7 +268,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    return o->call(ctx, thisArg, args.data(), args.size());
+    return o->call(thisArg, args.data(), args.size());
 }
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
@@ -284,7 +284,7 @@ Value FunctionPrototype::method_call(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    return o->call(ctx, thisArg, args.data(), args.size());
+    return o->call(thisArg, args.data(), args.size());
 }
 
 Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
@@ -377,16 +377,17 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
     return Value::fromObject(obj);
 }
 
-Value ScriptFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value ScriptFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     assert(f->function->code);
     quintptr stackSpace[stackContextSize/sizeof(quintptr)];
-    ExecutionContext *ctx = context->engine->newCallContext(stackSpace, f, thisObject, args, argc);
+    ExecutionContext *context = f->engine()->current;
+    ExecutionContext *ctx = f->engine()->newCallContext(stackSpace, f, thisObject, args, argc);
 
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {
-            ctx->thisObject = Value::fromObject(context->engine->globalObject);
+            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
             ctx->thisObject = Value::fromObject(thisObject.toObject(context));
         }
@@ -421,16 +422,19 @@ Value BuiltinFunctionOld::construct(Managed *f, Value *, int)
     return Value::undefinedValue();
 }
 
-Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value BuiltinFunctionOld::call(Managed *that, const Value &thisObject, Value *args, int argc)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
+    ExecutionEngine *v4 = f->engine();
+    ExecutionContext *context = v4->current;
+
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.thisObject = thisObject;
     ctx.arguments = args;
     ctx.argumentCount = argc;
-    context->engine->pushContext(&ctx);
+    v4->pushContext(&ctx);
 
     if (!f->strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
@@ -452,9 +456,11 @@ Value BuiltinFunctionOld::call(Managed *that, ExecutionContext *context, const V
     return result;
 }
 
-Value IndexedBuiltinFunction::call(Managed *that, ExecutionContext *context, const Value &thisObject, Value *args, int argc)
+Value IndexedBuiltinFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
+    ExecutionEngine *v4 = f->engine();
+    ExecutionContext *context = v4->current;
 
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
@@ -462,7 +468,7 @@ Value IndexedBuiltinFunction::call(Managed *that, ExecutionContext *context, con
     ctx.thisObject = thisObject;
     ctx.arguments = args;
     ctx.argumentCount = argc;
-    context->engine->pushContext(&ctx);
+    v4->pushContext(&ctx);
 
     if (!f->strictMode && !thisObject.isObject()) {
         // Built-in functions allow for the this object to be null or undefined. This overrides
@@ -512,14 +518,14 @@ void BoundFunction::destroy(Managed *that)
     static_cast<BoundFunction *>(that)->~BoundFunction();
 }
 
-Value BoundFunction::call(Managed *that, ExecutionContext *context, const Value &, Value *args, int argc)
+Value BoundFunction::call(Managed *that, const Value &, Value *args, int argc)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
     memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
 
-    return f->target->call(context, f->boundThis, newArgs, f->boundArgs.size() + argc);
+    return f->target->call(f->boundThis, newArgs, f->boundArgs.size() + argc);
 }
 
 Value BoundFunction::construct(Managed *that, Value *args, int argc)

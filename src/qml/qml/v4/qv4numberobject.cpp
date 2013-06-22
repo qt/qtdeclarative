@@ -62,7 +62,7 @@ Value NumberCtor::construct(Managed *m, Value *args, int argc)
     return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(d)));
 }
 
-Value NumberCtor::call(Managed *m, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
+Value NumberCtor::call(Managed *, const Value &, Value *argv, int argc)
 {
     double d = argc ? argv[0].toNumber() : 0.;
     return Value::fromDouble(d);

@@ -115,15 +115,12 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Value newInstance();
 
     static Value construct(Managed *that, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
     inline Value construct(Value *args, int argc) {
         return vtbl->construct(this, args, argc);
     }
-    inline Value call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
-        return vtbl->call(this, context, thisObject, args, argc);
-    }
     inline Value call(const Value &thisObject, Value *args, int argc) {
-        return vtbl->call(this, engine()->current, thisObject, args, argc);
+        return vtbl->call(this, thisObject, args, argc);
     }
 
 protected:
@@ -137,7 +134,7 @@ struct FunctionCtor: FunctionObject
     FunctionCtor(ExecutionContext *scope);
 
     static Value construct(Managed *that, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -160,7 +157,7 @@ struct BuiltinFunctionOld: FunctionObject {
     BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
 
     static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -188,7 +185,7 @@ struct IndexedBuiltinFunction: FunctionObject
         return Value::undefinedValue();
     }
 
-    static Value call(Managed *that, ExecutionContext *ctx, const Value &thisObject, Value *args, int argc);
+    static Value call(Managed *that, const Value &thisObject, Value *args, int argc);
 };
 
 
@@ -196,7 +193,7 @@ struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, Function *function);
 
     static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -212,7 +209,7 @@ struct BoundFunction: FunctionObject {
 
 
     static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *);

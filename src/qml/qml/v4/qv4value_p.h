@@ -556,8 +556,8 @@ inline ErrorObject *Value::asErrorObject() const
 inline Value Managed::construct(Value *args, int argc) {
     return vtbl->construct(this, args, argc);
 }
-inline Value Managed::call(ExecutionContext *context, const Value &thisObject, Value *args, int argc) {
-    return vtbl->call(this, context, thisObject, args, argc);
+inline Value Managed::call(const Value &thisObject, Value *args, int argc) {
+    return vtbl->call(this, thisObject, args, argc);
 }
 
 struct PersistentValuePrivate

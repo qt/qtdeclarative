@@ -181,9 +181,9 @@ Value Managed::construct(Managed *m, Value *, int)
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::call(Managed *, ExecutionContext *context, const Value &, Value *, int)
+Value Managed::call(Managed *m, const Value &, Value *, int)
 {
-    context->throwTypeError();
+    m->engine()->current->throwTypeError();
 }
 
 void Managed::getLookup(Managed *m, Lookup *, Value *)

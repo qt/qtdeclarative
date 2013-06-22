@@ -167,7 +167,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 This = value;
         }
 
-        result = function.asFunctionObject()->call(ctx, This, args, argc);
+        result = function.asFunctionObject()->call(This, args, argc);
 
         if (isUndefined)
             *isUndefined = result.isUndefined();

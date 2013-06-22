@@ -159,13 +159,13 @@ Value StringCtor::construct(Managed *m, Value *argv, int argc)
     return Value::fromObject(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *, ExecutionContext *parentCtx, const Value &thisObject, Value *argv, int argc)
+Value StringCtor::call(Managed *m, const Value &, Value *argv, int argc)
 {
     Value value;
     if (argc)
-        value = Value::fromString(argv[0].toString(parentCtx));
+        value = Value::fromString(argv[0].toString(m->engine()->current));
     else
-        value = Value::fromString(parentCtx, QString());
+        value = Value::fromString(m->engine()->current, QString());
     return value;
 }
 
@@ -355,7 +355,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
     Value arg = Value::fromString(s);
     if (!global)
-        return exec->call(context, Value::fromObject(rx), &arg, 1);
+        return exec->call(Value::fromObject(rx), &arg, 1);
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
@@ -364,7 +364,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(context, Value::fromObject(rx), &arg, 1);
+        Value result = exec->call(Value::fromObject(rx), &arg, 1);
         if (result.isNull())
             break;
         assert(result.isObject());
@@ -494,7 +494,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             args[numCaptures] = Value::fromUInt32(matchStart);
             args[numCaptures + 1] = Value::fromString(ctx, string);
-            Value replacement = searchCallback->call(ctx, Value::undefinedValue(), args, argc);
+            Value replacement = searchCallback->call(Value::undefinedValue(), args, argc);
             QString replacementString = replacement.toString(ctx)->toQString();
             result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacementString);
             replacementDelta += replacementString.length() - matchEnd + matchStart;

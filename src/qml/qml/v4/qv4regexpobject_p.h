@@ -99,7 +99,7 @@ struct RegExpCtor: FunctionObject
     RegExpCtor(ExecutionContext *scope);
 
     static Value construct(Managed *m, Value *args, int argc);
-    static Value call(Managed *that, ExecutionContext *, const Value &, Value *, int);
+    static Value call(Managed *that, const Value &, Value *, int);
 
 protected:
     static const ManagedVTable static_vtbl;

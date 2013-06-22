@@ -471,14 +471,14 @@ Value __qmljs_object_default_value(Object *object, int typeHint)
 
     Value conv = object->get(meth1);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(ctx, Value::fromObject(object), 0, 0);
+        Value r = o->call(Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
     conv = object->get(meth2);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(ctx, Value::fromObject(object), 0, 0);
+        Value r = o->call(Value::fromObject(object), 0, 0);
         if (r.isPrimitive())
             return r;
     }
@@ -627,7 +627,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
 
                 Value args[1];
                 args[0] = value;
-                setter->call(ctx, Value::fromObject(o), args, 1);
+                setter->call(Value::fromObject(o), args, 1);
                 return;
             }
         }
@@ -770,13 +770,13 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
     Value thisObject = Value::undefinedValue();
 
     if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
+        Value res = static_cast<EvalFunction *>(o)->evalCall(thisObject, args, argc, true);
         if (result)
             *result = res;
         return;
     }
 
-    Value res = o->call(context, thisObject, args, argc);
+    Value res = o->call(thisObject, args, argc);
     if (result)
         *result = res;
 }
@@ -798,13 +798,13 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
     Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
 
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(context, thisObject, args, argc, true);
+        Value res = static_cast<EvalFunction *>(o)->evalCall(thisObject, args, argc, true);
         if (result)
             *result = res;
         return;
     }
 
-    Value res = o->call(context, thisObject, args, argc);
+    Value res = o->call(thisObject, args, argc);
     if (result)
         *result = res;
 }
@@ -825,7 +825,7 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
         context->throwTypeError(error);
     }
 
-    Value res = o->call(context, thisObject, args, argc);
+    Value res = o->call(thisObject, args, argc);
     if (result)
         *result = res;
 }
@@ -851,7 +851,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(context, thisObject, args, argc);
+    Value res = o->call(thisObject, args, argc);
     if (result)
         *result = res;
 }
@@ -866,7 +866,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(context, thisObject, args, argc);
+    Value res = o->call(thisObject, args, argc);
     if (result)
         *result = res;
 }
@@ -876,7 +876,7 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *t
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
-    Value res = o->call(context, thisObject ? *thisObject : Value::undefinedValue(), args, argc);
+    Value res = o->call(thisObject ? *thisObject : Value::undefinedValue(), args, argc);
     if (result)
         *result = res;
 }

@@ -160,7 +160,7 @@ void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
             if (!getter)
                 res = Value::undefinedValue();
             else
-                res = getter->call(getter->engine()->current, object, 0, 0);
+                res = getter->call(object, 0, 0);
             if (result)
                 *result = res;
             return;
@@ -180,7 +180,7 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
             if (!getter)
                 res = Value::undefinedValue();
             else
-                res = getter->call(getter->engine()->current, object, 0, 0);
+                res = getter->call(object, 0, 0);
             if (result)
                 *result = res;
             return;
@@ -203,7 +203,7 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
                     if (!getter)
                         res = Value::undefinedValue();
                     else
-                        res = getter->call(getter->engine()->current, object, 0, 0);
+                        res = getter->call(object, 0, 0);
                     if (result)
                         *result = res;
                     return;
@@ -295,7 +295,7 @@ void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
         if (!getter)
             *result = Value::undefinedValue();
         else
-            *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
+            *result = getter->call(Value::undefinedValue(), 0, 0);
         return;
     }
     l->globalGetter = globalGetterGeneric;
@@ -311,7 +311,7 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
         if (!getter)
             *result = Value::undefinedValue();
         else
-            *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
+            *result = getter->call(Value::undefinedValue(), 0, 0);
         return;
     }
     l->globalGetter = globalGetterGeneric;
@@ -330,7 +330,7 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
                 if (!getter)
                     *result = Value::undefinedValue();
                 else
-                    *result = getter->call(ctx, Value::undefinedValue(), 0, 0);
+                    *result = getter->call(Value::undefinedValue(), 0, 0);
                 return;
             }
         }
