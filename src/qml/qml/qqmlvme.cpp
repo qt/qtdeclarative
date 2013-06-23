@@ -1159,8 +1159,11 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
         }
     }
 
-    if (!script->m_program)
+    if (!script->m_program) {
+        if (shared)
+            script->m_loaded = true;
         return QV4::PersistentValue();
+    }
 
     QV4::Value qmlglobal = QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0);
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
