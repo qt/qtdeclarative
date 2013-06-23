@@ -815,6 +815,11 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
     Value thisObject = thatObject;
     Managed *baseObject = thisObject.asManaged();
     if (!baseObject) {
+        if (thisObject.isNull() || thisObject.isUndefined()) {
+            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(thisObject.toQString());
+            context->throwTypeError(message);
+        }
+
         baseObject = __qmljs_convert_to_object(context, thisObject);
         thisObject = Value::fromObject(static_cast<Object *>(baseObject));
     }

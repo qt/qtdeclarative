@@ -136,6 +136,9 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (resource->isNullWrapper)
         return Object::get(m, name, hasProperty);
 
+    if (QV4::QmlContextWrapper::callingContext(v4) != resource->context)
+        return Object::get(m, name, hasProperty);
+
     bool hasProp;
     Value result = Object::get(m, name, &hasProp);
     if (hasProp) {
