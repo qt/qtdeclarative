@@ -106,7 +106,13 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
     newClass->propertyTable.insert(string->identifier, size);
-    newClass->nameMap.append(string);
+
+    // The incoming string can come from anywhere, so make sure to
+    // store a string in the nameMap that's guaranteed to get
+    // marked properly during GC.
+    String *name = engine->newIdentifier(string->toQString());
+    newClass->nameMap.append(name);
+
     newClass->propertyData.append(data);
     ++newClass->size;
     transitions.insert(id, newClass);
