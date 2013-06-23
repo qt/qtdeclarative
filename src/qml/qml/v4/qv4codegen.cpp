@@ -1712,11 +1712,14 @@ bool Codegen::visit(PreDecrementExpression *ast)
 {
     Result expr = expression(ast->expression);
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
-    move(*expr, binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1)));
+    V4IR::Expr *op = binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1));
     if (_expr.accept(nx)) {
-        // nothing to do
+        move(*expr, op);
     } else {
-        _expr.code = *expr;
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), op);
+        move(*expr, _block->TEMP(t));
+        _expr.code = _block->TEMP(t);
     }
     return false;
 }
@@ -1725,11 +1728,14 @@ bool Codegen::visit(PreIncrementExpression *ast)
 {
     Result expr = expression(ast->expression);
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
-    move(*expr, binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1)));
+    V4IR::Expr *op = binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1));
     if (_expr.accept(nx)) {
-        // nothing to do
+        move(*expr, op);
     } else {
-        _expr.code = *expr;
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), op);
+        move(*expr, _block->TEMP(t));
+        _expr.code = _block->TEMP(t);
     }
     return false;
 }
