@@ -336,6 +336,36 @@ public:
         return false;
     }
 
+    struct DefaultCompareFunctor
+    {
+        bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
+        {
+            return convertElementToString(lhs) < convertElementToString(rhs);
+        }
+    };
+
+    struct CompareFunctor
+    {
+        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
+            : m_ctx(ctx), m_compareFn(compareFn)
+        {}
+
+        bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
+        {
+            QV4::Managed *fun = this->m_compareFn.asManaged();
+            QV4::Value argv[2] = {
+                convertElementToValue(this->m_ctx->engine, lhs),
+                convertElementToValue(this->m_ctx->engine, rhs)
+            };
+            QV4::Value result = fun->call(QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
+            return result.toNumber() < 0;
+        }
+
+    private:
+        QV4::ExecutionContext *m_ctx;
+        QV4::Value m_compareFn;
+    };
+
     void sort(QV4::SimpleCallContext *ctx)
     {
         if (m_isReference) {
@@ -343,36 +373,6 @@ public:
                 return;
             loadReference();
         }
-
-        struct DefaultCompareFunctor
-        {
-            bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
-            {
-                return convertElementToString(lhs) < convertElementToString(rhs);
-            }
-        };
-
-        struct CompareFunctor
-        {
-            CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
-                : m_ctx(ctx), m_compareFn(compareFn)
-            {}
-
-            bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
-            {
-                QV4::Managed *fun = this->m_compareFn.asManaged();
-                QV4::Value argv[2] = {
-                    convertElementToValue(this->m_ctx->engine, lhs),
-                    convertElementToValue(this->m_ctx->engine, rhs)
-                };
-                QV4::Value result = fun->call(QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
-                return result.toNumber() < 0;
-            }
-
-        private:
-            QV4::ExecutionContext *m_ctx;
-            QV4::Value m_compareFn;
-        };
 
         if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
             QV4::Value compareFn = ctx->arguments[0];
