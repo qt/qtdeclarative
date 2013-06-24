@@ -190,6 +190,8 @@ struct PropertyAttributes
 
 }
 
+Q_DECLARE_TYPEINFO(QV4::PropertyAttributes, Q_PRIMITIVE_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QV4GLOBAL_H

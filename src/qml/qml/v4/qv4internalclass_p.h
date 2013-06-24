@@ -53,9 +53,62 @@ struct String;
 struct ExecutionEngine;
 struct Object;
 
+struct PropertyHashData;
+struct PropertyHash
+{
+    struct Entry {
+        uint identifier;
+        uint index;
+    };
+
+    PropertyHashData *d;
+
+    inline PropertyHash();
+    inline PropertyHash(const PropertyHash &other);
+    inline ~PropertyHash();
+
+    void addEntry(const Entry &entry, int classSize);
+    uint lookup(uint identifier) const;
+
+private:
+    PropertyHash &operator=(const PropertyHash &other);
+};
+
+struct PropertyHashData
+{
+    PropertyHashData(int numBits);
+    ~PropertyHashData() {
+        free(entries);
+    }
+
+    QBasicAtomicInt refCount;
+    int alloc;
+    int size;
+    int numBits;
+    PropertyHash::Entry *entries;
+};
+
+inline PropertyHash::PropertyHash()
+{
+    d = new PropertyHashData(3);
+}
+
+inline PropertyHash::PropertyHash(const PropertyHash &other)
+{
+    d = other.d;
+    d->refCount.ref();
+}
+
+inline PropertyHash::~PropertyHash()
+{
+    if (!d->refCount.deref())
+        delete d;
+}
+
+
 struct InternalClass {
     ExecutionEngine *engine;
-    QHash<uint, uint> propertyTable; // id to valueIndex
+    PropertyHash propertyTable; // id to valueIndex
     QVector<String *> nameMap;
 
     QVector<PropertyAttributes> propertyData;

@@ -45,7 +45,81 @@
 #include <qv4identifier_p.h>
 #include "qv4object_p.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
+
+static const uchar prime_deltas[] = {
+    0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
+    1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
+};
+
+static inline int primeForNumBits(int numBits)
+{
+    return (1 << numBits) + prime_deltas[numBits];
+}
+
+PropertyHashData::PropertyHashData(int numBits)
+    : refCount(Q_BASIC_ATOMIC_INITIALIZER(1))
+    , numBits(numBits)
+    , size(0)
+{
+    alloc = primeForNumBits(numBits);
+    entries = (PropertyHash::Entry *)malloc(alloc*sizeof(PropertyHash::Entry));
+    for (uint i = 0; i < alloc; ++i) {
+        entries[i].identifier = UINT_MAX;
+        entries[i].index = UINT_MAX;
+    }
+}
+
+void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
+{
+    // fill up to max 50%
+    bool grow = (d->alloc <= d->size*2);
+
+    if (classSize < d->size || grow) {
+        PropertyHashData *dd = new PropertyHashData(grow ? d->numBits + 1 : d->numBits);
+        for (uint i = 0; i < d->alloc; ++i) {
+            const Entry &e = d->entries[i];
+            if (e.identifier == UINT_MAX || e.index >= classSize)
+                continue;
+            uint idx = e.identifier % dd->alloc;
+            while (dd->entries[idx].identifier != UINT_MAX) {
+                ++idx;
+                idx %= dd->alloc;
+            }
+            dd->entries[idx] = e;
+        }
+        dd->size = classSize;
+        assert(d->refCount.load() > 1);
+        d->refCount.deref();
+        d = dd;
+    }
+
+    uint idx = entry.identifier % d->alloc;
+    while (d->entries[idx].identifier != UINT_MAX) {
+        ++idx;
+        idx %= d->alloc;
+    }
+    d->entries[idx] = entry;
+    ++d->size;
+}
+
+uint PropertyHash::lookup(uint identifier) const
+{
+    assert(d->entries);
+
+    uint idx = identifier % d->alloc;
+    while (1) {
+        if (d->entries[idx].identifier == identifier)
+            return d->entries[idx].index;
+        if (d->entries[idx].identifier == UINT_MAX)
+            return UINT_MAX;
+        ++idx;
+        idx %= d->alloc;
+    }
+}
+
 
 InternalClass::InternalClass(const QV4::InternalClass &other)
     : engine(other.engine)
@@ -91,11 +165,11 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 //    qDebug() << "InternalClass::addMember()" << string->toQString() << size << hex << (uint)data.m_all << data.type();
     data.resolve();
     engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier | (data.flags() << 27);
 
-    if (propertyTable.constFind(string->identifier) != propertyTable.constEnd())
+    if (propertyTable.lookup(string->identifier) < size)
         return changeMember(string, data, index);
 
+    uint id = string->identifier | (data.flags() << 27);
     QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(id);
 
     if (index)
@@ -105,7 +179,8 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
-    newClass->propertyTable.insert(string->identifier, size);
+    PropertyHash::Entry e = { string->identifier, size };
+    newClass->propertyTable.addEntry(e, size);
 
     // The incoming string can come from anywhere, so make sure to
     // store a string in the nameMap that's guaranteed to get
@@ -121,8 +196,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
 void InternalClass::removeMember(Object *object, uint id)
 {
-    assert (propertyTable.constFind(id) != propertyTable.constEnd());
-    int propIdx = propertyTable.constFind(id).value();
+    int propIdx = propertyTable.lookup(id);
     assert(propIdx < size);
 
     int toRemove = - (int)id;
@@ -149,9 +223,9 @@ uint InternalClass::find(String *string)
     engine->identifierCache->toIdentifier(string);
     uint id = string->identifier;
 
-    QHash<uint, uint>::const_iterator it = propertyTable.constFind(id);
-    if (it != propertyTable.constEnd())
-        return it.value();
+    uint index = propertyTable.lookup(id);
+    if (index < size)
+        return index;
 
     return UINT_MAX;
 }
@@ -198,7 +272,7 @@ void InternalClass::destroy()
     // Free the memory of the hashes/vectors by calling clear(), which
     // re-assigns them to the shared null instance. Therefore Internalclass
     // doesn't need a destructor to be called.
-    propertyTable.clear();
+    propertyTable.~PropertyHash();
     nameMap.clear();
     propertyData.clear();
 
@@ -214,3 +288,5 @@ void InternalClass::destroy()
 
     transitions.clear();
 }
+
+QT_END_NAMESPACE
