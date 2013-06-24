@@ -556,7 +556,6 @@ static void qt_print_material_count()
 
 QSGMaterial::QSGMaterial()
     : m_flags(0)
-    , m_reserved(0)
 {
 #ifndef QT_NO_DEBUG
     if (qsg_leak_check) {

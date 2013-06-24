@@ -133,7 +133,6 @@ public:
     void setFlag(Flags flags, bool on = true);
 
 private:
-    friend class QSGContext;
     Flags m_flags;
     void *m_reserved;
     Q_DISABLE_COPY(QSGMaterial)

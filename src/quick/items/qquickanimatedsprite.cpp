@@ -377,8 +377,6 @@ QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     , m_pauseOffset(0)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(runningChanged(bool)),
-            this, SLOT(update()));
     connect(this, SIGNAL(widthChanged()),
             this, SLOT(sizeVertices()));
     connect(this, SIGNAL(heightChanged()),
@@ -660,7 +658,10 @@ void QQuickAnimatedSprite::prepareNextFrame()
         }
         if (m_loops > 0 && m_curLoop >= m_loops) {
             frameAt = 0;
-            m_running = false;
+            if (m_running) {
+                m_running = false;
+                emit runningChanged(false);
+            }
         }
     } else {
         frameAt = m_curFrame;

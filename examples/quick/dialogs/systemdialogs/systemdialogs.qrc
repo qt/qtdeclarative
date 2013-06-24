@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/dialogs">
-        <file>dialogs.qml</file>
+        <file>systemdialogs.qml</file>
         <file>FileDialogs.qml</file>
         <file>ColorDialogs.qml</file>
     </qresource>

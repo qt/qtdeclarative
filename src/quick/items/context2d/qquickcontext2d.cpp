@@ -1753,12 +1753,25 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 
 // Complex shapes (paths) API
 /*!
-  \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
-  Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
-  \image qml-item-canvas-arcTo2.png
-  \sa arcTo,
-      {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
-  */
+    \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius,
+        real startAngle, real endAngle, bool anticlockwise)
+
+    Adds an arc to the current subpath that lies on the circumference of the
+    circle whose center is at the point (\a x, \a y) and whose radius is
+    \a radius.
+
+    Both \c startAngle and \c endAngle are measured from the x-axis in radians.
+
+    \image qml-item-canvas-arc.png
+
+    \image qml-item-canvas-startAngle.png
+
+    The \a anticlockwise parameter is \c true for each arc in the figure above
+    because they are all drawn in the anticlockwise direction.
+
+    \sa arcTo, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C's 2D
+    Context Standard for arc()}
+*/
 static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
@@ -1787,25 +1800,28 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod object QtQuick2::Context2D::arcTo(real x1, real y1, real x2, real y2, real radius)
+    \qmlmethod object QtQuick2::Context2D::arcTo(real x1, real y1, real x2,
+        real y2, real radius)
 
-   Adds an arc with the given control points and radius to the current subpath, connected to the previous point by a straight line.
-   To draw an arc, you begin with the same steps your followed to create a line:
+    Adds an arc with the given control points and radius to the current subpath,
+    connected to the previous point by a straight line. To draw an arc, you
+    begin with the same steps you followed to create a line:
+
     \list
-    \li Call the context.beginPath() method to set a new path.
-    \li Call the context.moveTo(\c x, \c y) method to set your starting position on the canvas at the point (\c x,\c y).
-    \li To draw an arc or circle, call the context.arcTo(\c x1, \c y1, \c x2, \c y2,\c radius) method.
-       This adds an arc with starting point (\c x1,\c y1), ending point (\c x2, \c y2), and radius \c radius to the current subpath and connects
-       it to the previous subpath by a straight line.
+    \li Call the beginPath() method to set a new path.
+    \li Call the moveTo(\c x, \c y) method to set your starting position on the
+        canvas at the point (\c x, \c y).
+    \li To draw an arc or circle, call the arcTo(\a x1, \a y1, \a x2, \a y2,
+        \a radius) method. This adds an arc with starting point (\a x1, \a y1),
+        ending point (\a x2, \a y2), and \a radius to the current subpath and
+        connects it to the previous subpath by a straight line.
     \endlist
-    \image qml-item-canvas-arcTo.png
-    Both startAngle and endAngle are measured from the x axis in units of radians.
 
-    \image qml-item-canvas-startAngle.png
-    The anticlockwise has the value TRUE for each arc in the figure above because they are all drawn in the counterclockwise direction.
-  \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
-      context standard for arcTo}
-  */
+    \image qml-item-canvas-arcTo.png
+
+    \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C's 2D
+    Context Standard for arcTo()}
+*/
 static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
@@ -2456,7 +2472,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
-  \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, sh, real dx, real dy, real dw, dh)
+  \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, real sh, real dx, real dy, real dw, real dh)
   This is an overloaded function.
   Draws the given item as \a image from source point (\a sx, \a sy) and source width \a sw, source height \a sh
   onto the canvas at point (\a dx, \a dy) and with width \a dw, height \a dh.
@@ -2715,20 +2731,25 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     return v8::Undefined();
 }
 /*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
-   Creates a CanvasImageData object with the given dimensions(\a sw, \a sh).
-  */
-/*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(CanvasImageData imageData)
-   Creates a CanvasImageData object with the same dimensions as the argument.
-  */
-/*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(Url imageUrl)
-   Creates a CanvasImageData object with the given image loaded from \a imageUrl.
-   Note:The \a imageUrl must be already loaded before this function call, if not, an empty
-   CanvasImageData obect will be returned.
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
 
-   \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(), QtQuick2::Canvas::isImageLoaded
+    Creates a CanvasImageData object with the given dimensions(\a sw, \a sh).
+*/
+/*!
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(CanvasImageData imageData)
+
+    Creates a CanvasImageData object with the same dimensions as the argument.
+*/
+/*!
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(Url imageUrl)
+
+    Creates a CanvasImageData object with the given image loaded from \a imageUrl.
+
+    \note The \a imageUrl must be already loaded before this function call,
+    otherwise an empty CanvasImageData obect will be returned.
+
+    \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(),
+        QtQuick2::Canvas::isImageLoaded
   */
 static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 {
