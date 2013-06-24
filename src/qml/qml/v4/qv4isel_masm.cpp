@@ -267,8 +267,8 @@ void Assembler::leaveStandardStackFrame(int locals)
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
-    move(TrustedImm32(frameSize), Assembler::ScratchRegister);
-    add32(Assembler::ScratchRegister, StackPointerRegister);
+    move(TrustedImm32(frameSize), JSC::ARMRegisters::r3);
+    add32(JSC::ARMRegisters::r3, StackPointerRegister);
 #else
     addPtr(TrustedImm32(frameSize), StackPointerRegister);
 #endif
