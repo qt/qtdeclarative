@@ -5,3 +5,4 @@ SUBDIRS += \
         simplematerial \
         textureinsgnode \
         textureinthread \
+        threadedanimation
