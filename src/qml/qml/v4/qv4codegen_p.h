@@ -48,6 +48,8 @@
 #include <QtCore/QStringList>
 #include <assert.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 struct DiagnosticMessage;
 struct ExecutionContext;
@@ -447,5 +449,7 @@ private:
 };
 
 }
+
+QT_END_NAMESPACE
 
 #endif // QV4CODEGEN_P_H

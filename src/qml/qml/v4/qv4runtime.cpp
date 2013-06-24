@@ -67,9 +67,9 @@
 #include <execinfo.h>
 #endif
 
-using namespace QV4;
+QT_BEGIN_NAMESPACE
 
-extern "C" {
+namespace QV4 {
 
 void __qmljs_numberToString(QString *result, double num, int radix)
 {
@@ -1295,4 +1295,6 @@ void __qmljs_decrement(Value *result, const Value &value)
     }
 }
 
-} // extern "C"
+} // namespace QV4
+
+QT_END_NAMESPACE

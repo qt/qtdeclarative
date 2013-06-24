@@ -58,6 +58,8 @@
 #include <execinfo.h>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 
 static void *removeThumbBit(void *addr)
@@ -195,6 +197,8 @@ void UnwindHelper::writeARMUnwindInfo(void *codeAddr, int codeSize)
 
 }
 
+QT_END_NAMESPACE
+
 extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount)
 {
     typedef void *(*Old_Unwind_Find_exidx)(void*, int*);
@@ -204,11 +208,11 @@ extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount
         oldFunction = (Old_Unwind_Find_exidx)dlsym(RTLD_NEXT, "__gnu_Unwind_Find_exidx");
 
     {
-        QMutexLocker locker(&QV4::functionProtector);
-        QV4::Function *function = QV4::lookupFunction(pc);
+        QMutexLocker locker(&QT_PREPEND_NAMESPACE(QV4::functionProtector));
+        QV4::Function *function = QT_PREPEND_NAMESPACE(QV4::lookupFunction(pc));
         if (function) {
             *entryCount = 1;
-            void * codeStart = QV4::removeThumbBit(function->codeRef.code().executableAddress());
+            void * codeStart = QT_PREPEND_NAMESPACE(QV4::removeThumbBit(function->codeRef.code().executableAddress()));
             // At the end of the function we store our synthetic exception table entry.
             return (char *)codeStart + function->codeSize;
         }

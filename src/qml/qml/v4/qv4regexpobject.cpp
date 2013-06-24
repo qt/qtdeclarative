@@ -62,6 +62,8 @@
 #include <iostream>
 #include "qv4alloca_p.h"
 
+QT_BEGIN_NAMESPACE
+
 Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
 using namespace QV4;
@@ -85,7 +87,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
     , global(false)
 {
     // Convert the pattern to a ECMAScript pattern.
-    QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
+    QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
     if (re.isMinimal()) {
         QString ecmaPattern;
         int len = pattern.length();
@@ -354,3 +356,4 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
     return Value::undefinedValue();
 }
 
+QT_END_NAMESPACE

@@ -44,6 +44,8 @@
 #include "qv4string_p.h"
 #include "qv4value_p.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
 
 Function::~Function()
@@ -83,3 +85,4 @@ int Function::lineNumberForProgramCounter(qptrdiff offset) const
     return it->lineNumber;
 }
 
+QT_END_NAMESPACE

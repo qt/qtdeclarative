@@ -48,6 +48,8 @@
 #include <qglobal.h>
 #include <QHash>
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 struct ExecutionEngine;
 struct Function;
@@ -159,5 +161,7 @@ private:
 } // namespace IR
 
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ISEL_P_H

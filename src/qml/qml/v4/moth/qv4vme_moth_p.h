@@ -45,6 +45,8 @@
 #include <private/qv4runtime_p.h>
 #include "qv4instr_moth_p.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
     struct Value;
 }
@@ -72,5 +74,7 @@ private:
 
 } // namespace Moth
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4VME_MOTH_P_H

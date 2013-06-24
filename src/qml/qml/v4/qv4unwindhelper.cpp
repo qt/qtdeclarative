@@ -68,6 +68,8 @@
 #  include <qv4unwindhelper_p-arm.h>
 #endif // USE_ARM_HELPER
 
+QT_BEGIN_NAMESPACE
+
 #ifdef USE_NULL_HELPER
 using namespace QV4;
 void UnwindHelper::prepareForUnwind(ExecutionContext *) {}
@@ -77,3 +79,4 @@ void UnwindHelper::deregisterFunction(Function *function) {Q_UNUSED(function);}
 void UnwindHelper::deregisterFunctions(const QVector<Function *> &functions) {Q_UNUSED(functions);}
 #endif // USE_NULL_HELPER
 
+QT_END_NAMESPACE

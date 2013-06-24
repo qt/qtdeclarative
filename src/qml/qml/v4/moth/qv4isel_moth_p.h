@@ -49,6 +49,8 @@
 #include <private/qv4object_p.h>
 #include "qv4instr_moth_p.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace Moth {
 
@@ -210,5 +212,7 @@ ptrdiff_t InstructionSelection::addInstruction(const InstrData<InstrT> &data)
 
 } // namespace Moth
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ISEL_MOTH_P_H

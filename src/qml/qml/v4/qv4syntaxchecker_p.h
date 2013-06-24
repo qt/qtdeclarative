@@ -48,6 +48,8 @@
 #include <QtCore/QString>
 #include <QtCore/QList>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 
 class SyntaxChecker: Lexer
@@ -69,5 +71,7 @@ private:
 };
 
 } // end of QQmlJS namespace
+
+QT_END_NAMESPACE
 
 #endif // QV4SYNTAXCHECKER_P_H

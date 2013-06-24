@@ -62,6 +62,8 @@
 #include <valgrind/memcheck.h>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
 using namespace WTF;
 
@@ -594,3 +596,5 @@ void MemoryManager::collectFromStack() const
         }
     }
 }
+
+QT_END_NAMESPACE

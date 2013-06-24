@@ -56,10 +56,10 @@
 #include <QtCore/qglobal.h>
 #include <private/qv4object_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlEngine;
 class QV8Engine;
-
-QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 

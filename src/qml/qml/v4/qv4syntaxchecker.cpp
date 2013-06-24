@@ -41,6 +41,8 @@
 
 #include "qv4syntaxchecker_p.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace QQmlJS;
 
 SyntaxChecker::SyntaxChecker()
@@ -117,3 +119,5 @@ again:
 
     return false;
 }
+
+QT_END_NAMESPACE

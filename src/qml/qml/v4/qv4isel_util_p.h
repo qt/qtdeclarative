@@ -45,6 +45,8 @@
 #include "qv4runtime_p.h"
 #include "qv4jsir_p.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 
 inline QV4::Value convertToValue(V4IR::Const *c)
@@ -79,5 +81,7 @@ inline QV4::Value convertToValue(V4IR::Const *c)
 }
 
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ISEL_UTIL_P_H

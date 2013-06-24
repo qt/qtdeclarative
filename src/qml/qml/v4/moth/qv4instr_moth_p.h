@@ -45,6 +45,8 @@
 #include <QtCore/qglobal.h>
 #include <private/qv4object_p.h>
 
+QT_BEGIN_NAMESPACE
+
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
     F(LoadValue, loadValue) \
@@ -460,13 +462,13 @@ union Instr
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
-        UnaryOpName alu;
+        QV4::UnaryOpName alu;
         Param source;
         Param result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
-        BinOp alu;
+        QV4::BinOp alu;
         Param lhs;
         Param rhs;
         Param result;
@@ -495,21 +497,21 @@ union Instr
     };
     struct instr_inplaceElementOp {
         MOTH_INSTR_HEADER
-        InplaceBinOpElement alu;
+        QV4::InplaceBinOpElement alu;
         Param base;
         Param index;
         Param source;
     };
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
-        InplaceBinOpMember alu;
+        QV4::InplaceBinOpMember alu;
         QV4::String *member;
         Param base;
         Param source;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
-        InplaceBinOpName alu;
+        QV4::InplaceBinOpName alu;
         QV4::String *name;
         Param source;
     };
@@ -596,5 +598,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 
 } // namespace Moth
 } // namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4INSTR_MOTH_P_H

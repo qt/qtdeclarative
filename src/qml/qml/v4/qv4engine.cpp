@@ -81,6 +81,8 @@
 #  include "qv4isel_moth_p.h"
 #endif // V4_ENABLE_JIT
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
@@ -960,3 +962,5 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
         context = context->engine->popContext();
     throwingContext = context;
 }
+
+QT_END_NAMESPACE

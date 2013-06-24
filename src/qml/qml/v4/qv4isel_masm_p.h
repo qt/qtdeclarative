@@ -54,6 +54,8 @@
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace MASM {
 
@@ -573,7 +575,7 @@ public:
 
     struct BinaryOperationInfo {
         const char *name;
-        BinOp fallbackImplementation;
+        QV4::BinOp fallbackImplementation;
         MemRegBinOp inlineMemRegOp;
         ImmRegBinOp inlineImmRegOp;
     };
@@ -909,5 +911,7 @@ public:
 
 } // end of namespace MASM
 } // end of namespace QQmlJS
+
+QT_END_NAMESPACE
 
 #endif // QV4ISEL_MASM_P_H

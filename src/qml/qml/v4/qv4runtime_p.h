@@ -89,11 +89,6 @@ struct ArrayObject;
 struct ErrorObject;
 struct ExecutionEngine;
 struct InternalClass;
-}
-
-QT_END_NAMESPACE
-
-extern "C" {
 
 // context
 void __qmljs_call_activation_property(QV4::ExecutionContext *, QV4::Value *result, QV4::String *name, QV4::Value *args, int argc);
@@ -721,6 +716,8 @@ inline uint __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::Value &left, c
     return v.booleanValue();
 }
 
-} // extern "C"
+} // namespace QV4
+
+QT_END_NAMESPACE
 
 #endif // QMLJS_RUNTIME_H

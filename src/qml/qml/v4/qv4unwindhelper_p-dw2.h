@@ -55,6 +55,8 @@
 #define __USE_GNU
 #include <dlfcn.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 
 namespace {
@@ -186,5 +188,7 @@ void UnwindHelper::deregisterFunctions(const QVector<Function *> &)
 }
 
 }
+
+QT_END_NAMESPACE
 
 #endif // QV4UNWINDHELPER_PDW2_H

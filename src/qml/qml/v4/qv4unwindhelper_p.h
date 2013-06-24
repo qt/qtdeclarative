@@ -44,6 +44,8 @@
 
 #include <QtCore/QVector>
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 
 struct Function;
@@ -64,5 +66,7 @@ public:
 };
 
 }
+
+QT_END_NAMESPACE
 
 #endif // QV4UNWINDHELPER_H
