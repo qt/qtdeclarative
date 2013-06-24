@@ -26,13 +26,11 @@
 ****************************************************************************/
 
 /*!
-    \title QML Demo - Calqlatr
+    \title Qt Quick Demo - Calqlatr
+    \ingroup qtquickdemos
     \example demos/calqlatr
-    \brief This is an example calculator written in QML.
-    \image qml-calqlatr-demo-small.png
-    \ingroup qmldemos
-
-    This demo implements a simple calculator app, designed for portrait devices.
+    \brief A simple calculator app, designed for portrait devices.
+    \image qtquick-demo-calqlatr.png
 
     This app has the logic implemented in Javascipt and the appearance implemented in QML.
 */

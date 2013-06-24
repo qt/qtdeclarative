@@ -46,9 +46,10 @@ Rectangle {
     width: 320
     height: 200
     color: palette.window
-
     SystemPalette { id: palette }
+    clip: true
 
+    //! [colordialog]
     ColorDialog {
         id: colorDialog
         visible: colorDialogVisible.checked
@@ -59,10 +60,11 @@ Rectangle {
         onAccepted: { console.log("Accepted: " + color) }
         onRejected: { console.log("Rejected") }
     }
+    //! [colordialog]
 
     Column {
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: 12
         spacing: 8
         Text {
             font.bold: true
@@ -103,6 +105,40 @@ Rectangle {
                 color: palette.windowText
                 text: "<b>current color:</b> " + colorDialog.color
                 anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
+    Rectangle {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 50
+        color: Qt.darker(palette.window, 1.1)
+        border.color: Qt.darker(palette.window, 1.3)
+        Row {
+            spacing: 6
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            height: parent.height - 6
+            width: parent.width
+            Button {
+                text: "Open"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: colorDialog.open()
+            }
+            Button {
+                text: "Close"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: colorDialog.close()
+            }
+            Button {
+                text: "set to green"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: colorDialog.color = "green"
             }
         }
     }

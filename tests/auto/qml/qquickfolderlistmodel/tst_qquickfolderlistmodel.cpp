@@ -73,9 +73,12 @@ private slots:
     void basicProperties();
     void resetFiltering();
     void refresh();
-#if defined (Q_OS_WIN)
+#if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
+    // WinCE does not have drive concept, so lets execute this test only on desktop Windows.
     void changeDrive();
 #endif
+    void showDotAndDotDot();
+    void showDotAndDotDot_data();
 
 private:
     void checkNoErrors(const QQmlComponent& component);
@@ -112,7 +115,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(),5); // wait for refresh
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
@@ -168,7 +171,7 @@ void tst_qquickfolderlistmodel::refresh()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(),5); // wait for refresh
 
     int count = flm->rowCount();
 
@@ -181,7 +184,7 @@ void tst_qquickfolderlistmodel::refresh()
     QTRY_COMPARE(removeEnd, count-1); // wait for refresh
 }
 
-#if defined (Q_OS_WIN)
+#if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
 void tst_qquickfolderlistmodel::changeDrive()
 {
     QSKIP("QTBUG-26728");
@@ -226,6 +229,49 @@ void tst_qquickfolderlistmodel::changeDrive()
     QTRY_VERIFY(folderChangeSpy.count() == 2);
 }
 #endif
+
+void tst_qquickfolderlistmodel::showDotAndDotDot()
+{
+    QFETCH(QUrl, folder);
+    QFETCH(QUrl, rootFolder);
+    QFETCH(bool, showDotAndDotDot);
+    QFETCH(bool, showDot);
+    QFETCH(bool, showDotDot);
+
+    QQmlComponent component(&engine, testFileUrl("showDotAndDotDot.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+
+    flm->setProperty("folder", folder);
+    flm->setProperty("rootFolder", rootFolder);
+    flm->setProperty("showDotAndDotDot", showDotAndDotDot);
+
+    int count = 5;
+    if (showDot) count++;
+    if (showDotDot) count++;
+    QTRY_COMPARE(flm->property("count").toInt(), count); // wait for refresh
+
+    if (showDot)
+        QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("."));
+    if (showDotDot)
+        QCOMPARE(flm->data(flm->index(1),FileNameRole).toString(), QLatin1String(".."));
+}
+
+void tst_qquickfolderlistmodel::showDotAndDotDot_data()
+{
+    QTest::addColumn<QUrl>("folder");
+    QTest::addColumn<QUrl>("rootFolder");
+    QTest::addColumn<bool>("showDotAndDotDot");
+    QTest::addColumn<bool>("showDot");
+    QTest::addColumn<bool>("showDotDot");
+
+    QTest::newRow("false") << dataDirectoryUrl() << QUrl() << false << false << false;
+    QTest::newRow("true") << dataDirectoryUrl() << QUrl() << true << true << true;
+    QTest::newRow("true but root") << dataDirectoryUrl() << dataDirectoryUrl() << true << true << false;
+
+}
 
 QTEST_MAIN(tst_qquickfolderlistmodel)
 

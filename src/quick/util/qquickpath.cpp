@@ -188,8 +188,67 @@ bool QQuickPath::hasEnd() const
 
 QQmlListProperty<QQuickPathElement> QQuickPath::pathElements()
 {
-    Q_D(QQuickPath);
-    return QQmlListProperty<QQuickPathElement>(this, d->_pathElements);
+    return QQmlListProperty<QQuickPathElement>(this,
+                                               0,
+                                               pathElements_append,
+                                               pathElements_count,
+                                               pathElements_at,
+                                               pathElements_clear);
+}
+
+static QQuickPathPrivate *privatePath(QObject *object)
+{
+    QQuickPath *path = static_cast<QQuickPath*>(object);
+
+    return QQuickPathPrivate::get(path);
+}
+
+QQuickPathElement *QQuickPath::pathElements_at(QQmlListProperty<QQuickPathElement> *property, int index)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    return d->_pathElements.at(index);
+}
+
+void QQuickPath::pathElements_append(QQmlListProperty<QQuickPathElement> *property, QQuickPathElement *pathElement)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+    QQuickPath *path = static_cast<QQuickPath*>(property->object);
+
+    d->_pathElements.append(pathElement);
+
+    if (d->componentComplete) {
+        QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement);
+        if (curve)
+            d->_pathCurves.append(curve);
+        else {
+            QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement);
+            if (attribute && !d->_attributes.contains(attribute->name()))
+                d->_attributes.append(attribute->name());
+        }
+
+        path->processPath();
+
+        connect(pathElement, SIGNAL(changed()), path, SLOT(processPath()));
+    }
+}
+
+int QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+
+    return d->_pathElements.count();
+}
+
+void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *property)
+{
+    QQuickPathPrivate *d = privatePath(property->object);
+    QQuickPath *path = static_cast<QQuickPath*>(property->object);
+
+    path->disconnectPathElements();
+    d->_pathElements.clear();
+    d->_pathCurves.clear();
+    d->_pointCache.clear();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
@@ -373,27 +432,49 @@ void QQuickPath::classBegin()
     d->componentComplete = false;
 }
 
-void QQuickPath::componentComplete()
+void QQuickPath::disconnectPathElements()
 {
     Q_D(QQuickPath);
-    QSet<QString> attrs;
-    d->componentComplete = true;
 
-    // First gather up all the attributes
-    foreach (QQuickPathElement *pathElement, d->_pathElements) {
-        if (QQuickCurve *curve =
-            qobject_cast<QQuickCurve *>(pathElement))
-            d->_pathCurves.append(curve);
-        else if (QQuickPathAttribute *attribute =
-                 qobject_cast<QQuickPathAttribute *>(pathElement))
-            attrs.insert(attribute->name());
-    }
-    d->_attributes = attrs.toList();
+    foreach (QQuickPathElement *pathElement, d->_pathElements)
+        disconnect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
+}
 
-    processPath();
+void QQuickPath::connectPathElements()
+{
+    Q_D(QQuickPath);
 
     foreach (QQuickPathElement *pathElement, d->_pathElements)
         connect(pathElement, SIGNAL(changed()), this, SLOT(processPath()));
+}
+
+void QQuickPath::gatherAttributes()
+{
+    Q_D(QQuickPath);
+
+    QSet<QString> attributes;
+
+    // First gather up all the attributes
+    foreach (QQuickPathElement *pathElement, d->_pathElements) {
+        if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement))
+            d->_pathCurves.append(curve);
+        else if (QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement))
+            attributes.insert(attribute->name());
+    }
+
+    d->_attributes = attributes.toList();
+}
+
+void QQuickPath::componentComplete()
+{
+    Q_D(QQuickPath);
+    d->componentComplete = true;
+
+    gatherAttributes();
+
+    processPath();
+
+    connectPathElements();
 }
 
 QPainterPath QQuickPath::path() const
@@ -1465,7 +1546,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
         nextData.curves = data.curves;
         next = positionForCurve(nextData, point);
     } else {
-        if (point == QPointF(path.elementAt(0)) && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(0))) {
+        if (point == QPointF(path.elementAt(0)) && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(0)) && path.elementCount() >= 3) {
             //this is a closed path starting and ending with catmull-rom segments.
             //we try to smooth the join point
             next = QPointF(path.elementAt(3));  //the first catmull-rom point

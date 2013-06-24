@@ -144,8 +144,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     if (oldMaterial == 0
            || material->color() != oldMaterial->color()
            || state.isOpacityDirty()) {
-        QColor c = material->color();
-        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
+        QVector4D color = material->color();
         color *= state.opacity();
         program()->setUniformValue(m_color_id, color);
     }
@@ -206,10 +205,10 @@ QSGMaterialType *QSGDistanceFieldTextMaterial::type() const
 
 void QSGDistanceFieldTextMaterial::setColor(const QColor &color)
 {
-    m_color = QColor::fromRgbF(color.redF() * color.alphaF(),
-                               color.greenF() * color.alphaF(),
-                               color.blueF() * color.alphaF(),
-                               color.alphaF());
+    m_color = QVector4D(color.redF() * color.alphaF(),
+                        color.greenF() * color.alphaF(),
+                        color.blueF() * color.alphaF(),
+                        color.alphaF());
 }
 
 QSGMaterialShader *QSGDistanceFieldTextMaterial::createShader() const
@@ -239,10 +238,8 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
     if (m_fontScale != other->m_fontScale) {
         return int(other->m_fontScale < m_fontScale) - int(m_fontScale < other->m_fontScale);
     }
-    QRgb c1 = m_color.rgba();
-    QRgb c2 = other->m_color.rgba();
-    if (c1 != c2)
-        return int(c2 < c1) - int(c1 < c2);
+    if (m_color != other->m_color)
+        return &m_color < &other->m_color ? -1 : 1;
     int t0 = m_texture ? m_texture->textureId : -1;
     int t1 = other->m_texture ? other->m_texture->textureId : -1;
     return t0 - t1;
@@ -284,8 +281,7 @@ void DistanceFieldStyledTextMaterialShader::updateState(const RenderState &state
     if (oldMaterial == 0
            || material->styleColor() != oldMaterial->styleColor()
            || (state.isOpacityDirty())) {
-        QColor c = material->styleColor();
-        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
+        QVector4D color = material->styleColor();
         color *= state.opacity();
         program()->setUniformValue(m_styleColor_id, color);
     }
@@ -302,21 +298,18 @@ QSGDistanceFieldStyledTextMaterial::~QSGDistanceFieldStyledTextMaterial()
 
 void QSGDistanceFieldStyledTextMaterial::setStyleColor(const QColor &color)
 {
-    m_styleColor = QColor::fromRgbF(color.redF() * color.alphaF(),
-                                    color.greenF() * color.alphaF(),
-                                    color.blueF() * color.alphaF(),
-                                    color.alphaF());
+    m_styleColor = QVector4D(color.redF() * color.alphaF(),
+                             color.greenF() * color.alphaF(),
+                             color.blueF() * color.alphaF(),
+                             color.alphaF());
 }
 
 int QSGDistanceFieldStyledTextMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
     const QSGDistanceFieldStyledTextMaterial *other = static_cast<const QSGDistanceFieldStyledTextMaterial *>(o);
-    if (m_styleColor != other->m_styleColor) {
-        QRgb c1 = m_styleColor.rgba();
-        QRgb c2 = other->m_styleColor.rgba();
-        return int(c2 < c1) - int(c1 < c2);
-    }
+    if (m_styleColor != other->m_color)
+        return &m_styleColor < &other->m_styleColor ? -1 : 1;
     return QSGDistanceFieldTextMaterial::compare(o);
 }
 
@@ -657,8 +650,8 @@ void QSGHiQSubPixelDistanceFieldTextMaterialShader::updateState(const RenderStat
     QSGDistanceFieldTextMaterial *oldMaterial = static_cast<QSGDistanceFieldTextMaterial *>(oldEffect);
 
     if (oldMaterial == 0 || material->color() != oldMaterial->color()) {
-        QColor c = material->color();
-        state.context()->functions()->glBlendColor(c.redF(), c.greenF(), c.blueF(), 1.0f);
+        QVector4D c = material->color();
+        state.context()->functions()->glBlendColor(c.x(), c.y(), c.z(), 1.0f);
     }
 
     if (oldMaterial == 0 || material->fontScale() != oldMaterial->fontScale())

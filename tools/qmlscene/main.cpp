@@ -483,7 +483,9 @@ int main(int argc, char ** argv)
             QObject *topLevel = component->create();
             QQuickWindow *window = qobject_cast<QQuickWindow *>(topLevel);
             QQuickView* qxView = 0;
-            if (!window) {
+            if (window) {
+                engine.setIncubationController(window->incubationController());
+            } else {
                 QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
                 if (contentItem) {
                     qxView = new QQuickView(&engine, NULL);
@@ -491,7 +493,6 @@ int main(int argc, char ** argv)
                     // Set window default properties; the qml can still override them
                     QString oname = contentItem->objectName();
                     window->setTitle(oname.isEmpty() ? QString::fromLatin1("qmlscene") : QString::fromLatin1("qmlscene: ") + oname);
-                    window->setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::WindowFullscreenButtonHint);
                     if (options.resizeViewToRootItem)
                         qxView->setResizeMode(QQuickView::SizeViewToRootObject);
                     else
@@ -512,11 +513,14 @@ int main(int argc, char ** argv)
                 }
                 window->setFormat(surfaceFormat);
 
+                if (window->flags() == Qt::Window) // Fix window flags unless set by QML.
+                    window->setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::WindowFullscreenButtonHint);
+
                 if (options.fullscreen)
                     window->showFullScreen();
                 else if (options.maximized)
                     window->showMaximized();
-                else
+                else if (!window->isVisible())
                     window->show();
             }
 

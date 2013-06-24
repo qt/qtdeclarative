@@ -139,7 +139,7 @@ public:
     If the binding target or binding property is changed, the bound value is
     immediately pushed onto the new target.
 
-    \sa QtQml
+    \sa {Qt QML}
 */
 QQmlBind::QQmlBind(QObject *parent)
     : QObject(*(new QQmlBindPrivate), parent)

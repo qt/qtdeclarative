@@ -163,6 +163,14 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
 
 typedef QMap<QString, QString> StringStringMap;
 Q_GLOBAL_STATIC(StringStringMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri
+void qmlClearEnginePlugins()
+{
+    foreach (const QString &s, qmlEnginePluginsWithRegisteredTypes()->values()) {
+        QPluginLoader loader(s);
+        loader.unload(); // ### Always returns false, worth doing?
+    }
+    qmlEnginePluginsWithRegisteredTypes()->clear();
+}
 
 class QQmlImportNamespace
 {
@@ -1455,7 +1463,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                                                   const QString &qmldirPath, const QString &qmldirPluginPath,
                                                   const QString &baseName)
 {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+#if defined(Q_OS_WIN)
     return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
                          QStringList()
 # ifdef QT_DEBUG

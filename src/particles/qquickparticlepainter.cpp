@@ -80,8 +80,8 @@ void QQuickParticlePainter::itemChange(ItemChange change, const ItemChangeData &
         m_window = data.window;
         if (m_window)
             connect(m_window, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()), Qt::DirectConnection);
-
     }
+    QQuickItem::itemChange(change, data);
 }
 
 void QQuickParticlePainter::componentComplete()

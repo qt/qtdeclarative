@@ -3,14 +3,15 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump QtQuick.XmlListModel 2.0'.
+// This file was auto-generated with the command 'qmlplugindump -notrelocatable QtQuick.XmlListModel 2.0'.
 
 Module {
     Component {
         name: "QQuickXmlListModel"
         defaultProperty: "roles"
         prototype: "QAbstractListModel"
-        exports: ["XmlListModel 2.0"]
+        exports: ["QtQuick.XmlListModel/XmlListModel 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Status"
             values: {
@@ -47,7 +48,8 @@ Module {
     Component {
         name: "QQuickXmlListModelRole"
         prototype: "QObject"
-        exports: ["XmlRole 2.0"]
+        exports: ["QtQuick.XmlListModel/XmlRole 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "name"; type: "string" }
         Property { name: "query"; type: "string" }
         Property { name: "isKey"; type: "bool" }

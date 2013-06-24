@@ -119,7 +119,7 @@ Rectangle {
 
         ImageParticle {
             groups: ["works", "fire", "splode"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             entryEffect: ImageParticle.Scale
         }
     }

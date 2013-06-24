@@ -28,15 +28,51 @@
 /*!
 \title Qt Quick Release Notes
 \page qtquick-releasenotes.html
-\inqmlmodule QtQuick 2.0
 
-\section1 Qt 5.0 - QtQuick C++ Module
+\section1 Qt Quick in Qt 5.1
 
-The QtQuick C++ module is new in Qt 5. It provides the visual canvas and scenegraph back-end
-as well as the QtQuick QML module for QML application development.
+\l{Qt Quick} 2.1 is new in Qt 5.1. This is a summary of improvements and new
+features introduced by the new import and new classes in Qt 5.1:
+\list
+\li New threaded render loop for Mac, Linux, and Embedded.
+\li New render loop for windows for smoother animations.
+\li New \l Window properties: activeFocusItem, minimumWidth, minimumHeight,
+    maximumWidth, maximumHeight, visibility, contentOrientation, and opacity.
+\li New \l Item property: activeFocusOnTab.
+\li New \l Grid properties: horizontalAlignment, verticalAlignment, and
+    effectiveHorizontalAlignment.
+\li New \l TextEdit properties: selectByKeyboard and textDocument
+\li A \l Window declared inside another Window or \l Item will automatically be
+    transient for (centered upon) the outer window.
+\li These types are now part of \l{Qt QML}:
+    \list
+    \li \l {VisualItemModel}
+    \li \l {VisualDataModel} - Encapsulates a model and a delegate
+    \li \l {VisualDataGroup}
+    \endlist
+    These types are kept due to compatibility reasons and are replaced by the
+    \l{Qt QML Models QML Types}{Qt QML Models} types.
+    \endlist
+\endlist
 
-As of Qt 5, the QtQuick module is based on an OpenGL scenegraph. Many of the classes in
-the QtQuick module have been ported from the \c QtDeclarative module from Qt 4.8 to use
+\section2 New Submodules
+
+In Qt 5.1, there are several new modules which extend Qt Quick functionalities.
+\list
+\li \l{Qt Quick Dialogs} - contains types for creating and interacting with system dialogs
+\li \l{Qt Quick Controls} - provides a set of reusable UI components
+\li \l{Qt Quick Layouts} - contains types that are used to arrange items in the user interface
+\endlist
+
+The \l{What's New in Qt 5.1} has more information about the Qt 5.1 release.
+
+\section1 Qt Quick in Qt 5.0
+
+The \l {Qt Quick} module is new in Qt 5. It provides the visual canvas and scenegraph back-end
+as well as the \c QtQuick QML module for QML application development.
+
+As of Qt 5, the \l {Qt Quick} module is based on an OpenGL scenegraph. Many of the classes in
+the \l {Qt Quick} module have been ported from the \l {Qt Quick 1}{QtDeclarative} module from Qt 4.8 to use
 the scenegraph architecture; these classes have been renamed to use a \c QQuick* prefix.
 (See the \l {Porting QML Applications to Qt 5} for porting information.)
 
@@ -77,10 +113,10 @@ Custom rendering can be performed on the scenegraph using the following new clas
 
 \section1 Qt 5.0 - QtQuick QML Module
 
-The QtQuick 2.0 QML module is a major update.
+The \c {QtQuick 2.0} QML module is a major update.
 
-Below are the additions in QtQuick 2.0. For a list of behavioral changes which may affect
-applications ported from QtQuick 1.x, see the \l {Porting QML Applications to Qt 5}.
+Below are the additions in \c {QtQuick 2.0}. For a list of behavioral changes which may affect
+applications ported from \c {QtQuick 1.x}, see the \l {Porting QML Applications to Qt 5}.
 
 \section2 Visual types, Graphical Effects and Sprites
 
@@ -345,11 +381,11 @@ the window loses focus.
 \section2 Property types
 
 Support for various math and geometry-related value types, including QVector2D, QVector3D, QVector4D,
-QMatrix4x4 and QQuaternion, as well as QColor and QFont, are now provided by QtQuick.  Properties of
+QMatrix4x4 and QQuaternion, as well as QColor and QFont, are now provided by \l {Qt Quick}.  Properties of
 these types can be declared in QML documents via the property syntax where the type name is \c vector2d,
 \c vector3d, \c vector4d, \c matrix4x4, \c quaternion, \c color and \c font respectively.
 
-QtQuick also provides implementation for the various value type factory or utility functions of the
+\l {Qt Quick} also provides implementation for the various value type factory or utility functions of the
 \c Qt object which return or operate on values of the above types.  The functions are:
 \table
   \header
@@ -386,8 +422,8 @@ QtQuick also provides implementation for the various value type factory or utili
 \endtable
 
 The \c Qt.rgba(), \c Qt.hsla(), \c Qt.tint(), \c Qt.lighter(), \c Qt.darker()
-and \c Qt.fontFamilies() functions already existed in \c QtDeclarative prior
-to QtQuick 2.0; the other functions are all new in QtQuick 2.0.
+and \c Qt.fontFamilies() functions already existed in \l {Qt Quick 1}{QtDeclarative} prior
+to \l {Qt Quick}{Qt Quick 2}; the other functions are all new in \l {Qt Quick}{Qt Quick 2}.
 
 \section1 Qt 5.0 - Additional QML Modules
 
@@ -406,7 +442,7 @@ documentation for comprehensive details.
 
 \section2 QtQuick.XmlListModel
 
-This new module contains XmlListModel and associated types, which were previously in the QtQuick
+This new module contains XmlListModel and associated types, which were previously in the \c QtQuick
 module. See the \l{QtQuick.XmlListModel 2}{QtQuick.XmlListModel} documentation for details.
 
 \section2 QtQuick.LocalStorage

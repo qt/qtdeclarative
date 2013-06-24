@@ -615,6 +615,7 @@ void tst_qquickvisualdatamodel::childChanged()
     vdm->setRootIndex(QVariant::fromValue(model.indexFromItem(model.item(1,0))));
     QCOMPARE(listview->count(), 1);
 
+    listview->forceLayout();
     QQuickText *name = findItem<QQuickText>(contentItem, "display", 0);
     QVERIFY(name);
     QCOMPARE(name->text(), QString("Row 2 Child Item"));
@@ -628,6 +629,7 @@ void tst_qquickvisualdatamodel::childChanged()
     model.item(1,0)->appendRow(new QStandardItem(QLatin1String("Row 2 Child Item 2")));
     QCOMPARE(listview->count(), 2);
 
+    listview->forceLayout();
     name = findItem<QQuickText>(contentItem, "display", 1);
     QVERIFY(name != 0);
     QCOMPARE(name->text(), QString("Row 2 Child Item 2"));
@@ -638,6 +640,8 @@ void tst_qquickvisualdatamodel::childChanged()
 
     vdm->setRootIndex(QVariant::fromValue(QModelIndex()));
     QCOMPARE(listview->count(), 3);
+
+    listview->forceLayout();
     name = findItem<QQuickText>(contentItem, "display", 0);
     QVERIFY(name);
     QCOMPARE(name->text(), QString("Row 1 Item"));
@@ -989,6 +993,8 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
     QQuickItem *rightContent = rightview->contentItem();
     QTRY_VERIFY(rightContent != 0);
 
+    leftview->forceLayout();
+    rightview->forceLayout();
     QCOMPARE(leftview->currentIndex(), 0);
     QCOMPARE(rightview->currentIndex(), 0);
 
@@ -3548,6 +3554,7 @@ void tst_qquickvisualdatamodel::resolve()
     evaluate<void>(visualModel, setupExpression);
     QCOMPARE(evaluate<int>(listView, "count"), unresolvedCount);
 
+    listView->forceLayout();
     evaluate<void>(visualModel, resolveExpression);
 
     QCOMPARE(evaluate<int>(listView, "count"), inItems ? visualCount : modelCount);

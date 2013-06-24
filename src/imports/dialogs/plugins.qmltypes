@@ -3,30 +3,15 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump QtQuick.Dialogs 1.0'.
+// This file was auto-generated with the command 'qmlplugindump -notrelocatable QtQuick.Dialogs 1.0'.
 
 Module {
     Component {
-        name: "QQuickAbstractFileDialog"
-        prototype: "QObject"
-        Property { name: "visible"; type: "bool" }
-        Property { name: "modality"; type: "Qt::WindowModality" }
-        Property { name: "title"; type: "string" }
-        Property { name: "selectExisting"; type: "bool" }
-        Property { name: "selectMultiple"; type: "bool" }
-        Property { name: "selectFolder"; type: "bool" }
-        Property { name: "folder"; type: "string" }
-        Property { name: "nameFilters"; type: "QStringList" }
-        Property { name: "selectedNameFilter"; type: "string" }
-        Property { name: "filePath"; type: "string"; isReadonly: true }
-        Property { name: "filePaths"; type: "QStringList"; isReadonly: true }
-        Signal { name: "visibilityChanged" }
-        Signal { name: "filterSelected" }
-        Signal { name: "fileModeChanged" }
-        Signal { name: "accepted" }
-        Signal { name: "rejected" }
-        Method { name: "open" }
-        Method { name: "close" }
+        name: "QQuickAbstractColorDialog"
+        prototype: "QQuickAbstractDialog"
+        Property { name: "showAlphaChannel"; type: "bool" }
+        Property { name: "color"; type: "QColor" }
+        Signal { name: "selectionAccepted" }
         Method {
             name: "setVisible"
             Parameter { name: "v"; type: "bool" }
@@ -34,6 +19,54 @@ Module {
         Method {
             name: "setModality"
             Parameter { name: "m"; type: "Qt::WindowModality" }
+        }
+        Method {
+            name: "setTitle"
+            Parameter { name: "t"; type: "string" }
+        }
+        Method {
+            name: "setColor"
+            Parameter { name: "arg"; type: "QColor" }
+        }
+        Method {
+            name: "setShowAlphaChannel"
+            Parameter { name: "arg"; type: "bool" }
+        }
+    }
+    Component {
+        name: "QQuickAbstractDialog"
+        prototype: "QObject"
+        Property { name: "visible"; type: "bool" }
+        Property { name: "modality"; type: "Qt::WindowModality" }
+        Property { name: "title"; type: "string" }
+        Property { name: "x"; type: "int" }
+        Property { name: "y"; type: "int" }
+        Property { name: "width"; type: "int" }
+        Property { name: "height"; type: "int" }
+        Signal { name: "visibilityChanged" }
+        Signal { name: "geometryChanged" }
+        Signal { name: "accepted" }
+        Signal { name: "rejected" }
+        Method { name: "open" }
+        Method { name: "close" }
+    }
+    Component {
+        name: "QQuickAbstractFileDialog"
+        prototype: "QQuickAbstractDialog"
+        Property { name: "selectExisting"; type: "bool" }
+        Property { name: "selectMultiple"; type: "bool" }
+        Property { name: "selectFolder"; type: "bool" }
+        Property { name: "folder"; type: "string" }
+        Property { name: "nameFilters"; type: "QStringList" }
+        Property { name: "selectedNameFilter"; type: "string" }
+        Property { name: "fileUrl"; type: "QUrl"; isReadonly: true }
+        Property { name: "fileUrls"; type: "QList<QUrl>"; isReadonly: true }
+        Signal { name: "filterSelected" }
+        Signal { name: "fileModeChanged" }
+        Signal { name: "selectionAccepted" }
+        Method {
+            name: "setVisible"
+            Parameter { name: "v"; type: "bool" }
         }
         Method {
             name: "setTitle"
@@ -65,8 +98,25 @@ Module {
         }
     }
     Component {
-        name: "QQuickQFileDialog"
+        name: "QQuickColorDialog"
+        defaultProperty: "implementation"
+        prototype: "QQuickAbstractColorDialog"
+        exports: ["QtQuick.Dialogs/AbstractColorDialog 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "implementation"; type: "QObject"; isPointer: true }
+    }
+    Component {
+        name: "QQuickFileDialog"
+        defaultProperty: "implementation"
         prototype: "QQuickAbstractFileDialog"
-        exports: ["QtQuick.PrivateWidgets/QtFileDialog 1.0"]
+        exports: ["QtQuick.Dialogs/AbstractFileDialog 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "implementation"; type: "QObject"; isPointer: true }
+        Method { name: "clearSelection" }
+        Method {
+            name: "addSelection"
+            type: "bool"
+            Parameter { name: "path"; type: "string" }
+        }
     }
 }

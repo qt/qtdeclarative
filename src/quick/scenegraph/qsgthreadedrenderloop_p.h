@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGRenderThread;
 
-class QSGThreadedRenderLoop : public QObject, public QSGRenderLoop
+class QSGThreadedRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
 public:
@@ -79,7 +79,7 @@ public:
 
     bool event(QEvent *);
 
-    void wakeup();
+    bool interleaveIncubation() const;
 
 public slots:
     void animationStarted();
@@ -91,7 +91,7 @@ private:
     void releaseResources(QQuickWindow *window, bool inDestructor);
     bool checkAndResetForceUpdate(QQuickWindow *window);
 
-    bool anyoneShowing();
+    bool anyoneShowing() const;
     void initialize();
 
     void maybePostPolishRequest();

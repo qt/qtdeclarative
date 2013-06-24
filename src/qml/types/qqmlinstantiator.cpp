@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlInstantiatorPrivate::QQmlInstantiatorPrivate()
     : componentComplete(true)
+    , effectiveReset(false)
     , active(true)
     , async(false)
     , ownModel(false)
@@ -124,7 +125,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
 {
     Q_Q(QQmlInstantiator);
 
-    if (componentComplete)
+    if (!componentComplete || effectiveReset)
         return;
 
     if (reset) {
@@ -162,7 +163,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
             objects = objects.mid(0, index) + movedObjects + objects.mid(index);
         } else for (int i = 0; i < insert.count; ++i) {
             int modelIndex = index + i;
-            QObject* obj = instanceModel->object(i, async);
+            QObject* obj = instanceModel->object(modelIndex, async);
             if (obj)
                 _q_createdItem(modelIndex, obj);
         }
@@ -378,8 +379,11 @@ void QQmlInstantiator::setModel(const QVariant &v)
         if (!d->ownModel)
             d->makeModel();
 
-        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel *>(d->instanceModel))
+        if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel *>(d->instanceModel)) {
+            d->effectiveReset = true;
             dataModel->setModel(v);
+            d->effectiveReset = false;
+        }
     }
 
     if (d->instanceModel != prevModel) {

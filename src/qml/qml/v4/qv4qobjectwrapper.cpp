@@ -266,10 +266,12 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     QQmlData *ddata = QQmlData::get(m_object, false);
     if (!ddata)
         return 0;
+    QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
-        return ddata->propertyCache->property(propertystring, m_object, qmlContext);
-    else
-        return QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, propertystring, qmlContext, *local);
+        result = ddata->propertyCache->property(propertystring, m_object, qmlContext);
+    if (!result)
+        result = QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, propertystring, qmlContext, *local);
+    return result;
 }
 
 Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
@@ -1078,7 +1080,7 @@ static QV4::Value CallMethod(QObject *object, int index, int returnType, int arg
     Returns the match score for converting \a actual to be of type \a conversionType.  A 
     zero score means "perfect match" whereas a higher score is worse.
 
-    The conversion table is copied out of the QtScript callQtMethod() function.
+    The conversion table is copied out of the \l QScript::callQtMethod() function.
 */
 static int MatchScore(const QV4::Value &actual, int conversionType)
 {

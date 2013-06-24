@@ -73,10 +73,6 @@ QSGPainterTexture::QSGPainterTexture()
     m_retain_image = true;
 }
 
-#ifdef QT_OPENGL_ES
-extern void qsg_swizzleBGRAToRGBA(QImage *image);
-#endif
-
 void QSGPainterTexture::bind()
 {
     if (m_dirty_rect.isNull()) {
@@ -84,33 +80,8 @@ void QSGPainterTexture::bind()
         return;
     }
 
-    bool oldMipmapsGenerated = m_mipmaps_generated;
-    m_mipmaps_generated = true;
+    setImage(m_image);
     QSGPlainTexture::bind();
-    m_mipmaps_generated = oldMipmapsGenerated;
-
-    QImage subImage = m_image.copy(m_dirty_rect);
-
-    int w = m_dirty_rect.width();
-    int h = m_dirty_rect.height();
-
-#ifdef QT_OPENGL_ES
-    qsg_swizzleBGRAToRGBA(&subImage);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
-                    GL_RGBA, GL_UNSIGNED_BYTE, subImage.constBits());
-#else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
-                    GL_BGRA, GL_UNSIGNED_BYTE, subImage.constBits());
-#endif
-
-    if (m_has_mipmaps && !m_mipmaps_generated) {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
-        m_mipmaps_generated = true;
-    }
-
-    m_dirty_texture = false;
-    m_dirty_bind_options = false;
 
     m_dirty_rect = QRect();
 }

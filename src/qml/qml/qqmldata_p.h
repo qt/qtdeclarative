@@ -83,7 +83,7 @@ public:
           hasTaintedV8Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
           hasVMEMetaObject(false), parentFrozen(false), notifyList(0), context(0), outerContext(0),
           bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
-          lineNumber(0), columnNumber(0), compiledData(0), deferredIdx(0), jsEngineId(0),
+          lineNumber(0), columnNumber(0), compiledData(0), deferredData(0), jsEngineId(0),
           propertyCache(0), guards(0), extendedData(0) {
         init();
     }
@@ -174,8 +174,13 @@ public:
     quint16 lineNumber;
     quint16 columnNumber;
 
+    struct DeferredData {
+        unsigned int deferredIdx;
+        QQmlCompiledData *compiledData;//Not always the same as the other compiledData
+        QQmlContextData *context;//Could be either context or outerContext
+    };
     QQmlCompiledData *compiledData;
-    unsigned int deferredIdx;
+    DeferredData *deferredData;
 
     quint32 jsEngineId; // id of the engine that cerated the jsWrapper
     QV4::WeakValue jsWrapper;

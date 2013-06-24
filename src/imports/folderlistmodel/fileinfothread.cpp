@@ -57,7 +57,7 @@ FileInfoThread::FileInfoThread(QObject *parent)
       sortUpdate(false),
       showDirs(true),
       showDirsFirst(false),
-      showDotDot(false),
+      showDotAndDotDot(false),
       showOnlyReadable(false)
 {
 #ifndef QT_NO_FILESYSTEMWATCHER
@@ -158,11 +158,12 @@ void FileInfoThread::setShowDirsFirst(bool show)
     condition.wakeAll();
 }
 
-void FileInfoThread::setShowDotDot(bool on)
+void FileInfoThread::setShowDotAndDotDot(bool on)
 {
     QMutexLocker locker(&mutex);
-    showDotDot = on;
+    showDotAndDotDot = on;
     folderUpdate = true;
+    needUpdate = true;
     condition.wakeAll();
 }
 
@@ -212,10 +213,12 @@ void FileInfoThread::run()
 void FileInfoThread::getFileInfos(const QString &path)
 {
     QDir::Filters filter;
-    filter = QDir::Files | QDir::NoDot | QDir::CaseSensitive;
+    filter = QDir::Files | QDir::CaseSensitive;
     if (showDirs)
         filter = filter | QDir::AllDirs | QDir::Drives;
-    if ((path == rootPath) || !showDotDot)
+    if (!showDotAndDotDot)
+        filter = filter | QDir::NoDot | QDir::NoDotDot;
+    else if (path == rootPath)
         filter = filter | QDir::NoDotDot;
     if (showOnlyReadable)
         filter = filter | QDir::Readable;

@@ -48,6 +48,7 @@
 #include <QtQml/QQmlComponent>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
 #include <QSignalSpy>
 #include <qpa/qwindowsysteminterface.h>
 #include <private/qquickwindow_p.h>
@@ -304,6 +305,7 @@ private slots:
     void qmlCreation();
     void clearColor();
 
+    void grab_data();
     void grab();
     void multipleWindows();
 
@@ -321,6 +323,10 @@ private slots:
     void showHideAnimate();
 
     void testExpose();
+
+    void requestActivate();
+
+    void blockClosing();
 
 #ifndef QT_NO_CURSOR
     void cursor();
@@ -929,15 +935,28 @@ void tst_qquickwindow::clearColor()
     QCOMPARE(window->color(), QColor(Qt::blue));
 }
 
+void tst_qquickwindow::grab_data()
+{
+    QTest::addColumn<bool>("visible");
+    QTest::newRow("visible") << true;
+    QTest::newRow("invisible") << false;
+}
+
 void tst_qquickwindow::grab()
 {
+    QFETCH(bool, visible);
+
     QQuickWindow window;
     window.setColor(Qt::red);
 
     window.resize(250, 250);
-    window.show();
 
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (visible) {
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+    } else {
+        window.create();
+    }
 
     QImage content = window.grabWindow();
     QCOMPARE(content.width(), window.width());
@@ -1398,6 +1417,74 @@ void tst_qquickwindow::testExpose()
 
     QWindowSystemInterface::handleExposeEvent(&window, QRegion(10, 10, 20, 20));
     QTRY_COMPARE(swapSpy.size(), 1);
+}
+
+void tst_qquickwindow::requestActivate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("active.qml"));
+    QQuickWindow* window1 = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window1);
+
+    QWindowList windows = QGuiApplication::topLevelWindows();
+    QVERIFY(windows.size() == 2);
+
+    for (int i = 0; i < windows.size(); ++i) {
+        if (windows.at(i)->objectName() == window1->objectName()) {
+            windows.removeAt(i);
+            break;
+        }
+    }
+    QVERIFY(windows.size() == 1);
+    QVERIFY(windows.at(0)->objectName() == "window2");
+
+    window1->show();
+    window1->requestActivate();
+
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window1);
+    QVERIFY(window1->isActive() == true);
+
+    QQuickItem *item = QQuickVisualTestUtil::findItem<QQuickItem>(window1->contentItem(), "item1");
+    QVERIFY(item);
+
+    //copied from src/qmltest/quicktestevent.cpp
+    QPoint pos = item->mapToScene(QPointF(item->width()/2, item->height()/2)).toPoint();
+
+    QMouseEvent me(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QSpontaneKeyEvent::setSpontaneous(&me);
+    if (!qApp->notify(window1, &me)) {
+        QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
+        QWARN(warning.toLatin1().data());
+    }
+    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, 0, Qt::NoModifier);
+    QSpontaneKeyEvent::setSpontaneous(&me);
+    if (!qApp->notify(window1, &me)) {
+        QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");
+        QWARN(warning.toLatin1().data());
+    }
+
+    QTRY_VERIFY(QGuiApplication::focusWindow() == windows.at(0));
+    QVERIFY(windows.at(0)->isActive());
+}
+
+void tst_qquickwindow::blockClosing()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ucantclosethis.qml"));
+    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+    QVERIFY(window->isVisible());
+    QWindowSystemInterface::handleCloseEvent(window);
+    QVERIFY(window->isVisible());
+    QWindowSystemInterface::handleCloseEvent(window);
+    QVERIFY(window->isVisible());
+    window->setProperty("canCloseThis", true);
+    QWindowSystemInterface::handleCloseEvent(window);
+    QTRY_VERIFY(!window->isVisible());
 }
 
 QTEST_MAIN(tst_qquickwindow)

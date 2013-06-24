@@ -494,7 +494,7 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
                    << "loaded has 'import QtQuick 1.0' or 'import Qt 4.7', this error will occur." << endl
                    << endl
                    << "To load files with 'import QtQuick 1.0' or 'import Qt 4.7', use the" << endl
-                   << "QDeclarativeView class in the qtquick1 module." << endl;
+                   << "QDeclarativeView class in the Qt Quick 1 module." << endl;
         delete obj;
         root = 0;
     }

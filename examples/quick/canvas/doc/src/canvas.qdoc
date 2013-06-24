@@ -36,12 +36,12 @@
     a small QML file emphasizing a particular type or feature.
 
     Red heart demonstrates using a bezierCurve API to stroke and fill a red heart.
-    \snippet quick/canvas/bezierCurve/bezierCurve.qml 0
+    \snippet canvas/bezierCurve/bezierCurve.qml 0
 
     Talk bubble demonstrates using a quadraticCurveTo API to stroke and fill a customized talk bubble:
-    \snippet quick/canvas/quadraticCurveTo/quadraticCurveTo.qml 0
+    \snippet canvas/quadraticCurveTo/quadraticCurveTo.qml 0
     This example also demonstrates the fillText API:
-    \snippet quick/canvas/quadraticCurveTo/quadraticCurveTo.qml 1
+    \snippet canvas/quadraticCurveTo/quadraticCurveTo.qml 1
 
     Squircle demonstrates using a collection of simple moveTo/lineTo path APIs to draw a smooth squircle.
 
@@ -50,9 +50,9 @@
     Smile face demonstrates using several complex path APIs to draw an fill a smile face.
 
     Clip demonstrates using clip API to clip a given image.
-    \snippet quick/canvas/clip/clip.qml 0
+    \snippet canvas/clip/clip.qml 0
 
     Tiger demonstrates using SVG path API to draw a tiger with a collection of SVG path strings.
-    \snippet quick/canvas/tiger/tiger.qml 0
+    \snippet canvas/tiger/tiger.qml 0
 
 */

@@ -36,19 +36,19 @@
 
     Blur Particles adds a blur effect to the particles, which increases over the particle's life time.
     It uses a custom vertex shader:
-    \snippet quick/particles/customparticle/content/blurparticles.qml vertex
+    \snippet particles/customparticle/content/blurparticles.qml vertex
     to propagate life time simulation to a custom fragement shader:
-    \snippet quick/particles/customparticle/content/blurparticles.qml fragment
+    \snippet particles/customparticle/content/blurparticles.qml fragment
     which has access to both the normal image sampler and a blurred sampler, the image plus a ShaderEffect.
 
     Fragment Shader just uses the particle system as a vertex delivery system.
-    \snippet quick/particles/customparticle/content/fragmentshader.qml 0
+    \snippet particles/customparticle/content/fragmentshader.qml 0
 
     Image Colors uses CustomParticle to assign colors to particles based on their location in a picture.
     The vertex shader,
-    \snippet quick/particles/customparticle/content/imagecolors.qml vertex
+    \snippet particles/customparticle/content/imagecolors.qml vertex
     passes along the starting position for each vertex to the fragment shader,
-    \snippet quick/particles/customparticle/content/imagecolors.qml fragment
+    \snippet particles/customparticle/content/imagecolors.qml fragment
     which uses it to determine the color for that particle.
 
 */

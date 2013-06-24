@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 static const double Q_PI   = 3.14159265358979323846;   // pi
 
-//copied from QtSvg (qsvghandler.cpp).
+//copied from Qt SVG (qsvghandler.cpp).
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 // '0' is 0x30 and '9' is 0x39
 static inline bool isDigit(ushort ch)

@@ -128,7 +128,7 @@ void QQuickContents::calcGeometry(QQuickItem *changed)
 
 class QQuickTransformPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickTransform);
+    Q_DECLARE_PUBLIC(QQuickTransform)
 public:
     static QQuickTransformPrivate* get(QQuickTransform *transform) { return transform->d_func(); }
 
@@ -293,6 +293,8 @@ public:
     static QQuickTransform *transform_at(QQmlListProperty<QQuickTransform> *list, int);
     static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
+    void _q_resourceObjectDeleted(QObject *);
+
     enum ChangeType {
         Geometry = 0x01,
         SiblingOrder = 0x02,
@@ -363,6 +365,8 @@ public:
         Qt::MouseButtons acceptedMouseButtons;
 
         QQuickItem::TransformOrigin origin:5;
+
+        QObjectList resourcesList;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -485,6 +489,10 @@ public:
     void itemToParentTransform(QTransform &) const;
 
     static bool focusNextPrev(QQuickItem *item, bool forward);
+    static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
+
+    static bool qt_tab_all_widgets(); //todo: move to QGuiApplication?
+    static bool canAcceptTabFocus(QQuickItem *item);
 
     qreal x;
     qreal y;
@@ -886,7 +894,7 @@ QSGNode *QQuickItemPrivate::childContainerNode()
     return groupNode;
 }
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes)
 
 QT_END_NAMESPACE
 

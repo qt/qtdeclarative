@@ -72,7 +72,7 @@ public:
     void setNameFilters(const QStringList & nameFilters);
     void setShowDirs(bool showFolders);
     void setShowDirsFirst(bool show);
-    void setShowDotDot(bool on);
+    void setShowDotAndDotDot(bool on);
     void setShowOnlyReadable(bool on);
 
 public Q_SLOTS:
@@ -104,7 +104,7 @@ private:
     bool sortUpdate;
     bool showDirs;
     bool showDirsFirst;
-    bool showDotDot;
+    bool showDotAndDotDot;
     bool showOnlyReadable;
 };
 

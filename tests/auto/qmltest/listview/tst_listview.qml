@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 import QtTest 1.0
 
 Item {
@@ -53,6 +53,7 @@ Item {
     ListView {
         id: viewmanyitems
         model: manyitems
+        delegate: Text { text: model.name }
     }
 
     ListView {
@@ -67,14 +68,66 @@ Item {
         delegate: Text { text: model.name }
     }
 
+    ListView {
+        id: asyncLoaderCurrentIndexListView
+        width: 360
+        height: 360
+        model: asyncLoaderCurrentIndexListModel
+
+        currentIndex: 0
+
+        delegate: Loader {
+            width: asyncLoaderCurrentIndexListView.width
+            height: asyncLoaderCurrentIndexListView.height
+
+            source: component
+            asynchronous: true
+        }
+    }
+
+    ListView {
+        id: asyncListViewLoaderView
+        width: 360
+        height: 360
+        model: asyncListViewLoaderModel
+
+        currentIndex: 0
+
+        delegate: Loader {
+            width: asyncListViewLoaderView.width
+            height: asyncListViewLoaderView.height
+
+            source: component
+            asynchronous: true
+        }
+    }
+
     ListModel { id: emptymodel }
     ListModel { id: manyitems }
     ListModel { id: firstmodel; ListElement { name: "FirstModelElement0" } }
     ListModel { id: secondmodel; ListElement { name: "SecondModelElement0" } ListElement { name: "SecondModelElement1" } }
     ListModel { id: altermodel; ListElement { name: "AlterModelElement0" } ListElement { name: "AlterModelElement1" } }
+    ListModel {
+        id: asyncLoaderCurrentIndexListModel
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+        ListElement { component: "data/asyncloadercurrentindex.qml" }
+    }
+    ListModel {
+        id: asyncListViewLoaderModel
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+        ListElement { component: "data/asynclistviewloader.qml" }
+    }
 
     TestCase {
         name: "ListView"
+        when: windowShown
 
         function test_empty() {
             compare(emptylist.count, 0)
@@ -107,15 +160,16 @@ Item {
                 manyitems.append({"name":"Item"+i})
             }
             compare(manyitems.count, row.numitems)
-            tryCompare(viewmanyitems.count, row.numitems)
+            tryCompare(viewmanyitems, 'count', row.numitems)
+
         }
 
         function test_modelchange() {
-            tryCompare(modelchange.count, 1)
+            tryCompare(modelchange, 'count', 1)
             modelchange.currentIndex = 0;
             compare(modelchange.currentItem.text, "FirstModelElement0")
             modelchange.model = secondmodel;
-            tryCompare(modelchange.count, 2)
+            tryCompare(modelchange, 'count', 2)
             modelchange.currentIndex = 0;
             compare(modelchange.currentItem.text, "SecondModelElement0")
             modelchange.currentIndex = 1;
@@ -123,13 +177,13 @@ Item {
         }
 
         function test_modelaltered() {
-            tryCompare(modelalter.count, 2)
+            tryCompare(modelalter, 'count', 2)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
             compare(modelalter.currentItem.text, "AlterModelElement1")
             altermodel.append({"name":"AlterModelElement2"})
-            tryCompare(modelalter.count, 3)
+            tryCompare(modelalter, 'count', 3)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -137,7 +191,7 @@ Item {
             modelalter.currentIndex = 2;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.insert(2,{"name":"AlterModelElement1.5"})
-            tryCompare(modelalter.count, 4)
+            tryCompare(modelalter, 'count', 4)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -147,7 +201,7 @@ Item {
             modelalter.currentIndex = 3;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.move(2,1,1);
-            tryCompare(modelalter.count, 4)
+            tryCompare(modelalter, 'count', 4)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -157,7 +211,7 @@ Item {
             modelalter.currentIndex = 3;
             compare(modelalter.currentItem.text, "AlterModelElement2")
             altermodel.remove(1,2)
-            tryCompare(modelalter.count, 2)
+            tryCompare(modelalter, 'count', 2)
             modelalter.currentIndex = 0;
             compare(modelalter.currentItem.text, "AlterModelElement0")
             modelalter.currentIndex = 1;
@@ -168,8 +222,32 @@ Item {
             modelalter.currentIndex = 1;
             compare(modelalter.currentItem.text, "AlterModelElement1")
             altermodel.clear()
-            tryCompare(modelalter.count, 0)
+            modelalter.forceLayout()
+            tryCompare(modelalter, 'count', 0)
             compare(modelalter.currentItem, null)
+        }
+
+        function test_asyncLoaderCurrentIndexChange() {
+            for (var i = 0; i < 500; i++) {
+                asyncLoaderCurrentIndexListView.currentIndex = 0;
+                asyncLoaderCurrentIndexListView.currentIndex = 1;
+                asyncLoaderCurrentIndexListView.currentIndex = 2;
+                asyncLoaderCurrentIndexListView.currentIndex = 3;
+                asyncLoaderCurrentIndexListView.currentIndex = 4;
+                asyncLoaderCurrentIndexListView.currentIndex = 5;
+            }
+            wait(1000)
+        }
+
+        function test_asyncListViewLoader() {
+            for (var i = 0; i < 50; i++) {
+                wait(10);
+                asyncListViewLoaderView.currentIndex = 0;
+                asyncListViewLoaderView.currentIndex = 1;
+                asyncListViewLoaderView.currentIndex = 2;
+                asyncListViewLoaderView.currentIndex = 3;
+                asyncListViewLoaderView.currentIndex = 4;
+            }
         }
     }
 }

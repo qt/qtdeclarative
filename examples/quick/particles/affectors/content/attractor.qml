@@ -77,7 +77,7 @@ Rectangle {
         ImageParticle {
             id: stars
             groups: ["stars"]
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
             color: "white"
             colorVariation: 0.1
             alpha: 0
@@ -96,7 +96,7 @@ Rectangle {
         ImageParticle {
             id: shot
             groups: ["shot"]
-            source: "../../images/star.png"
+            source: "qrc:///particleresources/star.png"
 
             color: "#0FF06600"
             colorVariation: 0.3
@@ -104,7 +104,7 @@ Rectangle {
         ImageParticle {
             id: engine
             groups: ["engine"]
-            source: "../../images/particle4.png"
+            source: "qrc:///particleresources/fuzzydot.png"
 
             color: "orange"
             SequentialAnimation on color {

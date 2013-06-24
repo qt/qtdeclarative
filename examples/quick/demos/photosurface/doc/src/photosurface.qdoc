@@ -26,11 +26,11 @@
 ****************************************************************************/
 
 /*!
-    \title QML Demo - Photo Surface
+    \title Qt Quick Demo - Photo Surface
+    \ingroup qtquickdemos
     \example demos/photosurface
-    \brief This is the typical touch photo-shuffling example written in QML.
-    \image qml-photosurface-example-small.png
-    \ingroup qtquickexamples
+    \brief A touch-based app for shuffling photos around a virtual surface.
+    \image qtquick-demo-photosurface-small.png
 
     This example demonstrates how to handle dragging, rotation and
     pinch zooming within the same item using a PinchArea containing a MouseArea.

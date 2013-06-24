@@ -28,16 +28,19 @@
 /*!
 \ingroup qtquick-positioners
 \page qtquick-positioning-layouts.html
-\ingroup qml-features
-\title Item Layouts
+\title Item Positioners
 
-Positioner items are container items that manage the positions and sizes of
+Positioner items are container items that manage the positions of
 items in a declarative user interface. Positioners behave in a similar way to
 the \l{Widgets and Layouts}{layout managers} used with standard Qt widgets,
 except that they are also containers in their own right.
 
 Positioners make it easier to work with many items when they need
 to be arranged in a regular layout.
+
+\l{Qt Quick Layouts} can also be used to arrange Qt Quick items in a user interface.
+They manage both the positions and the sizes of items on a declarative user interface,
+and are well suited for resizable user interfaces.
 
 \section1 Positioners
 

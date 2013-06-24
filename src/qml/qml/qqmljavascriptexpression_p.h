@@ -82,6 +82,7 @@ public:
 
     void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
     void setErrorDescription(const QString &description);
+    void setErrorObject(QObject *object);
 
     void setError(const QV4::Exception &e);
 

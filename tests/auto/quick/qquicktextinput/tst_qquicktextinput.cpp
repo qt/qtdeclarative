@@ -3149,6 +3149,7 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(initial, QLatin1String("ABCDefgh"));
     QCOMPARE(input->echoMode(), QQuickTextInput::Normal);
     QCOMPARE(input->displayText(), input->text());
+    const QString passwordMaskCharacter = qApp->styleHints()->passwordMaskCharacter();
     //Normal
     ref &= ~Qt::ImhHiddenText;
     ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
@@ -3156,7 +3157,7 @@ void tst_qquicktextinput::echoMode()
     input->setEchoMode(QQuickTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String(""));
-    QCOMPARE(input->passwordCharacter(), QLatin1String("*"));
+    QCOMPARE(input->passwordCharacter(), passwordMaskCharacter);
     //NoEcho
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
@@ -3166,7 +3167,7 @@ void tst_qquicktextinput::echoMode()
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->text(), initial);
-    QCOMPARE(input->displayText(), QLatin1String("********"));
+    QCOMPARE(input->displayText(), QString(8, passwordMaskCharacter.at(0)));
     QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
     // clearing input hints do not clear bits set by echo mode
     input->setInputMethodHints(Qt::ImhNone);
@@ -3221,7 +3222,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QQuickItem *cursor = input->findChild<QQuickItem *>("cursor");
     QVERIFY(cursor);
 
-    QChar fillChar = QLatin1Char('*');
+    QChar fillChar = qApp->styleHints()->passwordMaskCharacter();
 
     input->setEchoMode(QQuickTextInput::Password);
     QCOMPARE(input->displayText(), QString(8, fillChar));
@@ -6123,6 +6124,12 @@ void tst_qquicktextinput::keypress_inputMask_data()
         // inserting '12ab'
         keys << Qt::Key_Home << "12ab";
         QTest::newRow("uppercase") << QString("9999 >AA;_") << keys << QString("12 AB") << QString("12__ AB");
+    }
+    {
+        KeyList keys;
+        // inserting '12ab'
+        keys << Qt::Key_Right << Qt::Key_Right << "1";
+        QTest::newRow("Move in mask") << QString("#0:00;*") << keys << QString(":1") << QString("**:1*");
     }
 }
 

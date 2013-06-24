@@ -69,3 +69,7 @@ SUBDIRS += debugger
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
 }
+
+qtNomakeTools( \
+    qmlplugindump \
+)

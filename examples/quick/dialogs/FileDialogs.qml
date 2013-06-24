@@ -43,44 +43,13 @@ import QtQuick.Dialogs 1.0
 import "../shared"
 
 Rectangle {
-
     width: 580
-    height: 360
+    height: 400
     color: palette.window
     SystemPalette { id: palette }
+    clip: true
 
-    Rectangle {
-        id: toolbar
-        width: parent.width
-        height: 40
-        color: Qt.darker(palette.window, 1.1)
-        border.color: Qt.darker(palette.window, 1.3)
-        Row {
-            spacing: 6
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: 8
-            height: parent.height - 6
-            width: parent.width
-            Button {
-                text: "Open"
-                anchors.verticalCenter: parent.verticalCenter
-                onClicked: fileDialog.open()
-            }
-            Button {
-                text: "Close"
-                anchors.verticalCenter: parent.verticalCenter
-                onClicked: fileDialog.close()
-            }
-            Button {
-                text: "/tmp"
-                anchors.verticalCenter: parent.verticalCenter
-                // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
-                onClicked: fileDialog.folder = "/tmp"
-            }
-        }
-    }
-
+    //! [filedialog]
     FileDialog {
         id: fileDialog
         visible: fileDialogVisible.checked
@@ -95,12 +64,11 @@ Rectangle {
         onAccepted: { console.log("Accepted: " + fileUrls) }
         onRejected: { console.log("Rejected") }
     }
+    //! [filedialog]
 
     Column {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: toolbar.bottom
-        anchors.margins: 8
+        anchors.fill: parent
+        anchors.margins: 12
         spacing: 8
         Text {
             color: palette.windowText
@@ -161,6 +129,41 @@ Rectangle {
             text: "<b>chosen single path:</b> " + fileDialog.fileUrl
             width: parent.width
             wrapMode: Text.Wrap
+        }
+    }
+
+    Rectangle {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 50
+        color: Qt.darker(palette.window, 1.1)
+        border.color: Qt.darker(palette.window, 1.3)
+        Row {
+            spacing: 6
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            height: parent.height - 6
+            width: parent.width
+            Button {
+                text: "Open"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: fileDialog.open()
+            }
+            Button {
+                text: "Close"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: fileDialog.close()
+            }
+            Button {
+                text: "go to /tmp"
+                anchors.verticalCenter: parent.verticalCenter
+                // TODO: QTBUG-29814 This isn't portable, but we don't expose QDir::tempPath to QML yet.
+                onClicked: fileDialog.folder = "/tmp"
+            }
         }
     }
 }

@@ -167,6 +167,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickKeyEvent>();
     qmlRegisterType<QQuickMouseEvent>();
     qmlRegisterType<QQuickWheelEvent>();
+    qmlRegisterType<QQuickCloseEvent>();
     qmlRegisterType<QQuickTransform>();
     qmlRegisterType<QQuickPathElement>();
     qmlRegisterType<QQuickCurve>();
@@ -230,7 +231,13 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickItem, 1>(uri, 2, 1,"Item");
     qmlRegisterType<QQuickGrid, 1>(uri, 2, 1, "Grid");
+    qmlRegisterUncreatableType<QQuickItemView, 1>(uri, 2, 1, "ItemView", QQuickItemView::tr("ItemView is an abstract base class"));
+    qmlRegisterType<QQuickListView, 1>(uri, 2, 1, "ListView");
+    qmlRegisterType<QQuickGridView, 1>(uri, 2, 1, "GridView");
     qmlRegisterType<QQuickTextEdit, 1>(uri, 2, 1, "TextEdit");
+
+    qmlRegisterType<QQuickText, 2>(uri, 2, 2, "Text");
+    qmlRegisterType<QQuickTextEdit, 2>(uri, 2, 2, "TextEdit");
 }
 
 void QQuickItemsModule::defineModule()

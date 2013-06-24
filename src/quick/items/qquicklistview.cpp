@@ -1659,7 +1659,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     A ListView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
-    QAbstractListModel.
+    QAbstractItemModel or QAbstractListModel.
 
     A ListView has a \l model, which defines the data to be displayed, and
     a \l delegate, which defines how the data should be displayed. Items in a
@@ -2185,7 +2185,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     each section.
 
 
-    \snippet quick/views/listview/sections.qml 0
+    \snippet views/listview/sections.qml 0
 
     \image qml-listview-sections-example.png
 
@@ -3104,6 +3104,21 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 
     If the item is outside the visible area, null is returned, regardless of
     whether an item will exist at that point when scrolled into view.
+
+    \b Note: methods should only be called after the Component has completed.
+*/
+
+/*!
+    \qmlmethod QtQuick2::ListView::forceLayout()
+
+    Responding to changes in the model is usually batched to happen only once
+    per frame. This means that inside script blocks it is possible for the
+    underlying model to have changed, but the ListView has not caught up yet.
+
+    This method forces the ListView to immediately respond to any outstanding
+    changes in the model.
+
+    \since QtQuick 2.1
 
     \b Note: methods should only be called after the Component has completed.
 */

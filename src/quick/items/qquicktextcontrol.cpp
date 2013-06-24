@@ -298,6 +298,8 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     bool previousUndoRedoState = doc->isUndoRedoEnabled();
     doc->setUndoRedoEnabled(false);
 
+    const int oldCursorPos = cursor.position();
+
     // avoid multiple textChanged() signals being emitted
     qmlobject_disconnect(doc, QTextDocument, SIGNAL(contentsChanged()), q, QQuickTextControl, SIGNAL(textChanged()));
 
@@ -341,7 +343,8 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     doc->setModified(false);
 
     q->updateCursorRectangle(true);
-    emit q->cursorPositionChanged();
+    if (cursor.position() != oldCursorPos)
+        emit q->cursorPositionChanged();
 }
 
 void QQuickTextControlPrivate::setCursorPosition(const QPointF &pos)
@@ -698,6 +701,9 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
         case QEvent::KeyPress:
             d->keyPressEvent(static_cast<QKeyEvent *>(e));
             break;
+        case QEvent::KeyRelease:
+            d->keyReleaseEvent(static_cast<QKeyEvent *>(e));
+            break;
         case QEvent::MouseButtonPress: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
             d->mousePressEvent(ev, matrix.map(ev->localPos()));
@@ -713,6 +719,12 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
         case QEvent::MouseButtonDblClick: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
             d->mouseDoubleClickEvent(ev, matrix.map(ev->localPos()));
+            break; }
+        case QEvent::HoverEnter:
+        case QEvent::HoverMove:
+        case QEvent::HoverLeave: {
+            QHoverEvent *ev = static_cast<QHoverEvent *>(e);
+            d->hoverEvent(ev, matrix.map(ev->posF()));
             break; }
 #ifndef QT_NO_IM
         case QEvent::InputMethod:
@@ -809,9 +821,25 @@ void QQuickTextControl::setHtml(const QString &text)
     d->setContent(Qt::RichText, text);
 }
 
+
+void QQuickTextControlPrivate::keyReleaseEvent(QKeyEvent *e)
+{
+    if (e->key() == Qt::Key_Back) {
+         e->ignore();
+         return;
+    }
+    return;
+}
+
 void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
 {
     Q_Q(QQuickTextControl);
+
+    if (e->key() == Qt::Key_Back) {
+         e->ignore();
+         return;
+    }
+
 #ifndef QT_NO_SHORTCUT
     if (e == QKeySequence::SelectAll) {
             e->accept();
@@ -1381,6 +1409,20 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
     }
 }
 
+void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
+{
+    Q_Q(QQuickTextControl);
+
+    QString link;
+    if (e->type() != QEvent::HoverLeave)
+        link = q->anchorAt(pos);
+
+    if (hoveredLink != link) {
+        hoveredLink = link;
+        emit q->linkHovered(link);
+    }
+}
+
 bool QQuickTextControl::hasImState() const
 {
     Q_D(const QQuickTextControl);
@@ -1414,6 +1456,12 @@ QRectF QQuickTextControl::cursorRect() const
 {
     Q_D(const QQuickTextControl);
     return cursorRect(d->cursor);
+}
+
+QString QQuickTextControl::hoveredLink() const
+{
+    Q_D(const QQuickTextControl);
+    return d->hoveredLink;
 }
 
 QString QQuickTextControl::anchorAt(const QPointF &pos) const

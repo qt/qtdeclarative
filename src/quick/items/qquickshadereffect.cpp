@@ -912,8 +912,8 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 {
     QQuickShaderEffectNode *node = static_cast<QQuickShaderEffectNode *>(oldNode);
 
-    // In the case of a bad vertex shader, don't try to create a node...
-    if (m_common.attributes.isEmpty()) {
+    // In the case of zero-size or a bad vertex shader, don't try to create a node...
+    if (m_common.attributes.isEmpty() || width() <= 0 || height() <= 0) {
         if (node)
             delete node;
         return 0;

@@ -211,24 +211,24 @@ const char *SmoothColorMaterialShader::fragmentShader() const
             "}";
 }
 
-SmoothColorMaterial::SmoothColorMaterial()
+QSGSmoothColorMaterial::QSGSmoothColorMaterial()
 {
     setFlag(RequiresFullMatrixExceptTranslate, true);
     setFlag(Blending, true);
 }
 
-int SmoothColorMaterial::compare(const QSGMaterial *) const
+int QSGSmoothColorMaterial::compare(const QSGMaterial *) const
 {
     return 0;
 }
 
-QSGMaterialType *SmoothColorMaterial::type() const
+QSGMaterialType *QSGSmoothColorMaterial::type() const
 {
     static QSGMaterialType type;
     return &type;
 }
 
-QSGMaterialShader *SmoothColorMaterial::createShader() const
+QSGMaterialShader *QSGSmoothColorMaterial::createShader() const
 {
     return new SmoothColorMaterialShader;
 }

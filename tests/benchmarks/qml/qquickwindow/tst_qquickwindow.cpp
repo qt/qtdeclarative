@@ -63,9 +63,9 @@ tst_qquickwindow::tst_qquickwindow()
 {
     window = new QQuickWindow;
     window->resize(250, 250);
-    window->setPos(100, 100);
+    window->setPosition(100, 100);
     for ( int i=0; i<8000; i++ ) {
-        QQuickRectangle *r =new QQuickRectangle(window->rootItem());
+        QQuickRectangle *r =new QQuickRectangle(window->contentItem());
         for ( int j=0; j<10; ++j ) {
             new QQuickRectangle(r);
         }

@@ -60,6 +60,7 @@
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
+#include "qqmlabstracturlinterceptor_p.h"
 
 #include <QDebug>
 #include <QPointF>
@@ -516,6 +517,10 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
             // Encoded dir-separators defeat QUrl processing - decode them first
             string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+            // Apply URL interceptor
+            if (engine->urlInterceptor())
+                u = engine->urlInterceptor()->intercept(u,
+                        QQmlAbstractUrlInterceptor::UrlString);
             instr.propertyIndex = prop->index;
             instr.value = output->indexForUrl(u);
             output->addInstruction(instr);

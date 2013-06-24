@@ -52,8 +52,14 @@ class ThreadRenderer : public QQuickItem
 public:
     ThreadRenderer();
 
+    static QList<QThread *> threads;
+
+public slots:
+    void updatePolish();
+
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+
 
 private:
     RenderThread *m_renderThread;

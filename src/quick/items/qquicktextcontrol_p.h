@@ -103,6 +103,7 @@ public:
     QRectF selectionRect(const QTextCursor &cursor) const;
     QRectF selectionRect() const;
 
+    QString hoveredLink() const;
     QString anchorAt(const QPointF &pos) const;
 
     void setCursorWidth(int width);
@@ -151,6 +152,7 @@ Q_SIGNALS:
     void updateRequest();
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
+    void linkHovered(const QString &link);
 
 public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);

@@ -38,15 +38,15 @@
     It consists of a scene populated with items in a variety of positioners: Column, Row, Grid and Flow.
     Each positioner has animations described as Transitions.
 
-    \snippet quick/positioners/positioners-transitions.qml move
+    \snippet positioners/positioners-transitions.qml move
     The move transition specifies how items inside a positioner will animate when they are displaced by the appearance or disappearance of other items.
 
-    \snippet quick/positioners/positioners-transitions.qml add
+    \snippet positioners/positioners-transitions.qml add
     The add transition specifies how items will appear when they are added to a positioner.
 
-    \snippet quick/positioners/positioners-transitions.qml populate
+    \snippet positioners/positioners-transitions.qml populate
     The populate transition specifies how items will appear when their parent positioner is first created.
 
     Attached Properties shows how the Positioner attached property can be used to determine where an item is within a positioner.
-    \snippet quick/positioners/positioners-attachedproperties.qml 0
+    \snippet positioners/positioners-attachedproperties.qml 0
 */

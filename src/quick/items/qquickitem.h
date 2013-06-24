@@ -324,6 +324,7 @@ public:
     Q_INVOKABLE void mapToItem(QQmlV4Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
+    Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
 #ifndef QT_NO_IM
@@ -355,6 +356,7 @@ Q_SIGNALS:
     void smoothChanged(bool);
     void antialiasingChanged(bool);
     void clipChanged(bool);
+    Q_REVISION(1) void windowChanged(QQuickWindow* window);
 
     // XXX todo
     void childrenChanged();
@@ -430,6 +432,8 @@ protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 
 private:
+    Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
+
     friend class QQuickWindow;
     friend class QQuickWindowPrivate;
     friend class QSGRenderer;

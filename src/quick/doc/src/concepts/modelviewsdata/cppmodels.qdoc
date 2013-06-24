@@ -28,7 +28,7 @@
 /*!
 \page qtquick-modelviewsdata-cppmodels.html
 \title Using C++ Models with Qt Quick Views
-\brief using QtQuick views with models defined in C++
+\brief using Qt Quick views with models defined in C++
 
 
 \section1 Data Provided In A Custom C++ Model
@@ -49,12 +49,12 @@ via the \e modelData role.
 Here is a ListView with a delegate that references its model item's
 value using the \c modelData role:
 
-\snippet quick/models/stringlistmodel/view.qml 0
+\snippet models/stringlistmodel/view.qml 0
 
 A Qt application can load this QML document and set the value of \c myModel
 to a QStringList:
 
-\snippet quick/models/stringlistmodel/main.cpp 0
+\snippet models/stringlistmodel/main.cpp 0
 
 The complete source code for this example is available in
 \l {quick/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel}
@@ -74,11 +74,11 @@ The following application creates a \c DataObject class with
 Q_PROPERTY values that will be accessible as named roles when a
 QList<DataObject*> is exposed to QML:
 
-\snippet quick/models/objectlistmodel/dataobject.h 0
+\snippet models/objectlistmodel/dataobject.h 0
 \dots 4
-\snippet quick/models/objectlistmodel/dataobject.h 1
+\snippet models/objectlistmodel/dataobject.h 1
 \codeline
-\snippet quick/models/objectlistmodel/main.cpp 0
+\snippet models/objectlistmodel/main.cpp 0
 \dots
 
 The QObject* is available as the \c modelData property.  As a convenience,
@@ -86,7 +86,7 @@ the properties of the object are also made available directly in the
 delegate's context. Here, \c view.qml references the \c DataModel properties in
 the ListView delegate:
 
-\snippet quick/models/objectlistmodel/view.qml 0
+\snippet models/objectlistmodel/view.qml 0
 
 Note the use of \c color property with qualifier.
 The properties of the object are not replicated in the \c model
@@ -130,21 +130,21 @@ which exposes the \e type and \e sizes roles. It reimplements
 QAbstractItemModel::roleNames() to expose the role names, so that they can be
 accessed via QML:
 
-\snippet quick/models/abstractitemmodel/model.h 0
+\snippet models/abstractitemmodel/model.h 0
 \dots
-\snippet quick/models/abstractitemmodel/model.h 1
+\snippet models/abstractitemmodel/model.h 1
 \dots
-\snippet quick/models/abstractitemmodel/model.h 2
+\snippet models/abstractitemmodel/model.h 2
 \codeline
-\snippet quick/models/abstractitemmodel/model.cpp 0
+\snippet models/abstractitemmodel/model.cpp 0
 \codeline
-\snippet quick/models/abstractitemmodel/main.cpp 0
+\snippet models/abstractitemmodel/main.cpp 0
 \dots
 
 This model is displayed by a ListView delegate that accesses the \e type and \e size
 roles:
 
-\snippet quick/models/abstractitemmodel/view.qml 0
+\snippet models/abstractitemmodel/view.qml 0
 
 QML views are automatically updated when the model changes. Remember the model
 must follow the standard rules for model changes and notify the view when

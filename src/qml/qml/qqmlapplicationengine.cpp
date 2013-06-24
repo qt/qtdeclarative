@@ -72,6 +72,7 @@ void QQmlApplicationEnginePrivate::init()
         QCoreApplication::installTranslator(qtTranslator);
     translators << qtTranslator;
 #endif
+    QCoreApplication::instance()->setProperty("__qml_using_qqmlapplicationengine", QVariant(true));
 }
 
 void QQmlApplicationEnginePrivate::loadTranslations(const QUrl &rootFile)
@@ -133,7 +134,8 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
     case QQmlComponent::Null:
         return; //These cases just wait for the next status update
     }
-    delete c;
+
+    c->deleteLater();
 }
 
 /*!
@@ -158,16 +160,21 @@ void QQmlApplicationEnginePrivate::_q_finishLoad(QObject *o)
   }
   \endcode
 
-  You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as QtQuick).
+  You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as \c QtQuick).
 
   List of configuration changes from a default QQmlEngine:
 
   \list
   \li Connecting Qt.quit() to QCoreApplication::quit()
   \li Automatically loads translation files from an i18n directory adjacent to the main QML file.
+  \li Automatically sets an incubuation controller if the scene contains a QQuickWindow.
   \endlist
 
   The engine behavior can be further tweaked by using the inherited methods from QQmlEngine.
+
+  \note In the future QQmlApplicationEngine may automatically apply file selectors.
+  To ensure forwards compatibility, do not use folder names containing a '+' character in your QML file
+  structure.
 */
 
 /*!

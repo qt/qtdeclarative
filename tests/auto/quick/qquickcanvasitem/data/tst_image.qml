@@ -216,6 +216,17 @@ CanvasTestCase {
 
    }
 
+   property url green: 'green.png'
+
+   function test_url(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+
+       canvas.loadImage(testCase.green);
+       ctx.drawImage(testCase.green, 0, 0);
+       comparePixel(ctx, 0,0, 0,255,0,255,2);
+   }
+
    function test_composite(row) {
        var canvas = createCanvasObject(row);
        var ctx = canvas.getContext('2d');

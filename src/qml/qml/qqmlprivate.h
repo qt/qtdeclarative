@@ -253,7 +253,7 @@ namespace QQmlPrivate
     };
 
     struct RegisterCompositeType {
-        const QUrl &url;
+        QUrl url;
         const char *uri;
         int versionMajor;
         int versionMinor;

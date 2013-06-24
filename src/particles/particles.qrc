@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>particleresources/noise.png</file>
+        <file>particleresources/fuzzydot.png</file>
+        <file>particleresources/glowdot.png</file>
+        <file>particleresources/star.png</file>
     </qresource>
 </RCC>

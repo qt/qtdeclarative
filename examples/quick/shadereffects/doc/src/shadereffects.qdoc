@@ -25,27 +25,27 @@
 **
 ****************************************************************************/
 /*!
-    \title QML Examples - Shader Effects
+    \title Qt Quick Examples - Shader Effects
     \example shadereffects
     \image qml-shadereffects-example.png
     \brief This is a shader effects example
     \ingroup qtquickexamples
 
     This example demonstrates a couple of visual effects that you can perform
-    with shaders in QtQuick 2.0
+    with shaders in \l {Qt Quick}.
 
     ShaderEffects typically operate on other types, using a ShaderEffectSource
-    \snippet quick/shadereffects/shadereffects.qml source
+    \snippet shadereffects/shadereffects.qml source
     In the above snippet, theItem is the id of a complex QML object in the file.
 
     ShaderEffects can use this ShaderEffectSource as a texture in their fragment shader.
-    \snippet quick/shadereffects/shadereffects.qml fragment
+    \snippet shadereffects/shadereffects.qml fragment
 
     You can use any custom property on the ShaderEffect in your shader. This makes
     animated shader code very easy.
-    \snippet quick/shadereffects/shadereffects.qml properties
+    \snippet shadereffects/shadereffects.qml properties
 
     ShaderEffects can also have a custom vertext shader. Setting the mesh property on ShaderEffect
     provides more vertices for you to manipulate, enabling many effects.
-    \snippet quick/shadereffects/shadereffects.qml vertex
+    \snippet shadereffects/shadereffects.qml vertex
 */

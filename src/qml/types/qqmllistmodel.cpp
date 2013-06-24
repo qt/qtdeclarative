@@ -1412,22 +1412,12 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
     \qmltype ListModel
     \instantiates QQmlListModel
     \inqmlmodule QtQml.Models 2
-    \brief Defines a free-form list data source
-
-    The ListModel is a simple container of ListElement definitions, each containing data roles.
-    The contents can be defined dynamically, or explicitly in QML.
-
-    This type is also available in the QtQuick 2 import. For full documentation, see \l QtQuick2::ListModel
-*/
-/*!
-    \qmltype ListModel
-    \instantiates QQmlListModel
-    \inqmlmodule QtQuick 2
-    \brief Defines a free-form list data source
     \ingroup qtquick-models
+    \brief Defines a free-form list data source
 
-    The ListModel is a simple container of ListElement definitions, each containing data roles.
-    The contents can be defined dynamically, or explicitly in QML.
+    The ListModel is a simple container of ListElement definitions, each
+    containing data roles. The contents can be defined dynamically, or
+    explicitly in QML.
 
     The number of elements in the model can be obtained from its \l count property.
     A number of familiar methods are also provided to manipulate the contents of the
@@ -1509,7 +1499,7 @@ QQmlListModelParser::ListInstruction *QQmlListModelParser::ListModelData::instru
     handler. You must call sync() or else the changes made to the list from the external
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtQml
+    \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, {Qt QML}
 */
 
 QQmlListModel::QQmlListModel(QObject *parent)
@@ -1787,7 +1777,7 @@ QHash<int, QByteArray> QQmlListModel::roleNames() const
 }
 
 /*!
-    \qmlproperty bool QtQml2::ListModel::dynamicRoles
+    \qmlproperty bool ListModel::dynamicRoles
 
     By default, the type of a role is fixed the first time
     the role is used. For example, if you create a role called
@@ -1833,7 +1823,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 }
 
 /*!
-    \qmlproperty int QtQml2::ListModel::count
+    \qmlproperty int ListModel::count
     The number of data entries in the model.
 */
 int QQmlListModel::count() const
@@ -2515,16 +2505,6 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
     \qmltype ListElement
     \instantiates QQmlListElement
     \inqmlmodule QtQml.Models 2
-    \brief Defines a data item in a ListModel
-
-    List elements are defined inside ListModel definitions, and represent items in a list.
-
-    This type is also available in the QtQuick 2 import. For full documentation, see \l QtQuick2::ListElement
-*/
-/*!
-    \qmltype ListElement
-    \instantiates QQmlListElement
-    \inqmlmodule QtQuick 2
     \brief Defines a data item in a ListModel
     \ingroup qtquick-models
 

@@ -60,8 +60,11 @@ QAccessibleQuickWindow::QAccessibleQuickWindow(QQuickWindow *object)
 
 QQuickItem *QAccessibleQuickWindow::rootItem() const
 {
-    if (window()->contentItem())
-        return window()->contentItem()->childItems().first();
+    if (QQuickItem *ci = window()->contentItem()) {
+        const QList<QQuickItem *> &childItems = ci->childItems();
+        if (!childItems.isEmpty())
+            return childItems.first();
+    }
     return 0;
 }
 
@@ -78,10 +81,8 @@ QAccessibleInterface *QAccessibleQuickWindow::parent() const
 
 QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 {
-    if (index == 0) {
-        if (QQuickItem *declarativeRoot = rootItem())
-            return new QAccessibleQuickItem(declarativeRoot);
-    }
+    if (index == 0)
+        return QAccessible::queryAccessibleInterface(rootItem());
     return 0;
 }
 

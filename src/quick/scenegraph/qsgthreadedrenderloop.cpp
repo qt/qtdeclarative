@@ -56,6 +56,8 @@
 
 #include "qsgthreadedrenderloop_p.h"
 
+#include <private/qqmlprofilerservice_p.h>
+
 /*
    Overall design:
 
@@ -139,10 +141,10 @@ static inline int qsgrl_animation_interval() {
 
 #ifndef QSG_NO_RENDER_TIMING
 static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
-static QTime threadTimer;
-static int syncTime;
-static int renderTime;
-static int sinceLastTime;
+static QElapsedTimer threadTimer;
+static qint64 syncTime;
+static qint64 renderTime;
+static qint64 sinceLastTime;
 #endif
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -329,9 +331,9 @@ public:
 
     QEventLoop eventLoop;
 
-    uint pendingUpdate : 2;
-    uint sleeping : 1;
-    uint syncResultedInChanges : 1;
+    uint pendingUpdate;
+    uint sleeping;
+    uint syncResultedInChanges;
 
     volatile bool guiIsLocked;
     volatile bool shouldExit;
@@ -516,7 +518,6 @@ void QSGRenderThread::sync()
     mutex.lock();
 
     Q_ASSERT_X(guiIsLocked, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
-    pendingUpdate = 0;
 
     for (int i=0; i<m_windows.size(); ++i) {
         Window &w = const_cast<Window &>(m_windows.at(i));
@@ -547,8 +548,11 @@ void QSGRenderThread::sync()
 void QSGRenderThread::syncAndRender()
 {
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        sinceLastTime = threadTimer.restart();
+    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    if (profileFrames) {
+        sinceLastTime = threadTimer.nsecsElapsed();
+        threadTimer.start();
+    }
 #endif
     QElapsedTimer waitTimer;
     waitTimer.start();
@@ -558,8 +562,10 @@ void QSGRenderThread::syncAndRender()
     syncResultedInChanges = false;
 
     bool repaintRequested = pendingUpdate & RepaintRequest;
+    bool syncRequested = pendingUpdate & SyncRequest;
+    pendingUpdate = 0;
 
-    if (pendingUpdate & SyncRequest) {
+    if (syncRequested) {
         RLDEBUG("    Render:  - update pending, doing sync");
         sync();
     }
@@ -569,12 +575,13 @@ void QSGRenderThread::syncAndRender()
         int waitTime = vsyncDelta - (int) waitTimer.elapsed();
         if (waitTime > 0)
             msleep(waitTime);
+        emit wm->timeToIncubate();
         return;
     }
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        syncTime = threadTimer.elapsed();
+    if (profileFrames)
+        syncTime = threadTimer.nsecsElapsed();
 #endif
     RLDEBUG("    Render:  - rendering starting");
 
@@ -588,21 +595,30 @@ void QSGRenderThread::syncAndRender()
         gl->makeCurrent(w.window);
         d->renderSceneGraph(w.size);
 #ifndef QSG_NO_RENDER_TIMING
-        if (qsg_render_timing && i == 0)
-            renderTime = threadTimer.elapsed();
+        if (profileFrames && i == 0)
+            renderTime = threadTimer.nsecsElapsed();
 #endif
         gl->swapBuffers(w.window);
         d->fireFrameSwapped();
     }
     RLDEBUG("    Render:  - rendering done");
+    emit wm->timeToIncubate();
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing)
             qDebug("window Time: sinceLast=%d, sync=%d, first render=%d, after final swap=%d",
-                   sinceLastTime,
-                   syncTime,
-                   renderTime - syncTime,
-                   threadTimer.elapsed() - renderTime);
+                   int(sinceLastTime/1000000),
+                   int(syncTime/1000000),
+                   int((renderTime - syncTime)/1000000),
+                   int(threadTimer.elapsed() - renderTime/1000000));
+
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphRenderLoopFrame,
+                        syncTime,
+                        renderTime - syncTime,
+                        threadTimer.nsecsElapsed() - renderTime);
+        }
 #endif
 }
 
@@ -710,7 +726,7 @@ QSGContext *QSGThreadedRenderLoop::sceneGraphContext() const
     return m_thread->sg;
 }
 
-bool QSGThreadedRenderLoop::anyoneShowing()
+bool QSGThreadedRenderLoop::anyoneShowing() const
 {
     for (int i=0; i<m_windows.size(); ++i) {
         QQuickWindow *c = m_windows.at(i).window;
@@ -718,6 +734,11 @@ bool QSGThreadedRenderLoop::anyoneShowing()
             return true;
     }
     return false;
+}
+
+bool QSGThreadedRenderLoop::interleaveIncubation() const
+{
+    return m_animation_driver->isRunning() && anyoneShowing();
 }
 
 void QSGThreadedRenderLoop::animationStarted()
@@ -950,10 +971,11 @@ void QSGThreadedRenderLoop::polishAndSync()
 
 #ifndef QSG_NO_RENDER_TIMING
     QElapsedTimer timer;
-    int polishTime = 0;
-    int waitTime = 0;
-    int syncTime;
-    if (qsg_render_timing)
+    qint64 polishTime = 0;
+    qint64 waitTime = 0;
+    qint64 syncTime = 0;
+    bool profileFrames = qsg_render_timing  || QQmlProfilerService::enabled;
+    if (profileFrames)
         timer.start();
 #endif
 
@@ -964,8 +986,8 @@ void QSGThreadedRenderLoop::polishAndSync()
         d->polishItems();
     }
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        polishTime = timer.elapsed();
+    if (profileFrames)
+        polishTime = timer.nsecsElapsed();
 #endif
 
     m_sync_triggered_update = false;
@@ -977,8 +999,8 @@ void QSGThreadedRenderLoop::polishAndSync()
 
     RLDEBUG("GUI:  - wait for sync...");
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        waitTime = timer.elapsed();
+    if (profileFrames)
+        waitTime = timer.nsecsElapsed();
 #endif
     m_thread->waitCondition.wait(&m_thread->mutex);
     m_thread->guiIsLocked = false;
@@ -986,8 +1008,8 @@ void QSGThreadedRenderLoop::polishAndSync()
     RLDEBUG("GUI:  - unlocked after sync...");
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        syncTime = timer.elapsed();
+    if (profileFrames)
+        syncTime = timer.nsecsElapsed();
 #endif
 
     killTimer(m_update_timer);
@@ -997,7 +1019,6 @@ void QSGThreadedRenderLoop::polishAndSync()
         RLDEBUG("GUI:  - animations advancing");
         m_animation_driver->advance();
         RLDEBUG("GUI:  - animations done");
-
         // We need to trigger another sync to keep animations running...
         maybePostPolishRequest();
     } else if (m_sync_triggered_update) {
@@ -1006,7 +1027,20 @@ void QSGThreadedRenderLoop::polishAndSync()
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
-        qDebug(" - polish=%d, wait=%d, sync=%d -- animations=%d", polishTime, waitTime - polishTime, syncTime - waitTime, int(timer.elapsed() - syncTime));
+        qDebug(" - polish=%d, wait=%d, sync=%d -- animations=%d",
+               int(polishTime/1000000),
+               int((waitTime - polishTime)/1000000),
+               int((syncTime - waitTime)/1000000),
+               int((timer.nsecsElapsed() - syncTime)/1000000));
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphPolishAndSync,
+                    polishTime,
+                    waitTime - polishTime,
+                    syncTime - waitTime,
+                    timer.nsecsElapsed() - syncTime);
+    }
 #endif
 }
 

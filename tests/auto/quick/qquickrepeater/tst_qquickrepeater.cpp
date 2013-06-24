@@ -78,6 +78,7 @@ private slots:
     void asynchronous();
     void initParent();
     void dynamicModelCrash();
+    void visualItemModelCrash();
 };
 
 class TestObject : public QObject
@@ -730,6 +731,17 @@ void tst_QQuickRepeater::dynamicModelCrash()
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "rep");
     QVERIFY(repeater);
     QVERIFY(qvariant_cast<QObject *>(repeater->model()) == 0);
+}
+
+void tst_QQuickRepeater::visualItemModelCrash()
+{
+    // This used to crash because the model would get
+    // deleted before the repeater, leading to double-deletion
+    // of the items.
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("visualitemmodel.qml"));
+    qApp->processEvents();
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

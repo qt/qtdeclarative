@@ -56,7 +56,7 @@ Rectangle {
             system: particles
             anchors.fill: parent
             groups: ["A", "B"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             colorVariation: 0
             color: "#00111111"
         }
@@ -65,7 +65,7 @@ Rectangle {
             anchors.fill: parent
             system: particles
             groups: ["C", "D"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             colorVariation: 0.1
             color: "#00ff400f"
         }

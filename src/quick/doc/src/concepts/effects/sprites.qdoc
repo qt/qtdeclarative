@@ -27,7 +27,6 @@
 
 /*!
 \ingroup qtquick-images-sprites
-\ingroup qml-features
 \page qtquick-effects-sprites.html
 \title Sprite Animations
 \brief Sprite-based animations with flexible transitioning
@@ -36,7 +35,7 @@
 
 \section1 Sprite Engine
 
-The QtQuick sprite engine is a stochastic state machine combined with the ability
+The \l {Qt Quick} sprite engine is a stochastic state machine combined with the ability
 to chop up images containing multiple frames of an animation.
 
 \section2 State Machine

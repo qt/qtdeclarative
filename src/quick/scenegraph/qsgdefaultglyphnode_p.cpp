@@ -95,7 +95,8 @@ const char *QSGTextMaskMaterialData::fragmentShader() const {
         "uniform sampler2D texture;                     \n"
         "uniform lowp vec4 color;                       \n"
         "void main() {                                  \n"
-        "    gl_FragColor = vec4(texture2D(texture, sampleCoord).rgb * color.a, 1.0); \n"
+        "    lowp vec4 glyph = texture2D(texture, sampleCoord); \n"
+        "    gl_FragColor = vec4(glyph.rgb * color.a, glyph.a); \n"
         "}";
 }
 
@@ -162,7 +163,7 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
             state.context()->functions()->glBlendColor(c.redF(),
                                                        c.greenF(),
                                                        c.blueF(),
-                                                       1.0f);
+                                                       c.alphaF());
         }
     }
 
@@ -520,7 +521,7 @@ int QSGTextMaskMaterial::compare(const QSGMaterial *o) const
     Q_ASSERT(o && type() == o->type());
     const QSGTextMaskMaterial *other = static_cast<const QSGTextMaskMaterial *>(o);
     if (m_glyphCache != other->m_glyphCache)
-        return m_glyphCache - other->m_glyphCache;
+        return m_glyphCache.data() < other->m_glyphCache.data() ? -1 : 1;
     QRgb c1 = m_color.rgba();
     QRgb c2 = other->m_color.rgba();
     return int(c2 < c1) - int(c1 < c2);

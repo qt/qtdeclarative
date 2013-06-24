@@ -51,6 +51,8 @@
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
 #include <private/qqmlvme_p.h>
+#include <private/qqmlcomponentattached_p.h>
+#include <private/qqmldata_p.h>
 
 #include "designerwindowmanager_p.h"
 
@@ -375,6 +377,17 @@ void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
     }
 }
 
+void DesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
+{
+    QQmlData *data = QQmlData::get(item);
+    if (data && data->context) {
+        QQmlComponentAttached *componentAttached = data->context->componentAttached;
+        if (componentAttached) {
+            emit componentAttached->completed();
+        }
+    }
+}
+
 QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
@@ -435,6 +448,16 @@ void DesignerSupport::activateDesignerWindowManager()
 void DesignerSupport::activateDesignerMode()
 {
     QQmlEnginePrivate::activateDesignerMode();
+}
+
+void DesignerSupport::disableComponentComplete()
+{
+    QQmlVME::disableComponentComplete();
+}
+
+void DesignerSupport::enableComponentComplete()
+{
+    QQmlVME::enableComponentComplete();
 }
 
 void DesignerSupport::createOpenGLContext(QQuickWindow *window)

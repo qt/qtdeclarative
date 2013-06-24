@@ -48,6 +48,7 @@
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
 
+#include <private/qqmlprofilerservice_p.h>
 #include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
@@ -162,7 +163,8 @@ void QSGDistanceFieldGlyphCache::update()
         return;
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
+    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    if (profileFrames)
         qsg_render_timer.start();
 #endif
 
@@ -176,10 +178,10 @@ void QSGDistanceFieldGlyphCache::update()
     }
 
 #ifndef QSG_NO_RENDER_TIMING
-    int renderTime = 0;
+    qint64 renderTime = 0;
     int count = m_pendingGlyphs.size();
-    if (qsg_render_timing)
-        renderTime = qsg_render_timer.elapsed();
+    if (profileFrames)
+        renderTime = qsg_render_timer.nsecsElapsed();
 #endif
 
     m_pendingGlyphs.reset();
@@ -190,10 +192,17 @@ void QSGDistanceFieldGlyphCache::update()
     if (qsg_render_timing) {
         printf("   - glyphs: count=%d, render=%d, store=%d, total=%d\n",
                count,
-               renderTime,
-               (int) qsg_render_timer.elapsed() - renderTime,
+               int(renderTime/1000000),
+               (int) qsg_render_timer.elapsed() - int(renderTime/1000000),
                (int) qsg_render_timer.elapsed());
 
+    }
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphAdaptationLayerFrame,
+                    count,
+                    renderTime,
+                    qsg_render_timer.nsecsElapsed() - renderTime);
     }
 #endif
 }

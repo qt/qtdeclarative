@@ -54,6 +54,11 @@
 //
 
 #include "qqmldebugservice_p.h"
+#ifdef Q_OS_WINCE
+#  ifdef DebugBreak
+#    undef DebugBreak
+#  endif
+#endif
 #include <private/qv8debug_p.h>
 
 QT_BEGIN_NAMESPACE

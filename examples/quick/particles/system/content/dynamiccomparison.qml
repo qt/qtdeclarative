@@ -52,7 +52,7 @@ Rectangle {
 
     ImageParticle {
         system: sys
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
         color: "white"
         colorVariation: 1.0
         alpha: 0.1
@@ -90,7 +90,7 @@ Rectangle {
                 property int lifeSpan: 10000
                 width: 32
                 height: 32
-                source: "../../images/particle.png"
+                source: "qrc:///particleresources/glowdot.png"
                 y: 0
                 PropertyAnimation on y {from: -16; to: root.height-16; duration: container.lifeSpan; running: true}
                 SequentialAnimation on opacity {

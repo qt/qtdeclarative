@@ -178,9 +178,6 @@ public:
 
     bool isRenderable() const;
 
-    bool renderWithoutShowing;
-    void setRenderWithoutShowing(bool enabled);
-
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
     QQuickItem *dirtyItemList;
@@ -212,6 +209,7 @@ public:
     uint persistentSceneGraph : 1;
 
     uint lastWheelEventAccepted : 1;
+    bool componentCompleted : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
@@ -222,15 +220,40 @@ public:
 
     mutable QQuickWindowIncubationController *incubationController;
 
+    static bool defaultAlphaBuffer;
+
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
+
+    // data property
+    static void data_append(QQmlListProperty<QObject> *, QObject *);
+    static int data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static void data_clear(QQmlListProperty<QObject> *);
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+
+public:
+    QQuickCloseEvent()
+        : _accepted(true) {}
+
+    bool isAccepted() { return _accepted; }
+    void setAccepted(bool accepted) { _accepted = accepted; }
+
+private:
+    bool _accepted;
+};
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::FocusOptions)
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCloseEvent)
 
 #endif // QQUICKWINDOW_P_H

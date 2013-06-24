@@ -1,0 +1,36 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtQuickDialogs
+description             = Qt Quick Dialogs Reference Documentation
+url                     = http://qt-project.org/doc/qt-$QT_VER/qtquickdialogs/
+version                 = $QT_VERSION
+
+qhp.projects            = QtQuickDialogs
+
+qhp.QtQuickDialogs.file           = qtquickdialogs.qhp
+qhp.QtQuickDialogs.namespace      = org.qt-project.qtquickdialogs.$QT_VERSION_TAG
+qhp.QtQuickDialogs.virtualFolder  = qtquickdialogs
+qhp.QtQuickDialogs.indexTitle     = Qt Quick Dialogs
+qhp.QtQuickDialogs.indexRoot      =
+
+qhp.QtQuickDialogs.filterAttributes    = qtquickdialogs $QT_VERSION qtrefdoc
+qhp.QtQuickDialogs.customFilters.Qt.name = QtQuickDialogs $QT_VERSION
+qhp.QtQuickDialogs.customFilters.Qt.filterAttributes = qtquickdialogs $QT_VERSION
+
+qhp.QtQuickDialogs.subprojects = qtquickdialogsqmltypes
+qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.title = QML Types
+qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.indexTitle = Qt Quick Dialogs QML Types
+qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.selectors = fake:qmlclass
+qhp.QtQuickDialogs.subprojects.qtquickdialogsqmltypes.sortPages = true
+
+depends = qtqml qtquick qtgui qtwidgets qtdoc
+
+exampledirs += ../../../../examples/quick/dialogs
+
+examplesinstallpath = quick/dialogs
+
+headerdirs += ..
+
+sourcedirs += ..
+
+imagedirs += images

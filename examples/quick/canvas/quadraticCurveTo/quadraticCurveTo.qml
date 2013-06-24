@@ -116,13 +116,12 @@ Item {
                 if (canvas.stroke)
                     ctx.stroke();
 
-                ctx.restore();
-
                 // ![1]
                 ctx.fillStyle = "white";
                 ctx.font = "Bold 17px";
-                ctx.fillText("Qt Quick", 110, 140);
+                ctx.fillText("Qt Quick", 40, 70);
                 // ![1]
+                ctx.restore();
             }
         }
     }

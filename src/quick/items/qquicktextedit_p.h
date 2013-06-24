@@ -102,6 +102,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument FINAL REVISION 1)
+    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION 2)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -255,6 +256,8 @@ public:
 
     QQuickTextDocument *textDocument();
 
+    QString hoveredLink() const;
+
 Q_SIGNALS:
     void textChanged();
     void contentSizeChanged();
@@ -282,6 +285,7 @@ Q_SIGNALS:
     void selectByMouseChanged(bool selectByMouse);
     void mouseSelectionModeChanged(SelectionMode mode);
     void linkActivated(const QString &link);
+    Q_REVISION(2) void linkHovered(const QString &link);
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();
@@ -310,6 +314,7 @@ public Q_SLOTS:
     void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
+    Q_REVISION(2) void append(const QString &text);
 
 private Q_SLOTS:
     void q_textChanged();
@@ -337,6 +342,10 @@ protected:
     void keyReleaseEvent(QKeyEvent *);
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);
+
+    void hoverEnterEvent(QHoverEvent *event);
+    void hoverMoveEvent(QHoverEvent *event);
+    void hoverLeaveEvent(QHoverEvent *event);
 
     // mouse filter?
     void mousePressEvent(QMouseEvent *event);

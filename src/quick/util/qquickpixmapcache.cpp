@@ -71,6 +71,8 @@
 #include <QQmlFile>
 #include <QMetaMethod>
 
+#include <private/qqmlprofilerservice_p.h>
+
 #define IMAGEREQUEST_MAX_REQUEST_COUNT       8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
 #define CACHE_EXPIRE_TIME 30
@@ -890,11 +892,15 @@ bool QQuickPixmapReply::event(QEvent *event)
         if (data) {
             Event *de = static_cast<Event *>(event);
             data->pixmapStatus = (de->error == NoError) ? QQuickPixmap::Ready : QQuickPixmap::Error;
-
+            QQmlPixmapProfiler pixmapProfiler;
             if (data->pixmapStatus == QQuickPixmap::Ready) {
+                pixmapProfiler.finishLoading(data->url);
                 data->textureFactory = de->textureFactory;
                 data->implicitSize = de->implicitSize;
+                if (data->implicitSize.width() > 0)
+                    pixmapProfiler.setSize(url, data->implicitSize.width(), data->implicitSize.height());
             } else {
+                pixmapProfiler.errorLoading(data->url);
                 data->errorString = de->errorString;
                 data->removeFromCache(); // We don't continue to cache error'd pixmaps
             }
@@ -920,6 +926,7 @@ int QQuickPixmapData::cost() const
 void QQuickPixmapData::addref()
 {
     ++refCount;
+    QQmlPixmapProfiler().referenceCountChanged(url, refCount);
     if (prevUnreferencedPtr) 
         pixmapStore()->referencePixmap(this);
 }
@@ -928,6 +935,7 @@ void QQuickPixmapData::release()
 {
     Q_ASSERT(refCount > 0);
     --refCount;
+    QQmlPixmapProfiler().referenceCountChanged(url, refCount);
     if (refCount == 0) {
         if (reply) {
             QQuickPixmapReply *cancelReply = reply;
@@ -958,6 +966,10 @@ void QQuickPixmapData::addToCache()
         QQuickPixmapKey key = { &url, &requestSize };
         pixmapStore()->m_cache.insert(key, this);
         inCache = true;
+        QQmlPixmapProfiler pixmapProfiler;
+        pixmapProfiler.cacheCountChanged(url, pixmapStore()->m_cache.count());
+        if (implicitSize.width() > 0)
+            pixmapProfiler.setSize(url, implicitSize.width(), implicitSize.height());
     }
 }
 
@@ -965,6 +977,7 @@ void QQuickPixmapData::removeFromCache()
 {
     if (inCache) {
         QQuickPixmapKey key = { &url, &requestSize };
+        QQmlPixmapProfiler().cacheCountChanged(url, pixmapStore()->m_cache.count());
         pixmapStore()->m_cache.remove(key);
         inCache = false;
     }
@@ -1238,14 +1251,21 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
 
         if (!(options & QQuickPixmap::Asynchronous)) {
             bool ok = false;
+            QQmlPixmapProfiler pixmapProfiler;
+            pixmapProfiler.startLoading(url);
             d = createPixmapDataSync(this, engine, url, requestSize, &ok);
             if (ok) {
+                pixmapProfiler.finishLoading(url);
+                if (d->implicitSize.width() > 0)
+                    QQmlPixmapProfiler().setSize(url, d->implicitSize.width(), d->implicitSize.height());
                 if (options & QQuickPixmap::Cache)
                     d->addToCache();
                 return;
             }
-            if (d)  // loadable, but encountered error while loading
+            if (d) { // loadable, but encountered error while loading
+                pixmapProfiler.errorLoading(url);
                 return;
+            }
         } 
 
         if (!engine)

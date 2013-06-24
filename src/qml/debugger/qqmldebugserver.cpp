@@ -102,9 +102,8 @@ public:
     bool gotHello;
     bool blockingMode;
 
-    QMutex messageArrivedMutex;
-    QWaitCondition messageArrivedCondition;
-    QStringList waitingForMessageNames;
+    QMutex helloMutex;
+    QWaitCondition helloCondition;
     QQmlDebugServerThread *thread;
     QPluginLoader loader;
     QAtomicInt changeServiceStateCalls;
@@ -298,6 +297,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
             for (; argsIt != argsItEnd; ++argsIt) {
                 const QString strArgument = *argsIt;
                 if (strArgument.startsWith(QLatin1String("port:"))) {
+                    pluginName = QLatin1String("qmldbg_tcp");
                     portFrom = strArgument.mid(5).toInt(&ok);
                     portTo = portFrom;
                     QStringList::const_iterator argsNext = argsIt + 1;
@@ -308,7 +308,6 @@ QQmlDebugServer *QQmlDebugServer::instance()
                         portTo = nextArgument.toInt(&ok);
                         ++argsIt;
                     }
-                    pluginName = QLatin1String("qmldbg_tcp");
                 } else if (strArgument.startsWith(QLatin1String("host:"))) {
                     hostAddress = strArgument.mid(5);
                 } else if (strArgument == QLatin1String("block")) {
@@ -331,11 +330,11 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
                 d->blockingMode = block;
 
-                QMutexLocker locker(&d->messageArrivedMutex);
+                QMutexLocker locker(&d->helloMutex);
                 thread->start();
 
                 if (d->blockingMode)
-                    d->messageArrivedCondition.wait(&d->messageArrivedMutex);
+                    d->helloCondition.wait(&d->helloMutex);
 
             } else {
                 qWarning() << QString(QLatin1String(
@@ -418,10 +417,13 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 if (s_dataStreamVersion > QDataStream().version())
                     s_dataStreamVersion = QDataStream().version();
             }
+
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
+
             QByteArray helloAnswer;
             {
+                QReadLocker readPluginsLock(&d->pluginsLock);
                 QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
                 QStringList pluginNames;
                 QList<float> pluginVersions;
@@ -447,7 +449,8 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 d->_q_changeServiceState(iter.value()->name(), newState);
             }
 
-            d->messageArrivedCondition.wakeAll();
+            QMutexLocker helloLock(&d->helloMutex);
+            d->helloCondition.wakeAll();
 
         } else if (op == 1) {
 
@@ -487,9 +490,6 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
             } else {
                 (*iter)->messageReceived(message);
-
-                if (d->waitingForMessageNames.removeOne(name))
-                    d->messageArrivedCondition.wakeAll();
             }
         } else {
             qWarning("QML Debugger: Invalid hello message.");

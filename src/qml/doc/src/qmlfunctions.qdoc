@@ -47,6 +47,20 @@
   #include <QtQml> to use this macro.
 */
 
+/*!
+  \fn void qmlClearTypeRegistrations()
+  \relates QQmlEngine
+
+  Clears all stored type registrations, such as those produced with \l qmlRegisterType.
+
+  Do not call this function while a QQmlEngine exists or behavior will be undefined.
+  Any existing QQmlEngines must be deleted before calling this function.  This function
+  only affects the application global cache. Delete the QQmlEngine to clear all cached
+  data relating to that engine.
+
+  #include <QtQml> to use this method.
+*/
+
 
 /*!
   \fn int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
@@ -222,7 +236,7 @@
 
    Usage:
    \code
-   // first, define the singleton type provider function (callback).
+   // First, define the singleton type provider function (callback).
    static QJSValue *example_qjsvalue_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
@@ -233,7 +247,8 @@
        return example;
    }
 
-   // second, register the singleton type provider with QML by calling this function in an initialization function.
+   // Second, register the singleton type provider with QML by calling this function in an initialization function.
+   #include <QtQml>
    ...
    qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", example_qjsvalue_singletontype_provider);
    ...
@@ -299,7 +314,7 @@
 
    Usage:
    \code
-   // first, define your QObject which provides the functionality.
+   // First, define your QObject which provides the functionality.
    class SingletonTypeExample : public QObject
    {
        Q_OBJECT
@@ -325,7 +340,7 @@
        int m_someProperty;
    };
 
-   // second, define the singleton type provider function (callback).
+   // Second, define the singleton type provider function (callback).
    static QObject *example_qobject_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
@@ -335,7 +350,8 @@
        return example;
    }
 
-   // third, register the singleton type provider with QML by calling this function in an initialization function.
+   // Third, register the singleton type provider with QML by calling this function in an initialization function.
+   #include <QtQml>
    ...
    qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", example_qobject_singletontype_provider);
    ...
@@ -390,7 +406,7 @@
   url must be an absolute URL, i.e. url.isRelative() == false.
 
   Normally QML files can be loaded as types directly from other QML files, or using a qmldir file. This function allows
-  registration of files to types from a C++ module, such as when the type mapping needs to be procedurally determined at startup.
+  registration of files to types from C++ code, such as when the type mapping needs to be procedurally determined at startup.
 
   #include <QtQml> to use this function.
 

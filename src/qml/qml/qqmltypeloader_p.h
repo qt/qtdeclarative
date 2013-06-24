@@ -67,6 +67,7 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qqmlabstracturlinterceptor_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4script_p.h>
@@ -94,14 +95,16 @@ public:
         Error                    // Error
     };
 
-    enum Type {
-        QmlFile,
-        JavaScriptFile,
-        QmldirFile
+    enum Type { //Matched in QQmlAbstractUrlInterceptor
+        QmlFile = QQmlAbstractUrlInterceptor::QmlFile,
+        JavaScriptFile = QQmlAbstractUrlInterceptor::JavaScriptFile,
+        QmldirFile = QQmlAbstractUrlInterceptor::QmldirFile
     };
 
     QQmlDataBlob(const QUrl &, Type);
     virtual ~QQmlDataBlob();
+
+    void startLoading(QQmlDataLoader* manager);
 
     Type type() const;
 

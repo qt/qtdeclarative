@@ -283,12 +283,16 @@ protected:
                                  const QRectF &oldGeometry);
     virtual void itemChange(ItemChange change, const ItemChangeData& value);
 
+private slots:
+    void setTouchEventsEnabledForWindow(QWindow *window);
+
 private:
     void updatePinch();
     void handlePress();
     void handleRelease();
 
 private:
+    QWindow *_currentWindow;
     Q_DISABLE_COPY(QQuickPinchArea)
     Q_DECLARE_PRIVATE(QQuickPinchArea)
 };

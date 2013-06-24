@@ -332,42 +332,42 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 /*!
     \fn const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D() const
 
-    Convenience function to access the vertex data as an immuatble
+    Convenience function to access the vertex data as an immutable
     array of QSGGeometry::ColoredPoint2D.
  */
 
 /*!
     \fn QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()
 
-    Convenience function to access the vertex data as a muatble
+    Convenience function to access the vertex data as a mutable
     array of QSGGeometry::ColoredPoint2D.
  */
 
 /*!
     \fn const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D() const
 
-    Convenience function to access the vertex data as an immuatble
+    Convenience function to access the vertex data as an immutable
     array of QSGGeometry::TexturedPoint2D.
  */
 
 /*!
     \fn QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()
 
-    Convenience function to access the vertex data as a muatble
+    Convenience function to access the vertex data as a mutable
     array of QSGGeometry::TexturedPoint2D.
  */
 
 /*!
     \fn const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const
 
-    Convenience function to access the vertex data as an immuatble
+    Convenience function to access the vertex data as an immutable
     array of QSGGeometry::Point2D.
  */
 
 /*!
     \fn QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()
 
-    Convenience function to access the vertex data as a muatble
+    Convenience function to access the vertex data as a mutable
     array of QSGGeometry::Point2D.
  */
 
@@ -705,7 +705,8 @@ void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect,
 
     The default is AlwaysUploadPattern. When set to anything other than
     the default, the user must call markIndexDataDirty() after changing
-    the index data.
+    the index data, in addition to calling QSGNode::markDirty() with
+    QSGNode::DirtyGeometry.
  */
 
 void QSGGeometry::setIndexDataPattern(DataPattern p)
@@ -728,7 +729,8 @@ void QSGGeometry::setIndexDataPattern(DataPattern p)
 
     The default is AlwaysUploadPattern. When set to anything other than
     the default, the user must call markVertexDataDirty() after changing
-    the vertex data.
+    the vertex data, in addition to calling QSGNode::markDirty() with
+    QSGNode::DirtyGeometry.
  */
 
 void QSGGeometry::setVertexDataPattern(DataPattern p)

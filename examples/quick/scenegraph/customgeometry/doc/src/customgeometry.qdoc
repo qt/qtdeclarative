@@ -41,7 +41,7 @@
 
     \section1 BezierCurve Declaration
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.h 1
+    \snippet scenegraph/customgeometry/beziercurve.h 1
 
     The item declaration subclasses the QQuickItem class and adds five
     properties. One for each of the four control points in the bezier
@@ -52,7 +52,7 @@
     signals for each of them so changes will be picked up the QML
     engine and used accordingly.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.h 2
+    \snippet scenegraph/customgeometry/beziercurve.h 2
 
     The synchronization point between the QML scene and the rendering
     scene graph is the virtual function \l
@@ -67,7 +67,7 @@
 
     \section1 BezierCurve Implementation
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 1
+    \snippet scenegraph/customgeometry/beziercurve.cpp 1
 
     The BezierCurve constructor sets up default values for the
     control points and the number of segments. The bezier curve
@@ -80,7 +80,7 @@
     QQuickItem::updatePaintNode() when it is time for the QML scene to
     be synchronized with the rendering scene graph.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 2
+    \snippet scenegraph/customgeometry/beziercurve.cpp 2
 
     The BezierCurve class has no data members that need to be cleaned
     up so the destructor does nothing. It is worth mentioning that the
@@ -89,7 +89,7 @@
     QSGNode references in the QQuickItem class nor try to clean them
     up explicitly.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 3
+    \snippet scenegraph/customgeometry/beziercurve.cpp 3
 
     The setter function for the p1 property checks if the value is
     unchanged and exits early if this is the case. Then it updates the
@@ -103,7 +103,7 @@
     The other property setters are equivalent, and are omitted from
     this example.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 4
+    \snippet scenegraph/customgeometry/beziercurve.cpp 4
 
     The updatePaintNode() function is the primary integration point
     for synchronizing the state of the QML scene with the rendering
@@ -113,7 +113,7 @@
     our QSGGeometryNode which we will fill with geometry and a
     material.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 5
+    \snippet scenegraph/customgeometry/beziercurve.cpp 5
 
     We then create the geometry and add it to the node. The first
     argument to the QSGGeometry constructor is a definition of the
@@ -135,7 +135,7 @@
     geometry a member of a QSGGeometryNode subclass, in which case, we
     would not have set the QSGGeometryNode::OwnsGeometry flag.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 6
+    \snippet scenegraph/customgeometry/beziercurve.cpp 6
 
     The scene graph API provides a few commonly used used material
     implementations. In this example we use the QSGFlatColorMaterial
@@ -143,7 +143,7 @@
     color. Again we pass the ownership of the material to the node, so
     it can be cleaned up by the scene graph.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 7
+    \snippet scenegraph/customgeometry/beziercurve.cpp 7
 
     In the case where the QML item has changed and we only want to
     modify the existing node's geometry, we cast the \c oldNode to a
@@ -151,7 +151,7 @@
     segment count has changed, we call QSGGeometry::allocate() to make
     sure it has the right number of vertices.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 8
+    \snippet scenegraph/customgeometry/beziercurve.cpp 8
 
     To fill the geometry, we first extract the vertex array from
     it. Since we are using one of the default attribute sets, we can
@@ -159,14 +159,14 @@
     Then we go through each segment and calculate its position and
     write that value to the vertex.
 
-    \snippet quick/scenegraph/customgeometry/beziercurve.cpp 9
+    \snippet scenegraph/customgeometry/beziercurve.cpp 9
 
     In the end of the function, we return the node so the scene graph
     can render it.
 
     \section1 Application Entry-Point
 
-    \snippet quick/scenegraph/customgeometry/main.cpp 1
+    \snippet scenegraph/customgeometry/main.cpp 1
 
     The application is a straightforward QML application, with a
     QGuiApplication and a QQuickView that we pass a .qml file. To make
@@ -183,24 +183,24 @@
 
     \section1 Using the Item
 
-    \snippet quick/scenegraph/customgeometry/main.qml 1
+    \snippet scenegraph/customgeometry/main.qml 1
 
     Our .qml file imports the \c {QtQuick 2.0} module to get the
     standard types and also our own \c {CustomGeometry 1.0} module
     which contains our newly created BezierCurve objects.
 
-    \snippet quick/scenegraph/customgeometry/main.qml 2
+    \snippet scenegraph/customgeometry/main.qml 2
 
     Then we create the our root item and an instance of the
     BezierCurve which we anchor to fill the root.
 
-    \snippet quick/scenegraph/customgeometry/main.qml 3
+    \snippet scenegraph/customgeometry/main.qml 3
 
     To make the example a bit more interesting we add an animation to
     change the two control points in the curve. The end points stay
     unchanged.
 
-    \snippet quick/scenegraph/customgeometry/main.qml 4
+    \snippet scenegraph/customgeometry/main.qml 4
 
     Finally we overlay a short text outlining what the example shows.
 

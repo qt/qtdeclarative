@@ -203,14 +203,14 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     }
     \endcode
 
-    Note that the QtQuick 1 version is named QDeclarativeComponent.
+    Note that the \l {Qt Quick 1} version is named QDeclarativeComponent.
 */
 
 /*!
     \qmltype Component
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Encapsulates a QML component definition
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
@@ -226,7 +226,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     \snippet qml/component.qml 0
 
-    Notice that while a \l Rectangle by itself would be automatically 
+    Notice that while a \l Rectangle by itself would be automatically
     rendered and displayed, this is not the case for the above rectangle
     because it is defined inside a \c Component. The component encapsulates the
     QML types within, as if they were defined in a separate QML
@@ -246,7 +246,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     to specify how each list item is to be displayed.
 
     \c Component objects can also be created dynamically using
-    \l{QML:Qt::createComponent()}{Qt.createComponent()}.
+    \l{QtQml2::Qt::createComponent()}{Qt.createComponent()}.
 
     \section2 Creation Context
 
@@ -312,12 +312,12 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     }
     \endqml
 
-    \sa QtQml
+    \sa {Qt QML}
 */
 
 /*!
     \enum QQmlComponent::Status
-    
+
     Specifies the loading status of the QQmlComponent.
 
     \value Null This QQmlComponent has no data.  Call loadUrl() or setData() to add QML content.
@@ -382,8 +382,8 @@ void QQmlComponentPrivate::clear()
         typeData->release();
         typeData = 0;
     }
-        
-    if (cc) { 
+
+    if (cc) {
         cc->release();
         cc = 0;
     }
@@ -558,12 +558,12 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMod
 }
 
 /*!
-    Create a QQmlComponent from the given \a fileName and give it the specified 
+    Create a QQmlComponent from the given \a fileName and give it the specified
     \a parent and \a engine.
 
     \sa loadUrl()
 */
-QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName, 
+QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
                              QObject *parent)
 : QObject(*(new QQmlComponentPrivate), parent)
 {
@@ -617,7 +617,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
     d->url = url;
 
     QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
-    
+
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
     } else {
@@ -780,10 +780,15 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 /*!
     Create an object instance from this component.  Returns 0 if creation
     failed.  \a context specifies the context within which to create the object
-    instance.  
+    instance.
 
     If \a context is 0 (the default), it will create the instance in the
     engine' s \l {QQmlEngine::rootContext()}{root context}.
+
+    The ownership of the returned object instance is determined by the QQmlEngine.
+    By default the caller has to take care that the object is eventually deleted.
+
+    \sa QQmlEngine::ObjectOwnership
 */
 QObject *QQmlComponent::create(QQmlContext *context)
 {
@@ -801,28 +806,31 @@ QObject *QQmlComponent::create(QQmlContext *context)
 
 /*!
     This method provides advanced control over component instance creation.
-    In general, programmers should use QQmlComponent::create() to create a 
+    In general, programmers should use QQmlComponent::create() to create a
     component.
 
     Create an object instance from this component.  Returns 0 if creation
     failed.  \a publicContext specifies the context within which to create the object
-    instance.  
+    instance.
 
     When QQmlComponent constructs an instance, it occurs in three steps:
     \list 1
     \li The object hierarchy is created, and constant values are assigned.
     \li Property bindings are evaluated for the first time.
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
-    \endlist 
+    \endlist
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
-    only performs step 1.  QQmlComponent::completeCreate() must be called to 
+    only performs step 1.  QQmlComponent::completeCreate() must be called to
     complete steps 2 and 3.
 
     This breaking point is sometimes useful when using attached properties to
     communicate information to an instantiated component, as it allows their
     initial values to be configured before property bindings take effect.
 
-    \sa completeCreate()
+    The ownership of the returned object instance is determined by the QQmlEngine.
+    By default the caller has to take care that the object is eventually deleted.
+
+    \sa completeCreate(), QQmlEngine::ObjectOwnership
 */
 QObject *QQmlComponent::beginCreate(QQmlContext *publicContext)
 {
@@ -950,7 +958,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 
 /*!
     This method provides advanced control over component instance creation.
-    In general, programmers should use QQmlComponent::create() to create a 
+    In general, programmers should use QQmlComponent::create() to create a
     component.
 
     This function completes the component creation begun with QQmlComponent::beginCreate()
@@ -1044,7 +1052,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
 {
     Q_D(QQmlComponent);
 
-    if (!context) 
+    if (!context)
         context = d->engine->rootContext();
 
     QQmlContextData *contextData = QQmlContextData::get(context);
@@ -1122,7 +1130,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
                 needParent = true;
             }
         }
-        if (needParent) 
+        if (needParent)
             qWarning("QQmlComponent: Created graphical object was not "
                      "placed in the graphics scene.");
     }
@@ -1140,15 +1148,15 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     which were not created in QML.
 
     If you wish to create an object without setting a parent, specify \c null for
-    the \a parent value. Note that if the returned object is to be displayed, you 
-    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent} 
+    the \a parent value. Note that if the returned object is to be displayed, you
+    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent}
     property, or else the object will not be visible.
 
     If a \a parent is not provided to createObject(), a reference to the returned object must be held so that
     it is not destroyed by the garbage collector.  This is true regardless of whether \l{Item::parent} is set afterwards,
     since setting the Item parent does not change object ownership; only the graphical parent is changed.
 
-    As of QtQuick 1.1, this method accepts an optional \a properties argument that specifies a
+    As of \c {QtQuick 1.1}, this method accepts an optional \a properties argument that specifies a
     map of initial property values for the created object. These values are applied before object
     creation is finalized. This is more efficient than setting property values after object creation,
     particularly where large sets of property values are defined, and also allows property bindings
@@ -1236,17 +1244,16 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 /*!
     \qmlmethod object Component::incubateObject(Item parent, object properties, enumeration mode)
 
-    Creates an incubator for instance of this component.  Incubators allow new component 
+    Creates an incubator for instance of this component.  Incubators allow new component
     instances to be instantiated asynchronously and not cause freezes in the UI.
 
-    The \a parent argument specifies the parent the created instance will have.  Omitting the 
+    The \a parent argument specifies the parent the created instance will have.  Omitting the
     parameter or passing null will create an object with no parent.  In this case, a reference
-    to the created object must be maintained by the application or the object will eventually
-    be garbage collected.
+    to the created object must be held so that it is not destroyed by the garbage collector.
 
     The \a properties argument is specified as a map of property-value items which will be
-    set on the created object during its construction.  \a mode may be Qt.Synchronous or 
-    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously. 
+    set on the created object during its construction.  \a mode may be Qt.Synchronous or
+    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously.
     The default is asynchronously.  In some circumstances, even if Qt.Synchronous is specified,
     the incubator may create the object asynchronously.  This happens if the component calling
     incubateObject() is itself being created asynchronously.
@@ -1329,7 +1336,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     }
 
     QQmlComponentExtension *e = componentExtension(args->engine());
-    
+
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
     QmlIncubatorObject *r = new (v4->memoryManager) QmlIncubatorObject(args->engine(), mode);
     r->prototype = e->incubationProto.value().asObject();
@@ -1462,7 +1469,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         f.asFunctionObject()->call(QV4::Value::fromObject(v4->globalObject), args, 2);
     }
 }
-    
+
 void QmlIncubatorObject::destroy(Managed *that)
 {
     QmlIncubatorObject *o = that->as<QmlIncubatorObject>();

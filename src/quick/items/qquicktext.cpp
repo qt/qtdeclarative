@@ -107,6 +107,7 @@ void QQuickTextPrivate::init()
     Q_Q(QQuickText);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QQuickItem::ItemHasContents);
+    q->setAcceptHoverEvents(true);
 }
 
 QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
@@ -313,7 +314,8 @@ qreal QQuickTextPrivate::getImplicitHeight() const
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
 
-    On HighDpi "retina" displays this property is ignored and QtRendering is always used.
+    On HighDpi "retina" displays and mobile and embedded platforms, this property is ignored
+    and QtRendering is always used.
 */
 QQuickText::RenderType QQuickText::renderType() const
 {
@@ -953,7 +955,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
                 // Create the remainder of the unwrapped lines up to maxLineCount to get the
                 // implicit width.
-                if (line.isValid() && layoutText.at(line.textStart() + line.textLength()) != QChar::LineSeparator)
+                const int eol = line.isValid()
+                        ? line.textStart() + line.textLength()
+                        : layoutText.length();
+                if (eol < layoutText.length() && layoutText.at(eol) != QChar::LineSeparator)
                     line = layout.createLine();
                 for (; line.isValid() && unwrappedLineCount <= maxLineCount; ++unwrappedLineCount)
                     line = layout.createLine();
@@ -1334,10 +1339,10 @@ QQuickText::~QQuickText()
     \snippet qml/text/onLinkActivated.qml 0
 
     The example code will display the text
-    "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."
+    "See the \l{http://qt-project.org}{Qt Project website}."
 
     Clicking on the highlighted link will output
-    \tt{http://qt.nokia.com link activated} to the console.
+    \tt{http://qt-project.org link activated} to the console.
 */
 
 /*!
@@ -1988,6 +1993,7 @@ void QQuickText::setTextFormat(TextFormat format)
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
+            d->textHasChanged = true;
         }
         d->determineHorizontalAlignment();
     }
@@ -2150,9 +2156,10 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     if ((!widthChanged && !heightChanged) || d->internalWidthUpdate)
         goto geomChangeDone;
 
-    if (effectiveHAlign() != QQuickText::AlignLeft && widthChanged) {
+    if ((effectiveHAlign() != QQuickText::AlignLeft && widthChanged)
+            || vAlign() != QQuickText::AlignTop && heightChanged) {
         // If the width has changed and we're not left aligned do an update so the text is
-        // repositioned even if a full layout isn't required.
+        // repositioned even if a full layout isn't required. And the same for vertical.
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
     }
@@ -2573,6 +2580,85 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
 
     if (!event->isAccepted())
         QQuickItem::mouseReleaseEvent(event);
+}
+
+bool QQuickTextPrivate::isLinkHoveredConnected()
+{
+    Q_Q(QQuickText);
+    IS_SIGNAL_CONNECTED(q, QQuickText, linkHovered, (const QString &));
+}
+
+/*!
+    \qmlsignal QtQuick2::Text::onLinkHovered(string link)
+    \since QtQuick 2.2
+
+    This handler is called when the user hovers a link embedded in the
+    text. The link must be in rich text or HTML format and the \a link
+    string provides access to the particular link.
+
+    \sa hoveredLink
+*/
+
+/*!
+    \qmlproperty string QtQuick2::Text::hoveredLink
+    \since QtQuick 2.2
+
+    This property contains the link string when user hovers a link
+    embedded in the text. The link must be in rich text or HTML format
+    and the \a hoveredLink string provides access to the particular link.
+
+    \sa onLinkHovered
+*/
+
+QString QQuickText::hoveredLink() const
+{
+    Q_D(const QQuickText);
+    if (const_cast<QQuickTextPrivate *>(d)->isLinkHoveredConnected()) {
+        if (d->extra.isAllocated())
+            return d->extra->hoveredLink;
+    } else {
+#ifndef QT_NO_CURSOR
+        if (QQuickWindow *wnd = window()) {
+            QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
+            return d->anchorAt(pos);
+        }
+#endif // QT_NO_CURSOR
+    }
+    return QString();
+}
+
+void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
+{
+    Q_Q(QQuickText);
+    QString link;
+    if (event->type() != QEvent::HoverLeave)
+        link = anchorAt(event->posF());
+
+    if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
+        extra.value().hoveredLink = link;
+        emit q->linkHovered(extra->hoveredLink);
+    }
+}
+
+void QQuickText::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
+}
+
+void QQuickText::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
+}
+
+void QQuickText::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickText);
+    if (d->isLinkHoveredConnected())
+        d->processHoverEvent(event);
 }
 
 QT_END_NAMESPACE

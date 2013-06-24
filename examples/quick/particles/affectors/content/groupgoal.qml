@@ -124,7 +124,7 @@ Rectangle {
             id: smoke
             anchors.fill: parent
             groups: ["smoke"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             colorVariation: 0
             color: "#00111111"
         }
@@ -132,7 +132,7 @@ Rectangle {
             id: pilot
             anchors.fill: parent
             groups: ["pilot"]
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             redVariation: 0.01
             blueVariation: 0.4
             color: "#0010004f"

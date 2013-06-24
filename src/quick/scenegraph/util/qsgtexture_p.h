@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGTexturePrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QSGTexture);
+    Q_DECLARE_PUBLIC(QSGTexture)
 public:
     QSGTexturePrivate();
 

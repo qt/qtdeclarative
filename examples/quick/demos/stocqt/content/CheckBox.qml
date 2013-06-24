@@ -40,13 +40,12 @@
 
 import QtQuick 2.0
 
-Row {
+Item {
     id: button
     property alias text: txt.text
     property bool buttonEnabled: true
     width: 140
     height: 25
-    spacing: 5
     x: 5
     MouseArea {
         id: mouse
@@ -75,14 +74,14 @@ Row {
             radius: 1
             color: mouse.pressed || buttonEnabled ? "#76644A" : "transparent"
         }
-        Text {
-            id: txt
-            anchors.left: checkbox.right
-            anchors.leftMargin: 4
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Close "
-            color: "#ecc089"
-            font.pixelSize: 18
-        }
+    }
+    Text {
+        id: txt
+        anchors.left: checkbox.right
+        anchors.leftMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        text: "Close "
+        color: "#ecc089"
+        font.pixelSize: 18
     }
 }

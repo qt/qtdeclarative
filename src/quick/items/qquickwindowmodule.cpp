@@ -42,8 +42,27 @@
 #include "qquickwindowmodule_p.h"
 #include "qquickscreen_p.h"
 #include <QtQuick/QQuickWindow>
+#include <QtCore/QCoreApplication>
+#include <QtQml/QQmlEngine>
 
 QT_BEGIN_NAMESPACE
+
+class QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
+{
+    Q_INTERFACES(QQmlParserStatus)
+    Q_OBJECT
+protected:
+    void classBegin() {
+        //Give QQuickView behavior when created from QML with QQmlApplicationEngine
+        if (QCoreApplication::instance()->property("__qml_using_qqmlapplicationengine") == QVariant(true)) {
+            QQmlEngine* e = qmlEngine(this);
+            if (e && !e->incubationController())
+                e->setIncubationController(incubationController());
+        }
+    }
+
+    void componentComplete() {}
+};
 
 void QQuickWindowModule::defineModule()
 {
@@ -51,9 +70,12 @@ void QQuickWindowModule::defineModule()
 
     qmlRegisterType<QQuickWindow>(uri, 2, 0, "Window");
     qmlRegisterRevision<QWindow,1>(uri, 2, 1);
-    qmlRegisterType<QQuickWindow,1>(uri, 2, 1, "Window");
+    qmlRegisterRevision<QQuickWindow,1>(uri, 2, 1);//Type moved to a subclass, but also has new members
+    qmlRegisterType<QQuickWindowQmlImpl>(uri, 2, 1, "Window");
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
 }
+
+#include "qquickwindowmodule.moc"
 
 QT_END_NAMESPACE
 

@@ -142,6 +142,10 @@ public Q_SLOTS:
         QAccessibleValueChangeEvent ev(parent(), parent()->property("value"));
         QAccessible::updateAccessibility(&ev);
     }
+    void cursorPositionChanged() {
+        QAccessibleTextCursorEvent ev(parent(), parent()->property("cursorPosition").toInt());
+        QAccessible::updateAccessibility(&ev);
+    }
 
 Q_SIGNALS:
     void roleChanged();

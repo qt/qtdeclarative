@@ -108,6 +108,7 @@ public:
     QRectF rectForPosition(int position) const;
 
     void keyPressEvent(QKeyEvent *e);
+    void keyReleaseEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *event, const QPointF &pos);
     void mouseMoveEvent(QMouseEvent *event, const QPointF &pos);
     void mouseReleaseEvent(QMouseEvent *event, const QPointF &pos);
@@ -117,6 +118,7 @@ public:
 #ifndef QT_NO_IM
     void inputMethodEvent(QInputMethodEvent *);
 #endif
+    void hoverEvent(QHoverEvent *e, const QPointF &pos);
 
     void activateLinkUnderCursor(QString href = QString());
 
@@ -137,6 +139,7 @@ public:
     QTextCursor selectedBlockOnTripleClick;
     QString anchorOnMousePress;
     QString linkToCopy;
+    QString hoveredLink;
 
     QBasicTimer cursorBlinkTimer;
     QBasicTimer tripleClickTimer;

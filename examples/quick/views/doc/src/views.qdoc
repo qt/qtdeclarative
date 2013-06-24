@@ -32,51 +32,51 @@
     \image qml-modelviews-example.png
     \ingroup qtquickexamples
 
-    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the QtQuick view types.
+    This is a collection of small QML examples relating to model and view functionality. They demonstrate how to show data from a model using the \l {Qt Quick} view types.
 
     \section2 GridView and PathView demonstrate usage of these types to display views.
-    \snippet quick/views/gridview/gridview-example.qml 0
+    \snippet views/gridview/gridview-example.qml 0
 
     \section2 Dynamic List demonstrates animation of runtime additions and removals to a ListView.
 
     The ListView.onAdd signal handler runs an animation when new items are added to the
     view, and the ListView.onRemove another when they are removed.
-    \snippet quick/views/listview/dynamiclist.qml 0
-    \snippet quick/views/listview/dynamiclist.qml 1
+    \snippet views/listview/dynamiclist.qml 0
+    \snippet views/listview/dynamiclist.qml 1
 
     \section2 Expanding Delegates demonstrates delegates that expand when activated.
 
     It has a complex delegate the size and appearance of which can change, displacing
     other items in the view.
-    \snippet quick/views/listview/expandingdelegates.qml 0
-    \snippet quick/views/listview/expandingdelegates.qml 1
-    \snippet quick/views/listview/expandingdelegates.qml 2
-    \snippet quick/views/listview/expandingdelegates.qml 3
+    \snippet views/listview/expandingdelegates.qml 0
+    \snippet views/listview/expandingdelegates.qml 1
+    \snippet views/listview/expandingdelegates.qml 2
+    \snippet views/listview/expandingdelegates.qml 3
 
     \section2 Highlight demonstrates adding a custom highlight to a ListView.
-    \snippet quick/views/listview/highlight.qml 0
+    \snippet views/listview/highlight.qml 0
 
     \section2 Highlight Ranges shows the three different highlight range modes of ListView.
-    \snippet quick/views/listview/highlightranges.qml 0
-    \snippet quick/views/listview/highlightranges.qml 1
-    \snippet quick/views/listview/highlightranges.qml 2
+    \snippet views/listview/highlightranges.qml 0
+    \snippet views/listview/highlightranges.qml 1
+    \snippet views/listview/highlightranges.qml 2
 
     \section2 Sections demonstrates the various section headers and footers available to ListView.
-    \snippet quick/views/listview/sections.qml 0
+    \snippet views/listview/sections.qml 0
 
     \section2 Packages demonstrates using Packages to transition delegates between two views.
 
     It has a Package which defines delegate items for each view and an item that can
     be transferred between delegates.
 
-    \snippet quick/views/package/Delegate.qml 0
+    \snippet views/package/Delegate.qml 0
 
     A DelegateModel allows the individual views to access their specific items from
     the shared package delegate.
 
-    \snippet quick/views/package/view.qml 0
+    \snippet views/package/view.qml 0
 
     \section2 ObjectModel uses an ObjectModel for the model instead of a ListModel.
 
-    \snippet quick/views/visualitemmodel/visualitemmodel.qml 0
+    \snippet views/objectmodel/objectmodel.qml 0
 */

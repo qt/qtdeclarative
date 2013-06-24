@@ -51,7 +51,7 @@ Rectangle {
         anchors.centerIn: parent
 
         ImageParticle {
-            source: "../../images/particle.png"
+            source: "qrc:///particleresources/glowdot.png"
             z: 2
             anchors.fill: parent
             color: "#336666CC"

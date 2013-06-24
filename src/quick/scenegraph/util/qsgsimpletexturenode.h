@@ -48,6 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGSimpleTextureNodePrivate;
+
 class Q_QUICK_EXPORT QSGSimpleTextureNode : public QSGGeometryNode
 {
 public:
@@ -63,13 +65,27 @@ public:
     void setFiltering(QSGTexture::Filtering filtering);
     QSGTexture::Filtering filtering() const;
 
+    enum TextureCoordinatesTransformFlag {
+        NoTransform        = 0x00,
+        MirrorHorizontally = 0x01,
+        MirrorVertically   = 0x02
+    };
+    Q_DECLARE_FLAGS(TextureCoordinatesTransformMode, TextureCoordinatesTransformFlag)
+
+    void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode);
+    TextureCoordinatesTransformMode textureCoordinatesTransform() const;
+
 private:
     QSGGeometry m_geometry;
     QSGOpaqueTextureMaterial m_opaque_material;
     QSGTextureMaterial m_material;
 
     QRectF m_rect;
+
+    Q_DECLARE_PRIVATE(QSGSimpleTextureNode)
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGSimpleTextureNode::TextureCoordinatesTransformMode)
 
 QT_END_NAMESPACE
 

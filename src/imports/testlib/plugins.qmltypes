@@ -3,13 +3,14 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump QtTest 1.0'.
+// This file was auto-generated with the command 'qmlplugindump -notrelocatable QtTest 1.0'.
 
 Module {
     Component {
         name: "QuickTestEvent"
         prototype: "QObject"
-        exports: ["TestEvent 1.0"]
+        exports: ["QtTest/TestEvent 1.0"]
+        exportMetaObjectRevisions: [0]
         Method {
             name: "keyPress"
             type: "bool"
@@ -28,6 +29,27 @@ Module {
             name: "keyClick"
             type: "bool"
             Parameter { name: "key"; type: "int" }
+            Parameter { name: "modifiers"; type: "int" }
+            Parameter { name: "delay"; type: "int" }
+        }
+        Method {
+            name: "keyPressChar"
+            type: "bool"
+            Parameter { name: "character"; type: "string" }
+            Parameter { name: "modifiers"; type: "int" }
+            Parameter { name: "delay"; type: "int" }
+        }
+        Method {
+            name: "keyReleaseChar"
+            type: "bool"
+            Parameter { name: "character"; type: "string" }
+            Parameter { name: "modifiers"; type: "int" }
+            Parameter { name: "delay"; type: "int" }
+        }
+        Method {
+            name: "keyClickChar"
+            type: "bool"
+            Parameter { name: "character"; type: "string" }
             Parameter { name: "modifiers"; type: "int" }
             Parameter { name: "delay"; type: "int" }
         }
@@ -96,7 +118,8 @@ Module {
     Component {
         name: "QuickTestResult"
         prototype: "QObject"
-        exports: ["TestResult 1.0"]
+        exports: ["QtTest/TestResult 1.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "RunMode"
             values: {
@@ -230,7 +253,8 @@ Module {
     Component {
         name: "QuickTestUtil"
         prototype: "QObject"
-        exports: ["TestUtil 1.0"]
+        exports: ["QtTest/TestUtil 1.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "printAvailableFunctions"; type: "bool"; isReadonly: true }
         Property { name: "dragThreshold"; type: "int"; isReadonly: true }
         Method {

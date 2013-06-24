@@ -107,8 +107,8 @@ public:
     void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
 
 private:
-    void initEngine(const QColor &textColor, const QColor &selectedTextColor, const QColor &selectionColor, const QColor& anchorColor = QColor());
-
+    void initEngine(const QColor &textColor, const QColor &selectedTextColor, const QColor &selectionColor, const QColor& anchorColor = QColor()
+            , const QPointF &position = QPointF());
 
     QSGContext *m_context;
     QSGSimpleRectNode *m_cursorNode;
@@ -118,6 +118,7 @@ private:
     QScopedPointer<QQuickTextNodeEngine> m_engine;
 
     friend class QQuickTextEdit;
+    friend class QQuickTextEditPrivate;
 };
 
 QT_END_NAMESPACE

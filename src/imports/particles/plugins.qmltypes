@@ -3,14 +3,15 @@ import QtQuick.tooling 1.1
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
 //
-// This file was auto-generated with the command 'qmlplugindump QtQuick.Particles 2.0'.
+// This file was auto-generated with the command 'qmlplugindump -notrelocatable QtQuick.Particles 2.0'.
 
 Module {
     Component {
         name: "QQuickAgeAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Age 2.0"]
+        exports: ["QtQuick.Particles/Age 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "lifeLeft"; type: "int" }
         Property { name: "advancePosition"; type: "bool" }
         Signal {
@@ -33,7 +34,8 @@ Module {
     Component {
         name: "QQuickAngleDirection"
         prototype: "QQuickDirection"
-        exports: ["AngleDirection 2.0"]
+        exports: ["QtQuick.Particles/AngleDirection 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "angle"; type: "double" }
         Property { name: "magnitude"; type: "double" }
         Property { name: "angleVariation"; type: "double" }
@@ -75,7 +77,8 @@ Module {
         name: "QQuickAttractorAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Attractor 2.0"]
+        exports: ["QtQuick.Particles/Attractor 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Proportion"
             values: {
@@ -144,14 +147,16 @@ Module {
         name: "QQuickCumulativeDirection"
         defaultProperty: "directions"
         prototype: "QQuickDirection"
-        exports: ["CumulativeDirection 2.0"]
+        exports: ["QtQuick.Particles/CumulativeDirection 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "directions"; type: "QQuickDirection"; isList: true; isReadonly: true }
     }
     Component {
         name: "QQuickCustomAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Affector 2.0"]
+        exports: ["QtQuick.Particles/Affector 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "relative"; type: "bool" }
         Property { name: "position"; type: "QQuickDirection"; isPointer: true }
         Property { name: "velocity"; type: "QQuickDirection"; isPointer: true }
@@ -198,19 +203,22 @@ Module {
         name: "QQuickCustomParticle"
         defaultProperty: "data"
         prototype: "QQuickParticlePainter"
-        exports: ["CustomParticle 2.0"]
+        exports: ["QtQuick.Particles/CustomParticle 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "fragmentShader"; type: "QByteArray" }
         Property { name: "vertexShader"; type: "QByteArray" }
     }
     Component {
         name: "QQuickDirection"
         prototype: "QObject"
-        exports: ["NullVector 2.0"]
+        exports: ["QtQuick.Particles/NullVector 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickEllipseExtruder"
         prototype: "QQuickParticleExtruder"
-        exports: ["EllipseShape 2.0"]
+        exports: ["QtQuick.Particles/EllipseShape 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "fill"; type: "bool" }
         Signal {
             name: "fillChanged"
@@ -225,7 +233,8 @@ Module {
         name: "QQuickFrictionAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Friction 2.0"]
+        exports: ["QtQuick.Particles/Friction 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "factor"; type: "double" }
         Property { name: "threshold"; type: "double" }
         Signal {
@@ -249,7 +258,8 @@ Module {
         name: "QQuickGravityAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Gravity 2.0"]
+        exports: ["QtQuick.Particles/Gravity 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "magnitude"; type: "double" }
         Property { name: "acceleration"; type: "double" }
         Property { name: "angle"; type: "double" }
@@ -278,7 +288,8 @@ Module {
         name: "QQuickGroupGoalAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["GroupGoal 2.0"]
+        exports: ["QtQuick.Particles/GroupGoal 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "goalState"; type: "string" }
         Property { name: "jump"; type: "bool" }
         Signal {
@@ -302,7 +313,8 @@ Module {
         name: "QQuickImageParticle"
         defaultProperty: "data"
         prototype: "QQuickParticlePainter"
-        exports: ["ImageParticle 2.0"]
+        exports: ["QtQuick.Particles/ImageParticle 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Status"
             values: {
@@ -480,7 +492,8 @@ Module {
         name: "QQuickItemParticle"
         defaultProperty: "data"
         prototype: "QQuickParticlePainter"
-        exports: ["ItemParticle 2.0"]
+        exports: ["QtQuick.Particles/ItemParticle 2.0"]
+        exportMetaObjectRevisions: [0]
         attachedType: "QQuickItemParticleAttached"
         Property { name: "fade"; type: "bool" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
@@ -528,7 +541,8 @@ Module {
     Component {
         name: "QQuickLineExtruder"
         prototype: "QQuickParticleExtruder"
-        exports: ["LineShape 2.0"]
+        exports: ["QtQuick.Particles/LineShape 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "mirrored"; type: "bool" }
         Signal {
             name: "mirroredChanged"
@@ -542,7 +556,8 @@ Module {
     Component {
         name: "QQuickMaskExtruder"
         prototype: "QQuickParticleExtruder"
-        exports: ["MaskShape 2.0"]
+        exports: ["QtQuick.Particles/MaskShape 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "source"; type: "QUrl" }
         Signal {
             name: "sourceChanged"
@@ -557,7 +572,8 @@ Module {
         name: "QQuickParticleAffector"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["ParticleAffector 2.0"]
+        exports: ["QtQuick.Particles/ParticleAffector 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "system"; type: "QQuickParticleSystem"; isPointer: true }
         Property { name: "groups"; type: "QStringList" }
         Property { name: "whenCollidingWith"; type: "QStringList" }
@@ -623,7 +639,8 @@ Module {
         name: "QQuickParticleEmitter"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["Emitter 2.0"]
+        exports: ["QtQuick.Particles/Emitter 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "Lifetime"
             values: {
@@ -781,13 +798,15 @@ Module {
     Component {
         name: "QQuickParticleExtruder"
         prototype: "QObject"
-        exports: ["ParticleExtruder 2.0"]
+        exports: ["QtQuick.Particles/ParticleExtruder 2.0"]
+        exportMetaObjectRevisions: [0]
     }
     Component {
         name: "QQuickParticleGroup"
         defaultProperty: "particleChildren"
         prototype: "QQuickStochasticState"
-        exports: ["ParticleGroup 2.0"]
+        exports: ["QtQuick.Particles/ParticleGroup 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "system"; type: "QQuickParticleSystem"; isPointer: true }
         Property { name: "particleChildren"; type: "QObject"; isList: true; isReadonly: true }
         Signal {
@@ -815,7 +834,8 @@ Module {
         name: "QQuickParticlePainter"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["ParticlePainter 2.0"]
+        exports: ["QtQuick.Particles/ParticlePainter 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "system"; type: "QQuickParticleSystem"; isPointer: true }
         Property { name: "groups"; type: "QStringList" }
         Signal { name: "countChanged" }
@@ -845,7 +865,8 @@ Module {
         name: "QQuickParticleSystem"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["ParticleSystem 2.0"]
+        exports: ["QtQuick.Particles/ParticleSystem 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "running"; type: "bool" }
         Property { name: "paused"; type: "bool" }
         Property { name: "empty"; type: "bool"; isReadonly: true }
@@ -881,7 +902,8 @@ Module {
     Component {
         name: "QQuickPointDirection"
         prototype: "QQuickDirection"
-        exports: ["PointDirection 2.0"]
+        exports: ["QtQuick.Particles/PointDirection 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "x"; type: "double" }
         Property { name: "y"; type: "double" }
         Property { name: "xVariation"; type: "double" }
@@ -922,7 +944,8 @@ Module {
     Component {
         name: "QQuickRectangleExtruder"
         prototype: "QQuickParticleExtruder"
-        exports: ["RectangleShape 2.0"]
+        exports: ["QtQuick.Particles/RectangleShape 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "fill"; type: "bool" }
         Signal {
             name: "fillChanged"
@@ -937,7 +960,8 @@ Module {
         name: "QQuickSpriteGoalAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["SpriteGoal 2.0"]
+        exports: ["QtQuick.Particles/SpriteGoal 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "goalState"; type: "string" }
         Property { name: "jump"; type: "bool" }
         Property { name: "systemStates"; type: "bool" }
@@ -969,7 +993,8 @@ Module {
     Component {
         name: "QQuickTargetDirection"
         prototype: "QQuickDirection"
-        exports: ["TargetDirection 2.0"]
+        exports: ["QtQuick.Particles/TargetDirection 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "targetX"; type: "double" }
         Property { name: "targetY"; type: "double" }
         Property { name: "targetItem"; type: "QQuickItem"; isPointer: true }
@@ -1038,7 +1063,8 @@ Module {
         name: "QQuickTrailEmitter"
         defaultProperty: "data"
         prototype: "QQuickParticleEmitter"
-        exports: ["TrailEmitter 2.0"]
+        exports: ["QtQuick.Particles/TrailEmitter 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "EmitSize"
             values: {
@@ -1100,7 +1126,8 @@ Module {
         name: "QQuickTurbulenceAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Turbulence 2.0"]
+        exports: ["QtQuick.Particles/Turbulence 2.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "strength"; type: "double" }
         Property { name: "noiseSource"; type: "QUrl" }
         Signal {
@@ -1124,7 +1151,8 @@ Module {
         name: "QQuickWanderAffector"
         defaultProperty: "data"
         prototype: "QQuickParticleAffector"
-        exports: ["Wander 2.0"]
+        exports: ["QtQuick.Particles/Wander 2.0"]
+        exportMetaObjectRevisions: [0]
         Enum {
             name: "AffectableParameters"
             values: {

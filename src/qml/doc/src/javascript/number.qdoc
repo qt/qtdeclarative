@@ -27,7 +27,7 @@
 
 /*!
     \qmltype Number
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief The Number object provides represents a number value
 
     The QML Number object extends the JS Number object with
@@ -102,4 +102,3 @@
     d = Number.fromLocaleString(german, "1.234")    // d == 1234.0
     \endcode
 */
-

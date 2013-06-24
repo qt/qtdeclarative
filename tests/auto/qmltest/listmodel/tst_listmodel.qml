@@ -95,28 +95,28 @@ Item {
         }
 
         function test_altermodeled() {
-            tryCompare(altermodel.count, 2)
+            tryCompare(altermodel, 'count', 2)
             compare(altermodel.get(0).name, "AlterModelElement0")
             compare(altermodel.get(1).name, "AlterModelElement1")
             altermodel.append({"name":"AlterModelElement2"})
-            tryCompare(altermodel.count, 3)
+            tryCompare(altermodel, 'count', 3)
             compare(altermodel.get(0).name, "AlterModelElement0")
             compare(altermodel.get(1).name, "AlterModelElement1")
             compare(altermodel.get(2).name, "AlterModelElement2")
             altermodel.insert(2,{"name":"AlterModelElement1.5"})
-            tryCompare(altermodel.count, 4)
+            tryCompare(altermodel, 'count', 4)
             compare(altermodel.get(0).name, "AlterModelElement0")
             compare(altermodel.get(1).name, "AlterModelElement1")
             compare(altermodel.get(2).name, "AlterModelElement1.5")
             compare(altermodel.get(3).name, "AlterModelElement2")
-            tryCompare(altermodel.count, 4)
+            tryCompare(altermodel, 'count', 4)
             altermodel.move(2,1,1);
             compare(altermodel.get(0).name, "AlterModelElement0")
             compare(altermodel.get(1).name, "AlterModelElement1.5")
             compare(altermodel.get(2).name, "AlterModelElement1")
             compare(altermodel.get(3).name, "AlterModelElement2")
             altermodel.remove(1,2)
-            tryCompare(altermodel.count, 2)
+            tryCompare(altermodel, 'count', 2)
             compare(altermodel.get(0).name, "AlterModelElement0")
             compare(altermodel.get(1).name, "AlterModelElement2")
             altermodel.set(1,{"name":"AlterModelElement1"})
@@ -125,7 +125,7 @@ Item {
             altermodel.setProperty(0, "name", "AlteredProperty")
             compare(altermodel.get(0).name, "AlteredProperty")
             altermodel.clear()
-            tryCompare(altermodel.count, 0)
+            tryCompare(altermodel, 'count', 0)
             compare(altermodel.get(0), undefined)
         }
     }

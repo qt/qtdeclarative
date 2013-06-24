@@ -125,6 +125,7 @@ public:
     static QQuickItem *anchorCenterInTargetItem(QQuickItem *item);
     static QPair<QString, QObject*> anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context);
     static void resetAnchor(QQuickItem *item, const QString &name);
+    static void emitComponentCompleteSignalForAttachedProperty(QQuickItem *item);
 
 
     static QList<QObject*> statesForItem(QQuickItem *item);
@@ -144,6 +145,9 @@ public:
 
     static void activateDesignerWindowManager();
     static void activateDesignerMode();
+
+    static void disableComponentComplete();
+    static void enableComponentComplete();
 
     static void createOpenGLContext(QQuickWindow *window);
 

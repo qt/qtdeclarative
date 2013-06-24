@@ -105,6 +105,7 @@ public:
 private slots:
     void null();
     void loadEmptyUrl();
+    void qmlCreateWindow();
     void qmlCreateObject();
     void qmlCreateObjectWithProperties();
     void qmlIncubateObject();
@@ -161,6 +162,15 @@ void tst_qqmlcomponent::qmlIncubateObject()
     QTRY_VERIFY(object->property("test2").toBool() == true);
 
     delete object;
+}
+
+void tst_qqmlcomponent::qmlCreateWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("createWindow.qml"));
+    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
 }
 
 void tst_qqmlcomponent::qmlCreateObject()

@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlmodule QtQml.Models 2
-    \title Qt QML Model QML Types
+    \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models
     \since 5.1
@@ -60,7 +60,8 @@ QT_BEGIN_NAMESPACE
     import QtQml.Models 2.1
     \endcode
 
-    Note that QtQml.Models module started at version 2.1 to match the version of the parent module.
+    Note that QtQml.Models module started at version 2.1 to match the version
+    of the parent module, \l{Qt QML}.
 */
 
 

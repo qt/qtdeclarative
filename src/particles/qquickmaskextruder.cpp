@@ -114,12 +114,18 @@ bool QQuickMaskExtruder::contains(const QRectF &bounds, const QPointF &point)
     ensureInitialized(bounds);//###Current usage patterns WILL lead to different bounds/r calls. Separate list?
     if (m_img.isNull())
         return false;
-    QPoint p = point.toPoint() - bounds.topLeft().toPoint();
-    return m_img.rect().contains(p) && (bool)m_img.pixelIndex(p);
+
+    QPointF pt = point - bounds.topLeft();
+    QPoint p(pt.x() * m_img.width() / bounds.width(),
+             pt.y() * m_img.height() / bounds.height());
+    return m_img.rect().contains(p) && (m_img.pixel(p) & 0xff000000);
 }
 
-void QQuickMaskExtruder::ensureInitialized(const QRectF &r)
+void QQuickMaskExtruder::ensureInitialized(const QRectF &rf)
 {
+    // Convert to integer coords to avoid comparing floats and ints which would
+    // often result in rounding errors.
+    QRect r = rf.toRect();
     if (m_lastWidth == r.width() && m_lastHeight == r.height())
         return;//Same as before
     if (!m_pix.isReady())
@@ -129,13 +135,22 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &r)
 
     m_mask.clear();
 
-    m_img = m_pix.image().createAlphaMask();
-    m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
-    m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
-    for (int i=0; i<r.width(); i++){
-        for (int j=0; j<r.height(); j++){
-            if (m_img.pixelIndex(i,j))//Direct bit manipulation is presumably more efficient
-                m_mask << QPointF(i,j);
+    m_img = m_pix.image();
+    // Image will in all likelyhood be in this format already, so
+    // no extra memory or conversion takes place
+    if (m_img.format() != QImage::Format_ARGB32 && m_img.format() != QImage::Format_ARGB32_Premultiplied)
+        m_img = m_img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
+    // resample on the fly using 16-bit
+    int sx = (m_img.width() << 16) / r.width();
+    int sy = (m_img.height() << 16) / r.height();
+    int w = r.width();
+    int h = r.height();
+    for (int y=0; y<h; ++y) {
+        const uint *sl = (const uint *) m_img.constScanLine((y * sy) >> 16);
+        for (int x=0; x<w; ++x) {
+            if (sl[(x * sx) >> 16] & 0xff000000)
+                m_mask << QPointF(x, y);
         }
     }
 }

@@ -186,9 +186,14 @@ void QV8DebugService::signalEmitted(const QString &signal)
 // executed in the gui thread
 void QV8DebugService::init()
 {
-//    ### FIXME: v4
-//    v8::Debug::SetMessageHandler2(DebugMessageHandler);
-//    v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
+#if 0 // ### FIXME: v4
+    Q_D(QV8DebugService);
+    if (!d->debugIsolate)
+        d->debugIsolate = v8::Isolate::GetCurrent();
+    v8::Debug::SetMessageHandler2(DebugMessageHandler);
+    v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
+    QV4Compiler::enableV4(false);
+#endif
 }
 
 // executed in the gui thread
@@ -268,7 +273,10 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
 void QV8DebugService::sendDebugMessage(const QString &message)
 {
-//  ### FIXME: v4  v8::Debug::SendCommand(message.utf16(), message.size());
+#if 0 // ### FIXME: v4
+    Q_D(QV8DebugService);
+    v8::Debug::SendCommand(message.utf16(), message.size(), 0, d->debugIsolate);
+#endif
 }
 
 void QV8DebugService::processDebugMessages()

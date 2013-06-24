@@ -57,7 +57,7 @@
 class QQmlDebugTest
 {
 public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 10000);
+    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient
@@ -97,6 +97,9 @@ public:
 
     QString output() const;
     void stop();
+
+signals:
+    void readyReadStandardOutput();
 
 private slots:
     void timeout();

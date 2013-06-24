@@ -614,7 +614,8 @@ void QSGPlainTexture::bind()
     m_dirty_texture = false;
 
 #ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
+    bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+    if (profileFrames)
         qsg_renderer_timer.start();
 #endif
 
@@ -627,6 +628,11 @@ void QSGPlainTexture::bind()
                        (int) qsg_renderer_timer.elapsed(),
                        m_texture_size.width(),
                        m_texture_size.height());
+            }
+            if (QQmlProfilerService::enabled) {
+                QQmlProfilerService::sceneGraphFrame(
+                            QQmlProfilerService::SceneGraphTextureDeletion,
+                            qsg_renderer_timer.nsecsElapsed());
             }
 #endif
         }
@@ -645,9 +651,9 @@ void QSGPlainTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
 #ifndef QSG_NO_RENDER_TIMING
-    int bindTime = 0;
-    if (qsg_render_timing)
-        bindTime = qsg_renderer_timer.elapsed();
+    qint64 bindTime = 0;
+    if (profileFrames)
+        bindTime = qsg_renderer_timer.nsecsElapsed();
 #endif
 
     // ### TODO: check for out-of-memory situations...
@@ -657,11 +663,13 @@ void QSGPlainTexture::bind()
     QImage tmp = (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied)
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    if (tmp.width() * 4 != tmp.bytesPerLine())
+        tmp = tmp.copy();
 
 #ifndef QSG_NO_RENDER_TIMING
-    int convertTime = 0;
-    if (qsg_render_timing)
-        convertTime = qsg_renderer_timer.elapsed();
+    qint64 convertTime = 0;
+    if (profileFrames)
+        convertTime = qsg_renderer_timer.nsecsElapsed();
 #endif
 
     updateBindOptions(m_dirty_bind_options);
@@ -684,16 +692,16 @@ void QSGPlainTexture::bind()
     }
 
 #ifndef QSG_NO_RENDER_TIMING
-    int swizzleTime = 0;
-    if (qsg_render_timing)
-        swizzleTime = qsg_renderer_timer.elapsed();
+    qint64 swizzleTime = 0;
+    if (profileFrames)
+        swizzleTime = qsg_renderer_timer.nsecsElapsed();
 #endif
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
 
 #ifndef QSG_NO_RENDER_TIMING
-    int uploadTime = 0;
-    if (qsg_render_timing)
-        uploadTime = qsg_renderer_timer.elapsed();
+    qint64 uploadTime = 0;
+    if (profileFrames)
+        uploadTime = qsg_renderer_timer.nsecsElapsed();
 #endif
 
 
@@ -704,21 +712,33 @@ void QSGPlainTexture::bind()
     }
 
 #ifndef QSG_NO_RENDER_TIMING
-    int mipmapTime = 0;
+    qint64 mipmapTime = 0;
     if (qsg_render_timing) {
-        mipmapTime = qsg_renderer_timer.elapsed();
+        mipmapTime = qsg_renderer_timer.nsecsElapsed();
 
         printf("   - plaintexture(%dx%d) bind=%d, convert=%d, swizzle=%d (%s->%s), upload=%d, mipmap=%d, total=%d\n",
                m_texture_size.width(), m_texture_size.height(),
-               bindTime,
-               convertTime - bindTime,
-               swizzleTime - convertTime,
+               int(bindTime/1000000),
+               int((convertTime - bindTime)/1000000),
+               int((swizzleTime - convertTime)/1000000),
                externalFormat == GL_BGRA ? "BGRA" : "RGBA",
                internalFormat == GL_BGRA ? "BGRA" : "RGBA",
-               uploadTime - swizzleTime,
-               mipmapTime - uploadTime,
+               int((uploadTime - swizzleTime)/1000000),
+               int((mipmapTime - uploadTime)/1000000),
                (int) qsg_renderer_timer.elapsed());
 
+    }
+
+    if (QQmlProfilerService::enabled) {
+        mipmapTime = qsg_renderer_timer.nsecsElapsed();
+
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphTexturePrepare,
+                    bindTime,
+                    convertTime - bindTime,
+                    swizzleTime - convertTime,
+                    uploadTime - swizzleTime,
+                    mipmapTime - uploadTime);
     }
 
 #endif

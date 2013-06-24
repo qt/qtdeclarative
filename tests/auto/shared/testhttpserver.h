@@ -81,7 +81,10 @@ private:
     QHash<QTcpSocket *, QByteArray> dataCache;
     QList<QPair<QTcpSocket *, QByteArray> > toSend;
 
-    QByteArray waitData;
+    struct WaitData {
+        QList <QByteArray>headers;
+        QByteArray body;
+    } waitData;
     QByteArray replyData;
     QByteArray bodyData;
     bool m_hasFailed;

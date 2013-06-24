@@ -46,6 +46,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qhashedstring_p.h>
+#include <private/qqmlimport_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
@@ -585,16 +586,18 @@ void QQmlTypePrivate::init() const
     while(mo) {
         QQmlType *t = metaTypeData()->metaObjectToType.value(mo);
         if (t) {
-            if (t->d->extraData.cd->extFunc) {
-                QMetaObjectBuilder builder;
-                clone(builder, t->d->extraData.cd->extMetaObject, t->d->baseMetaObject, baseMetaObject);
-                builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
-                QMetaObject *mmo = builder.toMetaObject();
-                mmo->d.superdata = baseMetaObject;
-                if (!metaObjects.isEmpty())
-                    metaObjects.last().metaObject->d.superdata = mmo;
-                QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
-                metaObjects << data;
+            if (t->d->regType == QQmlType::CppType) {
+                if (t->d->extraData.cd->extFunc) {
+                    QMetaObjectBuilder builder;
+                    clone(builder, t->d->extraData.cd->extMetaObject, t->d->baseMetaObject, baseMetaObject);
+                    builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+                    QMetaObject *mmo = builder.toMetaObject();
+                    mmo->d.superdata = baseMetaObject;
+                    if (!metaObjects.isEmpty())
+                        metaObjects.last().metaObject->d.superdata = mmo;
+                    QQmlProxyMetaObject::ProxyData data = { mmo, t->d->extraData.cd->extFunc, 0, 0 };
+                    metaObjects << data;
+                }
             }
         }
         mo = mo->d.superdata;
@@ -1069,6 +1072,29 @@ QQmlType *QQmlTypeModuleVersion::type(const QHashedV4String &name) const
     else return 0;
 }
 
+void qmlClearTypeRegistrations() // Declared in qqml.h
+{
+    //Only cleans global static, assumed no running engine
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    for (int i = 0; i < data->types.count(); ++i)
+        delete data->types.at(i);
+
+    QQmlMetaTypeData::TypeModules::const_iterator i = data->uriToModule.constBegin();
+    for (; i != data->uriToModule.constEnd(); ++i)
+        delete *i;
+
+    data->types.clear();
+    data->idToType.clear();
+    data->nameToType.clear();
+    data->urlToType.clear();
+    data->metaObjectToType.clear();
+    data->uriToModule.clear();
+
+    QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
+    qmlClearEnginePlugins();
+}
 
 int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
 {

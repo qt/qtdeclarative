@@ -74,6 +74,7 @@ private:
     static QJsonValue toJsonValue(const QV4::Value &value, V4ObjectSet &visitedObjects);
     static QJsonObject toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects);
     static QJsonArray toJsonArray(QV4::ArrayObject *a, V4ObjectSet &visitedObjects);
+
 };
 
 }

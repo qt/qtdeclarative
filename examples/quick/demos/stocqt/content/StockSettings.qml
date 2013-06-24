@@ -88,7 +88,6 @@ Rectangle {
         anchors.leftMargin: 30
         anchors.top: startDateText.bottom
         anchors.topMargin: 8
-        date: new Date(1995, 3, 25)
     }
 
     Text {
@@ -212,4 +211,6 @@ Rectangle {
             onClicked: root.chartType = "all"
         }
     }
+
+    Component.onCompleted: startDatePicker.date = new Date(1995, 3, 25)
 }

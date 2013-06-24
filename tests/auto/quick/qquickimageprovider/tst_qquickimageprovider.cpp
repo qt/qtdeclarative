@@ -71,6 +71,9 @@ private slots:
     void removeProvider_data();
     void removeProvider();
 
+    void imageProviderId_data();
+    void imageProviderId();
+
     void threadTest();
 
 private:
@@ -370,6 +373,31 @@ void tst_qquickimageprovider::removeProvider()
     QCOMPARE(obj->status(), QQuickImage::Error);
 
     delete obj;
+}
+
+void tst_qquickimageprovider::imageProviderId_data()
+{
+    QTest::addColumn<QString>("providerId");
+
+    QTest::newRow("lowercase") << QStringLiteral("imageprovider");
+    QTest::newRow("CamelCase") << QStringLiteral("ImageProvider");
+    QTest::newRow("UPPERCASE") << QStringLiteral("IMAGEPROVIDER");
+}
+
+void tst_qquickimageprovider::imageProviderId()
+{
+    QFETCH(QString, providerId);
+
+    QQmlEngine engine;
+
+    bool deleteWatch = false;
+    TestQImageProvider *provider = new TestQImageProvider(&deleteWatch);
+
+    engine.addImageProvider(providerId, provider);
+    QVERIFY(engine.imageProvider(providerId) != 0);
+
+    engine.removeImageProvider(providerId);
+    QVERIFY(deleteWatch);
 }
 
 class TestThreadProvider : public QQuickImageProvider

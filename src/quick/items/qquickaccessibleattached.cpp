@@ -156,6 +156,9 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     if (!parent->property("value").isNull()) {
         connect(parent, SIGNAL(valueChanged()), this, SLOT(valueChanged()));
     }
+    if (!parent->property("cursorPosition").isNull()) {
+        connect(parent, SIGNAL(cursorPositionChanged()), this, SLOT(cursorPositionChanged()));
+    }
 }
 
 QQuickAccessibleAttached::~QQuickAccessibleAttached()

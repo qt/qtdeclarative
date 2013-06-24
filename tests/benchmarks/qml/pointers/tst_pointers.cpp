@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <qtest.h>
-#include "private/qqmlguard_p.h"
+#include <QtQml/private/qqmlguard_p.h>
 #include <QWeakPointer>
 
 class tst_pointers : public QObject

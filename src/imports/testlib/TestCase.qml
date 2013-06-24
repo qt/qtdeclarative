@@ -143,7 +143,7 @@ Item {
             if ("mapFromItem" in o && "mapToItem" in o) {
                 return "declarativeitem";  // @todo improve detection of declarative items
             } else if ("x" in o && "y" in o && "z" in o) {
-                return "vector3d"; // Qt3D vector
+                return "vector3d"; // Qt 3D vector
             }
             return "object";
         } else if (o instanceof Function) {
@@ -291,6 +291,11 @@ Item {
     }
 
     function tryCompare(obj, prop, value, timeout) {
+        if (arguments.length == 2) {
+            qtest_results.fail("A value is required for tryCompare",
+                        util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
         if (!timeout)
             timeout = 5000
         if (!qtest_compareInternal(obj[prop], value))
@@ -682,6 +687,9 @@ Item {
                 qtest_runFunction(prop, null, isBenchmark)
             }
             qtest_results.finishTestFunction()
+            // wait(0) will call processEvents() so objects marked for deletion
+            // in the test function will be deleted.
+            wait(0)
             qtest_results.skipped = false
         }
 

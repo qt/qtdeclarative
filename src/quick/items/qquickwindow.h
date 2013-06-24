@@ -57,6 +57,7 @@ class QQuickWindowPrivate;
 class QOpenGLFramebufferObject;
 class QQmlIncubationController;
 class QInputMethodEvent;
+class QQuickCloseEvent;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -114,6 +115,9 @@ public:
     void setColor(const QColor &color);
     QColor color() const;
 
+    static bool hasDefaultAlphaBuffer();
+    static void setDefaultAlphaBuffer(bool useAlpha);
+
     void setPersistentOpenGLContext(bool persistent);
     bool isPersistentOpenGLContext() const;
 
@@ -129,6 +133,7 @@ Q_SIGNALS:
     void beforeSynchronizing();
     void beforeRendering();
     void afterRendering();
+    Q_REVISION(1) void closing(QQuickCloseEvent *close);
     void colorChanged(const QColor &);
     Q_REVISION(1) void activeFocusItemChanged();
 
@@ -144,6 +149,7 @@ protected:
 
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
+    // TODO Qt 6: reimplement QWindow::closeEvent to emit closing
 
     virtual void focusInEvent(QFocusEvent *);
     virtual void focusOutEvent(QFocusEvent *);
@@ -162,6 +168,7 @@ protected:
 private Q_SLOTS:
     void maybeUpdate();
     void cleanupSceneGraph();
+    void setTransientParent_helper(QQuickWindow *window);
 
 private:
     friend class QQuickItem;

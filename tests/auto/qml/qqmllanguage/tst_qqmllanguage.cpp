@@ -242,6 +242,7 @@ private:
 void tst_qqmllanguage::cleanupTestCase()
 {
     QVERIFY(QFile::remove(testFile(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml"))));
+    qmlClearTypeRegistrations(); // Should not crash
 }
 
 void tst_qqmllanguage::insertedSemicolon_data()

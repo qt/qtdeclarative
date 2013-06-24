@@ -182,6 +182,8 @@ void QQmlDebugProcess::processAppOutput()
 {
     m_mutex.lock();
 
+    bool outputFromAppItself = false;
+
     QString newOutput = m_process.readAll();
     m_output.append(newOutput);
     m_outputBuffer.append(newOutput);
@@ -208,7 +210,13 @@ void QQmlDebugProcess::processAppOutput()
                 m_eventLoop.quit();
                 continue;
             }
+        } else {
+            // set to true if there is output not coming from the debugger
+            outputFromAppItself = true;
         }
     }
     m_mutex.unlock();
+
+    if (outputFromAppItself)
+        emit readyReadStandardOutput();
 }

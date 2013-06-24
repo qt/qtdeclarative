@@ -42,7 +42,7 @@
 
 #include <QStyleHints>
 #include <QGuiApplication>
-
+#include <qqmlfile.h>
 
 MaskedMouseArea::MaskedMouseArea(QQuickItem *parent)
     : QQuickItem(parent),
@@ -74,7 +74,7 @@ void MaskedMouseArea::setMaskSource(const QUrl &source)
 {
     if (m_maskSource != source) {
         m_maskSource = source;
-        m_maskImage = QImage(source.toLocalFile());
+        m_maskImage = QImage(QQmlFile::urlToLocalFileOrQrc(source));
         emit maskSourceChanged();
     }
 }

@@ -2554,7 +2554,7 @@ void tst_QJSEngine::qRegExpInport()
 }
 
 // QScriptValue::toDateTime() returns a local time, whereas JS dates
-// are always stored as UTC. QtScript must respect the current time
+// are always stored as UTC. Qt Script must respect the current time
 // zone, and correctly adjust for daylight saving time that may be in
 // effect at a given date (QTBUG-9770).
 void tst_QJSEngine::dateRoundtripJSQtJS()

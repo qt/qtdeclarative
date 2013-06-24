@@ -210,9 +210,11 @@ QFont qt_font_from_string(const QString& fontString) {
              font.setBold(true);
          else if (token.endsWith(QStringLiteral("px"))) {
              QString number = token;
-             number.remove(QStringLiteral("px"));
-             //font.setPointSizeF(number.trimmed().toFloat());
-             font.setPixelSize(number.trimmed().toInt());
+             number.remove(QLatin1String("px"));
+             bool ok = false;
+             float pixelSize = number.trimmed().toFloat(&ok);
+             if (ok)
+                font.setPixelSize(int(pixelSize));
          } else
              font.setFamily(token);
      }
@@ -426,50 +428,86 @@ DEFINE_MANAGED_VTABLE(QQuickContext2DStyle);
 
 QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
 {
-    int sides = radius ? radius : qRound(qSqrt(weights.size()));
-    int half = qFloor(sides/2);
+    // weights 3x3 => delta 1
+    int delta = radius ? radius : qFloor(qSqrt(weights.size()) / qreal(2));
+    int filterDim = 2 * delta + 1;
 
     QImage dst = QImage(src.size(), src.format());
+
     int w = src.width();
     int h = src.height();
-    for (int y = 0; y < dst.height(); ++y) {
-      QRgb *dr = (QRgb*)dst.scanLine(y);
-      for (int x = 0; x < dst.width(); ++x) {
-          unsigned char* dRgb = ((unsigned char*)&dr[x]);
-          unsigned char red=0, green=0, blue=0, alpha=0;
-          int sy = y;
-          int sx = x;
 
-          for (int cy=0; cy<sides; cy++) {
-             for (int cx=0; cx<sides; cx++) {
-               int scy = sy + cy - half;
-               int scx = sx + cx - half;
-               if (scy >= 0 && scy < w && scx >= 0 && scx < h) {
-                  const QRgb *sr = (const QRgb*)(src.constScanLine(scy));
-                  const unsigned char* sRgb = ((const unsigned char*)&sr[scx]);
-                  qreal wt = radius ? weights[0] : weights[cy*sides+cx];
-                  red += sRgb[0] * wt;
-                  green += sRgb[1] * wt;
-                  blue += sRgb[2] * wt;
-                  alpha += sRgb[3] * wt;
-               }
-             }
-          }
-          dRgb[0] = red;
-          dRgb[1] = green;
-          dRgb[2] = blue;
-          dRgb[3] = alpha;
-      }
+    const QRgb *sr = (const QRgb *)(src.constBits());
+    int srcStride = src.bytesPerLine() / 4;
+
+    QRgb *dr = (QRgb*)dst.bits();
+    int dstStride = dst.bytesPerLine() / 4;
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+            int alpha = 0;
+
+            qreal redF = 0;
+            qreal greenF = 0;
+            qreal blueF = 0;
+            qreal alphaF = 0;
+
+            int sy = y;
+            int sx = x;
+
+            for (int cy = 0; cy < filterDim; ++cy) {
+                int scy = sy + cy - delta;
+
+                if (scy < 0 || scy >= h)
+                    continue;
+
+                const QRgb *sry = sr + scy * srcStride;
+
+                for (int cx = 0; cx < filterDim; ++cx) {
+                    int scx = sx + cx - delta;
+
+                    if (scx < 0 || scx >= w)
+                        continue;
+
+                    const QRgb col = sry[scx];
+
+                    if (radius) {
+                        red += qRed(col);
+                        green += qGreen(col);
+                        blue += qBlue(col);
+                        alpha += qAlpha(col);
+                    } else {
+                        qreal wt = weights[cy * filterDim + cx];
+
+                        redF += qRed(col) * wt;
+                        greenF += qGreen(col) * wt;
+                        blueF += qBlue(col) * wt;
+                        alphaF += qAlpha(col) * wt;
+                    }
+                }
+            }
+
+            if (radius)
+                dr[x] = qRgba(qRound(red * weights[0]), qRound(green * weights[0]), qRound(blue * weights[0]), qRound(alpha * weights[0]));
+            else
+                dr[x] = qRgba(qRound(redF), qRound(greenF), qRound(blueF), qRound(alphaF));
+        }
+
+        dr += dstStride;
     }
+
     return dst;
 }
 
 void qt_image_boxblur(QImage& image, int radius, bool quality)
 {
     int passes = quality? 3: 1;
-    for (int i=0; i < passes; i++) {
-        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0/(radius * radius * 1.0), radius);
-    }
+    int filterSize = 2 * radius + 1;
+    for (int i = 0; i < passes; ++i)
+        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0 / (filterSize * filterSize), radius);
 }
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
@@ -644,7 +682,7 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
         pixelData->image = QImage(w, h, QImage::Format_ARGB32);
         pixelData->image.fill(0x00000000);
     } else {
-        Q_ASSERT(image.width() == w && image.height() == h);
+        Q_ASSERT(image.width() == int(w) && image.height() == int(h));
         pixelData->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
@@ -2525,7 +2563,11 @@ QV4::Value QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallContext *
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
         } else {
-            V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+            QUrl url(ctx->arguments[0].toQString());
+            if (url.isValid())
+                pixmap = r->context->createPixmap(url);
+            else
+                V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
     } else {
         V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
@@ -2790,7 +2832,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createImageData(QV4::SimpleCallCon
 }
 
 /*!
-  \qmlmethod CanvasImageData QtQuick2::Canvas::getImageData(real sx, real sy, real sw, real sh)
+  \qmlmethod CanvasImageData QtQuick2::Context2D::getImageData(real sx, real sy, real sw, real sh)
   Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
   */
 QV4::Value QQuickJSContext2DPrototype::method_getImageData(QV4::SimpleCallContext *ctx)
@@ -3488,7 +3530,6 @@ QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& 
     QPainterPath textPath;
 
     textPath.addText(x - xoffset, y - yoffset+metrics.ascent(), state.font, text);
-    textPath = state.matrix.map(textPath);
     return textPath;
 }
 
@@ -3662,7 +3703,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
     if (m_texture->thread() == QThread::currentThread())
         m_texture->grabImage(bounds);
     else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
-        qWarning() << "Pixel read back is not support in Cooperative mode, please try Theaded or Immediate mode";
+        qWarning() << "Pixel readback is not supported in Cooperative mode, please try Threaded or Immediate mode";
         return QImage();
     } else {
         QMetaObject::invokeMethod(m_texture,
@@ -3775,7 +3816,6 @@ void QQuickContext2D::pushState()
 void QQuickContext2D::reset()
 {
     QQuickContext2D::State newState;
-    newState.matrix = QTransform();
 
     m_path = QPainterPath();
 
@@ -3786,28 +3826,6 @@ void QQuickContext2D::reset()
     defaultClipPath.addRect(r);
     newState.clipPath = defaultClipPath;
     newState.clipPath.setFillRule(Qt::WindingFill);
-
-    newState.strokeStyle = QColor("#000000");
-    newState.fillStyle = QColor("#000000");
-    newState.fillPatternRepeatX = false;
-    newState.fillPatternRepeatY = false;
-    newState.strokePatternRepeatX = false;
-    newState.strokePatternRepeatY = false;
-    newState.invertibleCTM = true;
-    newState.fillRule = Qt::WindingFill;
-    newState.globalAlpha = 1.0;
-    newState.lineWidth = 1;
-    newState.lineCap = Qt::FlatCap;
-    newState.lineJoin = Qt::MiterJoin;
-    newState.miterLimit = 10;
-    newState.shadowOffsetX = 0;
-    newState.shadowOffsetY = 0;
-    newState.shadowBlur = 0;
-    newState.shadowColor = qRgba(0, 0, 0, 0);
-    newState.globalCompositeOperation = QPainter::CompositionMode_SourceOver;
-    newState.font = QFont(QStringLiteral("sans-serif"), 10);
-    newState.textAlign = QQuickContext2D::Start;
-    newState.textBaseline = QQuickContext2D::Alphabetic;
 
     m_stateStack.clear();
     m_stateStack.push(newState);

@@ -54,8 +54,8 @@ QT_BEGIN_NAMESPACE
     -- Declarative Accessibility Overview. --
 
     * Item interface classes:
-    QAccessibleDeclarativeItem for QtQuick1
-    QAccessibleQuickItem for for QtQuick2
+    QAccessibleDeclarativeItem for Qt Quick 1
+    QAccessibleQuickItem for for Qt Quick 2
     Common base class: QQmlAccessible
 
     * View interface classes.

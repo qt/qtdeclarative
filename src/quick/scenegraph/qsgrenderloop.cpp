@@ -41,6 +41,7 @@
 
 #include "qsgrenderloop_p.h"
 #include "qsgthreadedrenderloop_p.h"
+#include "qsgwindowsrenderloop_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
@@ -55,6 +56,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qqmlprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,7 +82,7 @@ QSGRenderLoop::~QSGRenderLoop()
 {
 }
 
-class QSGGuiThreadRenderLoop : public QObject, public QSGRenderLoop
+class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT
 public:
@@ -130,15 +132,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
         s_instance = QSGContext::createWindowManager();
 
         bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
-#ifdef Q_OS_WIN
-        bool fancy = false; // QTBUG-28037
-#else
-        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL);
-#endif
-        if (qmlNoThreadedRenderer())
-            fancy = false;
-        else if (qmlForceThreadedRenderer())
-            fancy = true;
 
         // Enable fixed animation steps...
         QByteArray fixed = qgetenv("QML_FIXED_ANIMATION_STEP");
@@ -151,9 +144,45 @@ QSGRenderLoop *QSGRenderLoop::instance()
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
 
         if (!s_instance) {
-            s_instance = fancy
-                    ? (QSGRenderLoop*) new QSGThreadedRenderLoop
-                    : (QSGRenderLoop*) new QSGGuiThreadRenderLoop;
+
+            enum RenderLoopType {
+                BasicRenderLoop,
+                ThreadedRenderLoop,
+                WindowsRenderLoop
+            };
+
+            RenderLoopType loopType = BasicRenderLoop;
+
+#ifdef Q_OS_WIN
+            loopType = WindowsRenderLoop;
+#else
+            if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
+                loopType = ThreadedRenderLoop;
+#endif
+            if (qmlNoThreadedRenderer())
+                loopType = BasicRenderLoop;
+            else if (qmlForceThreadedRenderer())
+                loopType = ThreadedRenderLoop;
+
+            const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
+            if (loopName == QByteArrayLiteral("windows"))
+                loopType = WindowsRenderLoop;
+            else if (loopName == QByteArrayLiteral("basic"))
+                loopType = BasicRenderLoop;
+            else if (loopName == QByteArrayLiteral("threaded"))
+                loopType = ThreadedRenderLoop;
+
+            switch (loopType) {
+            case ThreadedRenderLoop:
+                s_instance = new QSGThreadedRenderLoop();
+                break;
+            case WindowsRenderLoop:
+                s_instance = new QSGWindowsRenderLoop();
+                break;
+            default:
+                s_instance = new QSGGuiThreadRenderLoop();
+                break;
+            }
         }
     }
     return s_instance;
@@ -215,49 +244,25 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    bool renderWithoutShowing = QQuickWindowPrivate::get(window)->renderWithoutShowing;
-    if ((!window->isExposed() && !renderWithoutShowing) || !m_windows.contains(window))
+    if (!QQuickWindowPrivate::get(window)->isRenderable() || !m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
-
-    QQuickWindow *masterWindow = 0;
-    if (!window->isVisible() && !renderWithoutShowing) {
-        // Find a "proper surface" to bind...
-        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
-             it != m_windows.constEnd() && !masterWindow; ++it) {
-            if (it.key()->isVisible())
-                masterWindow = it.key();
-        }
-    } else {
-        masterWindow = window;
-    }
-
-    if (!masterWindow)
-        return;
-
-    if (!QQuickWindowPrivate::get(masterWindow)->isRenderable()) {
-        qWarning().nospace()
-            << "Unable to find a renderable master window "
-            << masterWindow << "when trying to render"
-            << window << " (" << window->geometry() << ").";
-        return;
-    }
 
     bool current = false;
 
     if (!gl) {
         gl = new QOpenGLContext();
-        gl->setFormat(masterWindow->requestedFormat());
+        gl->setFormat(window->requestedFormat());
         if (!gl->create()) {
             delete gl;
             gl = 0;
         }
-        current = gl->makeCurrent(masterWindow);
+        current = gl->makeCurrent(window);
         if (current)
             sg->initialize(gl);
     } else {
-        current = gl->makeCurrent(masterWindow);
+        current = gl->makeCurrent(window);
     }
 
     bool alsoSwap = data.updatePending;
@@ -269,20 +274,21 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
 
-    int renderTime = 0, syncTime = 0;
-    QTime renderTimer;
-    if (qsg_render_timing())
+    qint64 renderTime = 0, syncTime = 0;
+    QElapsedTimer renderTimer;
+    bool profileFrames = qsg_render_timing()  || QQmlProfilerService::enabled;
+    if (profileFrames)
         renderTimer.start();
 
     cd->syncSceneGraph();
 
-    if (qsg_render_timing())
-        syncTime = renderTimer.elapsed();
+    if (profileFrames)
+        syncTime = renderTimer.nsecsElapsed();
 
     cd->renderSceneGraph(window->size());
 
-    if (qsg_render_timing())
-        renderTime = renderTimer.elapsed() - syncTime;
+    if (profileFrames)
+        renderTime = renderTimer.nsecsElapsed() - syncTime;
 
     if (data.grabOnly) {
         grabContent = qt_gl_read_framebuffer(window->size(), false, false);
@@ -294,15 +300,27 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         cd->fireFrameSwapped();
     }
 
+    qint64 swapTime = 0;
+    if (profileFrames) {
+        swapTime = renderTimer.nsecsElapsed() - renderTime - syncTime;
+    }
+
     if (qsg_render_timing()) {
         static QTime lastFrameTime = QTime::currentTime();
-        const int swapTime = renderTimer.elapsed() - renderTime - syncTime;
-        qDebug() << "- Breakdown of frame time; sync:" << syncTime
-                 << "ms render:" << renderTime << "ms swap:" << swapTime
-                 << "ms total:" << swapTime + renderTime + syncTime
+        qDebug() << "- Breakdown of frame time; sync:" << syncTime/1000000
+                 << "ms render:" << renderTime/1000000 << "ms swap:" << swapTime/1000000
+                 << "ms total:" << (swapTime + renderTime + syncTime)/1000000
                  << "ms time since last frame:" << (lastFrameTime.msecsTo(QTime::currentTime()))
                  << "ms";
         lastFrameTime = QTime::currentTime();
+    }
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphRenderLoopFrame,
+                    syncTime,
+                    renderTime,
+                    swapTime);
     }
 
     // Might have been set during syncSceneGraph()

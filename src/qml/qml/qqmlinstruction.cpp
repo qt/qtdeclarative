@@ -58,7 +58,7 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "INIT\t\t\t" << instr->init.bindingsSize << "\t" << instr->init.parserStatusSize << "\t" << instr->init.contextCache << "\t" << instr->init.compiledBinding;
         break;
     case QQmlInstruction::DeferInit:
-        qWarning().nospace() << idx << "\t\t" << "DEFER_INIT\t\t" << instr->deferInit.bindingsSize << "\t" << instr->deferInit.parserStatusSize;
+        qWarning().nospace() << idx << "\t\t" << "DEFER_INIT\t\t" << instr->deferInit.bindingsSize << "\t" << instr->deferInit.parserStatusSize << "\t" << instr->deferInit.objectStackSize << "\t" << instr->deferInit.listStackSize;
         break;
     case QQmlInstruction::Done:
         qWarning().nospace() << idx << "\t\t" << "DONE";

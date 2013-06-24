@@ -708,13 +708,13 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
 /*!
     \qmltype Locale
     \instantiates QQmlLocale
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQml 2
     \brief Provides locale specific properties and formatted data
 
-    The Locale object may only be created via the \l{QML:Qt::locale()}{Qt.locale()} function.
+    The Locale object may only be created via the \l{QtQml2::Qt::locale()}{Qt.locale()} function.
     It cannot be created directly.
 
-    The \l{QML:Qt::locale()}{Qt.locale()} function returns a JS Locale object representing the
+    The \l{QtQml2::Qt::locale()}{Qt.locale()} function returns a JS Locale object representing the
     locale with the specified name, which has the format
     "language[_territory][.codeset][@modifier]" or "C".
 
@@ -751,7 +751,7 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
     }
     \endcode
 
-    QtQuick Locale's data is based on Common Locale Data Repository v1.8.1.
+    Qt Quick Locale's data is based on Common Locale Data Repository v1.8.1.
 
 
     \target FormatType

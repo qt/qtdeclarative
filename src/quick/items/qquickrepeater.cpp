@@ -217,7 +217,7 @@ void QQuickRepeater::setModel(const QVariant &model)
             d->model = new QQmlDelegateModel(qmlContext(this));
             d->ownModel = true;
             if (isComponentComplete())
-                static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
+                static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
         }
         if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             dataModel->setModel(model);
@@ -329,7 +329,7 @@ void QQuickRepeater::componentComplete()
 {
     Q_D(QQuickRepeater);
     if (d->model && d->ownModel)
-        static_cast<QQmlDelegateModel *>(d->model)->componentComplete();
+        static_cast<QQmlDelegateModel *>(d->model.data())->componentComplete();
     QQuickItem::componentComplete();
     regenerate();
     if (d->model && d->model->count())
@@ -351,11 +351,12 @@ void QQuickRepeater::clear()
 
     if (d->model) {
         for (int i = 0; i < d->deletables.count(); ++i) {
-            QQuickItem *item = d->deletables.at(i);
-            if (complete)
-                emit itemRemoved(i, item);
-            item->setParentItem(0);
-            d->model->release(item);
+            if (QQuickItem *item = d->deletables.at(i)) {
+                if (complete)
+                    emit itemRemoved(i, item);
+                item->setParentItem(0);
+                d->model->release(item);
+            }
         }
     }
     d->deletables.clear();
@@ -395,7 +396,7 @@ void QQuickRepeaterPrivate::createItems()
                     if (!delegateValidated) {
                         delegateValidated = true;
                         QObject* delegate = q->delegate();
-                        qmlInfo(delegate ? delegate : q) << q->tr("Delegate must be of Item type");
+                        qmlInfo(delegate ? delegate : q) << QQuickRepeater::tr("Delegate must be of Item type");
                     }
                 }
                 createFrom = ii;

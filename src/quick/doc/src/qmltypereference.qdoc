@@ -36,19 +36,19 @@ interfaces and applications with QML.  This page lists every QML type provided
 by this module, organized according to category and purpose.
 
 
-\section1 Importing QtQuick
+\section1 Importing \c QtQuick
 
-The types provided by the QtQuick module are only available in a QML document
+The types provided by the \l {Qt Quick} module are only available in a QML document
 if that document imports the \c QtQuick namespace.
 
-The current version of the QtQuick module is version 2.0, and thus it may be
+The current version of the \c QtQuick module is version 2.0, and thus it may be
 imported via the following statement:
 
 \qml
 import QtQuick 2.0
 \endqml
 
-See the QtQuick module documentation for more
+See the \l {Qt Quick} module documentation for more
 information about the concepts which are central to \c QtQuick.
 
 \section2 Submodules
@@ -56,14 +56,20 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{QtQuick.XmlListModel 2}{XML List Model} - contains types
+    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
     for creating models from XML data
-    \li \l{QtQuick.LocalStorage 2}{Local Storage} - a submodule
+    \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
-    \li \l{QtQuick.Particles 2}{Particles} - provides a particle
+    \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
     system for QML applications
-    \li \l{QtQuick.Window 2}{Window} - contains types for creating
+    \li \l{Qt Quick Window QML Types}{Window} - contains types for creating
     top-level windows and accessing screen information
+    \li \l{Qt Quick Dialogs QML Types}{Dialogs} - contains types for creating and
+    interacting with system dialogs
+    \li \l{Qt Quick Controls QML Types}{Controls} - provides a set of reusable
+    UI components
+    \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used
+    to arrange items in the user interface
     \endlist
 
 \section1 Basic Types
@@ -72,15 +78,15 @@ There are a number of basic types that are
 \l{qtqml-typesystem-basictypes.html#basic-types-provided-by-the-qml-language}
 {supported by default in the QML language}.
 
-In addition, the QtQuick module provides the following basic types:
+In addition, the \c QtQuick module provides the following basic types:
 \annotatedlist qtquickbasictypes
 
 \section1 Object Types
 
-All of the object types provided by QtQuick are based on the \l{Item} type,
-which itself derives from \l{QML::QtObject}.  \l{qtqml-typereference-topic.html#object-types}
+All of the object types provided by \c QtQuick are based on the \l{Item} type,
+which itself derives from \l{QtQml2::QtObject}{QtObject}.  \l{qtqml-typereference-topic.html#object-types}
 {QML object types} provided by the Qt QML module
-(such as \l{QML::QtObject} and \l{QML::Component}) are also available when
+(such as \l{QtQml2::QtObject}{QtObject} and \l{QtQml2::Component}{Component}) are also available when
 you import \c QtQuick.
 
 \section2 Visual Types
@@ -228,13 +234,26 @@ Animation paths
 
 \section2 Model/View Types And Data Storage And Access
 
-Models And Model Data
+QML Lists and Models
+
+The \l{Qt QML Models QML Types}{Qt QML Models} submodule provides the types for
+structuring data with models and lists.
 \list
-\li \l {QtQuick2::ListModel}{ListModel} - Defines a list of data
-\li \l {QtQuick2::ListElement}{ListElement} - Defines a data item in a \l {QtQuick2::ListModel}{ListModel}
+\li \l ListModel - Defines a list of data
+\li \l ListElement - Defines a data item in a \l ListModel
+\endlist
+
+These QML types are part of Qt Quick for backwards compatibility, but for
+newer applications, \l{Qt QML Models QML Types}{Qt QML Models} provides
+the same functionality.
+\list
 \li \l {VisualItemModel} - Contains items that already defines its own visual delegate
 \li \l {VisualDataModel} - Encapsulates a model and a delegate
-\li \l {VisualDataGroup} -Encapsulates a filtered set of visual data items
+\li \l {VisualDataGroup} - Encapsulates a filtered set of visual data items
+\endlist
+
+XML Lists
+\list
 \li \l {XmlListModel} - Specifies a model using XPath expressions
 \li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
 \endlist
@@ -259,7 +278,7 @@ Data Storage
 \li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
 \li \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
 \li \l {GridMesh} - Generates a grid mesh of vertices for use by ShaderEffect
-\li The \l{QtQuick.Particles 2} module provides a set of Particle System types for QtQuick 2
+\li The \l{QtQuick.Particles 2} module provides a set of Particle System types for Qt Quick 2
 \endlist
 
 \section2 Convenience Types
@@ -286,14 +305,14 @@ Data Storage
 
 /*!
 \qmlmodule QtQuick 2
-\brief The QtQuick 2 module provides graphical primitives for use in QML.
+\brief The \c {QtQuick 2} module provides graphical primitives for use in QML.
 
-The QtQuick 2 module provides graphical primitive types. They can be used with the following import
+The \c {QtQuick 2} module provides graphical primitive types. They can be used with the following import
 \code
 import QtQuick 2.1
 \endcode
 
-For a more detailed listing of types in the \c QtQuick 2 import, see the \l{Qt Quick QML Types} page.
+For a more detailed listing of types in the \c {QtQuick 2} import, see the \l{Qt Quick QML Types} page.
 For more details about the module itself, see the \l{Qt Quick} module page.
 */
 
@@ -311,9 +330,9 @@ For more details about the module itself, see the \l{Qt Quick} module page.
     \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
         respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
         and a slightly transparent blue to a quad of \c "#800000FF".
-    \li Using the \l{QML:Qt::rgba()}{Qt.rgba()}, \l{QML:Qt::hsla()}{Qt.hsla()},
-        \l{QML:Qt::darker()}{Qt.darker()}, \l{QML:Qt::lighter()}{Qt.lighter()} or
-        \l{QML:Qt::tint()}{Qt.tint()} functions.
+    \li Using the \l{QtQml2::Qt::rgba()}{Qt.rgba()}, \l{QtQml2::Qt::hsla()}{Qt.hsla()},
+        \l{QtQml2::Qt::darker()}{Qt.darker()}, \l{QtQml2::Qt::lighter()}{Qt.lighter()} or
+        \l{QtQml2::Qt::tint()}{Qt.tint()} functions.
     \endlist
 
     Example:
@@ -335,7 +354,7 @@ For more details about the module itself, see the \l{Qt Quick} module page.
     }
     \endqml
 
-    To test color values for equality, use the \l{QML:Qt::colorEqual()}{Qt.colorEqual()}
+    To test color values for equality, use the \l{QtQml2::Qt::colorEqual()}{Qt.colorEqual()}
     function.  This allows colors to be accurately compared whether they are in property
     form or in any of the acceptable string specification forms.
 
@@ -576,7 +595,7 @@ console.log(c + " " + d); // false true
     Rotation { angle: 60; axis: "0,1,0" }
     \endqml
 
-    or with the \l{QML:Qt::vector3d()}{Qt.vector3d()} function:
+    or with the \l{QtQml2::Qt::vector3d()}{Qt.vector3d()} function:
 
     \qml
     Rotation { angle: 60; axis: Qt.vector3d(0, 1, 0) }

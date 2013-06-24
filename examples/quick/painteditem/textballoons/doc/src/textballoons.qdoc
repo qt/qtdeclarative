@@ -27,7 +27,7 @@
 
 
 /*!
-    \title Scenegraph Painted Item Example
+    \title Scene Graph - Painted Item
     \brief Shows how to implement QPainter-based custom scenegraph items.
     \example customitems/painteditem
     \ingroup qtquickexamples
@@ -43,12 +43,12 @@
     The example consists of an item class, a plugin class and a QML file
     to use this plugin. The \c TextBalloon class represents the individual
     text balloons extending QQuickPaintedItem, the \c TextBalloonPlugin class
-    represents the skeleton code for a QtQuick plugin and the
+    represents the skeleton code for a \l {Qt Quick} plugin and the
     \c textballoons.qml file is used to load the plugin and display the text
     balloons.
 
     We will focus on the \c TextBalloon class first and continue with the
-    \c textballoons.qml file. For an example on how to implement a QtQuick
+    \c textballoons.qml file. For an example on how to implement a \l {Qt Quick}
     plugin please look at \l{declarative/tutorials/extending/chapter6-plugins}
     {Writing an Extension Plugin}
 
@@ -58,7 +58,7 @@
     is the base class for all QPainter based items in the QML Scene Graph
     framework.
 
-    \snippet quick/customitems/painteditem/textballoon.h 0
+    \snippet customitems/painteditem/textballoon.h 0
 
     To implement a QQuickPaintedItem you must implement QQuickPaintedIem's pure
     virtual function \l {QQuickPaintedItem::}{paint()} which implements the
@@ -69,13 +69,13 @@
     We have to be sure to initialize the rightAligned property for a
     TextBalloon item.
 
-    \snippet quick/customitems/painteditem/textballoon.cpp 0
+    \snippet customitems/painteditem/textballoon.cpp 0
 
     Then we implement the \c paint() function which is automatically called by
-    the Scenegraph framework to paint the contents of the item. The function
+    the Scene Graph framework to paint the contents of the item. The function
     paints the item in local coordinates.
 
-    \snippet quick/customitems/painteditem/textballoon.cpp 1
+    \snippet customitems/painteditem/textballoon.cpp 1
 
     We start with setting the pen and brush on the item to define the look of
     the item. After that we start drawing. Note that the \l {QQuickPaintedItem::}{boundingRect()}
@@ -90,7 +90,7 @@
 
     \section2 BalloonView
 
-    \snippet quick/customitems/painteditem/textballoons.qml 0
+    \snippet customitems/painteditem/textballoons.qml 0
 
     The balloonModel contains two types at application start which will be
     displayed by the balloonView. The balloonView alernates the TextBalloon
@@ -98,7 +98,7 @@
 
     \section2 Controls
 
-    \snippet quick/customitems/painteditem/textballoons.qml 1
+    \snippet customitems/painteditem/textballoons.qml 1
 
     The controls part of the UI contains a rectangle with a MouseArea which
     changes color when the mouse hovers over it. This control 'button' adds

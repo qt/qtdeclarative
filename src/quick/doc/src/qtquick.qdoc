@@ -38,16 +38,17 @@ provides a visual canvas and includes types for creating and animating
 visual components, receiving user input, creating data models and views
 and delayed object instantiation.
 
-The Qt Quick module provides both the \c QtQuick QML module, which supplies
-\l{Qt Quick QML Types}{a set of QML types} for creating user
-interfaces with the QML language, and the \c QtQuick C++ module, which supplies
-\l{Qt Quick C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
-applications built with QML and the \c QtQuick QML module.
+The Qt Quick module provides both a \l{Qt Quick QML Types}{QML API} which supplies
+QML types for creating user interfaces with the QML language, and a
+\l{Qt Quick C++ Classes}{C++ API} for extending QML applications with C++ code.
+
+\note From Qt 5.1, a set of Qt Quick based UI controls is available to
+create user interfaces. Please see \l{Qt Quick Controls}
+for more information.
 
 For those new to QML and Qt Quick, please see
 \l{QML Application Developer Resources}
 for an introduction to writing QML applications.
-
 
 \section1 Important Concepts in Qt Quick
 
@@ -75,7 +76,7 @@ of the \l{qtquick-quickstart-basics.html}{QML Basics} and
 \l{qtquick-quickstart-essentials.html}{QML Essentials} from the
 \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}.
 
-To find out more about using the QML language, see the \l{Qt QML Module Documentation}.
+To find out more about using the QML language, see the \l{Qt QML} module documentation.
 
 
 \section1 Qt Quick Module Documentation
@@ -124,6 +125,8 @@ Additional Qt Quick information:
     system for Qt Quick
     \li \l{QtQuick.Window 2}{Window} - contains types for creating
     top-level windows and accessing screen information
+    \li \l{Qt Quick Dialogs}{Dialogs} - contains types for creating and
+    interacting with system dialogs
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Code Samples} - list of all Qt Quick examples

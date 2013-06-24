@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlmodule QtQuick.Dialogs 1
-    \title Qt Quick Dialog QML Types
+    \title Qt Quick Dialogs QML Types
     \ingroup qmlmodules
     \brief Provides QML types for standard file, color picker and message dialogs
 

@@ -182,6 +182,8 @@ private:
     QQmlEngine *engine;
 };
 
+void qmlClearEnginePlugins();// For internal use by qmlClearRegisteredProperties
+
 QT_END_NAMESPACE
 
 #endif // QQMLIMPORT_P_H

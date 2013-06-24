@@ -55,7 +55,7 @@ Rectangle {
         alpha: 0
 
         //! [0]
-        source: "../../images/particle.png"
+        source: "qrc:///particleresources/glowdot.png"
         colorTable: "../../images/colortable.png"
         sizeTable: "../../images/colortable.png"
         //! [0]

@@ -144,8 +144,9 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in a model.
 
-    This type is provided by QtQuick 2 for compatibility reasons. The same implementation
-    is now primarily available as DelegateModel in the QtQml.Models module.
+    This type is provided by the \l{Qt QML} module due to compatibility reasons.
+    The same implementation is now primarily available as DelegateModel in the
+    \l{Qt QML Models QML Types}{Qt QML Models} module.
 
     \sa {QtQml.Models2::DelegateModel}
 */
@@ -158,9 +159,6 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
 
-    This element is also available as DelegateModel in the QtQuick module. For full details,
-    see the \l DelegateModel documentation.
-
     It is usually not necessary to create a DelegateModel.
     However, it can be useful for manipulating and accessing the \l modelIndex
     when a QAbstractItemModel subclass is used as the
@@ -170,7 +168,10 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
     The example below illustrates using a DelegateModel with a ListView.
 
-    \snippet qml/visualdatamodel.qml 0
+    \snippet delegatemodel/visualdatamodel.qml 0
+
+    \note This type is also available as \l VisualDataModel in the \l{Qt QML}
+    module due to compatibility reasons.
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
@@ -243,6 +244,8 @@ QQmlDelegateModel::~QQmlDelegateModel()
         cacheItem->objectRef = 0;
         if (!cacheItem->isReferenced())
             delete cacheItem;
+        else if (cacheItem->incubationTask)
+            cacheItem->incubationTask->vdm = 0;
     }
 }
 
@@ -408,10 +411,10 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet qml/visualdatamodel_rootindex/main.cpp 0
+    \snippet delegatemodel/visualdatamodel_rootindex/main.cpp 0
 
     \c view.qml:
-    \snippet qml/visualdatamodel_rootindex/view.qml 0
+    \snippet delegatemodel/visualdatamodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a
@@ -615,7 +618,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \snippet qml/visualdatagroup.qml 0
+    \snippet delegatemodel/visualdatagroup.qml 0
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
@@ -791,9 +794,28 @@ void QQmlDelegateModelPrivate::emitDestroyingPackage(QQuickPackage *package)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->destroyingPackage(package);
 }
 
+static bool isDoneIncubating(QQmlIncubator::Status status)
+{
+     return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
+}
+
 void QQDMIncubationTask::statusChanged(Status status)
 {
-    vdm->incubatorStatusChanged(this, status);
+    if (vdm) {
+        vdm->incubatorStatusChanged(this, status);
+    } else if (isDoneIncubating(status)) {
+        Q_ASSERT(incubating);
+        // The model was deleted from under our feet, cleanup ourselves
+        if (incubating->object) {
+            delete incubating->object;
+
+            incubating->object = 0;
+            incubating->contextData->destroy();
+            incubating->contextData = 0;
+        }
+        incubating->scriptRef = 0;
+        incubating->deleteLater();
+    }
 }
 
 void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTask)
@@ -821,7 +843,7 @@ void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status)
 {
     Q_Q(QQmlDelegateModel);
-    if (status != QQmlIncubator::Ready && status != QQmlIncubator::Error)
+    if (!isDoneIncubating(status))
         return;
 
     QQmlDelegateModelItem *cacheItem = incubationTask->incubating;
@@ -830,10 +852,12 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
     releaseIncubator(incubationTask);
 
     if (status == QQmlIncubator::Ready) {
+        cacheItem->referenceObject();
         if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
             emitCreatedPackage(incubationTask, package);
         else
             emitCreatedItem(incubationTask, cacheItem->object);
+        cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
         qmlInfo(q, m_delegate->errors()) << "Error creating delegate";
     }
@@ -846,8 +870,10 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         delete cacheItem->object;
         cacheItem->object = 0;
         cacheItem->scriptRef -= 1;
-        cacheItem->contextData->destroy();
+        if (cacheItem->contextData)
+            cacheItem->contextData->destroy();
         cacheItem->contextData = 0;
+
         if (!cacheItem->isReferenced()) {
             removeCacheItem(cacheItem);
             delete cacheItem;
@@ -945,7 +971,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 
     // Remove the temporary reference count.
     cacheItem->scriptRef -= 1;
-    if (cacheItem->object)
+    if (cacheItem->object && (!cacheItem->incubationTask || isDoneIncubating(cacheItem->incubationTask->status())))
         return cacheItem->object;
 
     cacheItem->releaseObject();
@@ -960,7 +986,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 /*
   If asynchronous is true or the component is being loaded asynchronously due
   to an ancestor being loaded asynchronously, item() may return 0.  In this
-  case itemCreated() will be emitted when the item is available.  The item
+  case createdItem() will be emitted when the item is available.  The item
   at this stage does not have any references, so item() must be called again
   to ensure a reference is held.  Any call to item() which returns a valid item
   must be matched by a call to release() in order to destroy the item.
@@ -1168,8 +1194,8 @@ void QQmlDelegateModelPrivate::itemsInserted(
             cacheIndex = insert.cacheIndex + insert.count;
         }
     }
-    for (; cacheIndex < m_cache.count(); ++cacheIndex)
-        incrementIndexes(m_cache.at(cacheIndex), m_groupCount, inserted);
+    for (const QList<QQmlDelegateModelItem *> cache = m_cache; cacheIndex < cache.count(); ++cacheIndex)
+        incrementIndexes(cache.at(cacheIndex), m_groupCount, inserted);
 }
 
 void QQmlDelegateModelPrivate::itemsInserted(const QVector<Compositor::Insert> &inserts)
@@ -1193,8 +1219,9 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
 
     d->m_count += count;
 
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= index)
             item->setModelIndex(item->modelIndex() + count);
     }
@@ -1285,8 +1312,8 @@ void QQmlDelegateModelPrivate::itemsRemoved(
         }
     }
 
-    for (; cacheIndex < m_cache.count(); ++cacheIndex)
-        incrementIndexes(m_cache.at(cacheIndex), m_groupCount, removed);
+    for (const QList<QQmlDelegateModelItem *> cache = m_cache; cacheIndex < cache.count(); ++cacheIndex)
+        incrementIndexes(cache.at(cacheIndex), m_groupCount, removed);
 }
 
 void QQmlDelegateModelPrivate::itemsRemoved(const QVector<Compositor::Remove> &removes)
@@ -1308,9 +1335,9 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         return;
 
     d->m_count -= count;
-
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= index + count)
             item->setModelIndex(item->modelIndex() - count);
         else  if (item->modelIndex() >= index)
@@ -1356,8 +1383,9 @@ void QQmlDelegateModel::_q_itemsMoved(int from, int to, int count)
     const int maximum = qMax(from, to) + count;
     const int difference = from > to ? count : -count;
 
-    for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-        QQmlDelegateModelItem *item = d->m_cache.at(i);
+    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    for (int i = 0, c = cache.count();  i < c; ++i) {
+        QQmlDelegateModelItem *item = cache.at(i);
         if (item->modelIndex() >= from && item->modelIndex() < from + count)
             item->setModelIndex(item->modelIndex() - from + to);
         else if (item->modelIndex() >= minimum && item->modelIndex() < maximum)
@@ -1413,8 +1441,9 @@ void QQmlDelegateModel::_q_modelReset()
     if (d->m_complete) {
         d->m_count = d->m_adaptorModel.count();
 
-        for (int i = 0, c = d->m_cache.count();  i < c; ++i) {
-            QQmlDelegateModelItem *item = d->m_cache.at(i);
+        const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+        for (int i = 0, c = cache.count();  i < c; ++i) {
+            QQmlDelegateModelItem *item = cache.at(i);
             if (item->modelIndex() != -1)
                 item->setModelIndex(-1);
         }
@@ -1773,8 +1802,12 @@ QQmlDelegateModelItem::~QQmlDelegateModelItem()
     Q_ASSERT(objectRef == 0);
     Q_ASSERT(!object);
 
-    if (incubationTask && metaType->model)
-        QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+    if (incubationTask) {
+        if (metaType->model)
+            QQmlDelegateModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
+        else
+            delete incubationTask;
+    }
 
     metaType->release();
 
@@ -2149,14 +2182,31 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 }
 
 /*!
-    \qmltype DelegateModelGroup
+    \qmltype VisualDataGroup
     \instantiates QQmlDelegateModelGroup
     \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
-    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
-    delegate items, as well as sort and filter these delegate items.
+    The VisualDataGroup type provides a means to address the model data of a
+    model's delegate items, as well as sort and filter these delegate items.
+
+    This type is provided by the \l{Qt QML} module due to compatibility reasons.
+    The same implementation is now primarily available as \l DelegateModelGroup
+    in the \l{Qt QML Models QML Types}{Qt QML Models} module.
+
+    \sa {QtQml.Models2::DelegateModelGroup}
+*/
+/*!
+    \qmltype DelegateModelGroup
+    \instantiates QQmlDelegateModelGroup
+    \inqmlmodule QtQml.Models 2
+    \ingroup qtquick-models
+    \brief Encapsulates a filtered set of visual data items
+
+    The DelegateModelGroup type provides a means to address the model data of a
+    DelegateModel's delegate items, as well as sort and filter these delegate
+    items.
 
     The initial set of instantiable delegate items in a DelegateModel is represented
     by its \l {QtQml.Models2::DelegateModel::items}{items} group, which normally directly reflects
@@ -2180,24 +2230,11 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     type or to cherry-pick specific items that should be instantiated irregardless of whether
     they're currently within a view's visible area.
 
+    \note This type is also available as \l VisualDataGroup in the \l{Qt QML}
+    module due to compatibility reasons.
+
     \sa {QML Dynamic View Ordering Tutorial}
 */
-/*!
-    \qmltype DelegateModelGroup
-    \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQml.Models 2
-    \brief Encapsulates a filtered set of visual data items
-
-    The DelegateModelGroup type provides a means to address the model data of a DelegateModel's
-    delegate items, as well as sort and filter these delegate items.
-
-    This element is also available as DelegateModelGroup in the QtQuick module. For full details,
-    see the \l DelegateModelGroup documentation.
-
-    \sa {QtQuick::DelegateModelGroup}
-*/
-
-
 QQmlDelegateModelGroup::QQmlDelegateModelGroup(QObject *parent)
     : QObject(*new QQmlDelegateModelGroupPrivate, parent)
 {
@@ -3222,4 +3259,3 @@ QV4::Value QQmlDelegateModelEngineData::array(
 }
 
 QT_END_NAMESPACE
-

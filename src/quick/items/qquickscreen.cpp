@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
 
     To use this type, you will need to import the module with the following line:
     \code
-    import QtQuick.Window 2.0
+    import QtQuick.Window 2.1
     \endcode
     It is a separate import in order to allow you to have a QML environment
     without access to window system features.
@@ -79,6 +79,13 @@ QT_BEGIN_NAMESPACE
     the Item or Window has not been displayed on a screen by this time.
 */
 
+/*!
+    \qmlattachedproperty String QtQuick.Window2::Screen::name
+    \readonly
+    \since Qt 5.1
+
+    The name of the screen.
+*/
 /*!
     \qmlattachedproperty int QtQuick.Window2::Screen::width
     \readonly
@@ -90,6 +97,43 @@ QT_BEGIN_NAMESPACE
     \readonly
 
     This contains the height of the screen in pixels.
+*/
+/*!
+    \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableWidth
+    \readonly
+    \since Qt 5.1
+
+    This contains the available width of the collection of screens which make
+    up the virtual desktop, in pixels, excluding window manager reserved areas
+    such as task bars and system menus. If you want to position a Window at
+    the right of the desktop, you can bind to it like this:
+
+    \qml
+    x: Screen.desktopAvailableWidth - width
+    \endqml
+*/
+/*!
+    \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableHeight
+    \readonly
+    \since Qt 5.1
+
+    This contains the available height of the collection of screens which make
+    up the virtual desktop, in pixels, excluding window manager reserved areas
+    such as task bars and system menus. If you want to position a Window at
+    the bottom of the desktop, you can bind to it like this:
+
+    \qml
+    y: Screen.desktopAvailableHeight - height
+    \endqml
+*/
+/*!
+    \qmlattachedproperty real QtQuick.Window2::Screen::logicalPixelDensity
+    \readonly
+    \since Qt 5.1
+
+    The number of logical pixels per millimeter.  Logical pixels are the
+    usual units in QML; on some systems they may be different than physical
+    pixels.
 */
 /*!
     \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::primaryOrientation
@@ -147,6 +191,13 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     }
 }
 
+QString QQuickScreenAttached::name() const
+{
+    if (!m_screen)
+        return QString();
+    return m_screen->name();
+}
+
 int QQuickScreenAttached::width() const
 {
     if (!m_screen)
@@ -159,6 +210,27 @@ int QQuickScreenAttached::height() const
     if (!m_screen)
         return 0;
     return m_screen->size().height();
+}
+
+int QQuickScreenAttached::desktopAvailableWidth() const
+{
+    if (!m_screen)
+        return 0;
+    return m_screen->availableVirtualSize().width();
+}
+
+int QQuickScreenAttached::desktopAvailableHeight() const
+{
+    if (!m_screen)
+        return 0;
+    return m_screen->availableVirtualSize().height();
+}
+
+qreal QQuickScreenAttached::logicalPixelDensity() const
+{
+    if (!m_screen)
+        return 0.0;
+    return m_screen->logicalDotsPerInch() / 25.4;
 }
 
 Qt::ScreenOrientation QQuickScreenAttached::primaryOrientation() const
@@ -209,12 +281,16 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
             emit widthChanged();
             emit heightChanged();
         }
-
+        if (!oldScreen || screen->name() != oldScreen->name())
+            emit nameChanged();
         if (!oldScreen || screen->orientation() != oldScreen->orientation())
             emit orientationChanged();
         if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
             emit primaryOrientationChanged();
-
+        if (!oldScreen || screen->availableVirtualGeometry() != oldScreen->availableVirtualGeometry())
+            emit desktopGeometryChanged();
+        if (!oldScreen || screen->logicalDotsPerInch() != oldScreen->logicalDotsPerInch())
+            emit logicalPixelDensityChanged();
 
         connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(widthChanged()));
@@ -224,6 +300,10 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
                 this, SIGNAL(orientationChanged()));
         connect(screen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
                 this, SIGNAL(primaryOrientationChanged()));
+        connect(screen, SIGNAL(virtualGeometryChanged(const QRect &)),
+                this, SIGNAL(desktopGeometryChanged()));
+        connect(screen, SIGNAL(logicalDotsPerInchChanged(qreal)),
+                this, SIGNAL(logicalPixelDensityChanged()));
     }
 }
 

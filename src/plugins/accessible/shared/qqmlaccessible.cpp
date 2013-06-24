@@ -129,7 +129,8 @@ QStringList QQmlAccessible::actionNames() const
         break;
     case QAccessible::RadioButton:
     case QAccessible::CheckBox:
-        actions << QAccessibleActionInterface::toggleAction();
+        actions << QAccessibleActionInterface::toggleAction()
+                << QAccessibleActionInterface::pressAction();
         break;
     case QAccessible::Slider:
     case QAccessible::SpinBox:
@@ -153,7 +154,7 @@ void QQmlAccessible::doAction(const QString &actionName)
         return;
     }
 
-    // Role-specific default action handling follows. Items are excepted to provide
+    // Role-specific default action handling follows. Items are expected to provide
     // properties according to role conventions. These will then be read and/or updated
     // by the accessibility system.
     //   Checkable roles   : checked
@@ -163,7 +164,9 @@ void QQmlAccessible::doAction(const QString &actionName)
     case QAccessible::CheckBox: {
         QVariant checked = object()->property("checked");
         if (checked.isValid()) {
-            if (actionName == QAccessibleActionInterface::toggleAction()) {
+            if (actionName == QAccessibleActionInterface::toggleAction() ||
+                actionName == QAccessibleActionInterface::pressAction()) {
+
                 object()->setProperty("checked",  QVariant(!checked.toBool()));
             }
         }

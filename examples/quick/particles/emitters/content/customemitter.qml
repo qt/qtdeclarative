@@ -90,7 +90,7 @@ ParticleSystem {
     }
 
     ImageParticle {
-        source: "../../images/particle4.png"
+        source: "qrc:///particleresources/fuzzydot.png"
         alpha: 0.0
     }
 }

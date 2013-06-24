@@ -78,6 +78,11 @@ void QQmlDelayedError::setErrorDescription(const QString &description)
     m_error.setDescription(description);
 }
 
+void QQmlDelayedError::setErrorObject(QObject *object)
+{
+    m_error.setObject(object);
+}
+
 void QQmlDelayedError::setError(const QV4::Exception &e)
 {
     m_error.setDescription(e.value().toQString());
@@ -340,6 +345,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
             error.setLine(line);
         if (error.url().isEmpty())
             error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         ep->warning(error);
         return QV4::PersistentValue();
     }
@@ -374,6 +380,7 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
             error.setLine(line);
         if (error.url().isEmpty())
             error.setUrl(QUrl::fromLocalFile(filename));
+        error.setObject(scope);
         ep->warning(error);
         return QV4::PersistentValue();
     }

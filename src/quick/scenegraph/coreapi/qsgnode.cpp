@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgnode.h"
+#include "qsgnode_p.h"
 #include "qsgrenderer_p.h"
 #include "qsgnodeupdater_p.h"
 #include "qsgmaterial.h"
@@ -128,12 +129,12 @@ static void qt_print_node_count()
     before rendering starts.
     \value OwnsGeometry Only valid for QSGGeometryNode and QSGClipNode.
     The node has ownership over the QSGGeometry instance and will
-    delete it when the node is destroyed.
+    delete it when the node is destroyed or a geometry is assigned.
     \value OwnsMaterial Only valid for QSGGeometryNode. The node has ownership
-    over the material and will delete it when the node is destroyed.
+    over the material and will delete it when the node is destroyed or a material is assigned.
     \value OwnsOpaqueMaterial Only valid for QSGGeometryNode. The node has
     ownership over the opaque material and will delete it when the node is
-    destroyed.
+    destroyed or a material is assigned.
  */
 
 /*!
@@ -262,6 +263,26 @@ QSGNode::QSGNode(NodeType type)
     , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
     , m_dirtyState(0)
+{
+    init();
+}
+
+/*!
+ * Constructs a new node with the given node type.
+ *
+ * \internal
+ */
+QSGNode::QSGNode(QSGNodePrivate &dd, NodeType type)
+    : m_parent(0)
+    , m_type(type)
+    , m_firstChild(0)
+    , m_lastChild(0)
+    , m_nextSibling(0)
+    , m_previousSibling(0)
+    , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
+    , m_nodeFlags(OwnedByParent)
+    , m_dirtyState(0)
+    , d_ptr(&dd)
 {
     init();
 }
@@ -678,6 +699,18 @@ QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
 
 
 /*!
+    \internal
+ */
+QSGBasicGeometryNode::QSGBasicGeometryNode(QSGBasicGeometryNodePrivate &dd, NodeType type)
+    : QSGNode(dd, type)
+    , m_geometry(0)
+    , m_matrix(0)
+    , m_clip_list(0)
+{
+}
+
+
+/*!
     Deletes this QSGBasicGeometryNode.
 
     If the node has the flag QSGNode::OwnsGeometry set, it will also delete the
@@ -799,6 +832,19 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 
 QSGGeometryNode::QSGGeometryNode()
     : QSGBasicGeometryNode(GeometryNodeType)
+    , m_render_order(0)
+    , m_material(0)
+    , m_opaque_material(0)
+    , m_opacity(1)
+{
+}
+
+
+/*!
+    \internal
+ */
+QSGGeometryNode::QSGGeometryNode(QSGGeometryNodePrivate &dd)
+    : QSGBasicGeometryNode(dd, GeometryNodeType)
     , m_render_order(0)
     , m_material(0)
     , m_opaque_material(0)

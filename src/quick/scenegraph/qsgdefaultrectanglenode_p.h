@@ -51,10 +51,10 @@ QT_BEGIN_NAMESPACE
 
 class QSGContext;
 
-class SmoothColorMaterial : public QSGMaterial
+class Q_QUICK_PRIVATE_EXPORT QSGSmoothColorMaterial : public QSGMaterial
 {
 public:
-    SmoothColorMaterial();
+    QSGSmoothColorMaterial();
 
     int compare(const QSGMaterial *other) const;
 
@@ -63,7 +63,7 @@ protected:
     virtual QSGMaterialShader *createShader() const;
 };
 
-class QSGDefaultRectangleNode : public QSGRectangleNode
+class Q_QUICK_PRIVATE_EXPORT QSGDefaultRectangleNode : public QSGRectangleNode
 {
 public:
     QSGDefaultRectangleNode();
@@ -83,7 +83,7 @@ private:
     void updateGradientTexture();
 
     QSGVertexColorMaterial m_material;
-    SmoothColorMaterial m_smoothMaterial;
+    QSGSmoothColorMaterial m_smoothMaterial;
 
     QRectF m_rect;
     QGradientStops m_gradient_stops;
