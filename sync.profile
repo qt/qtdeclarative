@@ -20,4 +20,5 @@
 %dependencies = (
         "qtbase" => "refs/heads/dev",
         "qtxmlpatterns" => "refs/heads/dev",
+        "qtjsbackend" => "refs/heads/dev",
 );
