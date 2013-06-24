@@ -565,7 +565,6 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
     while (it->memberIndex < o->internalClass->size) {
         String *n = o->internalClass->nameMap.at(it->memberIndex);
         assert(n);
-        // ### check that it's not a repeated attribute
 
         Property *p = o->memberData + it->memberIndex;
         PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
