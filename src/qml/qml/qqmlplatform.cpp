@@ -66,7 +66,7 @@ QString QQmlPlatform::os()
 #elif defined(Q_OS_IOS)
     return QLatin1String("ios");
 #elif defined(Q_OS_MAC)
-    return QLatin1String("mac");
+    return QLatin1String("osx");
 #elif defined(Q_OS_WINCE)
     return QLatin1String("wince");
 #elif defined(Q_OS_WIN)
