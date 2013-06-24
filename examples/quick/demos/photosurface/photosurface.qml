@@ -39,13 +39,14 @@
 ****************************************************************************/
 import QtQuick 2.0
 import QtQuick.Dialogs 1.0
+import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 1.0
 
-Rectangle {
+Window {
     id: root
+    visible: true
     width: 1024; height: 600
     color: "black"
-    visible: true
     property int highestZ: 0
     property real defaultSize: 200
 
