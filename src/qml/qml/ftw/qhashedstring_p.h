@@ -117,7 +117,7 @@ public:
     inline QString toString() const;
 
 private:
-    QV4::PersistentValue m_string;
+    QV4::Value m_string;
 };
 
 class QHashedCStringRef;
@@ -1151,32 +1151,32 @@ QHashedV4String &QHashedV4String::operator=(const QHashedV4String &other)
 
 bool QHashedV4String::operator==(const QHashedV4String &string)
 {
-    return m_string.value().asString()->isEqualTo(string.m_string.value().asString());
+    return m_string.asString()->isEqualTo(string.m_string.asString());
 }
 
 quint32 QHashedV4String::hash() const
 {
-    return m_string.value().asString()->hashValue();
+    return m_string.asString()->hashValue();
 }
 
 int QHashedV4String::length() const
 {
-    return m_string.value().asString()->toQString().length();
+    return m_string.asString()->toQString().length();
 }
 
 quint32 QHashedV4String::symbolId() const
 {
-    return m_string.value().asString()->identifier;
+    return m_string.asString()->identifier;
 }
 
 QV4::Value QHashedV4String::string() const
 {
-    return m_string.value();
+    return m_string;
 }
 
 QString QHashedV4String::toString() const
 {
-    return m_string.value().toQString();
+    return m_string.toQString();
 }
 
 QHashedStringRef::QHashedStringRef() 
