@@ -69,6 +69,9 @@ struct QmlBindingWrapper : FunctionObject
         usesArgumentsObject = function->usesArgumentsObject;
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+
+        qmlContext = scope->engine->newQmlContext(this, qml);
+        scope->engine->popContext();
     }
 
     static Value call(Managed *that, const Value &, Value *, int);
@@ -78,6 +81,7 @@ struct QmlBindingWrapper : FunctionObject
         if (wrapper->qml)
             wrapper->qml->mark();
         FunctionObject::markObjects(m);
+        wrapper->qmlContext->mark();
     }
 
 protected:
@@ -85,6 +89,8 @@ protected:
 
 private:
     Object *qml;
+    CallContext *qmlContext;
+
 };
 
 DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
@@ -94,10 +100,10 @@ Value QmlBindingWrapper::call(Managed *that, const Value &, Value *, int)
     ExecutionEngine *engine = that->engine();
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
 
-    ExecutionContext *qmlScope = engine->newQmlContext(This, This->qml);
-
-    Value result = This->function->code(qmlScope, This->function->codeData);
-
+    CallContext *ctx = This->qmlContext;
+    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
+    engine->pushContext(ctx);
+    Value result = This->function->code(ctx, This->function->codeData);
     engine->popContext();
 
     return result;
@@ -107,6 +113,9 @@ Value QmlBindingWrapper::call(Managed *that, const Value &, Value *, int)
 
 void Script::parse()
 {
+    if (parsed)
+        return;
+
     using namespace QQmlJS;
 
     parsed = true;
