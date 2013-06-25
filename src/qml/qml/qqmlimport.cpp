@@ -136,7 +136,7 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
         QHashedStringRef unqualifiedtype = dot < 0 ? typeName : QHashedStringRef(typeName.constData() + dot + 1, typeName.length() - dot - 1);
 
         //XXX: The constData of the string ref is pointing somewhere unsafe in qmlregister, so we need to create a temporary copy
-        QByteArray buf(unqualifiedtype.toUtf8().constData());
+        QByteArray buf(unqualifiedtype.toString().toUtf8());
 
         QQmlPrivate::RegisterCompositeType reg = {
             url,

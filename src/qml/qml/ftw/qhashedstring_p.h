@@ -160,18 +160,13 @@ public:
 
     inline bool isLatin1() const;
 
-    inline int utf8length() const;
-    QByteArray toUtf8() const;
-    void writeUtf8(char *) const;
 private:
     friend class QHashedString;
 
     void computeHash() const;
-    void computeUtf8Length() const;
 
     const QChar *m_data;
     int m_length;
-    mutable int m_utf8length;
     mutable quint32 m_hash;
 };
 
@@ -1180,38 +1175,37 @@ QString QHashedV4String::toString() const
 }
 
 QHashedStringRef::QHashedStringRef() 
-: m_data(0), m_length(0), m_utf8length(-1), m_hash(0) 
+: m_data(0), m_length(0), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QString &str)
-: m_data(str.constData()), m_length(str.length()), m_utf8length(0), m_hash(0)
+: m_data(str.constData()), m_length(str.length()), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QStringRef &str)
-: m_data(str.constData()), m_length(str.length()), m_utf8length(0), m_hash(0)
+: m_data(str.constData()), m_length(str.length()), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QChar *data, int length)
-: m_data(data), m_length(length), m_utf8length(0), m_hash(0)
+: m_data(data), m_length(length), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QChar *data, int length, quint32 hash)
-: m_data(data), m_length(length), m_utf8length(0), m_hash(hash)
+: m_data(data), m_length(length), m_hash(hash)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedString &string)
-: m_data(string.constData()), m_length(string.length()), m_utf8length(0), m_hash(string.m_hash)
+: m_data(string.constData()), m_length(string.length()), m_hash(string.m_hash)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedStringRef &string)
-: m_data(string.m_data), m_length(string.m_length), m_utf8length(string.m_utf8length), 
-  m_hash(string.m_hash)
+: m_data(string.m_data), m_length(string.m_length), m_hash(string.m_hash)
 {
 }
 
@@ -1219,7 +1213,6 @@ QHashedStringRef &QHashedStringRef::operator=(const QHashedStringRef &o)
 {
     m_data = o.m_data;
     m_length = o.m_length;
-    m_utf8length = o.m_utf8length;
     m_hash = o.m_hash;
     return *this;
 }
@@ -1302,13 +1295,6 @@ bool QHashedStringRef::isEmpty() const
 int QHashedStringRef::length() const
 {
     return m_length;
-}
-
-int QHashedStringRef::utf8length() const
-{
-    if (m_utf8length < m_length)
-        computeUtf8Length();
-    return m_utf8length;
 }
 
 bool QHashedStringRef::isLatin1() const
