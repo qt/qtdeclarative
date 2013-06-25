@@ -215,27 +215,6 @@ public:
     static QHash<const QMetaObject *, int> attachedPropertyIds;
 };
 
-// Avoid multiple fromUtf8(), copies and hashing of the module name.
-// This is only called when metaTypeDataLock is locked.
-static QHashedString moduleFromUtf8(const char *module)
-{
-    if (!module)
-        return QHashedString();
-
-    static const char *lastModule = 0;
-    static QHashedString lastModuleStr;
-
-    // Separate plugins may have different strings at the same address
-    QHashedCStringRef currentModule(module, ::strlen(module));
-    if ((lastModule != module) || (lastModuleStr.hash() != currentModule.hash())) {
-        lastModuleStr = QString::fromUtf8(module);
-        lastModuleStr.hash();
-        lastModule = module;
-    }
-
-    return lastModuleStr;
-}
-
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(e->handle());
@@ -346,7 +325,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 : d(new QQmlTypePrivate(SingletonType))
 {
     d->elementName = elementName;
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -374,7 +353,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 : d(new QQmlTypePrivate(CppType))
 {
     d->elementName = elementName;
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -413,7 +392,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
     d->index = index;
     d->elementName = elementName;
 
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
@@ -1162,7 +1141,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     }
 
     if (uri && !typeName.isEmpty()) {
-        QString nameSpace = moduleFromUtf8(uri);
+        QString nameSpace = QString::fromUtf8(uri);
 
         if (!data->typeRegistrationNamespace.isEmpty()) {
             // We can only install types into the registered namespace
