@@ -276,7 +276,12 @@ int main(int argc, char *argv[])
         use_llvm_compiler,
         use_llvm_runtime,
         use_llvm_jit
-    } mode = use_masm;
+    } mode;
+#ifdef V4_ENABLE_JIT
+    mode = use_masm;
+#else
+    mode = use_moth;
+#endif
 
 #ifdef QMLJS_WITH_LLVM
     QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
