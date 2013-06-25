@@ -391,9 +391,9 @@ The following functions are also on the Qt object.
     \list
         \li \c "android" - Android
         \li \c "blackberry" - BlackBerry OS
-        \li \c "ios" - Apple iOS
+        \li \c "ios" - iOS
         \li \c "linux" - Linux
-        \li \c "mac" - Mac OS X
+        \li \c "osx" - OS X
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "wince" - Windows CE
