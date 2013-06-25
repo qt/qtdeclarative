@@ -1569,7 +1569,7 @@ void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *
     basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
 }
 
-bool doEdgeSplitting(Function *f)
+void doEdgeSplitting(Function *f)
 {
     const QVector<BasicBlock *> oldBBs = f->basicBlocks;
 

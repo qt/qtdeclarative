@@ -623,7 +623,7 @@ namespace {
             STACKFRAME64 sf64;
             memset(&sf64, 0, sizeof(sf64));
 
-#if defined(Q_PROCESSOR_X86)
+#if defined(Q_PROCESSOR_X86_32)
             machineType = IMAGE_FILE_MACHINE_I386;
 
             sf64.AddrFrame.Offset = winContext.Ebp;
@@ -633,7 +633,7 @@ namespace {
             sf64.AddrStack.Offset = winContext.Esp;
             sf64.AddrStack.Mode = AddrModeFlat;
 
-#elif defined(Q_PROCESSOR_X86_32)
+#elif defined(Q_PROCESSOR_X86_64)
             machineType = IMAGE_FILE_MACHINE_AMD64;
 
             sf64.AddrFrame.Offset = winContext.Rbp;

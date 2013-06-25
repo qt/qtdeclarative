@@ -231,10 +231,9 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
     QV4::FunctionObject *createsendconstructor = createsendscript.run().asFunctionObject();
 
-    QV4::Value args[] = {
-        QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
-                                                              QQuickWorkerScriptEnginePrivate::sendMessage))
-    };
+    QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
+                                                          QQuickWorkerScriptEnginePrivate::sendMessage));
+    QV4::Value args[] = { function };
     createsend = createsendconstructor->call(global(), args, 1);
 }
 
