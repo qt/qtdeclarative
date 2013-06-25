@@ -1135,7 +1135,7 @@ QHashedV4String::QHashedV4String()
 QHashedV4String::QHashedV4String(const QV4::Value &s)
     : m_string(s)
 {
-    Q_ASSERT(!s.toQString().isEmpty());
+    Q_ASSERT(s.isString());
 }
 
 QHashedV4String::QHashedV4String(const QHashedV4String &string)
