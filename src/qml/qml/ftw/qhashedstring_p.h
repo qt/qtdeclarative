@@ -110,7 +110,6 @@ public:
 
     inline quint32 hash() const;
     inline int length() const; 
-    inline quint32 symbolId() const;
 
     inline QV4::Value string() const;
 
@@ -268,12 +267,6 @@ public:
         }
     }
 
-    inline bool symbolEquals(const QHashedV4String &string) const {
-        Q_ASSERT(string.symbolId() != 0);
-        return length == string.length() && hash == string.hash() && 
-               (string.symbolId() == symbolId || equals(string.string()));
-    }
-
     inline bool equals(const QHashedV4String &string) const {
         return length == string.length() && hash == string.hash() && 
                equals(string.string());
@@ -401,8 +394,6 @@ public:
 
     template<typename K>
     inline Node *findNode(const K &) const;
-
-    inline Node *findSymbolNode(const QHashedV4String &) const;
 
     inline Node *createNode(const Node &o);
 
@@ -867,21 +858,6 @@ typename QStringHash<T>::Node *QStringHash<T>::findNode(const K &key) const
 }
 
 template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findSymbolNode(const QHashedV4String &string) const
-{
-    Q_ASSERT(string.symbolId() != 0);
-
-    QStringHashNode *node = data.numBuckets?data.buckets[hashOf(string) % data.numBuckets]:0;
-    while (node && !node->symbolEquals(string))
-        node = (*node->next);
-
-    if (node)
-        node->symbolId = string.symbolId();
-
-    return (Node *)node;
-}
-
-template<class T>
 template<class K>
 T *QStringHash<T>::value(const K &key) const
 {
@@ -899,7 +875,7 @@ T *QStringHash<T>::value(const ConstIterator &iter) const
 template<class T>
 T *QStringHash<T>::value(const QHashedV4String &string) const
 {
-    Node *n = string.symbolId()?findSymbolNode(string):findNode(string);
+    Node *n = findNode(string);
     return n?&n->value:0;
 }
 
@@ -1157,11 +1133,6 @@ quint32 QHashedV4String::hash() const
 int QHashedV4String::length() const
 {
     return m_string.asString()->toQString().length();
-}
-
-quint32 QHashedV4String::symbolId() const
-{
-    return m_string.asString()->identifier;
 }
 
 QV4::Value QHashedV4String::string() const
