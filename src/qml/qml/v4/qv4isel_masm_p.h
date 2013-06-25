@@ -183,10 +183,7 @@ public:
     inline void platformLeaveStandardStackFrame()
     {
         pop(JSC::ARMRegisters::lr);
-        pop(JSC::ARMRegisters::r0);
-        pop(JSC::ARMRegisters::r1);
-        pop(JSC::ARMRegisters::r2);
-        pop(JSC::ARMRegisters::r3);
+        addPtr(TrustedImm32(4 * RegisterSize), StackPointerRegister);
     }
 #else
 #error The JIT needs to be ported to this platform.
