@@ -260,6 +260,7 @@ InternalClass *InternalClass::frozen()
     }
 
     m_frozen->m_frozen = m_frozen;
+    m_frozen->m_sealed = m_frozen;
     return m_frozen;
 }
 
