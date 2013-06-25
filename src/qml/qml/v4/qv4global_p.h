@@ -63,6 +63,30 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+class MemoryManager;
+struct String;
+struct Object;
+struct ObjectPrototype;
+struct ObjectIterator;
+struct ExecutionContext;
+struct ScriptFunction;
+struct InternalClass;
+struct Property;
+
+struct BooleanObject;
+struct NumberObject;
+struct StringObject;
+struct ArrayObject;
+struct DateObject;
+struct FunctionObject;
+struct ErrorObject;
+struct ArgumentsObject;
+struct Managed;
+struct Value;
+struct Lookup;
+struct ExecutionEngine;
+struct QObjectWrapper;
+
 
 enum PropertyFlag {
     Attr_Data = 0,

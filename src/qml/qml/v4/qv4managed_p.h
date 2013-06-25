@@ -45,34 +45,11 @@
 #include <QtCore/QVector>
 #include <QtCore/QDebug>
 #include "qv4global_p.h"
+#include "qv4value_def_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-class MemoryManager;
-struct String;
-struct Object;
-struct ObjectPrototype;
-struct ObjectIterator;
-struct ExecutionContext;
-struct ScriptFunction;
-struct InternalClass;
-struct Property;
-
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct ErrorObject;
-struct ArgumentsObject;
-struct Managed;
-struct Value;
-struct Lookup;
-struct ExecutionEngine;
-struct QObjectWrapper;
 
 #define Q_MANAGED_CHECK \
     template <typename T> inline void qt_check_for_QMANAGED_macro(const T &_q_argument) const \
@@ -330,6 +307,11 @@ private:
     friend struct Identifiers;
     friend struct ObjectIterator;
 };
+
+// ### Not a good placement
+template<typename T>
+inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
+
 
 }
 

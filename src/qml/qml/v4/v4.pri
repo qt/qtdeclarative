@@ -66,6 +66,7 @@ HEADERS += \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4math_p.h \
     $$PWD/qv4value_p.h \
+    $$PWD/qv4value_def_p.h \
     $$PWD/qv4syntaxchecker_p.h \
     $$PWD/qv4isel_masm_p.h \
     $$PWD/qv4isel_p.h \

@@ -52,252 +52,27 @@
 
 //#include <wtf/MathExtras.h>
 
+#include "qv4value_def_p.h"
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct String;
-struct ExecutionContext;
-struct ExecutionEngine;
-struct Value;
 
 double __qmljs_to_number(const QV4::Value &value);
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 
-typedef uint Bool;
 
+inline ExecutionEngine *Value::engine() const {
+    Managed *m = asManaged();
+    return m ? m->engine() : 0;
+}
 
-struct Q_QML_EXPORT Value
-{
-    union {
-        quint64 val;
-        double dbl;
-        struct {
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-            uint tag;
-#endif
-            union {
-                uint uint_32;
-                int int_32;
-#if QT_POINTER_SIZE == 4
-                Managed *m;
-                Object *o;
-                String *s;
-#endif
-            };
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-            uint tag;
-#endif
-        };
-    };
-
-    enum Masks {
-        NotDouble_Mask = 0xfffc0000,
-        Type_Mask = 0xffff8000,
-        Immediate_Mask = NotDouble_Mask | 0x00008000,
-        Special_Mask = Immediate_Mask | 0x20000,
-        Tag_Shift = 32
-    };
-    enum ValueType {
-        Undefined_Type = Immediate_Mask | 0x00000,
-        Null_Type = Immediate_Mask | 0x10000,
-        Boolean_Type = Immediate_Mask | 0x20000,
-        Integer_Type = Immediate_Mask | 0x30000,
-        Object_Type = NotDouble_Mask | 0x00000,
-        String_Type = NotDouble_Mask | 0x10000,
-        Deleted_Type = NotDouble_Mask | 0x30000
-    };
-
-    enum ImmediateFlags {
-        ConvertibleToInt = Immediate_Mask | 0x1
-    };
-
-    enum ValueTypeInternal {
-        _Undefined_Type = Undefined_Type,
-        _Empty_Type = Deleted_Type,
-        _Null_Type = Null_Type | ConvertibleToInt,
-        _Boolean_Type = Boolean_Type | ConvertibleToInt,
-        _Integer_Type = Integer_Type | ConvertibleToInt,
-        _Object_Type = Object_Type,
-        _String_Type = String_Type
-
-    };
-
-    inline unsigned type() const {
-        return tag & Type_Mask;
-    }
-
-    // used internally in property
-    inline bool isEmpty() const { return tag == _Empty_Type; }
-
-    inline bool isUndefined() const { return tag == _Undefined_Type; }
-    inline bool isNull() const { return tag == _Null_Type; }
-    inline bool isBoolean() const { return tag == _Boolean_Type; }
-    inline bool isInteger() const { return tag == _Integer_Type; }
-    inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
-#if QT_POINTER_SIZE == 8
-    inline bool isString() const { return (tag & Type_Mask) == String_Type; }
-    inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
-#else
-    inline bool isString() const { return tag == String_Type; }
-    inline bool isObject() const { return tag == Object_Type; }
-#endif
-    inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
-    inline bool isInt32() {
-        if (tag == _Integer_Type)
-            return true;
-        if (isDouble()) {
-            int i = (int)dbl;
-            if (i == dbl) {
-                int_32 = i;
-                tag = _Integer_Type;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool booleanValue() const {
-        return int_32;
-    }
-    double doubleValue() const {
-        return dbl;
-    }
-    void setDouble(double d) {
-        dbl = d;
-    }
-    double asDouble() const {
-        if (tag == _Integer_Type)
-            return int_32;
-        return dbl;
-    }
-    int integerValue() const {
-        return int_32;
-    }
-
-#if QT_POINTER_SIZE == 8
-    String *stringValue() const {
-        return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-    Object *objectValue() const {
-        return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-    Managed *managed() const {
-        return (Managed *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-#else
-    String *stringValue() const {
-        return s;
-    }
-    Object *objectValue() const {
-        return o;
-    }
-    Managed *managed() const {
-        return m;
-    }
-#endif
-
-    quint64 rawValue() const {
-        return val;
-    }
-
-    static Value emptyValue();
-    static Value undefinedValue();
-    static Value nullValue();
-    static Value fromBoolean(Bool b);
-    static Value fromDouble(double d);
-    static Value fromInt32(int i);
-    static Value fromUInt32(uint i);
-    static Value fromString(String *s);
-    static Value fromObject(Object *o);
-
-#ifndef QMLJS_LLVM_RUNTIME
-    static Value fromString(ExecutionContext *ctx, const QString &fromString);
-    static Value fromString(ExecutionEngine *engine, const QString &s);
-#endif
-
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
-
-    int toUInt16() const;
-    int toInt32() const;
-    unsigned int toUInt32() const;
-
-    bool toBoolean() const;
-    double toInteger() const;
-    double toNumber() const;
-    QString toQString() const;
-    String *toString(ExecutionContext *ctx) const;
-    Object *toObject(ExecutionContext *ctx) const;
-
-    inline bool isPrimitive() const { return !isObject(); }
-#if QT_POINTER_SIZE == 8
-    inline bool integerCompatible() const {
-        const quint64 mask = quint64(ConvertibleToInt) << 32;
-        return (val & mask) == mask;
-    }
-    static inline bool integerCompatible(Value a, Value b) {
-        const quint64 mask = quint64(ConvertibleToInt) << 32;
-        return ((a.val & b.val) & mask) == mask;
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        const quint64 mask = quint64(NotDouble_Mask) << 32;
-        return ((a.val | b.val) & mask) != mask;
-    }
-#else
-    inline bool integerCompatible() const {
-        return (tag & ConvertibleToInt) == ConvertibleToInt;
-    }
-    static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
-    }
-#endif
-    inline bool tryIntegerConversion() {
-        bool b = isConvertibleToInt();
-        if (b)
-            tag = _Integer_Type;
-        return b;
-    }
-
-    String *asString() const;
-    Managed *asManaged() const;
-    Object *asObject() const;
-    FunctionObject *asFunctionObject() const;
-    BooleanObject *asBooleanObject() const;
-    NumberObject *asNumberObject() const;
-    StringObject *asStringObject() const;
-    DateObject *asDateObject() const;
-    ArrayObject *asArrayObject() const;
-    ErrorObject *asErrorObject() const;
-
-    template<typename T>
-    T *as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
-
-    uint asArrayIndex() const;
-    uint asArrayLength(bool *ok) const;
-
-    Value property(ExecutionContext *ctx, String *name) const;
-
-    ExecutionEngine *engine() const {
-        Managed *m = asManaged();
-        return m ? m->engine() : 0;
-    }
-
-    // Section 9.12
-    bool sameValue(Value other) const;
-
-    void mark() const {
-        Managed *m = asManaged();
-        if (m)
-            m->mark();
-    }
-};
+inline void Value::mark() const {
+    Managed *m = asManaged();
+    if (m)
+        m->mark();
+}
 
 inline Value Value::undefinedValue()
 {
