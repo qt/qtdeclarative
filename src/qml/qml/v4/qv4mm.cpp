@@ -157,12 +157,8 @@ MemoryManager::MemoryManager()
     m_d->stackTop = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
 #  endif
 #elif OS(WINDOWS)
-#  if COMPILER(MSVC)
     PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
     m_d->stackTop = static_cast<quintptr*>(tib->StackBase);
-#  else
-#    error "Unsupported compiler: no way to get the top-of-stack."
-#  endif
 #else
 #  error "Unsupported platform: no way to get the top-of-stack."
 #endif
