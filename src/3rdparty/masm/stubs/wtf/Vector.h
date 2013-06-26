@@ -55,9 +55,6 @@ namespace WTF {
 template <typename T, int capacity = 1, int overflowMode = UnsafeVectorOverflow>
 class Vector : public std::vector<T> {
 public:
-    typedef T* iterator;
-    typedef const T* const_iterator;
-
     Vector() {}
     Vector(int initialSize) : std::vector<T>(initialSize) {}
 
@@ -70,7 +67,7 @@ public:
 
     inline void append(const Vector<T>& vector)
     {
-        this->insert(this->std::vector<T>::end(), vector.std::template vector<T>::begin(), vector.std::template vector<T>::end());
+        this->insert(this->end(), vector.begin(), vector.end());
     }
 
     inline void append(const T* ptr, size_t count)
@@ -90,33 +87,23 @@ public:
     inline void reserveInitialCapacity(size_t size) { this->reserve(size); }
 
     inline void insert(size_t position, T value)
-    { this->insert(this->std::vector<T>::begin() + position, value); }
+    { this->insert(this->begin() + position, value); }
 
     inline void grow(size_t size)
     { this->resize(size); }
 
     inline void shrink(size_t size)
-    { this->erase(this->std::vector<T>::begin() + size, this->std::vector<T>::end()); }
+    { this->erase(this->begin() + size, this->end()); }
 
     inline void shrinkToFit()
     { this->shrink(this->size()); }
 
     inline void remove(size_t position)
-    { this->erase(this->std::vector<T>::begin() + position); }
+    { this->erase(this->begin() + position); }
 
     inline bool isEmpty() const { return this->empty(); }
 
-    inline T &last() { return *(this->std::vector<T>::begin() + this->size() - 1); }
-
-    inline iterator begin()
-    { return &(*this->std::vector<T>::begin()); }
-    inline const_iterator begin() const
-    { return &(*this->std::vector<T>::begin()); }
-    inline iterator end()
-    { return &(*this->std::vector<T>::end()); }
-    inline const_iterator end() const
-    { return &(*this->std::vector<T>::end()); }
-
+    inline T &last() { return *(this->begin() + this->size() - 1); }
 };
 
 template <typename T, int capacity>

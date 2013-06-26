@@ -32,6 +32,8 @@ HEADERS += $$PWD/stubs/WTFStubs.h
 
 SOURCES += $$PWD/stubs/Options.cpp
 
+HEADERS += $$PWD/stubs/wtf/*.h
+
 SOURCES += $$PWD/disassembler/Disassembler.cpp
 SOURCES += $$PWD/disassembler/UDis86Disassembler.cpp
 contains(DEFINES, WTF_USE_UDIS86=1) {
