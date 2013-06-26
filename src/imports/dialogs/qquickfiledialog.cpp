@@ -64,13 +64,13 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractFileDialog::accepted
 
-    The \a accepted signal is emitted by \l accept().
+    This signal is emitted by \l accept().
 */
 
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractFileDialog::rejected
 
-    The \a accepted signal is emitted by \l reject().
+    This signal is emitted by \l reject().
 */
 
 /*!
@@ -118,13 +118,13 @@ QList<QUrl> QQuickFileDialog::fileUrls()
 */
 
 /*!
-    \qmlproperty bool AbstractFileDialog::filePaths
+    \qmlproperty bool AbstractFileDialog::fileUrls
 
     A list of files to be populated as the user chooses.
 */
 
 /*!
-   \brief Clears \l filePaths
+   \brief Clears \l fileUrls
 */
 void QQuickFileDialog::clearSelection()
 {
@@ -132,7 +132,7 @@ void QQuickFileDialog::clearSelection()
 }
 
 /*!
-   \brief Adds one file to \l filePaths
+   \brief Adds one file to \l fileUrls
 
    \l path should be given as an absolute file system path. If it is given as a
    file:// URL, it will be converted to a path.  Returns true on success,
