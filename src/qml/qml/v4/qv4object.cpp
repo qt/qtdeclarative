@@ -1166,7 +1166,13 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 
     Property *begin = arrayData;
-    std::sort(begin, begin + len, lessThan);
+    // We deliberately choose qSort over std::sort here, because with
+    // MSVC in debug builds, std::sort has an ASSERT() that verifies
+    // that the return values of lessThan are perfectly consistent
+    // and aborts otherwise. We do not want JavaScript to easily crash
+    // the entire application and therefore choose qSort, which doesn't
+    // have this property.
+    qSort(begin, begin + len, lessThan);
 }
 
 
