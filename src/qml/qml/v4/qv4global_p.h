@@ -82,7 +82,6 @@ struct FunctionObject;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Managed;
-struct Value;
 struct Lookup;
 struct ExecutionEngine;
 struct QObjectWrapper;

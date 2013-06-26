@@ -54,13 +54,13 @@
 //
 
 #include <QtCore/qbytearray.h>
+#include <private/qv4value_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 
 namespace QV4 {
-struct Value;
 
 class Serialize {
 public:

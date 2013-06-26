@@ -49,12 +49,12 @@
 
 #include <config.h>
 #include <assembler/MacroAssemblerCodeRef.h>
+#include "qv4value_def_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Value;
 struct String;
 struct Function;
 struct Object;

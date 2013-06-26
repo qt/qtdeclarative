@@ -64,7 +64,6 @@ class Debugger;
 
 namespace QV4 {
 
-struct Value;
 struct Function;
 struct Object;
 struct BooleanObject;

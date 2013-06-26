@@ -78,7 +78,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
     struct ArrayObject;
     struct ExecutionEngine;
-    struct Value;
 }
 
 // Uncomment the following line to enable global handle debugging.  When enabled, all the persistent

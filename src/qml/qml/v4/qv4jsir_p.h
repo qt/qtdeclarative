@@ -72,7 +72,6 @@ class QQmlType;
 
 namespace QV4 {
 struct ExecutionContext;
-struct Value;
 }
 
 namespace QQmlJS {

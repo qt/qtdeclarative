@@ -47,10 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-    struct Value;
-}
-
 namespace QQmlJS {
 namespace Moth {
 

@@ -70,10 +70,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-struct Value;
-}
-
 class QQmlContext;
 class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractExpression,

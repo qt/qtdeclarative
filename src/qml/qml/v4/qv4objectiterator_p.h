@@ -54,7 +54,6 @@ struct ArrayObject;
 struct PropertyAttributes;
 struct ExecutionContext;
 struct Property;
-struct Value;
 struct String;
 struct InternalClass;
 

@@ -64,7 +64,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Value;
 struct Function;
 struct Lookup;
 struct Object;
