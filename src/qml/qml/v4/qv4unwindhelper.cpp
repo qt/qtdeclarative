@@ -47,7 +47,7 @@
 #  define USE_DW2_HELPER
 #elif CPU(X86) && OS(LINUX)
 #  define USE_DW2_HELPER
-#elif CPU(ARM) && OS(LINUX)
+#elif CPU(ARM) && (OS(LINUX) || OS(QNX))
 # define USE_ARM_HELPER
 #elif OS(WINDOWS)
     // SJLJ will unwind on Windows
