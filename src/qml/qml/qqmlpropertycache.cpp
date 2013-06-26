@@ -290,11 +290,8 @@ QQmlPropertyCache::~QQmlPropertyCache()
 
 void QQmlPropertyCache::destroy()
 {
-    Q_ASSERT(engine || constructor.isEmpty());
-    if (constructor.isEmpty())
-        delete this;
-    else
-        QQmlEnginePrivate::deleteInEngineThread(engine, this);
+    Q_ASSERT(engine);
+    delete this;
 }
 
 // This is inherited from QQmlCleanup, so it should only clear the things
@@ -316,8 +313,6 @@ QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
     cache->allowedRevisionCache = allowedRevisionCache;
     cache->_metaObject = _metaObject;
     cache->_defaultPropertyName = _defaultPropertyName;
-
-    // We specifically do *NOT* copy the constructor
 
     return cache;
 }
@@ -547,11 +542,6 @@ QQmlPropertyCache *QQmlPropertyCache::parent() const
     return _parent;
 }
 
-void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
-{
-    _parent = newParent;
-}
-
 // Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
 // QML
 const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
@@ -598,7 +588,6 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                                        QQmlPropertyData::Flag signalFlags)
 {
     Q_UNUSED(revision);
-    Q_ASSERT(constructor.isEmpty()); // We should not be appending to an in-use property cache
 
     _metaObject = metaObject;
 

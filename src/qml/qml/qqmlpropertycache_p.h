@@ -68,7 +68,6 @@ QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 class QMetaProperty;
-class QV8QObjectWrapper;
 class QQmlEngine;
 class QQmlPropertyData;
 class QQmlAccessors;
@@ -296,7 +295,6 @@ public:
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
     QQmlPropertyCache *parent() const;
-    void setParent(QQmlPropertyCache *newParent);
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
@@ -337,7 +335,6 @@ protected:
 
 private:
     friend class QQmlEnginePrivate;
-    friend class QV8QObjectWrapper;
     friend class QQmlCompiler;
 
     inline QQmlPropertyCache *copy(int reserve);
@@ -389,7 +386,6 @@ private:
     IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
-    QV4::PersistentValue constructor;
 
     bool _hasPropertyOverrides : 1;
     bool _ownMetaObject : 1;

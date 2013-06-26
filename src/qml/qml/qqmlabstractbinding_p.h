@@ -149,7 +149,6 @@ private:
     friend class QQmlPropertyPrivate;
     friend class QQmlVME;
     friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
-    friend class QV8QObjectWrapper;
     friend class QV4Bindings;
 
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;

@@ -153,7 +153,6 @@ public:
     int m_index : 31;
 };
 
-class QV8QObjectWrapper;
 class QQmlVMEVariant;
 class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
@@ -251,7 +250,6 @@ public:
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
 
     friend class QV8GCCallback;
-    friend class QV8QObjectWrapper;
 };
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
