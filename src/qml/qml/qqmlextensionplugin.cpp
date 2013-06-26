@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \since 5.0
+    \since Qt 5.0
     \inmodule QtQml
     \class QQmlExtensionPlugin
     \brief The QQmlExtensionPlugin class provides an abstract base for custom QML extension plugins.
@@ -156,6 +156,13 @@ QQmlExtensionPlugin::~QQmlExtensionPlugin()
 {
 }
 
+/*!
+    \since Qt 5.1
+    \brief Returns the URL of the directory from which the extension is loaded.
+
+    This is useful when the plugin also needs to load QML files or other
+    assets from the same directory.
+*/
 QUrl QQmlExtensionPlugin::baseUrl() const
 {
     Q_D(const QQmlExtensionPlugin);
