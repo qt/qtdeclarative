@@ -113,6 +113,9 @@ struct Q_QML_EXPORT String : public Managed {
     bool startsWithUpper() const {
         return _text.length() && _text.at(0).isUpper();
     }
+    int length() const {
+        return _text.length();
+    }
 
     QString _text;
     mutable uint stringHash;

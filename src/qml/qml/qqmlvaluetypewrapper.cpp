@@ -251,8 +251,6 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (!r)
         v4->current->throwTypeError();
 
-    QHashedV4String propertystring(Value::fromString(name));
-
     // Note: readReferenceValue() can change the reference->type.
     if (r->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
@@ -273,9 +271,9 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
     {
         QQmlData *ddata = QQmlData::get(r->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(propertystring, 0, 0);
+            result = ddata->propertyCache->property(name, 0, 0);
         else
-            result = QQmlPropertyCache::property(r->v8->engine(), r->type, propertystring, 0, local);
+            result = QQmlPropertyCache::property(r->v8->engine(), r->type, name, 0, local);
     }
 
     if (!result)

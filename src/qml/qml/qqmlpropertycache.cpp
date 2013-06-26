@@ -1376,14 +1376,14 @@ inline const QString &qQmlPropertyCacheToString(const QString &string)
     return string;
 }
 
-inline QString qQmlPropertyCacheToString(const QHashedV4String &string)
+inline QString qQmlPropertyCacheToString(const QV4::String *string)
 {
-    return string.toString();
+    return string->toQString();
 }
 
 template<typename T>
 QQmlPropertyData *
-qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
+qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
                           QQmlContextData *context, QQmlPropertyData &local)
 {
     QQmlPropertyCache *cache = 0;
@@ -1417,17 +1417,17 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QHashedV4String &name,
+QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QV4::String *name,
                             QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<QHashedV4String>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj,
                                     const QString &name, QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<QString>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
 }
 
 static inline const QMetaObjectPrivate *priv(const uint* data)

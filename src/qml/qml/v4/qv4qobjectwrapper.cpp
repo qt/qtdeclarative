@@ -261,16 +261,14 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
 {
-    QHashedV4String propertystring(QV4::Value::fromString(name));
-
     QQmlData *ddata = QQmlData::get(m_object, false);
     if (!ddata)
         return 0;
     QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
-        result = ddata->propertyCache->property(propertystring, m_object, qmlContext);
+        result = ddata->propertyCache->property(name, m_object, qmlContext);
     if (!result)
-        result = QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, propertystring, qmlContext, *local);
+        result = QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, name, qmlContext, *local);
     return result;
 }
 
@@ -297,8 +295,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
         if (includeImports && name->startsWithUpper()) {
             // Check for attached properties
             if (qmlContext && qmlContext->imports) {
-                QHashedV4String propertystring(QV4::Value::fromString(name));
-                QQmlTypeNameCache::Result r = qmlContext->imports->query(propertystring);
+                QQmlTypeNameCache::Result r = qmlContext->imports->query(name);
 
                 if (hasProperty)
                     *hasProperty = true;
@@ -418,8 +415,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
-        QHashedV4String property(Value::fromString(name));
-        result = QQmlPropertyCache::property(ctx->engine->v8Engine->engine(), object, property, qmlContext, local);
+        result = QQmlPropertyCache::property(ctx->engine->v8Engine->engine(), object, name, qmlContext, local);
     }
 
     if (!result)

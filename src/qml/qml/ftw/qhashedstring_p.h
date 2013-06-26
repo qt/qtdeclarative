@@ -98,27 +98,6 @@ private:
     mutable quint32 m_hash;
 };
 
-class Q_AUTOTEST_EXPORT QHashedV4String
-{
-public:
-    inline QHashedV4String();
-    explicit inline QHashedV4String(const QV4::Value &s);
-    inline QHashedV4String(const QHashedV4String &string);
-    inline QHashedV4String &operator=(const QHashedV4String &other);
-
-    inline bool operator==(const QHashedV4String &string);
-
-    inline quint32 hash() const;
-    inline int length() const; 
-
-    inline QV4::Value string() const;
-
-    inline QString toString() const;
-
-private:
-    QV4::Value m_string;
-};
-
 class QHashedCStringRef;
 class Q_AUTOTEST_EXPORT QHashedStringRef 
 {
@@ -267,9 +246,17 @@ public:
         }
     }
 
-    inline bool equals(const QHashedV4String &string) const {
-        return length == string.length() && hash == string.hash() && 
-               equals(string.string());
+    inline bool equals(const QV4::String *string) const {
+        if (length != string->length() || hash != string->hashValue())
+                return false;
+        if (isQString()) {
+            QStringDataPtr dd;
+            dd.ptr = strData;
+            strData->ref.ref();
+            return QString(dd) == string->toQString();
+        } else {
+            return QLatin1String(cStrData(), length) == string->toQString();
+        }
     }
 
     inline bool equals(const QHashedStringRef &string) const {
@@ -326,7 +313,8 @@ struct HashedForm {};
 template<> struct HashedForm<QString> { typedef QHashedString Type; };
 template<> struct HashedForm<QStringRef> { typedef QHashedStringRef Type; };
 template<> struct HashedForm<QHashedString> { typedef const QHashedString &Type; };
-template<> struct HashedForm<QHashedV4String> { typedef const QHashedV4String &Type; };
+template<> struct HashedForm<QV4::String *> { typedef const QV4::String *Type; };
+template<> struct HashedForm<const QV4::String *> { typedef const QV4::String *Type; };
 template<> struct HashedForm<QHashedStringRef> { typedef const QHashedStringRef &Type; };
 template<> struct HashedForm<QLatin1String> { typedef QHashedCStringRef Type; };
 template<> struct HashedForm<QHashedCStringRef> { typedef const QHashedCStringRef &Type; };
@@ -337,7 +325,8 @@ public:
     static HashedForm<QString>::Type hashedString(const QString &s) { return QHashedString(s);}
     static HashedForm<QStringRef>::Type hashedString(const QStringRef &s) { return QHashedStringRef(s.constData(), s.size());}
     static HashedForm<QHashedString>::Type hashedString(const QHashedString &s) { return s; }
-    static HashedForm<QHashedV4String>::Type hashedString(const QHashedV4String &s) { return s; }
+    static HashedForm<QV4::String *>::Type hashedString(QV4::String *s) { return s; }
+    static HashedForm<const QV4::String *>::Type hashedString(const QV4::String *s) { return s; }
     static HashedForm<QHashedStringRef>::Type hashedString(const QHashedStringRef &s) { return s; }
 
     static HashedForm<QLatin1String>::Type hashedString(const QLatin1String &s) { return QHashedCStringRef(s.data(), s.size()); }
@@ -345,14 +334,15 @@ public:
 
     static const QString &toQString(const QString &s) { return s; }
     static const QString &toQString(const QHashedString &s) { return s; }
-    static QString toQString(const QHashedV4String &s) { return s.toString(); }
+    static QString toQString(const QV4::String *s) { return s->toQString(); }
     static QString toQString(const QHashedStringRef &s) { return s.toString(); }
 
     static QString toQString(const QLatin1String &s) { return QString(s); }
     static QString toQString(const QHashedCStringRef &s) { return s.toUtf16(); }
 
     static inline quint32 hashOf(const QHashedStringRef &s) { return s.hash(); }
-    static inline quint32 hashOf(const QHashedV4String &s) { return s.hash(); }
+    static inline quint32 hashOf(QV4::String *s) { return s->hashValue(); }
+    static inline quint32 hashOf(const QV4::String *s) { return s->hashValue(); }
 
     template<typename K>
     static inline quint32 hashOf(const K &key) { return hashedString(key).hash(); }
@@ -464,7 +454,7 @@ public:
     template<typename K>
     inline T *value(const K &) const;
 
-    inline T *value(const QHashedV4String &string) const;
+    inline T *value(const QV4::String *string) const;
     inline T *value(const ConstIterator &) const;
 
     template<typename K>
@@ -873,7 +863,7 @@ T *QStringHash<T>::value(const ConstIterator &iter) const
 }
 
 template<class T>
-T *QStringHash<T>::value(const QHashedV4String &string) const
+T *QStringHash<T>::value(const QV4::String *string) const
 {
     Node *n = findNode(string);
     return n?&n->value:0;
@@ -1097,52 +1087,6 @@ quint32 QHashedString::hash() const
 quint32 QHashedString::existingHash() const
 { 
     return m_hash;
-}
-
-QHashedV4String::QHashedV4String()
-{
-}
-
-QHashedV4String::QHashedV4String(const QV4::Value &s)
-    : m_string(s)
-{
-    Q_ASSERT(s.isString());
-}
-
-QHashedV4String::QHashedV4String(const QHashedV4String &string)
-    : m_string(string.m_string)
-{
-}
-
-QHashedV4String &QHashedV4String::operator=(const QHashedV4String &other)
-{
-    m_string = other.m_string;
-    return *this;
-}
-
-bool QHashedV4String::operator==(const QHashedV4String &string)
-{
-    return m_string.asString()->isEqualTo(string.m_string.asString());
-}
-
-quint32 QHashedV4String::hash() const
-{
-    return m_string.asString()->hashValue();
-}
-
-int QHashedV4String::length() const
-{
-    return m_string.asString()->toQString().length();
-}
-
-QV4::Value QHashedV4String::string() const
-{
-    return m_string;
-}
-
-QString QHashedV4String::toString() const
-{
-    return m_string.toQString();
 }
 
 QHashedStringRef::QHashedStringRef() 

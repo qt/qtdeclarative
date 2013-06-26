@@ -71,7 +71,7 @@ public:
     void reserve(int);
 
     int value(const QString &);
-    inline int value(const QHashedV4String &);
+    inline int value(const QV4::String *);
 
     QString findId(int value) const;
 
@@ -80,7 +80,7 @@ private:
     StringCache stringCache;
 };
 
-int QQmlIntegerCache::value(const QHashedV4String &name)
+int QQmlIntegerCache::value(const QV4::String *name)
 {
     int *result = stringCache.value(name);
     return result?*result:-1;

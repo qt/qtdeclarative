@@ -104,10 +104,9 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(const QString &key, Role::Da
     return createRole(key, type);
 }
 
-const ListLayout::Role &ListLayout::getRoleOrCreate(const QV4::Value &key, Role::DataType type)
+const ListLayout::Role &ListLayout::getRoleOrCreate(const QV4::String *key, Role::DataType type)
 {
-    QHashedV4String hashedKey(key);
-    QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
+    QStringHash<Role *>::Node *node = roleHash.findNode(key);
     if (node) {
         const Role &r = *node->value;
         if (type != r.type)
@@ -115,7 +114,7 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(const QV4::Value &key, Role:
         return r;
     }
 
-    QString qkey = key.toQString();
+    QString qkey = key->toQString();
 
     return createRole(qkey, type);
 }
@@ -240,11 +239,10 @@ const ListLayout::Role *ListLayout::getExistingRole(const QString &key)
     return r;
 }
 
-const ListLayout::Role *ListLayout::getExistingRole(const QV4::Value &key)
+const ListLayout::Role *ListLayout::getExistingRole(const QV4::String *key)
 {
     Role *r = 0;
-    QHashedV4String hashedKey(key);
-    QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
+    QStringHash<Role *>::Node *node = roleHash.findNode(key);
     if (node)
         r = node->value;
     return r;
@@ -419,8 +417,8 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
     while (1) {
         QV4::Value propertyValue;
-        QV4::Value propertyName = it.nextPropertyNameAsString(&propertyValue);
-        if (propertyName.isNull())
+        QV4::String *propertyName = it.nextPropertyNameAsString(&propertyValue).asString();
+        if (!propertyName)
             break;
 
         // Check if this key exists yet
@@ -485,8 +483,8 @@ void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
     while (1) {
         QV4::Value propertyValue;
-        QV4::Value propertyName = it.nextPropertyNameAsString(&propertyValue);
-        if (propertyName.isNull())
+        QV4::String *propertyName = it.nextPropertyNameAsString(&propertyValue).asString();
+        if (!propertyName)
             break;
 
         // Add the value now

@@ -129,8 +129,6 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     QObject *object = w->object;
 
-    QHashedV4String propertystring(Value::fromString(name));
-
     if (w->type) {
         QQmlType *type = w->type;
 
@@ -174,7 +172,7 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
             if (name->startsWithUpper()) {
                 bool ok = false;
-                int value = type->enumValue(propertystring, &ok);
+                int value = type->enumValue(name, &ok);
                 if (ok)
                     return QV4::Value::fromInt32(value);
 
@@ -195,7 +193,7 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     } else if (w->typeNamespace) {
         Q_ASSERT(w->importNamespace);
-        QQmlTypeNameCache::Result r = w->typeNamespace->query(propertystring,
+        QQmlTypeNameCache::Result r = w->typeNamespace->query(name,
                                                                              w->importNamespace);
 
         if (r.isValid()) {
@@ -235,8 +233,6 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 
     QV8Engine *v8engine = v4->v8Engine;
     QQmlContextData *context = v8engine->callingContext();
-
-    QHashedV4String propertystring(Value::fromString(name));
 
     QQmlType *type = w->type;
     if (type && !type->isSingleton() && w->object) {

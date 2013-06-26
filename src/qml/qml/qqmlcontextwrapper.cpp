@@ -170,11 +170,9 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     QObject *scopeObject = resource->getScopeObject();
 
-    QHashedV4String propertystring(Value::fromString(name));
-
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
-        QQmlTypeNameCache::Result r = context->imports->query(propertystring);
+        QQmlTypeNameCache::Result r = context->imports->query(name);
 
         if (r.isValid()) {
             if (hasProperty)
@@ -201,7 +199,7 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
     while (context) {
         // Search context properties
         if (context->propertyNames) {
-            int propertyIdx = context->propertyNames->value(propertystring);
+            int propertyIdx = context->propertyNames->value(name);
 
             if (propertyIdx != -1) {
 
@@ -302,11 +300,9 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     QObject *scopeObject = wrapper->getScopeObject();
 
-    QHashedV4String propertystring(Value::fromString(name));
-
     while (context) {
         // Search context properties
-        if (context->propertyNames && -1 != context->propertyNames->value(propertystring))
+        if (context->propertyNames && -1 != context->propertyNames->value(name))
             return;
 
         // Search scope object
