@@ -52,12 +52,13 @@ namespace QV4 {
 struct String;
 struct ExecutionEngine;
 struct Object;
+struct Identifier;
 
 struct PropertyHashData;
 struct PropertyHash
 {
     struct Entry {
-        uint identifier;
+        const Identifier *identifier;
         uint index;
     };
 
@@ -68,7 +69,7 @@ struct PropertyHash
     inline ~PropertyHash();
 
     void addEntry(const Entry &entry, int classSize);
-    uint lookup(uint identifier) const;
+    uint lookup(const Identifier *identifier) const;
 
 private:
     PropertyHash &operator=(const PropertyHash &other);
@@ -105,6 +106,12 @@ inline PropertyHash::~PropertyHash()
         delete d;
 }
 
+struct InternalClassTransition
+{
+    Identifier *id;
+    int flags;
+};
+uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 
 struct InternalClass {
     ExecutionEngine *engine;
@@ -113,7 +120,8 @@ struct InternalClass {
 
     QVector<PropertyAttributes> propertyData;
 
-    QHash<int, InternalClass *> transitions; // id to next class, positive means add, negative delete
+    typedef InternalClassTransition Transition;
+    QHash<Transition, InternalClass *> transitions; // id to next class, positive means add, negative delete
 
     InternalClass *m_sealed;
     InternalClass *m_frozen;
@@ -122,7 +130,7 @@ struct InternalClass {
 
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
-    void removeMember(Object *object, uint id);
+    void removeMember(Object *object, Identifier *id);
     uint find(String *s);
 
     InternalClass *sealed();
@@ -135,7 +143,6 @@ private:
     InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
     InternalClass(const InternalClass &other);
 };
-
 
 }
 

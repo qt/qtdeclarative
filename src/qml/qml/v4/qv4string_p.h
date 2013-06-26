@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ExecutionEngine;
+struct Identifier;
 
 struct Q_QML_EXPORT String : public Managed {
     enum StringType {
@@ -58,7 +59,7 @@ struct Q_QML_EXPORT String : public Managed {
         StringType_ArrayIndex
     };
 
-    String() : Managed(0), stringHash(UINT_MAX), identifier(UINT_MAX)
+    String() : Managed(0), identifier(0), stringHash(UINT_MAX)
     { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     ~String() { _data = 0; }
@@ -68,7 +69,7 @@ struct Q_QML_EXPORT String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        if (identifier != UINT_MAX && identifier == other->identifier)
+        if (identifier && identifier == other->identifier)
             return true;
         if (subtype >= StringType_UInt && subtype == other->subtype)
             return true;
@@ -100,7 +101,7 @@ struct Q_QML_EXPORT String : public Managed {
     uint toUInt(bool *ok) const;
 
     void makeIdentifier() {
-        if (identifier != UINT_MAX)
+        if (identifier)
             return;
         makeIdentifierImpl();
     }
@@ -118,8 +119,8 @@ struct Q_QML_EXPORT String : public Managed {
     }
 
     QString _text;
+    mutable Identifier *identifier;
     mutable uint stringHash;
-    mutable uint identifier;
 
 protected:
     static void destroy(Managed *);

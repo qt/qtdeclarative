@@ -49,14 +49,20 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Identifiers
+struct Identifier
+{
+    QString string;
+    uint hashValue;
+};
+
+
+struct IdentifierHash
 {
     ExecutionEngine *engine;
-    uint currentIndex;
     QHash<QString, String *> identifiers;
 public:
 
-    Identifiers(ExecutionEngine *engine) : engine(engine), currentIndex(0) {}
+    IdentifierHash(ExecutionEngine *engine) : engine(engine) {}
 
     String *insert(const QString &s)
     {
@@ -69,31 +75,30 @@ public:
         if (str->subtype == String::StringType_ArrayIndex)
             return str;
 
-        str->identifier = currentIndex;
-        if (currentIndex <= USHRT_MAX) {
-            identifiers.insert(s, str);
-            ++currentIndex;
-        }
+        str->identifier = new Identifier;
+        str->identifier->string = str->toQString();
+        str->identifier->hashValue = str->hashValue();
+        identifiers.insert(s, str);
+
         return str;
     }
 
-    void toIdentifier(String *s) {
-        if (s->identifier != UINT_MAX)
+    void toIdentifier(String *str) {
+        if (str->identifier)
             return;
-        if (s->subtype == String::StringType_Unknown)
-            s->createHashValue();
-        if (s->subtype == String::StringType_ArrayIndex)
+        if (str->subtype == String::StringType_Unknown)
+            str->createHashValue();
+        if (str->subtype == String::StringType_ArrayIndex)
             return;
-        QHash<QString, String*>::const_iterator it = identifiers.find(s->toQString());
+        QHash<QString, String*>::const_iterator it = identifiers.find(str->toQString());
         if (it != identifiers.constEnd()) {
-            s->identifier = (*it)->identifier;
+            str->identifier = (*it)->identifier;
             return;
         }
-        s->identifier = currentIndex;
-        if (currentIndex <= USHRT_MAX) {
-            identifiers.insert(s->toQString(), s);
-            ++currentIndex;
-        }
+        str->identifier = new Identifier;
+        str->identifier->string = str->toQString();
+        str->identifier->hashValue = str->hashValue();
+        identifiers.insert(str->toQString(), str);
     }
 
     void mark() {

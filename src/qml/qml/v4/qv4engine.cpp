@@ -114,7 +114,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     memoryManager->setExecutionEngine(this);
 
-    identifierCache = new Identifiers(this);
+    identifierCache = new IdentifierHash(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
 

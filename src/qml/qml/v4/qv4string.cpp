@@ -183,7 +183,7 @@ bool String::deleteIndexedProperty(Managed *m, uint index)
 }
 
 String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine ? engine->emptyClass : 0), _text(text), stringHash(UINT_MAX), identifier(UINT_MAX)
+    : Managed(engine ? engine->emptyClass : 0), _text(text), identifier(0), stringHash(UINT_MAX)
 {
     vtbl = &static_vtbl;
     type = Type_String;

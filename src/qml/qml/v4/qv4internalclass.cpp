@@ -47,7 +47,27 @@
 
 QT_BEGIN_NAMESPACE
 
+uint hash(const QV4::Identifier *id, uint = 0)
+{
+    quintptr h = (quintptr)id;
+    if (sizeof(quintptr) == sizeof(uint))
+        return h ^ (h >> 8);
+    else
+        return (uint)(h ^ (h >> 8) ^ (h >> 32));
+}
+
+
+uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
+{
+    return hash(t.id) ^ t.flags;
+}
+
 using namespace QV4;
+
+static bool operator==(const InternalClassTransition &a, const InternalClassTransition &b)
+{
+    return a.id == b.id && a.flags == b.flags;
+}
 
 static const uchar prime_deltas[] = {
     0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
@@ -66,10 +86,7 @@ PropertyHashData::PropertyHashData(int numBits)
 {
     alloc = primeForNumBits(numBits);
     entries = (PropertyHash::Entry *)malloc(alloc*sizeof(PropertyHash::Entry));
-    for (uint i = 0; i < alloc; ++i) {
-        entries[i].identifier = UINT_MAX;
-        entries[i].index = UINT_MAX;
-    }
+    memset(entries, 0, alloc*sizeof(PropertyHash::Entry));
 }
 
 void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
@@ -81,10 +98,10 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
         PropertyHashData *dd = new PropertyHashData(grow ? d->numBits + 1 : d->numBits);
         for (uint i = 0; i < d->alloc; ++i) {
             const Entry &e = d->entries[i];
-            if (e.identifier == UINT_MAX || e.index >= classSize)
+            if (!e.identifier || e.index >= classSize)
                 continue;
-            uint idx = e.identifier % dd->alloc;
-            while (dd->entries[idx].identifier != UINT_MAX) {
+            uint idx = hash(e.identifier) % dd->alloc;
+            while (dd->entries[idx].identifier) {
                 ++idx;
                 idx %= dd->alloc;
             }
@@ -96,8 +113,8 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
         d = dd;
     }
 
-    uint idx = entry.identifier % d->alloc;
-    while (d->entries[idx].identifier != UINT_MAX) {
+    uint idx = hash(entry.identifier) % d->alloc;
+    while (d->entries[idx].identifier) {
         ++idx;
         idx %= d->alloc;
     }
@@ -105,15 +122,15 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     ++d->size;
 }
 
-uint PropertyHash::lookup(uint identifier) const
+uint PropertyHash::lookup(const Identifier *identifier) const
 {
     assert(d->entries);
 
-    uint idx = identifier % d->alloc;
+    uint idx = hash(identifier) % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
             return d->entries[idx].index;
-        if (d->entries[idx].identifier == UINT_MAX)
+        if (!d->entries[idx].identifier)
             return UINT_MAX;
         ++idx;
         idx %= d->alloc;
@@ -147,9 +164,9 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     if (data == propertyData[idx])
         return this;
 
-    uint tid = string->identifier | (data.flags() << 27);
 
-    QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(tid);
+    Transition t = { string->identifier, data.flags() };
+    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
     if (tit != transitions.constEnd())
         return tit.value();
 
@@ -169,8 +186,8 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     if (propertyTable.lookup(string->identifier) < size)
         return changeMember(string, data, index);
 
-    uint id = string->identifier | (data.flags() << 27);
-    QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(id);
+    Transition t = { string->identifier, data.flags() };
+    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (index)
         *index = size;
@@ -190,17 +207,17 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 
     newClass->propertyData.append(data);
     ++newClass->size;
-    transitions.insert(id, newClass);
+    transitions.insert(t, newClass);
     return newClass;
 }
 
-void InternalClass::removeMember(Object *object, uint id)
+void InternalClass::removeMember(Object *object, Identifier *id)
 {
     int propIdx = propertyTable.lookup(id);
     assert(propIdx < size);
 
-    int toRemove = - (int)id;
-    QHash<int, InternalClass *>::const_iterator tit = transitions.constFind(toRemove);
+    Transition t = { id, -1 };
+    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (tit != transitions.constEnd()) {
         object->internalClass = tit.value();
@@ -215,13 +232,13 @@ void InternalClass::removeMember(Object *object, uint id)
         object->internalClass = object->internalClass->addMember(nameMap.at(i), propertyData.at(i));
     }
 
-    transitions.insert(toRemove, object->internalClass);
+    transitions.insert(t, object->internalClass);
 }
 
 uint InternalClass::find(String *string)
 {
     engine->identifierCache->toIdentifier(string);
-    uint id = string->identifier;
+    const Identifier *id = string->identifier;
 
     uint index = propertyTable.lookup(id);
     if (index < size)
@@ -283,7 +300,7 @@ void InternalClass::destroy()
     if (m_frozen)
         m_frozen->destroy();
 
-    for (QHash<int, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
+    for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
          it != end; ++it)
         it.value()->destroy();
 
