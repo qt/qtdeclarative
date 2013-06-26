@@ -2157,7 +2157,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         goto geomChangeDone;
 
     if ((effectiveHAlign() != QQuickText::AlignLeft && widthChanged)
-            || vAlign() != QQuickText::AlignTop && heightChanged) {
+            || (vAlign() != QQuickText::AlignTop && heightChanged)) {
         // If the width has changed and we're not left aligned do an update so the text is
         // repositioned even if a full layout isn't required. And the same for vertical.
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
