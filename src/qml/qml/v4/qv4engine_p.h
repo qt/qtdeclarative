@@ -100,7 +100,7 @@ struct URIErrorPrototype;
 struct VariantPrototype;
 struct SequencePrototype;
 struct EvalFunction;
-struct IdentifierHash;
+struct IdentifierTable;
 struct InternalClass;
 class MultiplyWrappedQObjectMap;
 class RegExp;
@@ -119,7 +119,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
-    IdentifierHash *identifierCache;
+    IdentifierTable *identifierTable;
 
     QQmlJS::Debugging::Debugger *debugger;
 

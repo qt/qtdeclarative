@@ -210,7 +210,7 @@ uint String::toUInt(bool *ok) const
 
 void String::makeIdentifierImpl()
 {
-    engine()->identifierCache->toIdentifier(this);
+    engine()->identifierTable->toIdentifier(this);
 }
 
 void String::createHashValue() const

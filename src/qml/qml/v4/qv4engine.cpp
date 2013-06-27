@@ -114,7 +114,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     memoryManager->setExecutionEngine(this);
 
-    identifierCache = new IdentifierHash(this);
+    identifierTable = new IdentifierTable(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
 
@@ -283,7 +283,7 @@ ExecutionEngine::~ExecutionEngine()
     delete memoryManager;
     delete m_qmlExtensions;
     emptyClass->destroy();
-    delete identifierCache;
+    delete identifierTable;
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
@@ -430,7 +430,7 @@ String *ExecutionEngine::newString(const QString &s)
 
 String *ExecutionEngine::newIdentifier(const QString &text)
 {
-    return identifierCache->insert(text);
+    return identifierTable->insert(text);
 }
 
 Object *ExecutionEngine::newStringObject(const Value &value)
@@ -810,7 +810,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
 
 void ExecutionEngine::markObjects()
 {
-    identifierCache->mark();
+    identifierTable->mark();
 
     globalObject->mark();
 

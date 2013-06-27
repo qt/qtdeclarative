@@ -56,13 +56,13 @@ struct Identifier
 };
 
 
-struct IdentifierHash
+struct IdentifierTable
 {
     ExecutionEngine *engine;
     QHash<QString, String *> identifiers;
 public:
 
-    IdentifierHash(ExecutionEngine *engine) : engine(engine) {}
+    IdentifierTable(ExecutionEngine *engine) : engine(engine) {}
 
     String *insert(const QString &s)
     {
