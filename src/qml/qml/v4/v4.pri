@@ -24,6 +24,7 @@ SOURCES += \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
+    $$PWD/qv4identifier.cpp \
     $$PWD/qv4mm.cpp \
     $$PWD/qv4managed.cpp \
     $$PWD/qv4internalclass.cpp \

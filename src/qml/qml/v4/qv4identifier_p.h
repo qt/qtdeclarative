@@ -59,51 +59,29 @@ struct Identifier
 struct IdentifierTable
 {
     ExecutionEngine *engine;
-    QHash<QString, String *> identifiers;
+
+    int alloc;
+    int size;
+    int numBits;
+    String **entries;
+
+    void addEntry(String *str);
+
 public:
 
-    IdentifierTable(ExecutionEngine *engine) : engine(engine) {}
+    IdentifierTable(ExecutionEngine *engine);
+    ~IdentifierTable();
 
-    String *insert(const QString &s)
-    {
-        QHash<QString, String*>::const_iterator it = identifiers.find(s);
-        if (it != identifiers.constEnd())
-            return it.value();
+    String *insertString(const QString &s);
 
-        String *str = engine->newString(s);
-        str->createHashValue();
-        if (str->subtype == String::StringType_ArrayIndex)
-            return str;
-
-        str->identifier = new Identifier;
-        str->identifier->string = str->toQString();
-        str->identifier->hashValue = str->hashValue();
-        identifiers.insert(s, str);
-
-        return str;
-    }
-
-    void toIdentifier(String *str) {
-        if (str->identifier)
-            return;
-        if (str->subtype == String::StringType_Unknown)
-            str->createHashValue();
-        if (str->subtype == String::StringType_ArrayIndex)
-            return;
-        QHash<QString, String*>::const_iterator it = identifiers.find(str->toQString());
-        if (it != identifiers.constEnd()) {
-            str->identifier = (*it)->identifier;
-            return;
-        }
-        str->identifier = new Identifier;
-        str->identifier->string = str->toQString();
-        str->identifier->hashValue = str->hashValue();
-        identifiers.insert(str->toQString(), str);
-    }
+    Identifier *identifier(String *str);
+    Identifier *identifier(const QString &s);
+    Identifier *identifier(const char *s, int len);
 
     void mark() {
-        for (QHash<QString, String *>::const_iterator it = identifiers.constBegin(); it != identifiers.constEnd(); ++it)
-            (*it)->mark();
+        for (uint i = 0; i < alloc; ++i)
+            if (entries[i])
+                entries[i]->mark();
     }
 };
 

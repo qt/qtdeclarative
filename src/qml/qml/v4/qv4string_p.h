@@ -110,6 +110,7 @@ struct Q_QML_EXPORT String : public Managed {
 
     void createHashValue() const;
     static uint createHashValue(const QChar *ch, int length);
+    static uint createHashValue(const char *ch, int length);
 
     bool startsWithUpper() const {
         return _text.length() && _text.at(0).isUpper();

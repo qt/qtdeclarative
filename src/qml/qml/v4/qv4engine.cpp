@@ -430,7 +430,7 @@ String *ExecutionEngine::newString(const QString &s)
 
 String *ExecutionEngine::newIdentifier(const QString &text)
 {
-    return identifierTable->insert(text);
+    return identifierTable->insertString(text);
 }
 
 Object *ExecutionEngine::newStringObject(const Value &value)

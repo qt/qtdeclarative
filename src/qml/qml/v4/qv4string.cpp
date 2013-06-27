@@ -74,6 +74,33 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
     return i;
 }
 
+static uint toArrayIndex(const char *ch, const char *end, bool *ok)
+{
+    *ok = false;
+    uint i = *ch - '0';
+    if (i > 9)
+        return UINT_MAX;
+    ++ch;
+    // reject "01", "001", ...
+    if (i == 0 && ch != end)
+        return UINT_MAX;
+
+    while (ch < end) {
+        uint x = *ch - '0';
+        if (x > 9)
+            return UINT_MAX;
+        uint n = i*10 + x;
+        if (n < i)
+            // overflow
+            return UINT_MAX;
+        i = n;
+        ++ch;
+    }
+    *ok = true;
+    return i;
+}
+
+
 const ManagedVTable String::static_vtbl =
 {
     call,
@@ -210,7 +237,7 @@ uint String::toUInt(bool *ok) const
 
 void String::makeIdentifierImpl()
 {
-    engine()->identifierTable->toIdentifier(this);
+    engine()->identifierTable->identifier(this);
 }
 
 void String::createHashValue() const
@@ -249,6 +276,27 @@ uint String::createHashValue(const QChar *ch, int length)
     uint h = 0xffffffff;
     while (ch < end) {
         h = 31 * h + ch->unicode();
+        ++ch;
+    }
+
+    return h;
+}
+
+uint String::createHashValue(const char *ch, int length)
+{
+    const char *end = ch + length;
+
+    // array indices get their number as hash value
+    bool ok;
+    uint stringHash = toArrayIndex(ch, end, &ok);
+    if (ok)
+        return stringHash;
+
+    uint h = 0xffffffff;
+    while (ch < end) {
+        if (*ch >= 0x80)
+            return UINT_MAX;
+        h = 31 * h + *ch;
         ++ch;
     }
 

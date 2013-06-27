@@ -181,7 +181,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 {
 //    qDebug() << "InternalClass::addMember()" << string->toQString() << size << hex << (uint)data.m_all << data.type();
     data.resolve();
-    engine->identifierTable->toIdentifier(string);
+    engine->identifierTable->identifier(string);
 
     if (propertyTable.lookup(string->identifier) < size)
         return changeMember(string, data, index);
@@ -237,7 +237,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
 
 uint InternalClass::find(String *string)
 {
-    engine->identifierTable->toIdentifier(string);
+    engine->identifierTable->identifier(string);
     const Identifier *id = string->identifier;
 
     uint index = propertyTable.lookup(id);
