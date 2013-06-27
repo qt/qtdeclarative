@@ -791,6 +791,10 @@ void convertToSSA(Function *function, const DominatorTree &df)
 class DefUsesCalculator: public StmtVisitor, public ExprVisitor {
 public:
     struct DefUse {
+        DefUse()
+            : defStmt(0)
+            , blockOfStatement(0)
+        {}
         Stmt *defStmt;
         BasicBlock *blockOfStatement;
         QList<Stmt *> uses;
