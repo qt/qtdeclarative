@@ -252,7 +252,7 @@ QPlatformFileDialogHelper *QQuickPlatformFileDialog::helper()
 */
 
 /*!
-    \qmlproperty string FileDialog::folder
+    \qmlproperty url FileDialog::folder
 
     The path to the currently selected folder. Setting this property before
     invoking open() will cause the file browser to be initially positioned on

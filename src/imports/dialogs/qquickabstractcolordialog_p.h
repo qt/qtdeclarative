@@ -78,7 +78,7 @@ public:
 public Q_SLOTS:
     void setVisible(bool v);
     void setModality(Qt::WindowModality m);
-    void setTitle(QString t);
+    void setTitle(const QString &t);
     void setColor(QColor arg);
     void setShowAlphaChannel(bool arg);
 

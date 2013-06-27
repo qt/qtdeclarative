@@ -72,7 +72,7 @@ signals:
 
 public Q_SLOTS:
     void clearSelection();
-    bool addSelection(QString path);
+    bool addSelection(const QUrl &path);
 
 protected:
     virtual QPlatformFileDialogHelper *helper() { return 0; }
@@ -81,7 +81,7 @@ protected:
     Q_INVOKABLE QUrl pathFolder(const QString &path);
 
 private:
-    QStringList m_selections;
+    QList<QUrl> m_selections;
 
     Q_DISABLE_COPY(QQuickFileDialog)
 };

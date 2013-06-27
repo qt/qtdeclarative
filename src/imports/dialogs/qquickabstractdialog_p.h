@@ -88,7 +88,7 @@ public:
 
     virtual void setVisible(bool v);
     virtual void setModality(Qt::WindowModality m);
-    virtual void setTitle(QString t) = 0;
+    virtual void setTitle(const QString &t) = 0;
     void setQmlImplementation(QObject* obj);
     bool isWindow() const { return m_hasNativeWindows; }
     void setX(int arg);
