@@ -199,13 +199,18 @@ void UnwindHelper::writeARMUnwindInfo(void *codeAddr, int codeSize)
 
 QT_END_NAMESPACE
 
+#if defined(Q_OS_ANDROID)
+extern "C" void *dl_unwind_find_exidx(void *pc, int *entryCount);
+#endif
+
 extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount)
 {
+#if !defined(Q_OS_ANDROID)
     typedef void *(*Old_Unwind_Find_exidx)(void*, int*);
     static Old_Unwind_Find_exidx oldFunction = 0;
-    static ptrdiff_t *exidx = (ptrdiff_t*)malloc(2 * sizeof(uintptr_t));
     if (!oldFunction)
         oldFunction = (Old_Unwind_Find_exidx)dlsym(RTLD_NEXT, "__gnu_Unwind_Find_exidx");
+#endif
 
     {
         QMutexLocker locker(&QT_PREPEND_NAMESPACE(QV4::functionProtector));
@@ -218,7 +223,11 @@ extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount
         }
     }
 
+#if defined(Q_OS_ANDROID)
+    return dl_unwind_find_exidx(pc, entryCount);
+#else
     return oldFunction(pc, entryCount);
+#endif
 }
 
 #endif // QV4UNWINDHELPER_PDW2_H
