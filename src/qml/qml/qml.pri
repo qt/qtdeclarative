@@ -31,7 +31,6 @@ SOURCES += \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
     $$PWD/qqmlnotifier.cpp \
-    $$PWD/qqmlintegercache.cpp \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
@@ -104,7 +103,6 @@ HEADERS += \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \
     $$PWD/qqmlnotifier_p.h \
-    $$PWD/qqmlintegercache_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \

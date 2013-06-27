@@ -198,8 +198,8 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     while (context) {
         // Search context properties
-        if (context->propertyNames) {
-            int propertyIdx = context->propertyNames->value(name);
+        if (context->propertyNames.count()) {
+            int propertyIdx = context->propertyNames.value(name);
 
             if (propertyIdx != -1) {
 
@@ -302,7 +302,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     while (context) {
         // Search context properties
-        if (context->propertyNames && -1 != context->propertyNames->value(name))
+        if (context->propertyNames.count() && -1 != context->propertyNames.value(name))
             return;
 
         // Search scope object

@@ -119,9 +119,6 @@ QQmlCompiledData::~QQmlCompiledData()
     for (int ii = 0; ii < propertyCaches.count(); ++ii) 
         propertyCaches.at(ii)->release();
 
-    for (int ii = 0; ii < contextCaches.count(); ++ii)
-        contextCaches.at(ii)->release();
-
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
 

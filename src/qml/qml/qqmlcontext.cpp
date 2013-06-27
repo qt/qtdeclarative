@@ -312,11 +312,12 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         }
     }
 
-    if (!data->propertyNames) data->propertyNames = new QQmlIntegerCache();
+    if (data->propertyNames.isEmpty())
+        data->propertyNames = QV4::IdentifierIntHash(QV8Engine::getV4(engine()->handle()));
 
-    int idx = data->propertyNames->value(name);
+    int idx = data->propertyNames.value(name);
     if (idx == -1) {
-        data->propertyNames->add(name, data->idValueCount + d->propertyValues.count());
+        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(value);
 
         data->refreshExpressions();
@@ -349,11 +350,12 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
         return;
     }
 
-    if (!data->propertyNames) data->propertyNames = new QQmlIntegerCache();
-    int idx = data->propertyNames->value(name);
+    if (data->propertyNames.isEmpty())
+        data->propertyNames = QV4::IdentifierIntHash(QV8Engine::getV4(engine()->handle()));
+    int idx = data->propertyNames.value(name);
 
     if (idx == -1) {
-        data->propertyNames->add(name, data->idValueCount + d->propertyValues.count());
+        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(QVariant::fromValue(value));
 
         data->refreshExpressions();
@@ -375,8 +377,8 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 
     QQmlContextData *data = d->data;
 
-    if (data->propertyNames)
-        idx = data->propertyNames->value(name);
+    if (data->propertyNames.count())
+        idx = data->propertyNames.value(name);
 
     if (idx == -1) {
         QByteArray utf8Name = name.toUtf8();
@@ -522,7 +524,7 @@ QQmlContextData::QQmlContextData()
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
   isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
   publicContext(0), activeVMEData(0),
-  propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
+  contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0)
 {
@@ -532,7 +534,7 @@ QQmlContextData::QQmlContextData(QQmlContext *ctxt)
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
   isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
   publicContext(ctxt), activeVMEData(0),
-  propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
+  contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0)
 {
@@ -635,9 +637,6 @@ void QQmlContextData::destroy()
         contextGuard = next;
     }
     contextGuards = 0;
-
-    if (propertyNames)
-        propertyNames->release();
 
     if (imports)
         imports->release();
@@ -771,31 +770,30 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
     idValues[idx].context = this;
 }
 
-void QQmlContextData::setIdPropertyData(QQmlIntegerCache *data)
+void QQmlContextData::setIdPropertyData(const QV4::IdentifierIntHash &data)
 {
-    Q_ASSERT(!propertyNames);
+    Q_ASSERT(propertyNames.isEmpty());
     propertyNames = data;
-    propertyNames->addref();
 
-    idValueCount = data->count();
+    idValueCount = data.count();
     idValues = new ContextGuard[idValueCount];
 }
 
 QString QQmlContextData::findObjectId(const QObject *obj) const
 {
-    if (!propertyNames)
+    if (propertyNames.isEmpty())
         return QString();
 
     for (int ii = 0; ii < idValueCount; ii++) {
         if (idValues[ii] == obj)
-            return propertyNames->findId(ii);
+            return propertyNames.findId(ii);
     }
 
     if (publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(publicContext);
         for (int ii = 0; ii < p->propertyValues.count(); ++ii)
             if (p->propertyValues.at(ii) == QVariant::fromValue((QObject *)obj))
-                return propertyNames->findId(ii);
+                return propertyNames.findId(ii);
     }
 
     if (linkedContext)

@@ -60,9 +60,9 @@
 #include "qqmlengine_p.h"
 #include <private/qbitfield_p.h>
 #include "qqmlpropertycache_p.h"
-#include "qqmlintegercache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
+#include "private/qv4identifier_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -121,7 +121,7 @@ public:
     QList<QByteArray> datas;
     QByteArray bytecode;
     QList<QQmlPropertyCache *> propertyCaches;
-    QList<QQmlIntegerCache *> contextCaches;
+    QList<QV4::IdentifierIntHash> contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;
 

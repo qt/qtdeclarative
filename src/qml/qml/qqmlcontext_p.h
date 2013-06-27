@@ -56,7 +56,6 @@
 #include "qqmlcontext.h"
 
 #include "qqmldata_p.h"
-#include "qqmlintegercache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include "qqmllist.h"
@@ -70,6 +69,7 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlguard_p.h>
 
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -152,7 +152,7 @@ public:
     void *activeVMEData;
 
     // Property name cache
-    QQmlIntegerCache *propertyNames;
+    QV4::IdentifierIntHash propertyNames;
 
     // Context object
     QObject *contextObject;
@@ -198,7 +198,7 @@ public:
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(QQmlIntegerCache *);
+    void setIdPropertyData(const QV4::IdentifierIntHash &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;
