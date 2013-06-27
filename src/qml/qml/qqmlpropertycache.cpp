@@ -1121,8 +1121,8 @@ QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QSt
         signalData->arguments = args;
     }
 
-    QQmlRewrite::RewriteSignalHandler rewriter;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    QQmlRewrite::RewriteSignalHandler rewriter(ep->v4engine());
     const QString &parameters = rewriter.createParameterString(parameterNameList,
                                                                ep->v8engine()->illegalNames());
 

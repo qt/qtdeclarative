@@ -1315,7 +1315,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
             store.signalIndex = prop->index;
 
             const QList<QByteArray> &parameterNameList = obj->metatype->signalParameterNames(prop->index);
-            QQmlRewrite::RewriteSignalHandler rewriter;
+            QQmlRewrite::RewriteSignalHandler rewriter(enginePrivate->v4engine());
             int count = 0;
             const QString &rewrite = rewriter(v->value.asAST(), v->value.asScript(),
                                               prop->name().toString(),
@@ -2628,7 +2628,7 @@ int QQmlCompiler::bindingIdentifier(const Variant &value)
 
 QString QQmlCompiler::rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name)
 {
-    QQmlRewrite::RewriteSignalHandler rewriteSignalHandler;
+    QQmlRewrite::RewriteSignalHandler rewriteSignalHandler(enginePrivate->v4engine());
     return rewriteSignalHandler(value.asAST(), value.asScript(), name);
 }
 
@@ -2670,7 +2670,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
                                        tr("Property names cannot begin with an upper case letter"));
         }
 
-        if (enginePrivate->v8engine()->illegalNames().contains(prop.name)) {
+        if (enginePrivate->v8engine()->illegalNames().contains(prop.name.toString())) {
             COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
                                        prop.nameLocation.column,
                                        tr("Illegal property name"));
@@ -2690,7 +2690,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 
         if (currSig.name.at(0).isUpper())
             COMPILE_EXCEPTION(&currSig, tr("Signal names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine()->illegalNames().contains(currSig.name))
+        if (enginePrivate->v8engine()->illegalNames().contains(currSig.name.toString()))
             COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
     }
 
@@ -2712,7 +2712,7 @@ bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 
         if (currSlot.name.at(0).isUpper())
             COMPILE_EXCEPTION(&currSlot, tr("Method names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine()->illegalNames().contains(currSlot.name))
+        if (enginePrivate->v8engine()->illegalNames().contains(currSlot.name.toString()))
             COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
     }
 

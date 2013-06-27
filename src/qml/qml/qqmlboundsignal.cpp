@@ -164,7 +164,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             //TODO: look at using the property cache here (as in the compiler)
             //      for further optimization
             QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-            QQmlRewrite::RewriteSignalHandler rewriter;
+            QQmlRewrite::RewriteSignalHandler rewriter(ep->v4engine());
 
             QString expression;
             bool ok = true;

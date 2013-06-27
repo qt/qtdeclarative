@@ -72,6 +72,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -222,7 +223,7 @@ public:
     virtual QNetworkAccessManager *networkAccessManager();
 
     // Return the list of illegal id names (the names of the properties on the global object)
-    const QStringHash<bool> &illegalNames() const;
+    const QV4::IdentifierHash<bool> &illegalNames() const;
 
     inline void collectGarbage() { gc(); }
     void gc();
@@ -274,7 +275,7 @@ protected:
     QVector<Deletable *> m_extensionData;
     Deletable *m_listModelData;
 
-    QStringHash<bool> m_illegalNames;
+    QV4::IdentifierHash<bool> m_illegalNames;
 
     QElapsedTimer m_time;
     QHash<QString, qint64> m_startedTimers;

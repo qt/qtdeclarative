@@ -111,6 +111,8 @@ IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
 
 const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifier) const
 {
+    if (!d)
+        return 0;
     assert(d->entries);
 
     uint idx = Identifier::hash(identifier) % d->alloc;
@@ -126,11 +128,15 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifi
 
 const IdentifierHashEntry *IdentifierHashBase::lookup(const QString &str) const
 {
+    if (!d)
+        return 0;
     return lookup(d->identifierTable->identifier(str));
 }
 
 const IdentifierHashEntry *IdentifierHashBase::lookup(String *str) const
 {
+    if (!d)
+        return 0;
     return lookup(d->identifierTable->identifier(str));
 }
 

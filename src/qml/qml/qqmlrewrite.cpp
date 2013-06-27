@@ -209,10 +209,11 @@ bool SharedBindingTester::visit(AST::BinaryExpression *e)
     to perform a second rewrite with the parameter information (using createParameterString)
     once the target object is known.
 */
-RewriteSignalHandler::RewriteSignalHandler()
+RewriteSignalHandler::RewriteSignalHandler(QV4::ExecutionEngine *engine)
     : _writer(0)
     , _code(0)
     , _position(0)
+    , _parameterNames(engine)
     , _parameterAccess(UnknownAccess)
     , _parameterCountForJS(0)
 {
@@ -238,7 +239,7 @@ bool RewriteSignalHandler::visit(AST::IdentifierExpression *e)
         return false;
 
     static const QString argumentsString = QStringLiteral("arguments");
-    if (_parameterNames.contains(e->name) || e->name == argumentsString)
+    if (_parameterNames.contains(e->name.toString()) || e->name == argumentsString)
         _parameterAccess = ParametersAccessed;
     return false;
 }
@@ -261,22 +262,12 @@ static inline QString msgGlobalErrorString(const QString &p)
 
 //create a parameter string which can be inserted into a generic rewrite
 QString RewriteSignalHandler::createParameterString(const QList<QByteArray> &parameterNameList,
-                                                    const QStringHash<bool> &illegalNames)
-{
-    QList<QHashedString> hashedParameterNameList;
-    for (int i = 0; i < parameterNameList.count(); ++i)
-        hashedParameterNameList.append(QString::fromUtf8(parameterNameList.at(i).constData()));
-
-    return createParameterString(hashedParameterNameList, illegalNames);
-}
-
-QString RewriteSignalHandler::createParameterString(const QList<QHashedString> &parameterNameList,
-                                                    const QStringHash<bool> &illegalNames)
+                                                    const QV4::IdentifierHash<bool> &illegalNames)
 {
     QString parameters;
     bool unnamedParam = false;
     for (int i = 0; i < parameterNameList.count(); ++i) {
-        const QHashedString &param = parameterNameList.at(i);
+        QString param = QString::fromUtf8(parameterNameList.at(i));
         if (param.isEmpty())
             unnamedParam = true;
         else if (unnamedParam)
@@ -304,7 +295,7 @@ QString RewriteSignalHandler::createParameterString(const QList<QHashedString> &
 QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name,
                                          const QString &parameterString,
                                          const QList<QByteArray> &parameterNameList,
-                                         const QStringHash<bool> &illegalNames)
+                                         const QV4::IdentifierHash<bool> &illegalNames)
 {
     if (rewriteDump()) {
         qWarning() << "=============================================================";
@@ -321,10 +312,10 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
 
     if (!parameterNameList.isEmpty()) {
         for (int i = 0; i < parameterNameList.count(); ++i) {
-            QHashedString param(QString::fromUtf8(parameterNameList.at(i).constData()));
-            _parameterNames.insert(param, i);
+            QString param(QString::fromUtf8(parameterNameList.at(i).constData()));
+            _parameterNames.add(param, i);
             if (!hasParameterString)
-                _parameterNameList.append(param);
+                _parameterNameList.append(parameterNameList.at(i));
         }
 
         //this is set to Unaccessed here, and will be set to Accessed
@@ -358,7 +349,7 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
 
 QString RewriteSignalHandler::operator()(const QString &code, const QString &name, bool *ok,
                                          const QList<QByteArray> &parameterNameList,
-                                         const QStringHash<bool> &illegalNames)
+                                         const QV4::IdentifierHash<bool> &illegalNames)
 {
     Engine engine;
     Lexer lexer(&engine);

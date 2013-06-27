@@ -57,7 +57,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsmemorypool_p.h>
-#include <private/qhashedstring_p.h>
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,14 +91,14 @@ public:
 class RewriteSignalHandler: protected AST::Visitor
 {
 public:
-    RewriteSignalHandler();
+    RewriteSignalHandler(QV4::ExecutionEngine *engine);
     QString operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name,
                        const QString &parameterString = QString(),
                        const QList<QByteArray> &parameterNameList = QList<QByteArray>(),
-                       const QStringHash<bool> &illegalNames = QStringHash<bool>());
+                       const QV4::IdentifierHash<bool> &illegalNames = QV4::IdentifierHash<bool>());
     QString operator()(const QString &code, const QString &name, bool *ok = 0,
                        const QList<QByteArray> &parameterNameList = QList<QByteArray>(),
-                       const QStringHash<bool> &illegalNames = QStringHash<bool>());
+                       const QV4::IdentifierHash<bool> &illegalNames = QV4::IdentifierHash<bool>());
 
     enum ParameterAccess {
         ParametersAccessed,
@@ -110,7 +110,7 @@ public:
     int parameterCountForJS() const { return _parameterCountForJS; }
     ParameterAccess parameterAccess() const { return _parameterAccess; }
     QString createParameterString(const QList<QByteArray> &parameterNameList,
-                                  const QStringHash<bool> &illegalNames);
+                                  const QV4::IdentifierHash<bool> &illegalNames);
 
     bool hasParameterError() { return !_error.isEmpty(); }
     QString parameterError() const { return _error; }
@@ -124,14 +124,11 @@ protected:
     virtual bool visit(AST::IdentifierExpression *);
 
 private:
-    QString createParameterString(const QList<QHashedString> &parameterNameList,
-                                  const QStringHash<bool> &illegalNames);
-
     TextWriter *_writer;
     const QString *_code;
     int _position;
-    QStringHash<int> _parameterNames;
-    QList<QHashedString> _parameterNameList;
+    QV4::IdentifierHash<int> _parameterNames;
+    QList<QByteArray> _parameterNameList;
     ParameterAccess _parameterAccess;
     int _parameterCountForJS;
     QString _error;
