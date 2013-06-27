@@ -3065,9 +3065,9 @@ void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
   relationship with other items.
 
   Margins apply to top, bottom, left, right, and fill anchors.
-  The \c anchors.margins property can be used to set all of the various margins at once, to the same value.
+  The \l anchors.margins property can be used to set all of the various margins at once, to the same value.
   It will not override a specific margin that has been previously set; to clear an explicit margin
-  set it's value to \c undefined.
+  set its value to \c undefined.
   Note that margins are anchor-specific and are not applied if an item does not
   use anchors.
 
@@ -3114,14 +3114,14 @@ void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
   \endqml
   \endtable
 
-  \c anchors.fill provides a convenient way for one item to have the
+  \l anchors.fill provides a convenient way for one item to have the
   same geometry as another item, and is equivalent to connecting all
   four directional anchors.
 
   To clear an anchor value, set it to \c undefined.
 
-  \c anchors.alignWhenCentered (default true) forces centered anchors to align to a
-  whole pixel, i.e. if the item being centered has an odd width/height the item
+  \l anchors.alignWhenCentered (default \c true) forces centered anchors to align to a
+  whole pixel; if the item being centered has an odd \l width or \l height, the item
   will be positioned on a whole pixel rather than being placed on a half-pixel.
   This ensures the item is painted crisply.  There are cases where this is not
   desirable, for example when rotating the item jitters may be apparent as the

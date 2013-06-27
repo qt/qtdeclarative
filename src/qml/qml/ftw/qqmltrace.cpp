@@ -43,6 +43,7 @@
 
 #ifdef QML_ENABLE_TRACE
 #include <stdio.h>
+#include <unistd.h>
 #endif
 
 QT_BEGIN_NAMESPACE

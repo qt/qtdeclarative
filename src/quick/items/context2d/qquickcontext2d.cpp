@@ -692,17 +692,19 @@ static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 // transformations
 /*!
     \qmlmethod object QtQuick2::Context2D::rotate(real angle)
-    Rotate the canvas around the current origin by \c angle in radians and clockwise direction.
+    Rotate the canvas around the current origin by \a angle in radians and clockwise direction.
+
     \code
     ctx.rotate(Math.PI/2);
     \endcode
+
     \image qml-item-canvas-rotate.png
 
     The rotation transformation matrix is as follows:
 
     \image qml-item-canvas-math-rotate.png
 
-    where the \c angle of rotation is in radians.
+    where the \a angle of rotation is in radians.
 
 */
 static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
@@ -717,17 +719,20 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
 
 /*!
     \qmlmethod object QtQuick2::Context2D::scale(real x, real y)
+
     Increases or decreases the size of each unit in the canvas grid by multiplying the scale factors
     to the current tranform matrix.
-    Where \c x is the scale factor in the horizontal direction and \c y is the scale factor in the
+    \a x is the scale factor in the horizontal direction and \a y is the scale factor in the
     vertical direction.
-    The following code doubles the horizontal size of an object drawn on the canvas and half its
+
+    The following code doubles the horizontal size of an object drawn on the canvas and halves its
     vertical size:
+
     \code
     ctx.scale(2.0, 0.5);
     \endcode
-    \image qml-item-canvas-scale.png
 
+    \image qml-item-canvas-scale.png
 */
 static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 {
@@ -756,15 +761,15 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
     \li \c{a} is the scale factor in the horizontal (x) direction
     \image qml-item-canvas-scalex.png
     \li \c{c} is the skew factor in the x direction
-    \image qml-item-canvas-canvas-skewx.png
+    \image qml-item-canvas-skewx.png
     \li \c{e} is the translation in the x direction
-    \image qml-item-canvas-canvas-translate.png
+    \image qml-item-canvas-translate.png
     \li \c{b} is the skew factor in the y (vertical) direction
-    \image qml-item-canvas-canvas-skewy.png
+    \image qml-item-canvas-skewy.png
     \li \c{d} is the scale factor in the y direction
-    \image qml-item-canvas-canvas-scaley.png
+    \image qml-item-canvas-scaley.png
     \li \c{f} is the translation in the y direction
-    \image qml-item-canvas-canvas-translatey.png
+    \image qml-item-canvas-translatey.png
     \li the last row remains constant
     \endlist
     The scale factors and skew factors are multiples; \c{e} and \c{f} are
@@ -792,8 +797,9 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 
 /*!
     \qmlmethod object QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
+
     This method is very similar to setTransform(), but instead of replacing the old
-    tranform matrix, this method applies the given tranform matrix to the current matrix by mulitplying to it.
+    transform matrix, this method applies the given tranform matrix to the current matrix by multiplying to it.
 
     The setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
     and then invokes the transform(a, b, c, d, e, f) method with the same arguments.
@@ -819,10 +825,10 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 
 /*!
     \qmlmethod object QtQuick2::Context2D::translate(real x, real y)
-    Translates the origin of the canvas to point (\c x, \c y).
 
-    \c x is the horizontal distance that the origin is translated, in coordinate space units,
-    \c y is the vertical distance that the origin is translated, in coordinate space units.
+    Translates the origin of the canvas by a horizontal distance of \a x,
+    and a vertical distance of \a y, in coordinate space units.
+
     Translating the origin enables you to draw patterns of different objects on the canvas
     without having to measure the coordinates manually for each shape.
 */
@@ -840,7 +846,9 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
 /*!
     \qmlmethod object QtQuick2::Context2D::resetTransform()
-    Reset the transformation matrix to default value.
+
+    Reset the transformation matrix to the default value (equivalent to calling
+    setTransform(\c 1, \c 0, \c 0, \c 1, \c 0, \c 0)).
 
     \sa transform(), setTransform(), reset()
 */
@@ -856,8 +864,10 @@ static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
 
 
 /*!
-    \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv )
-    Shear the transformation matrix with \a sh in horizontal direction and \a sv in vertical direction.
+    \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv)
+
+    Shears the transformation matrix by \a sh in the horizontal direction and
+    \a sv in the vertical direction.
 */
 static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
 {
@@ -873,9 +883,10 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
 
 /*!
     \qmlproperty real QtQuick2::Context2D::globalAlpha
+
      Holds the current alpha value applied to rendering operations.
-     The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
-     The default value is 1.0.
+     The value must be in the range from \c 0.0 (fully transparent) to \c 1.0 (fully opaque).
+     The default value is \c 1.0.
 */
 static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1918,7 +1929,7 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
     The new shape displays.  The following shows how a clipping path can
     modify how an image displays:
 
-    \image qml-canvas-clip-complex.png
+    \image qml-item-canvas-clip-complex.png
     \sa beginPath()
     \sa closePath()
     \sa stroke()

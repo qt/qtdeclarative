@@ -626,8 +626,11 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
         return;
 
     Q_D(QQuickCanvasItem);
-    if (d->available)
+    if (d->available) {
+        if (d->dirtyAttributes & QQuickItemPrivate::ContentUpdateMask)
+            requestPaint();
         return;
+    }
 
     if (value.window== 0)
         return;
