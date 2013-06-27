@@ -62,6 +62,10 @@
 #include <valgrind/memcheck.h>
 #endif
 
+#if OS(QNX)
+#include <sys/storage.h>   // __tls()
+#endif
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -142,7 +146,12 @@ MemoryManager::MemoryManager()
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
 
-#if USE(PTHREADS)
+#if OS(QNX)
+    // TLS is at the top of each thread's stack,
+    // so the stack base for thread is the result of __tls()
+    m_d->stackTop = reinterpret_cast<quintptr *>(
+          (((uintptr_t)__tls() + __PAGESIZE - 1) & ~(__PAGESIZE - 1)));
+#elif USE(PTHREADS)
 #  if OS(DARWIN)
     void *st = pthread_get_stackaddr_np(pthread_self());
     m_d->stackTop = static_cast<quintptr *>(st);
