@@ -161,13 +161,20 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
 
 }
 
-typedef QMap<QString, QString> StringStringMap;
-Q_GLOBAL_STATIC(StringStringMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri
+struct RegisteredPlugin {
+    QString uri;
+    QPluginLoader* loader;
+};
+
+typedef QMap<QString, RegisteredPlugin> StringRegisteredPluginMap;
+Q_GLOBAL_STATIC(StringRegisteredPluginMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri and the PluginLoaders
 void qmlClearEnginePlugins()
 {
-    foreach (const QString &s, qmlEnginePluginsWithRegisteredTypes()->values()) {
-        QPluginLoader loader(s);
-        loader.unload(); // ### Always returns false, worth doing?
+    foreach (RegisteredPlugin plugin, qmlEnginePluginsWithRegisteredTypes()->values()) {
+        QPluginLoader* loader = plugin.loader;
+        if (!loader->unload())
+            qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
+        delete loader;
     }
     qmlEnginePluginsWithRegisteredTypes()->clear();
 }
@@ -1634,7 +1641,7 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
     bool typesRegistered = qmlEnginePluginsWithRegisteredTypes()->contains(absoluteFilePath);
 
     if (typesRegistered) {
-        Q_ASSERT_X(qmlEnginePluginsWithRegisteredTypes()->value(absoluteFilePath) == uri,
+        Q_ASSERT_X(qmlEnginePluginsWithRegisteredTypes()->value(absoluteFilePath).uri == uri,
                    "QQmlImportDatabase::importPlugin",
                    "Internal error: Plugin imported previously with different uri");
     }
@@ -1648,25 +1655,37 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
             }
             return false;
         }
-        QPluginLoader loader(absoluteFilePath);
 
-        if (!loader.load()) {
-            if (errors) {
-                QQmlError error;
-                error.setDescription(loader.errorString());
-                errors->prepend(error);
+        QPluginLoader* loader = 0;
+        if (!typesRegistered) {
+            loader = new QPluginLoader(absoluteFilePath);
+
+            if (!loader->load()) {
+                if (errors) {
+                    QQmlError error;
+                    error.setDescription(loader->errorString());
+                    errors->prepend(error);
+
+                    delete loader;
+                }
+                return false;
             }
-            return false;
+        } else {
+            loader = qmlEnginePluginsWithRegisteredTypes()->value(absoluteFilePath).loader;
         }
 
-        QObject *instance = loader.instance();
+        QObject *instance = loader->instance();
         if (QQmlTypesExtensionInterface *iface = qobject_cast<QQmlExtensionInterface *>(instance)) {
 
             const QByteArray bytes = uri.toUtf8();
             const char *moduleId = bytes.constData();
             if (!typesRegistered) {
 
-                qmlEnginePluginsWithRegisteredTypes()->insert(absoluteFilePath, uri);
+                RegisteredPlugin plugin;
+                plugin.uri = uri;
+                plugin.loader = loader;
+
+                qmlEnginePluginsWithRegisteredTypes()->insert(absoluteFilePath, plugin);
 
                 QStringList registrationFailures;
 
@@ -1734,8 +1753,11 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
         } else {
             if (errors) {
                 QQmlError error;
-                error.setDescription(loader.errorString());
+                error.setDescription(loader->errorString());
                 errors->prepend(error);
+
+                if (!typesRegistered)
+                    delete loader;
             }
             return false;
         }
