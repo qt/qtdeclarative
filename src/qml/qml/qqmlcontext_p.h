@@ -152,7 +152,7 @@ public:
     void *activeVMEData;
 
     // Property name cache
-    QV4::IdentifierIntHash propertyNames;
+    QV4::IdentifierHash<int> propertyNames;
 
     // Context object
     QObject *contextObject;
@@ -198,7 +198,7 @@ public:
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(const QV4::IdentifierIntHash &);
+    void setIdPropertyData(const QV4::IdentifierHash<int> &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;

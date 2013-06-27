@@ -313,7 +313,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
     }
 
     if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierIntHash(QV8Engine::getV4(engine()->handle()));
+        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
 
     int idx = data->propertyNames.value(name);
     if (idx == -1) {
@@ -351,7 +351,7 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
     }
 
     if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierIntHash(QV8Engine::getV4(engine()->handle()));
+        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
     int idx = data->propertyNames.value(name);
 
     if (idx == -1) {
@@ -770,7 +770,7 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
     idValues[idx].context = this;
 }
 
-void QQmlContextData::setIdPropertyData(const QV4::IdentifierIntHash &data)
+void QQmlContextData::setIdPropertyData(const QV4::IdentifierHash<int> &data)
 {
     Q_ASSERT(propertyNames.isEmpty());
     propertyNames = data;

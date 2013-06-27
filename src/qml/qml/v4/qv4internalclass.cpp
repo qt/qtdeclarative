@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
 {
-    return hash(t.id) ^ t.flags;
+    return Identifier::hash(t.id) ^ t.flags;
 }
 
 using namespace QV4;
@@ -91,7 +91,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
             const Entry &e = d->entries[i];
             if (!e.identifier || e.index >= classSize)
                 continue;
-            uint idx = hash(e.identifier) % dd->alloc;
+            uint idx = Identifier::hash(e.identifier) % dd->alloc;
             while (dd->entries[idx].identifier) {
                 ++idx;
                 idx %= dd->alloc;
@@ -104,7 +104,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
         d = dd;
     }
 
-    uint idx = hash(entry.identifier) % d->alloc;
+    uint idx = Identifier::hash(entry.identifier) % d->alloc;
     while (d->entries[idx].identifier) {
         ++idx;
         idx %= d->alloc;
@@ -117,7 +117,7 @@ uint PropertyHash::lookup(const Identifier *identifier) const
 {
     assert(d->entries);
 
-    uint idx = hash(identifier) % d->alloc;
+    uint idx = Identifier::hash(identifier) % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
             return d->entries[idx].index;

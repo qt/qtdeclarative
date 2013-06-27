@@ -55,95 +55,16 @@ struct Identifier
 {
     QString string;
     uint hashValue;
-};
 
-inline uint hash(const QV4::Identifier *id)
-{
-    quintptr h = (quintptr)id;
-    if (sizeof(quintptr) == sizeof(uint))
-        return h ^ (h >> 8);
-    else
-        return (uint)(h ^ (h >> 8) ^ (h >> 32));
-}
-
-
-
-struct IdentifierIntHashData;
-struct IdentifierIntHash
-{
-    struct Entry {
-        const Identifier *identifier;
-        int value;
-    };
-
-    IdentifierIntHashData *d;
-
-    IdentifierIntHash() : d(0) {}
-    IdentifierIntHash(ExecutionEngine *engine);
-    inline IdentifierIntHash(const IdentifierIntHash &other);
-    inline ~IdentifierIntHash();
-    inline IdentifierIntHash &operator=(const IdentifierIntHash &other);
-
-    bool isEmpty() const { return !d; }
-    // ###
-    void reserve(int) {}
-
-    inline int count() const;
-    void add(const QString &str, int value);
-
-    int value(const QString &);
-    int value(String *str);
-
-    QString findId(int value) const;
-
-private:
-    void addEntry(const Identifier *i, uint value);
-    int lookup(const Identifier *identifier) const;
-};
-
-struct IdentifierIntHashData
-{
-    IdentifierIntHashData(int numBits);
-    ~IdentifierIntHashData() {
-        free(entries);
+    static inline uint hash(const QV4::Identifier *id)
+    {
+        quintptr h = (quintptr)id;
+        if (sizeof(quintptr) == sizeof(uint))
+            return h ^ (h >> 8);
+        else
+            return (uint)(h ^ (h >> 8) ^ (h >> 32));
     }
-
-    QBasicAtomicInt refCount;
-    int alloc;
-    int size;
-    int numBits;
-    IdentifierTable *identifierTable;
-    IdentifierIntHash::Entry *entries;
 };
-
-inline IdentifierIntHash::IdentifierIntHash(const IdentifierIntHash &other)
-{
-    d = other.d;
-    if (d)
-        d->refCount.ref();
-}
-
-inline IdentifierIntHash::~IdentifierIntHash()
-{
-    if (d && !d->refCount.deref())
-        delete d;
-}
-
-IdentifierIntHash &IdentifierIntHash::operator=(const IdentifierIntHash &other)
-{
-    if (other.d)
-        other.d->refCount.ref();
-    if (d && !d->refCount.deref())
-        delete d;
-    d = other.d;
-    return *this;
-}
-
-inline int IdentifierIntHash::count() const
-{
-    return d ? d->size : 0;
-}
-
 
 struct IdentifierTable
 {
@@ -173,6 +94,162 @@ public:
                 entries[i]->mark();
     }
 };
+
+
+
+
+struct IdentifierHashEntry {
+    const Identifier *identifier;
+    union {
+        int value;
+        void *pointer;
+    };
+    int get(int *) const { return this ? value : -1; }
+    bool get(bool *) const { return this != 0; }
+    void *get(void **) const { return this ? pointer : 0; }
+};
+
+struct IdentifierHashData
+{
+    IdentifierHashData(int numBits);
+    ~IdentifierHashData() {
+        free(entries);
+    }
+
+    QBasicAtomicInt refCount;
+    int alloc;
+    int size;
+    int numBits;
+    IdentifierTable *identifierTable;
+    IdentifierHashEntry *entries;
+};
+
+struct IdentifierHashBase
+{
+
+    IdentifierHashData *d;
+
+    IdentifierHashBase() : d(0) {}
+    IdentifierHashBase(ExecutionEngine *engine);
+    inline IdentifierHashBase(const IdentifierHashBase &other);
+    inline ~IdentifierHashBase();
+    inline IdentifierHashBase &operator=(const IdentifierHashBase &other);
+
+    bool isEmpty() const { return !d; }
+    // ###
+    void reserve(int) {}
+
+    inline int count() const;
+    bool contains(const Identifier *i) const;
+    bool contains(const QString &str) const;
+    bool contains(String *str) const;
+
+protected:
+    IdentifierHashEntry *addEntry(const Identifier *i);
+    const IdentifierHashEntry *lookup(const Identifier *identifier) const;
+    const IdentifierHashEntry *lookup(const QString &str) const;
+    const IdentifierHashEntry *lookup(String *str) const;
+};
+
+
+template<typename T>
+struct IdentifierHash : public IdentifierHashBase
+{
+    IdentifierHash()
+        : IdentifierHashBase() {}
+    IdentifierHash(ExecutionEngine *engine)
+        : IdentifierHashBase(engine) {}
+    inline IdentifierHash(const IdentifierHash<T> &other)
+        : IdentifierHashBase(other) {}
+    inline ~IdentifierHash() {}
+    inline IdentifierHash &operator=(const IdentifierHash<T> &other) {
+        IdentifierHashBase::operator =(other);
+        return *this;
+    }
+
+    void add(const QString &str, const T &value);
+
+    inline T value(const QString &str) const;
+    inline T value(String *str) const;
+    QString findId(T value) const;
+};
+
+inline IdentifierHashBase::IdentifierHashBase(const IdentifierHashBase &other)
+{
+    d = other.d;
+    if (d)
+        d->refCount.ref();
+}
+
+inline IdentifierHashBase::~IdentifierHashBase()
+{
+    if (d && !d->refCount.deref())
+        delete d;
+}
+
+IdentifierHashBase &IdentifierHashBase::operator=(const IdentifierHashBase &other)
+{
+    if (other.d)
+        other.d->refCount.ref();
+    if (d && !d->refCount.deref())
+        delete d;
+    d = other.d;
+    return *this;
+}
+
+inline int IdentifierHashBase::count() const
+{
+    return d ? d->size : 0;
+}
+
+inline bool IdentifierHashBase::contains(const Identifier *i) const
+{
+    return lookup(i) != 0;
+}
+
+inline bool IdentifierHashBase::contains(const QString &str) const
+{
+    return lookup(str) != 0;
+}
+
+inline bool IdentifierHashBase::contains(String *str) const
+{
+    return lookup(str) != 0;
+}
+
+template<typename T>
+void IdentifierHash<T>::add(const QString &str, const T &value)
+{
+    Identifier *i = d->identifierTable->identifier(str);
+    IdentifierHashEntry *e = addEntry(i);
+    e->value = value;
+}
+
+template<typename T>
+inline T IdentifierHash<T>::value(const QString &str) const
+{
+    return lookup(str)->get((T*)0);
+}
+
+template<typename T>
+inline T IdentifierHash<T>::value(String *str) const
+{
+    return lookup(str)->get((T*)0);
+}
+
+
+template<typename T>
+QString IdentifierHash<T>::findId(T value) const
+{
+    IdentifierHashEntry *e = d->entries;
+    IdentifierHashEntry *end = e + d->alloc;
+    while (e < end) {
+        if (e->get((T*)0) == value)
+            return e->identifier->string;
+    }
+    return QString();
+}
+
 
 }
 

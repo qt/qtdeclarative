@@ -3554,7 +3554,7 @@ int QQmlCompiler::genContextCache()
     if (compileState->ids.count() == 0)
         return -1;
 
-    QV4::IdentifierIntHash cache(QV8Engine::getV4(engine->handle()));
+    QV4::IdentifierHash<int> cache(QV8Engine::getV4(engine->handle()));
     cache.reserve(compileState->ids.count());
     for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) 
         cache.add(o->id, o->idIndex);
