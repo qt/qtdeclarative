@@ -299,7 +299,8 @@ static inline double DaylightSavingTA(double t)
     struct tm tmtm;
 #if defined(_MSC_VER) && _MSC_VER >= 1400
     __time64_t  tt = (__time64_t)(t / msPerSecond);
-    if (!_localtime64_s(&tmtm, &tt))
+    // _localtime_64_s returns non-zero on failure
+    if (_localtime64_s(&tmtm, &tt) != 0)
 #else
     long int tt = (long int)(t / msPerSecond);
     if (!localtime_r((const time_t*) &tt, &tmtm))
@@ -634,10 +635,8 @@ static double getLocalTZA()
     return double(locl - globl) * 1000.0;
 #else
     TIME_ZONE_INFORMATION tzInfo;
-    LONG daylightBias = 0;
-    if (GetTimeZoneInformation(&tzInfo) == TIME_ZONE_ID_DAYLIGHT)
-        daylightBias = tzInfo.DaylightBias;
-    return -(tzInfo.Bias + daylightBias)* 60.0 * 1000.0;
+    GetTimeZoneInformation(&tzInfo);
+    return -tzInfo.Bias * 60.0 * 1000.0;
 #endif
 }
 
