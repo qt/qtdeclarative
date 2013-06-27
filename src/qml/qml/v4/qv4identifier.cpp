@@ -54,6 +54,105 @@ static inline int primeForNumBits(int numBits)
     return (1 << numBits) + prime_deltas[numBits];
 }
 
+
+IdentifierIntHashData::IdentifierIntHashData(int numBits)
+    : refCount(Q_BASIC_ATOMIC_INITIALIZER(1))
+    , numBits(numBits)
+    , size(0)
+{
+    alloc = primeForNumBits(numBits);
+    entries = (IdentifierIntHash::Entry *)malloc(alloc*sizeof(IdentifierIntHash::Entry));
+    memset(entries, 0, alloc*sizeof(IdentifierIntHash::Entry));
+}
+
+IdentifierIntHash::IdentifierIntHash(ExecutionEngine *engine)
+{
+    d = new IdentifierIntHashData(3);
+    d->identifierTable = engine->identifierTable;
+}
+
+void IdentifierIntHash::add(const QString &str, int value)
+{
+    Identifier *i = d->identifierTable->identifier(str);
+    addEntry(i, value);
+}
+
+int IdentifierIntHash::value(const QString &str)
+{
+    return lookup(d->identifierTable->identifier(str));
+}
+
+int IdentifierIntHash::value(String *str)
+{
+    return lookup(d->identifierTable->identifier(str));
+}
+
+QString IdentifierIntHash::findId(int value) const
+{
+    Entry *e = d->entries;
+    Entry *end = e + d->alloc;
+    while (e < end) {
+        if (e->value == value)
+            return e->identifier->string;
+    }
+    return QString();
+}
+
+
+void IdentifierIntHash::addEntry(const Identifier *identifier, uint value)
+{
+    // fill up to max 50%
+    bool grow = (d->alloc <= d->size*2);
+
+    if (grow) {
+        ++d->numBits;
+        int newAlloc = primeForNumBits(d->numBits);
+        Entry *newEntries = (Entry *)malloc(newAlloc * sizeof(Entry));
+        memset(newEntries, 0, newAlloc*sizeof(Entry));
+        for (uint i = 0; i < d->alloc; ++i) {
+            const Entry &e = d->entries[i];
+            if (!e.identifier)
+                continue;
+            uint idx = hash(e.identifier) % newAlloc;
+            while (newEntries[idx].identifier) {
+                ++idx;
+                idx %= newAlloc;
+            }
+            newEntries[idx] = e;
+        }
+        free(d->entries);
+        d->entries = newEntries;
+        d->alloc = newAlloc;
+    }
+
+    uint idx = hash(identifier) % d->alloc;
+    while (d->entries[idx].identifier) {
+        Q_ASSERT(d->entries[idx].identifier != identifier);
+        ++idx;
+        idx %= d->alloc;
+    }
+    d->entries[idx].identifier = identifier;
+    d->entries[idx].value = value;
+    ++d->size;
+}
+
+int IdentifierIntHash::lookup(const Identifier *identifier) const
+{
+    assert(d->entries);
+
+    uint idx = hash(identifier) % d->alloc;
+    while (1) {
+        if (d->entries[idx].identifier == identifier)
+            return d->entries[idx].value;
+        if (!d->entries[idx].identifier)
+            return -1;
+        ++idx;
+        idx %= d->alloc;
+    }
+}
+
+
+
 IdentifierTable::IdentifierTable(ExecutionEngine *engine)
     : engine(engine)
     , size(0)

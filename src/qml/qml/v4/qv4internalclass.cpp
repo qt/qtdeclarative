@@ -44,18 +44,9 @@
 #include <qv4engine_p.h>
 #include <qv4identifier_p.h>
 #include "qv4object_p.h"
+#include "qv4identifier_p.h"
 
 QT_BEGIN_NAMESPACE
-
-uint hash(const QV4::Identifier *id, uint = 0)
-{
-    quintptr h = (quintptr)id;
-    if (sizeof(quintptr) == sizeof(uint))
-        return h ^ (h >> 8);
-    else
-        return (uint)(h ^ (h >> 8) ^ (h >> 32));
-}
-
 
 uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
 {
