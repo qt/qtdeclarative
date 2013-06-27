@@ -44,7 +44,7 @@
 #include <qv4engine_p.h>
 #include <qv4identifier_p.h>
 #include "qv4object_p.h"
-#include "qv4identifier_p.h"
+#include "qv4identifiertable_p.h"
 
 QT_BEGIN_NAMESPACE
 

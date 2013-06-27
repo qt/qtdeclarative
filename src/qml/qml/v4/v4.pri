@@ -25,6 +25,7 @@ SOURCES += \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
     $$PWD/qv4identifier.cpp \
+    $$PWD/qv4identifiertable.cpp \
     $$PWD/qv4mm.cpp \
     $$PWD/qv4managed.cpp \
     $$PWD/qv4internalclass.cpp \
@@ -75,6 +76,7 @@ HEADERS += \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
     $$PWD/qv4identifier_p.h \
+    $$PWD/qv4identifiertable_p.h \
     $$PWD/qv4mm_p.h \
     $$PWD/qv4managed_p.h \
     $$PWD/qv4internalclass_p.h \

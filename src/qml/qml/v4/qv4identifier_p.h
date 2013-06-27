@@ -41,15 +41,15 @@
 #ifndef QV4IDENTIFIER_H
 #define QV4IDENTIFIER_H
 
-#include "qv4string_p.h"
-#include "qv4engine_p.h"
-#include <limits.h>
+#include <qstring.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct String;
 struct IdentifierTable;
+struct ExecutionEngine;
 
 struct Identifier
 {
@@ -65,37 +65,6 @@ struct Identifier
             return (uint)(h ^ (h >> 8) ^ (h >> 32));
     }
 };
-
-struct IdentifierTable
-{
-    ExecutionEngine *engine;
-
-    int alloc;
-    int size;
-    int numBits;
-    String **entries;
-
-    void addEntry(String *str);
-
-public:
-
-    IdentifierTable(ExecutionEngine *engine);
-    ~IdentifierTable();
-
-    String *insertString(const QString &s);
-
-    Identifier *identifier(String *str);
-    Identifier *identifier(const QString &s);
-    Identifier *identifier(const char *s, int len);
-
-    void mark() {
-        for (int i = 0; i < alloc; ++i)
-            if (entries[i])
-                entries[i]->mark();
-    }
-};
-
-
 
 
 struct IdentifierHashEntry {
@@ -149,6 +118,8 @@ protected:
     const IdentifierHashEntry *lookup(const Identifier *identifier) const;
     const IdentifierHashEntry *lookup(const QString &str) const;
     const IdentifierHashEntry *lookup(String *str) const;
+    const Identifier *toIdentifier(const QString &str) const;
+    const Identifier *toIdentifier(String *str) const;
 };
 
 
@@ -220,8 +191,7 @@ inline bool IdentifierHashBase::contains(String *str) const
 template<typename T>
 void IdentifierHash<T>::add(const QString &str, const T &value)
 {
-    Identifier *i = d->identifierTable->identifier(str);
-    IdentifierHashEntry *e = addEntry(i);
+    IdentifierHashEntry *e = addEntry(toIdentifier(str));
     e->value = value;
 }
 

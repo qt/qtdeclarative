@@ -58,7 +58,7 @@
 #include <qv4dateobject_p.h>
 #include <qv4jsonobject_p.h>
 #include <qv4stringobject_p.h>
-#include <qv4identifier_p.h>
+#include <qv4identifiertable_p.h>
 #include <qv4unwindhelper_p.h>
 #include "qv4debugging_p.h"
 #include "qv4executableallocator_p.h"
