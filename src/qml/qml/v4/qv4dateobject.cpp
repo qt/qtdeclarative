@@ -634,8 +634,10 @@ static double getLocalTZA()
     return double(locl - globl) * 1000.0;
 #else
     TIME_ZONE_INFORMATION tzInfo;
-    GetTimeZoneInformation(&tzInfo);
-    return -tzInfo.Bias * 60.0 * 1000.0;
+    LONG daylightBias = 0;
+    if (GetTimeZoneInformation(&tzInfo) == TIME_ZONE_ID_DAYLIGHT)
+        daylightBias = tzInfo.DaylightBias;
+    return -(tzInfo.Bias + daylightBias)* 60.0 * 1000.0;
 #endif
 }
 
