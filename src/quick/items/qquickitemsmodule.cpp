@@ -239,11 +239,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
 void QQuickItemsModule::defineModule()
 {
-    static bool initialized = false;
-    if (initialized)
-        return;
-    initialized = true;
-
     QByteArray name = "QtQuick";
     int majorVersion = 2;
     int minorVersion = 0;
