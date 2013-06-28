@@ -368,7 +368,9 @@ CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     GlobalContext *g = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
+    ExecutionContext *oldNext = g->next;
     *g = *rootContext;
+    g->next = oldNext;
     g->parent = current;
     current = g;
 
