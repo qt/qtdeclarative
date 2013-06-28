@@ -57,10 +57,10 @@ static inline int primeForNumBits(int numBits)
 
 
 IdentifierHashData::IdentifierHashData(int numBits)
-    : refCount(Q_BASIC_ATOMIC_INITIALIZER(1))
-    , numBits(numBits)
+    : numBits(numBits)
     , size(0)
 {
+    refCount.store(1);
     alloc = primeForNumBits(numBits);
     entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
     memset(entries, 0, alloc*sizeof(IdentifierHashEntry));

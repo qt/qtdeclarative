@@ -66,10 +66,10 @@ static inline int primeForNumBits(int numBits)
 }
 
 PropertyHashData::PropertyHashData(int numBits)
-    : refCount(Q_BASIC_ATOMIC_INITIALIZER(1))
-    , numBits(numBits)
+    : numBits(numBits)
     , size(0)
 {
+    refCount.store(1);
     alloc = primeForNumBits(numBits);
     entries = (PropertyHash::Entry *)malloc(alloc*sizeof(PropertyHash::Entry));
     memset(entries, 0, alloc*sizeof(PropertyHash::Entry));
