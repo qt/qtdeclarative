@@ -205,8 +205,9 @@ QString IdentifierHash<T>::findId(T value) const
     IdentifierHashEntry *e = d->entries;
     IdentifierHashEntry *end = e + d->alloc;
     while (e < end) {
-        if (e->get((T*)0) == value)
+        if (e->identifier && e->get((T*)0) == value)
             return e->identifier->string;
+        ++e;
     }
     return QString();
 }
