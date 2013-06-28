@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Research In Motion.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the manual tests of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,17 +39,60 @@
 **
 ****************************************************************************/
 
-import QtQml 2.0
-import QtQuick 2.0
-import QtQuick.Window 2.0
-import QtQuick.LocalStorage 2.0
-import Test 2.0
-import TestPlugin 1.0
-import "."
+#include "../../shared/util.h"
+#include <QtCore/QObject>
+#include <QtQml/qqml.h>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlComponent>
 
-QtObject {
-    property TestType tt //No object, although it should be properly parented if there were one
-    property TestTypeCpp tt2 //No object, although it should be properly parented if there were one
-    property TestTypePlugin tt3
-    property Item it
+//Separate test, because if engine cleanup attempts fail they can easily break unrelated tests
+class tst_qqmlenginecleanup : public QQmlDataTest
+{
+    Q_OBJECT
+public:
+    tst_qqmlenginecleanup() {}
+
+private slots:
+    void test_qmlClearTypeRegistrations();
+};
+
+void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
+{
+    //Test for preventing memory leaks is in tests/manual/qmltypememory
+    QQmlEngine* engine;
+    QQmlComponent* component;
+    QUrl testFile = testFileUrl("types.qml");
+
+    qmlRegisterType<QObject>("Test", 2, 0, "TestTypeCpp");
+    engine = new QQmlEngine;
+    component = new QQmlComponent(engine, testFile);
+    QVERIFY(component->isReady());
+
+    delete engine;
+    delete component;
+    qmlClearTypeRegistrations();
+
+    //2nd run verifies that types can reload after a qmlClearTypeRegistrations
+    qmlRegisterType<QObject>("Test", 2, 0, "TestTypeCpp");
+    engine = new QQmlEngine;
+    component = new QQmlComponent(engine, testFile);
+    QVERIFY(component->isReady());
+
+    delete engine;
+    delete component;
+    qmlClearTypeRegistrations();
+
+    //3nd run verifies that TestTypeCpp is no longer registered
+    engine = new QQmlEngine;
+    component = new QQmlComponent(engine, testFile);
+    QVERIFY(component->isError());
+    QCOMPARE(component->errorString(),
+            testFile.toString() +":46 module \"Test\" is not installed\n");
+
+    delete engine;
+    delete component;
 }
+
+QTEST_MAIN(tst_qqmlenginecleanup)
+
+#include "tst_qqmlenginecleanup.moc"

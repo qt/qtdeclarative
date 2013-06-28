@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Research In Motion.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the manual tests of the Qt Toolkit.
+** This file is part of the autotests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -40,16 +40,4 @@
 ****************************************************************************/
 
 import QtQml 2.0
-import QtQuick 2.0
-import QtQuick.Window 2.0
-import QtQuick.LocalStorage 2.0
-import Test 2.0
-import TestPlugin 1.0
-import "."
-
-QtObject {
-    property TestType tt //No object, although it should be properly parented if there were one
-    property TestTypeCpp tt2 //No object, although it should be properly parented if there were one
-    property TestTypePlugin tt3
-    property Item it
-}
+QtObject{property int notJustAStandardQtObject: 10 }
