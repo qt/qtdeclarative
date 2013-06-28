@@ -74,7 +74,7 @@ void IdentifierTable::addEntry(String *str)
 {
     uint hash = str->hashValue();
 
-    if (str->subtype >= String::StringType_UInt)
+    if (str->subtype == String::StringType_ArrayIndex)
         return;
 
     str->identifier = new Identifier;
@@ -137,7 +137,7 @@ Identifier *IdentifierTable::identifier(String *str)
     if (str->identifier)
         return str->identifier;
     uint hash = str->hashValue();
-    if (str->subtype >= String::StringType_UInt)
+    if (str->subtype == String::StringType_ArrayIndex)
         return 0;
 
     uint idx = hash % alloc;
