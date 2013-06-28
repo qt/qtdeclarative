@@ -307,31 +307,28 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 WithContext *ExecutionEngine::newWithContext(Object *with)
 {
-    ExecutionContext *p = current;
     WithContext *w = static_cast<WithContext *>(memoryManager->allocContext(sizeof(WithContext)));
-    w->initWithContext(p, with);
-    w->parent = current;
+    ExecutionContext *p = current;
     current = w;
+    w->initWithContext(p, with);
     return w;
 }
 
 CatchContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
 {
-    ExecutionContext *p = current;
     CatchContext *c = static_cast<CatchContext *>(memoryManager->allocContext(sizeof(CatchContext)));
-    c->initCatchContext(p, exceptionVarName, exceptionValue);
-    c->parent = current;
+    ExecutionContext *p = current;
     current = c;
+    c->initCatchContext(p, exceptionVarName, exceptionValue);
     return c;
 }
 
 CallContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
 {
     CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc)));
-
-    c->initCallContext(this, f, args, argc, thisObject);
-    c->parent = current;
+    ExecutionContext *p = current;
     current = c;
+    c->initCallContext(p, f, args, argc, thisObject);
 
     return c;
 }
@@ -340,9 +337,9 @@ CallContext *ExecutionEngine::newQmlContext(FunctionObject *f, Object *qml)
 {
     CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
 
-    c->initQmlContext(this, qml, f);
-    c->parent = current;
+    ExecutionContext *p = current;
     current = c;
+    c->initQmlContext(p, qml, f);
 
     return c;
 }
@@ -360,9 +357,9 @@ CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f
 #endif
     }
 
-    c->initCallContext(this, f, args, argc, thisObject);
-    c->parent = current;
+    ExecutionContext *p = current;
     current = c;
+    c->initCallContext(p, f, args, argc, thisObject);
 
     return c;
 }
@@ -819,8 +816,10 @@ void ExecutionEngine::markObjects()
 
     for (int i = 0; i < argumentsAccessors.size(); ++i) {
         const Property &pd = argumentsAccessors.at(i);
-        pd.getter()->mark();
-        pd.setter()->mark();
+        if (FunctionObject *getter = pd.getter())
+            getter->mark();
+        if (FunctionObject *setter = pd.setter())
+            setter->mark();
     }
 
     ExecutionContext *c = current;

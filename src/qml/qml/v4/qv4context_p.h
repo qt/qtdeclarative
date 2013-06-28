@@ -105,14 +105,14 @@ struct Q_QML_EXPORT ExecutionContext
 
     const uchar **interpreterInstructionPointer;
 
-    void initBaseContext(Type type, ExecutionEngine *engine)
+    void initBaseContext(Type type, ExecutionEngine *engine, ExecutionContext *parentContext)
     {
         this->type = type;
         strictMode = false;
         marked = false;
         thisObject = Value::undefinedValue();
         this->engine = engine;
-        parent = 0;
+        parent = parentContext;
         outer = 0;
         lookups = 0;
         currentEvalCode = 0;
@@ -154,13 +154,7 @@ struct Q_QML_EXPORT ExecutionContext
 
 struct SimpleCallContext : public ExecutionContext
 {
-    void initSimpleCallContext(ExecutionEngine *engine)
-    {
-        initBaseContext(Type_SimpleCallContext, engine);
-        function = 0;
-        arguments = 0;
-        argumentCount = 0;
-    }
+    void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
     Value *arguments;
     unsigned int argumentCount;
@@ -168,9 +162,9 @@ struct SimpleCallContext : public ExecutionContext
 
 struct CallContext : public SimpleCallContext
 {
-    void initCallContext(QV4::ExecutionEngine *engine, FunctionObject *function, Value *args, int argc,
+    void initCallContext(ExecutionContext *parentContext, FunctionObject *function, Value *args, int argc,
                          const Value &thisObject);
-    void initQmlContext(QV4::ExecutionEngine *engine, Object *qml, QV4::FunctionObject *function);
+    void initQmlContext(ExecutionContext *parentContext, Object *qml, QV4::FunctionObject *function);
     bool needsOwnArguments() const;
 
     Value *locals;

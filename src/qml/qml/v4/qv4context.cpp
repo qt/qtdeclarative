@@ -127,14 +127,14 @@ unsigned int ExecutionContext::variableCount() const
 
 void GlobalContext::initGlobalContext(ExecutionEngine *eng)
 {
-    initBaseContext(Type_GlobalContext, eng);
+    initBaseContext(Type_GlobalContext, eng, /*parentContext*/0);
     thisObject = Value::fromObject(eng->globalObject);
     global = 0;
 }
 
 void WithContext::initWithContext(ExecutionContext *p, Object *with)
 {
-    initBaseContext(Type_WithContext, p->engine);
+    initBaseContext(Type_WithContext, p->engine, p);
     thisObject = p->thisObject;
     outer = p;
     lookups = p->lookups;
@@ -144,7 +144,7 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
 
 void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
 {
-    initBaseContext(Type_CatchContext, p->engine);
+    initBaseContext(Type_CatchContext, p->engine, p);
     strictMode = p->strictMode;
     thisObject = p->thisObject;
     outer = p;
@@ -154,9 +154,9 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     this->exceptionValue = exceptionValue;
 }
 
-void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *function, Value *_arguments, int _argumentCount, const Value &_thisObject)
+void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObject *function, Value *_arguments, int _argumentCount, const Value &_thisObject)
 {
-    initBaseContext(Type_CallContext, engine);
+    initBaseContext(Type_CallContext, parentContext->engine, parentContext);
 
     this->function = function;
     this->arguments = _arguments;
@@ -201,9 +201,9 @@ void CallContext::initCallContext(ExecutionEngine *engine, FunctionObject *funct
     }
 }
 
-void CallContext::initQmlContext(ExecutionEngine *engine, Object *qml, FunctionObject *function)
+void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, FunctionObject *function)
 {
-    initBaseContext(Type_QmlContext, engine);
+    initBaseContext(Type_QmlContext, parentContext->engine, parentContext);
 
     this->function = function;
     this->arguments = 0;
@@ -603,4 +603,13 @@ void ExecutionContext::throwRangeError(Value value)
 void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(msg)));
+}
+
+
+void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)
+{
+    initBaseContext(Type_SimpleCallContext, engine, engine->current);
+    function = 0;
+    arguments = 0;
+    argumentCount = 0;
 }
