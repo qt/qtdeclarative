@@ -48,8 +48,7 @@ inline quint32 stringHash(const QChar* data, int length)
 
 inline quint32 stringHash(const char *data, int length)
 {
-    QString s = QString::fromLatin1(data, length);
-    return QV4::String::createHashValue(s.constData(), s.length());
+    return QV4::String::createHashValue(data, length);
 }
 
 void QHashedString::computeHash() const
