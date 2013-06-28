@@ -219,7 +219,7 @@ QSGMaterialShader *QSGDistanceFieldTextMaterial::createShader() const
 bool QSGDistanceFieldTextMaterial::updateTextureSize()
 {
     if (!m_texture)
-        m_texture = m_glyph_cache->glyphTexture(-1); // invalid texture
+        m_texture = m_glyph_cache->glyphTexture(0); // invalid texture
 
     if (m_texture->size != m_size) {
         m_size = m_texture->size;
@@ -240,8 +240,8 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
     }
     if (m_color != other->m_color)
         return &m_color < &other->m_color ? -1 : 1;
-    int t0 = m_texture ? m_texture->textureId : -1;
-    int t1 = other->m_texture ? other->m_texture->textureId : -1;
+    int t0 = m_texture ? m_texture->textureId : 0;
+    int t1 = other->m_texture ? other->m_texture->textureId : 0;
     return t0 - t1;
 }
 
