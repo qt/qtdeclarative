@@ -55,15 +55,6 @@ struct Identifier
 {
     QString string;
     uint hashValue;
-
-    static inline uint hash(const QV4::Identifier *id)
-    {
-        quintptr h = (quintptr)id;
-        if (sizeof(quintptr) == sizeof(uint))
-            return h ^ (h >> 8);
-        else
-            return (uint)(h ^ (h >> 8) ^ (h >> 32));
-    }
 };
 
 

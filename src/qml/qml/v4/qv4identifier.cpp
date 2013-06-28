@@ -87,7 +87,7 @@ IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
             const IdentifierHashEntry &e = d->entries[i];
             if (!e.identifier)
                 continue;
-            uint idx = Identifier::hash(e.identifier) % newAlloc;
+            uint idx = e.identifier->hashValue % newAlloc;
             while (newEntries[idx].identifier) {
                 ++idx;
                 idx %= newAlloc;
@@ -99,7 +99,7 @@ IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
         d->alloc = newAlloc;
     }
 
-    uint idx = Identifier::hash(identifier) % d->alloc;
+    uint idx = identifier->hashValue % d->alloc;
     while (d->entries[idx].identifier) {
         Q_ASSERT(d->entries[idx].identifier != identifier);
         ++idx;
@@ -116,12 +116,12 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifi
         return 0;
     assert(d->entries);
 
-    uint idx = Identifier::hash(identifier) % d->alloc;
+    uint idx = identifier->hashValue % d->alloc;
     while (1) {
-        if (d->entries[idx].identifier == identifier)
-            return d->entries + idx;
         if (!d->entries[idx].identifier)
             return 0;
+        if (d->entries[idx].identifier == identifier)
+            return d->entries + idx;
         ++idx;
         idx %= d->alloc;
     }
@@ -131,14 +131,27 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const QString &str) const
 {
     if (!d)
         return 0;
-    return lookup(d->identifierTable->identifier(str));
+    assert(d->entries);
+
+    uint hash = String::createHashValue(str.constData(), str.length());
+    uint idx = hash % d->alloc;
+    while (1) {
+        if (!d->entries[idx].identifier)
+            return 0;
+        if (d->entries[idx].identifier->string == str)
+            return d->entries + idx;
+        ++idx;
+        idx %= d->alloc;
+    }
 }
 
 const IdentifierHashEntry *IdentifierHashBase::lookup(String *str) const
 {
     if (!d)
         return 0;
-    return lookup(d->identifierTable->identifier(str));
+    if (str->identifier)
+        return lookup(str->identifier);
+    return lookup(str->toQString());
 }
 
 const Identifier *IdentifierHashBase::toIdentifier(const QString &str) const
