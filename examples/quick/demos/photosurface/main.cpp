@@ -1,9 +1,9 @@
-/*****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -36,51 +36,28 @@
 **
 ** $QT_END_LICENSE$
 **
-*****************************************************************************/
+****************************************************************************/
 
-import QtQuick 2.1
-import QtQuick.Window 2.1
+#ifdef QT_WIDGETS_LIB
+#include <QtWidgets/QApplication>
+#else
+#include <QtGui/QGuiApplication>
+#endif
+#include <QtQml/QQmlApplicationEngine>
+#include <QtQuick/QQuickWindow>
+#include <QtCore/QUrl>
 
-Item {
-    id: container
-
-    property alias text: buttonLabel.text
-    property alias label: buttonLabel
-    signal clicked
-    property alias containsMouse: mouseArea.containsMouse
-    property alias pressed: mouseArea.pressed
-    implicitHeight: buttonLabel.implicitHeight * 1.2
-    implicitWidth: Math.max(Screen.logicalPixelDensity * 10, buttonLabel.implicitWidth * 1.2)
-    height: implicitHeight
-    width: implicitWidth
-
-    SystemPalette { id: palette }
-
-    Rectangle {
-        id: frame
-        anchors.fill: parent
-        color: palette.button
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
-            GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
-        }
-        antialiasing: true
-        radius: height / 4
-        border.color: Qt.darker(palette.button, 1.5)
-        border.width: 1
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: container.clicked()
-        hoverEnabled: true
-    }
-
-    Text {
-        id: buttonLabel
-        text: container.text
-        color: palette.buttonText
-        anchors.centerIn: parent
-    }
+int main(int argc, char* argv[])
+{
+    // The reason to use QApplication is that QWidget-based dialogs
+    // are the native dialogs on Qt-based platforms like KDE,
+    // but they cannot be instantiated if this is a QGuiApplication.
+#ifdef QT_WIDGETS_LIB
+    QApplication app(argc, argv);
+#else
+    QGuiApplication app(argc, argv);
+#endif
+    QQuickWindow::setDefaultAlphaBuffer(true);
+    QQmlApplicationEngine engine(QUrl("qrc:///photosurface.qml"));
+    return app.exec();
 }

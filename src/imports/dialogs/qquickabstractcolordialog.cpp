@@ -91,7 +91,7 @@ bool QQuickAbstractColorDialog::showAlphaChannel() const
     return m_options->testOption(QColorDialogOptions::ShowAlphaChannel);
 }
 
-void QQuickAbstractColorDialog::setTitle(QString t)
+void QQuickAbstractColorDialog::setTitle(const QString &t)
 {
     if (m_options->windowTitle() == t) return;
     m_options->setWindowTitle(t);

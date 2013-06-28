@@ -64,13 +64,13 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractColorDialog::accepted
 
-    The \a accepted signal is emitted by \l accept().
+    This signal is emitted by \l accept().
 */
 
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractColorDialog::rejected
 
-    The \a accepted signal is emitted by \l reject().
+    This signal is emitted by \l reject().
 */
 
 /*!
@@ -107,12 +107,6 @@ QQuickColorDialog::~QQuickColorDialog()
     \qmlproperty bool AbstractColorDialog::visible
 
     This property holds whether the dialog is visible. By default this is false.
-*/
-
-/*!
-    \qmlproperty bool AbstractColorDialog::filePaths
-
-    A list of files to be populated as the user chooses.
 */
 
 /*!

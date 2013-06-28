@@ -40,6 +40,7 @@
 
 import QtQuick 2.1
 import QtQuick.Dialogs 1.0
+import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 2.0
 import "qml"
 
@@ -52,13 +53,13 @@ AbstractFileDialog {
             currentPathField.visible = false
         }
     }
+    onFolderChanged: view.model.folder = folder
 
     property bool showFocusHighlight: false
-    property real textX: 28
+    property real textX: titleBar.height
     property SystemPalette palette
     property var selectedIndices: []
     property int lastClickedIdx: -1
-    folder: urlToPath(view.model.folder)
 
     function dirDown(path) {
         view.model.folder = path
@@ -106,10 +107,11 @@ AbstractFileDialog {
             selectedIndices.map(function(idx) {
                 if (view.model.isFolder(idx)) {
                     if (selectFolder)
-                        addSelection(view.model.get(idx, "filePath"))
+                        // TODO after QTBUG-32039: should not need to convert pathToUrl here
+                        addSelection(pathToUrl(view.model.get(idx, "filePath")))
                 } else {
                     if (!selectFolder)
-                        addSelection(view.model.get(idx, "filePath"))
+                        addSelection(pathToUrl(view.model.get(idx, "filePath")))
                 }
             })
         }
@@ -117,11 +119,12 @@ AbstractFileDialog {
     }
 
     Rectangle {
-        width: 480  // TODO: QTBUG-29817 geometry from AbstractFileDialog
-        height: 320
+        property int maxSize: Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+        // TODO: QTBUG-29817 geometry from AbstractFileDialog
+        implicitWidth: Math.min(maxSize, Screen.logicalPixelDensity * 100)
+        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * 80)
         id: window
         color: palette.window
-        anchors.centerIn: Qt.application.supportsMultipleWindows ? null : parent
 
         SystemPalette { id: palette }
 
@@ -209,7 +212,12 @@ AbstractFileDialog {
             clip: true
             x: 0
             width: parent.width
-            model: FolderListModel { }
+            model: FolderListModel {
+                onFolderChanged: {
+                    root.folder = folder
+                    currentPathField.text = root.urlToPath(view.model.folder)
+                }
+            }
             delegate: folderDelegate
             highlight: Rectangle {
                 color: "transparent"
@@ -303,10 +311,9 @@ AbstractFileDialog {
                 anchors.leftMargin: textX; anchors.rightMargin: 4
                 visible: false
                 focus: visible
-                text: root.urlToPath(view.model.folder)
                 onAccepted: {
                     root.clearSelection()
-                    if (root.addSelection(text))
+                    if (root.addSelection(root.pathToUrl(text)))
                         root.accept()
                     else
                         view.model.folder = root.pathFolder(text)

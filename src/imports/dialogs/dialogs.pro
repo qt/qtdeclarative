@@ -31,6 +31,7 @@ QML_FILES += \
     WidgetColorDialog.qml \
     qml/Button.qml \
     qml/ColorSlider.qml \
+    qml/DefaultWindowDecoration.qml \
     qml/TextField.qml \
     qml/qmldir \
     images/checkers.png \
@@ -38,6 +39,7 @@ QML_FILES += \
     images/crosshairs.png \
     images/slider_handle.png \
     images/sunken_frame.png \
+    images/window_border.png \
     images/folder.png \
     images/up.png
 
