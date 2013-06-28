@@ -55,11 +55,6 @@ uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
 
 using namespace QV4;
 
-static bool operator==(const InternalClassTransition &a, const InternalClassTransition &b)
-{
-    return a.id == b.id && a.flags == b.flags;
-}
-
 static const uchar prime_deltas[] = {
     0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
     1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
@@ -156,7 +151,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
         return this;
 
 
-    Transition t = { string->identifier, data.flags() };
+    Transition t = { string->identifier, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
     if (tit != transitions.constEnd())
         return tit.value();
@@ -177,7 +172,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     if (propertyTable.lookup(string->identifier) < size)
         return changeMember(string, data, index);
 
-    Transition t = { string->identifier, data.flags() };
+    Transition t = { string->identifier, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (index)

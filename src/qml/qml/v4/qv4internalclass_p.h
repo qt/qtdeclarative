@@ -110,6 +110,9 @@ struct InternalClassTransition
 {
     Identifier *id;
     int flags;
+
+    bool operator==(const InternalClassTransition &other) const
+    { return id == other.id && flags == other.flags; }
 };
 uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 
