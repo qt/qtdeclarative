@@ -103,9 +103,15 @@ bool QQuickApplication::eventFilter(QObject *, QEvent *event)
 {
     Q_D(QQuickApplication);
     if ((event->type() == QEvent::ApplicationActivate) ||
-        (event->type() == QEvent::ApplicationDeactivate)) {
+        (event->type() == QEvent::ApplicationDeactivate) ||
+        (event->type() == QEvent::ApplicationStateChange)) {
         bool wasActive = d->isActive;
-        d->isActive = (event->type() == QEvent::ApplicationActivate);
+        if (event->type() == QEvent::ApplicationStateChange) {
+            QApplicationStateChangeEvent * e= static_cast<QApplicationStateChangeEvent*>(event);
+            d->isActive = e->applicationState() == Qt::ApplicationActive;
+        } else {
+            d->isActive = (event->type() == QEvent::ApplicationActivate);
+        }
         if (d->isActive != wasActive) {
             emit activeChanged();
         }
