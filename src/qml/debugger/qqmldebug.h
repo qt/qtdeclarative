@@ -55,7 +55,7 @@ struct Q_QML_EXPORT QQmlDebuggingEnabler
 // Execute code in constructor before first QQmlEngine is instantiated
 #if defined(QT_QML_DEBUG_NO_WARNING)
 static QQmlDebuggingEnabler qQmlEnableDebuggingHelper(false);
-#elif defined(QT_QML_DEBUG) || defined(QT_DECLARATIVE_DEBUG)
+#elif defined(QT_QML_DEBUG)
 static QQmlDebuggingEnabler qQmlEnableDebuggingHelper(true);
 #endif
 
