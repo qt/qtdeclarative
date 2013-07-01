@@ -93,8 +93,7 @@ public:
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
         , textMargin(0.0), xoff(0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
-        , quickDocument(0), frameDecorationsNode(0), cursorNode(0)
-        , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
+        , quickDocument(0), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
         , renderType(QQuickTextEdit::QtRendering)
@@ -155,8 +154,6 @@ public:
     QQuickTextControl *control;
     QQuickTextDocument *quickDocument;
     QList<Node*> textNodeMap;
-    QQuickTextNode *frameDecorationsNode;
-    QSGSimpleRectNode *cursorNode;
 
     int lastSelectionStart;
     int lastSelectionEnd;
