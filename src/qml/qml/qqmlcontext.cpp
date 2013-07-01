@@ -770,10 +770,13 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
     idValues[idx].context = this;
 }
 
-void QQmlContextData::setIdPropertyData(const QV4::IdentifierHash<int> &data)
+void QQmlContextData::setIdPropertyData(const QVector<ObjectIdMapping> &data)
 {
     Q_ASSERT(propertyNames.isEmpty());
-    propertyNames = data;
+    propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
+    for (QVector<ObjectIdMapping>::ConstIterator it = data.begin(), end = data.end();
+         it != end; ++it)
+        propertyNames.add(it->name, it->id);
 
     idValueCount = data.count();
     idValues = new ContextGuard[idValueCount];

@@ -121,7 +121,7 @@ public:
     QList<QByteArray> datas;
     QByteArray bytecode;
     QList<QQmlPropertyCache *> propertyCaches;
-    QList<QV4::IdentifierHash<int> > contextCaches;
+    QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;
 

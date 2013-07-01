@@ -195,10 +195,17 @@ public:
         QFlagPointer<QQmlContextData> context;
         QQmlNotifier bindings;
     };
+    struct ObjectIdMapping {
+        ObjectIdMapping() : id(-1) {}
+        ObjectIdMapping(const QString &name, int id)
+            : name(name), id(id) {}
+        QString name;
+        int id;
+    };
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(const QV4::IdentifierHash<int> &);
+    void setIdPropertyData(const QVector<ObjectIdMapping> &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;

@@ -3554,10 +3554,10 @@ int QQmlCompiler::genContextCache()
     if (compileState->ids.count() == 0)
         return -1;
 
-    QV4::IdentifierHash<int> cache(QV8Engine::getV4(engine->handle()));
-    cache.reserve(compileState->ids.count());
-    for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) 
-        cache.add(o->id, o->idIndex);
+    QVector<QQmlContextData::ObjectIdMapping> cache(compileState->ids.count());
+    int i = 0;
+    for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o), ++i)
+        cache[i] = QQmlContextData::ObjectIdMapping(o->id, o->idIndex);
 
     output->contextCaches.append(cache);
     return output->contextCaches.count() - 1;
