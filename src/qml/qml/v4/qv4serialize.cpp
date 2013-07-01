@@ -370,9 +370,9 @@ QV4::Value Serialize::deserialize(const char *&data, QV8Engine *engine)
         int sequenceType = deserialize(data, engine).integerValue();
         QV4::ArrayObject *array = v4->newArrayObject();
         array->arrayReserve(seqLength);
+        array->arrayDataLen = seqLength;
         for (quint32 ii = 0; ii < seqLength; ++ii)
             array->arrayData[ii].value = deserialize(data, engine);
-        array->arrayDataLen = seqLength;
         array->setArrayLengthUnchecked(seqLength);
         QVariant seqVariant = QV4::SequencePrototype::toVariant(QV4::Value::fromObject(array), sequenceType, &succeeded);
         return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);

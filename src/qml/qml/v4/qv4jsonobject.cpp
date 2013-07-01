@@ -1006,9 +1006,9 @@ QV4::Value JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &
     int size = array.size();
     ArrayObject *a = engine->newArrayObject();
     a->arrayReserve(size);
+    a->arrayDataLen = size;
     for (int i = 0; i < size; i++)
         a->arrayData[i].value = fromJsonValue(engine, array.at(i));
-    a->arrayDataLen = size;
     a->setArrayLengthUnchecked(size);
     return Value::fromObject(a);
 }

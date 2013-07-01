@@ -1603,9 +1603,9 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         QList<QObject *> &list = *qlistPtr;
         QV4::ArrayObject *array = v4->newArrayObject();
         array->arrayReserve(list.count());
-        for (int ii = 0; ii < list.count(); ++ii) 
-            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
         array->arrayDataLen = list.count();
+        for (int ii = 0; ii < list.count(); ++ii)
+            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
         array->setArrayLengthUnchecked(list.count());
         return QV4::Value::fromObject(array);
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {

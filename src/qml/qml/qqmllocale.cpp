@@ -524,13 +524,13 @@ QV4::Value QQmlLocaleData::method_get_weekDays(QV4::SimpleCallContext *ctx)
 
     QV4::ArrayObject *result = ctx->engine->newArrayObject();
     result->arrayReserve(days.size());
+    result->arrayDataLen = days.size();
     for (int i = 0; i < days.size(); ++i) {
         int day = days.at(i);
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
             day = 0;
         result->arrayData[i].value = QV4::Value::fromInt32(day);
     }
-    result->arrayDataLen = days.size();
     result->setArrayLengthUnchecked(days.size());
 
     return QV4::Value::fromObject(result);
@@ -542,9 +542,9 @@ QV4::Value QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext *ctx)
     QStringList langs = locale.uiLanguages();
     QV4::ArrayObject *result = ctx->engine->newArrayObject();
     result->arrayReserve(langs.size());
+    result->arrayDataLen = langs.size();
     for (int i = 0; i < langs.size(); ++i)
         result->arrayData[i].value = QV4::Value::fromString(ctx, langs.at(i));
-    result->arrayDataLen = langs.size();
     result->setArrayLengthUnchecked(langs.size());
 
     return QV4::Value::fromObject(result);

@@ -184,9 +184,9 @@ static QV4::Value arrayFromStringList(QV8Engine *engine, const QStringList &list
     QV4::ArrayObject *a = e->newArrayObject();
     int len = list.count();
     a->arrayReserve(len);
+    a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
-    a->arrayDataLen = len;
     a->setArrayLengthUnchecked(len);
     return QV4::Value::fromObject(a);
 }
@@ -197,9 +197,9 @@ static QV4::Value arrayFromVariantList(QV8Engine *engine, const QVariantList &li
     QV4::ArrayObject *a = e->newArrayObject();
     int len = list.count();
     a->arrayReserve(len);
+    a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = engine->fromVariant(list.at(ii));
-    a->arrayDataLen = len;
     a->setArrayLengthUnchecked(len);
     return QV4::Value::fromObject(a);
 }
@@ -305,9 +305,9 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
             QV4::ArrayObject *a = m_v4Engine->newArrayObject();
             a->arrayReserve(list.count());
+            a->arrayDataLen = list.count();
             for (int ii = 0; ii < list.count(); ++ii)
                 a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
-            a->arrayDataLen = list.count();
             a->setArrayLengthUnchecked(list.count());
             return QV4::Value::fromObject(a);
         }
@@ -504,9 +504,9 @@ QV4::Value QV8Engine::variantListToJS(const QVariantList &lst)
 {
     QV4::ArrayObject *a = m_v4Engine->newArrayObject();
     a->arrayReserve(lst.size());
+    a->arrayDataLen = lst.size();
     for (int i = 0; i < lst.size(); i++)
         a->arrayData[i].value = variantToJS(lst.at(i));
-    a->arrayDataLen = lst.size();
     a->setArrayLengthUnchecked(lst.size());
     return QV4::Value::fromObject(a);
 }
