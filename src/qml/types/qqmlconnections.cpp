@@ -237,7 +237,7 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
                 QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
-                    ds << rewriteSignalHandler(v, propName).toUtf8();
+                    ds << v.asScript();
                     ds << propLine;
                     ds << propColumn;
                 } else {
@@ -270,7 +270,7 @@ void QQmlConnections::connectSignals()
     while (!ds.atEnd()) {
         QString propName;
         ds >> propName;
-        QByteArray script;
+        QString script;
         ds >> script;
         int line;
         ds >> line;
@@ -295,7 +295,7 @@ void QQmlConnections::connectSignals()
             QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target(), signalIndex,
                                               ctxtdata, this, script,
-                                              true, location, line, column) : 0;
+                                              location, line, column) : 0;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

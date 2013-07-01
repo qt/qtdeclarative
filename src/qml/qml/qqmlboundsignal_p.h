@@ -70,17 +70,14 @@ class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpres
 {
 public:
     QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
-                              bool isRewritten, const QString &fileName, quint16 line, quint16 column);
-    QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                              bool isRewritten, const QString &fileName, quint16 line, quint16 column);
+                              const QString &fileName, quint16 line, quint16 column,
+                              const QString &handlerName = QString());
+
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
     static void expressionChanged(QQmlJavaScriptExpression *);
-
-    void setParameterCountForJS(int count) { m_parameterCountForJS = count; }
 
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);
@@ -97,27 +94,22 @@ private:
     ~QQmlBoundSignalExpression();
 
     void init(QQmlContextData *ctxt, QObject *scope);
-    bool hasParameterInfo() const { return m_parameterCountForJS > 0; }
 
     QV4::PersistentValue m_v8qmlscope;
     QV4::PersistentValue m_v8function;
 
-    //either expressionUtf8 or expression will be used (but not both).
-    //once m_v8function is valid, we clear both expressions, and
+    QString m_handlerName;
+    //once m_v8function is valid, we clear expression and
     //extract it from m_v8function if needed.
-    QByteArray m_expressionUtf8;
     QString m_expression;   //only used when expression needs to be rewritten
     QString m_fileName;
     quint16 m_line;
     quint16 m_column;
 
-    int m_parameterCountForJS;
-
     QObject *m_target;
     int m_index;
 
     bool m_expressionFunctionValid:1;
-    bool m_expressionFunctionRewritten:1;
     bool m_invalidParameterName:1;
 };
 

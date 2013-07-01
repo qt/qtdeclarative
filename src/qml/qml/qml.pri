@@ -23,7 +23,6 @@ SOURCES += \
     $$PWD/qqmlinfo.cpp \
     $$PWD/qqmlerror.cpp \
     $$PWD/qqmlscript.cpp \
-    $$PWD/qqmlrewrite.cpp \
     $$PWD/qqmlvaluetype.cpp \
     $$PWD/qqmlaccessors.cpp \
     $$PWD/qqmlxmlhttprequest.cpp \
@@ -95,7 +94,6 @@ HEADERS += \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlerror.h \
     $$PWD/qqmlscript_p.h \
-    $$PWD/qqmlrewrite_p.h \
     $$PWD/qqmlvaluetype_p.h \
     $$PWD/qqmlaccessors_p.h \
     $$PWD/qqmlxmlhttprequest_p.h \

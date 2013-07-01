@@ -295,7 +295,6 @@ public:
     int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
     int bindingIdentifier(const QQmlScript::Variant& value); // for QQmlCustomParser::bindingIndex
-    QString rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name);  // for QQmlCustomParser::rewriteSignalHandler
 
 private:
     typedef QQmlCompiledData::Instruction Instruction;

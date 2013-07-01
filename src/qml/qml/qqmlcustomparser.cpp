@@ -317,13 +317,4 @@ QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QQmlScript::Va
     return compiler->bindingIdentifier(value);
 }
 
-/*!
-    Returns a rewritten \a handler. \a name
-    is used as the name of the rewritten function.
-*/
-QString QQmlCustomParser::rewriteSignalHandler(const QQmlScript::Variant &value, const QString &name)
-{
-    return compiler->rewriteSignalHandler(value , name);
-}
-
 QT_END_NAMESPACE

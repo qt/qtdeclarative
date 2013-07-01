@@ -623,7 +623,7 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 } else if (hasValidSignal(object, propertyName)) {
                     QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(property)->signalIndex(),
                                                                                              QQmlContextData::get(context), object, expression.toString(),
-                                                                                             false, filename, line, column);
+                                                                                             filename, line, column);
                     QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {
                     QQmlBinding *binding = new QQmlBinding(expression.toString(), object, QQmlContextData::get(context), filename, line, column);;

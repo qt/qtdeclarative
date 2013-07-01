@@ -757,9 +757,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(target, instr.signalIndex,
-                                              CTXT, context, DATAS.at(instr.value),
-                                              true, COMP->name, instr.line, instr.column);
-            expr->setParameterCountForJS(instr.parameterCount);
+                                              CTXT, context, PRIMITIVES.at(instr.value),
+                                              COMP->name, instr.line, instr.column,
+                                              PRIMITIVES.at(instr.handlerName));
             bs->takeExpression(expr);
         QML_END_INSTR(StoreSignal)
 

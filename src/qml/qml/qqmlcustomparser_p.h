@@ -140,7 +140,6 @@ protected:
     const QMetaObject *resolveType(const QString&) const;
 
     QQmlBinding::Identifier bindingIdentifier(const QQmlScript::Variant&, const QString&);
-    QString rewriteSignalHandler(const QQmlScript::Variant&, const QString&);
 
 private:
     QList<QQmlError> exceptions;

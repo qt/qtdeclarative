@@ -343,7 +343,7 @@ void QQuickPropertyChangesPrivate::decode()
             handler->property = prop;
             handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
                                                                    QQmlContextData::get(qmlContext(q)), object, expression,
-                                                                   false, url.toString(), line, column));
+                                                                   url.toString(), line, column));
             signalReplacements << handler;
         } else if (isScript) { // binding
             QString expression = data.toString();

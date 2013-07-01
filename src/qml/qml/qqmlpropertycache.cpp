@@ -49,7 +49,6 @@
 #include <private/qmetaobject_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
-#include <private/qqmlrewrite_p.h>
 
 #include <private/qv4value_p.h>
 
@@ -1085,60 +1084,6 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     args->next = argumentsCache;
     argumentsCache = args;
     return args;
-}
-
-/*! \internal
-    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
-    This is different from QMetaMethod::methodIndex().
-*/
-QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QString *errorString)
-{
-    QQmlPropertyCache *c = 0;
-    QQmlPropertyData *signalData = signal(index, &c);
-    if (!signalData)
-        return QString();
-
-    typedef QQmlPropertyCacheMethodArguments A;
-
-    if (signalData->arguments) {
-        A *arguments = static_cast<A *>(signalData->arguments);
-        if (arguments->signalParameterStringForJS) {
-            if (count)
-                *count = arguments->signalParameterCountForJS;
-            if (arguments->parameterError) {
-                if (errorString)
-                    *errorString = *arguments->signalParameterStringForJS;
-                return QString();
-            }
-            return *arguments->signalParameterStringForJS;
-        }
-    }
-
-    QList<QByteArray> parameterNameList = signalParameterNames(index);
-
-    if (!signalData->arguments) {
-        A *args = c->createArgumentsObject(parameterNameList.count(), parameterNameList);
-        signalData->arguments = args;
-    }
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QQmlRewrite::RewriteSignalHandler rewriter(ep->v4engine());
-    const QString &parameters = rewriter.createParameterString(parameterNameList,
-                                                               ep->v8engine()->illegalNames());
-
-    bool error = rewriter.hasParameterError();
-    A *arguments = static_cast<A *>(signalData->arguments);
-    arguments->signalParameterStringForJS = new QString(error ? rewriter.parameterError() : parameters);
-    arguments->signalParameterCountForJS = rewriter.parameterCountForJS();
-    if (count)
-        *count = arguments->signalParameterCountForJS;
-    if (error) {
-        arguments->parameterError = true;
-        if (errorString)
-            *errorString = *arguments->signalParameterStringForJS;
-        return QString();
-    }
-    return *arguments->signalParameterStringForJS;
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array

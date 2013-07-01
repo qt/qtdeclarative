@@ -392,9 +392,9 @@ union QQmlInstruction
     };
     struct instr_storeSignal {
         QML_INSTR_HEADER
+        int handlerName;
         int signalIndex;
         int value;
-        int parameterCount;
         short context;
         ushort line;
         ushort column;

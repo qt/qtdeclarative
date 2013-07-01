@@ -53,10 +53,11 @@
 #include "qqmlcontext_p.h"
 #include "qqmlcomponent_p.h"
 #include <private/qqmljsast_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsmemorypool_p.h>
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlproperty_p.h"
-#include "qqmlrewrite_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
@@ -1312,18 +1313,9 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         } else if (v->type == Value::SignalExpression) {
 
             Instruction::StoreSignal store;
+            store.handlerName = output->indexForString(prop->name().toString());
             store.signalIndex = prop->index;
-
-            const QList<QByteArray> &parameterNameList = obj->metatype->signalParameterNames(prop->index);
-            QQmlRewrite::RewriteSignalHandler rewriter(enginePrivate->v4engine());
-            int count = 0;
-            const QString &rewrite = rewriter(v->value.asAST(), v->value.asScript(),
-                                              prop->name().toString(),
-                                              obj->metatype->signalParameterStringForJS(prop->index, &count),
-                                              parameterNameList);
-            store.value = output->indexForByteArray(rewrite.toUtf8());
-            store.parameterCount =
-                    (rewriter.parameterAccess() == QQmlRewrite::RewriteSignalHandler::ParametersUnaccessed) ? 0 : count;
+            store.value = output->indexForString(v->value.asScript());
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
             store.column = v->location.start.column;
@@ -1684,12 +1676,6 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
             //all handlers should be on the original, rather than cloned signals in order
             //to ensure all parameters are available (see qqmlboundsignal constructor for more details)
             prop->index = obj->metatype->originalClone(prop->index);
-
-            QString errorString;
-            obj->metatype->signalParameterStringForJS(prop->index, 0, &errorString);
-            if (!errorString.isEmpty())
-                COMPILE_EXCEPTION(prop, errorString);
-
             prop->values.first()->signalExpressionContextStack = ctxt.stack;
         }
     }
@@ -2626,12 +2612,6 @@ int QQmlCompiler::bindingIdentifier(const Variant &value)
     return output->indexForString(value.asScript());
 }
 
-QString QQmlCompiler::rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name)
-{
-    QQmlRewrite::RewriteSignalHandler rewriteSignalHandler(enginePrivate->v4engine());
-    return rewriteSignalHandler(value.asAST(), value.asScript(), name);
-}
-
 // Ensures that the dynamic meta specification on obj is valid
 bool QQmlCompiler::checkDynamicMeta(QQmlScript::Object *obj)
 {
@@ -2746,8 +2726,6 @@ bool QQmlCompiler::mergeDynamicMetaProperties(QQmlScript::Object *obj)
     }
     return true;
 }
-
-#include <private/qqmljsparser_p.h>
 
 static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
 {
