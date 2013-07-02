@@ -1541,16 +1541,12 @@ void tst_QJSEngine::automaticSemicolonInsertion()
     }
     {
         QJSValue ret = eng.evaluate("n = 5; i = 0; do\n ++n; while (++i < 10); n");
-        QEXPECT_FAIL("", "Known issue with automatic semicolon insertion. Regression from V8", Continue);
         QVERIFY(ret.isNumber());
-        QEXPECT_FAIL("", "Known issue with automatic semicolon insertion. Regression from V8", Continue);
         QCOMPARE(ret.toInt(), 15);
     }
     {
         QJSValue ret = eng.evaluate("n = 20; i = 0; do\n --n; while (++i < 10); n");
-        QEXPECT_FAIL("", "Known issue with automatic semicolon insertion. Regression from V8", Continue);
         QVERIFY(ret.isNumber());
-        QEXPECT_FAIL("", "Known issue with automatic semicolon insertion. Regression from V8", Continue);
         QCOMPARE(ret.toInt(), 10);
     }
 

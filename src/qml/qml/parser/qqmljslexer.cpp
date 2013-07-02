@@ -287,7 +287,8 @@ int Lexer::lex()
         break;
 
     case BalancedParentheses:
-        _parenthesesState = IgnoreParentheses;
+        if (_tokenKind != T_DO)
+            _parenthesesState = IgnoreParentheses;
         break;
     } // switch
 
