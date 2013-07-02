@@ -6,6 +6,9 @@ SUBDIRS=\
     particles \
     qmltest \
     qmldevtools \
-    cmake
+    cmake \
+    installed_cmake
+
+installed_cmake.depends = cmake
 
 testcocoon: SUBDIRS -= headersclean
