@@ -881,11 +881,9 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         it = it->next;
     }
 
-    _as->move(Assembler::TrustedImmPtr(klass), Assembler::ReturnValueRegister);
-
     generateFunctionCall(Assembler::Void, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
                          Assembler::PointerToValue(result), baseAddressForCallArguments(),
-                         Assembler::ReturnValueRegister);
+                         Assembler::TrustedImmPtr(klass));
 }
 
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
