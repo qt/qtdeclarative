@@ -759,7 +759,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 new QQmlBoundSignalExpression(target, instr.signalIndex,
                                               CTXT, context, PRIMITIVES.at(instr.value),
                                               COMP->name, instr.line, instr.column,
-                                              PRIMITIVES.at(instr.handlerName));
+                                              PRIMITIVES.at(instr.handlerName),
+                                              PRIMITIVES.at(instr.parameters));
             bs->takeExpression(expr);
         QML_END_INSTR(StoreSignal)
 

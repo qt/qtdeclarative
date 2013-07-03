@@ -69,7 +69,8 @@ static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
                                                      QQmlContextData *ctxt, QObject *scope, const QString &expression,
                                                      const QString &fileName, quint16 line, quint16 column,
-                                                     const QString &handlerName)
+                                                     const QString &handlerName,
+                                                     const QString &parameterString)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_fileName(fileName),
       m_line(line),
@@ -81,6 +82,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 {
     init(ctxt, scope);
     m_handlerName = handlerName;
+    m_parameterString = parameterString;
     m_expression = expression;
 }
 
@@ -133,50 +135,35 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
         if (!m_expressionFunctionValid) {
-
-            //TODO: look at using the property cache here (as in the compiler)
-            //      for further optimization
-            QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-
             QString expression;
 
             expression = QStringLiteral("(function ");
             expression += m_handlerName;
             expression += QLatin1Char('(');
 
-            QString error;
+            if (m_parameterString.isEmpty()) {
+                QString error;
+                //TODO: look at using the property cache here (as in the compiler)
+                //      for further optimization
+                QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
+                expression += QQmlPropertyCache::signalParameterStringForJS(engine(), signal.parameterNames(), &error);
 
-            bool unnamedParameter = false;
-            const QV4::IdentifierHash<bool> &illegalNames = ep->v8engine()->illegalNames();
-
-            const QList<QByteArray> parameters = signal.parameterNames();
-            for (int i = 0; i < parameters.count(); ++i) {
-                if (i > 0)
-                    expression += QLatin1Char(',');
-                const QByteArray &param = parameters.at(i);
-                if (param.isEmpty())
-                    unnamedParameter = true;
-                else if (unnamedParameter) {
-                    error = QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
-                    break;
-                } else if (illegalNames.contains(param)) {
-                    error = QCoreApplication::translate("QQmlRewrite", "Signal parameter \"%1\" hides global variable.").arg(QString::fromUtf8(param));
-                    break;
+                if (!error.isEmpty()) {
+                    qmlInfo(scopeObject()) << error;
+                    m_invalidParameterName = true;
+                    ep->dereferenceScarceResources();
+                    return;
                 }
-                expression += QString::fromUtf8(param);
-            }
-
-            if (!error.isEmpty()) {
-                qmlInfo(scopeObject()) << error;
-                m_invalidParameterName = true;
-                ep->dereferenceScarceResources();
-                return;
-            }
+            } else
+                expression += m_parameterString;
 
             expression += QStringLiteral(") { ");
             expression += m_expression;
             expression += QStringLiteral(" })");
+
             m_expression.clear();
+            m_handlerName.clear();
+            m_parameterString.clear();
 
             m_v8function = evalFunction(context(), scopeObject(), expression,
                                         m_fileName, m_line, &m_v8qmlscope);

@@ -1314,6 +1314,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.handlerName = output->indexForString(prop->name().toString());
+            store.parameters = output->indexForString(obj->metatype->signalParameterStringForJS(prop->index));
             store.signalIndex = prop->index;
             store.value = output->indexForString(v->value.asScript());
             store.context = v->signalExpressionContextStack;
@@ -1677,6 +1678,11 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
             //to ensure all parameters are available (see qqmlboundsignal constructor for more details)
             prop->index = obj->metatype->originalClone(prop->index);
             prop->values.first()->signalExpressionContextStack = ctxt.stack;
+
+            QString errorString;
+            obj->metatype->signalParameterStringForJS(prop->index, &errorString);
+            if (!errorString.isEmpty())
+                COMPILE_EXCEPTION(prop, errorString);
         }
     }
 

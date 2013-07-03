@@ -73,7 +73,6 @@ public:
 
     //for signal handler rewrites
     QString *signalParameterStringForJS;
-    int signalParameterCountForJS:30;
     int parameterError:1;
     int argumentsValid:1;
 
@@ -1078,12 +1077,86 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     args->arguments[0] = argc;
     args->argumentsValid = false;
     args->signalParameterStringForJS = 0;
-    args->signalParameterCountForJS = 0;
     args->parameterError = false;
     args->names = argc ? new QList<QByteArray>(names) : 0;
     args->next = argumentsCache;
     argumentsCache = args;
     return args;
+}
+
+/*! \internal
+    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+QString QQmlPropertyCache::signalParameterStringForJS(int index, QString *errorString)
+{
+    QQmlPropertyCache *c = 0;
+    QQmlPropertyData *signalData = signal(index, &c);
+    if (!signalData)
+        return QString();
+
+    typedef QQmlPropertyCacheMethodArguments A;
+
+    if (signalData->arguments) {
+        A *arguments = static_cast<A *>(signalData->arguments);
+        if (arguments->signalParameterStringForJS) {
+            if (arguments->parameterError) {
+                if (errorString)
+                    *errorString = *arguments->signalParameterStringForJS;
+                return QString();
+            }
+            return *arguments->signalParameterStringForJS;
+        }
+    }
+
+    QList<QByteArray> parameterNameList = signalParameterNames(index);
+
+    if (!signalData->arguments) {
+        A *args = c->createArgumentsObject(parameterNameList.count(), parameterNameList);
+        signalData->arguments = args;
+    }
+
+    QString error;
+    QString parameters = signalParameterStringForJS(engine, parameterNameList, &error);
+
+    A *arguments = static_cast<A *>(signalData->arguments);
+    arguments->signalParameterStringForJS = new QString(!error.isEmpty() ? error : parameters);
+    if (!error.isEmpty()) {
+        arguments->parameterError = true;
+        if (errorString)
+            *errorString = *arguments->signalParameterStringForJS;
+        return QString();
+    }
+    return *arguments->signalParameterStringForJS;
+}
+
+QString QQmlPropertyCache::signalParameterStringForJS(QQmlEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString)
+{
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    bool unnamedParameter = false;
+    const QV4::IdentifierHash<bool> &illegalNames = ep->v8engine()->illegalNames();
+    QString error;
+    QString parameters;
+
+    for (int i = 0; i < parameterNameList.count(); ++i) {
+        if (i > 0)
+            parameters += QLatin1Char(',');
+        const QByteArray &param = parameterNameList.at(i);
+        if (param.isEmpty())
+            unnamedParameter = true;
+        else if (unnamedParameter) {
+            if (errorString)
+                *errorString = QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
+            return QString();
+        } else if (illegalNames.contains(param)) {
+            if (errorString)
+                *errorString = QCoreApplication::translate("QQmlRewrite", "Signal parameter \"%1\" hides global variable.").arg(QString::fromUtf8(param));
+            return QString();
+        }
+        parameters += QString::fromUtf8(param);
+    }
+
+    return parameters;
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array

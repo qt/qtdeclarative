@@ -314,6 +314,8 @@ public:
     static int originalClone(QObject *, int index);
 
     QList<QByteArray> signalParameterNames(int index) const;
+    QString signalParameterStringForJS(int index, QString *errorString = 0);
+    static QString signalParameterStringForJS(QQmlEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = 0);
 
     const char *className() const;
 

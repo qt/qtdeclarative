@@ -72,7 +72,8 @@ public:
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, const QString &expression,
                               const QString &fileName, quint16 line, quint16 column,
-                              const QString &handlerName = QString());
+                              const QString &handlerName = QString(),
+                              const QString &parameterString = QString());
 
 
     // "inherited" from QQmlJavaScriptExpression.
@@ -99,6 +100,7 @@ private:
     QV4::PersistentValue m_v8function;
 
     QString m_handlerName;
+    QString m_parameterString;
     //once m_v8function is valid, we clear expression and
     //extract it from m_v8function if needed.
     QString m_expression;   //only used when expression needs to be rewritten
