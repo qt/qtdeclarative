@@ -98,6 +98,7 @@ public:
 
     // Return address is pushed onto stack by the CPU.
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
+    static const int StackShadowSpace = 0;
     inline void platformEnterStandardStackFrame() {}
     inline void platformLeaveStandardStackFrame() {}
 #elif CPU(X86_64)
@@ -118,6 +119,21 @@ public:
 
     static const int RegisterSize = 8;
 
+#if OS(WINDOWS)
+    static const int RegisterArgumentCount = 4;
+    static RegisterID registerForArgument(int index)
+    {
+        static RegisterID regs[RegisterArgumentCount] = {
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+        assert(index >= 0 && index < RegisterArgumentCount);
+        return regs[index];
+    };
+    static const int StackShadowSpace = 32;
+#else // Unix
     static const int RegisterArgumentCount = 6;
     static RegisterID registerForArgument(int index)
     {
@@ -132,6 +148,8 @@ public:
         assert(index >= 0 && index < RegisterArgumentCount);
         return regs[index];
     };
+    static const int StackShadowSpace = 0;
+#endif
 
     // Return address is pushed onto stack by the CPU.
     static const int StackSpaceAllocatedUponFunctionEntry = RegisterSize;
@@ -169,6 +187,7 @@ public:
 
     // Registers saved in platformEnterStandardStackFrame below.
     static const int StackSpaceAllocatedUponFunctionEntry = 5 * RegisterSize;
+    static const int StackShadowSpace = 0;
     inline void platformEnterStandardStackFrame()
     {
         // Move the register arguments onto the stack as if they were
@@ -473,7 +492,11 @@ public:
         if (argumentNumber < RegisterArgumentCount)
             loadArgumentInRegister(value, registerForArgument(argumentNumber));
         else
+#if OS(WINDOWS) && CPU(X86_64)
+            loadArgumentOnStack<argumentNumber>(value);
+#else // Sanity:
             loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value);
+#endif
     }
 
     template <int argumentNumber>
@@ -515,7 +538,8 @@ public:
                                + SizeOnStack<2, Arg3>::Size
                                + SizeOnStack<3, Arg4>::Size
                                + SizeOnStack<4, Arg5>::Size
-                               + SizeOnStack<5, Arg6>::Size;
+                               + SizeOnStack<5, Arg6>::Size
+                               + StackShadowSpace;
 
         if (stackSpaceNeeded) {
             stackSpaceNeeded = WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded);
