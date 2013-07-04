@@ -164,10 +164,23 @@ void tst_qqmlapplicationengine::applicationProperties()
     QCOMPARE(coreApp->organizationName(), secondOrganization);
     QCOMPARE(coreApp->organizationDomain(), secondDomain);
 
+    QObject* application = root->property("applicationInstance").value<QObject*>();
+    QVERIFY(application);
+    QSignalSpy nameChanged(application, SIGNAL(nameChanged()));
+    QSignalSpy versionChanged(application, SIGNAL(versionChanged()));
+    QSignalSpy organizationChanged(application, SIGNAL(organizationChanged()));
+    QSignalSpy domainChanged(application, SIGNAL(domainChanged()));
+
     coreApp->setApplicationName(originalName);
     coreApp->setApplicationVersion(originalVersion);
     coreApp->setOrganizationName(originalOrganization);
     coreApp->setOrganizationDomain(originalDomain);
+
+    QCOMPARE(nameChanged.count(), 1);
+    QCOMPARE(versionChanged.count(), 1);
+    QCOMPARE(organizationChanged.count(), 1);
+    QCOMPARE(domainChanged.count(), 1);
+
     delete test;
 }
 

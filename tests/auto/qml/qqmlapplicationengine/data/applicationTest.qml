@@ -9,6 +9,7 @@ QtObject {
     property string currentVersion: Qt.application.version
     property string currentOrganization: Qt.application.organization
     property string currentDomain: Qt.application.domain
+    property QtObject applicationInstance: Qt.application
     Component.onCompleted: {
         originalName = Qt.application.name
         originalVersion = Qt.application.version
