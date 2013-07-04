@@ -67,7 +67,7 @@ class QQuickAbstractFileDialog : public QQuickAbstractDialog
     Q_PROPERTY(bool selectExisting READ selectExisting WRITE setSelectExisting NOTIFY fileModeChanged)
     Q_PROPERTY(bool selectMultiple READ selectMultiple WRITE setSelectMultiple NOTIFY fileModeChanged)
     Q_PROPERTY(bool selectFolder READ selectFolder WRITE setSelectFolder NOTIFY fileModeChanged)
-    Q_PROPERTY(QString folder READ folder WRITE setFolder NOTIFY folderChanged)
+    Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters NOTIFY nameFiltersChanged)
     Q_PROPERTY(QString selectedNameFilter READ selectedNameFilter WRITE selectNameFilter NOTIFY filterSelected)
     Q_PROPERTY(QUrl fileUrl READ fileUrl NOTIFY selectionAccepted)
@@ -81,7 +81,7 @@ public:
     bool selectExisting() const { return m_selectExisting; }
     bool selectMultiple() const { return m_selectMultiple; }
     bool selectFolder() const { return m_selectFolder; }
-    QString folder();
+    QUrl folder();
     QStringList nameFilters() const { return m_options->nameFilters(); }
     QString selectedNameFilter();
     QUrl fileUrl();
@@ -89,13 +89,13 @@ public:
 
 public Q_SLOTS:
     void setVisible(bool v);
-    void setTitle(QString t);
+    void setTitle(const QString &t);
     void setSelectExisting(bool s);
     void setSelectMultiple(bool s);
     void setSelectFolder(bool s);
-    void setFolder(QString f);
+    void setFolder(const QUrl &f);
     void setNameFilters(const QStringList &f);
-    void selectNameFilter(QString f);
+    void selectNameFilter(const QString &f);
 
 Q_SIGNALS:
     void folderChanged();

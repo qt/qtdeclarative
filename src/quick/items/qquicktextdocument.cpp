@@ -47,6 +47,24 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \class QQuickTextDocument
+    \since 5.1
+    \brief The QQuickTextDocument class provides access to the QTextDocument of QQuickTextEdit
+    \inmodule QtQuick
+
+    This class provides access to the QTextDocument of QQuickTextEdit elements.
+    This is provided to allow usage of the \l{Rich Text Processing} functionalities of Qt.
+    You are not allowed to modify the document, but it can be used to output content, for example with \l{QTextDocumentWriter}),
+    or provide additional formatting, for example with \l{QSyntaxHighlighter}.
+
+    The class has to be used from C++ directly, using the property of the \l TextEdit.
+
+    Warning: The QTextDocument provided is used internally by \l {Qt Quick} elements to provide text manipulation primitives.
+    You are not allowed to perform any modification of the internal state of the QTextDocument. If you do, the element
+    in question may stop functioning or crash.
+*/
+
 class QQuickTextDocumentPrivate : public QObjectPrivate
 {
 public:

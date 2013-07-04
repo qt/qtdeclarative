@@ -180,17 +180,29 @@
 
 /*!
     \fn void QSGSimpleMaterialShader::resolveUniforms()
-    \internal
+
+    Reimplement this function to resolve the location of named uniforms
+    in the shader program.
+
+    This function is called when the material shader is initialized.
  */
 
 /*!
     \fn const char *QSGSimpleMaterialShader::uniformMatrixName() const
-    \internal
+
+    Reimplement this function to give a different name to the uniform for
+    item transformation. The default value is \c qt_Matrix.
+
  */
 
 /*!
     \fn const char *QSGSimpleMaterialShader::uniformOpacityName() const
-    \internal
+
+    Reimplement this function to give a different name to the uniform for
+    item opacity. The default value is \c qt_Opacity.
+
+    If the shader program does not implement the item opacity, the
+    implemented function should return a null pointer.
  */
 
 /*!

@@ -45,10 +45,10 @@ Item {
 
     property alias textInput: textInput
     property alias text: textInput.text
-    property real implicitWidth: textInput.implicitWidth + rect.radius * 2
-    property real implicitHeight: textInput.implicitHeight + rect.radius * 2
     signal accepted
     signal downPressed
+    implicitWidth: textInput.implicitWidth + rect.radius * 2
+    implicitHeight: textInput.implicitHeight
 
     function copyAll() {
         textInput.selectAll()

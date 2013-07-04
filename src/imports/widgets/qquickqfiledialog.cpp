@@ -135,14 +135,14 @@ private:
     \qmlsignal QtQuick::Dialogs::FileDialog::accepted
 
     The \a accepted signal is emitted when the user has finished using the
-    dialog. You can then inspect the \a filePath or \a filePaths properties to
+    dialog. You can then inspect the \a fileUrl or \a fileUrls properties to
     get the selection.
 
     Example:
 
     \qml
     FileDialog {
-        onAccepted: { console.log("Selected file: " + filePath) }
+        onAccepted: { console.log("Selected file: " + fileUrl) }
     }
     \endqml
 */
