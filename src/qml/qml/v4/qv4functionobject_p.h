@@ -170,7 +170,7 @@ struct IndexedBuiltinFunction: FunctionObject
     uint index;
 
     IndexedBuiltinFunction(ExecutionContext *scope, uint index, Value (*code)(SimpleCallContext *ctx, uint index))
-        : FunctionObject(scope, name)
+        : FunctionObject(scope, /*name*/0)
         , code(code)
         , index(index)
     {

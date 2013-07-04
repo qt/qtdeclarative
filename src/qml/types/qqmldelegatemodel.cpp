@@ -67,7 +67,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     uint flag;
 
     DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::Value (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
-        : FunctionObject(scope, name)
+        : FunctionObject(scope, /*name*/0)
         , code(code)
         , flag(flag)
     {
