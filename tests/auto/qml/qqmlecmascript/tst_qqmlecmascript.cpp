@@ -4891,6 +4891,14 @@ void tst_qqmlecmascript::propertyVarCircular2()
     delete object;
 }
 
+#if defined(Q_CC_GNU)
+#if (__GNUC__ * 100 + __GNUC_MINOR__) >= 404
+#define pop_gcc_flags
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+#endif
+#endif
+
 void tst_qqmlecmascript::propertyVarInheritance()
 {
     // enforce behaviour regarding element inheritance - ensure handle disposal.
@@ -4913,8 +4921,11 @@ void tst_qqmlecmascript::propertyVarInheritance()
     {
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        icoCanaryHandle = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
-        ccoCanaryHandle = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
+        QV4::Value tmp = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
+        icoCanaryHandle = tmp;
+        tmp = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
+        ccoCanaryHandle = tmp;
+        tmp = QV4::Value::nullValue();
         QVERIFY(!icoCanaryHandle.isEmpty());
         QVERIFY(!ccoCanaryHandle.isEmpty());
         gc(engine);
@@ -4952,7 +4963,9 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        childObjectVarArrayValueHandle = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
+        QV4::Value tmp = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
+        childObjectVarArrayValueHandle = tmp;
+        tmp = QV4::Value::nullValue();
         QVERIFY(!childObjectVarArrayValueHandle.isEmpty());
         gc(engine);
         QVERIFY(!childObjectVarArrayValueHandle.isEmpty()); // should not have been collected yet.
@@ -4965,6 +4978,11 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
     delete object;
 }
+
+#if defined(pop_gcc_flags)
+#pragma GCC pop_options
+#endif
+
 
 // Ensure that QObject type conversion works on binding assignment
 void tst_qqmlecmascript::elementAssign()
