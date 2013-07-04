@@ -388,8 +388,7 @@ void QQuickXmlQueryEngine::doQueryJob(XmlQueryJob *currentJob, QQuickXmlQueryRes
     b.open(QIODevice::ReadOnly);
 
     QString namespaces = QLatin1String("declare namespace dummy=\"http://qtsotware.com/dummy\";\n") + currentJob->namespaces;
-    QString prefix = QLatin1String("doc($inputDocument)/dummy:items") +
-                     currentJob->query.mid(currentJob->query.lastIndexOf(QLatin1Char('/')));
+    QString prefix = QLatin1String("doc($inputDocument)/dummy:items/*");
 
     //figure out how many items we are dealing with
     int count = -1;
