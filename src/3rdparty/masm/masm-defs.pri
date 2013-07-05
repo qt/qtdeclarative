@@ -1,5 +1,11 @@
 !ios: DEFINES += V4_ENABLE_JIT
 
+# On Qt/Android/ARM release builds are thumb and debug builds arm,
+# but we'll force the JIT to always generate thumb2
+android:isEqual(QT_ARCH, "arm") {
+    DEFINES += WTF_CPU_ARM_THUMB2
+}
+
 DEFINES += WTF_EXPORT_PRIVATE="" JS_EXPORT_PRIVATE=""
 
 win*: DEFINES += NOMINMAX
