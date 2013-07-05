@@ -1367,7 +1367,7 @@ void QQmlVMEGuard::guard(QQmlVME *vme)
     clear();
     
     m_objectCount = vme->objects.count();
-    m_objects = new QQmlGuard<QObject>[m_objectCount];
+    m_objects = new QPointer<QObject>[m_objectCount];
     for (int ii = 0; ii < m_objectCount; ++ii)
         m_objects[ii] = vme->objects[ii];
 

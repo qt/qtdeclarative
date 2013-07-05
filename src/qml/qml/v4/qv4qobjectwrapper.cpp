@@ -41,7 +41,6 @@
 
 #include "qv4qobjectwrapper_p.h"
 
-#include <private/qqmlguard_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
@@ -924,7 +923,7 @@ namespace {
 void QObjectWrapper::collectDeletables(Managed *m, GCDeletable **deletable)
 {
     QObjectWrapper *This = static_cast<QObjectWrapper*>(m);
-    QQmlGuard<QObject> &object = This->m_object;
+    QPointer<QObject> &object = This->m_object;
     if (!object)
         return;
 
@@ -1652,7 +1651,7 @@ QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
 
         result += QString::fromUtf8(m_object->metaObject()->className());
         result += QLatin1String("(0x");
-        result += QString::number((quintptr)m_object.object(),16);
+        result += QString::number((quintptr)m_object.data(),16);
 
         if (!objectName.isEmpty()) {
             result += QLatin1String(", \"");

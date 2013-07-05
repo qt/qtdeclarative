@@ -162,7 +162,7 @@ public:
 
     QUrl baseUrl;
 
-    typedef QPair<QQmlGuard<QObject>,int> FinalizeCallback;
+    typedef QPair<QPointer<QObject>,int> FinalizeCallback;
     void registerFinalizeCallback(QObject *obj, int index);
 
     QQmlVME *activeVME;

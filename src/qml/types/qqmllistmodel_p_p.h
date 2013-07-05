@@ -278,7 +278,7 @@ private:
     ListModel *getListProperty(const ListLayout::Role &role);
     QString *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
-    QQmlGuard<QObject> *getGuardProperty(const ListLayout::Role &role);
+    QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
 

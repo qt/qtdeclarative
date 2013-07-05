@@ -76,8 +76,8 @@ public:
     QRegExp keyRegExp;
     QPointF dragPosition;
     QQuickDropAreaDrag *drag;
-    QQmlGuard<QObject> source;
-    QQmlGuard<QMimeData> mimeData;
+    QPointer<QObject> source;
+    QPointer<QMimeData> mimeData;
 };
 
 QQuickDropAreaPrivate::QQuickDropAreaPrivate()

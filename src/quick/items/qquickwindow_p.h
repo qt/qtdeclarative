@@ -55,7 +55,6 @@
 
 #include "qquickitem.h"
 #include "qquickwindow.h"
-#include <private/qqmlguard_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickdrag_p.h>

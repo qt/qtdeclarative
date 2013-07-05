@@ -986,7 +986,7 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
     if (activeVME) {
-        activeVME->finalizeCallbacks.append(qMakePair(QQmlGuard<QObject>(obj), index));
+        activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };
         QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);

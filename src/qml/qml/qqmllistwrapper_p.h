@@ -54,8 +54,9 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qpointer.h>
+
 #include <QtQml/qqmllist.h>
-#include <private/qqmlguard_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
@@ -88,7 +89,7 @@ public:
 
 private:
     QV8Engine *v8;
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
     QQmlListProperty<QObject> property;
     int propertyType;
 

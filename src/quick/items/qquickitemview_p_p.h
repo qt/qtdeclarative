@@ -249,7 +249,7 @@ public:
         q->polish();
     }
 
-    QQmlGuard<QQmlInstanceModel> model;
+    QPointer<QQmlInstanceModel> model;
     QVariant modelVariant;
     int itemCount;
     int buffer;

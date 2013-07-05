@@ -43,7 +43,6 @@
 #define QQMLNOTIFIER_P_H
 
 #include "qqmldata_p.h"
-#include "qqmlguard_p.h"
 #include <QtCore/qmetaobject.h>
 #include <private/qmetaobject_p.h>
 

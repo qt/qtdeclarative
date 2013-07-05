@@ -54,7 +54,6 @@
 //
 
 #include "qqmllist.h"
-#include "qqmlguard_p.h"
 #include "qqmlpropertycache_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -66,7 +65,7 @@ public:
 
     static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
 
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
     QQmlMetaObject elementType;
     QQmlListProperty<QObject> property;
     int propertyType;

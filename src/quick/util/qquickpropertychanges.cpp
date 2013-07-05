@@ -50,7 +50,6 @@
 #include <qqmlexpression.h>
 #include <private/qqmlbinding_p.h>
 #include <qqmlcontext.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qquickstate_p_p.h>
@@ -199,7 +198,7 @@ public:
     QQuickPropertyChangesPrivate() : decoded(true), restore(true),
                                 isExplicit(false) {}
 
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
     QByteArray data;
 
     bool decoded : 1;

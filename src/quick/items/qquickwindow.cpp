@@ -783,7 +783,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickWindowPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
 {
-    QQmlGuard<QQuickItem> item(*items);
+    QPointer<QQuickItem> item(*items);
 
     if (remaining)
         notifyFocusChangesRecur(items + 1, remaining - 1);

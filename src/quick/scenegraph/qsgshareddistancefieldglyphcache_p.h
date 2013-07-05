@@ -44,7 +44,6 @@
 
 #include <QtCore/qwaitcondition.h>
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qqmlguard_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -116,7 +115,7 @@ private:
         Owner(const Owner &o) : item(o.item), ref(o.ref) {}
         Owner &operator =(const Owner &o) { item = o.item; ref = o.ref; return *this; }
 
-        QQmlGuard<QQuickItem> item;
+        QPointer<QQuickItem> item;
         int ref;
     };
 

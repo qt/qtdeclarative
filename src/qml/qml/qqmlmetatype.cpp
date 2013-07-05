@@ -44,7 +44,6 @@
 
 #include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmlcustomparser_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
 

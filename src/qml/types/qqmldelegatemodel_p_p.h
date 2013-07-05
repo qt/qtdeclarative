@@ -80,7 +80,7 @@ public:
     int parseGroups(const QStringList &groupNames) const;
     int parseGroups(const QV4::Value &groupNames) const;
 
-    QQmlGuard<QQmlDelegateModel> model;
+    QPointer<QQmlDelegateModel> model;
     const int groupCount;
     QV8Engine * const v8Engine;
     QQmlDelegateModelAttachedMetaObject *metaObject;
@@ -231,7 +231,7 @@ public:
             QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
     Compositor::Group group;
-    QQmlGuard<QQmlDelegateModel> model;
+    QPointer<QQmlDelegateModel> model;
     QQmlDelegateModelGroupEmitterList emitters;
     QQmlChangeSet changeSet;
     QString name;

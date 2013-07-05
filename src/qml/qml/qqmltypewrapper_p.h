@@ -54,8 +54,8 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qpointer.h>
 
-#include <private/qqmlguard_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
 
@@ -89,7 +89,7 @@ public:
 private:
     QV8Engine *v8;
     TypeNameMode mode;
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
 
     QQmlType *type;
     QQmlTypeNameCache *typeNamespace;

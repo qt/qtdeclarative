@@ -63,7 +63,7 @@ class QmlValueTypeReference : public QmlValueTypeWrapper
 public:
     QmlValueTypeReference(QV8Engine *engine);
 
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
     int property;
 };
 

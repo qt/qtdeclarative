@@ -57,7 +57,6 @@
 #include <QtCore/qurl.h>
 
 #include <private/qqmlcontext_p.h>
-#include <private/qqmlguard_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4context_p.h>
@@ -96,7 +95,7 @@ private:
 
     QV4::ExecutionEngine *v4;
     QNetworkAccessManager *m_network;
-    QQmlGuard<QNetworkReply> m_reply;
+    QPointer<QNetworkReply> m_reply;
 
     QUrl m_url;
     int m_redirectCount;

@@ -42,9 +42,10 @@
 #ifndef QQUICKGRIDVIEW_P_H
 #define QQUICKGRIDVIEW_P_H
 
+#include <QtCore/qpointer.h>
+
 #include "qquickitemview_p.h"
 
-#include <private/qqmlguard_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -133,7 +134,7 @@ Q_SIGNALS:
     void viewChanged();
 
 public:
-    QQmlGuard<QQuickGridView> m_view;
+    QPointer<QQuickGridView> m_view;
 };
 
 

@@ -1047,7 +1047,7 @@ private:
     QString m_statusText;
     QNetworkRequest m_request;
     QStringList m_addedHeaders;
-    QQmlGuard<QNetworkReply> m_network;
+    QPointer<QNetworkReply> m_network;
     void destroyNetwork();
 
     QNetworkAccessManager *m_nam;

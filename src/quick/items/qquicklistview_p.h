@@ -43,8 +43,7 @@
 #define QQUICKLISTVIEW_P_H
 
 #include "qquickitemview_p.h"
-
-#include <private/qqmlguard_p.h>
+#include <qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -192,7 +191,7 @@ Q_SIGNALS:
     void viewChanged();
 
 public:
-    QQmlGuard<QQuickListView> m_view;
+    QPointer<QQuickListView> m_view;
     QQuickItem *m_sectionItem;
 };
 

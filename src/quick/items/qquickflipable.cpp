@@ -42,7 +42,6 @@
 #include "qquickflipable_p.h"
 #include "qquickitem_p.h"
 
-#include <private/qqmlguard_p.h>
 
 #include <QtQml/qqmlinfo.h>
 
@@ -78,9 +77,9 @@ public:
     void setBackTransform();
 
     QQuickFlipable::Side current;
-    QQmlGuard<QQuickLocalTransform> backTransform;
-    QQmlGuard<QQuickItem> front;
-    QQmlGuard<QQuickItem> back;
+    QPointer<QQuickLocalTransform> backTransform;
+    QPointer<QQuickItem> front;
+    QPointer<QQuickItem> back;
 
     bool sideDirty;
     bool wantBackXFlipped;

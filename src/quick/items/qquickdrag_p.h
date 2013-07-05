@@ -45,6 +45,7 @@
 #include <QtQuick/qquickitem.h>
 
 #include <private/qv8engine_p.h>
+#include <private/qqmlguard_p.h>
 
 #include <QtCore/qmimedata.h>
 #include <QtCore/qstringlist.h>

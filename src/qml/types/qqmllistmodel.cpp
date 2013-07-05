@@ -121,7 +121,7 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(const QV4::String *key, Role
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QQmlGuard<QObject>), sizeof(QVariantMap), sizeof(QDateTime) };
+    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime) };
     const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime) };
 
     Role *r = new Role;
@@ -636,7 +636,7 @@ QString *ListElement::getStringProperty(const ListLayout::Role &role)
 QObject *ListElement::getQObjectProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
-    QQmlGuard<QObject> *o = reinterpret_cast<QQmlGuard<QObject> *>(mem);
+    QPointer<QObject> *o = reinterpret_cast<QPointer<QObject> *>(mem);
     return o->data();
 }
 
@@ -662,22 +662,22 @@ QDateTime *ListElement::getDateTimeProperty(const ListLayout::Role &role)
     return dt;
 }
 
-QQmlGuard<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
+QPointer<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
 
     bool existingGuard = false;
-    for (size_t i=0 ; i < sizeof(QQmlGuard<QObject>) ; ++i) {
+    for (size_t i=0 ; i < sizeof(QPointer<QObject>) ; ++i) {
         if (mem[i] != 0) {
             existingGuard = true;
             break;
         }
     }
 
-    QQmlGuard<QObject> *o = 0;
+    QPointer<QObject> *o = 0;
 
     if (existingGuard)
-        o = reinterpret_cast<QQmlGuard<QObject> *>(mem);
+        o = reinterpret_cast<QPointer<QObject> *>(mem);
 
     return o;
 }
@@ -733,7 +733,7 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
             break;
         case ListLayout::Role::QObject:
             {
-                QQmlGuard<QObject> *guard = reinterpret_cast<QQmlGuard<QObject> *>(mem);
+                QPointer<QObject> *guard = reinterpret_cast<QPointer<QObject> *>(mem);
                 QObject *object = guard->data();
                 if (object)
                     data = QVariant::fromValue(object);
@@ -840,9 +840,9 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
 
     if (role.type == ListLayout::Role::QObject) {
         char *mem = getPropertyMemory(role);
-        QQmlGuard<QObject> *g = reinterpret_cast<QQmlGuard<QObject> *>(mem);
+        QPointer<QObject> *g = reinterpret_cast<QPointer<QObject> *>(mem);
         bool existingGuard = false;
-        for (size_t i=0 ; i < sizeof(QQmlGuard<QObject>) ; ++i) {
+        for (size_t i=0 ; i < sizeof(QPointer<QObject>) ; ++i) {
             if (mem[i] != 0) {
                 existingGuard = true;
                 break;
@@ -851,11 +851,11 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
         bool changed;
         if (existingGuard) {
             changed = g->data() != o;
-            g->~QQmlGuard();
+            g->~QPointer();
         } else {
             changed = true;
         }
-        new (mem) QQmlGuard<QObject>(o);
+        new (mem) QPointer<QObject>(o);
         if (changed)
             roleIndex = role.index;
     }
@@ -940,7 +940,7 @@ void ListElement::setBoolPropertyFast(const ListLayout::Role &role, bool b)
 void ListElement::setQObjectPropertyFast(const ListLayout::Role &role, QObject *o)
 {
     char *mem = getPropertyMemory(role);
-    new (mem) QQmlGuard<QObject>(o);
+    new (mem) QPointer<QObject>(o);
 }
 
 void ListElement::setListPropertyFast(const ListLayout::Role &role, ListModel *m)
@@ -1086,9 +1086,9 @@ void ListElement::destroy(ListLayout *layout)
                     break;
                 case ListLayout::Role::QObject:
                     {
-                        QQmlGuard<QObject> *guard = getGuardProperty(r);
+                        QPointer<QObject> *guard = getGuardProperty(r);
                         if (guard)
-                            guard->~QQmlGuard();
+                            guard->~QPointer();
                     }
                     break;
                 case ListLayout::Role::VariantMap:

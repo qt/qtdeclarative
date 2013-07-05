@@ -1102,7 +1102,7 @@ public:
     static void markObjects(Managed *that);
 
     QV8Engine *v8;
-    QQmlGuard<QObject> parent;
+    QPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value qmlGlobal;
     QV4::Value m_statusChanged;

@@ -101,7 +101,7 @@ private:
 
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    QQmlGuard<QObject> m_object;
+    QPointer<QObject> m_object;
     String *m_destroy;
     String *m_toString;
 
@@ -137,7 +137,7 @@ private:
     QV4::Value method_toString(QV4::ExecutionContext *ctx);
     QV4::Value method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc);
 
-    QQmlGuard<QObject> m_object;
+    QPointer<QObject> m_object;
     int m_index;
     QV4::PersistentValue m_qmlGlobal;
 
@@ -161,7 +161,7 @@ struct QmlSignalHandler : public QV4::Object
     QObject *object() const { return m_object.data(); }
 
 private:
-    QQmlGuard<QObject> m_object;
+    QPointer<QObject> m_object;
     int m_signalIndex;
 
     static void destroy(Managed *that)

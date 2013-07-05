@@ -45,7 +45,6 @@
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
 #include <private/qqmlproperty_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qabstractanimationjob_p.h>
 #include <private/qquicktransition_p.h>
@@ -65,7 +64,7 @@ public:
 
     QQmlProperty property;
     QVariant targetValue;
-    QQmlGuard<QQuickAbstractAnimation> animation;
+    QPointer<QQuickAbstractAnimation> animation;
     QAbstractAnimationJob *animationInstance;
     bool enabled;
     bool finalized;

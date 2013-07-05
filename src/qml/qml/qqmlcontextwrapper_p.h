@@ -93,7 +93,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     bool isNullWrapper;
 
     QQmlGuardedContextData context;
-    QQmlGuard<QObject> scopeObject;
+    QPointer<QObject> scopeObject;
 };
 
 }

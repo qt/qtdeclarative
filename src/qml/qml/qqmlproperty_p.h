@@ -59,7 +59,6 @@
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlpropertycache_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -78,8 +77,8 @@ public:
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
     QQmlContextData *context;
-    QQmlGuard<QQmlEngine> engine;
-    QQmlGuard<QObject> object;
+    QPointer<QQmlEngine> engine;
+    QPointer<QObject> object;
 
     QQmlPropertyData core;
 

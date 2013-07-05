@@ -89,9 +89,9 @@ public:
 
     QQuickDragGrabber dragGrabber;
 
-    QQmlGuard<QObject> source;
-    QQmlGuard<QObject> target;
-    QQmlGuard<QQuickWindow> window;
+    QPointer<QObject> source;
+    QPointer<QObject> target;
+    QPointer<QQuickWindow> window;
     QQuickItem *attachedItem;
     QQuickDragMimeData *mimeData;
     Qt::DropAction proposedAction;

@@ -202,7 +202,7 @@ public:
 
 private:
     int m_objectCount;
-    QQmlGuard<QObject> *m_objects;
+    QPointer<QObject> *m_objects;
     int m_contextCount;
     QQmlGuardedContextData *m_contexts;
 };

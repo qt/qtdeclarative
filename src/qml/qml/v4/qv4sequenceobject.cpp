@@ -480,7 +480,7 @@ private:
     }
 
     mutable Container m_container;
-    QQmlGuard<QObject> m_object;
+    QPointer<QObject> m_object;
     int m_propertyIndex;
     bool m_isReference;
 

@@ -57,9 +57,9 @@ public:
         rewindParent(0), rewindStackBefore(0) {}
 
     QQuickItem *target;
-    QQmlGuard<QQuickItem> parent;
-    QQmlGuard<QQuickItem> origParent;
-    QQmlGuard<QQuickItem> origStackBefore;
+    QPointer<QQuickItem> parent;
+    QPointer<QQuickItem> origParent;
+    QPointer<QQuickItem> origStackBefore;
     QQuickItem *rewindParent;
     QQuickItem *rewindStackBefore;
 

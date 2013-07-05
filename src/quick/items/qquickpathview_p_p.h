@@ -61,7 +61,6 @@
 #include <QtCore/qcoreapplication.h>
 
 #include <private/qquickanimation_p_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qquicktimeline_p_p.h>
 
@@ -132,7 +131,7 @@ public:
 
     QQuickPath *path;
     int currentIndex;
-    QQmlGuard<QQuickItem> currentItem;
+    QPointer<QQuickItem> currentItem;
     qreal currentItemOffset;
     qreal startPc;
     QPointF startPoint;
@@ -169,7 +168,7 @@ public:
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
-    QQmlGuard<QQmlInstanceModel> model;
+    QPointer<QQmlInstanceModel> model;
     QVariant modelVariant;
     enum MovementReason { Other, SetIndex, Mouse };
     MovementReason moveReason;

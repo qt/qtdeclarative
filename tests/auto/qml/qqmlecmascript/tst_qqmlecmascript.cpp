@@ -45,7 +45,6 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdebug.h>
-#include <QtQml/private/qqmlguard_p.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qnumeric.h>
 #include <private/qqmlengine_p.h>
@@ -1575,9 +1574,9 @@ void tst_qqmlecmascript::dynamicDestruction()
 {
     {
     QQmlComponent component(&engine, testFileUrl("dynamicDeletion.qml"));
-    QQmlGuard<MyQmlObject> object = qobject_cast<MyQmlObject*>(component.create());
+    QPointer<MyQmlObject> object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != 0);
-    QQmlGuard<QObject> createdQmlObject = 0;
+    QPointer<QObject> createdQmlObject = 0;
 
     QMetaObject::invokeMethod(object, "create");
     createdQmlObject = object->objectProperty();
@@ -1630,7 +1629,7 @@ void tst_qqmlecmascript::dynamicDestruction()
 
     {
     // QTBUG-23451
-    QQmlGuard<QObject> createdQmlObject = 0;
+    QPointer<QObject> createdQmlObject = 0;
     QQmlComponent component(&engine, testFileUrl("dynamicDeletion.3.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -3274,7 +3273,7 @@ void tst_qqmlecmascript::ownershipRootObject()
     context->setContextObject(&own);
 
     QQmlComponent component(&engine, testFileUrl("ownershipRootObject.qml"));
-    QQmlGuard<QObject> object = component.create(context);
+    QPointer<QObject> object = component.create(context);
     QVERIFY(object);
 
     engine.collectGarbage();
@@ -3304,7 +3303,7 @@ void tst_qqmlecmascript::ownershipConsistency()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
 
     QQmlComponent component(&engine, testFileUrl("ownershipConsistency.qml"));
-    QQmlGuard<QObject> object = component.create(context);
+    QPointer<QObject> object = component.create(context);
     QVERIFY(object);
 
     engine.collectGarbage();
@@ -5613,7 +5612,7 @@ void tst_qqmlecmascript::qtbug_9792()
     delete object;
 }
 
-// Verifies that QQmlGuard<>s used in the vmemetaobject are cleaned correctly
+// Verifies that QPointer<>s used in the vmemetaobject are cleaned correctly
 void tst_qqmlecmascript::qtcreatorbug_1289()
 {
     QQmlComponent component(&engine, testFileUrl("qtcreatorbug_1289.qml"));

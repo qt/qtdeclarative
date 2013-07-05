@@ -686,7 +686,7 @@ public:
     QObject *modelData() const { return object; }
     QObject *proxiedObject() { return object; }
 
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
 };
 
 class VDMObjectDelegateDataType : public QQmlRefCount, public QQmlAdaptorModel::Accessors
