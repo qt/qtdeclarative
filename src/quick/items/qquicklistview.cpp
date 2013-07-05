@@ -2322,6 +2322,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     if (d->snapMode != mode) {
         d->snapMode = mode;
         emit snapModeChanged();
+        d->fixupPosition();
     }
 }
 
