@@ -41,7 +41,7 @@
 /* This script file handles the game logic */
 .pragma library
 .import QtQuick.LocalStorage 2.0 as Sql
-.import "../settings.js" as Settings
+.import "settings.js" as Settings
 
 var maxColumn = 10;
 var maxRow = 13;

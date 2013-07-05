@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Research In Motion.
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,15 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLAPPLICATIONENGINE_P_H
-#define QQMLAPPLICATIONENGINE_P_H
-
-#include "qqmlapplicationengine.h"
-#include "qqmlengine_p.h"
-#include <QSignalMapper>
-#include <QCoreApplication>
-#include <QFileInfo>
-#include <QLibraryInfo>
+#ifndef QQMLFILESELECTOR_P_H
+#define QQMLFILESELECTOR_P_H
 
 //
 //  W A R N I N G
@@ -60,29 +53,20 @@
 // We mean it.
 //
 
+#include "qqmlfileselector.h"
+#include <private/qobject_p.h>
+#include <private/qtqmlglobal_p.h>
+
 QT_BEGIN_NAMESPACE
 
-class QTranslator;
 class QFileSelector;
-class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
+class Q_QML_PRIVATE_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQmlApplicationEngine)
+    Q_DECLARE_PUBLIC(QQmlFileSelector)
 public:
-    QQmlApplicationEnginePrivate(QQmlEngine *e);
-    ~QQmlApplicationEnginePrivate();
-    void init();
-    void cleanUp();
-
-    void startLoad(const QUrl &url, const QByteArray &data = QByteArray(), bool dataFlag = false);
-    void loadTranslations(const QUrl &rootFile);
-    void _q_finishLoad(QObject *component);
-    QList<QObject *> objects;
-    QSignalMapper statusMapper;
-    QObject *appObj;
-
-#ifndef QT_NO_TRANSLATIONS
-    QList<QTranslator *> translators;
-#endif
+    QQmlFileSelectorPrivate();
+    QFileSelector* selector;
+    bool ownSelector;
 };
 
 QT_END_NAMESPACE

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -38,20 +38,19 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Particles 2.0
+.pragma library
 
-import "settings.js" as Settings
+//This should be switched over once a proper QML settings API exists
 
-Emitter {
-    property Item block: parent
-    velocity: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -40; magnitudeVariation: 40}
-    acceleration: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -100;}
-    shape: EllipseShape{fill:true}
-    enabled: false;
-    lifeSpan: 700; lifeSpanVariation: 100
-    emitRate: 1000
-    maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
-    size: Settings.blockSize * 0.85
-    endSize: Settings.blockSize * 0.85 /2
-}
+var menuDelay = 500
+
+var headerHeight = 70
+var footerHeight = 100
+
+var fontPixelSize = 55
+
+var blockSize = 64
+
+var toolButtonHeight = 64
+
+var menuButtonSpacing = 15

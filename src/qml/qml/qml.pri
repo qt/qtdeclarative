@@ -54,7 +54,8 @@ SOURCES += \
     $$PWD/qqmllistwrapper.cpp \
     $$PWD/qqmlcontextwrapper.cpp \
     $$PWD/qqmlvaluetypewrapper.cpp \
-    $$PWD/qqmltypewrapper.cpp
+    $$PWD/qqmltypewrapper.cpp \
+    $$PWD/qqmlfileselector.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -130,7 +131,9 @@ HEADERS += \
     $$PWD/qqmllistwrapper_p.h \
     $$PWD/qqmlcontextwrapper_p.h \
     $$PWD/qqmlvaluetypewrapper_p.h \
-    $$PWD/qqmltypewrapper_p.h
+    $$PWD/qqmltypewrapper_p.h \
+    $$PWD/qqmlfileselector_p.h \
+    $$PWD/qqmlfileselector.h
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Research In Motion.
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,50 +39,31 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLAPPLICATIONENGINE_P_H
-#define QQMLAPPLICATIONENGINE_P_H
+#ifndef QQMLFILESELECTOR_H
+#define QQMLFILESELECTOR_H
 
-#include "qqmlapplicationengine.h"
-#include "qqmlengine_p.h"
-#include <QSignalMapper>
-#include <QCoreApplication>
-#include <QFileInfo>
-#include <QLibraryInfo>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/QObject>
+#include <QtCore/QUrl>
+#include <QtQml/QQmlAbstractUrlInterceptor>
+#include <qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QTranslator;
 class QFileSelector;
-class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
+class QQmlFileSelectorPrivate;
+class Q_QML_EXPORT QQmlFileSelector : public QObject, public QQmlAbstractUrlInterceptor
 {
-    Q_DECLARE_PUBLIC(QQmlApplicationEngine)
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QQmlFileSelector)
 public:
-    QQmlApplicationEnginePrivate(QQmlEngine *e);
-    ~QQmlApplicationEnginePrivate();
-    void init();
-    void cleanUp();
+    QQmlFileSelector(QObject* parent=0);
+    void setSelector(QFileSelector *selector);
 
-    void startLoad(const QUrl &url, const QByteArray &data = QByteArray(), bool dataFlag = false);
-    void loadTranslations(const QUrl &rootFile);
-    void _q_finishLoad(QObject *component);
-    QList<QObject *> objects;
-    QSignalMapper statusMapper;
-    QObject *appObj;
+protected:
+    virtual QUrl intercept(const QUrl &path, DataType type);
 
-#ifndef QT_NO_TRANSLATIONS
-    QList<QTranslator *> translators;
-#endif
+private:
+    Q_DISABLE_COPY(QQmlFileSelector)
 };
 
 QT_END_NAMESPACE

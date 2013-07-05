@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Research In Motion.
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,52 +39,43 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLAPPLICATIONENGINE_P_H
-#define QQMLAPPLICATIONENGINE_P_H
+#include <qtest.h>
+#include <QQmlEngine>
+#include <QQmlComponent>
+#include <QQmlFileSelector>
+#include <QFileSelector>
+#include <QQmlContext>
+#include <qqmlinfo.h>
+#include "../../shared/util.h"
 
-#include "qqmlapplicationengine.h"
-#include "qqmlengine_p.h"
-#include <QSignalMapper>
-#include <QCoreApplication>
-#include <QFileInfo>
-#include <QLibraryInfo>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-QT_BEGIN_NAMESPACE
-
-class QTranslator;
-class QFileSelector;
-class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePrivate
+class tst_qqmlfileselector : public QQmlDataTest
 {
-    Q_DECLARE_PUBLIC(QQmlApplicationEngine)
+    Q_OBJECT
 public:
-    QQmlApplicationEnginePrivate(QQmlEngine *e);
-    ~QQmlApplicationEnginePrivate();
-    void init();
-    void cleanUp();
+    tst_qqmlfileselector() {}
 
-    void startLoad(const QUrl &url, const QByteArray &data = QByteArray(), bool dataFlag = false);
-    void loadTranslations(const QUrl &rootFile);
-    void _q_finishLoad(QObject *component);
-    QList<QObject *> objects;
-    QSignalMapper statusMapper;
-    QObject *appObj;
+private slots:
+    void basicTest();
 
-#ifndef QT_NO_TRANSLATIONS
-    QList<QTranslator *> translators;
-#endif
 };
 
-QT_END_NAMESPACE
+void tst_qqmlfileselector::basicTest()
+{
+    QQmlEngine engine;
+    QFileSelector selector;
+    selector.setExtraSelectors(QStringList() << "basic");
+    QQmlFileSelector qmlSelector;
+    qmlSelector.setSelector(&selector);
+    engine.setUrlInterceptor(&qmlSelector);
 
-#endif
+    QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").toString(), QString("selected"));
+
+    delete object;
+}
+
+QTEST_MAIN(tst_qqmlfileselector)
+
+#include "tst_qqmlfileselector.moc"
