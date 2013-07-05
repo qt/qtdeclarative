@@ -30,6 +30,7 @@
 #if ENABLE(ASSEMBLER) && CPU(ARM_THUMB2)
 
 #include "AssemblerBuffer.h"
+#include "MacroAssemblerCodeRef.h"
 #include <wtf/Assertions.h>
 #include <wtf/Vector.h>
 #include <stdint.h>
@@ -2111,7 +2112,7 @@ public:
     {
         ASSERT(!(reinterpret_cast<intptr_t>(code) & 1));
         ASSERT(from.isSet());
-        ASSERT(reinterpret_cast<intptr_t>(to) & 1);
+        ASSERT_VALID_CODE_POINTER(to);
 
         setPointer(reinterpret_cast<uint16_t*>(reinterpret_cast<intptr_t>(code) + from.m_offset) - 1, to, false);
     }

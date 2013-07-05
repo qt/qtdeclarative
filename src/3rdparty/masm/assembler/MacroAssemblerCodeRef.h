@@ -33,10 +33,12 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 #include <wtf/UnusedParam.h>
+#include <qglobal.h>
 
 // ASSERT_VALID_CODE_POINTER checks that ptr is a non-null pointer, and that it is a valid
 // instruction address on the platform (for example, check any alignment requirements).
-#if CPU(ARM_THUMB2)
+// (Disabled checks on Android/ARM because we want to intermix thumb and arm)
+#if CPU(ARM_THUMB2) && !defined(Q_OS_ANDROID)
 // ARM/thumb instructions must be 16-bit aligned, but all code pointers to be loaded
 // into the processor are decorated with the bottom bit set, indicating that this is
 // thumb code (as oposed to 32-bit traditional ARM).  The first test checks for both
