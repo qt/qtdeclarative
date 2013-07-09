@@ -64,13 +64,13 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractFileDialog::accepted
 
-    The \a accepted signal is emitted by \l accept().
+    This signal is emitted by \l accept().
 */
 
 /*!
     \qmlsignal QtQuick::Dialogs::AbstractFileDialog::rejected
 
-    The \a accepted signal is emitted by \l reject().
+    This signal is emitted by \l reject().
 */
 
 /*!
@@ -105,10 +105,7 @@ QQuickFileDialog::~QQuickFileDialog()
 
 QList<QUrl> QQuickFileDialog::fileUrls()
 {
-    QList<QUrl> ret;
-    foreach (QString path, m_selections)
-        ret << QUrl::fromLocalFile(path);
-    return ret;
+    return m_selections;
 }
 
 /*!
@@ -118,13 +115,13 @@ QList<QUrl> QQuickFileDialog::fileUrls()
 */
 
 /*!
-    \qmlproperty bool AbstractFileDialog::filePaths
+    \qmlproperty bool AbstractFileDialog::fileUrls
 
     A list of files to be populated as the user chooses.
 */
 
 /*!
-   \brief Clears \l filePaths
+   \brief Clears \l fileUrls
 */
 void QQuickFileDialog::clearSelection()
 {
@@ -132,20 +129,18 @@ void QQuickFileDialog::clearSelection()
 }
 
 /*!
-   \brief Adds one file to \l filePaths
+   \brief Adds one file to \l fileUrls
 
-   \l path should be given as an absolute file system path. If it is given as a
-   file:// URL, it will be converted to a path.  Returns true on success,
-   false if the given path is not valid given the current setting properties.
+   \l path should be given as an absolute file:// path URL.
+   Returns true on success, false if the given path is
+   not valid given the current property settings.
 */
-bool QQuickFileDialog::addSelection(QString path)
+bool QQuickFileDialog::addSelection(const QUrl &path)
 {
-    if (path.startsWith("file:"))
-        path = QUrl(path).toLocalFile();
-    QFileInfo info(path);
+    QFileInfo info(path.toLocalFile());
     if (info.exists() && ((info.isDir() && m_selectFolder) || !info.isDir())) {
         if (m_selectFolder)
-            m_selections.append(pathFolder(path).toLocalFile());
+            m_selections.append(pathFolder(path.toLocalFile()));
         else
             m_selections.append(path);
         return true;

@@ -115,6 +115,8 @@ has now been replaced by the new \l {Qt QML} and \l {Qt Quick} modules. See the
 \list
 \li Arbitrary functionality may be provided in a namespace through a singleton type.  See qmlRegisterSingletonType() for more information.
 \li JavaScript (.js) files may now import QML modules and other JavaScript files using the ".import" syntax.
+\li Plugins may now use QQmlExtensionPlugin::baseUrl to get the directory from which the plugin is loaded.
+    This will be useful if the plugin needs to load QML or other assets from the same directory.
 \endlist
 
 \section2 Other

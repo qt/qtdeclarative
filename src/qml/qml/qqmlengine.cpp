@@ -863,9 +863,6 @@ QQmlEngine::~QQmlEngine()
     QList<QQmlType*> singletonTypes = QQmlMetaType::qmlSingletonTypes();
     foreach (QQmlType *currType, singletonTypes)
         currType->singletonInstanceInfo()->destroy(this);
-
-    if (d->incubationController)
-        d->incubationController->d = 0;
 }
 
 /*! \fn void QQmlEngine::quit()

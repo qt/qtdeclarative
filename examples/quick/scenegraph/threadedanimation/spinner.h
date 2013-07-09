@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
+** This file is part of the demonstration applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,55 +39,31 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKFILEDIALOG_P_H
-#define QQUICKFILEDIALOG_P_H
+#ifndef SPINNER_H
+#define SPINNER_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtQuick/QQuickItem>
 
-#include "qquickabstractfiledialog_p.h"
-
-QT_BEGIN_NAMESPACE
-
-class QQuickFileDialog : public QQuickAbstractFileDialog
+class Spinner : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QObject* implementation READ qmlImplementation WRITE setQmlImplementation DESIGNABLE false)
-    Q_CLASSINFO("DefaultProperty", "implementation")    // AbstractFileDialog in QML can have only one child
+
+    Q_PROPERTY(bool spinning READ spinning WRITE setSpinning NOTIFY spinningChanged)
 
 public:
-    explicit QQuickFileDialog(QObject *parent = 0);
-    ~QQuickFileDialog();
-    virtual QList<QUrl> fileUrls();
+    Spinner();
 
-signals:
-
-public Q_SLOTS:
-    void clearSelection();
-    bool addSelection(const QUrl &path);
+    bool spinning() const { return m_spinning; }
+    void setSpinning(bool spinning);
 
 protected:
-    virtual QPlatformFileDialogHelper *helper() { return 0; }
-    Q_INVOKABLE QString urlToPath(const QUrl &url) { return url.toLocalFile(); }
-    Q_INVOKABLE QUrl pathToUrl(const QString &path) { return QUrl::fromLocalFile(path); }
-    Q_INVOKABLE QUrl pathFolder(const QString &path);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+
+signals:
+    void spinningChanged();
 
 private:
-    QList<QUrl> m_selections;
-
-    Q_DISABLE_COPY(QQuickFileDialog)
+    bool m_spinning;
 };
 
-QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFileDialog *)
-
-#endif // QQUICKFILEDIALOG_P_H
+#endif // SQUIRCLE_H

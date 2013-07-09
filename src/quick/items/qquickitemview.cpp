@@ -51,13 +51,14 @@ QT_BEGIN_NAMESPACE
 #define QML_VIEW_DEFAULTCACHEBUFFER 320
 #endif
 
-FxViewItem::FxViewItem(QQuickItem *i, bool own, bool trackGeometry)
+FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own)
     : item(i)
+    , view(v)
     , transitionableItem(0)
     , attached(0)
     , ownItem(own)
     , releaseAfterTransition(false)
-    , trackGeom(trackGeometry)
+    , trackGeom(false)
 {
 }
 
@@ -94,6 +95,23 @@ void FxViewItem::setVisible(bool visible)
     if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
         return;
     QQuickItemPrivate::get(item)->setCulled(!visible);
+}
+
+void FxViewItem::trackGeometry(bool track)
+{
+    if (track) {
+        if (!trackGeom) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            trackGeom = true;
+        }
+    } else {
+        if (trackGeom) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            trackGeom = false;
+        }
+    }
 }
 
 QQuickItemViewTransitioner::TransitionType FxViewItem::scheduledTransitionType() const
@@ -2131,6 +2149,7 @@ void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQmlChangeSet::MoveKe
             bool isRemove = it.key().moveId < 0;
             if (isRemove) {
                 FxViewItem *item = *it;
+                item->trackGeometry(false);
                 item->releaseAfterTransition = true;
                 releasePendingTransition.append(item);
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, true);
@@ -2272,8 +2291,8 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
         return true;
     if (trackedItem == item)
         trackedItem = 0;
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item->item);
-    itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    item->trackGeometry(false);
+
     QQmlInstanceModel::ReleaseFlags flags = model->release(item->item);
     if (flags == 0) {
         // item was not destroyed, and we no longer reference it.

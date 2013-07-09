@@ -3196,6 +3196,18 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     Requests the window to be activated, i.e. receive keyboard focus.
  */
 
+/*!
+    \qmlmethod QtQuick2::Window::alert(int msec)
+    \since QtQuick 2.1
+
+    Causes an alert to be shown for \a msec miliseconds. If \a msec is \c 0 (the
+    default), then the alert is shown indefinitely until the window becomes
+    active again.
+
+    In alert state, the window indicates that it demands attention, for example by
+    flashing or bouncing the taskbar entry.
+*/
+
 #include "moc_qquickwindow.cpp"
 
 QT_END_NAMESPACE

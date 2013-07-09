@@ -244,19 +244,8 @@ void QQuickViewSection::setLabelPositioning(int l)
 class FxListItemSG : public FxViewItem
 {
 public:
-    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
+    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, v, own), view(v) {
         attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
-        if (trackGeometry) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-        }
-    }
-
-    ~FxListItemSG() {
-        if (trackGeom) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-        }
     }
 
     inline QQuickItem *section() const {
@@ -570,7 +559,7 @@ FxViewItem *QQuickListViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 {
     Q_Q(QQuickListView);
 
-    FxListItemSG *listItem = new FxListItemSG(item, q, false, false);
+    FxListItemSG *listItem = new FxListItemSG(item, q, false);
     listItem->index = modelIndex;
 
     // initialise attached properties
@@ -598,8 +587,8 @@ void QQuickListViewPrivate::initializeViewItem(FxViewItem *item)
 {
     QQuickItemViewPrivate::initializeViewItem(item);
 
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item->item);
-    itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+    // need to track current items that are animating
+    item->trackGeometry(true);
 
     if (sectionCriteria && sectionCriteria->delegate()) {
         if (QString::compare(item->attached->m_prevSection, item->attached->m_section, Qt::CaseInsensitive))
@@ -876,7 +865,8 @@ void QQuickListViewPrivate::createHighlight()
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
-            FxListItemSG *newHighlight = new FxListItemSG(item, q, true, true);
+            FxListItemSG *newHighlight = new FxListItemSG(item, q, true);
+            newHighlight->trackGeometry(true);
 
             if (autoHighlight) {
                 newHighlight->setSize(static_cast<FxListItemSG*>(currentItem)->itemSize());
@@ -1299,7 +1289,8 @@ void QQuickListViewPrivate::updateFooter()
         QQuickItem *item = createComponentItem(footerComponent, 1.0);
         if (!item)
             return;
-        footer = new FxListItemSG(item, q, true, true);
+        footer = new FxListItemSG(item, q, true);
+        footer->trackGeometry(true);
         created = true;
     }
 
@@ -1329,7 +1320,8 @@ void QQuickListViewPrivate::updateHeader()
         QQuickItem *item = createComponentItem(headerComponent, 1.0);
         if (!item)
             return;
-        header = new FxListItemSG(item, q, true, true);
+        header = new FxListItemSG(item, q, true);
+        header->trackGeometry(true);
         created = true;
     }
 

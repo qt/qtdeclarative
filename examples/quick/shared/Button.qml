@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 
 Item {
     id: container
@@ -48,10 +48,10 @@ Item {
     signal clicked
     property alias containsMouse: mouseArea.containsMouse
     property alias pressed: mouseArea.pressed
-    implicitHeight: buttonLabel.implicitHeight
-    implicitWidth: buttonLabel.implicitWidth
-    height: buttonLabel.implicitHeight + 12
-    width: Math.max(80, implicitWidth + 8)
+    implicitHeight: buttonLabel.implicitHeight * 1.2
+    implicitWidth: buttonLabel.implicitWidth * 1.2
+    height: implicitHeight
+    width: implicitWidth
 
     SystemPalette { id: palette }
 
@@ -64,7 +64,7 @@ Item {
             GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
         }
         antialiasing: true
-        radius: 5
+        radius: height / 4
         border.color: Qt.darker(palette.button, 1.5)
         border.width: 1
     }
@@ -78,10 +78,8 @@ Item {
 
     Text {
         id: buttonLabel
-        width: parent.width
-        horizontalAlignment: Text.Center
         text: container.text
         color: palette.buttonText
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
     }
 }

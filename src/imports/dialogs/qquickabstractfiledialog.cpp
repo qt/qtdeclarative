@@ -78,7 +78,7 @@ QString QQuickAbstractFileDialog::title() const
     return m_options->windowTitle();
 }
 
-void QQuickAbstractFileDialog::setTitle(QString t)
+void QQuickAbstractFileDialog::setTitle(const QString &t)
 {
     if (m_options->windowTitle() == t) return;
     m_options->setWindowTitle(t);
@@ -106,18 +106,19 @@ void QQuickAbstractFileDialog::setSelectFolder(bool selectFolder)
     updateModes();
 }
 
-QString QQuickAbstractFileDialog::folder()
+QUrl QQuickAbstractFileDialog::folder()
 {
     if (m_dlgHelper && !m_dlgHelper->directory().isEmpty())
-        return m_dlgHelper->directory();
-    return m_options->initialDirectory();
+        return QUrl::fromLocalFile(m_dlgHelper->directory());
+    return QUrl::fromLocalFile(m_options->initialDirectory());
 }
 
-void QQuickAbstractFileDialog::setFolder(QString f)
+void QQuickAbstractFileDialog::setFolder(const QUrl &f)
 {
+    QString dir = f.path();
     if (m_dlgHelper)
-        m_dlgHelper->setDirectory(f);
-    m_options->setInitialDirectory(f);
+        m_dlgHelper->setDirectory(dir);
+    m_options->setInitialDirectory(dir);
     emit folderChanged();
 }
 
@@ -141,7 +142,7 @@ QString QQuickAbstractFileDialog::selectedNameFilter()
     return ret;
 }
 
-void QQuickAbstractFileDialog::selectNameFilter(QString f)
+void QQuickAbstractFileDialog::selectNameFilter(const QString &f)
 {
     // This should work whether the dialog is currently being shown already, or ahead of time.
     m_options->setInitiallySelectedNameFilter(f);

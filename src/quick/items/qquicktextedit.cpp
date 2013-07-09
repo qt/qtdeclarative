@@ -135,6 +135,37 @@ namespace {
             return format(pos);
         }
     };
+
+    class RootNode : public QSGTransformNode
+    {
+    public:
+        RootNode() : cursorNode(0), frameDecorationsNode(0)
+        { }
+
+        void resetFrameDecorations(QQuickTextNode* newNode)
+        {
+            if (frameDecorationsNode) {
+                removeChildNode(frameDecorationsNode);
+                delete frameDecorationsNode;
+            }
+            frameDecorationsNode = newNode;
+            newNode->setFlag(QSGNode::OwnedByParent);
+        }
+
+        void resetCursorNode(QSGSimpleRectNode* newNode)
+        {
+            if (cursorNode)
+                removeChildNode(cursorNode);
+            delete cursorNode;
+            cursorNode = newNode;
+            appendChildNode(cursorNode);
+            cursorNode->setFlag(QSGNode::OwnedByParent);
+        }
+
+        QSGSimpleRectNode *cursorNode;
+        QQuickTextNode* frameDecorationsNode;
+
+    };
 }
 
 QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
@@ -1737,7 +1768,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     d->updateType = QQuickTextEditPrivate::UpdateNone;
 
-    QSGTransformNode *rootNode = static_cast<QSGTransformNode *>(oldNode);
+    RootNode *rootNode = static_cast<RootNode *>(oldNode);
     TextNodeIterator nodeIterator = d->textNodeMap.begin();
     while (nodeIterator != d->textNodeMap.end() && !(*nodeIterator)->dirty())
         ++nodeIterator;
@@ -1746,7 +1777,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (!oldNode || nodeIterator < d->textNodeMap.end()) {
 
         if (!oldNode)
-            rootNode = new QSGTransformNode;
+            rootNode = new RootNode;
 
         int firstDirtyPos = 0;
         if (nodeIterator != d->textNodeMap.end()) {
@@ -1760,11 +1791,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         }
 
         // FIXME: the text decorations could probably be handled separately (only updated for affected textFrames)
-        if (d->frameDecorationsNode) {
-            rootNode->removeChildNode(d->frameDecorationsNode);
-            delete d->frameDecorationsNode;
-        }
-        d->frameDecorationsNode = d->createTextNode();
+        rootNode->resetFrameDecorations(d->createTextNode());
 
         QQuickTextNode *node = 0;
 
@@ -1780,7 +1807,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         while (!frames.isEmpty()) {
             QTextFrame *textFrame = frames.takeFirst();
             frames.append(textFrame->childFrames());
-            d->frameDecorationsNode->m_engine->addFrameDecorations(d->document, textFrame);
+            rootNode->frameDecorationsNode->m_engine->addFrameDecorations(d->document, textFrame);
 
 
             if (textFrame->lastPosition() < firstDirtyPos || (firstCleanNode && textFrame->firstPosition() >= firstCleanNode->startPos()))
@@ -1843,9 +1870,9 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             }
             d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
         }
-        d->frameDecorationsNode->m_engine->addToSceneGraph(d->frameDecorationsNode, QQuickText::Normal, QColor());
+        rootNode->frameDecorationsNode->m_engine->addToSceneGraph(rootNode->frameDecorationsNode, QQuickText::Normal, QColor());
         // Now prepend the frame decorations since we want them rendered first, with the text nodes and cursor in front.
-        rootNode->prependChildNode(d->frameDecorationsNode);
+        rootNode->prependChildNode(rootNode->frameDecorationsNode);
 
         Q_ASSERT(nodeIterator == d->textNodeMap.end() || (*nodeIterator) == firstCleanNode);
         // Update the position of the subsequent text blocks.
@@ -1871,11 +1898,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QColor color = (!d->cursorVisible || !d->control->cursorOn())
                 ? QColor(0, 0, 0, 0)
                 : d->color;
-        if (d->cursorNode)
-            rootNode->removeChildNode(d->cursorNode);
-        delete d->cursorNode;
-        d->cursorNode = new QSGSimpleRectNode(cursorRectangle(), color);
-        rootNode->appendChildNode(d->cursorNode);
+        rootNode->resetCursorNode(new QSGSimpleRectNode(cursorRectangle(), color));
     }
 
     return rootNode;

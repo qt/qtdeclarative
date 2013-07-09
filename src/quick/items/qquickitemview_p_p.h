@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 class FxViewItem
 {
 public:
-    FxViewItem(QQuickItem *, bool own, bool trackGeometry);
+    FxViewItem(QQuickItem *, QQuickItemView *, bool own);
     virtual ~FxViewItem();
 
     qreal itemX() const;
@@ -64,6 +64,7 @@ public:
 
     void moveTo(const QPointF &pos, bool immediate);
     void setVisible(bool visible);
+    void trackGeometry(bool track);
 
     QQuickItemViewTransitioner::TransitionType scheduledTransitionType() const;
     bool transitionScheduledOrRunning() const;
@@ -83,6 +84,7 @@ public:
     virtual bool contains(qreal x, qreal y) const = 0;
 
     QQuickItem *item;
+    QQuickItemView *view;
     QQuickItemViewTransitionableItem *transitionableItem;
     QQuickItemViewAttached *attached;
     int index;
