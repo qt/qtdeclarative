@@ -65,15 +65,7 @@
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
-
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || defined(Q_OS_MAC)
-#define HAVE_GNU_BACKTRACE
-#include <execinfo.h>
-#endif
-
-#if defined(Q_OS_WIN)
-#include <DbgHelp.h>
-#endif
+#include "qv4stacktrace_p.h"
 
 #ifdef V4_ENABLE_JIT
 #  include "qv4isel_masm_p.h"
@@ -589,106 +581,9 @@ Object *ExecutionEngine::qmlContextObject() const
 }
 
 namespace {
-    struct NativeFrame {
-        Function *function;
-        int line;
-    };
-
-    struct NativeStackTrace
-    {
-        void *trace[100];
-        int nativeFrameCount;
-        int currentNativeFrame;
-        ExecutionEngine *engine;
-
-        NativeStackTrace(ExecutionContext *context)
-        {
-            engine = context->engine;
-            currentNativeFrame = 0;
-
-#if defined(HAVE_GNU_BACKTRACE)
-            UnwindHelper::prepareForUnwind(context);
-
-            nativeFrameCount = backtrace(&trace[0], sizeof(trace) / sizeof(trace[0]));
-#elif defined(Q_OS_WIN)
-
-            int machineType = 0;
-
-            CONTEXT winContext;
-            memset(&winContext, 0, sizeof(winContext));
-            winContext.ContextFlags = CONTEXT_FULL;
-            RtlCaptureContext(&winContext);
-
-            STACKFRAME64 sf64;
-            memset(&sf64, 0, sizeof(sf64));
-
-#if defined(Q_PROCESSOR_X86_32)
-            machineType = IMAGE_FILE_MACHINE_I386;
-
-            sf64.AddrFrame.Offset = winContext.Ebp;
-            sf64.AddrFrame.Mode = AddrModeFlat;
-            sf64.AddrPC.Offset = winContext.Eip;
-            sf64.AddrPC.Mode = AddrModeFlat;
-            sf64.AddrStack.Offset = winContext.Esp;
-            sf64.AddrStack.Mode = AddrModeFlat;
-
-#elif defined(Q_PROCESSOR_X86_64)
-            machineType = IMAGE_FILE_MACHINE_AMD64;
-
-            sf64.AddrFrame.Offset = winContext.Rbp;
-            sf64.AddrFrame.Mode = AddrModeFlat;
-            sf64.AddrPC.Offset = winContext.Rip;
-            sf64.AddrPC.Mode = AddrModeFlat;
-            sf64.AddrStack.Offset = winContext.Rsp;
-            sf64.AddrStack.Mode = AddrModeFlat;
-
-#else
-#error "Platform unsupported!"
-#endif
-
-            nativeFrameCount = 0;
-
-            while (StackWalk64(machineType, GetCurrentProcess(), GetCurrentThread(), &sf64, &winContext, 0, SymFunctionTableAccess64, SymGetModuleBase64, 0)) {
-
-                if (sf64.AddrReturn.Offset == 0)
-                    break;
-
-                trace[nativeFrameCount] = reinterpret_cast<void*>(sf64.AddrReturn.Offset);
-                nativeFrameCount++;
-                if (nativeFrameCount >= sizeof(trace) / sizeof(trace[0]))
-                    break;
-            }
-
-#else
-            nativeFrameCount = 0;
-#endif
-        }
-
-        NativeFrame nextFrame() {
-            NativeFrame frame;
-            frame.function = 0;
-            frame.line = -1;
-
-            for (; currentNativeFrame < nativeFrameCount && !frame.function; ++currentNativeFrame) {
-                quintptr pc = reinterpret_cast<quintptr>(trace[currentNativeFrame]);
-                // The pointers from the back trace point to the return address, but we are interested in
-                // the caller site.
-                pc = pc - 1;
-
-                Function *f = engine->functionForProgramCounter(pc);
-                if (!f)
-                    continue;
-
-                frame.function = f;
-                frame.line = f->lineNumberForProgramCounter(pc - reinterpret_cast<quintptr>(f->code));
-            }
-
-            return frame;
-        }
-    };
     struct LineNumberResolver {
         const ExecutionEngine* engine;
-        QScopedPointer<NativeStackTrace> nativeTrace;
+        QScopedPointer<QV4::NativeStackTrace> nativeTrace;
 
         LineNumberResolver(const ExecutionEngine *engine)
             : engine(engine)
@@ -702,7 +597,7 @@ namespace {
                 frame->line = function->lineNumberForProgramCounter(offset);
             } else {
                 if (!nativeTrace)
-                    nativeTrace.reset(new NativeStackTrace(engine->current));
+                    nativeTrace.reset(new QV4::NativeStackTrace(engine->current));
 
                 NativeFrame nativeFrame = nativeTrace->nextFrame();
                 if (nativeFrame.function == function)
