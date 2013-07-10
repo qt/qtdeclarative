@@ -73,7 +73,6 @@ Object::Object(ExecutionEngine *engine)
     , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
-    , externalResource(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -85,7 +84,6 @@ Object::Object(ExecutionContext *context)
     , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
-    , externalResource(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -97,7 +95,6 @@ Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
     , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
-    , externalResource(0)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
@@ -111,7 +108,6 @@ Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
 
 Object::~Object()
 {
-    delete externalResource;
     if (memberData != inlineProperties)
         delete [] memberData;
     delete [] (arrayData - (sparseArray ? 0 : arrayOffset));

@@ -102,12 +102,6 @@ typedef Value (*PropertyEnumeratorFunction)(Object *object);
 typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
-
-    class ExternalResource {
-    public:
-        virtual ~ExternalResource() {}
-    };
-
     Object *prototype;
     uint memberDataAlloc;
     Property *memberData;
@@ -121,7 +115,6 @@ struct Q_QML_EXPORT Object: Managed {
     PropertyAttributes *arrayAttributes;
     Property *arrayData;
     SparseArray *sparseArray;
-    ExternalResource *externalResource;
 
     enum {
         InlinePropertySize = 4
