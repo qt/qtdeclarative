@@ -48,6 +48,7 @@
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "qv4ssa_p.h"
+#include "qv4exception_p.h"
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>

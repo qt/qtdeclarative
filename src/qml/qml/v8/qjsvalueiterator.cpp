@@ -44,6 +44,7 @@
 #include "qjsvalue_p.h"
 #include "private/qv4string_p.h"
 #include "private/qv4object_p.h"
+#include "private/qv4exception_p.h"
 
 QT_BEGIN_NAMESPACE
 

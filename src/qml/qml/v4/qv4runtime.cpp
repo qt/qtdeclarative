@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qv4global_p.h"
-#include "qv4debugging_p.h"
 #include "qv4runtime_p.h"
 #include "qv4object_p.h"
 #include "qv4jsir_p.h"
@@ -49,7 +48,7 @@
 #include "qv4stringobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
-#include "qv4unwindhelper_p.h"
+#include "qv4exception_p.h"
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/qmath.h>
@@ -61,11 +60,6 @@
 #include <stdlib.h>
 
 #include "../../../3rdparty/double-conversion/double-conversion.h"
-
-#if USE(LIBUNWIND_DEBUG)
-#include <libunwind.h>
-#include <execinfo.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -940,32 +934,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 
 void __qmljs_throw(ExecutionContext *context, const Value &value)
 {
-    if (context->engine->debugger)
-        context->engine->debugger->aboutToThrow(value);
-
-    UnwindHelper::prepareForUnwind(context);
-
-#if USE(LIBUNWIND_DEBUG)
-    printf("about to throw exception. walking stack first with libunwind:\n");
-    unw_cursor_t cursor; unw_context_t uc;
-    unw_word_t ip, sp;
-
-    unw_getcontext(&uc);
-    unw_init_local(&cursor, &uc);
-    while (unw_step(&cursor) > 0) {
-        unw_get_reg(&cursor, UNW_REG_IP, &ip);
-        unw_get_reg(&cursor, UNW_REG_SP, &sp);
-        printf("ip = %lx, sp = %lx ", (long) ip, (long) sp);
-        void * const addr = (void*)ip;
-        char **symbol = backtrace_symbols(&addr, 1);
-        printf("%s", symbol[0]);
-        free(symbol);
-        printf("\n");
-    }
-    printf("stack walked. throwing exception now...\n");
-#endif
-
-    throw Exception(context, value);
+    Exception::throwException(context, value);
 }
 
 void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)

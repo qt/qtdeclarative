@@ -323,25 +323,6 @@ inline ExecutionContext *ExecutionEngine::popContext()
     return current;
 }
 
-struct Q_QML_EXPORT Exception {
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
-    ~Exception();
-
-    void accept(ExecutionContext *catchingContext);
-
-    void partiallyUnwindContext(ExecutionContext *catchingContext);
-
-    Value value() const { return exception; }
-
-    ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
-
-private:
-    ExecutionContext *throwingContext;
-    bool accepted;
-    PersistentValue exception;
-    ExecutionEngine::StackTrace m_stackTrace;
-};
-
 } // namespace QV4
 
 QT_END_NAMESPACE

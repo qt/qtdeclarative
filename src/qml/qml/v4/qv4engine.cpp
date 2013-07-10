@@ -826,37 +826,4 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
     return m_qmlExtensions;
 }
 
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
-    : exception(exceptionValue)
-{
-    this->throwingContext = throwingContext->engine->current;
-    accepted = false;
-    if (ErrorObject *error = exceptionValue.asErrorObject())
-        m_stackTrace = error->stackTrace;
-    else
-        m_stackTrace = throwingContext->engine->stackTrace();
-}
-
-Exception::~Exception()
-{
-    assert(accepted);
-}
-
-void Exception::accept(ExecutionContext *catchingContext)
-{
-    assert(!accepted);
-    accepted = true;
-    partiallyUnwindContext(catchingContext);
-}
-
-void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
-{
-    if (!throwingContext)
-        return;
-    ExecutionContext *context = throwingContext;
-    while (context != catchingContext)
-        context = context->engine->popContext();
-    throwingContext = context;
-}
-
 QT_END_NAMESPACE

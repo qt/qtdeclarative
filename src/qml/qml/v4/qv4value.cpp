@@ -42,6 +42,7 @@
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include "qv4mm_p.h"
+#include "qv4exception_p.h"
 
 #include <wtf/MathExtras.h>
 

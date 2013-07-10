@@ -52,6 +52,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4exception_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 
 QT_BEGIN_NAMESPACE

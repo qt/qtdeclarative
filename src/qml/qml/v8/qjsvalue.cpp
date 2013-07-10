@@ -54,6 +54,7 @@
 #include "qv4regexpobject_p.h"
 #include "qv8engine_p.h"
 #include <private/qv4mm_p.h>
+#include <private/qv4exception_p.h>
 
 QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
 {

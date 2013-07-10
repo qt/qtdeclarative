@@ -57,7 +57,8 @@ SOURCES += \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4qmlextensions.cpp \
-    $$PWD/qv4stacktrace.cpp
+    $$PWD/qv4stacktrace.cpp \
+    $$PWD/qv4exception.cpp
 
 HEADERS += \
     $$PWD/qv4global_p.h \
@@ -113,7 +114,8 @@ HEADERS += \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4qmlextensions_p.h \
-    $$PWD/qv4stacktrace_p.h
+    $$PWD/qv4stacktrace_p.h \
+    $$PWD/qv4exception_p.h
 
 llvm-libs {
 

@@ -59,6 +59,7 @@
 #include <private/qv4object_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
+#include <private/qv4exception_p.h>
 
 using namespace QV4;
 
