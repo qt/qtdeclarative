@@ -161,6 +161,16 @@ linux*|mac {
     LIBS += -ldl
 }
 
+# Only on Android/ARM at the moment, because only there we have issues
+# replacing __gnu_Unwind_Find_exidx with our own implementation,
+# and thus require static libgcc linkage.
+android:equals(QT_ARCH, "arm"):*g++* {
+    static_libgcc = $$system($$QMAKE_CXX -print-file-name=libgcc.a)
+    LIBS += $$static_libgcc
+    SOURCES += $$PWD/qv4exception_gcc.cpp
+    DEFINES += V4_CXX_ABI_EXCEPTION
+}
+
 debug-with-libunwind {
     UW_INC=$$(LIBUNWIND_INCLUDES)
     isEmpty(UW_INC): error("Please set LIBUNWIND_INCLUDES")

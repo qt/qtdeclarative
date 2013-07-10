@@ -83,7 +83,7 @@ void Exception::throwException(ExecutionContext *context, const Value &value)
     printf("stack walked. throwing exception now...\n");
 #endif
 
-    throw Exception(context, value);
+    throwInternal(context, value);
 }
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
@@ -118,5 +118,12 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
         context = context->engine->popContext();
     throwingContext = context;
 }
+
+#if !defined(V4_CXX_ABI_EXCEPTION)
+void Exception::throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue)
+{
+    throw Exception(throwingContext, exceptionValue);
+}
+#endif
 
 QT_END_NAMESPACE

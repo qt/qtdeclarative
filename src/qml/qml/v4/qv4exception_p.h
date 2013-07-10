@@ -63,12 +63,15 @@ struct Q_QML_EXPORT Exception {
     ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
 
 private:
+    void *operator new(size_t, void *p) { return p; }
+
     explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
 
     ExecutionContext *throwingContext;
     bool accepted;
     PersistentValue exception;
     ExecutionEngine::StackTrace m_stackTrace;
+    static void throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue);
 };
 
 } // namespace QV4
