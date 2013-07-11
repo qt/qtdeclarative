@@ -1854,7 +1854,7 @@ int QQmlListModel::count() const
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::clear()
+    \qmlmethod ListModel::clear()
 
     Deletes all content from the model.
 
@@ -1876,7 +1876,7 @@ void QQmlListModel::clear()
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::remove(int index, int count = 1)
+    \qmlmethod ListModel::remove(int index, int count = 1)
 
     Deletes the content at \a index from the model.
 
@@ -1910,7 +1910,7 @@ void QQmlListModel::remove(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::insert(int index, jsobject dict)
+    \qmlmethod ListModel::insert(int index, jsobject dict)
 
     Adds a new item to the list model at position \a index, with the
     values in \a dict.
@@ -1971,7 +1971,7 @@ void QQmlListModel::insert(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::move(int from, int to, int n)
+    \qmlmethod ListModel::move(int from, int to, int n)
 
     Moves \a n items \a from one position \a to another.
 
@@ -2024,7 +2024,7 @@ void QQmlListModel::move(int from, int to, int n)
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::append(jsobject dict)
+    \qmlmethod ListModel::append(jsobject dict)
 
     Adds a new item to the end of the list model, with the
     values in \a dict.
@@ -2078,7 +2078,7 @@ void QQmlListModel::append(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod object QtQml2::ListModel::get(int index)
+    \qmlmethod object ListModel::get(int index)
 
     Returns the item at \a index in the list model. This allows the item
     data to be accessed or modified from JavaScript:
@@ -2128,7 +2128,7 @@ QQmlV8Handle QQmlListModel::get(int index) const
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::set(int index, jsobject dict)
+    \qmlmethod ListModel::set(int index, jsobject dict)
 
     Changes the item at \a index in the list model with the
     values in \a dict. Properties not appearing in \a dict
@@ -2183,7 +2183,7 @@ void QQmlListModel::set(int index, const QQmlV8Handle &handle)
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::setProperty(int index, string property, variant value)
+    \qmlmethod ListModel::setProperty(int index, string property, variant value)
 
     Changes the \a property of the item at \a index in the list model to \a value.
 
@@ -2226,7 +2226,7 @@ void QQmlListModel::setProperty(int index, const QString& property, const QVaria
 }
 
 /*!
-    \qmlmethod QtQml2::ListModel::sync()
+    \qmlmethod ListModel::sync()
 
     Writes any unsaved changes to the list model after it has been modified
     from a worker script.
