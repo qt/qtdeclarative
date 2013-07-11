@@ -75,7 +75,6 @@ private:
 
     QHash<QString, QSGDistanceFieldGlyphCache *> m_caches;
 
-    QSGGlyphNode::AntialiasingMode m_defaultAntialiasingMode;
     ThresholdFunc m_threshold_func;
     AntialiasingSpreadFunc m_antialiasingSpread_func;
 };
