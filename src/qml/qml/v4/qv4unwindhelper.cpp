@@ -45,7 +45,7 @@
 
 #if CPU(X86_64) && (OS(LINUX) || OS(MAC_OS_X))
 #  define USE_DW2_HELPER
-#elif CPU(X86) && OS(LINUX)
+#elif CPU(X86) && COMPILER(GCC)
 #  define USE_DW2_HELPER
 #elif CPU(ARM) && (OS(LINUX) || OS(QNX))
 # define USE_ARM_HELPER

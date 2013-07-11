@@ -52,9 +52,6 @@
 #include <QMap>
 #include <QMutex>
 
-#define __USE_GNU
-#include <dlfcn.h>
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -75,7 +72,7 @@ static const unsigned char cie_fde_data[] = {
 static const int fde_offset = 20;
 static const int initial_location_offset = 28;
 static const int address_range_offset = 36;
-#elif CPU(X86) && OS(LINUX)
+#elif CPU(X86)
 static const unsigned char cie_fde_data[] = {
     0x10, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x1, 0x0, 0x4, 0x7c, 0x8, 0xc, 0x4, 0x4,
