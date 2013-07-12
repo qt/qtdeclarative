@@ -7,7 +7,7 @@ QtObject {
         var x = new XMLHttpRequest;
 
         try {
-            x.open("GET", "http://www.nokia.com", true, "user", "password", "extra");
+            x.open("GET", "http://www.qt-project.org", true, "user", "password", "extra");
         } catch (e) {
             if (e.code == DOMException.SYNTAX_ERR)
                 exceptionThrown = true;
