@@ -179,8 +179,8 @@ void tst_qqmlinfo::types()
 
     //### do we actually want QUrl to show up in the output?
     //### why the extra space at the end?
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QUrl(\"http://qt.nokia.com\") ");
-    qmlInfo(0) << QUrl("http://qt.nokia.com");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QUrl(\"http://www.qt-project.org\") ");
+    qmlInfo(0) << QUrl("http://www.qt-project.org");
 
     //### should this be quoted?
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: hello");
@@ -202,14 +202,14 @@ void tst_qqmlinfo::chaining()
     //### should more of these be automatically inserting spaces?
     QString str("Hello World");
     QStringRef ref(&str, 6, 5);
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: false 1.1 1.2 15 hello 'b' QUrl(\"http://qt.nokia.com\") World \"Qt\" true Quick ");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: false 1.1 1.2 15 hello 'b' QUrl(\"http://www.qt-project.org\") World \"Qt\" true Quick ");
     qmlInfo(0) << false << ' '
                << 1.1 << ' '
                << 1.2f << ' '
                << 15 << ' '
                << QLatin1String("hello") << ' '
                << QChar('b') << ' '
-               << QUrl("http://qt.nokia.com")
+               << QUrl("http://www.qt-project.org")
                << ref
                << QByteArray("Qt")
                << bool(true)
