@@ -54,19 +54,6 @@
 #include <execinfo.h>
 #endif
 
-#if defined(Q_OS_WIN)
-// We call RtlCaptureContext and that will crash if the compiler did not
-// create a stack frame for the function that calls RtlCaptureContext.
-#if defined(Q_CC_MSVC)
-#pragma optimize( "y", off )
-#elif defined(Q_CC_GNU)
-#pragma GCC optimize ("O0")
-#else
-#error "Don't know how to disable frame pointer optimizations with this compiler on Windows!"
-#endif
-
-#endif
-
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
