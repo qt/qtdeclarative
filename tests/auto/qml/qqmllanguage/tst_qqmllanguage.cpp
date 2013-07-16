@@ -48,6 +48,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QSignalSpy>
+#include <QFont>
 
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -189,6 +190,8 @@ private slots:
     void objectDeletionNotify();
 
     void scopedProperties();
+
+    void deepProperty();
 
 private:
     QQmlEngine engine;
@@ -3148,6 +3151,15 @@ void tst_qqmllanguage::scopedProperties()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != 0);
     QVERIFY(o->property("success").toBool());
+}
+
+void tst_qqmllanguage::deepProperty()
+{
+    QQmlComponent component(&engine, testFile("deepProperty.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != 0);
+    QFont font = qvariant_cast<QFont>(qvariant_cast<QObject*>(o->property("someObject"))->property("font"));
+    QCOMPARE(font.family(), QStringLiteral("test"));
 }
 
 // Tests that the implicit import has lowest precedence, in the case where
