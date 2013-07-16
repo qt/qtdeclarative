@@ -411,7 +411,9 @@ public:
       : QV4::Object(e)
       , patternRepeatX(false)
       , patternRepeatY(false)
-    {}
+    {
+        vtbl = &static_vtbl;
+    }
     QBrush brush;
     bool patternRepeatX:1;
     bool patternRepeatY:1;
