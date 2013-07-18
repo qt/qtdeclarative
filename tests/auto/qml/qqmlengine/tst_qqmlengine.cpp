@@ -680,12 +680,16 @@ void tst_qqmlengine::qtqmlModule()
 class CustomSelector : public QQmlAbstractUrlInterceptor
 {
 public:
+    CustomSelector(const QUrl &base):m_base(base){}
     virtual QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType d)
     {
         if (url.scheme() != QStringLiteral("file"))
             return url;
         if (!m_interceptionPoints.contains(d))
             return url;
+
+        if (url.path().endsWith("Test.2/qmldir"))//Special case
+            return QUrl::fromLocalFile(m_base.path() + "interception/module/intercepted/qmldir");
 
         QString alteredPath = url.path();
         int a = alteredPath.lastIndexOf('/');
@@ -698,6 +702,7 @@ public:
         return ret;
     }
     QList<QQmlAbstractUrlInterceptor::DataType> m_interceptionPoints;
+    QUrl m_base;
 };
 
 Q_DECLARE_METATYPE(QList<QQmlAbstractUrlInterceptor::DataType>);
@@ -729,6 +734,15 @@ void tst_qqmlengine::urlInterceptor_data()
         << testFileUrl("interception/qmldir/intercepted/doesNotExist.file").toString()
         << QStringLiteral("file:///intercepted/doesNotExist.file");
 
+    QTest::newRow("InterceptModule")//just a Test{}, needs to intercept the module import for it to work
+        << testFileUrl("interception/module/urlInterceptor.qml")
+        << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::QmldirFile )
+        << testFileUrl("interception/module/intercepted/doesNotExist.file").toString()
+        << QStringLiteral("intercepted")
+        << QStringLiteral("intercepted")
+        << testFileUrl("interception/module/intercepted/doesNotExist.file").toString()
+        << QStringLiteral("file:///doesNotExist.file");
+
     QTest::newRow("InterceptStrings")
         << testFileUrl("interception/strings/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::UrlString)
@@ -751,7 +765,8 @@ void tst_qqmlengine::urlInterceptor()
     QFETCH(QString, expectedAbsoluteUrl);
 
     QQmlEngine e;
-    CustomSelector cs;
+    e.setImportPathList(QStringList() << testFileUrl("interception/imports").toLocalFile());
+    CustomSelector cs(testFileUrl(""));
     cs.m_interceptionPoints = interceptionPoint;
     e.setUrlInterceptor(&cs);
     QQmlComponent c(&e, testFile); //Note that this can get intercepted too

@@ -1801,9 +1801,25 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 Return a QmldirContent for absoluteFilePath.  The QmldirContent may be cached.
 
 \a filePath is either a bundle URL, or a local file path.
+
+It can also be a remote path for a remote directory import, but it will have been cached by now in this case.
 */
-const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePath, const QString &uriHint)
+const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn, const QString &uriHint)
 {
+    QUrl url(filePathIn); //May already contain bundle or http scheme
+    if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
+        return *(m_importQmlDirCache.value(filePathIn)); //Can't load the remote here, but should be cached
+    else if (!QQmlFile::isBundle(filePathIn))
+        url = QUrl::fromLocalFile(filePathIn);
+    if (engine() && engine()->urlInterceptor())
+        url = engine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::QmldirFile);
+    Q_ASSERT(url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("bundle"));
+    QString filePath;
+    if (url.scheme() == QLatin1String("file"))
+        filePath = url.toLocalFile();
+    else
+        filePath = url.path();
+
     QmldirContent *qmldir;
     QmldirContent **val = m_importQmlDirCache.value(filePath);
     if (!val) {
@@ -1813,13 +1829,10 @@ const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString
 #define NOT_READABLE_ERROR QString(QLatin1String("module \"$$URI$$\" definition \"%1\" not readable"))
 #define CASE_MISMATCH_ERROR QString(QLatin1String("cannot load module \"$$URI$$\": File name case mismatch for \"%1\""))
 
-        if (QQmlFile::isBundle(filePath)) {
-
-            QUrl url(filePath);
-
+        if (QQmlFile::isBundle(url.toString())) {
             QQmlFile file(engine(), url);
             if (file.isError()) {
-                ERROR(NOT_READABLE_ERROR.arg(filePath));
+                ERROR(NOT_READABLE_ERROR.arg(url.toString()));
             } else {
                 QString content(QString::fromUtf8(file.data(), file.size()));
                 qmldir->setContent(filePath, content);
