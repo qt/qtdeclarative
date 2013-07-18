@@ -67,9 +67,11 @@ public:
 
     virtual bool defaultNameFilterDisables() const { return true; }
     virtual void setDirectory(const QString &dir) { m_dialog.setDirectory(dir); }
-    virtual QString directory() const { return m_dialog.directory().absolutePath(); }
     virtual void selectFile(const QString &f) { m_dialog.selectFile(f); }
+    /* TODO after dialog helper switches to URLs
+    virtual QString directory() const { return m_dialog.directory().absolutePath(); }
     virtual QStringList selectedFiles() const { return m_dialog.selectedFiles(); }
+    */
 
     virtual void setFilter() {
         m_dialog.setWindowTitle(QPlatformFileDialogHelper::options()->windowTitle());
@@ -188,6 +190,7 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
     if (parentItem)
         m_parentWindow = parentItem->window();
 
+    /* TODO after dialog helper switches to URLs
     if (!m_dlgHelper) {
         m_dlgHelper = new QFileDialogHelper();
         connect(m_dlgHelper, SIGNAL(directoryEntered(QString)), this, SIGNAL(folderChanged()));
@@ -195,6 +198,7 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
         connect(m_dlgHelper, SIGNAL(accept()), this, SLOT(accept()));
         connect(m_dlgHelper, SIGNAL(reject()), this, SLOT(reject()));
     }
+    */
 
     return m_dlgHelper;
 }
