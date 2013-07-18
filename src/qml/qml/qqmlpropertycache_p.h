@@ -295,6 +295,8 @@ public:
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
     QQmlPropertyCache *parent() const;
+    // is used by the Qml Designer
+    void setParent(QQmlPropertyCache *newParent);
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;

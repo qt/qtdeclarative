@@ -540,6 +540,11 @@ QQmlPropertyCache *QQmlPropertyCache::parent() const
     return _parent;
 }
 
+void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
+{
+    _parent = newParent;
+}
+
 // Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
 // QML
 const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
