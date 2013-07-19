@@ -535,12 +535,12 @@ void QSGRenderThread::sync()
         }
     }
 
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+
     RLDEBUG("    Render:  - unlocking after sync");
 
     waitCondition.wakeOne();
     mutex.unlock();
-
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 }
 
 
