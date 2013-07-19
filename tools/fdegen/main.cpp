@@ -87,10 +87,10 @@ enum DwarfRegs {
     EDX = 1,
     ECX = 2,
     EBX = 3,
-    ESI = 4,
-    EDI = 5,
-    EBP = 6,
-    ESP = 7,
+    ESP = 4,
+    EBP = 5,
+    ESI = 6,
+    EDI = 7,
     EIP = 8,
 
     InstructionPointerRegister = EIP,
@@ -105,6 +105,9 @@ static const DwarfRegs calleeSavedRegisters[] = {
 #if defined(Q_PROCESSOR_X86_64)
     R12,
     R14
+#elif defined(Q_PROCESSOR_X86)
+    ESI,
+    EDI
 #endif
 };
 static const int calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / sizeof(calleeSavedRegisters[0]);
