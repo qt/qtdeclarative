@@ -406,8 +406,7 @@ QModelIndex QQuickFolderListModel::index(int row, int , const QModelIndex &) con
     The \a folder property holds a URL for the folder that the model is
     currently providing.
 
-    The value is a URL expressed as a string, and must be a \c file: or \c qrc:
-    URL, or a relative URL.
+    The value must be a \c file: or \c qrc: URL, or a relative URL.
 
     By default, the value is an invalid URL.
 */
@@ -447,7 +446,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
 
 
 /*!
-   \qmlproperty string QQuickFolderListModel::rootFolder
+   \qmlproperty url QQuickFolderListModel::rootFolder
 
    When the rootFolder is set, then this folder will
    be threated as the root in the file system, so that
