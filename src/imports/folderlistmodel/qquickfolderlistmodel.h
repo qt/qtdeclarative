@@ -90,7 +90,8 @@ public:
         FileSizeRole = Qt::UserRole + 5,
         FileLastModifiedRole = Qt::UserRole + 6,
         FileLastReadRole = Qt::UserRole +7,
-        FileIsDirRole = Qt::UserRole + 8
+        FileIsDirRole = Qt::UserRole + 8,
+        FileUrlRole = Qt::UserRole + 9
     };
 
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;

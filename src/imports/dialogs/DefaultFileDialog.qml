@@ -107,11 +107,10 @@ AbstractFileDialog {
             selectedIndices.map(function(idx) {
                 if (view.model.isFolder(idx)) {
                     if (selectFolder)
-                        // TODO after QTBUG-32039: should not need to convert pathToUrl here
-                        addSelection(pathToUrl(view.model.get(idx, "filePath")))
+                        addSelection(view.model.get(idx, "fileURL"))
                 } else {
                     if (!selectFolder)
-                        addSelection(pathToUrl(view.model.get(idx, "filePath")))
+                        addSelection(view.model.get(idx, "fileURL"))
                 }
             })
         }

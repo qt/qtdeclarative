@@ -325,6 +325,7 @@ QQuickFolderListModel::QQuickFolderListModel(QObject *parent)
     d->roleNames[FileLastModifiedRole] = "fileModified";
     d->roleNames[FileLastReadRole] = "fileAccessed";
     d->roleNames[FileIsDirRole] = "fileIsDir";
+    d->roleNames[FileUrlRole] = "fileURL";
     d->init();
 }
 
@@ -365,6 +366,9 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
             break;
         case FileIsDirRole:
             rv = d->data.at(index.row()).isDir();
+            break;
+        case FileUrlRole:
+            rv = QUrl::fromLocalFile(d->data.at(index.row()).filePath());
             break;
         default:
             break;
@@ -753,6 +757,7 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
     \list
         \li \c fileName
         \li \c filePath
+        \li \c fileURL
         \li \c fileBaseName
         \li \c fileSuffix
         \li \c fileSize
