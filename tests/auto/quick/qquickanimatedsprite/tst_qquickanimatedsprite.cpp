@@ -53,6 +53,7 @@ public:
 private slots:
     void initTestCase();
     void test_properties();
+    void test_runningChangedSignal();
     void test_frameChangedSignal();
 };
 
@@ -83,6 +84,29 @@ void tst_qquickanimatedsprite::test_properties()
     QVERIFY(!sprite->running());
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
+
+    delete window;
+}
+
+void tst_qquickanimatedsprite::test_runningChangedSignal()
+{
+    QQuickView *window = new QQuickView(0);
+
+    window->setSource(testFileUrl("runningChange.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QVERIFY(!sprite->running());
+
+    QSignalSpy runningChangedSpy(sprite, SIGNAL(runningChanged(bool)));
+    sprite->setRunning(true);
+    QTRY_COMPARE(runningChangedSpy.count(), 1);
+    QTRY_VERIFY(!sprite->running());
+    QTRY_COMPARE(runningChangedSpy.count(), 2);
 
     delete window;
 }

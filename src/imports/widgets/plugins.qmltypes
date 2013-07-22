@@ -39,6 +39,7 @@ Module {
         Property { name: "visible"; type: "bool" }
         Property { name: "modality"; type: "Qt::WindowModality" }
         Property { name: "title"; type: "string" }
+        Property { name: "isWindow"; type: "bool"; isReadonly: true }
         Property { name: "x"; type: "int" }
         Property { name: "y"; type: "int" }
         Property { name: "width"; type: "int" }
@@ -56,7 +57,7 @@ Module {
         Property { name: "selectExisting"; type: "bool" }
         Property { name: "selectMultiple"; type: "bool" }
         Property { name: "selectFolder"; type: "bool" }
-        Property { name: "folder"; type: "string" }
+        Property { name: "folder"; type: "QUrl" }
         Property { name: "nameFilters"; type: "QStringList" }
         Property { name: "selectedNameFilter"; type: "string" }
         Property { name: "fileUrl"; type: "QUrl"; isReadonly: true }
@@ -86,7 +87,7 @@ Module {
         }
         Method {
             name: "setFolder"
-            Parameter { name: "f"; type: "string" }
+            Parameter { name: "f"; type: "QUrl" }
         }
         Method {
             name: "setNameFilters"

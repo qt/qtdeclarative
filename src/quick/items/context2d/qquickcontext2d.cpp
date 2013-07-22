@@ -198,31 +198,153 @@ QColor qt_color_from_string(const QV4::Value &name)
     return QColor();
 }
 
-QFont qt_font_from_string(const QString& fontString) {
-    QFont font;
-     // ### this is simplified and incomplete
-    // ### TODO:get code from Qt webkit
-     const QStringList tokens = fontString.split(QLatin1Char(' '));
-     foreach (const QString &token, tokens) {
-         if (token == QStringLiteral("italic"))
-             font.setItalic(true);
-         else if (token == QStringLiteral("bold"))
-             font.setBold(true);
-         else if (token.endsWith(QStringLiteral("px"))) {
-             QString number = token;
-             number.remove(QLatin1String("px"));
-             bool ok = false;
-             float pixelSize = number.trimmed().toFloat(&ok);
-             if (ok)
-                font.setPixelSize(int(pixelSize));
-         } else
-             font.setFamily(token);
-     }
-
-     return font;
+static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
+{
+    const QString trimmedToken = fontSizeToken.trimmed();
+    QString unit = trimmedToken.right(2);
+    QString value = trimmedToken.left(fontSizeToken.size() - 2);
+    bool ok = false;
+    float size = value.trimmed().toFloat(&ok);
+    if (ok) {
+        int intSize = int(size);
+        if (unit.compare(QLatin1String("px")) == 0) {
+            font.setPixelSize(intSize);
+            return true;
+        } else if (unit.compare(QLatin1String("pt")) == 0) {
+            font.setPointSize(intSize);
+            return true;
+        }
+    }
+    qWarning().nospace() << "Context2D: A font size of " << fontSizeToken << " is invalid.";
+    return false;
 }
 
+static bool qSetFontFamilyFromToken(QFont &font, const QString &fontFamilyToken)
+{
+    const QString trimmedToken = fontFamilyToken.trimmed();
+    QFontDatabase fontDatabase;
+    if (fontDatabase.hasFamily(trimmedToken)) {
+        font.setFamily(trimmedToken);
+        return true;
+    } else {
+        // Can't find a family matching this name; if it's a generic family,
+        // try searching for the default family for it by using style hints.
+        QFont tmp;
+        int styleHint = -1;
+        if (fontFamilyToken.compare(QLatin1String("serif")) == 0) {
+            styleHint = QFont::Serif;
+        } else if (fontFamilyToken.compare(QLatin1String("sans-serif")) == 0) {
+            styleHint = QFont::SansSerif;
+        } else if (fontFamilyToken.compare(QLatin1String("cursive")) == 0) {
+            styleHint = QFont::Cursive;
+        } else if (fontFamilyToken.compare(QLatin1String("monospace")) == 0) {
+            styleHint = QFont::Monospace;
+        } else if (fontFamilyToken.compare(QLatin1String("fantasy")) == 0) {
+            styleHint = QFont::Fantasy;
+        }
+        if (styleHint != -1) {
+            tmp.setStyleHint(static_cast<QFont::StyleHint>(styleHint));
+            font.setFamily(tmp.defaultFamily());
+            return true;
+        }
+    }
+    qWarning().nospace() << "Context2D: The font family " << fontFamilyToken << " is invalid.";
+    return false;
+}
 
+enum FontToken
+{
+    NoTokens = 0x00,
+    FontStyle = 0x01,
+    FontVariant = 0x02,
+    FontWeight = 0x04
+};
+
+#define Q_TRY_SET_TOKEN(token, value, setStatement) \
+if (!(usedTokens & token)) { \
+    usedTokens |= token; \
+    setStatement; \
+} else { \
+    qWarning().nospace() << "Context2D: Duplicate token " << QLatin1String(value) << " found in font string."; \
+    return currentFont; \
+}
+
+/*!
+    Parses a font string based on the CSS shorthand font property.
+
+    See: http://www.w3.org/TR/css3-fonts/#font-prop
+*/
+static QFont qt_font_from_string(const QString& fontString, const QFont &currentFont) {
+    const QStringList tokens = fontString.split(QLatin1Char(' '));
+    if (tokens.size() < 2) {
+        qWarning().nospace() << "Context2D: Insufficent amount of tokens in font string.";
+        return currentFont;
+    }
+
+    QFont newFont;
+    QStringList remainingTokens = tokens;
+    int usedTokens = NoTokens;
+    // Optional properties can be in any order, but font-size and font-family must be last.
+    while (remainingTokens.size() > 2) {
+        const QString token = remainingTokens.takeFirst();
+        if (token.compare(QLatin1String("normal")) == 0) {
+            if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
+                // Could be font-style, font-variant or font-weight.
+                if (!(usedTokens & FontStyle)) {
+                    // QFont::StyleNormal is the default for QFont::style.
+                    usedTokens = usedTokens | FontStyle;
+                } else if (!(usedTokens & FontVariant)) {
+                    // QFont::MixedCase is the default for QFont::capitalization.
+                    usedTokens |= FontVariant;
+                } else if (!(usedTokens & FontWeight)) {
+                    // QFont::Normal is the default for QFont::weight.
+                    usedTokens |= FontWeight;
+                }
+            } else {
+                qWarning().nospace() << "Context2D: Duplicate token \"normal\" found in font string.";
+                return currentFont;
+            }
+        } else if (token.compare(QLatin1String("bold")) == 0) {
+            Q_TRY_SET_TOKEN(FontWeight, "bold", newFont.setBold(true))
+        } else if (token.compare(QLatin1String("italic")) == 0) {
+            Q_TRY_SET_TOKEN(FontStyle, "italic", newFont.setStyle(QFont::StyleItalic))
+        } else if (token.compare(QLatin1String("oblique")) == 0) {
+            Q_TRY_SET_TOKEN(FontStyle, "oblique", newFont.setStyle(QFont::StyleOblique))
+        } else if (token.compare(QLatin1String("small-caps")) == 0) {
+            Q_TRY_SET_TOKEN(FontVariant, "small-caps", newFont.setCapitalization(QFont::SmallCaps))
+        } else {
+            bool conversionOk = false;
+            int weight = token.toInt(&conversionOk);
+            if (conversionOk) {
+                if (weight >= 0 && weight <= 99) {
+                    Q_TRY_SET_TOKEN(FontWeight, "<font-weight>", newFont.setWeight(weight))
+                    continue;
+                } else {
+                    qWarning().nospace() << "Context2D: Invalid font weight " << weight << " found in font string; "
+                        << "must be between 0 and 99, inclusive.";
+                    return currentFont;
+                }
+            }
+            // The token is invalid or in the wrong place/order in the font string.
+            qWarning().nospace() << "Context2D: Invalid or misplaced token " << token << " found in font string.";
+            return currentFont;
+        }
+    }
+    if (remainingTokens.size() == 2) {
+        // Order must be: font-size font-family.
+        if (!qSetFontSizeFromToken(newFont, remainingTokens.first())) {
+            return currentFont;
+        }
+        if (!qSetFontFamilyFromToken(newFont, remainingTokens.last())) {
+            return currentFont;
+        }
+        return newFont;
+    } else {
+        qWarning().nospace() << "Context2D: Missing font-size and/or font-family tokens in font string.";
+        return currentFont;
+    }
+    return newFont;
+}
 
 class QQuickContext2DEngineData : public QV8Engine::Deletable
 {
@@ -781,17 +903,19 @@ QV4::Value QQuickJSContext2DPrototype::method_save(QV4::SimpleCallContext *ctx)
 // transformations
 /*!
     \qmlmethod object QtQuick2::Context2D::rotate(real angle)
-    Rotate the canvas around the current origin by \c angle in radians and clockwise direction.
+    Rotate the canvas around the current origin by \a angle in radians and clockwise direction.
+
     \code
     ctx.rotate(Math.PI/2);
     \endcode
+
     \image qml-item-canvas-rotate.png
 
     The rotation transformation matrix is as follows:
 
     \image qml-item-canvas-math-rotate.png
 
-    where the \c angle of rotation is in radians.
+    where the \a angle of rotation is in radians.
 
 */
 QV4::Value QQuickJSContext2DPrototype::method_rotate(QV4::SimpleCallContext *ctx)
@@ -806,17 +930,20 @@ QV4::Value QQuickJSContext2DPrototype::method_rotate(QV4::SimpleCallContext *ctx
 
 /*!
     \qmlmethod object QtQuick2::Context2D::scale(real x, real y)
+
     Increases or decreases the size of each unit in the canvas grid by multiplying the scale factors
     to the current tranform matrix.
-    Where \c x is the scale factor in the horizontal direction and \c y is the scale factor in the
+    \a x is the scale factor in the horizontal direction and \a y is the scale factor in the
     vertical direction.
-    The following code doubles the horizontal size of an object drawn on the canvas and half its
+
+    The following code doubles the horizontal size of an object drawn on the canvas and halves its
     vertical size:
+
     \code
     ctx.scale(2.0, 0.5);
     \endcode
-    \image qml-item-canvas-scale.png
 
+    \image qml-item-canvas-scale.png
 */
 QV4::Value QQuickJSContext2DPrototype::method_scale(QV4::SimpleCallContext *ctx)
 {
@@ -845,15 +972,15 @@ QV4::Value QQuickJSContext2DPrototype::method_scale(QV4::SimpleCallContext *ctx)
     \li \c{a} is the scale factor in the horizontal (x) direction
     \image qml-item-canvas-scalex.png
     \li \c{c} is the skew factor in the x direction
-    \image qml-item-canvas-canvas-skewx.png
+    \image qml-item-canvas-skewx.png
     \li \c{e} is the translation in the x direction
-    \image qml-item-canvas-canvas-translate.png
+    \image qml-item-canvas-translate.png
     \li \c{b} is the skew factor in the y (vertical) direction
-    \image qml-item-canvas-canvas-skewy.png
+    \image qml-item-canvas-skewy.png
     \li \c{d} is the scale factor in the y direction
-    \image qml-item-canvas-canvas-scaley.png
+    \image qml-item-canvas-scaley.png
     \li \c{f} is the translation in the y direction
-    \image qml-item-canvas-canvas-translatey.png
+    \image qml-item-canvas-translatey.png
     \li the last row remains constant
     \endlist
     The scale factors and skew factors are multiples; \c{e} and \c{f} are
@@ -881,8 +1008,9 @@ QV4::Value QQuickJSContext2DPrototype::method_setTransform(QV4::SimpleCallContex
 
 /*!
     \qmlmethod object QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
+
     This method is very similar to setTransform(), but instead of replacing the old
-    tranform matrix, this method applies the given tranform matrix to the current matrix by mulitplying to it.
+    transform matrix, this method applies the given tranform matrix to the current matrix by multiplying to it.
 
     The setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
     and then invokes the transform(a, b, c, d, e, f) method with the same arguments.
@@ -908,10 +1036,10 @@ QV4::Value QQuickJSContext2DPrototype::method_transform(QV4::SimpleCallContext *
 
 /*!
     \qmlmethod object QtQuick2::Context2D::translate(real x, real y)
-    Translates the origin of the canvas to point (\c x, \c y).
 
-    \c x is the horizontal distance that the origin is translated, in coordinate space units,
-    \c y is the vertical distance that the origin is translated, in coordinate space units.
+    Translates the origin of the canvas by a horizontal distance of \a x,
+    and a vertical distance of \a y, in coordinate space units.
+
     Translating the origin enables you to draw patterns of different objects on the canvas
     without having to measure the coordinates manually for each shape.
 */
@@ -929,7 +1057,9 @@ QV4::Value QQuickJSContext2DPrototype::method_translate(QV4::SimpleCallContext *
 
 /*!
     \qmlmethod object QtQuick2::Context2D::resetTransform()
-    Reset the transformation matrix to default value.
+
+    Reset the transformation matrix to the default value (equivalent to calling
+    setTransform(\c 1, \c 0, \c 0, \c 1, \c 0, \c 0)).
 
     \sa transform(), setTransform(), reset()
 */
@@ -945,8 +1075,10 @@ QV4::Value QQuickJSContext2DPrototype::method_resetTransform(QV4::SimpleCallCont
 
 
 /*!
-    \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv )
-    Shear the transformation matrix with \a sh in horizontal direction and \a sv in vertical direction.
+    \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv)
+
+    Shears the transformation matrix by \a sh in the horizontal direction and
+    \a sv in the vertical direction.
 */
 QV4::Value QQuickJSContext2DPrototype::method_shear(QV4::SimpleCallContext *ctx)
 {
@@ -962,9 +1094,10 @@ QV4::Value QQuickJSContext2DPrototype::method_shear(QV4::SimpleCallContext *ctx)
 
 /*!
     \qmlproperty real QtQuick2::Context2D::globalAlpha
+
      Holds the current alpha value applied to rendering operations.
-     The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
-     The default value is 1.0.
+     The value must be in the range from \c 0.0 (fully transparent) to \c 1.0 (fully opaque).
+     The default value is \c 1.0.
 */
 QV4::Value QQuickJSContext2D::method_get_globalAlpha(QV4::SimpleCallContext *ctx)
 {
@@ -1826,12 +1959,25 @@ QV4::Value QQuickJSContext2DPrototype::method_strokeRect(QV4::SimpleCallContext 
 
 // Complex shapes (paths) API
 /*!
-  \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
-  Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
-  \image qml-item-canvas-arcTo2.png
-  \sa arcTo,
-      {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
-  */
+    \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius,
+        real startAngle, real endAngle, bool anticlockwise)
+
+    Adds an arc to the current subpath that lies on the circumference of the
+    circle whose center is at the point (\a x, \a y) and whose radius is
+    \a radius.
+
+    Both \c startAngle and \c endAngle are measured from the x-axis in radians.
+
+    \image qml-item-canvas-arc.png
+
+    \image qml-item-canvas-startAngle.png
+
+    The \a anticlockwise parameter is \c true for each arc in the figure above
+    because they are all drawn in the anticlockwise direction.
+
+    \sa arcTo, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C's 2D
+    Context Standard for arc()}
+*/
 QV4::Value QQuickJSContext2DPrototype::method_arc(QV4::SimpleCallContext *ctx)
 {
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
@@ -1860,25 +2006,28 @@ QV4::Value QQuickJSContext2DPrototype::method_arc(QV4::SimpleCallContext *ctx)
 }
 
 /*!
-  \qmlmethod object QtQuick2::Context2D::arcTo(real x1, real y1, real x2, real y2, real radius)
+    \qmlmethod object QtQuick2::Context2D::arcTo(real x1, real y1, real x2,
+        real y2, real radius)
 
-   Adds an arc with the given control points and radius to the current subpath, connected to the previous point by a straight line.
-   To draw an arc, you begin with the same steps your followed to create a line:
+    Adds an arc with the given control points and radius to the current subpath,
+    connected to the previous point by a straight line. To draw an arc, you
+    begin with the same steps you followed to create a line:
+
     \list
-    \li Call the context.beginPath() method to set a new path.
-    \li Call the context.moveTo(\c x, \c y) method to set your starting position on the canvas at the point (\c x,\c y).
-    \li To draw an arc or circle, call the context.arcTo(\c x1, \c y1, \c x2, \c y2,\c radius) method.
-       This adds an arc with starting point (\c x1,\c y1), ending point (\c x2, \c y2), and radius \c radius to the current subpath and connects
-       it to the previous subpath by a straight line.
+    \li Call the beginPath() method to set a new path.
+    \li Call the moveTo(\c x, \c y) method to set your starting position on the
+        canvas at the point (\c x, \c y).
+    \li To draw an arc or circle, call the arcTo(\a x1, \a y1, \a x2, \a y2,
+        \a radius) method. This adds an arc with starting point (\a x1, \a y1),
+        ending point (\a x2, \a y2), and \a radius to the current subpath and
+        connects it to the previous subpath by a straight line.
     \endlist
-    \image qml-item-canvas-arcTo.png
-    Both startAngle and endAngle are measured from the x axis in units of radians.
 
-    \image qml-item-canvas-startAngle.png
-    The anticlockwise has the value TRUE for each arc in the figure above because they are all drawn in the counterclockwise direction.
-  \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
-      context standard for arcTo}
-  */
+    \image qml-item-canvas-arcTo.png
+
+    \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C's 2D
+    Context Standard for arcTo()}
+*/
 QV4::Value QQuickJSContext2DPrototype::method_arcTo(QV4::SimpleCallContext *ctx)
 {
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
@@ -1975,7 +2124,7 @@ QV4::Value QQuickJSContext2DPrototype::method_bezierCurveTo(QV4::SimpleCallConte
     The new shape displays.  The following shows how a clipping path can
     modify how an image displays:
 
-    \image qml-canvas-clip-complex.png
+    \image qml-item-canvas-clip-complex.png
     \sa beginPath()
     \sa closePath()
     \sa stroke()
@@ -2232,13 +2381,28 @@ QV4::Value QQuickJSContext2DPrototype::method_caretBlinkRate(QV4::SimpleCallCont
 
     V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
 }
-// text
-/*!
-  \qmlproperty string QtQuick2::Context2D::font
-  Holds the current font settings.
 
-  The default font value is "10px sans-serif".
-  See \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
+/*!
+    \qmlproperty string QtQuick2::Context2D::font
+    Holds the current font settings.
+
+    A subset of the
+    \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
+    is supported:
+
+    \list
+        \li font-style (optional):
+        normal | italic | oblique
+        \li font-variant (optional): normal | small-caps
+        \li font-weight (optional): normal | bold | 0 ... 99
+        \li font-size: Npx | Npt (where N is a positive number)
+        \li font-family: See \l {http://www.w3.org/TR/CSS2/fonts.html#propdef-font-family}
+    \endlist
+
+    Note that font-size and font-family are mandatory and must be in the order
+    they are shown in above.
+
+    The default font value is "10px sans-serif".
   */
 QV4::Value QQuickJSContext2D::method_get_font(QV4::SimpleCallContext *ctx)
 {
@@ -2254,7 +2418,7 @@ QV4::Value QQuickJSContext2D::method_set_font(QV4::SimpleCallContext *ctx)
     CHECK_CONTEXT_SETTER(r)
 
     QString fs = ctx->argument(0).toQString();
-    QFont font = qt_font_from_string(fs);
+    QFont font = qt_font_from_string(fs, r->context->state.font);
     if (font != r->context->state.font) {
         r->context->state.font = font;
     }
@@ -2504,7 +2668,7 @@ QV4::Value QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCallContext
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
-  \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, sh, real dx, real dy, real dw, dh)
+  \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, real sh, real dx, real dy, real dw, real dh)
   This is an overloaded function.
   Draws the given item as \a image from source point (\a sx, \a sy) and source width \a sw, source height \a sh
   onto the canvas at point (\a dx, \a dy) and with width \a dw, height \a dh.
@@ -2784,20 +2948,25 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
     }
 }
 /*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
-   Creates a CanvasImageData object with the given dimensions(\a sw, \a sh).
-  */
-/*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(CanvasImageData imageData)
-   Creates a CanvasImageData object with the same dimensions as the argument.
-  */
-/*!
-  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(Url imageUrl)
-   Creates a CanvasImageData object with the given image loaded from \a imageUrl.
-   Note:The \a imageUrl must be already loaded before this function call, if not, an empty
-   CanvasImageData obect will be returned.
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
 
-   \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(), QtQuick2::Canvas::isImageLoaded
+    Creates a CanvasImageData object with the given dimensions(\a sw, \a sh).
+*/
+/*!
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(CanvasImageData imageData)
+
+    Creates a CanvasImageData object with the same dimensions as the argument.
+*/
+/*!
+    \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(Url imageUrl)
+
+    Creates a CanvasImageData object with the given image loaded from \a imageUrl.
+
+    \note The \a imageUrl must be already loaded before this function call,
+    otherwise an empty CanvasImageData obect will be returned.
+
+    \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(),
+        QtQuick2::Canvas::isImageLoaded
   */
 QV4::Value QQuickJSContext2DPrototype::method_createImageData(QV4::SimpleCallContext *ctx)
 {

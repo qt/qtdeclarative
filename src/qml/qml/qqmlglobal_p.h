@@ -322,6 +322,8 @@ class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
     Q_PROPERTY(QStringList arguments READ args CONSTANT)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString version READ version WRITE setVersion NOTIFY versionChanged)
+    Q_PROPERTY(QString organization READ organization WRITE setOrganization NOTIFY organizationChanged)
+    Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
 public:
     QQmlApplication(QObject* parent=0);
 
@@ -329,16 +331,22 @@ public:
 
     QString name() const;
     QString version() const;
+    QString organization() const;
+    QString domain() const;
 
 public Q_SLOTS:
     void setName(const QString &arg);
     void setVersion(const QString &arg);
+    void setOrganization(const QString &arg);
+    void setDomain(const QString &arg);
 
 Q_SIGNALS:
     void aboutToQuit();
 
     void nameChanged();
     void versionChanged();
+    void organizationChanged();
+    void domainChanged();
 
 protected:
     QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=0);

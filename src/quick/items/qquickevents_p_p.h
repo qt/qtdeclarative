@@ -59,6 +59,7 @@
 #include <QtCore/qobject.h>
 #include <QtGui/qvector2d.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qkeysequence.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,6 +89,8 @@ public:
 
     bool isAccepted() { return event.isAccepted(); }
     void setAccepted(bool accepted) { event.setAccepted(accepted); }
+
+    Q_REVISION(2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const { return event.matches(key); }
 
 private:
     QKeyEvent event;

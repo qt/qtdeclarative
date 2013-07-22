@@ -44,6 +44,8 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qpointer.h>
+#include <QtCore/qscopedpointer.h>
 
 #include <QtGui/QGuiApplication>
 
@@ -461,7 +463,7 @@ int main(int argc, char ** argv)
             // TODO: as soon as the engine construction completes, the debug service is
             // listening for connections.  But actually we aren't ready to debug anything.
             QQmlEngine engine;
-            QQmlComponent *component = new QQmlComponent(&engine);
+            QPointer<QQmlComponent> component = new QQmlComponent(&engine);
             for (int i = 0; i < imports.size(); ++i)
                 engine.addImportPath(imports.at(i));
             for (int i = 0; i < bundles.size(); ++i)
@@ -481,15 +483,14 @@ int main(int argc, char ** argv)
             }
 
             QObject *topLevel = component->create();
-            QQuickWindow *window = qobject_cast<QQuickWindow *>(topLevel);
-            QQuickView* qxView = 0;
+            QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(topLevel));
             if (window) {
                 engine.setIncubationController(window->incubationController());
             } else {
                 QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
                 if (contentItem) {
-                    qxView = new QQuickView(&engine, NULL);
-                    window = qxView;
+                    QQuickView* qxView = new QQuickView(&engine, NULL);
+                    window.reset(qxView);
                     // Set window default properties; the qml can still override them
                     QString oname = contentItem->objectName();
                     window->setTitle(oname.isEmpty() ? QString::fromLatin1("qmlscene") : QString::fromLatin1("qmlscene: ") + oname);
@@ -534,14 +535,10 @@ int main(int argc, char ** argv)
 #ifdef QML_RUNTIME_TESTING
             RenderStatistics::printTotalStats();
 #endif
-            // Ready to exit.  If we created qxView, it owns the component;
-            // otherwise, the ownership is still right here.  Nobody deletes the engine
-            // (which is odd since the container constructor takes the engine pointer),
-            // but it's stack-allocated anyway.
-            if (qxView)
-                delete qxView;
-            else
-                delete component;
+            // Ready to exit. Notice that the component might be owned by
+            // QQuickView if one was created. That case is tracked by
+            // QPointer, so it is safe to delete the component here.
+            delete component;
         }
     }
 

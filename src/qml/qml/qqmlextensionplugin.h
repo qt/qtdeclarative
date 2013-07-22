@@ -68,6 +68,7 @@ public:
     virtual void registerTypes(const char *uri) = 0;
     virtual void initializeEngine(QQmlEngine *engine, const char *uri);
 
+private:
     Q_DISABLE_COPY(QQmlExtensionPlugin)
 };
 

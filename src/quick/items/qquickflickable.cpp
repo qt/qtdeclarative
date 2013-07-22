@@ -2384,7 +2384,7 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     }
 
     // emit moving signals
-    bool wasMoving = d->hData.moving || d->vData.moving;
+    bool wasMoving = isMoving();
     if (hMovementEnding && d->hData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->hData.moving = false;
@@ -2397,7 +2397,7 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
         d->vMoved = false;
         emit movingVerticallyChanged();
     }
-    if (wasMoving && (!d->hData.moving || !d->vData.moving)) {
+    if (wasMoving && !isMoving()) {
         emit movingChanged();
         emit movementEnded();
     }

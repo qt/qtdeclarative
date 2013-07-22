@@ -49,7 +49,6 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
-#include <QtCore/qdebug.h>
 
 #define QML_VERSION     0x020000
 #define QML_VERSION_STR "2.0"
@@ -477,7 +476,7 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
 {
     if (url.isRelative()) { 
         // User input check must go here, because QQmlPrivate::qmlregister is also used internally for composite types
-        qWarning() << "qmlRegisterType requires absolute URLs.";
+        qWarning("qmlRegisterType requires absolute URLs.");
         return 0;
     }
 

@@ -39,13 +39,14 @@
 ****************************************************************************/
 import QtQuick 2.0
 import QtQuick.Dialogs 1.0
+import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 1.0
 
-Rectangle {
+Window {
     id: root
+    visible: true
     width: 1024; height: 600
     color: "black"
-    visible: true
     property int highestZ: 0
     property real defaultSize: 200
 
@@ -117,11 +118,27 @@ Rectangle {
             }
         }
     }
+
+    Image {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: 10
+        source: "resources/folder.png"
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -10
+            onClicked: fileDialog.open()
+        }
+    }
+
     Text {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.right: parent.right
         anchors.margins: 10
         color: "darkgrey"
+        wrapMode: Text.WordWrap
+        font.pointSize: 8
         text: "On a touchscreen: use two fingers to zoom and rotate, one finger to drag\n" +
               "With a mouse: drag normally, use the vertical wheel to zoom, horizontal wheel to rotate, or hold Ctrl while using the vertical wheel to rotate"
     }

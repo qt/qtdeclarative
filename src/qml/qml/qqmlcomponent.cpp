@@ -785,8 +785,7 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
     If \a context is 0 (the default), it will create the instance in the
     engine' s \l {QQmlEngine::rootContext()}{root context}.
 
-    The ownership of the returned object instance is determined by the QQmlEngine.
-    By default the caller has to take care that the object is eventually deleted.
+    The ownership of the returned object instance is transferred to the caller.
 
     \sa QQmlEngine::ObjectOwnership
 */
@@ -827,8 +826,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
     communicate information to an instantiated component, as it allows their
     initial values to be configured before property bindings take effect.
 
-    The ownership of the returned object instance is determined by the QQmlEngine.
-    By default the caller has to take care that the object is eventually deleted.
+    The ownership of the returned object instance is transferred to the caller.
 
     \sa completeCreate(), QQmlEngine::ObjectOwnership
 */

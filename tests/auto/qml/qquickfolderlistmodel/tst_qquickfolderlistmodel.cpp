@@ -71,6 +71,7 @@ public slots:
 
 private slots:
     void basicProperties();
+    void showFiles();
     void resetFiltering();
     void refresh();
 #if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
@@ -121,6 +122,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml");
     QCOMPARE(flm->property("sortReversed").toBool(), false);
+    QCOMPARE(flm->property("showFiles").toBool(), true);
     QCOMPARE(flm->property("showDirs").toBool(), true);
     QCOMPARE(flm->property("showDotAndDotDot").toBool(), false);
     QCOMPARE(flm->property("showOnlyReadable").toBool(), false);
@@ -129,6 +131,23 @@ void tst_qquickfolderlistmodel::basicProperties()
     
     flm->setProperty("folder",QUrl::fromLocalFile(""));
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(""));
+}
+
+void tst_qquickfolderlistmodel::showFiles()
+{
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+
+    flm->setProperty("folder", dataDirectoryUrl());
+    QTRY_COMPARE(flm->property("count").toInt(), 5); // wait for refresh
+    QCOMPARE(flm->property("showFiles").toBool(), true);
+
+    flm->setProperty("showFiles", false);
+    QCOMPARE(flm->property("showFiles").toBool(), false);
+    QTRY_COMPARE(flm->property("count").toInt(), 1); // wait for refresh
 }
 
 void tst_qquickfolderlistmodel::resetFiltering()

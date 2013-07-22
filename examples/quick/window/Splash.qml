@@ -44,9 +44,6 @@ import QtQuick.Window 2.1
 //! [splash-properties]
 Window {
     id: splash
-    visible: true
-    width: splashImage.width
-    height: splashImage.height
     color: "transparent"
     title: "Splash Window"
     modality: Qt.ApplicationModal
@@ -58,6 +55,8 @@ Window {
     x: (Screen.width - splashImage.width) / 2
     y: (Screen.height - splashImage.height) / 2
 //! [screen-properties]
+    width: splashImage.width
+    height: splashImage.height
 
     Image {
         id: splashImage
@@ -76,4 +75,5 @@ Window {
         }
     }
     //! [timer]
+    Component.onCompleted: visible = true
 }

@@ -101,6 +101,7 @@ private slots:
     void threading();
     void threading_data();
     void propertyChanges();
+    void selectAncestor();
 
     void roleCrash();
 
@@ -962,6 +963,18 @@ void tst_qquickxmllistmodel::propertyChanges()
 
     QTRY_VERIFY(model->rowCount() == 1);
     delete model;
+}
+
+void tst_qquickxmllistmodel::selectAncestor()
+{
+    QQmlComponent component(&engine, testFileUrl("groups.qml"));
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
+    QVERIFY(model != 0);
+    QTRY_COMPARE(model->rowCount(), 1);
+
+    QModelIndex index = model->index(0, 0);
+    QCOMPARE(model->data(index, Qt::UserRole).toInt(), 12);
+    QCOMPARE(model->data(index, Qt::UserRole+1).toString(), QLatin1String("cats"));
 }
 
 void tst_qquickxmllistmodel::roleCrash()

@@ -403,6 +403,14 @@ QQmlApplication::QQmlApplication(QObject *parent)
 {
     connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
             this, SIGNAL(aboutToQuit()));
+    connect(QCoreApplication::instance(), SIGNAL(applicationNameChanged()),
+            this, SIGNAL(nameChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(applicationVersionChanged()),
+            this, SIGNAL(versionChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(organizationNameChanged()),
+            this, SIGNAL(organizationChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(organizationDomainChanged()),
+            this, SIGNAL(domainChanged()));
 }
 
 QQmlApplication::QQmlApplication(QQmlApplicationPrivate &dd, QObject *parent)
@@ -410,6 +418,14 @@ QQmlApplication::QQmlApplication(QQmlApplicationPrivate &dd, QObject *parent)
 {
     connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()),
             this, SIGNAL(aboutToQuit()));
+    connect(QCoreApplication::instance(), SIGNAL(applicationNameChanged()),
+            this, SIGNAL(nameChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(applicationVersionChanged()),
+            this, SIGNAL(versionChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(organizationNameChanged()),
+            this, SIGNAL(organizationChanged()));
+    connect(QCoreApplication::instance(), SIGNAL(organizationDomainChanged()),
+            this, SIGNAL(domainChanged()));
 }
 
 QStringList QQmlApplication::args()
@@ -432,16 +448,34 @@ QString QQmlApplication::version() const
     return QCoreApplication::instance()->applicationVersion();
 }
 
+QString QQmlApplication::organization() const
+{
+    return QCoreApplication::instance()->organizationName();
+}
+
+QString QQmlApplication::domain() const
+{
+    return QCoreApplication::instance()->organizationDomain();
+}
+
 void QQmlApplication::setName(const QString &arg)
 {
     QCoreApplication::instance()->setApplicationName(arg);
-    emit nameChanged(); //Note that we don't get notified if it's changed from C++
 }
 
 void QQmlApplication::setVersion(const QString &arg)
 {
     QCoreApplication::instance()->setApplicationVersion(arg);
-    emit versionChanged(); //Note that we don't get notified if it's changed from C++
+}
+
+void QQmlApplication::setOrganization(const QString &arg)
+{
+    QCoreApplication::instance()->setOrganizationName(arg);
+}
+
+void QQmlApplication::setDomain(const QString &arg)
+{
+    QCoreApplication::instance()->setOrganizationDomain(arg);
 }
 
 QT_END_NAMESPACE

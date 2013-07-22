@@ -66,6 +66,7 @@ class QQuickAbstractDialog : public QObject
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibilityChanged)
     Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+    Q_PROPERTY(bool isWindow READ isWindow CONSTANT)
     Q_PROPERTY(int x READ x WRITE setX NOTIFY geometryChanged)
     Q_PROPERTY(int y READ y WRITE setY NOTIFY geometryChanged)
     Q_PROPERTY(int width READ width WRITE setWidth NOTIFY geometryChanged)
@@ -87,8 +88,9 @@ public:
 
     virtual void setVisible(bool v);
     virtual void setModality(Qt::WindowModality m);
-    virtual void setTitle(QString t) = 0;
+    virtual void setTitle(const QString &t) = 0;
     void setQmlImplementation(QObject* obj);
+    bool isWindow() const { return m_hasNativeWindows; }
     void setX(int arg);
     void setY(int arg);
     void setWidth(int arg);
@@ -107,6 +109,7 @@ Q_SIGNALS:
     void rejected();
 
 protected Q_SLOTS:
+    void decorationLoaded();
     void accept();
     void reject();
     void visibleChanged(bool v);
@@ -124,6 +127,13 @@ protected:
 protected: // variables for pure-QML implementations only
     QObject *m_qmlImplementation;
     QWindow *m_dialogWindow;
+    QQuickItem *m_contentItem;
+    QQuickItem *m_windowDecoration;
+    bool m_hasNativeWindows;
+
+    static QQmlComponent *m_decorationComponent;
+
+    friend class QtQuick2DialogsPlugin;
 
     Q_DISABLE_COPY(QQuickAbstractDialog)
 };

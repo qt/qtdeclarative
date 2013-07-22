@@ -55,6 +55,7 @@ FileInfoThread::FileInfoThread(QObject *parent)
       needUpdate(true),
       folderUpdate(false),
       sortUpdate(false),
+      showFiles(true),
       showDirs(true),
       showDirsFirst(false),
       showDotAndDotDot(false),
@@ -142,6 +143,14 @@ void FileInfoThread::setNameFilters(const QStringList & filters)
     condition.wakeAll();
 }
 
+void FileInfoThread::setShowFiles(bool show)
+{
+    QMutexLocker locker(&mutex);
+    showFiles = show;
+    folderUpdate = true;
+    condition.wakeAll();
+}
+
 void FileInfoThread::setShowDirs(bool showFolders)
 {
     QMutexLocker locker(&mutex);
@@ -213,7 +222,9 @@ void FileInfoThread::run()
 void FileInfoThread::getFileInfos(const QString &path)
 {
     QDir::Filters filter;
-    filter = QDir::Files | QDir::CaseSensitive;
+    filter = QDir::CaseSensitive;
+    if (showFiles)
+        filter = filter | QDir::Files;
     if (showDirs)
         filter = filter | QDir::AllDirs | QDir::Drives;
     if (!showDotAndDotDot)

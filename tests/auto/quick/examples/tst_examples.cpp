@@ -89,6 +89,7 @@ tst_examples::tst_examples()
     // Add files to exclude here
     excludedFiles << "examples/quick/canvas/tiger/tiger.qml"; // QTBUG-26528
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
+    excludedFiles << "examples/quick/demos/photosurface/photosurface.qml"; // root item is Window rather than Item
 
     // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
     excludedDirs << "shared"; //Not an example

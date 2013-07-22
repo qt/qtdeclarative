@@ -507,16 +507,10 @@ QSGDepthStencilBufferManager *QSGContext::depthStencilBufferManager()
 QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
 {
     Q_D(QSGContext);
-
-    if (material->m_reserved)
-        return reinterpret_cast<QSGMaterialShader *>(material->m_reserved);
-
     QSGMaterialType *type = material->type();
     QSGMaterialShader *shader = d->materials.value(type);
-    if (shader) {
-        material->m_reserved = shader;
+    if (shader)
         return shader;
-    }
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing  || QQmlProfilerService::enabled)
@@ -524,7 +518,6 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
 #endif
 
     shader = material->createShader();
-    material->m_reserved = shader;
     shader->compile();
     shader->initialize();
     d->materials[type] = shader;

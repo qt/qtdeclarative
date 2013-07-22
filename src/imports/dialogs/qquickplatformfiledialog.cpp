@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
         id: fileDialog
         title: "Please choose a file"
         onAccepted: {
-            console.log("You chose: " + fileDialog.filePaths)
+            console.log("You chose: " + fileDialog.fileUrls)
             Qt.quit()
         }
         onRejected: {
@@ -103,15 +103,15 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick::Dialogs::FileDialog::accepted
 
-    The \a accepted signal is emitted when the user has finished using the
-    dialog. You can then inspect the \a filePath or \a filePaths properties to
+    This handler is called when the user has finished using the
+    dialog. You can then inspect the \l fileUrl or \l fileUrls properties to
     get the selection.
 
     Example:
 
     \qml
     FileDialog {
-        onAccepted: { console.log("Selected file: " + filePath) }
+        onAccepted: { console.log("Selected file: " + fileUrl) }
     }
     \endqml
 */
@@ -119,7 +119,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick::Dialogs::FileDialog::rejected
 
-    The \a rejected signal is emitted when the user has dismissed the dialog,
+    This handler is called when the user has dismissed the dialog,
     either by closing the dialog window or by pressing the Cancel button.
 */
 
@@ -191,7 +191,7 @@ QPlatformFileDialogHelper *QQuickPlatformFileDialog::helper()
     containing the dialog's parent Item, modal with respect to the whole
     application, or non-modal.
 
-    By default it is \l WindowModal.
+    By default it is \c Qt.WindowModal.
 
     Modality does not mean that there are any blocking calls to wait for the
     dialog to be accepted or rejected; it's only that the user will be
@@ -252,7 +252,7 @@ QPlatformFileDialogHelper *QQuickPlatformFileDialog::helper()
 */
 
 /*!
-    \qmlproperty string FileDialog::folder
+    \qmlproperty url FileDialog::folder
 
     The path to the currently selected folder. Setting this property before
     invoking open() will cause the file browser to be initially positioned on
@@ -295,18 +295,18 @@ QPlatformFileDialogHelper *QQuickPlatformFileDialog::helper()
 */
 
 /*!
-    \qmlproperty string FileDialog::filePath
+    \qmlproperty url FileDialog::fileUrl
 
     The path of the file which was selected by the user.
 
     \note This property is set only if exactly one file was selected. In all
-    other cases, it will return an empty string.
+    other cases, it will be empty.
 
-    \sa filePaths
+    \sa fileUrls
 */
 
 /*!
-    \qmlproperty list<string> FileDialog::filePaths
+    \qmlproperty list<url> FileDialog::fileUrls
 
     The list of file paths which were selected by the user.
 */

@@ -1794,6 +1794,10 @@ void QQuickText::setVAlign(VAlignment align)
         return;
 
     d->vAlign = align;
+
+    if (isComponentComplete())
+        d->updateLayout();
+
     emit verticalAlignmentChanged(align);
 }
 

@@ -63,3 +63,7 @@ sourcedirs += ../../plugins
 excludedirs += ../../imports/dialogs \
                ../../imports/models \
                ../../../examples/quick/dialogs
+
+navigation.landingpage = "Qt Quick"
+navigation.cppclassespage = "Qt Quick C++ Classes"
+navigation.qmltypespage = "Qt Quick QML Types"

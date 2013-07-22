@@ -222,7 +222,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     \section1 Texture Atlasses
 
-    Some scene graph backens use texture atlasses, grouping multiple
+    Some scene graph backends use texture atlasses, grouping multiple
     small textures into one large texture. If this is the case, the
     function isAtlasTexture() will return true. Atlasses are used to
     aid the rendering algorithm to do better sorting which increases
@@ -528,6 +528,7 @@ QSGPlainTexture::QSGPlainTexture()
     , m_texture_id(0)
     , m_has_alpha(false)
     , m_has_mipmaps(false)
+    , m_dirty_texture(false)
     , m_dirty_bind_options(false)
     , m_owns_texture(true)
     , m_mipmaps_generated(false)

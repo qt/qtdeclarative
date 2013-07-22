@@ -34,3 +34,6 @@ headerdirs += ..
 sourcedirs += ..
 
 imagedirs += images
+
+navigation.landingpage = "Qt Quick Dialogs"
+navigation.qmltypespage = "Qt Quick Dialogs QML Types"

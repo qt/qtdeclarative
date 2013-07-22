@@ -67,9 +67,11 @@ public:
 
     virtual bool defaultNameFilterDisables() const { return true; }
     virtual void setDirectory(const QString &dir) { m_dialog.setDirectory(dir); }
-    virtual QString directory() const { return m_dialog.directory().absolutePath(); }
     virtual void selectFile(const QString &f) { m_dialog.selectFile(f); }
+    /* TODO after dialog helper switches to URLs
+    virtual QString directory() const { return m_dialog.directory().absolutePath(); }
     virtual QStringList selectedFiles() const { return m_dialog.selectedFiles(); }
+    */
 
     virtual void setFilter() {
         m_dialog.setWindowTitle(QPlatformFileDialogHelper::options()->windowTitle());
@@ -96,8 +98,11 @@ public:
     virtual void exec() { m_dialog.exec(); }
 
     virtual bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
-        m_dialog.windowHandle()->setTransientParent(parent);
-        m_dialog.windowHandle()->setFlags(f);
+        m_dialog.winId();
+        QWindow *window = m_dialog.windowHandle();
+        Q_ASSERT(window);
+        window->setTransientParent(parent);
+        window->setFlags(f);
         m_dialog.setWindowModality(m);
         m_dialog.show();
         return m_dialog.isVisible();
@@ -132,14 +137,14 @@ private:
     \qmlsignal QtQuick::Dialogs::FileDialog::accepted
 
     The \a accepted signal is emitted when the user has finished using the
-    dialog. You can then inspect the \a filePath or \a filePaths properties to
+    dialog. You can then inspect the \a fileUrl or \a fileUrls properties to
     get the selection.
 
     Example:
 
     \qml
     FileDialog {
-        onAccepted: { console.log("Selected file: " + filePath) }
+        onAccepted: { console.log("Selected file: " + fileUrl) }
     }
     \endqml
 */
@@ -185,6 +190,7 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
     if (parentItem)
         m_parentWindow = parentItem->window();
 
+    /* TODO after dialog helper switches to URLs
     if (!m_dlgHelper) {
         m_dlgHelper = new QFileDialogHelper();
         connect(m_dlgHelper, SIGNAL(directoryEntered(QString)), this, SIGNAL(folderChanged()));
@@ -192,6 +198,7 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
         connect(m_dlgHelper, SIGNAL(accept()), this, SLOT(accept()));
         connect(m_dlgHelper, SIGNAL(reject()), this, SLOT(reject()));
     }
+    */
 
     return m_dlgHelper;
 }

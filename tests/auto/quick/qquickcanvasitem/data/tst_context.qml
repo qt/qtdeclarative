@@ -71,6 +71,7 @@ Canvas {
         }
    }
 
+    // See: http://www.w3.org/TR/css3-fonts/#font-prop
     TestCase {
         name: "ContextFontValidation"
         when: canvas.available
@@ -82,8 +83,82 @@ Canvas {
             var ctx = canvas.getContext("2d");
             compare(ctx.font, "sans-serif,-1,10,5,50,0,0,0,0,0");
 
-            ctx.font = "80.1px sans-serif";
-            compare(ctx.font, "sans-serif,-1,80,5,50,0,0,0,0,0");
+            ctx.font = "80.1px cursive";
+            // Can't verify the chosen font family since it's different for each platform.
+            compare(ctx.font.substr(ctx.font.indexOf(",") + 1), "-1,80,5,50,0,0,0,0,0");
+        }
+
+        function test_valid() {
+            wait(100);
+            compare(contextSpy.count, 1);
+
+            var ctx = canvas.getContext("2d");
+
+            var validFonts = [
+                { string: "12px sans-serif", expected: "sans-serif,-1,12,5,50,0,0,0,0,0" },
+                { string: "12px serif", expected: "serif,-1,12,5,50,0,0,0,0,0" },
+                { string: "12pt sans-serif", expected: "sans-serif,12,-1,5,50,0,0,0,0,0" },
+                { string: "12pt serif", expected: "serif,12,-1,5,50,0,0,0,0,0" },
+                { string: "normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,0,0,0,0,0" },
+                { string: "normal normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,0,0,0,0,0" },
+                { string: "normal normal normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,0,0,0,0,0" },
+                { string: "italic 12px sans-serif", expected: "sans-serif,-1,12,5,50,1,0,0,0,0" },
+                { string: "italic normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,1,0,0,0,0" },
+                { string: "italic normal normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,1,0,0,0,0" },
+                { string: "oblique 12px sans-serif", expected: "sans-serif,-1,12,5,50,2,0,0,0,0" },
+                { string: "oblique normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,2,0,0,0,0" },
+                { string: "oblique normal normal 12px sans-serif", expected: "sans-serif,-1,12,5,50,2,0,0,0,0" },
+                { string: "bold 12px sans-serif", expected: "sans-serif,-1,12,5,75,0,0,0,0,0" },
+                { string: "0 12px sans-serif", expected: "sans-serif,-1,12,5,0,0,0,0,0,0" },
+                { string: "small-caps 12px sans-serif", expected: "sans-serif,-1,12,5,50,0,0,0,0,0" },
+            ];
+            for (var i = 0; i < validFonts.length; ++i) {
+                ctx.font = validFonts[i].string;
+                compare(ctx.font.substr(ctx.font.indexOf(",") + 1),
+                    validFonts[i].expected.substr(validFonts[i].expected.indexOf(",") + 1));
+            }
+        }
+
+        function test_invalid() {
+            wait(100);
+            compare(contextSpy.count, 1);
+
+            var ctx = canvas.getContext("2d");
+            var originalFont = ctx.font;
+            var i = 0;
+
+            var insufficientQtyTokens = ["", "12px", "sans-serif"];
+            for (i = 0; i < insufficientQtyTokens.length; ++i) {
+                ignoreWarning("Context2D: Insufficent amount of tokens in font string.");
+                ctx.font = insufficientQtyTokens[i];
+                compare(ctx.font, originalFont);
+            }
+
+            var invalidFontSizes = ["z12px sans-serif", "1z2px sans-serif", "12zpx sans-serif",
+                "12pzx sans-serif", "12pxz sans-serif", "sans-serif 12px"];
+            for (i = 0; i < invalidFontSizes.length; ++i) {
+                ignoreWarning("Context2D: A font size of \"" + invalidFontSizes[i].split(" ")[0] + "\" is invalid.");
+                ctx.font = invalidFontSizes[i];
+                compare(ctx.font, originalFont);
+            }
+
+            var invalidFontFamilies = ["12px !@weeeeeeee!@!@Don'tNameYourFontThis", "12px )(&*^^^%#$@*!!@#$JSPOR)"];
+            for (i = 0; i < invalidFontFamilies.length; ++i) {
+                ignoreWarning("Context2D: The font family \"" + invalidFontFamilies[i].split(" ")[1] + "\" is invalid.");
+                ctx.font = invalidFontFamilies[i];
+                compare(ctx.font, originalFont);
+            }
+
+            var duplicates = [
+                { duplicate: "normal", string: "normal normal normal normal 12px sans-serif" },
+                { duplicate: "bold", string: "normal normal bold bold 12px sans-serif" },
+                { duplicate: "bold", string: "bold bold 12px sans-serif" }
+            ];
+            for (i = 0; i < duplicates.length; ++i) {
+                ignoreWarning("Context2D: Duplicate token \"" + duplicates[i].duplicate + "\" found in font string.");
+                ctx.font = duplicates[i].string;
+                compare(ctx.font, originalFont);
+            }
         }
     }
 }

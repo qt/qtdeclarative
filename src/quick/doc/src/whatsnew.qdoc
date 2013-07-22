@@ -38,7 +38,8 @@ features introduced by the new import and new classes in Qt 5.1:
 \li New render loop for windows for smoother animations.
 \li New \l Window properties: activeFocusItem, minimumWidth, minimumHeight,
     maximumWidth, maximumHeight, visibility, contentOrientation, and opacity.
-\li New \l Item property: activeFocusOnTab.
+\li New \l Screen attached properties: name, desktopAvailableWidth,
+    desktopAvailableHeight, logicalPixelDensity
 \li New \l Grid properties: horizontalAlignment, verticalAlignment, and
     effectiveHorizontalAlignment.
 \li New \l TextEdit properties: selectByKeyboard and textDocument
