@@ -654,7 +654,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QQuickView window(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = window.rootObject()->findChild<QQuickTextEdit*>("text");
     QVERIFY(textEdit != 0);
-    window.show();
+    window.showNormal();
 
     const QString rtlText = textEdit->text();
 
@@ -832,7 +832,7 @@ void tst_qquicktextedit::hAlignVisual()
 {
     QQuickView view(testFileUrl("hAlignVisual.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
-    view.show();
+    view.showNormal();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
@@ -1262,7 +1262,7 @@ void tst_qquicktextedit::focusOnPress()
     QQuickWindow window;
     window.resize(100, 50);
     textEditObject->setParentItem(window.contentItem());
-    window.show();
+    window.showNormal();
     window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
@@ -2530,7 +2530,7 @@ void tst_qquicktextedit::remoteCursorDelegate()
 
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
@@ -2543,10 +2543,6 @@ void tst_qquicktextedit::remoteCursorDelegate()
 
     textEditObject->setFocus(true);
     QVERIFY(textEditObject->isCursorVisible());
-
-    QCOMPARE(component.status(), QQmlComponent::Loading);
-    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
-    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
@@ -3057,7 +3053,7 @@ void tst_qquicktextedit::openInputPanel()
     inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 

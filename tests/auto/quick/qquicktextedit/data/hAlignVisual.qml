@@ -9,5 +9,6 @@ Rectangle {
         text: "AA\nBBBBBBB\nCCCCCCCCCCCCCCCC"
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignLeft
+        font.pointSize: 12
     }
 }
