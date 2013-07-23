@@ -2775,7 +2775,6 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::remoteCursorDelegate()
 {
-    QSKIP("This test is unstable");
     TestHTTPServer server(SERVER_PORT);
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
@@ -2798,10 +2797,6 @@ void tst_qquicktextinput::remoteCursorDelegate()
 
     textInputObject->setFocus(true);
     QVERIFY(textInputObject->isCursorVisible());
-
-    QCOMPARE(component.status(), QQmlComponent::Loading);
-    QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
-    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
