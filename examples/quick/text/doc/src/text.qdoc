@@ -50,7 +50,7 @@
     or finally using a FontLoader and specifying a remote font file:
     \snippet text/fonts/fonts.qml fontloaderremote
 
-    'Available Fonts' shows how to use the QML global Qt object and a list view
+    'Available Fonts' shows how to use the QML \l{QtQml::Qt}{Qt} global object and a list view
     to display all the fonts available on the system.
     The ListView type uses the list of fonts available as its model:
     \snippet text/fonts/availableFonts.qml model
