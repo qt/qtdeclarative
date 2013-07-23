@@ -51,10 +51,8 @@ QT_BEGIN_NAMESPACE
 QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
     : value(v)
     , iterator(QJSValuePrivate::get(v)->value.asObject(), QV4::ObjectIterator::NoFlags)
-    , currentValue(0)
     , currentName(0)
     , currentIndex(UINT_MAX)
-    , nextValue(0)
     , nextName(0)
     , nextIndex(UINT_MAX)
 {
@@ -98,7 +96,7 @@ QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
 QJSValueIterator::QJSValueIterator(const QJSValue& object)
     : d_ptr(new QJSValueIteratorPrivate(object))
 {
-    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
 }
 
 /*!
@@ -119,7 +117,7 @@ bool QJSValueIterator::hasNext() const
 {
     if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
         return false;
-    return d_ptr->nextValue != 0;
+    return d_ptr->nextName != 0 || d_ptr->nextIndex != UINT_MAX;
 }
 
 /*!
@@ -137,13 +135,12 @@ bool QJSValueIterator::next()
 {
     if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
         return false;
-    d_ptr->currentValue = d_ptr->nextValue;
     d_ptr->currentName = d_ptr->nextName;
     d_ptr->currentIndex = d_ptr->nextIndex;
     d_ptr->currentAttributes = d_ptr->nextAttributes;
 
-    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
-    return d_ptr->nextValue != 0;
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    return d_ptr->nextName != 0 || d_ptr->nextIndex != UINT_MAX;
 }
 
 /*!
@@ -174,14 +171,18 @@ QJSValue QJSValueIterator::value() const
 {
     if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
         return QJSValue();
-    if (!d_ptr->currentValue)
-        return QJSValue();
 
     QV4::Object *o = d_ptr->iterator.object;
     QV4::ExecutionEngine *engine = o->internalClass->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = o->getValue(d_ptr->currentValue, d_ptr->currentAttributes);
+        QV4::Value v;
+        if (d_ptr->currentName)
+            v = o->get(d_ptr->currentName);
+        else if (d_ptr->currentIndex != UINT_MAX)
+            v = o->getIndexed(d_ptr->currentIndex);
+        else
+            return QJSValue();
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -198,7 +199,7 @@ QJSValue QJSValueIterator::value() const
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
     d_ptr->iterator = QV4::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QV4::ObjectIterator::NoFlags);
-    d_ptr->nextValue = d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
     return *this;
 }
 

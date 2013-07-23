@@ -56,11 +56,9 @@ public:
 
     QJSValue value;
     QV4::ObjectIterator iterator;
-    QV4::Property *currentValue;
     QV4::PropertyAttributes currentAttributes;
     QV4::String *currentName;
     uint currentIndex;
-    QV4::Property *nextValue;
     QV4::PropertyAttributes nextAttributes;
     QV4::String *nextName;
     uint nextIndex;
