@@ -1573,7 +1573,7 @@ void tst_qquicktextinput::verticalAlignment()
     QQuickView window(testFileUrl("horizontalAlignment.qml"));
     QQuickTextInput *textInput = window.rootObject()->findChild<QQuickTextInput*>("text");
     QVERIFY(textInput != 0);
-    window.show();
+    window.showNormal();
 
     QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignTop);
     QVERIFY(textInput->boundingRect().bottom() < window.height() / 2);
@@ -3314,7 +3314,7 @@ void tst_qquicktextinput::focusOnPress()
     QQuickWindow window;
     window.resize(100, 50);
     textInputObject->setParentItem(window.contentItem());
-    window.show();
+    window.showNormal();
     window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
@@ -3377,7 +3377,7 @@ void tst_qquicktextinput::openInputPanel()
     inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
@@ -3769,7 +3769,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     input->setFocus(true);
     input->setText("");
 
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
