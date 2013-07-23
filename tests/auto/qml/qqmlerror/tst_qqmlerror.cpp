@@ -64,18 +64,18 @@ void tst_qqmlerror::url()
 
     QCOMPARE(error.url(), QUrl());
 
-    error.setUrl(QUrl("http://www.nokia.com/main.qml"));
+    error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
 
-    QCOMPARE(error.url(), QUrl("http://www.nokia.com/main.qml"));
+    QCOMPARE(error.url(), QUrl("http://www.qt-project.org/main.qml"));
 
     QQmlError error2 = error;
 
-    QCOMPARE(error2.url(), QUrl("http://www.nokia.com/main.qml"));
+    QCOMPARE(error2.url(), QUrl("http://www.qt-project.org/main.qml"));
 
-    error.setUrl(QUrl("http://qt.nokia.com/main.qml"));
+    error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
 
-    QCOMPARE(error.url(), QUrl("http://qt.nokia.com/main.qml"));
-    QCOMPARE(error2.url(), QUrl("http://www.nokia.com/main.qml"));
+    QCOMPARE(error.url(), QUrl("http://www.qt-project.org/main.qml"));
+    QCOMPARE(error2.url(), QUrl("http://www.qt-project.org/main.qml"));
 }
 
 void tst_qqmlerror::description()
@@ -142,28 +142,28 @@ void tst_qqmlerror::toString()
 {
     {
         QQmlError error;
-        error.setUrl(QUrl("http://www.nokia.com/main.qml"));
+        error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
         error.setDescription("An Error");
         error.setLine(92);
         error.setColumn(13);
 
-        QCOMPARE(error.toString(), QString("http://www.nokia.com/main.qml:92:13: An Error"));
+        QCOMPARE(error.toString(), QString("http://www.qt-project.org/main.qml:92:13: An Error"));
     }
 
     {
         QQmlError error;
-        error.setUrl(QUrl("http://www.nokia.com/main.qml"));
+        error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
         error.setDescription("An Error");
         error.setLine(92);
 
-        QCOMPARE(error.toString(), QString("http://www.nokia.com/main.qml:92: An Error"));
+        QCOMPARE(error.toString(), QString("http://www.qt-project.org/main.qml:92: An Error"));
     }
 }
 
 void tst_qqmlerror::copy()
 {
     QQmlError error;
-    error.setUrl(QUrl("http://www.nokia.com/main.qml"));
+    error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
     error.setDescription("An Error");
     error.setLine(92);
     error.setColumn(13);
@@ -172,22 +172,22 @@ void tst_qqmlerror::copy()
     QQmlError error3;
     error3 = error;
 
-    error.setUrl(QUrl("http://qt.nokia.com/main.qml"));
+    error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
     error.setDescription("Another Error");
     error.setLine(2);
     error.setColumn(33);
 
-    QCOMPARE(error.url(), QUrl("http://qt.nokia.com/main.qml"));
+    QCOMPARE(error.url(), QUrl("http://www.qt-project.org/main.qml"));
     QCOMPARE(error.description(), QString("Another Error"));
     QCOMPARE(error.line(), 2);
     QCOMPARE(error.column(), 33);
 
-    QCOMPARE(error2.url(), QUrl("http://www.nokia.com/main.qml"));
+    QCOMPARE(error2.url(), QUrl("http://www.qt-project.org/main.qml"));
     QCOMPARE(error2.description(), QString("An Error"));
     QCOMPARE(error2.line(), 92);
     QCOMPARE(error2.column(), 13);
 
-    QCOMPARE(error3.url(), QUrl("http://www.nokia.com/main.qml"));
+    QCOMPARE(error3.url(), QUrl("http://www.qt-project.org/main.qml"));
     QCOMPARE(error3.description(), QString("An Error"));
     QCOMPARE(error3.line(), 92);
     QCOMPARE(error3.column(), 13);
@@ -198,12 +198,12 @@ void tst_qqmlerror::debug()
 {
     {
         QQmlError error;
-        error.setUrl(QUrl("http://www.nokia.com/main.qml"));
+        error.setUrl(QUrl("http://www.qt-project.org/main.qml"));
         error.setDescription("An Error");
         error.setLine(92);
         error.setColumn(13);
 
-        QTest::ignoreMessage(QtWarningMsg, "http://www.nokia.com/main.qml:92:13: An Error ");
+        QTest::ignoreMessage(QtWarningMsg, "http://www.qt-project.org/main.qml:92:13: An Error ");
         qWarning() << error;
     }
 

@@ -80,7 +80,7 @@ void tst_QQuickView::resizemodeitem()
     QVERIFY(item);
     window.show();
 
-    view->show();
+    view->showNormal();
 
     // initial size from root object
     QCOMPARE(item->width(), 200.0);
@@ -126,7 +126,7 @@ void tst_QQuickView::resizemodeitem()
     QVERIFY(item);
     window.show();
 
-    view->show();
+    view->showNormal();
 
     // initial size for root object
     QCOMPARE(item->width(), 200.0);
@@ -173,7 +173,7 @@ void tst_QQuickView::resizemodeitem()
     QVERIFY(item);
     window.show();
 
-    view->show();
+    view->showNormal();
     QTest::qWait(50);
 
     // initial size from root object

@@ -5083,7 +5083,7 @@ void tst_qquicktextedit::undo_keypressevents()
 void tst_qquicktextedit::baseUrl()
 {
     QUrl localUrl("file:///tests/text.qml");
-    QUrl remoteUrl("http://qt.nokia.com/test.qml");
+    QUrl remoteUrl("http://www.qt-project.org/test.qml");
 
     QQmlComponent textComponent(&engine);
     textComponent.setData("import QtQuick 2.0\n TextEdit {}", localUrl);
