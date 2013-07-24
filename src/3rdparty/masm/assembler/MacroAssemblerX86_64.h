@@ -110,6 +110,12 @@ public:
         m_assembler.cvtsi2sd_rr(scratchRegister, dest);
     }
 
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, FPRegisterID /*scratch*/)
+    {
+        zeroExtend32ToPtr(src, src);
+        m_assembler.cvtsiq2sd_rr(src, dest);
+    }
+
     void store32(TrustedImm32 imm, void* address)
     {
         move(TrustedImmPtr(address), scratchRegister);

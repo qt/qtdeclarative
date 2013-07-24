@@ -1541,6 +1541,15 @@ public:
     }
 #endif
 
+#if CPU(X86_64)
+    void cvtsiq2sd_rr(RegisterID src, FPRegisterID dst)
+    {
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
+    }
+
+#endif
+
     void cvttsd2si_rr(XMMRegisterID src, RegisterID dst)
     {
         m_formatter.prefix(PRE_SSE_F2);

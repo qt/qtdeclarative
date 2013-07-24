@@ -123,6 +123,19 @@ public:
         m_assembler.cvtsi2sd_mr(src.m_ptr, dest);
     }
 
+#if 0 // FIXME: UNTESTED!
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, FPRegisterID scratch)
+    {
+        // compare this with what the Clang compiler with -O3 generates for:
+        //    double f(unsigned u) { return (double) u; }
+        static const double magic = 4.503600e+15; // 0x4330000000000000
+        m_assembler.loadDouble(&magic, scratch);
+        m_assembler.movd_rr(src, dst);
+        m_assembler.orpd_rr(scratch, dest);
+        m_assembler.subsd(scratch, dest);
+    }
+#endif
+
     void store32(TrustedImm32 imm, void* address)
     {
         m_assembler.movl_i32m(imm.m_value, address);
