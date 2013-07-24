@@ -40,11 +40,11 @@
 
 import QtQuick 2.0
 import QtQuick.Dialogs 1.0
-import "../shared"
+import "../../shared"
 
 Rectangle {
     width: 320
-    height: 200
+    height: 240
     color: palette.window
     SystemPalette { id: palette }
     clip: true

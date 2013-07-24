@@ -158,7 +158,7 @@ void tst_qqmlinstruction::dump()
     }
 
     {
-        data->urls << QUrl("http://www.nokia.com");
+        data->urls << QUrl("http://www.qt-project.org");
         QQmlCompiledData::Instruction::StoreUrl i;
         i.propertyIndex = 8;
         i.value = data->urls.count() - 1;
@@ -510,7 +510,7 @@ void tst_qqmlinstruction::dump()
         << "8\t\tSTORE_INTEGER\t\t5\t9"
         << "9\t\tSTORE_BOOL\t\t6\ttrue"
         << "10\t\tSTORE_STRING\t\t7\t1\t\t\"Test String\""
-        << "11\t\tSTORE_URL\t\t8\t0\t\tQUrl(\"http://www.nokia.com\") "
+        << "11\t\tSTORE_URL\t\t8\t0\t\tQUrl(\"http://www.qt-project.org\") "
         << "12\t\tSTORE_COLOR\t\t9\t\t\t\"ff00ff00\""
         << "13\t\tSTORE_DATE\t\t10\t9"
         << "14\t\tSTORE_TIME\t\t11"

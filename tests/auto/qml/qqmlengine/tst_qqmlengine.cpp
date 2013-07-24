@@ -241,8 +241,8 @@ void tst_qqmlengine::offlineStoragePath()
     // Without these set, QDesktopServices::storageLocation returns
     // strings with extra "//" at the end. We set them to ignore this problem.
     qApp->setApplicationName("tst_qqmlengine");
-    qApp->setOrganizationName("Nokia");
-    qApp->setOrganizationDomain("nokia.com");
+    qApp->setOrganizationName("QtProject");
+    qApp->setOrganizationDomain("www.qt-project.org");
 
     QQmlEngine engine;
 
