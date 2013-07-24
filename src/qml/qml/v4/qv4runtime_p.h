@@ -474,7 +474,7 @@ inline void __qmljs_mod(QV4::ExecutionContext *, QV4::Value *result, const QV4::
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
-    *result = QV4::Value::fromDouble(fmod(lval, rval));
+    *result = QV4::Value::fromDouble(std::fmod(lval, rval));
 }
 
 inline void __qmljs_shl(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)

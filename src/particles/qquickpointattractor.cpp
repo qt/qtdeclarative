@@ -119,8 +119,8 @@ bool QQuickAttractorAffector::affectParticle(QQuickParticleData *d, qreal dt)
         return false;
     qreal dx = m_x+m_offset.x() - d->curX();
     qreal dy = m_y+m_offset.y() - d->curY();
-    qreal r = sqrt((dx*dx) + (dy*dy));
-    qreal theta = atan2(dy,dx);
+    qreal r = std::sqrt((dx*dx) + (dy*dy));
+    qreal theta = std::atan2(dy,dx);
     qreal ds = 0;
     switch (m_proportionalToDistance){
     case InverseQuadratic:
@@ -139,8 +139,8 @@ bool QQuickAttractorAffector::affectParticle(QQuickParticleData *d, qreal dt)
         ds = m_strength;
     }
     ds *= dt;
-    dx = ds * cos(theta);
-    dy = ds * sin(theta);
+    dx = ds * std::cos(theta);
+    dy = ds * std::sin(theta);
     qreal vx,vy;
     switch (m_physics){
     case Position:

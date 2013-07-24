@@ -663,7 +663,7 @@ V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
                 case V4IR::OpLe: return _block->CONST(V4IR::BoolType, c1->value <= c2->value);
                 case V4IR::OpLt: return _block->CONST(V4IR::BoolType, c1->value < c2->value);
                 case V4IR::OpLShift: return _block->CONST(V4IR::NumberType, QV4::Value::toInt32(c1->value) << (QV4::Value::toUInt32(c2->value) & 0x1f));
-                case V4IR::OpMod: return _block->CONST(V4IR::NumberType, ::fmod(c1->value, c2->value));
+                case V4IR::OpMod: return _block->CONST(V4IR::NumberType, std::fmod(c1->value, c2->value));
                 case V4IR::OpMul: return _block->CONST(V4IR::NumberType, c1->value * c2->value);
                 case V4IR::OpOr: return _block->CONST(V4IR::NumberType, c1->value ? c1->value : c2->value);
                 case V4IR::OpRShift: return _block->CONST(V4IR::NumberType, QV4::Value::toInt32(c1->value) >> (QV4::Value::toUInt32(c2->value) & 0x1f));
