@@ -43,7 +43,6 @@
 #  include "private/qv4_llvm_p.h"
 #endif // QMLJS_WITH_LLVM
 
-#include "private/qv4debugging_p.h"
 #include "private/qv4object_p.h"
 #include "private/qv4runtime_p.h"
 #include "private/qv4functionobject_p.h"
@@ -287,15 +286,7 @@ int main(int argc, char *argv[])
 #ifdef QMLJS_WITH_LLVM
     QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
 #endif // QMLJS_WITH_LLVM
-    bool enableDebugging = false;
     bool runAsQml = false;
-
-    if (!args.isEmpty()) {
-        if (args.first() == QLatin1String("-d") || args.first() == QLatin1String("--debug")) {
-            enableDebugging = true;
-            args.removeFirst();
-        }
-    }
 
     if (!args.isEmpty()) {
         if (args.first() == QLatin1String("--jit")) {
@@ -374,11 +365,6 @@ int main(int argc, char *argv[])
         }
 
         QV4::ExecutionEngine vm(iSelFactory);
-
-        QScopedPointer<QQmlJS::Debugging::Debugger> debugger;
-        if (enableDebugging)
-            debugger.reset(new QQmlJS::Debugging::Debugger(&vm));
-        vm.debugger = debugger.data();
 
         QV4::ExecutionContext *ctx = vm.rootContext;
 

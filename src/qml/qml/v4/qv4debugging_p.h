@@ -45,113 +45,117 @@
 #include "qv4global_p.h"
 #include "qv4engine_p.h"
 #include "qv4context_p.h"
+#include "qv4jsir_p.h"
 
 #include <QHash>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS {
+namespace QV4 {
 
-namespace V4IR {
-struct BasicBlock;
 struct Function;
-} // namespace IR
 
 namespace Debugging {
 
-class Debugger;
-
-struct FunctionDebugInfo { // TODO: use opaque d-pointers here
-    QString name;
-    unsigned startLine, startColumn;
-
-    FunctionDebugInfo(V4IR::Function *function):
-        startLine(0), startColumn(0)
-    {
-        if (function->name)
-            name = *function->name;
-    }
-
-    void setSourceLocation(unsigned line, unsigned column)
-    { startLine = line; startColumn = column; }
-};
-
-class FunctionState
-{
-public:
-    FunctionState(QV4::ExecutionContext *context);
-    virtual ~FunctionState();
-
-    virtual QV4::Value *argument(unsigned idx);
-    virtual QV4::Value *local(unsigned idx);
-    virtual QV4::Value *temp(unsigned idx) = 0;
-
-    QV4::ExecutionContext *context() const
-    { return _context; }
-
-    Debugger *debugger() const
-    { return _context->engine->debugger; }
-
-private:
-    QV4::ExecutionContext *_context;
-};
-
-struct CallInfo
-{
-    QV4::ExecutionContext *context;
-    QV4::FunctionObject *function;
-    FunctionState *state;
-
-    CallInfo(QV4::ExecutionContext *context = 0, QV4::FunctionObject *function = 0, FunctionState *state = 0)
-        : context(context)
-        , function(function)
-        , state(state)
-    {}
-};
+class DebuggerAgent;
 
 class Q_QML_EXPORT Debugger
 {
 public:
-    Debugger(QV4::ExecutionEngine *_engine);
+    enum State {
+        Running,
+        Paused
+    };
+
+    Debugger(ExecutionEngine *_engine);
     ~Debugger();
 
-public: // compile-time interface
-    void addFunction(V4IR::Function *function);
-    void setSourceLocation(V4IR::Function *function, unsigned line, unsigned column);
-    void mapFunction(QV4::Function *vmf, V4IR::Function *irf);
+    void attachToAgent(DebuggerAgent *agent);
+    void detachFromAgent();
 
-public: // run-time querying interface
-    FunctionDebugInfo *debugInfo(QV4::FunctionObject *function) const;
-    QString name(QV4::FunctionObject *function) const;
+    void pause();
+    void resume();
+
+    State state() const { return m_state; }
+
+    void addBreakPoint(const QString &fileName, int lineNumber);
+    void removeBreakPoint(const QString &fileName, int lineNumber);
+
+    struct ExecutionState
+    {
+        ExecutionState() : lineNumber(-1), function(0) {}
+        QString fileName;
+        int lineNumber;
+        Function *function;
+    };
+
+    ExecutionState currentExecutionState(const uchar *code = 0) const;
+
+    bool pauseAtNextOpportunity() const {
+        return m_pauseRequested || m_havePendingBreakPoints;
+    }
+    void setPendingBreakpoints(Function *function);
+
+public: // compile-time interface
+    void maybeBreakAtInstruction(const uchar *code, bool breakPointHit);
 
 public: // execution hooks
-    void aboutToCall(QV4::FunctionObject *function, QV4::ExecutionContext *context);
-    void justLeft(QV4::ExecutionContext *context);
-    void enterFunction(FunctionState *state);
-    void leaveFunction(FunctionState *state);
-    void aboutToThrow(const QV4::Value &value);
-
-public: // debugging hooks
-    FunctionState *currentState() const;
-    const char *currentArg(unsigned idx) const;
-    const char *currentLocal(unsigned idx) const;
-    const char *currentTemp(unsigned idx) const;
-    void printStackTrace() const;
+    void aboutToThrow(const Value &value);
 
 private:
-    int callIndex(QV4::ExecutionContext *context);
-    V4IR::Function *irFunction(QV4::Function *vmf) const;
+    // requires lock to be held
+    void pauseAndWait();
 
-private: // TODO: use opaque d-pointers here
+    void applyPendingBreakPoints();
+
+    struct BreakPoints : public QHash<QString, QList<int> >
+    {
+        void add(const QString &fileName, int lineNumber);
+        bool remove(const QString &fileName, int lineNumber);
+        bool contains(const QString &fileName, int lineNumber) const;
+        void applyToFunction(Function *function, bool removeBreakPoints);
+    };
+
     QV4::ExecutionEngine *_engine;
-    QHash<V4IR::Function *, FunctionDebugInfo *> _functionInfo;
-    QHash<QV4::Function *, V4IR::Function *> _vmToIr;
-    QVector<CallInfo> _callStack;
+    DebuggerAgent *m_agent;
+    QMutex m_lock;
+    QWaitCondition m_runningCondition;
+    State m_state;
+    bool m_pauseRequested;
+    bool m_havePendingBreakPoints;
+    BreakPoints m_pendingBreakPointsToAdd;
+    BreakPoints m_pendingBreakPointsToAddToFutureCode;
+    BreakPoints m_pendingBreakPointsToRemove;
+    const uchar *m_currentInstructionPointer;
+};
+
+class Q_QML_EXPORT DebuggerAgent : public QObject
+{
+    Q_OBJECT
+public:
+    ~DebuggerAgent();
+
+    void addDebugger(Debugger *debugger);
+    void removeDebugger(Debugger *debugger);
+
+    void pause(Debugger *debugger);
+    void addBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber);
+    void removeBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber);
+
+    Q_INVOKABLE virtual void debuggerPaused(QV4::Debugging::Debugger *debugger) = 0;
+
+protected:
+    QList<Debugger *> m_debuggers;
 };
 
 } // namespace Debugging
-} // namespace QQmlJS
+} // namespace QV4
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QV4::Debugging::Debugger*)
 
 #endif // DEBUGGING_H

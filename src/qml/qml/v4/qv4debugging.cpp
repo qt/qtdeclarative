@@ -42,188 +42,163 @@
 #include "qv4debugging_p.h"
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4function_p.h"
+#include "moth/qv4instr_moth_p.h"
 #include <iostream>
 
-#define LOW_LEVEL_DEBUGGING_HELPERS
-
-using namespace QQmlJS;
-using namespace QQmlJS::Debugging;
-
-FunctionState::FunctionState(QV4::ExecutionContext *context)
-    : _context(context)
-{
-    if (debugger())
-        debugger()->enterFunction(this);
-}
-
-FunctionState::~FunctionState()
-{
-    if (debugger())
-        debugger()->leaveFunction(this);
-}
-
-QV4::Value *FunctionState::argument(unsigned idx)
-{
-    QV4::CallContext *c = _context->asCallContext();
-    if (!c || idx >= c->argumentCount)
-        return 0;
-    return c->arguments + idx;
-}
-
-QV4::Value *FunctionState::local(unsigned idx)
-{
-    QV4::CallContext *c = _context->asCallContext();
-    if (c && idx < c->variableCount())
-        return c->locals + idx;
-    return 0;
-}
-
-#ifdef LOW_LEVEL_DEBUGGING_HELPERS
-Debugger *globalInstance = 0;
-
-void printStackTrace()
-{
-    if (globalInstance)
-        globalInstance->printStackTrace();
-    else
-        std::cerr << "No debugger." << std::endl;
-}
-#endif // DO_TRACE_INSTR
+using namespace QV4;
+using namespace QV4::Debugging;
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
     : _engine(engine)
+    , m_agent(0)
+    , m_state(Running)
+    , m_pauseRequested(false)
+    , m_currentInstructionPointer(0)
 {
-#ifdef LOW_LEVEL_DEBUGGING_HELPERS
-    globalInstance = this;
-#endif // DO_TRACE_INSTR
+    qMetaTypeId<Debugger*>();
 }
 
 Debugger::~Debugger()
 {
-#ifdef LOW_LEVEL_DEBUGGING_HELPERS
-    globalInstance = 0;
-#endif // DO_TRACE_INSTR
-
-    qDeleteAll(_functionInfo.values());
+    detachFromAgent();
 }
 
-void Debugger::addFunction(V4IR::Function *function)
+void Debugger::attachToAgent(DebuggerAgent *agent)
 {
-    _functionInfo.insert(function, new FunctionDebugInfo(function));
+    Q_ASSERT(!m_agent);
+    m_agent = agent;
 }
 
-void Debugger::setSourceLocation(V4IR::Function *function, unsigned line, unsigned column)
+void Debugger::detachFromAgent()
 {
-    _functionInfo[function]->setSourceLocation(line, column);
+    DebuggerAgent *agent = 0;
+    {
+        QMutexLocker locker(&m_lock);
+        agent = m_agent;
+        m_agent = 0;
+    }
+    if (agent)
+        agent->removeDebugger(this);
 }
 
-void Debugger::mapFunction(QV4::Function *vmf, V4IR::Function *irf)
+void Debugger::pause()
 {
-    _vmToIr.insert(vmf, irf);
+    QMutexLocker locker(&m_lock);
+    if (m_state == Paused)
+        return;
+    m_pauseRequested = true;
 }
 
-FunctionDebugInfo *Debugger::debugInfo(QV4::FunctionObject *function) const
+void Debugger::resume()
 {
-    if (!function)
-        return 0;
-
-    if (function->function)
-        return _functionInfo[irFunction(function->function)];
-    else
-        return 0;
+    QMutexLocker locker(&m_lock);
+    Q_ASSERT(m_state == Paused);
+    m_runningCondition.wakeAll();
 }
 
-QString Debugger::name(QV4::FunctionObject *function) const
+void Debugger::addBreakPoint(const QString &fileName, int lineNumber)
 {
-    if (FunctionDebugInfo *i = debugInfo(function))
-        return i->name;
-
-    return QString();
+    QMutexLocker locker(&m_lock);
+    if (!m_pendingBreakPointsToRemove.remove(fileName, lineNumber))
+        m_pendingBreakPointsToAdd.add(fileName, lineNumber);
+    m_havePendingBreakPoints = !m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty();
 }
 
-void Debugger::aboutToCall(QV4::FunctionObject *function, QV4::ExecutionContext *context)
+void Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
 {
-    _callStack.append(CallInfo(context, function));
+    QMutexLocker locker(&m_lock);
+    if (!m_pendingBreakPointsToAdd.remove(fileName, lineNumber))
+        m_pendingBreakPointsToRemove.add(fileName, lineNumber);
+    m_havePendingBreakPoints = !m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty();
 }
 
-void Debugger::justLeft(QV4::ExecutionContext *context)
+Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) const
 {
-    int idx = callIndex(context);
-    if (idx < 0)
-        qDebug() << "Oops, leaving a function that was not registered...?";
-    else
-        _callStack.resize(idx);
+    if (!code)
+        code = m_currentInstructionPointer;
+    // ### Locking
+    ExecutionState state;
+
+    QV4::ExecutionContext *context = _engine->current;
+    QV4::Function *function = 0;
+    if (CallContext *callCtx = context->asCallContext())
+        function = callCtx->function->function;
+    else {
+        Q_ASSERT(context->type == QV4::ExecutionContext::Type_GlobalContext);
+        function = context->engine->globalCode;
+    }
+
+    state.function = function;
+    state.fileName = function->sourceFile;
+
+    qptrdiff relativeProgramCounter = code - function->codeData;
+    state.lineNumber = function->lineNumberForProgramCounter(relativeProgramCounter);
+
+    return state;
 }
 
-void Debugger::enterFunction(FunctionState *state)
+void Debugger::setPendingBreakpoints(Function *function)
 {
-    _callStack[callIndex(state->context())].state = state;
-
-#ifdef DO_TRACE_INSTR
-    QString n = name(_callStack[callIndex(state->context())].function);
-    std::cerr << "*** Entering \"" << qPrintable(n) << "\" with " << state->context()->argumentCount << " args" << std::endl;
-//    for (unsigned i = 0; i < state->context()->variableEnvironment->argumentCount; ++i)
-//        std::cerr << "        " << i << ": " << currentArg(i) << std::endl;
-#endif // DO_TRACE_INSTR
+    m_pendingBreakPointsToAddToFutureCode.applyToFunction(function, /*removeBreakPoints*/ false);
 }
 
-void Debugger::leaveFunction(FunctionState *state)
+void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
 {
-    _callStack[callIndex(state->context())].state = 0;
+    QMutexLocker locker(&m_lock);
+    m_currentInstructionPointer = code;
+
+    // Do debugger internal work
+    if (m_havePendingBreakPoints) {
+
+        if (breakPointHit) {
+            ExecutionState state = currentExecutionState();
+            breakPointHit = !m_pendingBreakPointsToRemove.contains(state.fileName, state.lineNumber);
+        }
+
+        applyPendingBreakPoints();
+    }
+
+    // Serve debugging requests from the agent
+    if (m_pauseRequested) {
+        m_pauseRequested = false;
+        pauseAndWait();
+    } else if (breakPointHit)
+        pauseAndWait();
+
+    if (!m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty())
+        applyPendingBreakPoints();
 }
 
 void Debugger::aboutToThrow(const QV4::Value &value)
 {
-    qDebug() << "*** We are about to throw...:" << value.toString(currentState()->context())->toQString();
+    qDebug() << "*** We are about to throw...";
 }
 
-FunctionState *Debugger::currentState() const
+void Debugger::pauseAndWait()
 {
-    if (_callStack.isEmpty())
-        return 0;
-    else
-        return _callStack.last().state;
+    m_state = Paused;
+    QMetaObject::invokeMethod(m_agent, "debuggerPaused", Qt::QueuedConnection, Q_ARG(QV4::Debugging::Debugger*, this));
+    m_runningCondition.wait(&m_lock);
+    m_state = Running;
 }
 
-const char *Debugger::currentArg(unsigned idx) const
+void Debugger::applyPendingBreakPoints()
 {
-    FunctionState *state = currentState();
-    return qPrintable(state->argument(idx)->toString(state->context())->toQString());
-}
-
-const char *Debugger::currentLocal(unsigned idx) const
-{
-    FunctionState *state = currentState();
-    return qPrintable(state->local(idx)->toString(state->context())->toQString());
-}
-
-const char *Debugger::currentTemp(unsigned idx) const
-{
-    FunctionState *state = currentState();
-    return qPrintable(state->temp(idx)->toString(state->context())->toQString());
-}
-
-void Debugger::printStackTrace() const
-{
-    for (int i = _callStack.size() - 1; i >=0; --i) {
-        QString n = name(_callStack[i].function);
-        std::cerr << "\tframe #" << i << ": " << qPrintable(n) << std::endl;
-    }
-}
-
-int Debugger::callIndex(QV4::ExecutionContext *context)
-{
-    for (int idx = _callStack.size() - 1; idx >= 0; --idx) {
-        if (_callStack[idx].context == context)
-            return idx;
+    foreach (Function *function, _engine->functions) {
+        m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
+        m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
     }
 
-    return -1;
-}
+    for (BreakPoints::ConstIterator it = m_pendingBreakPointsToAdd.constBegin(),
+         end = m_pendingBreakPointsToAdd.constEnd(); it != end; ++it) {
+        foreach (int lineNumber, it.value())
+            m_pendingBreakPointsToAddToFutureCode.add(it.key(), lineNumber);
+    }
 
-V4IR::Function *Debugger::irFunction(QV4::Function *vmf) const
-{
-    return _vmToIr[vmf];
+    m_pendingBreakPointsToAdd.clear();
+    m_pendingBreakPointsToRemove.clear();
+    m_havePendingBreakPoints = false;
 }
 
 static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string prefix)
@@ -305,4 +280,93 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
 void dumpValue(QV4::Value v, QV4::ExecutionContext *ctx)
 {
     realDumpValue(v, ctx, std::string(""));
+}
+
+
+void DebuggerAgent::addDebugger(Debugger *debugger)
+{
+    Q_ASSERT(!m_debuggers.contains(debugger));
+    m_debuggers << debugger;
+    debugger->attachToAgent(this);
+}
+
+void DebuggerAgent::removeDebugger(Debugger *debugger)
+{
+    m_debuggers.removeAll(debugger);
+    debugger->detachFromAgent();
+}
+
+void DebuggerAgent::pause(Debugger *debugger)
+{
+    debugger->pause();
+}
+
+void DebuggerAgent::addBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber)
+{
+    debugger->addBreakPoint(fileName, lineNumber);
+}
+
+void DebuggerAgent::removeBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber)
+{
+    debugger->removeBreakPoint(fileName, lineNumber);
+}
+
+DebuggerAgent::~DebuggerAgent()
+{
+    Q_ASSERT(m_debuggers.isEmpty());
+}
+
+void Debugger::BreakPoints::add(const QString &fileName, int lineNumber)
+{
+    QList<int> &lines = (*this)[fileName];
+    if (!lines.contains(lineNumber)) {
+        lines.append(lineNumber);
+        qSort(lines);
+    }
+}
+
+bool Debugger::BreakPoints::remove(const QString &fileName, int lineNumber)
+{
+    Iterator breakPoints = find(fileName);
+    if (breakPoints == constEnd())
+        return false;
+    return breakPoints->removeAll(lineNumber) > 0;
+}
+
+bool Debugger::BreakPoints::contains(const QString &fileName, int lineNumber) const
+{
+    ConstIterator breakPoints = find(fileName);
+    if (breakPoints == constEnd())
+        return false;
+    return breakPoints->contains(lineNumber);
+}
+
+void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreakPoints)
+{
+    Iterator breakPointsForFile = find(function->sourceFile);
+    if (breakPointsForFile == end())
+        return;
+
+    QList<int>::Iterator breakPoint = breakPointsForFile->begin();
+    while (breakPoint != breakPointsForFile->end()) {
+        bool breakPointFound = false;
+        for (QVector<LineNumberMapping>::ConstIterator mapping = function->lineNumberMappings.constBegin(),
+             end = function->lineNumberMappings.constEnd(); mapping != end; ++mapping) {
+            if (mapping->lineNumber == *breakPoint) {
+                uchar *codePtr = const_cast<uchar *>(function->codeData) + mapping->codeOffset;
+                QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
+                instruction->common.breakPoint = !removeBreakPoints;
+                // Continue setting the next break point.
+                breakPointFound = true;
+                break;
+            }
+        }
+        if (breakPointFound)
+            breakPoint = breakPointsForFile->erase(breakPoint);
+        else
+            ++breakPoint;
+    }
+
+    if (breakPointsForFile->isEmpty())
+        erase(breakPointsForFile);
 }

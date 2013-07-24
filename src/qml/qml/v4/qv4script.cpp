@@ -192,9 +192,6 @@ Value Script::run()
 
     QV4::ExecutionEngine *engine = scope->engine;
 
-    if (engine->debugger)
-        engine->debugger->aboutToCall(0, scope);
-
     if (qml.isEmpty()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
@@ -203,9 +200,6 @@ Value Script::run()
 
         scope->strictMode = vmFunction->isStrict;
         scope->lookups = vmFunction->lookups;
-
-        if (engine->debugger)
-            engine->debugger->aboutToCall(0, scope);
 
         QV4::Value result;
         try {
@@ -216,8 +210,6 @@ Value Script::run()
             throw;
         }
 
-        if (engine->debugger)
-            engine->debugger->justLeft(scope);
         return result;
 
     } else {

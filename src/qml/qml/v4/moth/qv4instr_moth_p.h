@@ -112,9 +112,11 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QQmlJS::Moth::Instr) - 1)
 
 #ifdef MOTH_THREADED_INTERPRETER
-#  define MOTH_INSTR_HEADER void *code;
+#  define MOTH_INSTR_HEADER void *code; \
+                            unsigned int breakPoint : 1;
 #else
-#  define MOTH_INSTR_HEADER quint8 instructionType;
+#  define MOTH_INSTR_HEADER quint8 instructionType; \
+                            unsigned int breakPoint : 1;
 #endif
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,

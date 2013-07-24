@@ -59,9 +59,6 @@ namespace QQmlJS {
 namespace AST {
 class UiParameterList;
 }
-namespace Debugging {
-class Debugger;
-} // namespace Debugging
 
 
 
@@ -442,7 +439,6 @@ private:
     QHash<AST::FunctionExpression *, int> _functionMap;
     QV4::ExecutionContext *_context;
     bool _strictMode;
-    Debugging::Debugger *_debugger;
     ErrorHandler *_errorHandler;
 
     class ScanFunctions;

@@ -68,10 +68,10 @@
 #include "qv4stacktrace_p.h"
 
 #ifdef V4_ENABLE_JIT
-#  include "qv4isel_masm_p.h"
-#else // !V4_ENABLE_JIT
-#  include "qv4isel_moth_p.h"
+#include "qv4isel_masm_p.h"
 #endif // V4_ENABLE_JIT
+
+#include "qv4isel_moth_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -270,6 +270,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    delete debugger;
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete memoryManager;
@@ -282,6 +283,13 @@ ExecutionEngine::~ExecutionEngine()
     qDeleteAll(functions);
     delete regExpAllocator;
     delete executableAllocator;
+}
+
+void ExecutionEngine::enableDebugger()
+{
+    Q_ASSERT(!debugger);
+    debugger = new Debugging::Debugger(this);
+    iselFactory.reset(new QQmlJS::Moth::ISelFactory);
 }
 
 void ExecutionEngine::initRootContext()

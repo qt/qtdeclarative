@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 
-namespace QQmlJS {
+namespace QV4 {
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
@@ -121,7 +121,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     IdentifierTable *identifierTable;
 
-    QQmlJS::Debugging::Debugger *debugger;
+    QV4::Debugging::Debugger *debugger;
 
     Object *globalObject;
 
@@ -226,6 +226,8 @@ struct Q_QML_EXPORT ExecutionEngine
 
     ExecutionEngine(QQmlJS::EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
+
+    void enableDebugger();
 
     WithContext *newWithContext(Object *with);
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);

@@ -60,38 +60,11 @@
 using namespace QQmlJS;
 using namespace QQmlJS::Moth;
 
-class FunctionState: public Debugging::FunctionState
-{
-public:
-    FunctionState(QV4::ExecutionContext *context, const uchar **code)
-        : Debugging::FunctionState(context)
-        , stack(0)
-        , stackSize(0)
-        , code(code)
-    {
-        previousInstructionPointer = context->interpreterInstructionPointer;
-        context->interpreterInstructionPointer = code;
-    }
-    ~FunctionState()
-    {
-        context()->interpreterInstructionPointer = previousInstructionPointer;
-    }
-
-    virtual QV4::Value *temp(unsigned idx) { return stack + idx; }
-
-    void setStack(QV4::Value *stack, unsigned stackSize)
-    { this->stack = stack; this->stackSize = stackSize; }
-
-private:
-    QV4::Value *stack;
-    unsigned stackSize;
-    const uchar **code;
-    const uchar **previousInstructionPointer;
-};
-
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
     code += InstrMeta<(int)Instr::I>::Size; \
+    if (context->engine->debugger && (instr.breakPoint || context->engine->debugger->pauseAtNextOpportunity())) \
+        context->engine->debugger->maybeBreakAtInstruction(code, instr.breakPoint); \
     Q_UNUSED(instr); \
     TRACE_INSTR(I)
 
@@ -265,8 +238,6 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     }
 #endif
 
-    FunctionState state(context, &code);
-
 #ifdef MOTH_THREADED_INTERPRETER
     const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
     goto *genericInstr->common.code;
@@ -320,7 +291,6 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         stackSize = instr.value;
         stack = static_cast<QV4::Value *>(alloca(stackSize * sizeof(QV4::Value)));
         memset(stack, 0, stackSize * sizeof(QV4::Value));
-        state.setStack(stack, stackSize);
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)

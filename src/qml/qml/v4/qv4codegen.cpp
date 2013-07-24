@@ -459,7 +459,6 @@ Codegen::Codegen(QV4::ExecutionContext *context, bool strict)
     , _scopeAndFinally(0)
     , _context(context)
     , _strictMode(strict)
-    , _debugger(context->engine->debugger)
     , _errorHandler(0)
 {
 }
@@ -478,7 +477,6 @@ Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
     , _scopeAndFinally(0)
     , _context(0)
     , _strictMode(strictMode)
-    , _debugger(0)
     , _errorHandler(errorHandler)
 {
 }
@@ -501,13 +499,6 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
 
     V4IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0,
                                               node->elements, mode, inheritedLocals);
-    if (_debugger) {
-        if (node->elements->element) {
-            SourceLocation loc = node->elements->element->firstSourceLocation();
-            _debugger->setSourceLocation(globalCode, loc.startLine, loc.startColumn);
-        }
-    }
-
     qDeleteAll(_envMap);
     _envMap.clear();
 
@@ -530,8 +521,6 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
     scan.leaveEnvironment();
 
     V4IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    if (_debugger)
-        _debugger->setSourceLocation(function, ast->functionToken.startLine, ast->functionToken.startColumn);
 
     qDeleteAll(_envMap);
     _envMap.clear();
@@ -1410,8 +1399,6 @@ bool Codegen::visit(FieldMemberExpression *ast)
 bool Codegen::visit(FunctionExpression *ast)
 {
     V4IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    if (_debugger)
-        _debugger->setSourceLocation(function, ast->functionToken.startLine, ast->functionToken.startColumn);
     _expr.code = _block->CLOSURE(function);
     return false;
 }
@@ -1546,8 +1533,6 @@ bool Codegen::visit(ObjectLiteral *ast)
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             QString name = propertyName(gs->name);
             V4IR::Function *function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
-            if (_debugger)
-                _debugger->setSourceLocation(function, gs->getSetToken.startLine, gs->getSetToken.startColumn);
             ObjectPropertyValue &v = valueMap[name];
             if (v.value ||
                 (gs->type == PropertyGetterSetter::Getter && v.getter) ||
@@ -1825,8 +1810,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     V4IR::Function *function = _module->newFunction(name, _function);
     function->sourceFile = _fileName;
 
-    if (_debugger)
-        _debugger->addFunction(function);
     V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock());
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
     V4IR::BasicBlock *throwBlock = function->newBasicBlock(groupStartBlock());
@@ -1899,8 +1882,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             V4IR::Function *function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                     member.function->body ? member.function->body->elements : 0);
-            if (_debugger)
-                _debugger->setSourceLocation(function, member.function->functionToken.startLine, member.function->functionToken.startColumn);
             if (! _env->parent) {
                 move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
                      _block->CLOSURE(function));

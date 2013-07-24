@@ -103,9 +103,6 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     foreach (V4IR::Function *function, irFunction->nestedFunctions)
         createFunctionMapping(vmFunction, function);
 
-    if (_engine->debugger)
-        _engine->debugger->mapFunction(vmFunction, irFunction);
-
     return vmFunction;
 }
 

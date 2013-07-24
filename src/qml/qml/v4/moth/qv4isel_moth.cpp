@@ -214,6 +214,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
 
     int codeSize = 4096;
     uchar *codeStart = new uchar[codeSize];
+    memset(codeStart, 0, codeSize);
     uchar *codeNext = codeStart;
     uchar *codeEnd = codeStart + codeSize;
 
@@ -277,6 +278,9 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
 
     _vmFunction->code = VME::exec;
     _vmFunction->codeData = squeezeCode();
+
+    if (QV4::Debugging::Debugger *debugger = engine()->debugger)
+        debugger->setPendingBreakpoints(_vmFunction);
 
     qSwap(_currentStatement, cs);
     qSwap(_stackSlotAllocator, stackSlotAllocator);
@@ -990,6 +994,7 @@ ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &in
 #else
     instr.common.instructionType = type;
 #endif
+    instr.common.breakPoint = 0;
 
     int instructionSize = Instr::size(type);
     if (_codeEnd - _codeNext < instructionSize) {
