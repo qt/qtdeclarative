@@ -30,7 +30,8 @@
     \inqmlmodule QtQml 2
     \brief Provides date functions
 
-    The QML Date object extends the JS Date object with
+    The QML Date object extends the
+    \l{Mozilla Developer Network Date Reference}{JS Date object} with
     locale aware functions.
 
     Functions that accept a locale format may be either an enumeration

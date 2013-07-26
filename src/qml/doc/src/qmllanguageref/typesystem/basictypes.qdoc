@@ -70,6 +70,8 @@ QML modules may extend the QML language with more basic types.
 For example, the basic types provided by the \c QtQuick module are listed below:
 \annotatedlist qtquickbasictypes
 
+The \l{QtQml::Qt}{Qt} global object provides useful functions for manipulating values of basic types.
+
 Currently only QML modules which are provided by Qt may provide their
 own basic types, however this may change in future releases of Qt QML.
 In order to use types provided by a particular QML module, clients

@@ -103,7 +103,7 @@ Item {
 
             Text {
                 id: name
-                text: Helper.realName(model.name)
+                text: model.name
                 anchors { left: avatar.right; leftMargin: 10; top: avatar.top; topMargin: -3 }
                 font.pixelSize: 12
                 font.bold: true
@@ -121,7 +121,7 @@ Item {
                 color: "#adebff"
                 linkColor: "white"
                 onLinkActivated: {
-                    var tag = link.split("http://search.twitter.com/search?q=%23")
+                    var tag = link.split("https://twitter.com/search?q=%23")
                     var user = link.split("https://twitter.com/")
                     if (tag[1] != undefined) {
                         mainListView.positionViewAtBeginning()
@@ -166,7 +166,7 @@ Item {
 
             Text {
                 id: username
-                text: Helper.twitterName(model.name)
+                text: model.twitterName
                 x: 10; anchors { top: avatar2.top; topMargin: -3 }
                 font.pixelSize: 12
                 font.bold: true
