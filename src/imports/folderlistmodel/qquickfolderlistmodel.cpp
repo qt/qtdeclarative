@@ -483,16 +483,12 @@ QUrl QQuickFolderListModel::parentFolder() const
     QString localFile = d->currentDir.toLocalFile();
     if (!localFile.isEmpty()) {
         QDir dir(localFile);
-#if defined(Q_OS_WIN)
-        if (dir.isRoot())
-            dir.setPath("");
-        else
-#endif
-            dir.cdUp();
+        if (dir.isRoot() || !dir.cdUp())
+            return QUrl();
         localFile = dir.path();
     } else {
-        int pos = d->currentDir.path().lastIndexOf(QLatin1Char('/'));
-        if (pos == -1)
+        const int pos = d->currentDir.path().lastIndexOf(QLatin1Char('/'));
+        if (pos <= 0)
             return QUrl();
         localFile = d->currentDir.path().left(pos);
     }

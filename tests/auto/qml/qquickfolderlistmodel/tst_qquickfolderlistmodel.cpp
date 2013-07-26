@@ -73,6 +73,7 @@ private slots:
     void basicProperties();
     void resetFiltering();
     void refresh();
+    void cdUp();
 #if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
     // WinCE does not have drive concept, so lets execute this test only on desktop Windows.
     void changeDrive();
@@ -180,6 +181,33 @@ void tst_qquickfolderlistmodel::refresh()
 
     QTRY_COMPARE(removeStart, 0);
     QTRY_COMPARE(removeEnd, count-1); // wait for refresh
+}
+
+void tst_qquickfolderlistmodel::cdUp()
+{
+    enum { maxIterations = 50 };
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+    const QUrl startFolder = flm->property("folder").toUrl();
+    QVERIFY(startFolder.isValid());
+
+    // QTBUG-32139: Ensure navigating upwards terminates cleanly and does not
+    // return invalid Urls like "file:".
+    for (int i = 0; ; ++i) {
+        const QVariant folderV = flm->property("parentFolder");
+        const QUrl folder = folderV.toUrl();
+        if (!folder.isValid())
+            break;
+        QVERIFY(folder.toString() != QLatin1String("file:"));
+        QVERIFY2(i < maxIterations,
+                 qPrintable(QString::fromLatin1("Unable to reach root after %1 iterations starting from %2, stuck at %3")
+                            .arg(maxIterations).arg(QDir::toNativeSeparators(startFolder.toLocalFile()),
+                                                    QDir::toNativeSeparators(folder.toLocalFile()))));
+        flm->setProperty("folder", folderV);
+    }
 }
 
 #if defined (Q_OS_WIN) && !defined (Q_OS_WINCE)
