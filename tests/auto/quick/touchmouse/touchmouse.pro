@@ -14,5 +14,3 @@ TESTDATA = data/*
 # OTHER_FILES += data/foo.qml
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-
-mac:CONFIG+=insignificant_test # QTBUG-27890
