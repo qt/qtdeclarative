@@ -21,6 +21,5 @@ Item {
 
     function deassignCircular() {
         vp = 2;
-        gc();
     }
 }

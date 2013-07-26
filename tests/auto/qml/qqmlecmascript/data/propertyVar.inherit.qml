@@ -22,7 +22,6 @@ Item {
 
     function deassignCircular() {
         varProperty = 2;
-        gc();
     }
 
     function assignThenDeassign() {

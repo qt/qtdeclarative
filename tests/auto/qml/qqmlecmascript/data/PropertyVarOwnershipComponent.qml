@@ -31,7 +31,6 @@ Rectangle {
         function deassignVp() {
             textTwo.textCanary = 22;
             textTwo.vp = textTwo.textCanary;
-            gc();
         }
     }
 }

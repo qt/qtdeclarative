@@ -298,6 +298,13 @@ private:
     QQmlEngine engine;
 };
 
+static void gc(QQmlEngine &engine)
+{
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
 void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -4171,6 +4178,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QMetaObject::invokeMethod(object, "assignVarProperty");
     QVERIFY(v4->scarceResources.isEmpty());             // the scarce resource is a VME property.
     QMetaObject::invokeMethod(object, "deassignVarProperty");
+    gc(engine);
     QVERIFY(v4->scarceResources.isEmpty());             // should still be empty; the resource should have been released on gc.
     delete object;
 
@@ -4641,13 +4649,6 @@ void tst_qqmlecmascript::propertyVarCpp()
     delete object;
 }
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
 void tst_qqmlecmascript::propertyVarOwnership()
 {
     // Referenced JS objects are not collected
@@ -4748,8 +4749,7 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
     QCoreApplication::processEvents();
     QVERIFY(!qobjectGuard.isNull());
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QVERIFY(qobjectGuard.isNull());                                // should have been collected now.
     delete object;
 }
@@ -4783,15 +4783,13 @@ void tst_qqmlecmascript::propertyVarReparent()
     // now reparent the "Image" object (currently, it has JS ownership)
     image->setParent(text);                                        // shouldn't be collected after deassignVp now, since has a parent.
     QMetaObject::invokeMethod(text2, "deassignVp");
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QCOMPARE(text->property("textCanary").toInt(), 11);
     QCOMPARE(text2->property("textCanary").toInt(), 22);
     QVERIFY(!imageGuard.isNull());                                 // should still be alive.
     QCOMPARE(image->property("imageCanary").toInt(), 13);          // still able to access var properties
     QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QVERIFY(imageGuard.isNull());                                  // should now have been deleted, due to parent being deleted.
     delete object;
 }
@@ -4827,8 +4825,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     // now reparent the "Image" object (currently, it has JS ownership)
     image->setParent(object);                                      // reparented to base object.  after deassignVarProp, the ctxt will be invalid.
     QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QVERIFY(!imageGuard.isNull());                                 // should still be alive.
     QVERIFY(!image->property("imageCanary").isValid());            // but varProperties won't be available (null context).
     delete object;
@@ -4850,12 +4847,10 @@ void tst_qqmlecmascript::propertyVarCircular()
     QPixmap canaryResourcePixmap = canaryResourceVariant.value<QPixmap>();
     canaryResourceVariant = QVariant();                            // invalidate it to remove one copy of the pixmap from memory.
     QMetaObject::invokeMethod(object, "deassignCanaryResource");   // remove one copy of the pixmap from memory
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QVERIFY(!canaryResourcePixmap.isDetached());                   // two copies extant - this and the propertyVar.vp.vp.vp.vp.memoryHog.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QCOMPARE(object->property("canaryInt"), QVariant(2));
     QCOMPARE(object->property("canaryResource"), QVariant(1));
     QVERIFY(canaryResourcePixmap.isDetached());                    // now detached, since orig copy was member of qdvmemo which was deleted.
@@ -4884,8 +4879,7 @@ void tst_qqmlecmascript::propertyVarCircular2()
     QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     QVERIFY(rootObjectTracker.isNull());                           // should have been collected
     QVERIFY(childObjectTracker.isNull());                          // should have been collected
     delete object;
@@ -4934,8 +4928,6 @@ void tst_qqmlecmascript::propertyVarInheritance()
     }
     // now we deassign the var prop, which should trigger collection of item subtrees.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
@@ -4976,8 +4968,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
         QCOMPARE(childObject->property("textCanary").toInt(), 10);
     }
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
-    QCoreApplication::processEvents();
+    gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
 #if !defined(Q_CC_CLANG)
     QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.

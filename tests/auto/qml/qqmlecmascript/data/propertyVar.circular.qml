@@ -19,7 +19,6 @@ Item {
 
     function deassignCanaryResource() {
         canaryResource = 1;
-        gc();
     }
 
     function assignCircular() {
@@ -32,7 +31,6 @@ Item {
     function deassignCircular() {
         canaryInt = 2;
         varProperty = 2;
-        gc();
     }
 
     function assignThenDeassign() {
