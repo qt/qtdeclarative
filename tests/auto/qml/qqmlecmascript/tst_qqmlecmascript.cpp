@@ -4938,8 +4938,11 @@ void tst_qqmlecmascript::propertyVarInheritance()
     QCoreApplication::processEvents();
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
+    // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
+#if !defined(Q_CC_CLANG)
     QVERIFY(icoCanaryHandle.isEmpty());
     QVERIFY(ccoCanaryHandle.isEmpty());
+#endif
     delete object;
     // since there are no parent vmemo's to keep implicit references alive, and the only handles
     // to what remains are weak, all varProperties arrays must have been collected.
@@ -4975,7 +4978,10 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QMetaObject::invokeMethod(object, "deassignCircular");
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
     QCoreApplication::processEvents();
+    // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
+#if !defined(Q_CC_CLANG)
     QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
+#endif
     delete object;
 }
 
