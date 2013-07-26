@@ -52,10 +52,10 @@ control QML types.
 Tutorial chapters:
 
 \list 1
-\li \l {quick/tutorials/samegame/samegame1}{Creating the Game Canvas and Blocks}
-\li \l {quick/tutorials/samegame/samegame2}{Populating the Game Canvas}
-\li \l {quick/tutorials/samegame/samegame3}{Implementing the Game Logic}
-\li \l {quick/tutorials/samegame/samegame4}{Finishing Touches}
+\li \l {QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks}{Creating the Game Canvas and Blocks}
+\li \l {QML Advanced Tutorial 2 - Populating the Game Canvas}{Populating the Game Canvas}
+\li \l {QML Advanced Tutorial 3 - Implementing the Game Logic}{Implementing the Game Logic}
+\li \l {QML Advanced Tutorial 4 - Finishing Touches}{Finishing Touches}
 \endlist
 
 All the code in this tutorial can be found in Qt's \c examples/quick/tutorials/samegame
@@ -63,7 +63,6 @@ directory.
 */
 
 /*!
-\page qml-advtutorial1.html
 \title QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial
@@ -132,7 +131,6 @@ types to get started. Next, we will populate the game canvas with some blocks.
 
 
 /*!
-\page qml-advtutorial2.html
 \title QML Advanced Tutorial 2 - Populating the Game Canvas
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
@@ -207,7 +205,6 @@ Now, we have a screen of blocks, and we can begin to add the game mechanics.
 */
 
 /*!
-\page qml-advtutorial3.html
 \title QML Advanced Tutorial 3 - Implementing the Game Logic
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 2 - Populating the Game Canvas
@@ -295,7 +292,6 @@ until the next chapter - where your application becomes alive!
 */
 
 /*!
-\page qml-advtutorial4.html
 \title QML Advanced Tutorial 4 - Finishing Touches
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 3 - Implementing the Game Logic

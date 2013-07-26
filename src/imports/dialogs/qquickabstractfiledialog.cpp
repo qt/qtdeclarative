@@ -108,12 +108,9 @@ void QQuickAbstractFileDialog::setSelectFolder(bool selectFolder)
 
 QUrl QQuickAbstractFileDialog::folder()
 {
-    return QUrl();
-    /* TODO after dialog helper switches to URLs
     if (m_dlgHelper && !m_dlgHelper->directory().isEmpty())
-        return QUrl::fromLocalFile(m_dlgHelper->directory());
-    return QUrl::fromLocalFile(m_options->initialDirectory());
-    */
+        return m_dlgHelper->directory();
+    return m_options->initialDirectory();
 }
 
 void QQuickAbstractFileDialog::setFolder(const QUrl &f)
@@ -162,13 +159,7 @@ QUrl QQuickAbstractFileDialog::fileUrl()
 
 QList<QUrl> QQuickAbstractFileDialog::fileUrls()
 {
-    QList<QUrl> ret;
-    /* TODO after dialog helper switches to URLs
-    if (m_dlgHelper)
-        foreach (QString path, m_dlgHelper->selectedFiles())
-            ret << QUrl::fromLocalFile(path);
-    */
-    return ret;
+    return m_dlgHelper->selectedFiles();
 }
 
 void QQuickAbstractFileDialog::updateModes()

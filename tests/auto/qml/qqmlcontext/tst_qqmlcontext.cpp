@@ -83,9 +83,9 @@ void tst_qqmlcontext::baseUrl()
 
     QCOMPARE(ctxt.baseUrl(), QUrl());
 
-    ctxt.setBaseUrl(QUrl("http://www.nokia.com/"));
+    ctxt.setBaseUrl(QUrl("http://www.qt-project.org/"));
 
-    QCOMPARE(ctxt.baseUrl(), QUrl("http://www.nokia.com/"));
+    QCOMPARE(ctxt.baseUrl(), QUrl("http://www.qt-project.org/"));
 }
 
 void tst_qqmlcontext::resolvedUrl()
@@ -93,18 +93,18 @@ void tst_qqmlcontext::resolvedUrl()
     // Relative to the component
     {
         QQmlContext ctxt(&engine);
-        ctxt.setBaseUrl(QUrl("http://www.nokia.com/"));
+        ctxt.setBaseUrl(QUrl("http://www.qt-project.org/"));
 
-        QCOMPARE(ctxt.resolvedUrl(QUrl("main.qml")), QUrl("http://www.nokia.com/main.qml"));
+        QCOMPARE(ctxt.resolvedUrl(QUrl("main.qml")), QUrl("http://www.qt-project.org/main.qml"));
     }
 
     // Relative to a parent
     {
         QQmlContext ctxt(&engine);
-        ctxt.setBaseUrl(QUrl("http://www.nokia.com/"));
+        ctxt.setBaseUrl(QUrl("http://www.qt-project.org/"));
 
         QQmlContext ctxt2(&ctxt);
-        QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.nokia.com/main2.qml"));
+        QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
     }
 
     // Relative to the engine
@@ -116,10 +116,10 @@ void tst_qqmlcontext::resolvedUrl()
     // Relative to a deleted parent
     {
         QQmlContext *ctxt = new QQmlContext(&engine);
-        ctxt->setBaseUrl(QUrl("http://www.nokia.com/"));
+        ctxt->setBaseUrl(QUrl("http://www.qt-project.org/"));
 
         QQmlContext ctxt2(ctxt);
-        QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.nokia.com/main2.qml"));
+        QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
 
         delete ctxt; ctxt = 0;
 
@@ -130,7 +130,7 @@ void tst_qqmlcontext::resolvedUrl()
     {
         QQmlContext ctxt(&engine);
 
-        QCOMPARE(ctxt.resolvedUrl(QUrl("http://www.nokia.com/main2.qml")), QUrl("http://www.nokia.com/main2.qml"));
+        QCOMPARE(ctxt.resolvedUrl(QUrl("http://www.qt-project.org/main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
         QCOMPARE(ctxt.resolvedUrl(QUrl("file:///main2.qml")), QUrl("file:///main2.qml"));
     }
 }

@@ -325,6 +325,7 @@ QQuickFolderListModel::QQuickFolderListModel(QObject *parent)
     d->roleNames[FileLastModifiedRole] = "fileModified";
     d->roleNames[FileLastReadRole] = "fileAccessed";
     d->roleNames[FileIsDirRole] = "fileIsDir";
+    d->roleNames[FileUrlRole] = "fileURL";
     d->init();
 }
 
@@ -366,6 +367,9 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
         case FileIsDirRole:
             rv = d->data.at(index.row()).isDir();
             break;
+        case FileUrlRole:
+            rv = QUrl::fromLocalFile(d->data.at(index.row()).filePath());
+            break;
         default:
             break;
     }
@@ -402,8 +406,7 @@ QModelIndex QQuickFolderListModel::index(int row, int , const QModelIndex &) con
     The \a folder property holds a URL for the folder that the model is
     currently providing.
 
-    The value is a URL expressed as a string, and must be a \c file: or \c qrc:
-    URL, or a relative URL.
+    The value must be a \c file: or \c qrc: URL, or a relative URL.
 
     By default, the value is an invalid URL.
 */
@@ -443,7 +446,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
 
 
 /*!
-   \qmlproperty string QQuickFolderListModel::rootFolder
+   \qmlproperty url QQuickFolderListModel::rootFolder
 
    When the rootFolder is set, then this folder will
    be threated as the root in the file system, so that
@@ -753,6 +756,7 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
     \list
         \li \c fileName
         \li \c filePath
+        \li \c fileURL
         \li \c fileBaseName
         \li \c fileSuffix
         \li \c fileSize

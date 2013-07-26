@@ -38,10 +38,10 @@ data to dynamically sort all items in a view.
 Tutorial chapters:
 
 \list 1
-\li \l {quick/tutorials/dynamicview/dynamicview1}{A Simple ListView and Delegate}
-\li \l {quick/tutorials/dynamicview/dynamicview2}{Dragging View Items}
-\li \l {quick/tutorials/dynamicview/dynamicview3}{Moving Dragged Items}
-\li \l {quick/tutorials/dynamicview/dynamicview4}{Sorting Items}
+\li \l {QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate}{A Simple ListView and Delegate}
+\li \l {QML Dynamic View Ordering Tutorial 2 - Dragging View Items}{Dragging View Items}
+\li \l {QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items}{Moving Dragged Items}
+\li \l {QML Dynamic View Ordering Tutorial 4 - Sorting Items}{Sorting Items}
 \endlist
 
 All the code in this tutorial can be found in Qt's \c examples/quick/tutorials/dynamicview
@@ -49,7 +49,6 @@ directory.
 */
 
 /*!
-\page qml-dynamicview-tutorial1.html
 \title QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial
@@ -85,7 +84,6 @@ The second part of the application is the ListView itself to which we bind the m
 */
 
 /*!
-\page qml-dynamicview-tutorial2.html
 \title QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
@@ -129,7 +127,6 @@ so that is above other items in the stacking order and isn't obscured as it is d
 */
 
 /*!
-\page qml-dynamicview-tutorial3.html
 \title QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
@@ -182,7 +179,6 @@ property of the view and bind the \l {QtQuick2::VisualDataModel::model}{model} a
 */
 
 /*!
-\page qml-dynamicview-tutorial4.html
 \title QML Dynamic View Ordering Tutorial 4 - Sorting Items
 \contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items

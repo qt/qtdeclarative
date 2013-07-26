@@ -62,8 +62,8 @@ public:
     tst_qqmlsqldatabase()
     {
         qApp->setApplicationName("tst_qqmlsqldatabase");
-        qApp->setOrganizationName("Nokia");
-        qApp->setOrganizationDomain("nokia.com");
+        qApp->setOrganizationName("QtProject");
+        qApp->setOrganizationDomain("www.qt-project.org");
         engine = new QQmlEngine;
     }
 

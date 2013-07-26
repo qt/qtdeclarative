@@ -10,8 +10,7 @@ qtHaveModule(quick) {
         qtquick2 \
         particles \
         window \
-# disabled to allow file dialog changes to use urls internally (qtbase)
-#        dialogs \
+        dialogs \
         testlib
 }
 
