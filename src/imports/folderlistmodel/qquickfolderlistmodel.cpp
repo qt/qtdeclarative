@@ -536,8 +536,8 @@ void QQuickFolderListModel::componentComplete()
 {
     Q_D(QQuickFolderListModel);
 
-    if (!d->currentDir.isValid() || d->currentDir.toLocalFile().isEmpty() || !QDir().exists(d->currentDir.toLocalFile()))
-        setFolder(QUrl(QLatin1String("file://")+QDir::currentPath()));
+    if (!d->currentDir.isValid() || !d->currentDir.isLocalFile() || !QDir().exists(d->currentDir.toLocalFile()))
+        setFolder(QUrl::fromLocalFile(QDir::currentPath()));
 }
 
 /*!
