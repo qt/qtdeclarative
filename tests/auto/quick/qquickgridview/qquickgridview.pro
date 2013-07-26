@@ -12,5 +12,3 @@ TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private testlib
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-
-mac:CONFIG+=insignificant_test # QTBUG-27890
