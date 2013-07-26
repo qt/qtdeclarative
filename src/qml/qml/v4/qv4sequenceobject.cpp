@@ -522,7 +522,7 @@ typedef QQmlSequence<QList<qreal> > QQmlRealList;
 template<>
 DEFINE_MANAGED_VTABLE(QQmlRealList);
 
-#define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>();
+#define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
 SequencePrototype::SequencePrototype(ExecutionEngine *engine)
     : QV4::Object(engine)
 {
