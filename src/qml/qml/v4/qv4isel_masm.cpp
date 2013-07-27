@@ -608,10 +608,10 @@ void Assembler::link(QV4::Function *vmFunc)
 
         WTF::setDataFile(stderr);
 #if (OS(LINUX) && !defined(Q_OS_ANDROID)) || OS(MAC_OS_X)
+        fclose(disasmStream);
 #  if OS(MAC_OS_X)
         char *disasmOutput = memStream.buf.data();
 #  endif
-        fclose(disasmStream);
 #  if CPU(X86) || CPU(X86_64)
         QHash<void*, String*> idents;
         printDisassembledOutputWithCalls(disasmOutput, functions, _vmFunction->identifiers);
