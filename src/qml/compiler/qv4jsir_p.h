@@ -302,8 +302,8 @@ struct Name: Expr {
         builtin_invalid,
         builtin_typeof,
         builtin_delete,
-        builtin_postincrement,
-        builtin_postdecrement,
+        builtin_postincrement, // TODO: remove
+        builtin_postdecrement, // TODO: remove
         builtin_throw,
         builtin_finish_try,
         builtin_foreach_iterator_object,

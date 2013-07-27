@@ -1657,13 +1657,16 @@ bool Codegen::visit(PostDecrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
 
-    if (_expr.accept(nx)) {
-        move(*expr, binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1)));
-    } else {
-        V4IR::ExprList *args = _function->New<V4IR::ExprList>();
-        args->init(*expr);
-        _expr.code = call(_block->NAME(V4IR::Name::builtin_postdecrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
-    }
+    const unsigned oldValue = _block->newTemp();
+    move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
+
+    const unsigned  newValue = _block->newTemp();
+    move(_block->TEMP(newValue), binop(V4IR::OpSub, _block->TEMP(oldValue), _block->CONST(V4IR::NumberType, 1)));
+    move(*expr, _block->TEMP(newValue));
+
+    if (!_expr.accept(nx))
+        _expr.code = _block->TEMP(oldValue);
+
     return false;
 }
 
@@ -1674,13 +1677,16 @@ bool Codegen::visit(PostIncrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
     throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
 
-    if (_expr.accept(nx)) {
-        move(*expr, binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1)));
-    } else {
-        V4IR::ExprList *args = _function->New<V4IR::ExprList>();
-        args->init(*expr);
-        _expr.code = call(_block->NAME(V4IR::Name::builtin_postincrement, ast->lastSourceLocation().startLine, ast->lastSourceLocation().startColumn), args);
-    }
+    const unsigned oldValue = _block->newTemp();
+    move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
+
+    const unsigned  newValue = _block->newTemp();
+    move(_block->TEMP(newValue), binop(V4IR::OpAdd, _block->TEMP(oldValue), _block->CONST(V4IR::NumberType, 1)));
+    move(*expr, _block->TEMP(newValue));
+
+    if (!_expr.accept(nx))
+        _expr.code = _block->TEMP(oldValue);
+
     return false;
 }
 
