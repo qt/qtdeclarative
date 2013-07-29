@@ -1023,7 +1023,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
 
 void QQuickListViewPrivate::updateStickySections()
 {
-    if (!sectionCriteria
+    if (!sectionCriteria || !sectionCriteria->delegate()
             || (!sectionCriteria->labelPositioning() && !currentSectionItem && !nextSectionItem))
         return;
 
