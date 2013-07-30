@@ -49,6 +49,20 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
+inline bool canConvertToSignedInteger(double value)
+{
+    int ival = (int) value;
+    // +0 != -0, so we need to convert to double when negating 0
+    return ival == value && !(value == 0 && isNegative(value));
+}
+
+inline bool canConvertToUnsignedInteger(double value)
+{
+    unsigned uval = (unsigned) value;
+    // +0 != -0, so we need to convert to double when negating 0
+    return uval == value && !(value == 0 && isNegative(value));
+}
+
 inline QV4::Value convertToValue(V4IR::Const *c)
 {
     switch (c->type) {
@@ -68,8 +82,7 @@ inline QV4::Value convertToValue(V4IR::Const *c)
         return QV4::Value::fromDouble(c->value);
     case V4IR::NumberType: {
         int ival = (int)c->value;
-        // +0 != -0, so we need to convert to double when negating 0
-        if (ival == c->value && !(c->value == 0 && isNegative(c->value))) {
+        if (canConvertToSignedInteger(c->value)) {
             return QV4::Value::fromInt32(ival);
         } else {
             return QV4::Value::fromDouble(c->value);

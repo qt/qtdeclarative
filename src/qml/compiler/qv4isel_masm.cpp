@@ -1261,7 +1261,10 @@ void InstructionSelection::callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
     // FIXME: do something more useful with this info
-    copyValue(source, target);
+    if (target->type & V4IR::NumberType && !(source->type & V4IR::NumberType))
+        unop(V4IR::OpUPlus, source, target);
+    else
+        copyValue(source, target);
 }
 
 String *InstructionSelection::identifier(const QString &s)

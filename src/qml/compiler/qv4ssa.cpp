@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4ssa_p.h"
+#include "qv4isel_util_p.h"
 #include "qv4util_p.h"
 
 #include <QtCore/QCoreApplication>
@@ -1247,7 +1248,17 @@ private:
     }
 
 protected:
-    virtual void visitConst(Const *e) { _ty = TypingResult(e->type); }
+    virtual void visitConst(Const *e) {
+        if (e->type & NumberType) {
+            if (canConvertToSignedInteger(e->value))
+                _ty = TypingResult(SInt32Type);
+            else if (canConvertToUnsignedInteger(e->value))
+                _ty = TypingResult(UInt32Type);
+            else
+                _ty = TypingResult(e->type);
+        } else
+            _ty = TypingResult(e->type);
+    }
     virtual void visitString(String *) { _ty = TypingResult(StringType); }
     virtual void visitRegExp(RegExp *) { _ty = TypingResult(ObjectType); }
     virtual void visitName(Name *) { _ty = TypingResult(ObjectType); }
@@ -1287,7 +1298,9 @@ protected:
 
         switch (e->op) {
         case OpAdd:
-            if (leftTy.type & StringType || rightTy.type & StringType)
+            if (leftTy.type & ObjectType || rightTy.type & ObjectType)
+                _ty.type = ObjectType;
+            else if (leftTy.type & StringType || rightTy.type & StringType)
                 _ty.type = StringType;
             else if (leftTy.type != UnknownType && rightTy.type != UnknownType)
                 _ty.type = DoubleType;
@@ -1397,18 +1410,33 @@ protected:
 
 class TypePropagation: public StmtVisitor, public ExprVisitor {
     Type _ty;
+    Function *_f;
 
-    void run(Expr *&e, Type requestedType = UnknownType) {
+    bool run(Expr *&e, Type requestedType = UnknownType, bool insertConversion = true) {
         qSwap(_ty, requestedType);
         e->accept(this);
         qSwap(_ty, requestedType);
 
-        if (requestedType != UnknownType)
-            if (e->type != requestedType)
-                if (requestedType & NumberType) {
-//                    qDebug()<<"adding conversion from"<<typeName(e->type)<<"to"<<typeName(requestedType);
-                    addConversion(e, requestedType);
+        if (requestedType != UnknownType) {
+            if (e->type != requestedType) {
+                if (requestedType & NumberType || requestedType == BoolType) {
+#ifdef SHOW_SSA
+                    QTextStream os(stdout, QIODevice::WriteOnly);
+                    os << "adding conversion from " << typeName(e->type)
+                       << " to " << typeName(requestedType) << " for expression ";
+                    e->dump(os);
+                    os << " in statement ";
+                    _currStmt->dump(os);
+                    os << endl;
+#endif
+                    if (insertConversion)
+                        addConversion(e, requestedType);
+                    return true;
                 }
+            }
+        }
+
+        return false;
     }
 
     struct Conversion {
@@ -1434,6 +1462,7 @@ public:
     TypePropagation() : _ty(UnknownType) {}
 
     void run(Function *f) {
+        _f = f;
         foreach (BasicBlock *bb, f->basicBlocks) {
             _conversions.clear();
 
@@ -1445,6 +1474,25 @@ public:
             foreach (const Conversion &conversion, _conversions) {
                 if (conversion.stmt->asMove() && conversion.stmt->asMove()->source->asTemp()) {
                     *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
+                } else if (Const *c = (*conversion.expr)->asConst()) {
+                    switch (conversion.targetType) {
+                    case DoubleType:
+                        break;
+                    case SInt32Type:
+                        c->value = QV4::Value::toInt32(c->value);
+                        break;
+                    case UInt32Type:
+                        c->value = QV4::Value::toUInt32(c->value);
+                        break;
+                    case BoolType:
+                        c->value = !(c->value == 0 || std::isnan(c->value));
+                        break;
+                    default:
+                        Q_UNIMPLEMENTED();
+                        Q_ASSERT(!"Unimplemented!");
+                        break;
+                    }
+                    c->type = conversion.targetType;
                 } else {
                     Temp *target = bb->TEMP(bb->newTemp());
                     target->type = conversion.targetType;
@@ -1473,6 +1521,10 @@ public:
 protected:
     virtual void visitConst(Const *c) {
         if (_ty & NumberType && c->type & NumberType) {
+            if (_ty == SInt32Type)
+                c->value = QV4::Value::toInt32(c->value);
+            else if (_ty == UInt32Type)
+                c->value = QV4::Value::toUInt32(c->value);
             c->type = _ty;
         }
     }
@@ -1495,37 +1547,43 @@ protected:
         case OpBitAnd:
         case OpBitOr:
         case OpBitXor:
-        case OpLShift:
-        case OpRShift:
-        case OpURShift:
             run(e->left, e->type);
             run(e->right, e->type);
+            break;
+
+        case OpLShift:
+        case OpRShift:
+            run(e->left, SInt32Type);
+            run(e->right, UInt32Type);
+            break;
+
+        case OpURShift:
+            run(e->left, UInt32Type);
+            run(e->right, UInt32Type);
             break;
 
         case OpGt:
         case OpLt:
         case OpGe:
         case OpLe:
-            if (e->left->type == DoubleType)
+        case OpEqual:
+        case OpNotEqual:
+            if (e->left->type == DoubleType) {
                 run(e->right, DoubleType);
-            else if (e->right->type == DoubleType)
+            } else if (e->right->type == DoubleType) {
                 run(e->left, DoubleType);
-            else {
-                run(e->left, e->type);
-                run(e->right, e->type);
+            } else {
+                run(e->left, e->left->type);
+                run(e->right, e->right->type);
             }
             break;
 
-        case OpEqual:
-        case OpNotEqual:
         case OpStrictEqual:
         case OpStrictNotEqual:
-            break;
-
         case OpInstanceof:
         case OpIn:
-            run(e->left, e->type);
-            run(e->right, e->type);
+            run(e->left, e->left->type);
+            run(e->right, e->right->type);
             break;
 
         default:
@@ -1547,7 +1605,25 @@ protected:
     virtual void visitMember(Member *e) { run(e->base); }
     virtual void visitExp(Exp *s) { run(s->expr); }
     virtual void visitMove(Move *s) {
+        if (s->source->asConvert())
+            return; // this statement got inserted for a phi-node type conversion
+
         run(s->target);
+
+        if (Unop *u = s->source->asUnop()) {
+            if (u->op == OpUPlus) {
+                if (run(u->expr, s->target->type, false)) {
+                    Convert *convert = _f->New<Convert>();
+                    convert->init(u->expr, s->target->type);
+                    s->source = convert;
+                } else {
+                    s->source = u->expr;
+                }
+
+                return;
+            }
+        }
+
         run(s->source, s->target->type);
     }
     virtual void visitJump(Jump *) {}
@@ -1563,7 +1639,7 @@ protected:
     }
 };
 
-void doEdgeSplitting(Function *f)
+void splitCriticalEdges(Function *f)
 {
     const QVector<BasicBlock *> oldBBs = f->basicBlocks;
 
@@ -1733,10 +1809,6 @@ void cleanupBasicBlocks(Function *function)
         }
     }
 
-    // TODO: merge 2 basic blocks A and B if A has one outgoing edge (to B), B has one incoming
-    // edge (from A), but not when A has more than 1 incoming edge and B has more than one
-    // outgoing edge.
-
     foreach (BasicBlock *bb, toRemove) {
         foreach (Stmt *s, bb->statements)
             s->destroyData();
@@ -1749,6 +1821,337 @@ void cleanupBasicBlocks(Function *function)
     // re-number all basic blocks:
     for (int i = 0; i < function->basicBlocks.size(); ++i)
         function->basicBlocks[i]->index = i;
+}
+
+inline Const *isConstPhi(Phi *phi)
+{
+    if (Const *c = phi->d->incoming[0]->asConst()) {
+        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
+            if (Const *cc = phi->d->incoming[i]->asConst()) {
+                if (c->value != cc->value)
+                    return 0;
+                if (!(c->type == cc->type || (c->type & NumberType && cc->type & NumberType)))
+                    return 0;
+                if (int(c->value) == 0 && int(cc->value) == 0)
+                    if (isNegative(c->value) != isNegative(cc->value))
+                        return 0;
+            } else {
+                return 0;
+            }
+        }
+        return c;
+    }
+    return 0;
+}
+
+inline Temp *isSameTempPhi(Phi *phi)
+{
+    if (Temp *t = phi->d->incoming[0]->asTemp()) {
+        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
+            if (Temp *tt = phi->d->incoming[i]->asTemp())
+                if (t->index == tt->index)
+                    continue;
+            return 0;
+        }
+        return t;
+    }
+    return 0;
+}
+
+class ExprReplacer: public StmtVisitor, public ExprVisitor
+{
+    DefUsesCalculator &_defUses;
+    Function* _function;
+    Temp *_toReplace;
+    Expr *_replacement;
+
+public:
+    ExprReplacer(DefUsesCalculator &defUses, Function *function)
+        : _defUses(defUses)
+        , _function(function)
+        , _toReplace(0)
+        , _replacement(0)
+    {}
+
+    QVector<Stmt *> operator()(Temp *toReplace, Expr *replacement)
+    {
+        Q_ASSERT(replacement->asTemp() || replacement->asConst() || replacement->asName());
+
+//        qout << "Replacing ";toReplace->dump(qout);qout<<" by ";replacement->dump(qout);qout<<endl;
+
+        qSwap(_toReplace, toReplace);
+        qSwap(_replacement, replacement);
+
+        QList<Stmt *> uses = _defUses.uses(*_toReplace);
+        QVector<Stmt *> result;
+        result.reserve(uses.size());
+        foreach (Stmt *use, uses) {
+//            qout<<"        ";use->dump(qout);qout<<"\n";
+            use->accept(this);
+//            qout<<"     -> ";use->dump(qout);qout<<"\n";
+            result.append(use);
+        }
+
+        qSwap(_replacement, replacement);
+        qSwap(_toReplace, toReplace);
+        return result;
+    }
+
+protected:
+    virtual void visitConst(Const *) {}
+    virtual void visitString(String *) {}
+    virtual void visitRegExp(RegExp *) {}
+    virtual void visitName(Name *) {}
+    virtual void visitTemp(Temp *) {}
+    virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { check(e->expr); }
+    virtual void visitUnop(Unop *e) { check(e->expr); }
+    virtual void visitBinop(Binop *e) { check(e->left); check(e->right); }
+    virtual void visitCall(Call *e) {
+        check(e->base);
+        for (ExprList *it = e->args; it; it = it->next)
+            check(it->expr);
+    }
+    virtual void visitNew(New *e) {
+        check(e->base);
+        for (ExprList *it = e->args; it; it = it->next)
+            check(it->expr);
+    }
+    virtual void visitSubscript(Subscript *e) { check(e->base); check(e->index); }
+    virtual void visitMember(Member *e) { check(e->base); }
+    virtual void visitExp(Exp *s) { check(s->expr); }
+    virtual void visitMove(Move *s) { check(s->target); check(s->source); }
+    virtual void visitJump(Jump *) {}
+    virtual void visitCJump(CJump *s) { check(s->cond); }
+    virtual void visitRet(Ret *s) { check(s->expr); }
+    virtual void visitTry(Try *) { Q_UNREACHABLE(); }
+    virtual void visitPhi(Phi *s) {
+        for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
+            check(s->d->incoming[i]);
+    }
+
+private:
+    Expr *clone(Expr *e) const {
+        if (Temp *t = e->asTemp()) {
+            return CloneExpr::cloneTemp(t, _function);
+        } else if (Const *c = e->asConst()) {
+            return CloneExpr::cloneConst(c, _function);
+        } else if (Name *n = e->asName()) {
+            return CloneExpr::cloneName(n, _function);
+        } else {
+            Q_UNIMPLEMENTED();
+            return e;
+        }
+    }
+
+    void check(Expr *&e) {
+        if (equals(e, _toReplace))
+            e = clone(_replacement);
+        else
+            e->accept(this);
+    }
+
+    // This only calculates equality for everything needed by constant propagation
+    bool equals(Expr *e1, Expr *e2) const {
+        if (e1 == e2)
+            return true;
+
+        if (Const *c1 = e1->asConst()) {
+            if (Const *c2 = e2->asConst())
+                return c1->value == c2->value && (c1->type == c2->type || (c1->type & NumberType && c2->type & NumberType));
+        } else if (Temp *t1 = e1->asTemp()) {
+            if (Temp *t2 = e2->asTemp())
+                return *t1 == *t2;
+        } else if (Name *n1 = e1->asName()) {
+            if (Name *n2 = e2->asName()) {
+                if (n1->id) {
+                    if (n2->id)
+                        return *n1->id == *n2->id;
+                } else {
+                    return n1->builtin == n2->builtin;
+                }
+            }
+        }
+
+        return false;
+    }
+};
+
+inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
+{
+    Temp *t = e->asTemp();
+    if (!t)
+        return 0;
+
+    switch (t->kind) {
+    case Temp::VirtualRegister:
+        return t;
+    case Temp::Local:
+        return variablesCanEscape ? 0 : t;
+    default:
+        return 0;
+    }
+}
+
+void optimizeSSA(Function *function, DefUsesCalculator &defUses)
+{
+    const bool variablesCanEscape = function->variablesCanEscape();
+
+    QHash<Stmt*,Stmt**> ref;
+    QVector<Stmt *> W;
+    foreach (BasicBlock *bb, function->basicBlocks) {
+        for (int i = 0, ei = bb->statements.size(); i != ei; ++i) {
+            Stmt **s = &bb->statements[i];
+            W.append(*s);
+            ref.insert(*s, s);
+        }
+    }
+
+    ExprReplacer replaceUses(defUses, function);
+
+    while (!W.isEmpty()) {
+        Stmt *s = W.last();
+        W.removeLast();
+        if (!s)
+            continue;
+
+        if (Phi *phi = s->asPhi()) {
+            // constant propagation:
+            if (Const *c = isConstPhi(phi)) {
+                W += replaceUses(phi->targetTemp, c);
+                defUses.removeDef(*phi->targetTemp);
+                *ref[s] = 0;
+                continue;
+            }
+
+            // copy propagation:
+            if (phi->d->incoming.size() == 1) {
+                Temp *t = phi->targetTemp;
+                Expr *e = phi->d->incoming.first();
+
+                QVector<Stmt *> newT2Uses = replaceUses(t, e);
+                W += newT2Uses;
+                if (Temp *t2 = e->asTemp()) {
+                    defUses.removeUse(s, *t2);
+                    defUses.addUses(*t2, QList<Stmt*>::fromVector(newT2Uses));
+                }
+                defUses.removeDef(*t);
+                *ref[s] = 0;
+                continue;
+            }
+
+        }
+
+        if (Move *m = s->asMove()) {
+            if (Temp *t = unescapableTemp(m->target, variablesCanEscape)) {
+                // constant propagation:
+                if (Const *c = m->source->asConst()) {
+                    if (c->type & NumberType || c->type == BoolType) {
+                        // TODO: when propagating other constants, e.g. undefined, the other
+                        // optimization passes have to be changed to cope with them.
+//                        qout<<"propagating constant from ";s->dump(qout);qout<<" info:"<<endl;
+                        W += replaceUses(t, c);
+                        defUses.removeDef(*t);
+                        *ref[s] = 0;
+                    }
+                    continue;
+                }
+#if defined(PROPAGATE_THIS)
+                if (Name *n = m->source->asName()) {
+                    qout<<"propagating constant from ";s->dump(qout);qout<<" info:"<<endl;
+                    W += replaceUses(t, n);
+                    defUses.removeDef(t->index);
+                    *ref[s] = 0;
+                    continue;
+                }
+#endif
+                // copy propagation:
+                if (Temp *t2 = unescapableTemp(m->source, variablesCanEscape)) {
+                    QVector<Stmt *> newT2Uses = replaceUses(t, t2);
+                    W += newT2Uses;
+                    defUses.removeUse(s, *t2);
+                    defUses.addUses(*t2, QList<Stmt*>::fromVector(newT2Uses));
+                    defUses.removeDef(*t);
+                    *ref[s] = 0;
+                    continue;
+                }
+
+                // Constant unary expression evaluation:
+                if (Unop *u = m->source->asUnop()) {
+                    if (Const *c = u->expr->asConst()) {
+                        if (c->type & NumberType || c->type == BoolType) {
+                            // TODO: implement unop propagation for other constant types
+                            bool doneSomething = false;
+                            switch (u->op) {
+                            case OpNot:
+                                c->value = !c->value;
+                                c->type = BoolType;
+                                doneSomething = true;
+                                break;
+                            case OpUMinus:
+                                if (int(c->value) == 0 && int(c->value) == c->value) {
+                                    if (isNegative(c->value))
+                                        c->value = 0;
+                                    else
+                                        c->value = -1 / Q_INFINITY;
+                                    c->type = DoubleType;
+                                    doneSomething = true;
+                                    break;
+                                }
+
+                                c->value = -c->value;
+                                if (canConvertToSignedInteger(c->value))
+                                    c->type = SInt32Type;
+                                else if (canConvertToUnsignedInteger(c->value))
+                                    c->type = UInt32Type;
+                                else
+                                    c->type = DoubleType;
+                                doneSomething = true;
+                                break;
+                            case OpUPlus:
+                                c->type = DoubleType;
+                                doneSomething = true;
+                                break;
+                            case OpCompl:
+                                c->value = ~QV4::Value::toInt32(c->value);
+                                c->type = SInt32Type;
+                                doneSomething = true;
+                                break;
+                            case OpIncrement:
+                                c->value = c->value + 1;
+                                doneSomething = true;
+                                break;
+                            case OpDecrement:
+                                c->value = c->value - 1;
+                                doneSomething = true;
+                                break;
+                            default:
+                                break;
+                            };
+
+                            if (doneSomething) {
+                                m->source = c;
+                                W += m;
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                // TODO: Constant binary expression evaluation
+            }
+        }
+    }
+
+    foreach (BasicBlock *bb, function->basicBlocks) {
+        for (int i = 0; i < bb->statements.size();) {
+            if (bb->statements[i])
+                ++i;
+            else
+                bb->statements.remove(i);
+        }
+    }
 }
 
 class InputOutputCollector: protected StmtVisitor, protected ExprVisitor {
@@ -2054,8 +2457,8 @@ bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval &r1, const LifeTim
 void Optimizer::run()
 {
 #if defined(SHOW_SSA)
-    qout << "##### NOW IN FUNCTION " << (_function->name ? qPrintable(*_function->name) : "anonymous!")
-         << " with " << _function->basicBlocks.size() << " basic blocks." << endl << flush;
+    qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
+         << " with " << function->basicBlocks.size() << " basic blocks." << endl << flush;
 #endif
 
     // Number all basic blocks, so we have nice numbers in the dumps:
@@ -2069,9 +2472,11 @@ void Optimizer::run()
 
 //    showMeTheCode(function);
 
-    if (!function->hasTry && !function->hasWith) {
+    static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
+
+    if (!function->hasTry && !function->hasWith && doOpt) {
 //        qout << "Starting edge splitting..." << endl;
-        doEdgeSplitting(function);
+        splitCriticalEdges(function);
 //        showMeTheCode(function);
 
         // Calculate the dominator tree:
@@ -2090,6 +2495,10 @@ void Optimizer::run()
 
 //        qout << "Starting dead-code elimination..." << endl;
         DeadCodeElimination(defUses, function).run();
+//        showMeTheCode(function);
+
+//        qout << "Running SSA optimization..." << endl;
+//        optimizeSSA(function, defUses);
 //        showMeTheCode(function);
 
 //        qout << "Running type inference..." << endl;

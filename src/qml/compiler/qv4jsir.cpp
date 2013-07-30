@@ -303,7 +303,14 @@ void Const::dump(QTextStream &out) const
         out << "missing";
         break;
     default:
-        out << QString::number(value, 'g', 16);
+        if (int(value) == 0 && int(value) == value) {
+            if (isNegative(value))
+                out << "-0";
+            else
+                out << "0";
+        } else {
+            out << QString::number(value, 'g', 16);
+        }
         break;
     }
     if (type != UndefinedType && type != NullType)
