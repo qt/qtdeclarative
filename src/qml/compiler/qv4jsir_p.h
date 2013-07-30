@@ -855,6 +855,33 @@ public:
         return static_cast<_Expr *>(c);
     }
 
+    static Const *cloneConst(Const *c, Function *f)
+    {
+        Const *newConst = f->New<Const>();
+        newConst->init(c->type, c->value);
+        return newConst;
+    }
+
+    static Name *cloneName(Name *n, Function *f)
+    {
+        Name *newName = f->New<Name>();
+        newName->type = n->type;
+        newName->id = n->id;
+        newName->builtin = n->builtin;
+        newName->global = n->global;
+        newName->line = n->line;
+        newName->column = n->column;
+        return newName;
+    }
+
+    static Temp *cloneTemp(Temp *t, Function *f)
+    {
+        Temp *newTemp = f->New<Temp>();
+        newTemp->init(t->kind, t->index, t->scope);
+        newTemp->type = t->type;
+        return newTemp;
+    }
+
 protected:
     V4IR::ExprList *clone(V4IR::ExprList *list);
 

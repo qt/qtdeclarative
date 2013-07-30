@@ -950,7 +950,7 @@ ExprList *CloneExpr::clone(ExprList *list)
 
 void CloneExpr::visitConst(Const *e)
 {
-    cloned = block->CONST(e->type, e->value);
+    cloned = cloneConst(e, block->function);
 }
 
 void CloneExpr::visitString(String *e)
@@ -965,17 +965,12 @@ void CloneExpr::visitRegExp(RegExp *e)
 
 void CloneExpr::visitName(Name *e)
 {
-    if (e->id)
-        cloned = block->NAME(*e->id, e->line, e->column);
-    else
-        cloned = block->NAME(e->builtin, e->line, e->column);
+    cloned = cloneName(e, block->function);
 }
 
 void CloneExpr::visitTemp(Temp *e)
 {
-    Temp *t = block->function->New<Temp>();
-    t->init(e->kind, e->index, e->scope);
-    cloned = t;
+    cloned = cloneTemp(e, block->function);
 }
 
 void CloneExpr::visitClosure(Closure *e)
