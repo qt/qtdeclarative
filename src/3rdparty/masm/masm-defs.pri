@@ -1,4 +1,4 @@
-!ios: DEFINES += V4_ENABLE_JIT
+!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT
 
 # On Qt/Android/ARM release builds are thumb and debug builds arm,
 # but we'll force the JIT to always generate thumb2
