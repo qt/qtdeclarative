@@ -1245,6 +1245,25 @@ void __qmljs_decrement(Value *result, const Value &value)
     }
 }
 
+int __qmljs_value_to_int32(const Value &value)
+{
+    return value.toInt32();
+}
+
+int __qmljs_double_to_int32(double d)
+{
+    return Value::toInt32(d);
+}
+
+unsigned __qmljs_value_to_uint32(const Value &value)
+{
+    return value.toUInt32();
+}
+
+unsigned __qmljs_double_to_uint32(double d)
+{
+    return Value::toUInt32(d);
+}
 } // namespace QV4
 
 QT_END_NAMESPACE
