@@ -881,8 +881,10 @@ QQuickItem *QQuickFlickable::contentItem()
 QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
 {
     Q_D(QQuickFlickable);
-    if (!d->visibleArea)
+    if (!d->visibleArea) {
         d->visibleArea = new QQuickFlickableVisibleArea(this);
+        d->visibleArea->updateVisible(); // calculate initial ratios
+    }
     return d->visibleArea;
 }
 
@@ -1518,8 +1520,7 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
 
     bool changed = false;
     if (newGeometry.width() != oldGeometry.width()) {
-        if (xflick())
-            changed = true;
+        changed = true; // we must update visualArea.widthRatio
         if (d->hData.viewSize < 0) {
             d->contentItem->setWidth(width());
             emit contentWidthChanged();
@@ -1531,8 +1532,7 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
         }
     }
     if (newGeometry.height() != oldGeometry.height()) {
-        if (yflick())
-            changed = true;
+        changed = true; // we must update visualArea.heightRatio
         if (d->vData.viewSize < 0) {
             d->contentItem->setHeight(height());
             emit contentHeightChanged();

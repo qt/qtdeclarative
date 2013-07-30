@@ -67,6 +67,7 @@ private slots:
     void create();
     void horizontalViewportSize();
     void verticalViewportSize();
+    void visibleAreaRatiosUpdate();
     void properties();
     void boundsBehavior();
     void rebound();
@@ -154,6 +155,28 @@ void tst_qquickflickable::verticalViewportSize()
     QCOMPARE(obj->isAtXEnd(), false);
     QCOMPARE(obj->isAtYBeginning(), true);
     QCOMPARE(obj->isAtYEnd(), false);
+
+    delete obj;
+}
+
+void tst_qquickflickable::visibleAreaRatiosUpdate()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("ratios.qml"));
+    QQuickItem *obj = qobject_cast<QQuickItem*>(c.create());
+
+    QVERIFY(obj != 0);
+    // check initial ratio values
+    QCOMPARE(obj->property("heightRatioIs").toDouble(), obj->property("heightRatioShould").toDouble());
+    QCOMPARE(obj->property("widthRatioIs").toDouble(), obj->property("widthRatioShould").toDouble());
+    // change flickable geometry so that flicking is enabled (content size > flickable size)
+    obj->setProperty("forceNoFlicking", false);
+    QCOMPARE(obj->property("heightRatioIs").toDouble(), obj->property("heightRatioShould").toDouble());
+    QCOMPARE(obj->property("widthRatioIs").toDouble(), obj->property("widthRatioShould").toDouble());
+    // change flickable geometry so that flicking is disabled (content size == flickable size)
+    obj->setProperty("forceNoFlicking", true);
+    QCOMPARE(obj->property("heightRatioIs").toDouble(), obj->property("heightRatioShould").toDouble());
+    QCOMPARE(obj->property("widthRatioIs").toDouble(), obj->property("widthRatioShould").toDouble());
 
     delete obj;
 }
