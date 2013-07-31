@@ -1,3 +1,4 @@
+TEMPLATE = app
 QT += qml quick network
 
 SOURCES += main.cpp 
