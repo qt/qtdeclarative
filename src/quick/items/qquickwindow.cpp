@@ -1414,6 +1414,7 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
                                          Qt::KeyboardModifiers modifiers, bool &accepted)
 {
+    Q_Q(QQuickWindow);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1463,7 +1464,13 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 
                     for (int i = startIdx; i >= 0; i--) {
                         QQuickItem *itemToHover = itemsToHover[i];
-                        if (QQuickItemPrivate::get(itemToHover)->hoverEnabled) {
+                        QQuickItemPrivate *itemToHoverPrivate = QQuickItemPrivate::get(itemToHover);
+                        // The item may be about to be deleted or reparented to another window
+                        // due to another hover event delivered in this function. If that is the
+                        // case, sending a hover event here will cause a crash or other bad
+                        // behavior when the leave event is generated. Checking
+                        // itemToHoverPrivate->window here prevents that case.
+                        if (itemToHoverPrivate->window == q && itemToHoverPrivate->hoverEnabled) {
                             hoverItems.prepend(itemToHover);
                             sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, accepted);
                         }

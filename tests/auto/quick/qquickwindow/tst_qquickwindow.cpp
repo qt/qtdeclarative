@@ -328,6 +328,8 @@ private slots:
 
     void blockClosing();
 
+    void crashWhenHoverItemDeleted();
+
 #ifndef QT_NO_CURSOR
     void cursor();
 #endif
@@ -1485,6 +1487,25 @@ void tst_qquickwindow::blockClosing()
     window->setProperty("canCloseThis", true);
     QWindowSystemInterface::handleCloseEvent(window);
     QTRY_VERIFY(!window->isVisible());
+}
+
+void tst_qquickwindow::crashWhenHoverItemDeleted()
+{
+    // QTBUG-32771
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("hoverCrash.qml"));
+    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QVERIFY(window);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+
+    // Simulate a move from the first rectangle to the second. Crash will happen in here
+    // Moving instantaneously from (0, 99) to (0, 102) does not cause the crash
+    for (int i = 99; i < 102; ++i)
+    {
+        QTest::mouseMove(window, QPoint(0, i));
+    }
 }
 
 QTEST_MAIN(tst_qquickwindow)
