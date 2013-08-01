@@ -365,7 +365,6 @@ public:
     }
 
     void updateState(const DeformableMaterialData* d, const DeformableMaterialData*) {
-        glFuncs->glActiveTexture(GL_TEXTURE0);
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
@@ -405,7 +404,7 @@ public:
     QList<QByteArray> attributes() const {
         return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
             << "vColor" << "vDeformVec" << "vRotation" << "vAnimData" << "vAnimPos";
-    };
+    }
 
     void initialize() {
         QSGSimpleMaterialShader<SpriteMaterialData>::initialize();
@@ -496,7 +495,6 @@ public:
     }
 
     void updateState(const ColoredMaterialData* d, const ColoredMaterialData*) {
-        glFuncs->glActiveTexture(GL_TEXTURE0);
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
@@ -561,7 +559,6 @@ public:
     }
 
     void updateState(const SimpleMaterialData* d, const SimpleMaterialData*) {
-        glFuncs->glActiveTexture(GL_TEXTURE0);
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
