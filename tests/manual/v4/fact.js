@@ -16,7 +16,7 @@ function fact3(n) {
     return res;
 }
 
-print("fact1(12) = ", fact1(12))
-print("fact2(12) = ", fact2(12))
-print("fact3(12) = ", fact3(12))
+print("fact1(12) =", fact1(12))
+print("fact2(12) =", fact2(12))
+print("fact3(12) =", fact3(12))
 
