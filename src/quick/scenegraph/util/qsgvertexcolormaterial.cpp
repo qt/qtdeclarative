@@ -66,7 +66,7 @@ QSGMaterialType QSGVertexColorMaterialShader::type;
 
 void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
 {
-    if (!(newEffect->flags() & QSGMaterial::Blending) || state.isOpacityDirty())
+    if (state.isOpacityDirty())
         program()->setUniformValue(m_opacity_id, state.opacity());
 
     if (state.isMatrixDirty())
