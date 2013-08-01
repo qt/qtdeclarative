@@ -1677,7 +1677,6 @@ void QQuickImageParticle::spritesUpdate(qreal time)
             if (frameAt < (datum->frameCount-1))
                 x2 += w;
 
-            node->setFlag(QSGNode::OwnsGeometry, false);
             SpriteVertex *spriteVertices = (SpriteVertex *) node->geometry()->vertexData();
             spriteVertices += datum->index*4;
             for (int i=0; i<4; i++) {
@@ -1689,7 +1688,6 @@ void QQuickImageParticle::spritesUpdate(qreal time)
                 spriteVertices[i].animH = h;
                 spriteVertices[i].animProgress = progress;
             }
-            node->setFlag(QSGNode::OwnsGeometry, true);
         }
     }
 }
@@ -1853,7 +1851,6 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
     if (!node)
         return;
     QQuickParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
-    node->setFlag(QSGNode::OwnsGeometry, false);
     SpriteVertex *spriteVertices = (SpriteVertex *) node->geometry()->vertexData();
     DeformableVertex *deformableVertices = (DeformableVertex *) node->geometry()->vertexData();
     ColoredVertex *coloredVertices = (ColoredVertex *) node->geometry()->vertexData();
@@ -2004,8 +2001,6 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
     default:
         break;
     }
-
-    node->setFlag(QSGNode::OwnsGeometry, true);
 }
 
 
