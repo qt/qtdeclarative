@@ -192,57 +192,141 @@ QColor qt_color_from_string(v8::Local<v8::Value> name)
     return QColor();
 }
 
+static int qParseFontSizeFromToken(const QString &fontSizeToken, bool &ok)
+{
+    ok = false;
+    float size = fontSizeToken.trimmed().toFloat(&ok);
+    if (ok) {
+        return int(size);
+    }
+    qWarning().nospace() << "Context2D: A font size of " << fontSizeToken << " is invalid.";
+    return 0;
+}
+
+/*
+    Attempts to set the font size of \a font to \a fontSizeToken, returning
+    \c true if successful. If the font size is invalid, \c false is returned
+    and a warning is printed.
+*/
 static bool qSetFontSizeFromToken(QFont &font, const QString &fontSizeToken)
 {
     const QString trimmedToken = fontSizeToken.trimmed();
-    QString unit = trimmedToken.right(2);
-    QString value = trimmedToken.left(fontSizeToken.size() - 2);
+    const QString unitStr = trimmedToken.right(2);
+    const QString value = trimmedToken.left(trimmedToken.size() - 2);
     bool ok = false;
-    float size = value.trimmed().toFloat(&ok);
-    if (ok) {
-        int intSize = int(size);
-        if (unit.compare(QLatin1String("px")) == 0) {
-            font.setPixelSize(intSize);
-            return true;
-        } else if (unit.compare(QLatin1String("pt")) == 0) {
-            font.setPointSize(intSize);
+    int size = 0;
+    if (unitStr == QStringLiteral("px")) {
+        size = qParseFontSizeFromToken(value, ok);
+        if (ok) {
+            font.setPixelSize(size);
             return true;
         }
+    } else if (unitStr == QStringLiteral("pt")) {
+        size = qParseFontSizeFromToken(value, ok);
+        if (ok) {
+            font.setPointSize(size);
+            return true;
+        }
+    } else {
+        qWarning().nospace() << "Context2D: Invalid font size unit in font string.";
     }
-    qWarning().nospace() << "Context2D: A font size of " << fontSizeToken << " is invalid.";
     return false;
 }
 
-static bool qSetFontFamilyFromToken(QFont &font, const QString &fontFamilyToken)
+/*
+    Returns a list of all of the families in \a fontFamiliesString, where
+    each family is separated by spaces. Families with spaces in their name
+    must be quoted.
+*/
+static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesString)
 {
-    const QString trimmedToken = fontFamilyToken.trimmed();
-    QFontDatabase fontDatabase;
-    if (fontDatabase.hasFamily(trimmedToken)) {
-        font.setFamily(trimmedToken);
-        return true;
-    } else {
-        // Can't find a family matching this name; if it's a generic family,
-        // try searching for the default family for it by using style hints.
-        QFont tmp;
-        int styleHint = -1;
-        if (fontFamilyToken.compare(QLatin1String("serif")) == 0) {
-            styleHint = QFont::Serif;
-        } else if (fontFamilyToken.compare(QLatin1String("sans-serif")) == 0) {
-            styleHint = QFont::SansSerif;
-        } else if (fontFamilyToken.compare(QLatin1String("cursive")) == 0) {
-            styleHint = QFont::Cursive;
-        } else if (fontFamilyToken.compare(QLatin1String("monospace")) == 0) {
-            styleHint = QFont::Monospace;
-        } else if (fontFamilyToken.compare(QLatin1String("fantasy")) == 0) {
-            styleHint = QFont::Fantasy;
-        }
-        if (styleHint != -1) {
-            tmp.setStyleHint(static_cast<QFont::StyleHint>(styleHint));
-            font.setFamily(tmp.defaultFamily());
-            return true;
+    QStringList extractedFamilies;
+    int quoteIndex = -1;
+    QString currentFamily;
+    for (int index = 0; index < fontFamiliesString.size(); ++index) {
+        const QChar ch = fontFamiliesString.at(index);
+        if (ch == '"' || ch == '\'') {
+            if (quoteIndex == -1) {
+                quoteIndex = index;
+            } else {
+                if (ch == fontFamiliesString.at(quoteIndex)) {
+                    // Found the matching quote. +1/-1 because we don't want the quote as part of the name.
+                    const QString family = fontFamiliesString.mid(quoteIndex + 1, index - quoteIndex - 1);
+                    extractedFamilies.push_back(family);
+                    currentFamily.clear();
+                    quoteIndex = -1;
+                } else {
+                    qWarning().nospace() << "Context2D: Mismatched quote in font string.";
+                    return QStringList();
+                }
+            }
+        } else if (ch == ' ' && quoteIndex == -1) {
+            // This is a space that's not within quotes...
+            if (!currentFamily.isEmpty()) {
+                // and there is a current family; consider it the end of the current family.
+                extractedFamilies.push_back(currentFamily);
+                currentFamily.clear();
+            } // else: ignore the space
+        } else {
+            currentFamily.push_back(ch);
         }
     }
-    qWarning().nospace() << "Context2D: The font family " << fontFamilyToken << " is invalid.";
+    if (!currentFamily.isEmpty()) {
+        if (quoteIndex == -1) {
+            // This is the end of the string, so add this family to our list.
+            extractedFamilies.push_back(currentFamily);
+        } else {
+            qWarning().nospace() << "Context2D: Unclosed quote in font string.";
+            return QStringList();
+        }
+    }
+    if (extractedFamilies.isEmpty()) {
+        qWarning().nospace() << "Context2D: Missing or misplaced font family in font string"
+            << " (it must come after the font size).";
+    }
+    return extractedFamilies;
+}
+
+/*!
+    Tries to set a family on \a font using the families provided in \a fontFamilyTokens.
+
+    The list is ordered by preference, with the first family having the highest preference.
+    If the first family is invalid, the next family in the list is evaluated.
+    This process is repeated until a valid font is found (at which point the function
+    will return \c true and the family set on \a font) or there are no more
+    families left, at which point a warning is printed and \c false is returned.
+*/
+static bool qSetFontFamilyFromTokens(QFont &font, const QStringList &fontFamilyTokens)
+{
+    foreach (QString fontFamilyToken, fontFamilyTokens) {
+        QFontDatabase fontDatabase;
+        if (fontDatabase.hasFamily(fontFamilyToken)) {
+            font.setFamily(fontFamilyToken);
+            return true;
+        } else {
+            // Can't find a family matching this name; if it's a generic family,
+            // try searching for the default family for it by using style hints.
+            int styleHint = -1;
+            if (fontFamilyToken.compare(QLatin1String("serif")) == 0) {
+                styleHint = QFont::Serif;
+            } else if (fontFamilyToken.compare(QLatin1String("sans-serif")) == 0) {
+                styleHint = QFont::SansSerif;
+            } else if (fontFamilyToken.compare(QLatin1String("cursive")) == 0) {
+                styleHint = QFont::Cursive;
+            } else if (fontFamilyToken.compare(QLatin1String("monospace")) == 0) {
+                styleHint = QFont::Monospace;
+            } else if (fontFamilyToken.compare(QLatin1String("fantasy")) == 0) {
+                styleHint = QFont::Fantasy;
+            }
+            if (styleHint != -1) {
+                QFont tmp;
+                tmp.setStyleHint(static_cast<QFont::StyleHint>(styleHint));
+                font.setFamily(tmp.defaultFamily());
+                return true;
+            }
+        }
+    }
+    qWarning("Context2D: The font families specified are invalid: %s", qPrintable(fontFamilyTokens.join(QString()).trimmed()));
     return false;
 }
 
@@ -269,18 +353,63 @@ if (!(usedTokens & token)) { \
     See: http://www.w3.org/TR/css3-fonts/#font-prop
 */
 static QFont qt_font_from_string(const QString& fontString, const QFont &currentFont) {
-    const QStringList tokens = fontString.split(QLatin1Char(' '));
-    if (tokens.size() < 2) {
-        qWarning().nospace() << "Context2D: Insufficent amount of tokens in font string.";
+    if (fontString.isEmpty()) {
+        qWarning().nospace() << "Context2D: Font string is empty.";
         return currentFont;
     }
 
+    // We know that font-size must be specified and it must be before font-family
+    // (which could potentially have "px" or "pt" in its name), so extract it now.
+    int fontSizeEnd = fontString.indexOf(QStringLiteral("px"));
+    if (fontSizeEnd == -1)
+        fontSizeEnd = fontString.indexOf(QStringLiteral("pt"));
+    if (fontSizeEnd == -1) {
+        qWarning().nospace() << "Context2D: Invalid font size unit in font string.";
+        return currentFont;
+    }
+
+    int fontSizeStart = fontString.lastIndexOf(' ', fontSizeEnd);
+    if (fontSizeStart == -1) {
+        // The font size might be the first token in the font string, which is OK.
+        // Regardless, we'll find out if the font is invalid with qSetFontSizeFromToken().
+        fontSizeStart = 0;
+    } else {
+        // Don't want to take the leading space.
+        ++fontSizeStart;
+    }
+
+    // + 2 for the unit, +1 for the space that we require.
+    fontSizeEnd += 3;
+
     QFont newFont;
-    QStringList remainingTokens = tokens;
+    if (!qSetFontSizeFromToken(newFont, fontString.mid(fontSizeStart, fontSizeEnd - fontSizeStart)))
+        return currentFont;
+
+    // We don't want to parse the size twice, so remove it now.
+    QString remainingFontString = fontString;
+    remainingFontString.remove(fontSizeStart, fontSizeEnd - fontSizeStart);
+
+    // Next, we have to take any font families out, as QString::split() will ruin quoted family names.
+    const QString fontFamiliesString = remainingFontString.mid(fontSizeStart);
+    remainingFontString.chop(remainingFontString.length() - fontSizeStart);
+    QStringList fontFamilies = qExtractFontFamiliesFromString(fontFamiliesString);
+    if (fontFamilies.isEmpty()) {
+        return currentFont;
+    }
+    if (!qSetFontFamilyFromTokens(newFont, fontFamilies))
+        return currentFont;
+
+    // Now that we've removed the messy parts, we can split the font string on spaces.
+    const QString trimmedTokensStr = remainingFontString.trimmed();
+    if (trimmedTokensStr.isEmpty()) {
+        // No optional properties.
+        return newFont;
+    }
+    const QStringList tokens = trimmedTokensStr.split(QLatin1Char(' '));
+
     int usedTokens = NoTokens;
     // Optional properties can be in any order, but font-size and font-family must be last.
-    while (remainingTokens.size() > 2) {
-        const QString token = remainingTokens.takeFirst();
+    foreach (const QString token, tokens) {
         if (token.compare(QLatin1String("normal")) == 0) {
             if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
                 // Could be font-style, font-variant or font-weight.
@@ -323,19 +452,6 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
             qWarning().nospace() << "Context2D: Invalid or misplaced token " << token << " found in font string.";
             return currentFont;
         }
-    }
-    if (remainingTokens.size() == 2) {
-        // Order must be: font-size font-family.
-        if (!qSetFontSizeFromToken(newFont, remainingTokens.first())) {
-            return currentFont;
-        }
-        if (!qSetFontFamilyFromToken(newFont, remainingTokens.last())) {
-            return currentFont;
-        }
-        return newFont;
-    } else {
-        qWarning().nospace() << "Context2D: Missing font-size and/or font-family tokens in font string.";
-        return currentFont;
     }
     return newFont;
 }
@@ -2205,8 +2321,9 @@ static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
         \li font-family: See \l {http://www.w3.org/TR/CSS2/fonts.html#propdef-font-family}
     \endlist
 
-    Note that font-size and font-family are mandatory and must be in the order
-    they are shown in above.
+    \note The font-size and font-family properties are mandatory and must be in
+    the order they are shown in above. In addition, a font family with spaces in
+    its name must be quoted.
 
     The default font value is "10px sans-serif".
   */
