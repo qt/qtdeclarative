@@ -37,17 +37,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 import QtQuick 2.0
 
 Rectangle {
-    id:dialog
-    height: 200 * partition; width: 200
+    id: dialog
+    width: 200
+    height: 200 * partition
     color: "transparent"
 
     signal selectChanged()
     signal notifyRefresh()
-    onNotifyRefresh:dirView.model = directory.files
+    onNotifyRefresh: dirView.model = directory.files
 
     property string selectedFile
     property int selectedIndex: 0
@@ -56,15 +56,17 @@ Rectangle {
         id: dirBox
         radius: 10
         antialiasing: true
-        anchors.centerIn:parent
-        height: parent.height -15; width: parent.width -30
+        anchors.centerIn: parent
+        height: parent.height -15
+        width: parent.width - 30
 
         Rectangle {
-            id:header
-            height: parent.height*0.1; width: parent.width
-            radius:3
+            id: header
+            height: parent.height * 0.1
+            width: parent.width
+            radius: 3
             antialiasing: true
-            z:1
+            z: 1
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#8C8F8C" }
                 GradientStop { position: 0.17; color: "#6A6D6A" }
@@ -72,32 +74,39 @@ Rectangle {
                 GradientStop { position: 1.0; color: "#0e1B20" }
             }
             Text {
-                height: header.height; anchors.centerIn: header
-                text: "files:" 
+                height: header.height
+                anchors.centerIn: header
+                text: "files:"
                 color: "lightblue"
                 font.weight: Font.Light
                 font.italic: true
             }
         }
+
         GridView {
-            id:dirView
-            width:parent.width; height:parent.height*.9
+            id: dirView
+            width: parent.width
+            height: parent.height * 0.9
             anchors.top: header.bottom
-            cellWidth: 100; cellHeight: 75
+            cellWidth: 100
+            cellHeight: 75
             model: directory.files
             delegate: dirDelegate
             clip: true
             highlightMoveDuration: 40
         }
+
         Component {
             id: dirDelegate
+
             Rectangle {
-                id:file
+                id: file
                 color: "transparent"
-                width: GridView.view.cellWidth; height: GridView.view.cellHeight
+                width: dirView.cellWidth
+                height: dirView.cellHeight
 
                 Text {
-                    id:fileName
+                    id: fileName
                     width: parent.width
                     anchors.centerIn: parent
                     text: name
@@ -107,14 +116,17 @@ Rectangle {
                     elide: Text.ElideMiddle
                     horizontalAlignment: Text.AlignHCenter
                 }
+
                 Rectangle {
                     id: selection
-                    width: parent.width; height: parent.height
+                    width: parent.width
+                    height: parent.height
                     anchors.centerIn: parent
                     radius: 10
                     antialiasing: true
                     scale: dirView.currentIndex == index ?  1 : 0.5
                     opacity: dirView.currentIndex == index ?  1 : 0
+
                     Text {
                         id: overlay
                         width: parent.width
@@ -126,18 +138,20 @@ Rectangle {
                         elide: Text.ElideMiddle
                         horizontalAlignment: Text.AlignHCenter
                     }
+
                     Behavior on opacity { NumberAnimation{ duration: 45 } }
                     Behavior on scale { NumberAnimation{ duration: 45 } }
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.lighter("lightsteelblue",1.25) }
-                        GradientStop { position: 0.67; color: Qt.darker("lightsteelblue",1.3) }
+                        GradientStop { position: 0.0; color: Qt.lighter("lightsteelblue", 1.25) }
+                        GradientStop { position: 0.67; color: Qt.darker("lightsteelblue", 1.30) }
                     }
                     border.color: "lightsteelblue"
                     border.width: 1
                 }
+
                 MouseArea {
-                    id:fileMouseArea
-                    anchors.fill:parent
+                    id: fileMouseArea
+                    anchors.fill: parent
                     hoverEnabled: true
 
                     onClicked: {
@@ -156,6 +170,7 @@ Rectangle {
                 }
             }
         }
+
         gradient: Gradient {
             GradientStop { position: 0.0; color: "#A5333333" }
             GradientStop { position: 1.0; color: "#03333333" }
