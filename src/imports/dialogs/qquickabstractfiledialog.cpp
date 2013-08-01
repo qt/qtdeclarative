@@ -115,10 +115,9 @@ QUrl QQuickAbstractFileDialog::folder()
 
 void QQuickAbstractFileDialog::setFolder(const QUrl &f)
 {
-    QString dir = f.path();
     if (m_dlgHelper)
-        m_dlgHelper->setDirectory(dir);
-    m_options->setInitialDirectory(dir);
+        m_dlgHelper->setDirectory(f);
+    m_options->setInitialDirectory(f);
     emit folderChanged();
 }
 
@@ -159,7 +158,9 @@ QUrl QQuickAbstractFileDialog::fileUrl()
 
 QList<QUrl> QQuickAbstractFileDialog::fileUrls()
 {
-    return m_dlgHelper->selectedFiles();
+    if (m_dlgHelper)
+        return m_dlgHelper->selectedFiles();
+    return QList<QUrl>();
 }
 
 void QQuickAbstractFileDialog::updateModes()
