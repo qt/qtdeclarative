@@ -27,6 +27,8 @@
 /*!
 \module QtQml
 \title Qt QML C++ Classes
+\ingroup modules
+\qtvariable qml
 \brief The C++ API provided by the Qt QML module
 
 To include the definitions of the module's classes, use the
