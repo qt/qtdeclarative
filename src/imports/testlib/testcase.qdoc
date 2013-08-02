@@ -367,11 +367,12 @@
 */
 
 /*!
-    \qmlmethod TestCase::tryCompare(obj, property, expected, timeout = 5000)
+    \qmlmethod TestCase::tryCompare(obj, property, expected, timeout = 5000, message = "")
 
     Fails the current test case if the specified \a property on \a obj
-    is not the same as \a expected.  The test will be retried multiple
-    times until the \a timeout (in milliseconds) is reached.
+    is not the same as \a expected, and displays the optional \a message.
+    The test will be retried multiple times until the
+    \a timeout (in milliseconds) is reached.
 
     This function is intended for testing applications where a property
     changes value based on asynchronous events.  Use compare() for testing
