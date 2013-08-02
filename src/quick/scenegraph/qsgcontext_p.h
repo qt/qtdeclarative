@@ -103,7 +103,8 @@ public:
     virtual QSGGlyphNode *createNativeGlyphNode();
     virtual QSGRenderer *createRenderer();
 
-    virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
+    virtual QSGTexture *createTexture(const QImage &image) const;
+    virtual QSGTexture *createTextureNoAtlas(const QImage &image) const;
     virtual QSize minimumFBOSize() const;
     virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
     QSGDepthStencilBufferManager *depthStencilBufferManager();
