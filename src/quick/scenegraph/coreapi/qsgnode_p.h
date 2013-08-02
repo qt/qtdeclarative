@@ -44,6 +44,8 @@
 
 #include <qglobal.h>
 
+#include "qsgnode.h"
+
 QT_BEGIN_NAMESPACE
 
 class QSGNodePrivate
@@ -51,6 +53,16 @@ class QSGNodePrivate
 public:
     QSGNodePrivate() {}
     virtual ~QSGNodePrivate() {}
+
+#ifdef QSG_RUNTIME_DESCRIPTION
+    static void setDescription(QSGNode *node, const QString &description) {
+        node->d_ptr->descr= description;
+    }
+    static QString description(const QSGNode *node) {
+        return node->d_ptr->descr;
+    }
+    QString descr;
+#endif
 };
 
 

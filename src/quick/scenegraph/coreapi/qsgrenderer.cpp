@@ -762,7 +762,7 @@ void QSGNodeDumper::dump(QSGNode *n)
 
 void QSGNodeDumper::visitNode(QSGNode *n)
 {
-    qDebug() << QString(m_indent * 2, QLatin1Char(' ')) << n;
+    qDebug() << QByteArray(m_indent * 2, ' ').constData() << n;
     QSGNodeVisitor::visitNode(n);
 }
 

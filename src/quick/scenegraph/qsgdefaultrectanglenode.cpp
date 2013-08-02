@@ -246,8 +246,8 @@ QSGDefaultRectangleNode::QSGDefaultRectangleNode()
     setGeometry(&m_geometry);
     setMaterial(&m_material);
 
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("rectangle");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("rectangle"));
 #endif
 }
 

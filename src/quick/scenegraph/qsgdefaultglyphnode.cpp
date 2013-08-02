@@ -78,8 +78,8 @@ void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &gl
     m_position = position;
     m_glyphs = glyphs;
 
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("glyphs");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("glyphs"));
 #endif
 }
 

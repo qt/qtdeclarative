@@ -103,6 +103,9 @@ QSGSimpleTextureNode::QSGSimpleTextureNode()
     setGeometry(&m_geometry);
     setMaterial(&m_material);
     setOpaqueMaterial(&m_opaque_material);
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("simpletexture"));
+#endif
 }
 
 /*!

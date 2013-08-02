@@ -156,13 +156,11 @@ void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 void QSGDefaultRenderer::render()
 {
-#if defined (QML_RUNTIME_TESTING)
     static bool dumpTree = qApp->arguments().contains(QLatin1String("--dump-tree"));
     if (dumpTree) {
         printf("\n\n");
         QSGNodeDumper::dump(rootNode());
     }
-#endif
 
 #ifdef RENDERER_DEBUG
     debugTimer.invalidate();
