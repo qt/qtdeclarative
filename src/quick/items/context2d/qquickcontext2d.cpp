@@ -3440,10 +3440,12 @@ int baseLineOffset(QQuickContext2D::TextBaseLineType value, const QFontMetrics &
     int offset = 0;
     switch (value) {
     case QQuickContext2D::Top:
+    case QQuickContext2D::Hanging:
+        break;
+    case QQuickContext2D::Middle:
+        offset = (metrics.ascent() >> 1) + metrics.height() - metrics.ascent();
         break;
     case QQuickContext2D::Alphabetic:
-    case QQuickContext2D::Middle:
-    case QQuickContext2D::Hanging:
         offset = metrics.ascent();
         break;
     case QQuickContext2D::Bottom:
