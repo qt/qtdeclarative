@@ -892,6 +892,23 @@ public:
     QList<Stmt *> uses(const Temp &var) const
     { return _defUses[var].uses; }
 
+    QVector<Stmt*> removeDefUses(Stmt *s)
+    {
+        QVector<Stmt*> defStmts;
+        foreach (const Temp &usedVar, usedVars(s)) {
+            defStmts += defStmt(usedVar);
+            removeUse(s, usedVar);
+        }
+        if (Move *m = s->asMove()) {
+            if (Temp *t = m->target->asTemp())
+                removeDef(*t);
+        } else if (Phi *p = s->asPhi()) {
+            removeDef(*p->targetTemp);
+        }
+
+        return defStmts;
+    }
+
     void dump() const
     {
         foreach (const Temp &var, _defUses.keys()) {
@@ -1271,7 +1288,7 @@ protected:
     }
     virtual void visitClosure(Closure *) { _ty = TypingResult(ObjectType); } // TODO: VERIFY THIS!
     virtual void visitConvert(Convert *e) {
-        _ty = run(e->expr);
+        _ty = TypingResult(e->type);
     }
 
     virtual void visitUnop(Unop *e) {
@@ -1993,6 +2010,77 @@ inline Temp *unescapableTemp(Expr *e, bool variablesCanEscape)
     }
 }
 
+namespace {
+/// This function removes the basic-block from the function's list, unlinks any uses and/or defs,
+/// and removes unreachable staements from the worklist, so that optimiseSSA won't consider them
+/// anymore.
+/// Important: this assumes that there are no critical edges in the control-flow graph!
+void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W)
+{
+    QVector<BasicBlock *> toPurge;
+    toPurge.append(bb);
+
+    while (!toPurge.isEmpty()) {
+        bb = toPurge.first();
+        toPurge.removeFirst();
+
+        int bbIdx = func->basicBlocks.indexOf(bb);
+        if (bbIdx == -1)
+            continue;
+        else
+            func->basicBlocks.remove(bbIdx);
+
+        // unlink all incoming edges
+        foreach (BasicBlock *in, bb->in) {
+            int idx = in->out.indexOf(bb);
+            if (idx != -1)
+                in->out.remove(idx);
+        }
+
+        // unlink all outgoing edges, including "arguments" to phi statements
+        foreach (BasicBlock *out, bb->out) {
+            int idx = out->in.indexOf(bb);
+            if (idx != -1) {
+                out->in.remove(idx);
+                foreach (Stmt *outStmt, out->statements) {
+                    if (!outStmt)
+                        continue;
+                    if (Phi *phi = outStmt->asPhi()) {
+                        if (Temp *t = phi->d->incoming[idx]->asTemp())
+                            defUses.removeUse(phi, *t);
+                        phi->d->incoming.remove(idx);
+                        W += phi;
+                    } else
+                        break;
+                }
+            }
+
+            // if a successor has no incoming edges after unlinking the current basic block, then
+            // it is unreachable, and can be purged too
+            if (out->in.isEmpty())
+                toPurge.append(out);
+
+        }
+
+        // unlink all defs/uses from the statements in the basic block
+        foreach (Stmt *s, bb->statements) {
+            if (!s)
+                continue;
+
+            W << defUses.removeDefUses(s);
+            for (int idx = W.indexOf(s); idx != -1; idx = W.indexOf(s))
+                W.remove(idx);
+
+            // clean-up the statement's data
+            s->destroyData();
+        }
+        bb->statements.clear();
+
+        delete bb;
+    }
+}
+} // anonymous namespace
+
 void optimizeSSA(Function *function, DefUsesCalculator &defUses)
 {
     const bool variablesCanEscape = function->variablesCanEscape();
@@ -2040,9 +2128,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 continue;
             }
 
-        }
-
-        if (Move *m = s->asMove()) {
+        } else  if (Move *m = s->asMove()) {
             if (Temp *t = unescapableTemp(m->target, variablesCanEscape)) {
                 // constant propagation:
                 if (Const *c = m->source->asConst()) {
@@ -2141,6 +2227,24 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
 
                 // TODO: Constant binary expression evaluation
             }
+        } else if (CJump *cjump = s->asCJump()) {
+            if (Const *c = cjump->cond->asConst()) {
+                // Note: this assumes that there are no critical edges! Meaning, we can safely purge
+                //       any basic blocks that are found to be unreachable.
+                Jump *jump = function->New<Jump>();
+                if (convertToValue(c).toBoolean()) {
+                    jump->target = cjump->iftrue;
+                    purgeBB(cjump->iffalse, function, defUses, W);
+                } else {
+                    jump->target = cjump->iffalse;
+                    purgeBB(cjump->iftrue, function, defUses, W);
+                }
+                *ref[s] = jump;
+
+                continue;
+            }
+            // TODO: Constant unary expression evaluation
+            // TODO: Constant binary expression evaluation
         }
     }
 
