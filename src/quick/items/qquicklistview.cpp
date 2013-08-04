@@ -1690,6 +1690,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     The list view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
+    They are parented to ListView's \l {Flickable::contentItem}{contentItem}, not to the view itself.
     State should \e never be stored in a delegate.
 
     ListView attaches a number of properties to the root item of the delegate, for example
@@ -1862,6 +1863,7 @@ QQuickListView::~QQuickListView()
     alignment of items.
 
     \note Delegates are instantiated as needed and may be destroyed at any time.
+    They are parented to ListView's \l {Flickable::contentItem}{contentItem}, not to the view itself.
     State should \e never be stored in a delegate.
 */
 /*!

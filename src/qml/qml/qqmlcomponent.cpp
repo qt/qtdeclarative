@@ -231,7 +231,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     because it is defined inside a \c Component. The component encapsulates the
     QML types within, as if they were defined in a separate QML
     file, and is not loaded until requested (in this case, by the
-    two \l Loader objects).
+    two \l Loader objects). Because Component is not derived from Item, you cannot
+    anchor anything to it.
 
     Defining a \c Component is similar to defining a \l {QML Document}{QML document}.
     A QML document has a single top-level item that defines the behaviors and
