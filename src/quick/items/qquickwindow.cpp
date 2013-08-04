@@ -1509,7 +1509,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 
     if (item->contains(p)) {
         QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
-                          event->orientation(), event->buttons(), event->modifiers());
+                          event->orientation(), event->buttons(), event->modifiers(), event->phase());
         wheel.accept();
         q->sendEvent(item, &wheel);
         if (wheel.isAccepted()) {
@@ -1530,7 +1530,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 #endif
 
     //if the actual wheel event was accepted, accept the compatibility wheel event and return early
-    if (d->lastWheelEventAccepted && event->angleDelta().isNull())
+    if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
         return;
 
     event->ignore();
