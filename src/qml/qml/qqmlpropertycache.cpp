@@ -1340,6 +1340,8 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
 
+    const QByteArray propertyName = property.toUtf8();
+
     int methodCount = metaObject->methodCount();
     for (int ii = methodCount - 1; ii >= 0; --ii) {
         if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
@@ -1347,9 +1349,8 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;
-        QString methodName = QString::fromUtf8(m.name().constData());
 
-        if (methodName == property) {
+        if (m.name() == propertyName) {
             rv.load(m);
             return rv;
         }
@@ -1357,7 +1358,6 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
 
     {
         const QMetaObject *cmo = metaObject;
-        const QByteArray propertyName = property.toUtf8();
         while (cmo) {
             int idx = cmo->indexOfProperty(propertyName);
             if (idx != -1) {
