@@ -233,7 +233,10 @@ void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const Val
 
 void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_add);
+    Value lhs = ctx->getProperty(name);
+    Value result;
+    __qmljs_add(ctx, &result, lhs, value);
+    ctx->setProperty(name, result);
 }
 
 void __qmljs_inplace_sub_name(ExecutionContext *ctx, String *name, const Value &value)

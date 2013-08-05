@@ -162,7 +162,31 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *, BinOp op, String *name, const Value &rhs)
+{
+    Value v = get(name);
+    Value result;
+    op(&result, v, rhs);
+    put(name, result);
+}
+
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
+{
+    uint idx = index.asArrayIndex();
+    if (idx < UINT_MAX) {
+        bool hasProperty = false;
+        Value v = getIndexed(idx, &hasProperty);
+        Value result;
+        op(&result, v, rhs);
+        putIndexed(idx, result);
+        return;
+    }
+    String *name = index.toString(ctx);
+    assert(name);
+    inplaceBinOp(ctx, op, name, rhs);
+}
+
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const Value &rhs)
 {
     Value v = get(name);
     Value result;
@@ -170,7 +194,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const V
     put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const Value &index, const Value &rhs)
 {
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {

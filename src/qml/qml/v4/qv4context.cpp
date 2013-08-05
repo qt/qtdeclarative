@@ -543,7 +543,7 @@ void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
 {
     Value lhs = getProperty(name);
     Value result;
-    op(this, &result, lhs, value);
+    op(&result, lhs, value);
     setProperty(name, result);
 }
 

@@ -154,8 +154,10 @@ struct Q_QML_EXPORT Object: Managed {
 
     void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
 
-    void inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const Value &rhs);
+    void inplaceBinOp(ExecutionContext *, BinOp op, String *name, const Value &rhs);
     void inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const Value &rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const Value &index, const Value &rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, Value value);

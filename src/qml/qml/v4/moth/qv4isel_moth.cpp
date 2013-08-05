@@ -77,7 +77,7 @@ inline QV4::BinOp aluOpFunction(V4IR::AluOp op)
     case V4IR::OpBitXor:
         return QV4::__qmljs_bit_xor;
     case V4IR::OpAdd:
-        return QV4::__qmljs_add;
+        return 0;
     case V4IR::OpSub:
         return QV4::__qmljs_sub;
     case V4IR::OpMul:
@@ -109,9 +109,9 @@ inline QV4::BinOp aluOpFunction(V4IR::AluOp op)
     case V4IR::OpStrictNotEqual:
         return QV4::__qmljs_sne;
     case V4IR::OpInstanceof:
-        return QV4::__qmljs_instanceof;
+        return 0;
     case V4IR::OpIn:
-        return QV4::__qmljs_in;
+        return 0;
     case V4IR::OpAnd:
         return 0;
     case V4IR::OpOr:
@@ -540,12 +540,26 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
     Q_ASSERT(leftSource->asTemp() && rightSource->asTemp());
 #endif // USE_TYPE_INFO
 
-    Instruction::Binop binop;
-    binop.alu = aluOpFunction(oper);
-    binop.lhs = getParam(leftSource);
-    binop.rhs = getParam(rightSource);
-    binop.result = getResultParam(target);
-    addInstruction(binop);
+    if (oper == V4IR::OpInstanceof || oper == V4IR::OpIn || oper == V4IR::OpAdd) {
+        Instruction::BinopContext binop;
+        if (oper == V4IR::OpInstanceof)
+            binop.alu = QV4::__qmljs_instanceof;
+        else if (oper == V4IR::OpIn)
+            binop.alu = QV4::__qmljs_in;
+        else
+            binop.alu = QV4::__qmljs_add;
+        binop.lhs = getParam(leftSource);
+        binop.rhs = getParam(rightSource);
+        binop.result = getResultParam(target);
+        addInstruction(binop);
+    } else {
+        Instruction::Binop binop;
+        binop.alu = aluOpFunction(oper);
+        binop.lhs = getParam(leftSource);
+        binop.rhs = getParam(rightSource);
+        binop.result = getResultParam(target);
+        addInstruction(binop);
+    }
 }
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)

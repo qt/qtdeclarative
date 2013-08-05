@@ -351,13 +351,17 @@ void Assembler::leaveStandardStackFrame(int locals)
 
 
 #define OP(op) \
-    { isel_stringIfy(op), op, 0, 0 }
+    { isel_stringIfy(op), op, 0, 0, 0 }
+#define OPCONTEXT(op) \
+    { isel_stringIfy(op), 0, op, 0, 0 }
 
 #define INLINE_OP(op, memOp, immOp) \
-    { isel_stringIfy(op), op, memOp, immOp }
+    { isel_stringIfy(op), op, 0, memOp, immOp }
+#define INLINE_OPCONTEXT(op, memOp, immOp) \
+    { isel_stringIfy(op), 0, op, memOp, immOp }
 
 #define NULL_OP \
-    { 0, 0, 0, 0 }
+    { 0, 0, 0, 0, 0 }
 
 const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::LastAluOp + 1] = {
     NULL_OP, // OpInvalid
@@ -373,7 +377,7 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::L
     INLINE_OP(__qmljs_bit_or, &Assembler::inline_or32, &Assembler::inline_or32), // OpBitOr
     INLINE_OP(__qmljs_bit_xor, &Assembler::inline_xor32, &Assembler::inline_xor32), // OpBitXor
 
-    INLINE_OP(__qmljs_add, &Assembler::inline_add32, &Assembler::inline_add32), // OpAdd
+    INLINE_OPCONTEXT(__qmljs_add, &Assembler::inline_add32, &Assembler::inline_add32), // OpAdd
     INLINE_OP(__qmljs_sub, &Assembler::inline_sub32, &Assembler::inline_sub32), // OpSub
     INLINE_OP(__qmljs_mul, &Assembler::inline_mul32, &Assembler::inline_mul32), // OpMul
 
@@ -393,8 +397,8 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::L
     OP(__qmljs_se), // OpStrictEqual
     OP(__qmljs_sne), // OpStrictNotEqual
 
-    OP(__qmljs_instanceof), // OpInstanceof
-    OP(__qmljs_in), // OpIn
+    OPCONTEXT(__qmljs_instanceof), // OpInstanceof
+    OPCONTEXT(__qmljs_in), // OpIn
 
     NULL_OP, // OpAnd
     NULL_OP // OpOr
@@ -403,7 +407,7 @@ const Assembler::BinaryOperationInfo Assembler::binaryOperations[QQmlJS::V4IR::L
 void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::Temp *left, V4IR::Temp *right)
 {
     const BinaryOperationInfo& info = binaryOperations[operation];
-    if (!info.fallbackImplementation) {
+    if (!info.fallbackImplementation && !info.contextImplementation) {
         assert(!"unreachable");
         return;
     }
@@ -481,8 +485,12 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
     }
 
     // Fallback
-    generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation, ContextRegister,
-                            Assembler::PointerToValue(target), Assembler::Reference(left), Assembler::Reference(right));
+    if (info.contextImplementation)
+        generateFunctionCallImp(Assembler::Void, info.name, info.contextImplementation, ContextRegister,
+                                Assembler::PointerToValue(target), Assembler::Reference(left), Assembler::Reference(right));
+    else
+        generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation,
+                                Assembler::PointerToValue(target), Assembler::Reference(left), Assembler::Reference(right));
 
     if (binOpFinished.isSet())
         binOpFinished.link(this);

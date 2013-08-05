@@ -97,6 +97,7 @@ QT_BEGIN_NAMESPACE
     F(CJump, cjump) \
     F(Unop, unop) \
     F(Binop, binop) \
+    F(BinopContext, binopContext) \
     F(AddNumberParams, addNumberParams) \
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
@@ -481,6 +482,13 @@ union Instr
         Param rhs;
         Param result;
     };
+    struct instr_binopContext {
+        MOTH_INSTR_HEADER
+        QV4::BinOpContext alu;
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
     struct instr_addNumberParams {
         MOTH_INSTR_HEADER
         Param lhs;
@@ -574,6 +582,7 @@ union Instr
     instr_cjump cjump;
     instr_unop unop;
     instr_binop binop;
+    instr_binopContext binopContext;
     instr_addNumberParams addNumberParams;
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
