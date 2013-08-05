@@ -238,6 +238,8 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     }
 #endif
 
+    context->interpreterInstructionPointer = &code;
+
 #ifdef MOTH_THREADED_INTERPRETER
     const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
     goto *genericInstr->common.code;
@@ -339,6 +341,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
             const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
+            context->interpreterInstructionPointer = &code;
         } catch (QV4::Exception &ex) {
             ex.accept(context);
             VALUE(instr.exceptionVar) = ex.value();
@@ -347,6 +350,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(catchContext, catchCode, stack, stackSize);
                 code = catchCode;
+                context->interpreterInstructionPointer = &code;
                 context = __qmljs_builtin_pop_scope(catchContext);
             } catch (QV4::Exception &ex) {
                 ex.accept(context);
@@ -354,6 +358,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;
+                context->interpreterInstructionPointer = &code;
             }
         }
     MOTH_END_INSTR(EnterTry)
@@ -573,6 +578,5 @@ void **VME::instructionJumpTable()
 QV4::Value VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
-    ctxt->interpreterInstructionPointer = &code;
     return vme.run(ctxt, code);
 }
