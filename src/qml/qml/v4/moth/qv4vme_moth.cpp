@@ -573,5 +573,6 @@ void **VME::instructionJumpTable()
 QV4::Value VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
+    ctxt->interpreterInstructionPointer = &code;
     return vme.run(ctxt, code);
 }
