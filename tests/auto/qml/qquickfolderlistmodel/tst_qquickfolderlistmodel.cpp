@@ -52,6 +52,21 @@
 #include <qt_windows.h>
 #endif
 
+static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
+{
+    QEventLoop loop;
+    QObject::connect(obj, signal, &loop, SLOT(quit()));
+    QTimer timer;
+    QSignalSpy timeoutSpy(&timer, SIGNAL(timeout()));
+    if (timeout > 0) {
+        QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+        timer.setSingleShot(true);
+        timer.start(timeout);
+    }
+    loop.exec();
+    return timeoutSpy.isEmpty();
+}
+
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
 const int FilePathRole = Qt::UserRole+2;
@@ -116,7 +131,8 @@ void tst_qquickfolderlistmodel::basicProperties()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(),5); // wait for refresh
+    ::waitForSignal(flm, SIGNAL(folderChanged()), 0);
+    QCOMPARE(flm->property("count").toInt(), 5);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
