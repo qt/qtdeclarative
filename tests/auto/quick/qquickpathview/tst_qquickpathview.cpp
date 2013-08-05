@@ -1725,6 +1725,14 @@ void tst_QQuickPathView::missingPercent()
     delete obj;
 }
 
+static inline bool hasFraction(qreal o)
+{
+    const bool result = o != qFloor(o);
+    if (!result)
+        qDebug() << "o != qFloor(o)" << o;
+    return result;
+}
+
 void tst_QQuickPathView::cancelDrag()
 {
     QScopedPointer<QQuickView> window(createView());
@@ -1747,7 +1755,7 @@ void tst_QQuickPathView::cancelDrag()
     QTest::mouseMove(window.data(), QPoint(30, 100));
     QTest::mouseMove(window.data(), QPoint(85, 100));
 
-    QTRY_VERIFY(pathview->offset() != qFloor(pathview->offset()));
+    QTRY_VERIFY(hasFraction(pathview->offset()));
     QTRY_VERIFY(pathview->isMoving());
     QVERIFY(pathview->isDragging());
     QCOMPARE(draggingSpy.count(), 1);

@@ -278,11 +278,8 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 \inqmlmodule QtQml 2
 \instantiates QQmlEnginePrivate
 \ingroup qml-utility-elements
-\brief The QML global Qt object provides useful enums and functions from Qt.
-
 \keyword QmlGlobalQtObject
-
-\brief The \c Qt object provides useful enums and functions from Qt, for use in all QML files.
+\brief Provides a global object with useful enums and functions from Qt.
 
 The \c Qt object is a global object with utility functions, properties and enums.
 

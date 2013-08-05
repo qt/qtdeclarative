@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,28 +39,25 @@
 **
 ****************************************************************************/
 
-#include "qquickimplicitsizeitem_p.h"
-#include "qquickimplicitsizeitem_p_p.h"
+import QtQuick 2.0
 
-QT_BEGIN_NAMESPACE
+Item {
+    width: 200; height: 200
 
-void QQuickImplicitSizeItemPrivate::implicitWidthChanged()
-{
-    Q_Q(QQuickImplicitSizeItem);
-    QQuickItemPrivate::implicitWidthChanged();
-    emit q->implicitWidthChanged2();
+    Image {
+        cache: false
+
+        NumberAnimation on opacity {
+            loops: Animation.Infinite
+            from: 1; to: 0
+        }
+
+        SequentialAnimation on source {
+            loops: Animation.Infinite
+            PropertyAction { value: "green.png" }
+            PauseAnimation { duration: 100 }
+            PropertyAction {  value: "pattern.png" }
+            PauseAnimation { duration: 100 }
+        }
+    }
 }
-
-void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
-{
-    Q_Q(QQuickImplicitSizeItem);
-    QQuickItemPrivate::implicitHeightChanged();
-    emit q->implicitHeightChanged2();
-}
-
-QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent)
-    : QQuickItem(dd, parent)
-{
-}
-
-QT_END_NAMESPACE

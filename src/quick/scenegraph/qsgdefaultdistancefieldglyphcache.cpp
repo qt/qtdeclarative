@@ -172,7 +172,8 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
             }
         }
 
-        glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
+        for (int i = 0; i < glyph.height(); ++i)
+            glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y + i, glyph.width(), 1, GL_ALPHA, GL_UNSIGNED_BYTE, glyph.scanLine(i));
     }
 
     QHash<TextureInfo *, QVector<glyph_t> >::const_iterator i;
@@ -242,7 +243,8 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
     updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
     if (useWorkaround()) {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.constBits());
+        for (int i = 0; i < oldHeight; ++i)
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, oldWidth, 1, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.scanLine(i));
         texInfo->image = texInfo->image.copy(0, 0, width, height);
         glDeleteTextures(1, &oldTexture);
         return;

@@ -99,6 +99,7 @@ private slots:
     void sourceSize_QTBUG_16389();
     void nullPixmapPaint();
     void imageCrash_QTBUG_22125();
+    void imageCrash_QTBUG_32513();
     void sourceSize_data();
     void sourceSize();
     void progressAndStatusChanges();
@@ -702,6 +703,15 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
     server.sendDelayedItem();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
+}
+
+void tst_qquickimage::imageCrash_QTBUG_32513()
+{
+    QQuickView view(testFileUrl("qtbug_32513.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QTest::qWait(1000);
+    // shouldn't crash when the image changes sources
 }
 
 void tst_qquickimage::sourceSize_data()

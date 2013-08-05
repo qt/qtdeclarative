@@ -656,7 +656,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QQuickView window(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = window.rootObject()->findChild<QQuickTextEdit*>("text");
     QVERIFY(textEdit != 0);
-    window.show();
+    window.showNormal();
 
     const QString rtlText = textEdit->text();
 
@@ -820,42 +820,66 @@ static int numberOfNonWhitePixels(int fromX, int toX, const QImage &image)
     return pixels;
 }
 
+static inline QByteArray msgNotGreaterThan(int n1, int n2)
+{
+    return QByteArray::number(n1) + QByteArrayLiteral(" is not greater than ") + QByteArray::number(n2);
+}
+
+static inline QByteArray msgNotLessThan(int n1, int n2)
+{
+    return QByteArray::number(n1) + QByteArrayLiteral(" is not less than ") + QByteArray::number(n2);
+}
+
 void tst_qquicktextedit::hAlignVisual()
 {
     QQuickView view(testFileUrl("hAlignVisual.qml"));
-    view.show();
+    view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
+    view.showNormal();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
     QVERIFY(text != 0);
+
+    // Try to check whether alignment works by checking the number of black
+    // pixels in the thirds of the grabbed image.
+    const int windowWidth = 200;
+    const int textWidth = qCeil(text->implicitWidth());
+    QVERIFY2(textWidth < windowWidth, "System font too large.");
+    const int sectionWidth = textWidth / 3;
+    const int centeredSection1 = (windowWidth - textWidth) / 2;
+    const int centeredSection2 = centeredSection1 + sectionWidth;
+    const int centeredSection3 = centeredSection2 + sectionWidth;
+    const int centeredSection3End = centeredSection3 + sectionWidth;
+
     {
         // Left Align
         QImage image = view.grabWindow();
-        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
-        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
-        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
-        QVERIFY(left > mid);
-        QVERIFY(mid > right);
+        const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
+        const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
+        const int right = numberOfNonWhitePixels(centeredSection3, centeredSection3End, image);
+        QVERIFY2(left > mid, msgNotGreaterThan(left, mid).constData());
+        QVERIFY2(mid > right, msgNotGreaterThan(mid, right).constData());
     }
     {
         // HCenter Align
         text->setHAlign(QQuickText::AlignHCenter);
         QImage image = view.grabWindow();
-        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
-        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
-        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
-        QVERIFY(left < mid);
-        QVERIFY(mid > right);
+        const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
+        const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
+        const int right = numberOfNonWhitePixels(centeredSection3, centeredSection3End, image);
+        QVERIFY2(left < mid, msgNotLessThan(left, mid).constData());
+        QVERIFY2(mid > right, msgNotGreaterThan(mid, right).constData());
     }
     {
         // Right Align
         text->setHAlign(QQuickText::AlignRight);
         QImage image = view.grabWindow();
-        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
-        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
-        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
-        QVERIFY(left < mid);
-        QVERIFY(mid < right);
+        const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
+        const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
+        const int right = numberOfNonWhitePixels(centeredSection3, centeredSection3End, image);
+        image.save("test3.png");
+        QVERIFY2(left < mid, msgNotLessThan(left, mid).constData());
+        QVERIFY2(mid < right, msgNotLessThan(mid, right).constData());
     }
 
     text->setWidth(200);
@@ -866,8 +890,8 @@ void tst_qquicktextedit::hAlignVisual()
         int x = qCeil(text->implicitWidth());
         int left = numberOfNonWhitePixels(0, x, image);
         int right = numberOfNonWhitePixels(x, image.width() - x, image);
-        QVERIFY(left > 0);
-        QVERIFY(right == 0);
+        QVERIFY2(left > 0, msgNotGreaterThan(left, 0).constData());
+        QCOMPARE(right, 0);
     }
     {
         // HCenter Align
@@ -878,9 +902,9 @@ void tst_qquicktextedit::hAlignVisual()
         int left = numberOfNonWhitePixels(0, x1, image);
         int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
         int right = numberOfNonWhitePixels(x2, image.width() - x2, image);
-        QVERIFY(left == 0);
-        QVERIFY(mid > 0);
-        QVERIFY(right == 0);
+        QCOMPARE(left, 0);
+        QVERIFY2(mid > 0, msgNotGreaterThan(left, 0).constData());
+        QCOMPARE(right, 0);
     }
     {
         // Right Align
@@ -889,8 +913,8 @@ void tst_qquicktextedit::hAlignVisual()
         int x = image.width() - qCeil(text->implicitWidth());
         int left = numberOfNonWhitePixels(0, x, image);
         int right = numberOfNonWhitePixels(x, image.width() - x, image);
-        QVERIFY(left == 0);
-        QVERIFY(right > 0);
+        QCOMPARE(left, 0);
+        QVERIFY2(right > 0, msgNotGreaterThan(left, 0).constData());
     }
 }
 
@@ -1240,7 +1264,7 @@ void tst_qquicktextedit::focusOnPress()
     QQuickWindow window;
     window.resize(100, 50);
     textEditObject->setParentItem(window.contentItem());
-    window.show();
+    window.showNormal();
     window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
@@ -2519,7 +2543,7 @@ void tst_qquicktextedit::remoteCursorDelegate()
 
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
@@ -2532,10 +2556,6 @@ void tst_qquicktextedit::remoteCursorDelegate()
 
     textEditObject->setFocus(true);
     QVERIFY(textEditObject->isCursorVisible());
-
-    QCOMPARE(component.status(), QQmlComponent::Loading);
-    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
-    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
@@ -3046,7 +3066,7 @@ void tst_qquicktextedit::openInputPanel()
     inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 

@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 import "content"
+import "content/tweetsearch.js" as Helper
 
 Rectangle {
     id: main
@@ -47,7 +48,6 @@ Rectangle {
     height: 480
     color: "#d6d6d6"
 
-    property string searchTerms: ""
     property int inAnimDur: 250
     property int counter: 0
     property alias isLoading: tweetsModel.isLoading
@@ -85,13 +85,15 @@ Rectangle {
         onTriggered: {
             main.counter--;
             var id = tweetsModel.model.get(idx[main.counter]).id
-            mainListView.add( { "statusText": tweetsModel.model.get(main.counter).content,
-                                 "name": tweetsModel.model.get(main.counter).name,
-                                 "userImage": tweetsModel.model.get(main.counter).image,
-                                 "source": tweetsModel.model.get(main.counter).source,
-                                 "id": id,
-                                 "uri": tweetsModel.model.get(main.counter).uri,
-                                 "published": tweetsModel.model.get(main.counter).published } );
+            var item = tweetsModel.model.get(main.counter)
+            mainListView.add( { "statusText": Helper.insertLinks(item.text, item.entities),
+                                "twitterName": item.user.screen_name,
+                                "name" : item.user.name,
+                                "userImage": item.user.profile_image_url,
+                                "source": item.source,
+                                "id": id,
+                                 "uri": Helper.insertLinks(item.user.url, item.user.entities),
+                                "published": item.created_at } );
             ids.push(id)
         }
     }
@@ -107,7 +109,7 @@ Rectangle {
             PropertyAction { property: "appear"; value: 250 }
         }
 
-        onDragEnded: if (header.refresh) { tweetsModel.model.reload() }
+        onDragEnded: if (header.refresh) { tweetsModel.reload() }
 
         ListHeader {
             id: header

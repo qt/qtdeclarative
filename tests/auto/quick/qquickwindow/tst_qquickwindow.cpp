@@ -1072,7 +1072,7 @@ void tst_qquickwindow::noUpdateWhenNothingChanges()
 
     QQuickRectangle rect(window.contentItem());
 
-    window.show();
+    window.showNormal();
     QTRY_VERIFY(window.isExposed());
 
     if (window.openglContext()->thread() == QGuiApplication::instance()->thread()) {
