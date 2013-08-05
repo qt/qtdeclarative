@@ -4880,6 +4880,9 @@ void tst_qqmlecmascript::propertyVarCircular2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QMetaObject::invokeMethod(object, "deassignCircular");
     gc(engine);
+#if defined(Q_CC_MSVC)
+    QSKIP("This test does not work reliably with MSVC.");
+#endif
     QVERIFY(rootObjectTracker.isNull());                           // should have been collected
     QVERIFY(childObjectTracker.isNull());                          // should have been collected
     delete object;
@@ -4931,6 +4934,9 @@ void tst_qqmlecmascript::propertyVarInheritance()
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
+#if defined(Q_CC_MSVC)
+    QSKIP("This test does not work reliably with MSVC.");
+#endif
 #if !defined(Q_CC_CLANG)
     QVERIFY(icoCanaryHandle.isEmpty());
     QVERIFY(ccoCanaryHandle.isEmpty());
@@ -4970,6 +4976,9 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QMetaObject::invokeMethod(object, "deassignCircular");
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
+#if defined(Q_CC_MSVC)
+    QSKIP("This test does not work reliably with MSVC.");
+#endif
 #if !defined(Q_CC_CLANG)
     QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
 #endif
