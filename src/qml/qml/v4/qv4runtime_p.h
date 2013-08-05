@@ -404,12 +404,10 @@ inline void __qmljs_add(QV4::ExecutionContext *ctx, QV4::Value *result, const QV
 {
     TRACE2(left, right);
 
-#ifdef QMLJS_INLINE_MATH
     if (QV4::Value::integerCompatible(left, right)) {
         *result = add_int32(left.integerValue(), right.integerValue());
         return;
     }
-#endif
 
     if (QV4::Value::bothDouble(left, right)) {
         *result = QV4::Value::fromDouble(left.doubleValue() + right.doubleValue());
@@ -423,12 +421,10 @@ inline void __qmljs_sub(QV4::ExecutionContext *, QV4::Value *result, const QV4::
 {
     TRACE2(left, right);
 
-#ifdef QMLJS_INLINE_MATH
     if (QV4::Value::integerCompatible(left, right)) {
         *result = sub_int32(left.integerValue(), right.integerValue());
         return;
     }
-#endif
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
@@ -439,12 +435,10 @@ inline void __qmljs_mul(QV4::ExecutionContext *, QV4::Value *result, const QV4::
 {
     TRACE2(left, right);
 
-#ifdef QMLJS_INLINE_MATH
     if (QV4::Value::integerCompatible(left, right)) {
         *result = mul_int32(left.integerValue(), right.integerValue());
         return;
     }
-#endif
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);

@@ -41,21 +41,24 @@
 #ifndef QMLJS_MATH_H
 #define QMLJS_MATH_H
 
+#include <qglobal.h>
+
 #ifndef QMLJS_LLVM_RUNTIME
 #  include <QtCore/qnumeric.h>
 #endif // QMLJS_LLVM_RUNTIME
 #include <cmath>
 
-#if !defined(QMLJS_LLVM_RUNTIME) && defined(Q_CC_GCC) && defined(Q_PROCESSOR_X86)
-#define QMLJS_INLINE_MATH
+#if defined(Q_CC_GNU)
 #define QMLJS_READONLY __attribute((const))
+#else
+#define QMLJS_READONLY
 #endif
-
-#if defined(QMLJS_INLINE_MATH)
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+
+#if !defined(QMLJS_LLVM_RUNTIME) && defined(Q_CC_GNU) && defined(Q_PROCESSOR_X86)
 
 static inline QMLJS_READONLY Value add_int32(int a, int b)
 {
@@ -105,11 +108,37 @@ static inline QMLJS_READONLY Value mul_int32(int a, int b)
     return Value::fromDouble((double)a * (double)b);
 }
 
+#else
+
+static inline QMLJS_READONLY Value add_int32(int a, int b)
+{
+    qint64 result = a + b;
+    if (result > INT_MAX || result < INT_MIN)
+        return Value::fromDouble(result);
+    return Value::fromInt32(static_cast<int>(result));
+}
+
+static inline QMLJS_READONLY Value sub_int32(int a, int b)
+{
+    qint64 result = a - b;
+    if (result > INT_MAX || result < INT_MIN)
+        return Value::fromDouble(result);
+    return Value::fromInt32(static_cast<int>(result));
+}
+
+static inline QMLJS_READONLY Value mul_int32(int a, int b)
+{
+    qint64 result = a * b;
+    if (result > INT_MAX || result < INT_MIN)
+        return Value::fromDouble(result);
+    return Value::fromInt32(static_cast<int>(result));
+}
+
+#endif // defined(QMLJS_INLINE_MATH)
+
 }
 
 QT_END_NAMESPACE
-
-#endif // defined(QMLJS_INLINE_MATH)
 
 #ifdef QMLJS_READONLY
 #undef QMLJS_READONLY

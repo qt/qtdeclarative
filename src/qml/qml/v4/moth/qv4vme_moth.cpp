@@ -44,6 +44,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4exception_p.h>
+#include <private/qv4math_p.h>
 
 #include <iostream>
 
@@ -505,21 +506,30 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(AddNumberParams)
-        double lhs = VALUEPTR(instr.lhs)->asDouble();
-        double rhs = VALUEPTR(instr.rhs)->asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs + rhs);
+        QV4::Value lhs = VALUE(instr.lhs);
+        QV4::Value rhs = VALUE(instr.rhs);
+        if (lhs.isInteger() && rhs.isInteger())
+            VALUE(instr.result) = QV4::add_int32(lhs.integerValue(), rhs.integerValue());
+        else
+            VALUEPTR(instr.result)->setDouble(lhs.asDouble() + rhs.asDouble());
     MOTH_END_INSTR(AddNumberParams)
 
     MOTH_BEGIN_INSTR(MulNumberParams)
-        double lhs = VALUEPTR(instr.lhs)->asDouble();
-        double rhs = VALUEPTR(instr.rhs)->asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs * rhs);
+        QV4::Value lhs = VALUE(instr.lhs);
+        QV4::Value rhs = VALUE(instr.rhs);
+        if (lhs.isInteger() && rhs.isInteger())
+            VALUE(instr.result) = QV4::mul_int32(lhs.integerValue(), rhs.integerValue());
+        else
+            VALUEPTR(instr.result)->setDouble(lhs.asDouble() * rhs.asDouble());
     MOTH_END_INSTR(MulNumberParams)
 
     MOTH_BEGIN_INSTR(SubNumberParams)
-        double lhs = VALUEPTR(instr.lhs)->asDouble();
-        double rhs = VALUEPTR(instr.rhs)->asDouble();
-        VALUEPTR(instr.result)->setDouble(lhs - rhs);
+        QV4::Value lhs = VALUE(instr.lhs);
+        QV4::Value rhs = VALUE(instr.rhs);
+        if (lhs.isInteger() && rhs.isInteger())
+            VALUE(instr.result) = QV4::sub_int32(lhs.integerValue(), rhs.integerValue());
+        else
+            VALUEPTR(instr.result)->setDouble(lhs.asDouble() - rhs.asDouble());
     MOTH_END_INSTR(SubNumberParams)
 
     MOTH_BEGIN_INSTR(Ret)
