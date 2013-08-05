@@ -202,12 +202,12 @@ void __qmljs_mod(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &
 void __qmljs_shl(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
 void __qmljs_shr(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
 void __qmljs_ushr(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_gt(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_lt(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_ge(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_le(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_eq(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
-void __qmljs_ne(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_gt(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_lt(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_ge(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_le(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_eq(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+void __qmljs_ne(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
 void __qmljs_se(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
 void __qmljs_sne(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
 
@@ -253,15 +253,17 @@ void __qmljs_inplace_shl_member(QV4::ExecutionContext *ctx, const QV4::Value &ba
 void __qmljs_inplace_shr_member(QV4::ExecutionContext *ctx, const QV4::Value &base, QV4::String *name, const QV4::Value &rhs);
 void __qmljs_inplace_ushr_member(QV4::ExecutionContext *ctx, const QV4::Value &base, QV4::String *name, const QV4::Value &rhs);
 
-typedef QV4::Bool (*CmpOp)(QV4::ExecutionContext *ctx, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_gt(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_lt(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_ge(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_le(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_eq(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_ne(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_se(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
-QV4::Bool __qmljs_cmp_sne(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right);
+typedef QV4::Bool (*CmpOp)(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_gt(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_lt(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_ge(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_le(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_eq(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_ne(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_se(const QV4::Value &left, const QV4::Value &right);
+QV4::Bool __qmljs_cmp_sne(const QV4::Value &left, const QV4::Value &right);
+
+typedef QV4::Bool (*CmpOpContext)(QV4::ExecutionContext *ctx, const QV4::Value &left, const QV4::Value &right);
 QV4::Bool __qmljs_cmp_instanceof(QV4::ExecutionContext *ctx, const QV4::Value &left, const QV4::Value &right);
 QV4::Bool __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::Value &left, const QV4::Value &right);
 
@@ -518,46 +520,46 @@ inline void __qmljs_ushr(QV4::ExecutionContext *, QV4::Value *result, const QV4:
         *result = QV4::Value::fromInt32(res);
 }
 
-inline void __qmljs_gt(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_gt(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_gt(ctx, left, right));
+    *result = QV4::Value::fromBoolean(__qmljs_cmp_gt(left, right));
 }
 
-inline void __qmljs_lt(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_lt(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_lt(ctx, left, right));
+    *result = QV4::Value::fromBoolean(__qmljs_cmp_lt(left, right));
 }
 
-inline void __qmljs_ge(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_ge(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_ge(ctx, left, right));
+    *result = QV4::Value::fromBoolean(__qmljs_cmp_ge(left, right));
 }
 
-inline void __qmljs_le(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_le(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_le(ctx, left, right));
+    *result = QV4::Value::fromBoolean(__qmljs_cmp_le(left, right));
 }
 
-inline void __qmljs_eq(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_eq(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_eq(ctx, left, right));
+    *result = QV4::Value::fromBoolean(__qmljs_cmp_eq(left, right));
 }
 
-inline void __qmljs_ne(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
+inline void __qmljs_ne(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(!__qmljs_cmp_eq(ctx, left, right));
+    *result = QV4::Value::fromBoolean(!__qmljs_cmp_eq(left, right));
 }
 
 inline void __qmljs_se(QV4::ExecutionContext *, QV4::Value *result, const QV4::Value &left, const QV4::Value &right)
@@ -576,7 +578,7 @@ inline void __qmljs_sne(QV4::ExecutionContext *, QV4::Value *result, const QV4::
     *result = QV4::Value::fromBoolean(r);
 }
 
-inline QV4::Bool __qmljs_cmp_gt(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_gt(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
     if (QV4::Value::integerCompatible(left, right))
@@ -596,7 +598,7 @@ inline QV4::Bool __qmljs_cmp_gt(QV4::ExecutionContext *, const QV4::Value &left,
     }
 }
 
-inline QV4::Bool __qmljs_cmp_lt(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_lt(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
     if (QV4::Value::integerCompatible(left, right))
@@ -616,7 +618,7 @@ inline QV4::Bool __qmljs_cmp_lt(QV4::ExecutionContext *, const QV4::Value &left,
     }
 }
 
-inline QV4::Bool __qmljs_cmp_ge(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_ge(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
     if (QV4::Value::integerCompatible(left, right))
@@ -636,7 +638,7 @@ inline QV4::Bool __qmljs_cmp_ge(QV4::ExecutionContext *, const QV4::Value &left,
     }
 }
 
-inline QV4::Bool __qmljs_cmp_le(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_le(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
     if (QV4::Value::integerCompatible(left, right))
@@ -656,36 +658,35 @@ inline QV4::Bool __qmljs_cmp_le(QV4::ExecutionContext *, const QV4::Value &left,
     }
 }
 
-inline QV4::Bool __qmljs_cmp_eq(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_eq(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    // need to test for doubles first as NaN != NaN
-    if (QV4::Value::bothDouble(left, right))
-        return left.doubleValue() == right.doubleValue();
     if (left.val == right.val)
-        return true;
+        // NaN != NaN
+        return (left.tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+
     if (left.isString() && right.isString())
         return left.stringValue()->isEqualTo(right.stringValue());
 
     return __qmljs_equal(left, right);
 }
 
-inline QV4::Bool __qmljs_cmp_ne(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_ne(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
-    return !__qmljs_cmp_eq(0, left, right);
+    return !__qmljs_cmp_eq(left, right);
 }
 
-inline QV4::Bool __qmljs_cmp_se(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_se(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 
     return __qmljs_strict_equal(left, right);
 }
 
-inline QV4::Bool __qmljs_cmp_sne(QV4::ExecutionContext *, const QV4::Value &left, const QV4::Value &right)
+inline QV4::Bool __qmljs_cmp_sne(const QV4::Value &left, const QV4::Value &right)
 {
     TRACE2(left, right);
 

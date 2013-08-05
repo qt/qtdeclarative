@@ -1082,6 +1082,8 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 #define setOp(op, opName, operation) \
     do { op = operation; opName = isel_stringIfy(operation); } while (0)
+#define setOpContext(op, opName, operation) \
+    do { opContext = operation; opName = isel_stringIfy(operation); } while (0)
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
@@ -1309,6 +1311,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
         if (b->left->asTemp() && b->right->asTemp()) {
             CmpOp op = 0;
+            CmpOpContext opContext = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -1320,13 +1323,18 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
             case V4IR::OpNotEqual: setOp(op, opName, __qmljs_cmp_ne); break;
             case V4IR::OpStrictEqual: setOp(op, opName, __qmljs_cmp_se); break;
             case V4IR::OpStrictNotEqual: setOp(op, opName, __qmljs_cmp_sne); break;
-            case V4IR::OpInstanceof: setOp(op, opName, __qmljs_cmp_instanceof); break;
-            case V4IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
+            case V4IR::OpInstanceof: setOpContext(op, opName, __qmljs_cmp_instanceof); break;
+            case V4IR::OpIn: setOpContext(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op, Assembler::ContextRegister,
-                                         Assembler::Reference(b->left->asTemp()),
-                                         Assembler::Reference(b->right->asTemp()));
+            if (opContext)
+                _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, opContext, Assembler::ContextRegister,
+                                             Assembler::Reference(b->left->asTemp()),
+                                             Assembler::Reference(b->right->asTemp()));
+            else
+                _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op,
+                                             Assembler::Reference(b->left->asTemp()),
+                                             Assembler::Reference(b->right->asTemp()));
 
             Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
             _as->addPatch(s->iftrue, target);

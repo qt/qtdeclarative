@@ -740,15 +740,14 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
 {
     TRACE2(x, y);
 
-    if (x.rawValue() == y.rawValue()) {
-        if (x.isDouble())
-            return !std::isnan(x.doubleValue());
-        return true;
-    }
-    if (x.isNumber() && y.isNumber())
-        return x.asDouble() == y.asDouble();
-    if (x.isString() && y.isString())
-        return x.stringValue()->isEqualTo(y.stringValue());
+    if (x.rawValue() == y.rawValue())
+        // NaN != NaN
+        return (x.tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+
+    if (x.isNumber())
+        return y.isNumber() && x.asDouble() == y.asDouble();
+    if (x.isString())
+        return y.isString() && x.stringValue()->isEqualTo(y.stringValue());
     return false;
 }
 

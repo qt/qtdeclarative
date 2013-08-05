@@ -75,7 +75,8 @@ struct Q_QML_EXPORT Value
     };
 
     enum Masks {
-        NotDouble_Mask = 0xfffc0000,
+        NaN_Mask = 0x7ff80000,
+        NotDouble_Mask = 0x7ffc0000,
         Type_Mask = 0xffff8000,
         Immediate_Mask = NotDouble_Mask | 0x00008000,
         Special_Mask = Immediate_Mask | 0x20000,
