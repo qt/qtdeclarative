@@ -213,7 +213,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     QVector<ushort> ip;
     ip.reserve(indexes.size() * 6);
 
-    qreal maxTexMargin = m_glyph_cache->distanceFieldRadius() / 2;
+    qreal maxTexMargin = m_glyph_cache->distanceFieldRadius();
     qreal fontScale = m_glyph_cache->fontScale(fontPixelSize);
     qreal margin = 2;
     qreal texMargin = margin / fontScale;

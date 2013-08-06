@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,28 +39,33 @@
 **
 ****************************************************************************/
 
-#include "qquickimplicitsizeitem_p.h"
-#include "qquickimplicitsizeitem_p_p.h"
+import QtQuick 2.0
 
-QT_BEGIN_NAMESPACE
+Rectangle {
+  width: 400
+  height: 400
 
-void QQuickImplicitSizeItemPrivate::implicitWidthChanged()
-{
-    Q_Q(QQuickImplicitSizeItem);
-    QQuickItemPrivate::implicitWidthChanged();
-    emit q->implicitWidthChanged2();
+  property bool forceNoFlicking: true
+  property double heightRatioIs: flickable.visibleArea.heightRatio
+  property double heightRatioShould: flickable.height / flickable.contentHeight
+  property double widthRatioIs: flickable.visibleArea.widthRatio
+  property double widthRatioShould: flickable.height / flickable.contentWidth
+
+  Flickable {
+    id: flickable
+    flickableDirection: Flickable.AutoFlickDirection
+    width: forceNoFlicking ? contentItem.width   /* so xflick() returns false */ : 20
+    height: forceNoFlicking ? contentItem.height /* likewise */ : 20
+    contentHeight: contentItem.height
+    contentWidth: contentItem.width
+    clip: true
+
+    Rectangle {
+      id: contentItem
+      color: "red"
+      width: 300
+      height: 300
+    }
+  }
 }
 
-void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
-{
-    Q_Q(QQuickImplicitSizeItem);
-    QQuickItemPrivate::implicitHeightChanged();
-    emit q->implicitHeightChanged2();
-}
-
-QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent)
-    : QQuickItem(dd, parent)
-{
-}
-
-QT_END_NAMESPACE

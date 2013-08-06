@@ -75,7 +75,7 @@ The Qt QML module contains the QML framework and important QML types used in
 applications. The constructs of QML are described in the \l{The QML Reference}.
 
 In addition to the \l{QML Basic Types}, the module comes with
-various QML object types:
+the following QML object types:
 \list
 \li \l Component
 \li \l QtObject
@@ -83,6 +83,9 @@ various QML object types:
 \li \l Connections
 \li \l Timer
 \endlist
+
+The \l{QtQml::Qt}{Qt} global object provides useful enums and functions
+for various QML types.
 
 \section2 Lists and Models
 

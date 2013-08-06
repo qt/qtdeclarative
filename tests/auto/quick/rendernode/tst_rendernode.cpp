@@ -59,7 +59,7 @@ public:
         QQuickView view;
         view.setSource(testFileUrl(fileName));
 
-        view.show();
+        view.showNormal();
         QTest::qWaitForWindowExposed(&view);
 
         return view.grabWindow();

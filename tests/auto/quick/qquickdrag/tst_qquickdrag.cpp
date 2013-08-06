@@ -1070,106 +1070,131 @@ void tst_QQuickDrag::recursion_data()
 {
     QTest::addColumn<QString>("script");
     QTest::addColumn<int>("type");
+    QTest::addColumn<int>("moveEvents");
     QTest::addColumn<QByteArray>("warning");
 
     QTest::newRow("Drag.start() in Enter")
             << QString("Drag.start()")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: start() cannot be called from within a drag event handler");
     QTest::newRow("Drag.cancel() in Enter")
             << QString("Drag.cancel()")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: cancel() cannot be called from within a drag event handler");
     QTest::newRow("Drag.drop() in Enter")
             << QString("Drag.drop()")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: drop() cannot be called from within a drag event handler");
     QTest::newRow("Drag.active = true in Enter")
             << QString("Drag.active = true")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray();
     QTest::newRow("Drag.active = false in Enter")
             << QString("Drag.active = false")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: active cannot be changed from within a drag event handler");
     QTest::newRow("move in Enter")
             << QString("x = 23")
             << int(QEvent::DragEnter)
+            << 1
             << QByteArray();
 
     QTest::newRow("Drag.start() in Move")
             << QString("Drag.start()")
             << int(QEvent::DragMove)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: start() cannot be called from within a drag event handler");
     QTest::newRow("Drag.cancel() in Move")
             << QString("Drag.cancel()")
             << int(QEvent::DragMove)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: cancel() cannot be called from within a drag event handler");
     QTest::newRow("Drag.drop() in Move")
             << QString("Drag.drop()")
             << int(QEvent::DragMove)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: drop() cannot be called from within a drag event handler");
     QTest::newRow("Drag.active = true in Move")
             << QString("Drag.active = true")
             << int(QEvent::DragMove)
+            << 1
             << QByteArray();
     QTest::newRow("Drag.active = false in Move")
             << QString("Drag.active = false")
             << int(QEvent::DragMove)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: active cannot be changed from within a drag event handler");
     QTest::newRow("move in Move")
             << QString("x = 23")
             << int(QEvent::DragMove)
+            << 2
             << QByteArray();
 
     QTest::newRow("Drag.start() in Leave")
             << QString("Drag.start()")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: start() cannot be called from within a drag event handler");
     QTest::newRow("Drag.cancel() in Leave")
             << QString("Drag.cancel()")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: cancel() cannot be called from within a drag event handler");
     QTest::newRow("Drag.drop() in Leave")
             << QString("Drag.drop()")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: drop() cannot be called from within a drag event handler");
     QTest::newRow("Drag.active = true in Leave")
             << QString("Drag.active = true")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: active cannot be changed from within a drag event handler");
     QTest::newRow("Drag.active = false in Leave")
             << QString("Drag.active = false")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray();
     QTest::newRow("move in Leave")
             << QString("x = 23")
             << int(QEvent::DragLeave)
+            << 1
             << QByteArray();
 
     QTest::newRow("Drag.start() in Drop")
             << QString("Drag.start()")
             << int(QEvent::Drop)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: start() cannot be called from within a drag event handler");
     QTest::newRow("Drag.cancel() in Drop")
             << QString("Drag.cancel()")
             << int(QEvent::Drop)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: cancel() cannot be called from within a drag event handler");
     QTest::newRow("Drag.drop() in Drop")
             << QString("Drag.drop()")
             << int(QEvent::Drop)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: drop() cannot be called from within a drag event handler");
     QTest::newRow("Drag.active = true in Drop")
             << QString("Drag.active = true")
             << int(QEvent::Drop)
+            << 1
             << QByteArray("<Unknown File>: QML QQuickDragAttached: active cannot be changed from within a drag event handler");
     QTest::newRow("Drag.active = false in Drop")
             << QString("Drag.active = false")
             << int(QEvent::Drop)
+            << 1
             << QByteArray();
     QTest::newRow("move in Drop")
             << QString("x = 23")
             << int(QEvent::Drop)
+            << 1
             << QByteArray();
 }
 
@@ -1177,6 +1202,7 @@ void tst_QQuickDrag::recursion()
 {
     QFETCH(QString, script);
     QFETCH(int, type);
+    QFETCH(int, moveEvents);
     QFETCH(QByteArray, warning);
 
     if (!warning.isEmpty())
@@ -1206,22 +1232,36 @@ void tst_QQuickDrag::recursion()
     QCOMPARE(dropTarget.leaveEvents, 0);
 
     evaluate<void>(item, "y = 15");
+
+    // the evaluate statement above, y = 15, will cause
+    // QQuickItem::setY(15) to be called, leading to an
+    // event being posted that will be delivered
+    // to RecursingDropTarget::dragMoveEvent(), hence
+    // the following call to QCoreApplication::processEvents()
     QCoreApplication::processEvents();
+
+
+    // Regarding 'move in Move' when
+    // RecursingDropTarget::dragMoveEvent() runs,
+    // its call 'evaluate' triggers a second
+    // move event (x = 23) that needs to be delivered.
+    QCoreApplication::processEvents();
+
     QCOMPARE(dropTarget.enterEvents, 1);
-    QCOMPARE(dropTarget.moveEvents, 1);
+    QCOMPARE(dropTarget.moveEvents, moveEvents);
     QCOMPARE(dropTarget.dropEvents, 0);
     QCOMPARE(dropTarget.leaveEvents, 0);
 
     if (type == QEvent::Drop) {
         QCOMPARE(evaluate<bool>(item, "Drag.drop() == Qt.MoveAction"), true);
         QCOMPARE(dropTarget.enterEvents, 1);
-        QCOMPARE(dropTarget.moveEvents, 1);
+        QCOMPARE(dropTarget.moveEvents, moveEvents);
         QCOMPARE(dropTarget.dropEvents, 1);
         QCOMPARE(dropTarget.leaveEvents, 0);
     } else {
         evaluate<void>(item, "Drag.cancel()");
         QCOMPARE(dropTarget.enterEvents, 1);
-        QCOMPARE(dropTarget.moveEvents, 1);
+        QCOMPARE(dropTarget.moveEvents, moveEvents);
         QCOMPARE(dropTarget.dropEvents, 0);
         QCOMPARE(dropTarget.leaveEvents, 1);
     }

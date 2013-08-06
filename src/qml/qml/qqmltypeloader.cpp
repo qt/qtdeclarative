@@ -1683,14 +1683,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
         QHashedString dirPathString(dirPath.toString());
-        bool exists = false;
-#ifdef Q_OS_UNIX
-        struct stat statBuf;
-        if (::stat(QFile::encodeName(dirPathString).constData(), &statBuf) == 0)
-            exists = S_ISDIR(statBuf.st_mode);
-#else
-        exists = QDir(dirPathString).exists();
-#endif
+        bool exists = QDir(dirPathString).exists();
         QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);
@@ -1755,14 +1748,7 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
         QHashedString dirPathString(dirPath.toString());
-        bool exists = false;
-#ifdef Q_OS_UNIX
-        struct stat statBuf;
-        if (::stat(QFile::encodeName(dirPathString).constData(), &statBuf) == 0)
-            exists = S_ISDIR(statBuf.st_mode);
-#else
-        exists = QDir(dirPathString).exists();
-#endif
+        bool exists = QDir(dirPathString).exists();
         QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);

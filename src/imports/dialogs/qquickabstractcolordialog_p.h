@@ -66,6 +66,10 @@ class QQuickAbstractColorDialog : public QQuickAbstractDialog
     Q_OBJECT
     Q_PROPERTY(bool showAlphaChannel READ showAlphaChannel WRITE setShowAlphaChannel NOTIFY showAlphaChannelChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(qreal hue READ hue NOTIFY colorChanged)
+    Q_PROPERTY(qreal saturation READ saturation NOTIFY colorChanged)
+    Q_PROPERTY(qreal lightness READ lightness NOTIFY colorChanged)
+    Q_PROPERTY(qreal alpha READ alpha NOTIFY colorChanged)
 
 public:
     QQuickAbstractColorDialog(QObject *parent = 0);
@@ -74,6 +78,10 @@ public:
     virtual QString title() const;
     bool showAlphaChannel() const;
     QColor color() const { return m_color; }
+    qreal hue() const { return m_color.hslHueF(); }
+    qreal saturation() const { return m_color.hslSaturationF(); }
+    qreal lightness() const { return m_color.lightnessF(); }
+    qreal alpha() const { return m_color.alphaF(); }
 
 public Q_SLOTS:
     void setVisible(bool v);
