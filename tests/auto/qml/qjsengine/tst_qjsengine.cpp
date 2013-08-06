@@ -49,16 +49,28 @@
 #include <QtCore/qnumeric.h>
 #include <stdlib.h>
 
+#ifdef Q_CC_MSVC
+#define NO_INLINE __declspec(noinline)
+#else
+#define NO_INLINE __attribute__((noinline))
+#endif
+
+#if defined(Q_OS_WIN)
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
+
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QObjectList)
 
 // The JavaScriptCore GC marks the C stack. To try to ensure that there is
 // no JSObject* left in stack memory by the compiler, we call this function
 // to zap some bytes of memory before calling collectGarbage().
-static void zapSomeStack()
+static void NO_INLINE zapSomeStack()
 {
-    char buf[4096];
-    memset(buf, 0, sizeof(buf));
+    char *buf = (char*)alloca(4096);
+    memset(buf, 0, 4096);
 }
 
 static void collectGarbage_helper(QJSEngine &eng)

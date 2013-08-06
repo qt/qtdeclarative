@@ -56,6 +56,18 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4exception_p.h>
 
+#ifdef Q_CC_MSVC
+#define NO_INLINE __declspec(noinline)
+#else
+#define NO_INLINE __attribute__((noinline))
+#endif
+
+#if defined(Q_OS_WIN)
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
+
 /*
 This test covers evaluation of ECMAScript expressions and bindings from within
 QML.  This does not include static QML language issues.
@@ -298,8 +310,18 @@ private:
     QQmlEngine engine;
 };
 
+// The JavaScriptCore GC marks the C stack. To try to ensure that there is
+// no JSObject* left in stack memory by the compiler, we call this function
+// to zap some bytes of memory before calling collectGarbage().
+static void NO_INLINE zapSomeStack()
+{
+    char *buf = (char*)alloca(4096);
+    memset(buf, 0, 4096);
+}
+
 static void gc(QQmlEngine &engine)
 {
+    zapSomeStack();
     engine.collectGarbage();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
@@ -4880,9 +4902,6 @@ void tst_qqmlecmascript::propertyVarCircular2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QMetaObject::invokeMethod(object, "deassignCircular");
     gc(engine);
-#if defined(Q_CC_MSVC)
-    QSKIP("This test does not work reliably with MSVC.");
-#endif
     QVERIFY(rootObjectTracker.isNull());                           // should have been collected
     QVERIFY(childObjectTracker.isNull());                          // should have been collected
     delete object;
@@ -4976,9 +4995,6 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QMetaObject::invokeMethod(object, "deassignCircular");
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
-#if defined(Q_CC_MSVC)
-    QSKIP("This test does not work reliably with MSVC.");
-#endif
 #if !defined(Q_CC_CLANG)
     QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
 #endif
