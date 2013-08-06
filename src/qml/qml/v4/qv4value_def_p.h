@@ -79,7 +79,7 @@ struct Q_QML_EXPORT Value
         NotDouble_Mask = 0x7ffc0000,
         Type_Mask = 0xffff8000,
         Immediate_Mask = NotDouble_Mask | 0x00008000,
-        Special_Mask = Immediate_Mask | 0x20000,
+        IsManaged_Mask = Type_Mask & ~0x10000,
         Tag_Shift = 32
     };
     enum ValueType {
@@ -127,6 +127,7 @@ struct Q_QML_EXPORT Value
     inline bool isString() const { return tag == String_Type; }
     inline bool isObject() const { return tag == Object_Type; }
 #endif
+    inline bool isManaged() const { return (tag & IsManaged_Mask) == Object_Type; }
     inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
     inline bool isInt32() {
         if (tag == _Integer_Type)

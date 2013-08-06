@@ -168,7 +168,7 @@ void __qmljs_numberToString(QString *result, double num, int radix = 10);
 QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 
-QV4::Bool __qmljs_equal(const QV4::Value &x, const QV4::Value &y);
+QV4::Bool __qmljs_equal_helper(const Value &x, const Value &y);
 Q_QML_EXPORT QV4::Bool __qmljs_strict_equal(const QV4::Value &x, const QV4::Value &y);
 
 // unary operators
@@ -667,10 +667,13 @@ inline QV4::Bool __qmljs_cmp_eq(const QV4::Value &left, const QV4::Value &right)
         // NaN != NaN
         return (left.tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
 
-    if (left.isString() && right.isString())
-        return left.stringValue()->isEqualTo(right.stringValue());
+    if (left.type() == right.type()) {
+        if (left.isManaged())
+            return left.managed()->isEqualTo(right.managed());
+        return false;
+    }
 
-    return __qmljs_equal(left, right);
+    return __qmljs_equal_helper(left, right);
 }
 
 inline QV4::Bool __qmljs_cmp_ne(const QV4::Value &left, const QV4::Value &right)

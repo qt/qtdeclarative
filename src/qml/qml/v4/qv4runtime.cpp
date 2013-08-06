@@ -685,55 +685,34 @@ void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, Strin
     *result = ctx->getProperty(name);
 }
 
-uint __qmljs_equal(const Value &x, const Value &y)
+uint __qmljs_equal_helper(const Value &x, const Value &y)
 {
-    if (x.type() == y.type()) {
-        switch (x.type()) {
-        case Value::Undefined_Type:
-            return true;
-        case Value::Null_Type:
-            return true;
-        case Value::Boolean_Type:
-            return x.booleanValue() == y.booleanValue();
-            break;
-        case Value::Integer_Type:
-            return x.integerValue() == y.integerValue();
-        case Value::String_Type:
-            return x.stringValue()->isEqualTo(y.stringValue());
-        case Value::Object_Type:
-            if (x.objectValue() == y.objectValue())
-                return true;
-            return x.objectValue()->isEqualTo(y.objectValue());
-        default: // double
-            return x.doubleValue() == y.doubleValue();
-        }
-        // unreachable
-    } else {
-        if (x.isNumber() && y.isNumber())
-            return x.asDouble() == y.asDouble();
-        if (x.isNull() && y.isUndefined()) {
-            return true;
-        } else if (x.isUndefined() && y.isNull()) {
-            return true;
-        } else if (x.isNumber() && y.isString()) {
-            Value ny = Value::fromDouble(__qmljs_to_number(y));
-            return __qmljs_equal(x, ny);
-        } else if (x.isString() && y.isNumber()) {
-            Value nx = Value::fromDouble(__qmljs_to_number(x));
-            return __qmljs_equal(nx, y);
-        } else if (x.isBoolean()) {
-            Value nx = Value::fromDouble((double) x.booleanValue());
-            return __qmljs_equal(nx, y);
-        } else if (y.isBoolean()) {
-            Value ny = Value::fromDouble((double) y.booleanValue());
-            return __qmljs_equal(x, ny);
-        } else if ((x.isNumber() || x.isString()) && y.isObject()) {
-            Value py = __qmljs_to_primitive(y, PREFERREDTYPE_HINT);
-            return __qmljs_equal(x, py);
-        } else if (x.isObject() && (y.isNumber() || y.isString())) {
-            Value px = __qmljs_to_primitive(x, PREFERREDTYPE_HINT);
-            return __qmljs_equal(px, y);
-        }
+    Q_ASSERT(x.type() != y.type());
+
+    if (x.isNumber() && y.isNumber())
+        return x.asDouble() == y.asDouble();
+    if (x.isNull() && y.isUndefined()) {
+        return true;
+    } else if (x.isUndefined() && y.isNull()) {
+        return true;
+    } else if (x.isNumber() && y.isString()) {
+        double dy = __qmljs_to_number(y);
+        return x.asDouble() == dy;
+    } else if (x.isString() && y.isNumber()) {
+        double dx = __qmljs_to_number(x);
+        return dx == y.asDouble();
+    } else if (x.isBoolean()) {
+        Value nx = Value::fromDouble((double) x.booleanValue());
+        return __qmljs_cmp_eq(nx, y);
+    } else if (y.isBoolean()) {
+        Value ny = Value::fromDouble((double) y.booleanValue());
+        return __qmljs_cmp_eq(x, ny);
+    } else if ((x.isNumber() || x.isString()) && y.isObject()) {
+        Value py = __qmljs_to_primitive(y, PREFERREDTYPE_HINT);
+        return __qmljs_cmp_eq(x, py);
+    } else if (x.isObject() && (y.isNumber() || y.isString())) {
+        Value px = __qmljs_to_primitive(x, PREFERREDTYPE_HINT);
+        return __qmljs_cmp_eq(px, y);
     }
 
     return false;

@@ -747,7 +747,7 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
-    return __qmljs_equal(d->value, other.d->value);
+    return __qmljs_cmp_eq(d->value, other.d->value);
 }
 
 /*!

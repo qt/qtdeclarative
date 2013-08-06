@@ -119,7 +119,7 @@ const ManagedVTable String::static_vtbl =
     deleteIndexedProperty,
     0 /*getLookup*/,
     0 /*setLookup*/,
-    Managed::isEqualTo,
+    isEqualTo,
     0 /*advanceIterator*/,
     "String",
 };
@@ -208,6 +208,23 @@ bool String::deleteIndexedProperty(Managed *m, uint index)
 {
     return false;
 }
+
+bool String::isEqualTo(Managed *t, Managed *o)
+{
+    if (t == o)
+        return true;
+    String *that = static_cast<String *>(t);
+    String *other = static_cast<String *>(o);
+    if (that->hashValue() != other->hashValue())
+        return false;
+    if (that->identifier && that->identifier == other->identifier)
+        return true;
+    if (that->subtype >= StringType_UInt && that->subtype == other->subtype)
+        return true;
+
+    return that->toQString() == other->toQString();
+}
+
 
 String::String(ExecutionEngine *engine, const QString &text)
     : Managed(engine ? engine->emptyClass : 0), _text(text), identifier(0), stringHash(UINT_MAX)

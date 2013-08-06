@@ -276,7 +276,7 @@ inline String *Value::asString() const
 
 inline Managed *Value::asManaged() const
 {
-    if (isObject() || isString())
+    if (isManaged())
         return managed();
     return 0;
 }

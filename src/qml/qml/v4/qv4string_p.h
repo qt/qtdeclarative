@@ -123,6 +123,7 @@ struct Q_QML_EXPORT String : public Managed {
     mutable Identifier *identifier;
     mutable uint stringHash;
 
+
 protected:
     static void destroy(Managed *);
     static Value get(Managed *m, String *name, bool *hasProperty);
@@ -133,6 +134,7 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *, String *);
     static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool isEqualTo(Managed *that, Managed *o);
 
     static const ManagedVTable static_vtbl;
 };
