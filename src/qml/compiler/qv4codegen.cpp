@@ -443,7 +443,7 @@ Codegen::Codegen(bool strict)
 {
 }
 
-V4IR::Function *Codegen::operator()(const QString &fileName,
+V4IR::Function *Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
                                   V4IR::Module *module,
@@ -468,7 +468,7 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
     return globalCode;
 }
 
-V4IR::Function *Codegen::operator()(const QString &fileName,
+V4IR::Function *Codegen::generateFromFunctionExpression(const QString &fileName,
                                   const QString &sourceCode,
                                   AST::FunctionExpression *ast,
                                   V4IR::Module *module)

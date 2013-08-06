@@ -75,13 +75,13 @@ public:
         QmlBinding
     };
 
-    V4IR::Function *operator()(const QString &fileName,
+    V4IR::Function *generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
                              V4IR::Module *module,
                              Mode mode = GlobalCode,
                              const QStringList &inheritedLocals = QStringList());
-    V4IR::Function *operator()(const QString &fileName,
+    V4IR::Function *generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
                              V4IR::Module *module);

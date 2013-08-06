@@ -163,8 +163,8 @@ void Script::parse()
                 inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
         RuntimeCodegen cg(scope, strictMode);
-        cg(sourceFile, sourceCode, program, &module,
-           parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module,
+                               parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
         if (inheritContext)
             isel->setUseFastLookups(false);
