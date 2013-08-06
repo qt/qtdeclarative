@@ -685,8 +685,6 @@ void *InstructionSelection::addConstantTable(QVector<Value> *values)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = jsGenerator->generateUnit();
-    compilationUnit->ownsData = true;
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
     foreach (V4IR::Function *irFunction, irModule->functions)

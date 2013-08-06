@@ -70,6 +70,13 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+namespace CompiledData {
+struct CompilationUnit;
+struct QmlUnit;
+}
+}
+
 class QQmlEngine;
 class QQmlComponent;
 class QQmlContext;
@@ -124,6 +131,11 @@ public:
     QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;
+
+    // --- new compiler
+    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QV4::CompiledData::QmlUnit *qmlUnit;
+    // ---
 
     struct Instruction {
 #define QML_INSTR_DATA_TYPEDEF(I, FMT) typedef QQmlInstructionData<QQmlInstruction::I> I;

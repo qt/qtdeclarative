@@ -87,7 +87,7 @@ int QQmlCompiledData::indexForUrl(const QUrl &data)
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
 : engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
-  rootPropertyCache(0)
+  rootPropertyCache(0), compilationUnit(0), qmlUnit(0)
 {
     Q_ASSERT(engine);
 
@@ -127,6 +127,10 @@ QQmlCompiledData::~QQmlCompiledData()
 
     if (rootPropertyCache)
         rootPropertyCache->release();
+
+    if (compilationUnit)
+        compilationUnit->deref();
+    free(qmlUnit);
 }
 
 void QQmlCompiledData::clear()

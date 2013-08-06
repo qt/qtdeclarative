@@ -78,7 +78,7 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
+QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool generateUnitData)
 {
     Function *rootFunction = irModule->rootFunction;
     if (!rootFunction)
@@ -86,7 +86,12 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
     foreach (V4IR::Function *f, irModule->functions)
         run(f);
 
-    return backendCompileStep();
+    QV4::CompiledData::CompilationUnit *unit = backendCompileStep();
+    if (generateUnitData) {
+        unit->data = jsGenerator->generateUnit();
+        unit->ownsData = true;
+    }
+    return unit;
 }
 
 void IRDecoder::visitMove(V4IR::Move *s)

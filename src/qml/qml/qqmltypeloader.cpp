@@ -1900,6 +1900,7 @@ QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 : QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
+    m_useNewCompiler = QQmlEnginePrivate::get(manager->engine())->useNewCompiler;
 }
 
 QQmlTypeData::~QQmlTypeData()
@@ -2031,9 +2032,17 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
-    if (!scriptParser.parse(code, preparseData, finalUrl(), finalUrlString())) {
-        setError(scriptParser.errors());
-        return;
+    if (m_useNewCompiler) {
+        QQmlCodeGenerator compiler;
+        if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), &parsedQML)) {
+            setError(compiler.errors);
+            return;
+        }
+    } else {
+        if (!scriptParser.parse(code, preparseData, finalUrl(), finalUrlString())) {
+            setError(scriptParser.errors());
+            return;
+        }
     }
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
@@ -2063,7 +2072,34 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     QList<QQmlError> errors;
 
-    foreach (const QQmlScript::Import &import, scriptParser.imports()) {
+    // ### convert to use new data structure once old compiler is gone.
+    QList<QQmlScript::Import> imports;
+    if (m_useNewCompiler) {
+        imports.reserve(parsedQML.imports.size());
+        foreach (QV4::CompiledData::Import *i, parsedQML.imports) {
+            QQmlScript::Import import;
+            import.uri = parsedQML.stringAt(i->uriIndex);
+            import.qualifier = parsedQML.stringAt(i->qualifierIndex);
+            import.majorVersion = i->majorVersion;
+            import.minorVersion = i->minorVersion;
+            import.location.start.line = i->location.line;
+            import.location.start.column = i->location.column;
+
+            switch (i->type) {
+            case QV4::CompiledData::Import::ImportFile: import.type = QQmlScript::Import::File; break;
+            case QV4::CompiledData::Import::ImportLibrary: import.type = QQmlScript::Import::Library; break;
+            case QV4::CompiledData::Import::ImportScript: import.type = QQmlScript::Import::Script; break;
+            default: break;
+            }
+
+
+            imports << import;
+        }
+    } else {
+        imports = scriptParser.imports();
+    }
+
+    foreach (const QQmlScript::Import &import, imports) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
@@ -2124,11 +2160,36 @@ void QQmlTypeData::compile()
 
     QQmlCompilingProfiler prof(m_compiledData->name);
 
-    QQmlCompiler compiler(&scriptParser._pool);
-    if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
-        setError(compiler.errors());
-        m_compiledData->release();
-        m_compiledData = 0;
+    if (m_useNewCompiler) {
+        JSCodeGen jsCodeGen;
+        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), &parsedQML);
+
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML.jsModule, &parsedQML.jsGenerator));
+        isel->setUseFastLookups(false);
+        QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
+
+        QmlUnitGenerator qmlGenerator;
+        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(parsedQML);
+
+        if (jsUnit) {
+            Q_ASSERT(!jsUnit->data);
+            jsUnit->ownsData = false;
+            jsUnit->data = &qmlUnit->header;
+        }
+
+        m_compiledData->compilationUnit = jsUnit;
+        if (m_compiledData->compilationUnit)
+            m_compiledData->compilationUnit->ref();
+        m_compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
+    } else {
+        QQmlCompiler compiler(&scriptParser._pool);
+        if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
+            setError(compiler.errors());
+            m_compiledData->release();
+            m_compiledData = 0;
+        }
     }
 }
 

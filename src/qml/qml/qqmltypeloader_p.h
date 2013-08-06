@@ -68,6 +68,7 @@
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlabstracturlinterceptor_p.h>
+#include <private/qqmlcodegenerator_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4script_p.h>
@@ -446,7 +447,11 @@ private:
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
+    // --- old compiler
     QQmlScript::Parser scriptParser;
+    // --- new compiler
+    QtQml::ParsedQML parsedQML;
+    // ---
 
     QList<ScriptReference> m_scripts;
 
@@ -454,6 +459,7 @@ private:
 
     QList<TypeReference> m_types;
     bool m_typesResolved:1;
+    bool m_useNewCompiler:1;
 
     QQmlCompiledData *m_compiledData;
 

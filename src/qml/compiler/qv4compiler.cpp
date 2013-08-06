@@ -44,11 +44,14 @@
 #include <qv4isel_p.h>
 #include <qv4engine_p.h>
 
-QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module)
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module, int headerSize)
     : irModule(module)
     , stringDataSize(0)
     , jsClassDataSize(0)
 {
+    if (headerSize == -1)
+        headerSize = sizeof(QV4::CompiledData::Unit);
+    this->headerSize = headerSize;
 }
 
 int QV4::Compiler::JSUnitGenerator::registerString(const QString &str)
@@ -148,7 +151,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(QQmlJS::V4IR::ExprList *args
     return jsClasses.size() - 1;
 }
 
-QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
+QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *totalUnitSize)
 {
     registerString(irModule->fileName);
     foreach (QQmlJS::V4IR::Function *f, irModule->functions) {
@@ -159,7 +162,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size(), lookups.size(), jsClasses.count());
+    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, strings.size(), irModule->functions.size(), regexps.size(), lookups.size(), jsClasses.count());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -174,7 +177,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount);
     }
 
-    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize + jsClassDataSize);
+    const int totalSize = unitSize + functionDataSize + stringDataSize + jsClassDataSize;
+    if (totalUnitSize)
+        *totalUnitSize = totalSize;
+    char *data = (char *)malloc(totalSize);
+    memset(data, 0, totalSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
 
     memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
@@ -182,7 +189,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->flags = QV4::CompiledData::Unit::IsJavascript;
     unit->version = 1;
     unit->stringTableSize = strings.size();
-    unit->offsetToStringTable = sizeof(QV4::CompiledData::Unit);
+    unit->offsetToStringTable = headerSize;
     unit->functionTableSize = irModule->functions.size();
     unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     unit->lookupTableSize = lookups.count();

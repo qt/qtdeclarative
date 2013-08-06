@@ -626,9 +626,7 @@ Function *Module::newFunction(const QString &name, Function *outer)
 
 Module::~Module()
 {
-    foreach (Function *f, functions) {
-        delete f;
-    }
+    qDeleteAll(functions);
 }
 
 void Module::setFileName(const QString &name)

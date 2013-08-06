@@ -893,8 +893,16 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     state.completePending = true;
 
     enginePriv->referenceScarceResources();
-    state.vme.init(context, cc, start, creationContext);
-    QObject *rv = state.vme.execute(&state.errors);
+    QObject *rv = 0;
+    if (enginePriv->useNewCompiler) {
+        state.creator = new QtQml::QmlObjectCreator(engine, context, cc);
+        rv = state.creator->create();
+        if (!rv)
+            state.errors = state.creator->errors;
+    } else {
+        state.vme.init(context, cc, start, creationContext);
+        rv = state.vme.execute(&state.errors);
+    }
     enginePriv->dereferenceScarceResources();
 
     if (rv) {
@@ -934,14 +942,22 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     state->errors.clear();
     state->completePending = true;
 
-    state->vme.initDeferred(object);
-    state->vme.execute(&state->errors);
+    if (enginePriv->useNewCompiler) {
+        // ###
+    } else {
+        state->vme.initDeferred(object);
+        state->vme.execute(&state->errors);
+    }
 }
 
 void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionState *state)
 {
     if (state->completePending) {
-        state->vme.complete();
+        if (enginePriv->useNewCompiler) {
+            // ###
+        } else {
+            state->vme.complete();
+        }
 
         state->completePending = false;
 

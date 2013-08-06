@@ -282,7 +282,7 @@ protected:
 
     V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
                                  AST::FormalParameterList *formals,
-                                 AST::SourceElements *body,
+                                 AST::Node *body,
                                  Mode mode = FunctionCode,
                                  const QStringList &inheritedLocals = QStringList());
 
@@ -435,7 +435,7 @@ protected:
 
     QList<QQmlError> _errors;
 
-    class ScanFunctions: Visitor
+    class ScanFunctions: protected Visitor
     {
         typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
     public:

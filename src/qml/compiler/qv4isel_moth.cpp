@@ -300,8 +300,6 @@ void InstructionSelection::run(V4IR::Function *function)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = jsGenerator->generateUnit();
-    compilationUnit->ownsData = true;
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
     foreach (V4IR::Function *irFunction, irModule->functions)

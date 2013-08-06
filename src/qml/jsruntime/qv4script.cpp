@@ -59,39 +59,44 @@
 
 using namespace QV4;
 
-struct QmlBindingWrapper : FunctionObject
+QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
+    : FunctionObject(scope, scope->engine->id_eval)
+    , qml(qml)
 {
-    Q_MANAGED
+    vtbl = &static_vtbl;
+    function = f;
+    function->compilationUnit->ref();
+    usesArgumentsObject = function->usesArgumentsObject();
+    needsActivation = function->needsActivation();
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 
-    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
-        : FunctionObject(scope, scope->engine->id_eval)
-        , qml(qml)
-    {
-        vtbl = &static_vtbl;
-        function = f;
-        function->compilationUnit->ref();
-        usesArgumentsObject = function->usesArgumentsObject();
-        needsActivation = function->needsActivation();
-        defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    qmlContext = scope->engine->current->newQmlContext(this, qml);
+    scope->engine->popContext();
+}
 
-        qmlContext = scope->engine->current->newQmlContext(this, qml);
-        scope->engine->popContext();
-    }
+Value QmlBindingWrapper::call(Managed *that, const CallData &)
+{
+    ExecutionEngine *engine = that->engine();
+    QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
 
-    static Value call(Managed *that, const CallData &);
-    static void markObjects(Managed *m)
-    {
-        QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
-        if (wrapper->qml)
-            wrapper->qml->mark();
-        FunctionObject::markObjects(m);
-        wrapper->qmlContext->mark();
-    }
+    CallContext *ctx = This->qmlContext;
+    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
+    engine->pushContext(ctx);
+    Value result = This->function->code(ctx, This->function->codeData);
+    engine->popContext();
 
-private:
-    Object *qml;
-    CallContext *qmlContext;
-};
+    return result;
+
+}
+
+void QmlBindingWrapper::markObjects(Managed *m)
+{
+    QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
+    if (wrapper->qml)
+        wrapper->qml->mark();
+    FunctionObject::markObjects(m);
+    wrapper->qmlContext->mark();
+}
 
 DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
 
@@ -120,22 +125,6 @@ struct CompilationUnitHolder : public QV4::Object
 };
 
 DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
-
-Value QmlBindingWrapper::call(Managed *that, const CallData &)
-{
-    ExecutionEngine *engine = that->engine();
-    QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
-
-    CallContext *ctx = This->qmlContext;
-    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
-    engine->pushContext(ctx);
-    Value result = This->function->code(ctx, This->function->codeData);
-    engine->popContext();
-
-    return result;
-
-}
-
 
 Script::~Script()
 {

@@ -66,6 +66,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QtQml {
+struct QmlObjectCreator;
+}
+
 class QV8Engine;
 class QMetaProperty;
 class QQmlEngine;
@@ -339,6 +343,7 @@ protected:
 private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
+    friend struct QtQml::QmlObjectCreator;
 
     inline QQmlPropertyCache *copy(int reserve);
 

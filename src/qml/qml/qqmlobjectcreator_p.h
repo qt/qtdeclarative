@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,67 +38,60 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4SCRIPT_H
-#define QV4SCRIPT_H
+#ifndef QQMLOBJECTCREATOR_P_H
+#define QQMLOBJECTCREATOR_P_H
 
-#include "qv4global_p.h"
-#include "qv4engine_p.h"
-#include "qv4functionobject_p.h"
+#include <private/qqmlimport_p.h>
+#include <private/qqmltypenamecache_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
+class QQmlAbstractBinding;
 
-struct ExecutionContext;
+namespace QtQml {
 
-struct QmlBindingWrapper : FunctionObject {
-    Q_MANAGED
+struct Q_QML_EXPORT QmlObjectCreator
+{
+    QmlObjectCreator(QQmlEngine *engine,
+                     // extra data/output stored in these two
+                     QQmlContextData *contextData,
+                     QQmlCompiledData *runtimeData);
 
-    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
+    QObject *create(QObject *parent = 0)
+    { return create(unit->indexOfRootObject); }
+    QObject *create(int index, QObject *parent = 0);
 
-    static Value call(Managed *that, const CallData &);
-    static void markObjects(Managed *m);
+    QList<QQmlError> errors;
 
+    bool createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData) const;
 private:
-    Object *qml;
-    CallContext *qmlContext;
+    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
+
+    QVector<QQmlAbstractBinding *> setupBindings(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal);
+    void setupFunctions(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal);
+
+    QVariant variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const;
+
+    QString valueAsString(const QV4::CompiledData::Value *value) const;
+    static double valueAsNumber(const QV4::CompiledData::Value *value);
+    static bool valueAsBoolean(const QV4::CompiledData::Value *value);
+
+    QQmlEngine *engine;
+    const QV4::CompiledData::QmlUnit *unit;
+    const QV4::CompiledData::CompilationUnit *jsUnit;
+    QQmlContextData *context;
+    QQmlTypeNameCache *typeNameCache;
+    QQmlCompiledData *runtimeData;
+    QQmlImports imports;
+
+    QObject *_object;
+    QQmlData *_ddata;
+    QQmlPropertyCache *_propertyCache;
 };
 
-struct Q_QML_EXPORT Script {
-    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
-        : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), parsed(false)
-        , vmFunction(0), parseAsBinding(false) {}
-    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
-        : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
-        , qml(Value::fromObject(qml)), vmFunction(0), parseAsBinding(true) {}
-    ~Script();
-    QString sourceFile;
-    int line;
-    int column;
-    QString sourceCode;
-    ExecutionContext *scope;
-    bool strictMode;
-    bool inheritContext;
-    bool parsed;
-    QV4::PersistentValue qml;
-    QV4::PersistentValue compilationUnitHolder;
-    Function *vmFunction;
-    bool parseAsBinding;
-
-    void parse();
-    Value run();
-    Value qmlBinding();
-
-    Function *function();
-
-
-    static Value evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
-};
-
-}
+} // end namespace QtQml
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QQMLOBJECTCREATOR_P_H

@@ -144,6 +144,7 @@ public:
 
     QQmlContext *rootContext;
     bool isDebugging;
+    bool useNewCompiler;
 
     bool outputWarningsToStdErr;
 
