@@ -44,6 +44,9 @@
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
     QGuiApplication app(argc,argv);\
+    app.setOrganizationName("Qt Project");\
+    app.setOrganizationDomain("qt-project.org");\
+    app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
     view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
     view.setSource(QUrl("qrc:///" #NAME ".qml")); \
