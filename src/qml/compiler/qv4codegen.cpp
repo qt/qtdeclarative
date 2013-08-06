@@ -67,383 +67,365 @@
 using namespace QQmlJS;
 using namespace AST;
 
-class Codegen::ScanFunctions: Visitor
+Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode)
+    : _cg(cg)
+    , _sourceCode(sourceCode)
+    , _env(0)
+    , _inFuncBody(false)
+    , _allowFuncDecls(true)
 {
-    typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
-public:
-    ScanFunctions(Codegen *cg, const QString &sourceCode)
-        : _cg(cg)
-        , _sourceCode(sourceCode)
-        , _env(0)
-        , _inFuncBody(false)
-        , _allowFuncDecls(true)
-    {
-    }
+}
 
-    void operator()(Node *node)
-    {
-        if (node)
-            node->accept(this);
-    }
+void Codegen::ScanFunctions::operator()(Node *node)
+{
+    if (node)
+        node->accept(this);
+}
 
-    inline void enterEnvironment(Node *node)
-    {
-        Environment *e = _cg->newEnvironment(node, _env);
-        if (!e->isStrict)
-            e->isStrict = _cg->_strictMode;
-        _envStack.append(e);
-        _env = e;
-    }
+void Codegen::ScanFunctions::enterEnvironment(Node *node)
+{
+    Environment *e = _cg->newEnvironment(node, _env);
+    if (!e->isStrict)
+        e->isStrict = _cg->_strictMode;
+    _envStack.append(e);
+    _env = e;
+}
 
-    inline void leaveEnvironment()
-    {
-        _envStack.pop();
-        _env = _envStack.isEmpty() ? 0 : _envStack.top();
-    }
+void Codegen::ScanFunctions::leaveEnvironment()
+{
+    _envStack.pop();
+    _env = _envStack.isEmpty() ? 0 : _envStack.top();
+}
 
-protected:
-    using Visitor::visit;
-    using Visitor::endVisit;
-
-    void checkDirectivePrologue(SourceElements *ast)
-    {
-        for (SourceElements *it = ast; it; it = it->next) {
-            if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
-                if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
-                    if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
-                        // Use the source code, because the StringLiteral's
-                        // value might have escape sequences in it, which is not
-                        // allowed.
-                        if (strLit->literalToken.length < 2)
-                            continue;
-                        QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
-                        if (str == QStringLiteral("use strict")) {
-                            _env->isStrict = true;
-                        } else {
-                            // TODO: give a warning.
-                        }
+void Codegen::ScanFunctions::checkDirectivePrologue(SourceElements *ast)
+{
+    for (SourceElements *it = ast; it; it = it->next) {
+        if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
+            if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
+                if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
+                    // Use the source code, because the StringLiteral's
+                    // value might have escape sequences in it, which is not
+                    // allowed.
+                    if (strLit->literalToken.length < 2)
                         continue;
+                    QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
+                    if (str == QStringLiteral("use strict")) {
+                        _env->isStrict = true;
+                    } else {
+                        // TODO: give a warning.
                     }
-                }
-            }
-
-            break;
-        }
-    }
-
-    void checkName(const QStringRef &name, const SourceLocation &loc)
-    {
-        if (_env->isStrict) {
-            if (name == QLatin1String("implements")
-                    || name == QLatin1String("interface")
-                    || name == QLatin1String("let")
-                    || name == QLatin1String("package")
-                    || name == QLatin1String("private")
-                    || name == QLatin1String("protected")
-                    || name == QLatin1String("public")
-                    || name == QLatin1String("static")
-                    || name == QLatin1String("yield")) {
-                _cg->throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Unexpected strict mode reserved word"));
-            }
-        }
-    }
-    void checkForArguments(AST::FormalParameterList *parameters)
-    {
-        while (parameters) {
-            if (parameters->name == QStringLiteral("arguments"))
-                _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-            parameters = parameters->next;
-        }
-    }
-
-    virtual bool visit(Program *ast)
-    {
-        enterEnvironment(ast);
-        checkDirectivePrologue(ast->elements);
-        return true;
-    }
-
-    virtual void endVisit(Program *)
-    {
-        leaveEnvironment();
-    }
-
-    virtual bool visit(CallExpression *ast)
-    {
-        if (! _env->hasDirectEval) {
-            if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
-                if (id->name == QStringLiteral("eval")) {
-                    if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown)
-                        _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
-                    _env->hasDirectEval = true;
+                    continue;
                 }
             }
         }
-        int argc = 0;
-        for (ArgumentList *it = ast->arguments; it; it = it->next)
-            ++argc;
-        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
-        return true;
-    }
 
-    virtual bool visit(NewMemberExpression *ast)
-    {
-        int argc = 0;
-        for (ArgumentList *it = ast->arguments; it; it = it->next)
-            ++argc;
-        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
-        return true;
+        break;
     }
+}
 
-    virtual bool visit(ArrayLiteral *ast)
-    {
-        int index = 0;
-        for (ElementList *it = ast->elements; it; it = it->next) {
-            for (Elision *elision = it->elision; elision; elision = elision->next)
-                ++index;
-            ++index;
+void Codegen::ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
+{
+    if (_env->isStrict) {
+        if (name == QLatin1String("implements")
+                || name == QLatin1String("interface")
+                || name == QLatin1String("let")
+                || name == QLatin1String("package")
+                || name == QLatin1String("private")
+                || name == QLatin1String("protected")
+                || name == QLatin1String("public")
+                || name == QLatin1String("static")
+                || name == QLatin1String("yield")) {
+            _cg->throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Unexpected strict mode reserved word"));
         }
-        if (ast->elision) {
-            for (Elision *elision = ast->elision->next; elision; elision = elision->next)
-                ++index;
-        }
-        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, index);
-        return true;
     }
-
-    virtual bool visit(VariableDeclaration *ast)
-    {
-        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
-        checkName(ast->name, ast->identifierToken);
-        if (ast->name == QLatin1String("arguments"))
+}
+void Codegen::ScanFunctions::checkForArguments(AST::FormalParameterList *parameters)
+{
+    while (parameters) {
+        if (parameters->name == QStringLiteral("arguments"))
             _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-        _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration);
-        return true;
+        parameters = parameters->next;
     }
+}
 
-    virtual bool visit(IdentifierExpression *ast)
-    {
-        checkName(ast->name, ast->identifierToken);
-        if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown && ast->name == QLatin1String("arguments"))
-            _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
-        return true;
-    }
+bool Codegen::ScanFunctions::visit(Program *ast)
+{
+    enterEnvironment(ast);
+    checkDirectivePrologue(ast->elements);
+    return true;
+}
 
-    virtual bool visit(ExpressionStatement *ast)
-    {
-        if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
-            if (!_allowFuncDecls)
-                _cg->throwSyntaxError(expr->functionToken, QCoreApplication::translate("qv4codegen", "conditional function or closure declaration"));
+void Codegen::ScanFunctions::endVisit(Program *)
+{
+    leaveEnvironment();
+}
 
-            enterFunction(expr, /*enterName*/ true);
-            Node::accept(expr->formals, this);
-            Node::accept(expr->body, this);
-            leaveEnvironment();
-            return false;
-        } else {
-            SourceLocation firstToken = ast->firstSourceLocation();
-            if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QStringLiteral("function")) {
-                _cg->throwSyntaxError(firstToken, QCoreApplication::translate("qv4codegen", "unexpected token"));
+bool Codegen::ScanFunctions::visit(CallExpression *ast)
+{
+    if (! _env->hasDirectEval) {
+        if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
+            if (id->name == QStringLiteral("eval")) {
+                if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown)
+                    _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
+                _env->hasDirectEval = true;
             }
         }
-        return true;
     }
+    int argc = 0;
+    for (ArgumentList *it = ast->arguments; it; it = it->next)
+        ++argc;
+    _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
+    return true;
+}
 
-    virtual bool visit(FunctionExpression *ast)
-    {
-        enterFunction(ast, /*enterName*/ false);
-        return true;
+bool Codegen::ScanFunctions::visit(NewMemberExpression *ast)
+{
+    int argc = 0;
+    for (ArgumentList *it = ast->arguments; it; it = it->next)
+        ++argc;
+    _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
+    return true;
+}
+
+bool Codegen::ScanFunctions::visit(ArrayLiteral *ast)
+{
+    int index = 0;
+    for (ElementList *it = ast->elements; it; it = it->next) {
+        for (Elision *elision = it->elision; elision; elision = elision->next)
+            ++index;
+        ++index;
     }
-
-    void enterFunction(FunctionExpression *ast, bool enterName, bool isExpression = true)
-    {
-        if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-            _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
-        enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
+    if (ast->elision) {
+        for (Elision *elision = ast->elision->next; elision; elision = elision->next)
+            ++index;
     }
+    _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, index);
+    return true;
+}
 
-    virtual void endVisit(FunctionExpression *)
-    {
+bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
+{
+    if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
+        _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+    checkName(ast->name, ast->identifierToken);
+    if (ast->name == QLatin1String("arguments"))
+        _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
+    _env->enter(ast->name.toString(), ast->expression ? Environment::VariableDefinition : Environment::VariableDeclaration);
+    return true;
+}
+
+bool Codegen::ScanFunctions::visit(IdentifierExpression *ast)
+{
+    checkName(ast->name, ast->identifierToken);
+    if (_env->usesArgumentsObject == Environment::ArgumentsObjectUnknown && ast->name == QLatin1String("arguments"))
+        _env->usesArgumentsObject = Environment::ArgumentsObjectUsed;
+    return true;
+}
+
+bool Codegen::ScanFunctions::visit(ExpressionStatement *ast)
+{
+    if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
+        if (!_allowFuncDecls)
+            _cg->throwSyntaxError(expr->functionToken, QCoreApplication::translate("qv4codegen", "conditional function or closure declaration"));
+
+        enterFunction(expr, /*enterName*/ true);
+        Node::accept(expr->formals, this);
+        Node::accept(expr->body, this);
         leaveEnvironment();
+        return false;
+    } else {
+        SourceLocation firstToken = ast->firstSourceLocation();
+        if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QStringLiteral("function")) {
+            _cg->throwSyntaxError(firstToken, QCoreApplication::translate("qv4codegen", "unexpected token"));
+        }
     }
+    return true;
+}
 
-    virtual bool visit(ObjectLiteral *ast)
-    {
-        int argc = 0;
-        for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+bool Codegen::ScanFunctions::visit(FunctionExpression *ast)
+{
+    enterFunction(ast, /*enterName*/ false);
+    return true;
+}
+
+void Codegen::ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName, bool isExpression)
+{
+    if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
+        _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
+    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
+}
+
+void Codegen::ScanFunctions::endVisit(FunctionExpression *)
+{
+    leaveEnvironment();
+}
+
+bool Codegen::ScanFunctions::visit(ObjectLiteral *ast)
+{
+    int argc = 0;
+    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+        ++argc;
+        if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
             ++argc;
-            if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
-                ++argc;
-        }
-        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
+    }
+    _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
 
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-        Node::accept(ast->properties, this);
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
+    Node::accept(ast->properties, this);
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(PropertyGetterSetter *ast)
+{
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
+    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
+    return true;
+}
+
+void Codegen::ScanFunctions::endVisit(PropertyGetterSetter *)
+{
+    leaveEnvironment();
+}
+
+bool Codegen::ScanFunctions::visit(FunctionDeclaration *ast)
+{
+    enterFunction(ast, /*enterName*/ true, /*isExpression */false);
+    return true;
+}
+
+void Codegen::ScanFunctions::endVisit(FunctionDeclaration *)
+{
+    leaveEnvironment();
+}
+
+bool Codegen::ScanFunctions::visit(FunctionBody *ast)
+{
+    TemporaryBoolAssignment inFuncBody(_inFuncBody, true);
+    Node::accept(ast->elements, this);
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(WithStatement *ast)
+{
+    if (_env->isStrict) {
+        _cg->throwSyntaxError(ast->withToken, QCoreApplication::translate("qv4codegen", "'with' statement is not allowed in strict mode"));
         return false;
     }
 
-    virtual bool visit(PropertyGetterSetter *ast)
+    return true;
+}
+
+bool Codegen::ScanFunctions::visit(IfStatement *ast) {
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
+    Node::accept(ast->ok, this);
+    Node::accept(ast->ko, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(WhileStatement *ast) {
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(DoWhileStatement *ast) {
     {
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-        enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
-        return true;
-    }
-
-    virtual void endVisit(PropertyGetterSetter *)
-    {
-        leaveEnvironment();
-    }
-
-    virtual bool visit(FunctionDeclaration *ast)
-    {
-        enterFunction(ast, /*enterName*/ true, /*isExpression */false);
-        return true;
-    }
-
-    virtual void endVisit(FunctionDeclaration *)
-    {
-        leaveEnvironment();
-    }
-
-    virtual bool visit(FunctionBody *ast)
-    {
-        TemporaryBoolAssignment inFuncBody(_inFuncBody, true);
-        Node::accept(ast->elements, this);
-        return false;
-    }
-
-    virtual bool visit(WithStatement *ast)
-    {
-        if (_env->isStrict) {
-            _cg->throwSyntaxError(ast->withToken, QCoreApplication::translate("qv4codegen", "'with' statement is not allowed in strict mode"));
-            return false;
-        }
-
-        return true;
-    }
-
-    virtual bool visit(IfStatement *ast) {
-        Node::accept(ast->expression, this);
-
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
-        Node::accept(ast->ok, this);
-        Node::accept(ast->ko, this);
-
-        return false;
-    }
-
-    virtual bool visit(WhileStatement *ast) {
-        Node::accept(ast->expression, this);
-
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
-        Node::accept(ast->statement, this);
-
-        return false;
-    }
-
-    virtual bool visit(DoWhileStatement *ast) {
-        {
-            TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
-            Node::accept(ast->statement, this);
-        }
-        Node::accept(ast->expression, this);
-        return false;
-    }
-
-    virtual bool visit(ForStatement *ast) {
-        Node::accept(ast->initialiser, this);
-        Node::accept(ast->condition, this);
-        Node::accept(ast->expression, this);
-
         TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
         Node::accept(ast->statement, this);
+    }
+    Node::accept(ast->expression, this);
+    return false;
+}
 
-        return false;
+bool Codegen::ScanFunctions::visit(ForStatement *ast) {
+    Node::accept(ast->initialiser, this);
+    Node::accept(ast->condition, this);
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(LocalForStatement *ast) {
+    Node::accept(ast->declarations, this);
+    Node::accept(ast->condition, this);
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(ForEachStatement *ast) {
+    Node::accept(ast->initialiser, this);
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(LocalForEachStatement *ast) {
+    Node::accept(ast->declaration, this);
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+bool Codegen::ScanFunctions::visit(Block *ast) {
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _env->isStrict ? false : _allowFuncDecls);
+    Node::accept(ast->statements, this);
+    return false;
+}
+
+void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
+{
+    bool wasStrict = false;
+    if (_env) {
+        _env->hasNestedFunctions = true;
+        // The identifier of a function expression cannot be referenced from the enclosing environment.
+        if (expr)
+            _env->enter(name, Environment::FunctionDefinition, expr);
+        if (name == QLatin1String("arguments"))
+            _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
+        wasStrict = _env->isStrict;
     }
 
-    virtual bool visit(LocalForStatement *ast) {
-        Node::accept(ast->declarations, this);
-        Node::accept(ast->condition, this);
-        Node::accept(ast->expression, this);
+    enterEnvironment(ast);
+    checkForArguments(formals);
 
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
-        Node::accept(ast->statement, this);
+    _env->isNamedFunctionExpression = isExpression && !name.isEmpty();
+    _env->formals = formals;
 
-        return false;
-    }
+    if (body)
+        checkDirectivePrologue(body->elements);
 
-    virtual bool visit(ForEachStatement *ast) {
-        Node::accept(ast->initialiser, this);
-        Node::accept(ast->expression, this);
-
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
-        Node::accept(ast->statement, this);
-
-        return false;
-    }
-
-    virtual bool visit(LocalForEachStatement *ast) {
-        Node::accept(ast->declaration, this);
-        Node::accept(ast->expression, this);
-
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_env->isStrict);
-        Node::accept(ast->statement, this);
-
-        return false;
-    }
-
-    virtual bool visit(Block *ast) {
-        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _env->isStrict ? false : _allowFuncDecls);
-        Node::accept(ast->statements, this);
-        return false;
-    }
-
-private:
-    void enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
-    {
-        bool wasStrict = false;
-        if (_env) {
-            _env->hasNestedFunctions = true;
-            // The identifier of a function expression cannot be referenced from the enclosing environment.
-            if (expr)
-                _env->enter(name, Environment::FunctionDefinition, expr);
-            if (name == QLatin1String("arguments"))
-                _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
-            wasStrict = _env->isStrict;
+    if (wasStrict || _env->isStrict) {
+        QStringList args;
+        for (FormalParameterList *it = formals; it; it = it->next) {
+            QString arg = it->name.toString();
+            if (args.contains(arg))
+                _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
+            if (arg == QLatin1String("eval") || arg == QLatin1String("arguments"))
+                _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
+            args += arg;
         }
-
-        enterEnvironment(ast);
-        checkForArguments(formals);
-
-        _env->isNamedFunctionExpression = isExpression && !name.isEmpty();
-        _env->formals = formals;
-
-        if (body)
-            checkDirectivePrologue(body->elements);
-
-        if (wasStrict || _env->isStrict) {
-            QStringList args;
-            for (FormalParameterList *it = formals; it; it = it->next) {
-                QString arg = it->name.toString();
-                if (args.contains(arg))
-                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
-                if (arg == QLatin1String("eval") || arg == QLatin1String("arguments"))
-                    _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
-                args += arg;
-            }
-        }
     }
+}
 
-private: // fields:
-    Codegen *_cg;
-    const QString _sourceCode;
-    Environment *_env;
-    QStack<Environment *> _envStack;
-
-    bool _inFuncBody;
-    bool _allowFuncDecls;
-};
 
 Codegen::Codegen(bool strict)
     : _module(0)

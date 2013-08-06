@@ -46,8 +46,10 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <QtCore/QStringList>
+#include <QStack>
 #include <qqmlerror.h>
 #include <assert.h>
+#include <private/qv4util_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -433,7 +435,75 @@ protected:
 
     QList<QQmlError> _errors;
 
-    class ScanFunctions;
+    class ScanFunctions: Visitor
+    {
+        typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
+    public:
+        ScanFunctions(Codegen *cg, const QString &sourceCode);
+        void operator()(AST::Node *node);
+
+        void enterEnvironment(AST::Node *node);
+        void leaveEnvironment();
+
+    protected:
+        using Visitor::visit;
+        using Visitor::endVisit;
+
+        void checkDirectivePrologue(AST::SourceElements *ast);
+
+        void checkName(const QStringRef &name, const AST::SourceLocation &loc);
+        void checkForArguments(AST::FormalParameterList *parameters);
+
+        virtual bool visit(AST::Program *ast);
+        virtual void endVisit(AST::Program *);
+
+        virtual bool visit(AST::CallExpression *ast);
+        virtual bool visit(AST::NewMemberExpression *ast);
+        virtual bool visit(AST::ArrayLiteral *ast);
+        virtual bool visit(AST::VariableDeclaration *ast);
+        virtual bool visit(AST::IdentifierExpression *ast);
+        virtual bool visit(AST::ExpressionStatement *ast);
+        virtual bool visit(AST::FunctionExpression *ast);
+
+        void enterFunction(AST::FunctionExpression *ast, bool enterName, bool isExpression = true);
+
+        virtual void endVisit(AST::FunctionExpression *);
+
+        virtual bool visit(AST::ObjectLiteral *ast);
+
+        virtual bool visit(AST::PropertyGetterSetter *ast);
+        virtual void endVisit(AST::PropertyGetterSetter *);
+
+        virtual bool visit(AST::FunctionDeclaration *ast);
+        virtual void endVisit(AST::FunctionDeclaration *);
+
+        virtual bool visit(AST::FunctionBody *ast);
+
+        virtual bool visit(AST::WithStatement *ast);
+
+        virtual bool visit(AST::IfStatement *ast);
+        virtual bool visit(AST::WhileStatement *ast);
+        virtual bool visit(AST::DoWhileStatement *ast);
+        virtual bool visit(AST::ForStatement *ast);
+        virtual bool visit(AST::LocalForStatement *ast);
+        virtual bool visit(AST::ForEachStatement *ast);
+        virtual bool visit(AST::LocalForEachStatement *ast);
+
+        virtual bool visit(AST::Block *ast);
+
+    protected:
+        void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr, bool isExpression);
+
+    // fields:
+        Codegen *_cg;
+        const QString _sourceCode;
+        Environment *_env;
+        QStack<Environment *> _envStack;
+
+        bool _inFuncBody;
+        bool _allowFuncDecls;
+    };
+
 };
 
 class RuntimeCodegen : public Codegen
