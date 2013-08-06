@@ -53,6 +53,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
+#include <QtCore/qmath.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE

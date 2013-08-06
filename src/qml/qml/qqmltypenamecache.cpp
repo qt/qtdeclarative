@@ -91,7 +91,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
     return typeSearch(i->modules, name);
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedV8String &name)
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name)
 {
     Result result = query(m_namedImports, name);
 
@@ -101,7 +101,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedV8String &name)
     return result;
 }
 
-QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedV8String &name, const void *importNamespace)
+QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, const void *importNamespace)
 {
     Q_ASSERT(importNamespace);
     const Import *i = static_cast<const Import *>(importNamespace);

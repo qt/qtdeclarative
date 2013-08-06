@@ -44,7 +44,6 @@
 
 #include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmlcustomparser_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
 
@@ -215,34 +214,16 @@ public:
     static QHash<const QMetaObject *, int> attachedPropertyIds;
 };
 
-// Avoid multiple fromUtf8(), copies and hashing of the module name.
-// This is only called when metaTypeDataLock is locked.
-static QHashedString moduleFromUtf8(const char *module)
-{
-    if (!module)
-        return QHashedString();
-
-    static const char *lastModule = 0;
-    static QHashedString lastModuleStr;
-
-    // Separate plugins may have different strings at the same address
-    QHashedCStringRef currentModule(module, ::strlen(module));
-    if ((lastModule != module) || (lastModuleStr.hash() != currentModule.hash())) {
-        lastModuleStr = QString::fromUtf8(module);
-        lastModuleStr.hash();
-        lastModule = module;
-    }
-
-    return lastModuleStr;
-}
-
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e->handle());
+    v4->pushGlobalContext();
     if (scriptCallback && scriptApi(e).isUndefined()) {
         setScriptApi(e, scriptCallback(e, e));
     } else if (qobjectCallback && !qobjectApi(e)) {
         setQObjectApi(e, qobjectCallback(e, e));
     }
+    v4->popContext();
 }
 
 void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
@@ -343,7 +324,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 : d(new QQmlTypePrivate(SingletonType))
 {
     d->elementName = elementName;
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -371,7 +352,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 : d(new QQmlTypePrivate(CppType))
 {
     d->elementName = elementName;
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -410,7 +391,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
     d->index = index;
     d->elementName = elementName;
 
-    d->module = moduleFromUtf8(type.uri);
+    d->module = QString::fromUtf8(type.uri);
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
@@ -920,7 +901,7 @@ int QQmlType::enumValue(const QHashedCStringRef &name, bool *ok) const
     return -1;
 }
 
-int QQmlType::enumValue(const QHashedV8String &name, bool *ok) const
+int QQmlType::enumValue(const QV4::String *name, bool *ok) const
 {
     Q_ASSERT(ok);
     *ok = true;
@@ -994,7 +975,7 @@ QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
     return 0;
 }
 
-QQmlType *QQmlTypeModule::type(const QHashedV8String &name, int minor)
+QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor)
 {
     QReadLocker lock(metaTypeDataLock());
 
@@ -1063,7 +1044,7 @@ QQmlType *QQmlTypeModuleVersion::type(const QHashedStringRef &name) const
     else return 0;
 }
 
-QQmlType *QQmlTypeModuleVersion::type(const QHashedV8String &name) const
+QQmlType *QQmlTypeModuleVersion::type(const QV4::String *name) const
 {
     if (m_module) return m_module->type(name, m_minor);
     else return 0;
@@ -1159,7 +1140,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     }
 
     if (uri && !typeName.isEmpty()) {
-        QString nameSpace = moduleFromUtf8(uri);
+        QString nameSpace = QString::fromUtf8(uri);
 
         if (!data->typeRegistrationNamespace.isEmpty()) {
             // We can only install types into the registered namespace

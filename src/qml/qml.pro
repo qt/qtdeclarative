@@ -1,6 +1,5 @@
 TARGET     = QtQml
 QT = core-private network
-QT_PRIVATE = v8-private
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 

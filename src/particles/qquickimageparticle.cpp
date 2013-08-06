@@ -1651,9 +1651,9 @@ void QQuickImageParticle::spritesUpdate(qreal time)
                 qreal frame = (time - datum->animT)/(datum->frameDuration / 1000.0);
                 frame = qBound((qreal)0.0, frame, (qreal)((qreal)datum->frameCount - 1.0));//Stop at count-1 frames until we have between anim interpolation
                 if (m_spritesInterpolate)
-                    progress = modf(frame,&frameAt);
+                    progress = std::modf(frame,&frameAt);
                 else
-                    modf(frame,&frameAt);
+                    std::modf(frame,&frameAt);
             } else {
                 datum->frameAt++;
                 if (datum->frameAt >= datum->frameCount){

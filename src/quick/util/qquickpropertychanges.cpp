@@ -42,7 +42,6 @@
 #include "qquickpropertychanges_p.h"
 
 #include <private/qqmlopenmetaobject_p.h>
-#include <private/qqmlrewrite_p.h>
 #include <private/qqmlengine_p.h>
 
 #include <qqmlinfo.h>
@@ -51,7 +50,6 @@
 #include <qqmlexpression.h>
 #include <private/qqmlbinding_p.h>
 #include <qqmlcontext.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qquickstate_p_p.h>
@@ -200,7 +198,7 @@ public:
     QQuickPropertyChangesPrivate() : decoded(true), restore(true),
                                 isExplicit(false) {}
 
-    QQmlGuard<QObject> object;
+    QPointer<QObject> object;
     QByteArray data;
 
     bool decoded : 1;
@@ -292,7 +290,7 @@ QQuickPropertyChangesParser::compile(const QList<QQmlCustomParserProperty> &prop
             var = QVariant(v.asScript());
             {
                 // Pre-rewrite the expression
-                id = rewriteBinding(v, data.at(ii).first);
+                id = bindingIdentifier(v, data.at(ii).first);
             }
             break;
         }
@@ -344,7 +342,7 @@ void QQuickPropertyChangesPrivate::decode()
             handler->property = prop;
             handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
                                                                    QQmlContextData::get(qmlContext(q)), object, expression,
-                                                                   false, url.toString(), line, column));
+                                                                   url.toString(), line, column));
             signalReplacements << handler;
         } else if (isScript) { // binding
             QString expression = data.toString();
@@ -483,7 +481,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
             QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this), e.url.toString(), e.column) : 0;
             if (!newBinding)
-                newBinding = new QQmlBinding(e.expression, false, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
+                newBinding = new QQmlBinding(e.expression, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
 
             if (d->isExplicit) {
                 // in this case, we don't want to assign a binding, per se,

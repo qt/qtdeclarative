@@ -40,7 +40,7 @@ Module {
         Method { name: "reload" }
         Method {
             name: "get"
-            type: "QQmlV8Handle"
+            type: "QQmlV4Handle"
             Parameter { name: "index"; type: "int" }
         }
         Method { name: "errorString"; type: "string" }

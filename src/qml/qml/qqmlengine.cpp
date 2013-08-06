@@ -511,12 +511,12 @@ The \c status property will be updated as the operation progresses.
 If provided, \a callback is invoked when the operation completes.  The callback is passed
 the same object as is returned from the Qt.include() call.
 */
-// Qt.include() is implemented in qv8include.cpp
+// Qt.include() is implemented in qv4include.cpp
 
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
-  outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
+  outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
@@ -750,7 +750,7 @@ void QQmlEnginePrivate::init()
     qRegisterMetaType<QQmlComponent::Status>();
     qRegisterMetaType<QList<QObject*> >();
     qRegisterMetaType<QList<int> >();
-    qRegisterMetaType<QQmlV8Handle>();
+    qRegisterMetaType<QQmlV4Handle>();
 
     v8engine()->setEngine(q);
 
@@ -991,7 +991,7 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
     if (activeVME) {
-        activeVME->finalizeCallbacks.append(qMakePair(QQmlGuard<QObject>(obj), index));
+        activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };
         QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
@@ -1613,11 +1613,7 @@ void QQmlData::destroyed(QObject *object)
         delete extendedData;
 
     // Dispose the handle.
-    // We don't simply clear it (and wait for next gc cycle to dispose
-    // via the weak qobject reference callback) as this affects the
-    // outcomes of v8's gc statistical analysis heuristics, which can
-    // cause unnecessary growth of the old pointer space js heap area.
-    qPersistentDispose(v8object);
+    jsWrapper = QV4::Value::undefinedValue();
 
     if (ownMemory)
         delete this;
@@ -1731,7 +1727,7 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
 void QQmlEnginePrivate::warning(QQmlDelayedError *error)
 {
     Q_Q(QQmlEngine);
-    warning(error->error(q));
+    warning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEngine *engine, const QQmlError &error)
@@ -1755,7 +1751,7 @@ void QQmlEnginePrivate::warning(QQmlEngine *engine, QQmlDelayedError *error)
     if (engine)
         QQmlEnginePrivate::get(engine)->warning(error);
     else
-        dumpwarning(error->error(0));
+        dumpwarning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QQmlError &error)
@@ -1801,9 +1797,10 @@ void QQmlEnginePrivate::dereferenceScarceResources()
         // note that the actual SRD is owned by the JS engine,
         // so we cannot delete the SRD; but we can free the
         // memory used by the variant in the SRD.
-        while (ScarceResourceData *sr = scarceResources.first()) {
+        QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
+        while (QV4::ExecutionEngine::ScarceResourceData *sr = engine->scarceResources.first()) {
             sr->data = QVariant();
-            scarceResources.remove(sr);
+            engine->scarceResources.remove(sr);
         }
     }
 }

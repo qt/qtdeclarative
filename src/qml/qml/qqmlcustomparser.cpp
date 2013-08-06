@@ -311,18 +311,10 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
     used to construct the binding later. \a name
     is used as the name of the rewritten function.
 */
-QQmlBinding::Identifier QQmlCustomParser::rewriteBinding(const QQmlScript::Variant &value, const QString& name)
+QQmlBinding::Identifier QQmlCustomParser::bindingIdentifier(const QQmlScript::Variant &value, const QString& name)
 {
-    return compiler->rewriteBinding(value, name);
-}
-
-/*!
-    Returns a rewritten \a handler. \a name
-    is used as the name of the rewritten function.
-*/
-QString QQmlCustomParser::rewriteSignalHandler(const QQmlScript::Variant &value, const QString &name)
-{
-    return compiler->rewriteSignalHandler(value , name);
+    Q_UNUSED(name);
+    return compiler->bindingIdentifier(value);
 }
 
 QT_END_NAMESPACE

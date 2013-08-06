@@ -41,8 +41,6 @@
 
 #include "qv8debugservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include <private/qjsconverter_impl_p.h>
-#include <private/qv4compiler_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtCore/QHash>
@@ -88,6 +86,7 @@ void DebugMessageDispatchHandler()
     QMetaObject::invokeMethod(v8ServiceInstancePtr, "processDebugMessages", Qt::QueuedConnection);
 }
 
+/* ### FIXME: v4
 void DebugMessageHandler(const v8::Debug::Message& message)
 {
     v8::DebugEvent event = message.GetEvent();
@@ -102,13 +101,13 @@ void DebugMessageHandler(const v8::Debug::Message& message)
 
     v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()));
 }
+*/
 
 class QV8DebugServicePrivate : public QQmlDebugServicePrivate
 {
 public:
     QV8DebugServicePrivate()
-        : engine(0),
-          debugIsolate(0)
+        : engine(0)
     {
     }
 
@@ -120,7 +119,6 @@ public:
     QWaitCondition initializeCondition;
     QStringList breakOnSignals;
     const QV8Engine *engine;
-    v8::Isolate *debugIsolate;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
@@ -188,21 +186,24 @@ void QV8DebugService::signalEmitted(const QString &signal)
 // executed in the gui thread
 void QV8DebugService::init()
 {
+#if 0 // ### FIXME: v4
     Q_D(QV8DebugService);
     if (!d->debugIsolate)
         d->debugIsolate = v8::Isolate::GetCurrent();
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
     v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
     QV4Compiler::enableV4(false);
+#endif
 }
 
 // executed in the gui thread
 void QV8DebugService::scheduledDebugBreak(bool schedule)
 {
-    if (schedule)
-        v8::Debug::DebugBreak();
-    else
-        v8::Debug::CancelDebugBreak();
+//    ### FIXME: v4
+//    if (schedule)
+//        v8::Debug::DebugBreak();
+//    else
+//        v8::Debug::CancelDebugBreak();
 }
 
 // executed in the debugger thread
@@ -272,16 +273,16 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
 void QV8DebugService::sendDebugMessage(const QString &message)
 {
+#if 0 // ### FIXME: v4
     Q_D(QV8DebugService);
     v8::Debug::SendCommand(message.utf16(), message.size(), 0, d->debugIsolate);
+#endif
 }
 
 void QV8DebugService::processDebugMessages()
 {
     Q_D(QV8DebugService);
-    v8::HandleScope handleScope;
-    v8::Context::Scope contextScope(d->engine->context());
-    v8::Debug::ProcessDebugMessages();
+//  ### FIXME: v4  v8::Debug::ProcessDebugMessages();
 }
 
 QByteArray QV8DebugServicePrivate::packMessage(const QString &type, const QString &message)

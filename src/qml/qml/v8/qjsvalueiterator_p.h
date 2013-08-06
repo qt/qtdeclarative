@@ -42,10 +42,8 @@
 #ifndef QJSVALUEITERATOR_P_H
 #define QJSVALUEITERATOR_P_H
 
-#include <private/qintrusivelist_p.h>
-#include "qjsvalue_p.h"
-
-#include <private/qv8_p.h>
+#include "qjsvalue.h"
+#include "private/qv4objectiterator_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -54,30 +52,16 @@ class QV8Engine;
 class QJSValueIteratorPrivate
 {
 public:
-    inline QJSValueIteratorPrivate(const QJSValuePrivate* value);
-    inline ~QJSValueIteratorPrivate();
+    QJSValueIteratorPrivate(const QJSValue &v);
 
-    inline bool hasNext() const;
-    inline bool next();
-
-    inline QString name() const;
-
-    inline QScriptPassPointer<QJSValuePrivate> value() const;
-
-    inline bool isValid() const;
-    inline QV8Engine* engine() const;
-
-    inline void invalidate();
-private:
-    Q_DISABLE_COPY(QJSValueIteratorPrivate)
-
-    QIntrusiveListNode m_node;
-    QScriptSharedDataPointer<QJSValuePrivate> m_object;
-    v8::Persistent<v8::Array> m_names;
-    uint32_t m_index;
-    uint32_t m_count;
-
-    friend class QV8Engine;
+    QJSValue value;
+    QV4::ObjectIterator iterator;
+    QV4::PropertyAttributes currentAttributes;
+    QV4::String *currentName;
+    uint currentIndex;
+    QV4::PropertyAttributes nextAttributes;
+    QV4::String *nextName;
+    uint nextIndex;
 };
 
 

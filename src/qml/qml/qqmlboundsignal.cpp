@@ -50,10 +50,11 @@
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
-#include "qqmlrewrite_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv8debugservice_p.h>
 #include "qqmlinfo.h"
+
+#include <private/qv4value_p.h>
 
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
@@ -66,45 +67,23 @@ static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
 };
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
-                                                     QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
-                                                     bool isRewritten, const QString &fileName, quint16 line, quint16 column)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
-      m_fileName(fileName),
-      m_line(line),
-      m_column(column),
-      m_parameterCountForJS(-1),
-      m_target(target),
-      m_index(index),
-      m_expressionFunctionValid(false),
-      m_expressionFunctionRewritten(isRewritten),
-      m_invalidParameterName(false)
-{
-    init(ctxt, scope);
-    if (isRewritten)
-        m_expressionUtf8 = expression;
-    else
-        m_expression = QString::fromUtf8(expression);
-}
-
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
                                                      QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                                                     bool isRewritten, const QString &fileName, quint16 line, quint16 column)
+                                                     const QString &fileName, quint16 line, quint16 column,
+                                                     const QString &handlerName,
+                                                     const QString &parameterString)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_fileName(fileName),
       m_line(line),
       m_column(column),
-      m_parameterCountForJS(-1),
       m_target(target),
       m_index(index),
       m_expressionFunctionValid(false),
-      m_expressionFunctionRewritten(isRewritten),
       m_invalidParameterName(false)
 {
     init(ctxt, scope);
-    if (isRewritten)
-        m_expressionUtf8 = expression.toUtf8();
-    else
-        m_expression = expression;
+    m_handlerName = handlerName;
+    m_parameterString = parameterString;
+    m_expression = expression;
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
@@ -119,8 +98,6 @@ void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
 
 QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 {
-    qPersistentDispose(m_v8function);
-    qPersistentDispose(m_v8qmlscope);
 }
 
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
@@ -138,11 +115,7 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        v8::HandleScope handle_scope;
-        v8::Context::Scope context_scope(QQmlEnginePrivate::get(engine())->v8engine()->context());
-        return QV8Engine::toStringStatic(m_v8function->ToString());
-    } else if (!m_expressionUtf8.isEmpty()) {
-        return QString::fromUtf8(m_expressionUtf8);
+        return m_v8function.value().toQString();
     } else {
         return m_expression;
     }
@@ -161,100 +134,80 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
-        v8::HandleScope handle_scope;
-        v8::Context::Scope context_scope(ep->v8engine()->context());
         if (!m_expressionFunctionValid) {
-
-            //TODO: look at using the property cache here (as in the compiler)
-            //      for further optimization
-            QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-            QQmlRewrite::RewriteSignalHandler rewriter;
-
             QString expression;
-            bool ok = true;
 
-            if (m_expressionFunctionRewritten) {
-                expression = QString::fromUtf8(m_expressionUtf8);
+            expression = QStringLiteral("(function ");
+            expression += m_handlerName;
+            expression += QLatin1Char('(');
 
-                //if we need parameters, and the rewrite doesn't include them,
-                //create and insert the parameter string now
-                if (m_parameterCountForJS == -1 && signal.parameterCount()) {
-                    const QString &parameters = rewriter.createParameterString(signal.parameterNames(),
-                                                                               ep->v8engine()->illegalNames());
-                    int index = expression.indexOf(QLatin1Char('('), 1);
-                    Q_ASSERT(index > -1);
-                    expression.insert(index + 1, parameters);
+            if (m_parameterString.isEmpty()) {
+                QString error;
+                //TODO: look at using the property cache here (as in the compiler)
+                //      for further optimization
+                QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
+                expression += QQmlPropertyCache::signalParameterStringForJS(engine(), signal.parameterNames(), &error);
 
-                    setParameterCountForJS(rewriter.parameterCountForJS());
+                if (!error.isEmpty()) {
+                    qmlInfo(scopeObject()) << error;
+                    m_invalidParameterName = true;
+                    ep->dereferenceScarceResources();
+                    return;
                 }
+            } else
+                expression += m_parameterString;
 
-                m_expressionUtf8.clear();
-            } else {
-                //expression is still in its original form, so perform a full rewrite
-                expression = rewriter(m_expression, QString()/*no name hint available*/, &ok,
-                                      signal.parameterNames(),
-                                      ep->v8engine()->illegalNames());
-                setParameterCountForJS(rewriter.parameterCountForJS());
-                m_expression.clear();
-            }
+            expression += QStringLiteral(") { ");
+            expression += m_expression;
+            expression += QStringLiteral(" })");
 
-            if (rewriter.hasParameterError()) {
-                qmlInfo(scopeObject()) << rewriter.parameterError();
-                m_invalidParameterName = true;
-                ep->dereferenceScarceResources();
-                return;
-            }
+            m_expression.clear();
+            m_handlerName.clear();
+            m_parameterString.clear();
 
-            if (ok) {
-                m_v8function = evalFunction(context(), scopeObject(), expression,
-                                            m_fileName, m_line, &m_v8qmlscope);
-            }
+            m_v8function = evalFunction(context(), scopeObject(), expression,
+                                        m_fileName, m_line, &m_v8qmlscope);
 
-            if (m_v8function.IsEmpty() || m_v8function->IsNull()) {
+            if (m_v8function.isEmpty() || m_v8function.value().isNull()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
 
-            setUseSharedContext(false);
             m_expressionFunctionValid = true;
         }
 
-        if (!hasParameterInfo()) {
-            QQmlJavaScriptExpression::evaluate(context(), m_v8function, 0);
-        } else {
-            QV8Engine *engine = ep->v8engine();
-            QVarLengthArray<int, 9> dummy;
-            //TODO: lookup via signal index rather than method index as an optimization
-            int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-            int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
-            int argCount = argsTypes ? m_parameterCountForJS : 0;
+        QV8Engine *engine = ep->v8engine();
+        QVarLengthArray<int, 9> dummy;
+        //TODO: lookup via signal index rather than method index as an optimization
+        int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
+        int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
+        int argCount = argsTypes ? *argsTypes : 0;
 
-            QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
+        QVarLengthArray<QV4::Value, 9> args(argCount);
 
-            for (int ii = 0; ii < argCount; ++ii) {
-                int type = argsTypes[ii + 1];
-                //### ideally we would use metaTypeToJS, however it currently gives different results
-                //    for several cases (such as QVariant type and QObject-derived types)
-                //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
-                if (type == QMetaType::QVariant) {
-                    args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
-                } else if (type == QMetaType::Int) {
-                    //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-                    args[ii] = v8::Integer::New(*reinterpret_cast<const int*>(a[ii + 1]));
-                } else if (type == qMetaTypeId<QQmlV8Handle>()) {
-                    args[ii] = reinterpret_cast<QQmlV8Handle *>(a[ii + 1])->toHandle();
-                } else if (ep->isQObject(type)) {
-                    if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                        args[ii] = v8::Null();
-                    else
-                        args[ii] = engine->newQObject(*reinterpret_cast<QObject* const *>(a[ii + 1]));
-                } else {
-                    args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
-                }
+        for (int ii = 0; ii < argCount; ++ii) {
+            int type = argsTypes[ii + 1];
+            //### ideally we would use metaTypeToJS, however it currently gives different results
+            //    for several cases (such as QVariant type and QObject-derived types)
+            //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
+            if (type == QMetaType::QVariant) {
+                args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
+            } else if (type == QMetaType::Int) {
+                //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
+                args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+            } else if (type == qMetaTypeId<QQmlV4Handle>()) {
+                args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toValue();
+            } else if (ep->isQObject(type)) {
+                if (!*reinterpret_cast<void* const *>(a[ii + 1]))
+                    args[ii] = QV4::Value::nullValue();
+                else
+                    args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+            } else {
+                args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
             }
-
-            QQmlJavaScriptExpression::evaluate(context(), m_v8function, argCount, args.data(), 0);
         }
+
+        QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args.data(), 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

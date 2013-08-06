@@ -55,15 +55,14 @@
 
 #include "qqml.h"
 #include "qqmlerror.h"
-#include <private/qv8_p.h>
 #include "qqmlinstruction_p.h"
 #include "qqmlscript_p.h"
 #include "qqmlengine_p.h"
 #include <private/qbitfield_p.h>
 #include "qqmlpropertycache_p.h"
-#include "qqmlintegercache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
+#include "private/qv4identifier_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -111,7 +110,7 @@ public:
         : program(p), cdata(c) {}
 
         QByteArray program;
-        v8::Persistent<v8::Array> bindings;
+        QV4::PersistentValue bindings;
         QQmlCompiledData *cdata;
     };
 
@@ -122,7 +121,7 @@ public:
     QList<QByteArray> datas;
     QByteArray bytecode;
     QList<QQmlPropertyCache *> propertyCaches;
-    QList<QQmlIntegerCache *> contextCaches;
+    QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;
 
@@ -187,7 +186,7 @@ namespace QQmlCompilerTypes {
 
     struct BindingReference
     {
-        enum DataType { QtScript, V4, V8,
+        enum DataType { QtScript,
                         Tr, TrId };
         DataType dataType;
     };
@@ -195,17 +194,15 @@ namespace QQmlCompilerTypes {
     struct JSBindingReference : public QQmlPool::Class,
                                 public BindingReference
     {
-        JSBindingReference() : isSafe(false), nextReference(0) {}
+        JSBindingReference() : nextReference(0) {}
 
         QQmlScript::Variant expression;
         QQmlScript::Property *property;
         QQmlScript::Value *value;
 
-        int compiledIndex:15;
-        int sharedIndex:15;
-        bool isSafe:1;
+        int compiledIndex : 16;
+        int sharedIndex : 16;
 
-        QString rewrittenExpression;
         BindingContext bindingContext;
 
         JSBindingReference *nextReference;
@@ -255,7 +252,7 @@ namespace QQmlCompilerTypes {
     {
         ComponentCompileState() 
         : parserStatusCount(0), totalBindingsCount(0), pushedProperties(0), nested(false), 
-          v8BindingProgramLine(-1), root(0) {}
+          root(0) {}
 
         IdList ids;
         int parserStatusCount;
@@ -264,8 +261,6 @@ namespace QQmlCompilerTypes {
         bool nested;
 
         QByteArray compiledBindingData;
-        QByteArray v8BindingProgram;
-        int v8BindingProgramLine;
 
         DepthStack objectDepth;
         DepthStack listDepth;
@@ -299,8 +294,7 @@ public:
 
     int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
-    int rewriteBinding(const QQmlScript::Variant& value, const QString& name); // for QQmlCustomParser::rewriteBinding
-    QString rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name);  // for QQmlCustomParser::rewriteSignalHandler
+    int bindingIdentifier(const QQmlScript::Variant& value); // for QQmlCustomParser::bindingIndex
 
 private:
     typedef QQmlCompiledData::Instruction Instruction;
@@ -446,8 +440,6 @@ private:
 
         int ids;
         QList<QQmlScript::LocationSpan> scriptBindings;
-        QList<QQmlScript::LocationSpan> sharedBindings;
-        QList<QQmlScript::LocationSpan> optimizedBindings;
         int objects;
     };
     struct ComponentStats : public QQmlPool::Class

@@ -76,8 +76,8 @@ public:
     QRegExp keyRegExp;
     QPointF dragPosition;
     QQuickDropAreaDrag *drag;
-    QQmlGuard<QObject> source;
-    QQmlGuard<QMimeData> mimeData;
+    QPointer<QObject> source;
+    QPointer<QMimeData> mimeData;
 };
 
 QQuickDropAreaPrivate::QQuickDropAreaPrivate()
@@ -416,14 +416,14 @@ QStringList QQuickDropEvent::keys() const
     If an \a action is specified it will overwrite the value of the \l action property.
 */
 
-void QQuickDropEvent::accept(QQmlV8Function *args)
+void QQuickDropEvent::accept(QQmlV4Function *args)
 {
     Qt::DropAction action = event->dropAction();
 
-    if (args->Length() >= 1) {
-        v8::Local<v8::Value> v = (*args)[0];
-        if (v->IsInt32())
-            action = Qt::DropAction(v->Int32Value());
+    if (args->length() >= 1) {
+        QV4::Value v = (*args)[0];
+        if (v.isInt32())
+            action = Qt::DropAction(v.integerValue());
     }
     // get action from arguments.
     event->setDropAction(action);

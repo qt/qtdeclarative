@@ -3,7 +3,7 @@ TARGET  = qmllocalstorageplugin
 TARGETPATH = QtQuick/LocalStorage
 IMPORT_VERSION = 2.0
 
-QT = sql qml-private v8-private core-private
+QT = sql qml-private  core-private
 
 SOURCES += plugin.cpp
 

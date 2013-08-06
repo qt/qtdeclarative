@@ -623,10 +623,10 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 } else if (hasValidSignal(object, propertyName)) {
                     QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(property)->signalIndex(),
                                                                                              QQmlContextData::get(context), object, expression.toString(),
-                                                                                             false, filename, line, column);
+                                                                                             filename, line, column);
                     QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {
-                    QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
+                    QQmlBinding *binding = new QQmlBinding(expression.toString(), object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);
                     QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, binding);
                     if (oldBinding)
@@ -742,7 +742,8 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
-    vmeMetaObject->setVmeMethod(prop->coreIndex, QQmlExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
+    vmeMetaObject->setVmeMethod(prop->coreIndex,
+                                QQmlExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
     return true;
 }
 

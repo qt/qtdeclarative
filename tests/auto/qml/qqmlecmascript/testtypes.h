@@ -63,6 +63,7 @@
 
 #include <private/qqmlengine_p.h>
 #include <private/qv8engine_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 class MyQmlAttachedObject : public QObject
 {
@@ -265,7 +266,7 @@ public slots:
     void myinvokable(MyQmlObject *o) { myinvokableObject = o; }
     void variantMethod(const QVariant &v) { m_variant = v; }
     void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
-    void v8function(QQmlV8Function*);
+    void v8function(QQmlV4Function*);
     void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
 
 private:
@@ -1172,16 +1173,14 @@ private:
     int m_value;
 };
 
-class CircularReferenceObject : public QObject,
-                                public QV8GCCallback::Node
+class CircularReferenceObject : public QObject
 {
     Q_OBJECT
 
 public:
     CircularReferenceObject(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(callback), m_referenced(0), m_dtorCount(0)
+        : QObject(parent), m_dtorCount(0)
     {
-        QV8GCCallback::addGcCallbackNode(this);
     }
 
     ~CircularReferenceObject()
@@ -1204,15 +1203,15 @@ public:
 
     Q_INVOKABLE void addReference(QObject *other)
     {
-        m_referenced = other;
-    }
+        QQmlData *ddata = QQmlData::get(this);
+        assert(ddata);
+        QV4::QObjectWrapper *thisObject = ddata->jsWrapper.value().as<QV4::QObjectWrapper>();
+        assert(thisObject);
 
-    static void callback(QV8GCCallback::Node *n)
-    {
-        CircularReferenceObject *cro = static_cast<CircularReferenceObject*>(n);
-        if (cro->m_referenced) {
-            cro->m_engine->addRelationshipForGC(cro, cro->m_referenced);
-        }
+        QQmlData *otherDData = QQmlData::get(other);
+        assert(otherDData);
+
+        thisObject->defineDefaultProperty(thisObject->engine(), QStringLiteral("autoTestStrongRef"), otherDData->jsWrapper.value());
     }
 
     void setEngine(QQmlEngine* declarativeEngine)
@@ -1221,70 +1220,10 @@ public:
     }
 
 private:
-    QObject *m_referenced;
     int *m_dtorCount;
     QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceObject*)
-
-class CircularReferenceHandle : public QObject,
-                                public QV8GCCallback::Node
-{
-    Q_OBJECT
-
-public:
-    CircularReferenceHandle(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0), m_engine(0)
-    {
-        QV8GCCallback::addGcCallbackNode(this);
-    }
-
-    ~CircularReferenceHandle()
-    {
-        if (m_dtorCount) *m_dtorCount = *m_dtorCount + 1;
-    }
-
-    Q_INVOKABLE void setDtorCount(int *dtorCount)
-    {
-        m_dtorCount = dtorCount;
-    }
-
-    Q_INVOKABLE CircularReferenceHandle *generate(QObject *parent = 0)
-    {
-        CircularReferenceHandle *retn = new CircularReferenceHandle(parent);
-        retn->m_dtorCount = m_dtorCount;
-        retn->m_engine = m_engine;
-        return retn;
-    }
-
-    Q_INVOKABLE void addReference(v8::Persistent<v8::Value> handle)
-    {
-        m_referenced = qPersistentNew(handle);
-        m_referenced.MakeWeak(static_cast<void*>(this), wrcallback);
-    }
-
-    static void wrcallback(v8::Persistent<v8::Value> handle, void *)
-    {
-        qPersistentDispose(handle);
-    }
-
-    static void gccallback(QV8GCCallback::Node *n)
-    {
-        CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(n);
-        crh->m_engine->addRelationshipForGC(crh, crh->m_referenced);
-    }
-
-    void setEngine(QQmlEngine* declarativeEngine)
-    {
-        m_engine = QQmlEnginePrivate::get(declarativeEngine)->v8engine();
-    }
-
-private:
-    v8::Persistent<v8::Value> m_referenced;
-    int *m_dtorCount;
-    QV8Engine* m_engine;
-};
-Q_DECLARE_METATYPE(CircularReferenceHandle*)
 
 class MyDynamicCreationDestructionObject : public QObject
 {

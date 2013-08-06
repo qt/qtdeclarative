@@ -3,6 +3,6 @@ var test2 = false
 var test3 = false
 
 function go() {
-    Qt.include("js/include2.js");
+    console.log(Qt.include("js/include2.js").status);
 }
 

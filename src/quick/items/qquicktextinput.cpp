@@ -56,6 +56,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qinputmethod.h>
+#include <QtCore/qmath.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include "qaccessible.h"
@@ -1406,7 +1407,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     \endlist
 */
 
-void QQuickTextInput::positionAt(QQmlV8Function *args) const
+void QQuickTextInput::positionAt(QQmlV4Function *args) const
 {
     Q_D(const QQuickTextInput);
 
@@ -1414,21 +1415,21 @@ void QQuickTextInput::positionAt(QQmlV8Function *args) const
     qreal y = 0;
     QTextLine::CursorPosition position = QTextLine::CursorBetweenCharacters;
 
-    if (args->Length() < 1)
+    if (args->length() < 1)
         return;
 
     int i = 0;
-    v8::Local<v8::Value> arg = (*args)[i];
-    x = arg->NumberValue();
+    QV4::Value arg = (*args)[i];
+    x = arg.toNumber();
 
-    if (++i < args->Length()) {
+    if (++i < args->length()) {
         arg = (*args)[i];
-        y = arg->NumberValue();
+        y = arg.toNumber();
     }
 
-    if (++i < args->Length()) {
+    if (++i < args->length()) {
         arg = (*args)[i];
-        position = QTextLine::CursorPosition(arg->Int32Value());
+        position = QTextLine::CursorPosition(arg.toInt32());
     }
 
     int pos = d->positionAt(x, y, position);
@@ -1443,7 +1444,7 @@ void QQuickTextInput::positionAt(QQmlV8Function *args) const
         pos = cursor;
 #endif
     }
-    args->returnValue(v8::Int32::New(pos));
+    args->setReturnValue(QV4::Value::fromInt32(pos));
 }
 
 int QQuickTextInputPrivate::positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const

@@ -116,10 +116,7 @@ QT_BEGIN_NAMESPACE
     F(StoreImportedScript, storeScript) \
     F(StoreScriptString, storeScriptString) \
     F(BeginObject, begin) \
-    F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
-    F(StoreV8Binding, assignBinding) \
-    F(StoreV4Binding, assignV4Binding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \
@@ -236,24 +233,6 @@ union QQmlInstruction
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
         int castValue;
-    };
-    struct instr_initV8Bindings {
-        QML_INSTR_HEADER
-        ushort programIndex;
-        ushort line;
-    };
-    struct instr_assignV4Binding {
-        QML_INSTR_HEADER
-        int property;   // ((value type sub-property index << 16) | property index)
-        int propType;
-        int value;
-        int fallbackValue;
-        short context;
-        short owner;
-        bool isRoot:1;
-        bool isAlias:1;
-        ushort line;
-        ushort column;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
@@ -413,9 +392,10 @@ union QQmlInstruction
     };
     struct instr_storeSignal {
         QML_INSTR_HEADER
+        int handlerName;
+        int parameters;
         int signalIndex;
         int value;
-        int parameterCount;
         short context;
         ushort line;
         ushort column;
@@ -510,8 +490,6 @@ union QQmlInstruction
     instr_setId setId;
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
-    instr_initV8Bindings initV8Bindings;
-    instr_assignV4Binding assignV4Binding;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;

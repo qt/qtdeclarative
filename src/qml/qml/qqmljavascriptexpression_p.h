@@ -53,11 +53,11 @@
 // We mean it.
 //
 
-#include <private/qv8_p.h>
 #include <QtCore/qglobal.h>
 #include <QtQml/qqmlerror.h>
 #include <private/qqmlengine_p.h>
 #include <private/qpointervaluepair_p.h>
+#include <private/qv4exception_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +65,7 @@ class QQmlDelayedError
 {
 public:
     inline QQmlDelayedError() : nextError(0), prevError(0) {}
-    inline ~QQmlDelayedError() { qPersistentDispose(m_message); removeError(); }
+    inline ~QQmlDelayedError() { removeError(); }
 
     bool addError(QQmlEnginePrivate *);
 
@@ -77,20 +77,19 @@ public:
         prevError = 0;
     }
 
-    inline bool isValid() const { return !m_message.IsEmpty() || m_error.isValid(); }
-    inline const QQmlError &error(QQmlEngine *engine) const { convertMessageToError(engine); return m_error; }
-    inline void clearError() { qPersistentDispose(m_message); m_error = QQmlError(); }
+    inline bool isValid() const { return m_error.isValid(); }
+    inline const QQmlError &error() const { return m_error; }
+    inline void clearError() { m_error = QQmlError(); }
 
-    void setMessage(v8::Handle<v8::Message> message);
     void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
     void setErrorDescription(const QString &description);
     void setErrorObject(QObject *object);
 
+    void setError(const QV4::Exception &e);
+
 private:
-    void convertMessageToError(QQmlEngine *engine) const;
 
     mutable QQmlError m_error;
-    mutable v8::Persistent<v8::Message> m_message;
 
     QQmlDelayedError  *nextError;
     QQmlDelayedError **prevError;
@@ -111,16 +110,14 @@ public:
 
     QQmlJavaScriptExpression(VTable *vtable);
 
-    v8::Local<v8::Value> evaluate(QQmlContextData *, v8::Handle<v8::Function>,
+    QV4::Value evaluate(QQmlContextData *, const QV4::Value &function,
                                   bool *isUndefined);
-    v8::Local<v8::Value> evaluate(QQmlContextData *, v8::Handle<v8::Function>,
-                                  int argc, v8::Handle<v8::Value> args[],
+    QV4::Value evaluate(QQmlContextData *, const QV4::Value &function,
+                                  int argc, QV4::Value *args,
                                   bool *isUndefined);
 
     inline bool requiresThisObject() const;
     inline void setRequiresThisObject(bool v);
-    inline bool useSharedContext() const;
-    inline void setUseSharedContext(bool v);
     inline bool notifyOnValueChanged() const;
 
     void setNotifyOnValueChanged(bool v);
@@ -148,15 +145,16 @@ public:
     void clearGuards();
     QQmlDelayedError *delayedError();
 
-    static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
-    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
+    static void exceptionToError(const QV4::Exception &e, QQmlError &);
+    static QV4::PersistentValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
                                                      quint16 line,
-                                                     v8::Persistent<v8::Object> *qmlscope = 0);
-    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                                     const char *code, int codeLength,
-                                                     const QString &filename, quint16 line,
-                                                     v8::Persistent<v8::Object> *qmlscope = 0);
+                                                     QV4::PersistentValue *qmlscope = 0);
+    // doesn't require rewriting the expression
+    static QV4::PersistentValue qmlBinding(QQmlContextData *ctxt, QObject *scope,
+                                        const QString &code,
+                                        const QString &filename, quint16 line,
+                                        QV4::PersistentValue *qmlscope = 0);
 protected:
     ~QQmlJavaScriptExpression();
 
@@ -225,16 +223,6 @@ bool QQmlJavaScriptExpression::requiresThisObject() const
 void QQmlJavaScriptExpression::setRequiresThisObject(bool v)
 {
     m_scopeObject.setFlagValue(v);
-}
-
-bool QQmlJavaScriptExpression::useSharedContext() const
-{
-    return activeGuards.flag2();
-}
-
-void QQmlJavaScriptExpression::setUseSharedContext(bool v)
-{
-    activeGuards.setFlag2Value(v);
 }
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const

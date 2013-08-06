@@ -47,6 +47,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qmath.h>
 
 #include <private/qqmlglobal_p.h>
 

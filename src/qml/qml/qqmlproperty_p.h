@@ -59,7 +59,6 @@
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlpropertycache_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -78,8 +77,8 @@ public:
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
     QQmlContextData *context;
-    QQmlGuard<QQmlEngine> engine;
-    QQmlGuard<QObject> object;
+    QPointer<QQmlEngine> engine;
+    QPointer<QObject> object;
 
     QQmlPropertyData core;
 
@@ -119,8 +118,6 @@ public:
     static QQmlAbstractBinding *setBindingNoEnable(QObject *, int coreIndex,
                                                            int valueTypeIndex /* -1 */,
                                                            QQmlAbstractBinding *);
-    static QQmlAbstractBinding *activateSharedBinding(QQmlContextData *context,
-                                                      int sharedIdx, WriteFlags flags);
     static QQmlAbstractBinding *binding(QObject *, int coreIndex,
                                                 int valueTypeIndex /* -1 */);
 
@@ -150,8 +147,8 @@ public:
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,
-                             QQmlJavaScriptExpression *expression, 
-                             v8::Handle<v8::Value> result, bool isUndefined,
+                             QQmlJavaScriptExpression *expression,
+                             const QV4::Value &result, bool isUndefined,
                              WriteFlags flags);
     static int valueTypeCoreIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlProperty &that);

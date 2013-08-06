@@ -89,9 +89,9 @@ public:
 
     QQuickDragGrabber dragGrabber;
 
-    QQmlGuard<QObject> source;
-    QQmlGuard<QObject> target;
-    QQmlGuard<QQuickWindow> window;
+    QPointer<QObject> source;
+    QPointer<QObject> target;
+    QPointer<QQuickWindow> window;
     QQuickItem *attachedItem;
     QQuickDragMimeData *mimeData;
     Qt::DropAction proposedAction;
@@ -502,7 +502,7 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
     property for the started sequence.
 */
 
-void QQuickDragAttached::start(QQmlV8Function *args)
+void QQuickDragAttached::start(QQmlV4Function *args)
 {
     Q_D(QQuickDragAttached);
     if (d->inEvent) {
@@ -516,10 +516,10 @@ void QQuickDragAttached::start(QQmlV8Function *args)
     d->overrideActions = false;
     Qt::DropActions supportedActions = d->supportedActions;
     // check arguments for supportedActions, maybe data?
-    if (args->Length() >= 1) {
-        v8::Local<v8::Value> v = (*args)[0];
-        if (v->IsInt32()) {
-            supportedActions = Qt::DropActions(v->Int32Value());
+    if (args->length() >= 1) {
+        QV4::Value v = (*args)[0];
+        if (v.isInt32()) {
+            supportedActions = Qt::DropActions(v.integerValue());
             d->overrideActions = true;
         }
     }

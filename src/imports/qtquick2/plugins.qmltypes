@@ -1029,7 +1029,7 @@ Module {
         }
         Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "contextType"; type: "string" }
-        Property { name: "context"; type: "QQmlV8Handle"; isReadonly: true }
+        Property { name: "context"; type: "QQmlV4Handle"; isReadonly: true }
         Property { name: "canvasSize"; type: "QSizeF" }
         Property { name: "tileSize"; type: "QSize" }
         Property { name: "canvasWindow"; type: "QRectF" }
@@ -3929,7 +3929,7 @@ Module {
         Property { name: "source"; type: "QUrl" }
         Signal {
             name: "message"
-            Parameter { name: "messageObject"; type: "QQmlV8Handle" }
+            Parameter { name: "messageObject"; type: "QQmlV4Handle" }
         }
         Method {
             name: "sendMessage"

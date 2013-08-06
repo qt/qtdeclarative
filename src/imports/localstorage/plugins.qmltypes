@@ -13,7 +13,7 @@ Module {
         exportMetaObjectRevisions: [0]
         Method {
             name: "openDatabaseSync"
-            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
+            Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
         }
     }
 }

@@ -130,7 +130,7 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
 
                 QQmlBinding *newBinding = 0;
                 if (!isLiteralValue) {
-                    newBinding = new QQmlBinding(expression.toString(), false, object,
+                    newBinding = new QQmlBinding(expression.toString(), object,
                                                  QQmlContextData::get(context), fileName,
                                                  line, column);
                     newBinding->setTarget(property);

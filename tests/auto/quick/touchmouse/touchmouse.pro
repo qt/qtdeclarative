@@ -1,7 +1,7 @@
 CONFIG += testcase
 
 TARGET = tst_touchmouse
-QT += core-private gui-private qml-private quick-private v8-private testlib
+QT += core-private gui-private qml-private quick-private  testlib
 
 macx:CONFIG -= app_bundle
 

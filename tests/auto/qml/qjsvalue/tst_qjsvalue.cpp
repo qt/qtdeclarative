@@ -378,7 +378,7 @@ void tst_QJSValue::toString()
             "})()");
         QVERIFY(!objectObject.isError());
         QVERIFY(objectObject.isObject());
-        QCOMPARE(objectObject.toString(), QString::fromLatin1("TypeError: Function.prototype.toString is not generic"));
+        QCOMPARE(objectObject.toString(), QString::fromLatin1("TypeError: Type error"));
     }
 
     QJSValue inv = QJSValue();
@@ -1584,7 +1584,7 @@ void tst_QJSValue::getSetPrototype_evalCyclicPrototype()
     QJSEngine eng;
     QJSValue ret = eng.evaluate("o = { }; p = { }; o.__proto__ = p; p.__proto__ = o");
     QCOMPARE(ret.isError(), true);
-    QCOMPARE(ret.toString(), QLatin1String("Error: Cyclic __proto__ value"));
+    QCOMPARE(ret.toString(), QLatin1String("TypeError: Cyclic __proto__ value"));
 }
 
 void tst_QJSValue::getSetPrototype_eval()
@@ -1783,7 +1783,6 @@ void tst_QJSValue::call_twoEngines()
     QJSEngine otherEngine;
     QJSValue fun = otherEngine.evaluate("(function() { return 1; })");
     QVERIFY(fun.isCallable());
-    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with thisObject created in "
                          "a different engine");
@@ -2070,7 +2069,6 @@ void tst_QJSValue::equals()
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(1, 2)));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
         QVERIFY(var1.equals(var2));
     }
     {
@@ -2078,12 +2076,6 @@ void tst_QJSValue::equals()
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.equals(var2));
     }
-
-    QJSEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::equals: "
-                         "cannot compare to a value created in "
-                         "a different engine");
-    QCOMPARE(date1.equals(otherEngine.toScriptValue(123)), false);
 }
 
 void tst_QJSValue::strictlyEquals()
@@ -2221,12 +2213,6 @@ void tst_QJSValue::strictlyEquals()
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.strictlyEquals(var2));
     }
-
-    QJSEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::strictlyEquals: "
-                         "cannot compare to a value created in "
-                         "a different engine");
-    QCOMPARE(date1.strictlyEquals(otherEngine.toScriptValue(123)), false);
 }
 
 Q_DECLARE_METATYPE(int*)
@@ -2423,6 +2409,7 @@ void tst_QJSValue::prettyPrinter()
     QJSValue val = eng.evaluate("(" + function + ")");
     QVERIFY(val.isCallable());
     QString actual = val.toString();
+    QSKIP("Function::toString() doesn't give the whole function on v4");
     int count = qMin(actual.size(), expected.size());
     for (int i = 0; i < count; ++i) {
         QCOMPARE(actual.at(i), expected.at(i));

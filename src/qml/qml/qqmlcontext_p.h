@@ -56,7 +56,6 @@
 #include "qqmlcontext.h"
 
 #include "qqmldata_p.h"
-#include "qqmlintegercache_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include "qqmllist.h"
@@ -70,19 +69,16 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlguard_p.h>
 
-#include <private/qv8_p.h>
-
+#include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QV8Bindings;
 class QQmlContext;
 class QQmlExpression;
 class QQmlEngine;
 class QQmlExpression;
 class QQmlExpressionPrivate;
 class QQmlAbstractExpression;
-class QV4Bindings;
 class QQmlContextData;
 
 class QQmlContextPrivate : public QObjectPrivate
@@ -156,13 +152,13 @@ public:
     void *activeVMEData;
 
     // Property name cache
-    QQmlIntegerCache *propertyNames;
+    QV4::IdentifierHash<int> propertyNames;
 
     // Context object
     QObject *contextObject;
 
     // Any script blocks that exist on this context
-    QList<v8::Persistent<v8::Object> > importedScripts;
+    QList<QV4::PersistentValue> importedScripts;
 
     // Context base url
     QUrl url;
@@ -199,10 +195,17 @@ public:
         QFlagPointer<QQmlContextData> context;
         QQmlNotifier bindings;
     };
+    struct ObjectIdMapping {
+        ObjectIdMapping() : id(-1) {}
+        ObjectIdMapping(const QString &name, int id)
+            : name(name), id(id) {}
+        QString name;
+        int id;
+    };
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(QQmlIntegerCache *);
+    void setIdPropertyData(const QVector<ObjectIdMapping> &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;
@@ -210,10 +213,6 @@ public:
     // Linked list of uses of the Component attached property in this
     // context
     QQmlComponentAttached *componentAttached;
-
-    // Optimized binding objects.  Needed for deferred properties.
-    QV4Bindings *v4bindings;
-    QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.
     QString findObjectId(const QObject *obj) const;

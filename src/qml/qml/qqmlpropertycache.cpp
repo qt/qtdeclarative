@@ -49,7 +49,8 @@
 #include <private/qmetaobject_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
-#include <private/qqmlrewrite_p.h>
+
+#include <private/qv4value_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -72,7 +73,6 @@ public:
 
     //for signal handler rewrites
     QString *signalParameterStringForJS;
-    int signalParameterCountForJS:30;
     int parameterError:1;
     int argumentsValid:1;
 
@@ -117,8 +117,8 @@ static QQmlPropertyData::Flags flagsForPropertyType(int propType, QQmlEngine *en
         flags |= QQmlPropertyData::IsQmlBinding;
     } else if (propType == qMetaTypeId<QJSValue>()) {
         flags |= QQmlPropertyData::IsQJSValue;
-    } else if (propType == qMetaTypeId<QQmlV8Handle>()) {
-        flags |= QQmlPropertyData::IsV8Handle;
+    } else if (propType == qMetaTypeId<QQmlV4Handle>()) {
+        flags |= QQmlPropertyData::IsV4Handle;
     } else {
         QQmlMetaType::TypeCategory cat =
             engine ? QQmlEnginePrivate::get(engine)->typeCategory(propType)
@@ -194,8 +194,8 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
-            flags |= IsV8Function;
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+            flags |= IsV4Function;
         }
     }
 
@@ -225,8 +225,8 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 
     if (m.parameterCount()) {
         flags |= HasArguments;
-        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
-            flags |= IsV8Function;
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV4Function*")) {
+            flags |= IsV4Function;
         }
     }
 
@@ -288,18 +288,14 @@ QQmlPropertyCache::~QQmlPropertyCache()
 
 void QQmlPropertyCache::destroy()
 {
-    Q_ASSERT(engine || constructor.IsEmpty());
-    if (constructor.IsEmpty())
-        delete this;
-    else
-        QQmlEnginePrivate::deleteInEngineThread(engine, this);
+    Q_ASSERT(engine);
+    delete this;
 }
 
 // This is inherited from QQmlCleanup, so it should only clear the things
 // that are tied to the specific QQmlEngine.
 void QQmlPropertyCache::clear()
 {
-    qPersistentDispose(constructor);
     engine = 0;
 }
 
@@ -315,8 +311,6 @@ QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
     cache->allowedRevisionCache = allowedRevisionCache;
     cache->_metaObject = _metaObject;
     cache->_defaultPropertyName = _defaultPropertyName;
-
-    // We specifically do *NOT* copy the constructor
 
     return cache;
 }
@@ -597,7 +591,6 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                                        QQmlPropertyData::Flag signalFlags)
 {
     Q_UNUSED(revision);
-    Q_ASSERT(constructor.IsEmpty()); // We should not be appending to an in-use property cache
 
     _metaObject = metaObject;
 
@@ -1089,7 +1082,6 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     args->arguments[0] = argc;
     args->argumentsValid = false;
     args->signalParameterStringForJS = 0;
-    args->signalParameterCountForJS = 0;
     args->parameterError = false;
     args->names = argc ? new QList<QByteArray>(names) : 0;
     args->next = argumentsCache;
@@ -1101,7 +1093,7 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QString *errorString)
+QString QQmlPropertyCache::signalParameterStringForJS(int index, QString *errorString)
 {
     QQmlPropertyCache *c = 0;
     QQmlPropertyData *signalData = signal(index, &c);
@@ -1113,8 +1105,6 @@ QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QSt
     if (signalData->arguments) {
         A *arguments = static_cast<A *>(signalData->arguments);
         if (arguments->signalParameterStringForJS) {
-            if (count)
-                *count = arguments->signalParameterCountForJS;
             if (arguments->parameterError) {
                 if (errorString)
                     *errorString = *arguments->signalParameterStringForJS;
@@ -1131,24 +1121,47 @@ QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QSt
         signalData->arguments = args;
     }
 
-    QQmlRewrite::RewriteSignalHandler rewriter;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    const QString &parameters = rewriter.createParameterString(parameterNameList,
-                                                               ep->v8engine()->illegalNames());
+    QString error;
+    QString parameters = signalParameterStringForJS(engine, parameterNameList, &error);
 
-    bool error = rewriter.hasParameterError();
     A *arguments = static_cast<A *>(signalData->arguments);
-    arguments->signalParameterStringForJS = new QString(error ? rewriter.parameterError() : parameters);
-    arguments->signalParameterCountForJS = rewriter.parameterCountForJS();
-    if (count)
-        *count = arguments->signalParameterCountForJS;
-    if (error) {
+    arguments->signalParameterStringForJS = new QString(!error.isEmpty() ? error : parameters);
+    if (!error.isEmpty()) {
         arguments->parameterError = true;
         if (errorString)
             *errorString = *arguments->signalParameterStringForJS;
         return QString();
     }
     return *arguments->signalParameterStringForJS;
+}
+
+QString QQmlPropertyCache::signalParameterStringForJS(QQmlEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString)
+{
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    bool unnamedParameter = false;
+    const QV4::IdentifierHash<bool> &illegalNames = ep->v8engine()->illegalNames();
+    QString error;
+    QString parameters;
+
+    for (int i = 0; i < parameterNameList.count(); ++i) {
+        if (i > 0)
+            parameters += QLatin1Char(',');
+        const QByteArray &param = parameterNameList.at(i);
+        if (param.isEmpty())
+            unnamedParameter = true;
+        else if (unnamedParameter) {
+            if (errorString)
+                *errorString = QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
+            return QString();
+        } else if (illegalNames.contains(param)) {
+            if (errorString)
+                *errorString = QCoreApplication::translate("QQmlRewrite", "Signal parameter \"%1\" hides global variable.").arg(QString::fromUtf8(param));
+            return QString();
+        }
+        parameters += QString::fromUtf8(param);
+    }
+
+    return parameters;
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array
@@ -1327,6 +1340,8 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
 
+    const QByteArray propertyName = property.toUtf8();
+
     int methodCount = metaObject->methodCount();
     for (int ii = methodCount - 1; ii >= 0; --ii) {
         if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
@@ -1334,9 +1349,8 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;
-        QString methodName = QString::fromUtf8(m.name().constData());
 
-        if (methodName == property) {
+        if (m.name() == propertyName) {
             rv.load(m);
             return rv;
         }
@@ -1344,7 +1358,6 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
 
     {
         const QMetaObject *cmo = metaObject;
-        const QByteArray propertyName = property.toUtf8();
         while (cmo) {
             int idx = cmo->indexOfProperty(propertyName);
             if (idx != -1) {
@@ -1375,14 +1388,14 @@ inline const QString &qQmlPropertyCacheToString(const QString &string)
     return string;
 }
 
-inline QString qQmlPropertyCacheToString(const QHashedV8String &string)
+inline QString qQmlPropertyCacheToString(const QV4::String *string)
 {
-    return QV8Engine::toStringStatic(string.string());
+    return string->toQString();
 }
 
 template<typename T>
 QQmlPropertyData *
-qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
+qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
                           QQmlContextData *context, QQmlPropertyData &local)
 {
     QQmlPropertyCache *cache = 0;
@@ -1416,17 +1429,17 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, const T &name,
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QHashedV8String &name,
+QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QV4::String *name,
                             QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<QHashedV8String>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj,
                                     const QString &name, QQmlContextData *context, QQmlPropertyData &local)
 {
-    return qQmlPropertyCacheProperty<QString>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
 }
 
 static inline const QMetaObjectPrivate *priv(const uint* data)

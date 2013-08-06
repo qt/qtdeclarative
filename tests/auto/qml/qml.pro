@@ -33,6 +33,7 @@ PRIVATETESTS += \
     qqmlecmascript \
     qqmlcontext \
     qqmlexpression \
+    qqmldirparser \
     qqmlglobal \
     qqmlinstruction \
     qqmllanguage \
@@ -52,9 +53,9 @@ PRIVATETESTS += \
     qquickworkerscript \
     qqmlbundle \
     qrcqml \
-    v4 \
     qqmltimer \
-    qqmlinstantiator
+    qqmlinstantiator \
+    qv4debugger
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

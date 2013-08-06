@@ -40,20 +40,15 @@
 ****************************************************************************/
 
 #include "qhashedstring_p.h"
-#include <private/qcalculatehash_p.h>
 
 inline quint32 stringHash(const QChar* data, int length)
 {
-    quint32 rv = calculateHash<quint16>((quint16*)data, length) >> HashedString::kHashShift;
-    Q_ASSERT(rv == v8::String::ComputeHash((uint16_t*)data, length));
-    return rv;
+    return QV4::String::createHashValue(data, length);
 }
 
 inline quint32 stringHash(const char *data, int length)
 {
-    quint32 rv = calculateHash<quint8>((quint8*)data, length) >> HashedString::kHashShift;
-    Q_ASSERT(rv == v8::String::ComputeHash((char *)data, length));
-    return rv;
+    return QV4::String::createHashValue(data, length);
 }
 
 void QHashedString::computeHash() const
@@ -345,14 +340,6 @@ static void utf8FromUtf16(char *output, const QChar *uc, int len)
     }
 }
 
-void QHashedStringRef::computeUtf8Length() const
-{
-    if (m_length) 
-        m_utf8length = utf8LengthFromUtf16(m_data, m_length);
-    else
-        m_utf8length = 0;
-}
-
 QHashedStringRef QHashedStringRef::mid(int offset, int length) const
 {
     Q_ASSERT(offset < m_length);
@@ -398,33 +385,6 @@ QString QHashedStringRef::toString() const
     if (m_length == 0)
         return QString();
     return QString(m_data, m_length);
-}
-
-QByteArray QHashedStringRef::toUtf8() const
-{
-    if (m_length == 0)
-        return QByteArray();
-
-    QByteArray result;
-    result.resize(utf8length());
-    writeUtf8(result.data());
-    return result;
-}
-
-void QHashedStringRef::writeUtf8(char *output) const
-{
-    if (m_length) {
-        int ulen = utf8length();
-        if (ulen == m_length) {
-            // Must be a latin1 string
-            uchar *o = (uchar *)output;
-            const QChar *c = m_data;
-            while (ulen--) 
-                *o++ = (uchar)((*c++).unicode());
-        } else {
-            utf8FromUtf16(output, m_data, m_length);
-        }
-    }
 }
 
 QString QHashedCStringRef::toUtf16() const

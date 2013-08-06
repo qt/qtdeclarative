@@ -62,11 +62,12 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
+#include <private/qv4value_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 class QMetaProperty;
-class QV8QObjectWrapper;
 class QQmlEngine;
 class QQmlPropertyData;
 class QQmlAccessors;
@@ -101,7 +102,7 @@ public:
         IsQList            = 0x00000800, // Property type is a QML list
         IsQmlBinding       = 0x00001000, // Property type is a QQmlBinding*
         IsQJSValue         = 0x00002000, // Property type is a QScriptValue
-        IsV8Handle         = 0x00004000, // Property type is a QQmlV8Handle
+        IsV4Handle         = 0x00004000, // Property type is a QQmlV4Handle
         IsVarProperty      = 0x00008000, // Property type is a "var" property of VMEMO
         IsValueTypeVirtual = 0x00010000, // Property is a value type "virtual" property
         IsQVariant         = 0x00020000, // Property is a QVariant
@@ -111,7 +112,7 @@ public:
         HasArguments       = 0x00080000, // Function takes arguments
         IsSignal           = 0x00100000, // Function is a signal
         IsVMESignal        = 0x00200000, // Signal was added by QML
-        IsV8Function       = 0x00400000, // Function takes QQmlV8Function* args
+        IsV4Function       = 0x00400000, // Function takes QQmlV4Function* args
         IsSignalHandler    = 0x00800000, // Function is a signal handler
         IsOverload         = 0x01000000, // Function is an overload of another function
         IsCloned           = 0x02000000, // The function was marked as cloned
@@ -121,7 +122,7 @@ public:
 
         // Flags that are set based on the propType field
         PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
-                           IsV8Handle | IsQVariant,
+                           IsV4Handle | IsQVariant,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -144,7 +145,7 @@ public:
     bool isQList() const { return flags & IsQList; }
     bool isQmlBinding() const { return flags & IsQmlBinding; }
     bool isQJSValue() const { return flags & IsQJSValue; }
-    bool isV8Handle() const { return flags & IsV8Handle; }
+    bool isV4Handle() const { return flags & IsV4Handle; }
     bool isVarProperty() const { return flags & IsVarProperty; }
     bool isValueTypeVirtual() const { return flags & IsValueTypeVirtual; }
     bool isQVariant() const { return flags & IsQVariant; }
@@ -152,7 +153,7 @@ public:
     bool hasArguments() const { return flags & HasArguments; }
     bool isSignal() const { return flags & IsSignal; }
     bool isVMESignal() const { return flags & IsVMESignal; }
-    bool isV8Function() const { return flags & IsV8Function; }
+    bool isV4Function() const { return flags & IsV4Function; }
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
     bool isCloned() const { return flags & IsCloned; }
@@ -294,6 +295,7 @@ public:
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
     QQmlPropertyCache *parent() const;
+    // is used by the Qml Designer
     void setParent(QQmlPropertyCache *newParent);
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
@@ -302,7 +304,7 @@ public:
     inline QQmlEngine *qmlEngine() const;
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QString &,
                                               QQmlContextData *, QQmlPropertyData &);
-    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QHashedV8String &,
+    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QV4::String *,
                                               QQmlContextData *, QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);
@@ -314,7 +316,8 @@ public:
     static int originalClone(QObject *, int index);
 
     QList<QByteArray> signalParameterNames(int index) const;
-    QString signalParameterStringForJS(int index, int *count = 0, QString *errorString = 0);
+    QString signalParameterStringForJS(int index, QString *errorString = 0);
+    static QString signalParameterStringForJS(QQmlEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = 0);
 
     const char *className() const;
 
@@ -335,7 +338,6 @@ protected:
 
 private:
     friend class QQmlEnginePrivate;
-    friend class QV8QObjectWrapper;
     friend class QQmlCompiler;
 
     inline QQmlPropertyCache *copy(int reserve);
@@ -344,9 +346,6 @@ private:
                 QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
-
-    // Implemented in v8/qv8qobjectwrapper.cpp
-    v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
                                                             const QList<QByteArray> &names = QList<QByteArray>());
@@ -390,7 +389,6 @@ private:
     IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
-    v8::Persistent<v8::Function> constructor;
 
     bool _hasPropertyOverrides : 1;
     bool _ownMetaObject : 1;

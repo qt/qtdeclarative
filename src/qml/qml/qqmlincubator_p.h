@@ -85,7 +85,7 @@ public:
     enum Progress { Execute, Completing, Completed };
     Progress progress;
 
-    QQmlGuard<QObject> result;
+    QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
     QQmlCompiledData *compiledData;
     QQmlVME vme;

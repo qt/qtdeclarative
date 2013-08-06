@@ -82,7 +82,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 
-    QQmlV8Handle typeName(const QVariant& v) const
+    QQmlV4Handle typeName(const QVariant& v) const
     {
         QString name(v.typeName());
         if (v.canConvert<QObject*>()) {
@@ -97,31 +97,33 @@ public Q_SLOTS:
             }
         }
 
-        return QQmlV8Handle::fromHandle(v8::String::New(name.toUtf8()));
+        QQmlEngine *engine = qmlEngine(this);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        return QQmlV4Handle(QV4::Value::fromString(v4->newString(name)));
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
         return act == exp;
     }
 
-    QQmlV8Handle callerFile(int frameIndex = 0) const
+    QQmlV4Handle callerFile(int frameIndex = 0) const
     {
-        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
-        int count = stacks->GetFrameCount();
-        if (count >= frameIndex + 1) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
-            return QQmlV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
-        }
-        return QQmlV8Handle();
+        QQmlEngine *engine = qmlEngine(this);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+
+        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 1);
+        if (stack.size() > frameIndex)
+            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex).source)));
+        return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const
     {
-        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
-        int count = stacks->GetFrameCount();
-        if (count >= frameIndex + 1) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
-            return frame->GetLineNumber();
-        }
+        QQmlEngine *engine = qmlEngine(this);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+
+        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 1);
+        if (stack.size() > frameIndex)
+            return stack.at(frameIndex).line;
         return -1;
     }
 };

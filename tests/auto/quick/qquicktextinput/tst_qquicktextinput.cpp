@@ -55,6 +55,7 @@
 #include <QDebug>
 #include <QDir>
 #include <math.h>
+#include <qmath.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
@@ -5695,7 +5696,7 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
 {
     QUrl url = testFileUrl("qtbug-19956regexp.qml");
 
-    QString warning = url.toString() + ":11: Unable to assign [undefined] to QRegExp";
+    QString warning = url.toString() + ":11:17: Unable to assign [undefined] to QRegExp";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QQuickView window(url);

@@ -42,8 +42,8 @@
 #ifndef QSCRIPTVALUEITERATOR_H
 #define QSCRIPTVALUEITERATOR_H
 
-#include <QtQml/qtqmlglobal.h>
 #include <QtQml/qjsvalue.h>
+#include <QtQml/qtqmlglobal.h>
 #include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE

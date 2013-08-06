@@ -189,9 +189,9 @@ public:
     QPointF pressPos;
     QPointF tripleClickStartPoint;
 
-    QQmlGuard<QQmlComponent> cursorComponent;
+    QPointer<QQmlComponent> cursorComponent;
 #ifndef QT_NO_VALIDATOR
-    QQmlGuard<QValidator> m_validator;
+    QPointer<QValidator> m_validator;
 #endif
 
     qreal hscroll;

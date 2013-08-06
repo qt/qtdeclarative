@@ -45,7 +45,6 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QQmlComponent>
-#include <private/v8.h>
 #include <private/qqmldirparser_p.h>
 #include <QDebug>
 

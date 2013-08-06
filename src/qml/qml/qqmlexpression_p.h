@@ -55,8 +55,6 @@
 
 #include "qqmlexpression.h"
 
-#include <private/qv8engine_p.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
 #include <private/qflagpointer_p.h>
@@ -79,23 +77,18 @@ public:
     ~QQmlExpressionPrivate();
 
     void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, quint16, quint16);
-    void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, quint16, quint16);
+    void init(QQmlContextData *, const QString &, QObject *, const QString &, quint16, quint16);
 
     QVariant value(bool *isUndefined = 0);
 
-    v8::Local<v8::Value> v8value(bool *isUndefined = 0);
+    QV4::Value v4value(bool *isUndefined = 0);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);
 
     void _q_notify();
 
-    static QQmlExpression *create(QQmlContextData *, QObject *, const QString &, bool,
-                                  const QString &, quint16, quint16);
-
     bool expressionFunctionValid:1;
-    bool expressionFunctionRewritten:1;
 
     // "Inherited" from QQmlJavaScriptExpression
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
@@ -103,10 +96,9 @@ public:
     virtual void expressionChanged();
 
     QString expression;
-    QByteArray expressionUtf8;
 
-    v8::Persistent<v8::Object> v8qmlscope;
-    v8::Persistent<v8::Function> v8function;
+    QV4::PersistentValue qmlscope;
+    QV4::PersistentValue function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     quint16 line;

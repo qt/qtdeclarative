@@ -41,7 +41,6 @@
 
 #include "qv8profilerservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include "private/qjsconverter_impl_p.h"
 #include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>
@@ -52,6 +51,8 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
 
+#if 0
+// ### FIXME: v4
 class DebugServiceOutputStream : public v8::OutputStream
 {
 public:
@@ -68,6 +69,7 @@ public:
     }
     QList<QByteArray> messages;
 };
+#endif
 
 // convert to a QByteArray that can be sent to the debug client
 QByteArray QV8ProfilerData::toByteArray() const
@@ -90,10 +92,10 @@ public:
     {
     }
 
-    void takeSnapshot(v8::HeapSnapshot::Type);
-
-    void printProfileTree(const v8::CpuProfileNode *node, int level = 0);
-    void sendMessages();
+    // ### FIXME: v4
+//    void takeSnapshot(v8::HeapSnapshot::Type);
+//    void printProfileTree(const v8::CpuProfileNode *node, int level = 0);
+//    void sendMessages();
 
     QList<QV8ProfilerData> m_data;
 
@@ -198,9 +200,9 @@ void QV8ProfilerService::startProfiling(const QString &title)
     if (d->m_ongoing.contains(title))
         return;
 
-    v8::HandleScope handle_scope;
-    v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
-    v8::CpuProfiler::StartProfiling(v8title);
+//    v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
+    // ### FIXME: v4
+//    v8::CpuProfiler::StartProfiling(v8title);
 
     d->m_ongoing.append(title);
 
@@ -221,6 +223,8 @@ void QV8ProfilerService::stopProfiling(const QString &title)
         return;
     d->m_ongoing.removeOne(title);
 
+#if 0
+    // ### FIXME: v4
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     const v8::CpuProfile *cpuProfile = v8::CpuProfiler::StopProfiling(v8title);
@@ -236,26 +240,32 @@ void QV8ProfilerService::stopProfiling(const QString &title)
 
         sendMessage(data);
     }
+#endif
 }
 
 void QV8ProfilerService::takeSnapshot()
 {
     Q_D(QV8ProfilerService);
-    d->takeSnapshot(v8::HeapSnapshot::kFull);
+    // ### FIXME: v4
+//    d->takeSnapshot(v8::HeapSnapshot::kFull);
 }
 
 void QV8ProfilerService::deleteSnapshots()
 {
-    v8::HeapProfiler::DeleteAllSnapshots();
+    // ### FIXME: v4
+//    v8::HeapProfiler::DeleteAllSnapshots();
 }
 
 void QV8ProfilerService::sendProfilingData()
 {
     Q_D(QV8ProfilerService);
     // Send messages to client
-    d->sendMessages();
+    // ### FIXME: v4
+//    d->sendMessages();
 }
 
+#if 0
+// ### FIXME: v4
 void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)
 {
     for (int index = 0 ; index < node->GetChildrenCount() ; index++) {
@@ -281,7 +291,7 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     Q_Q(QV8ProfilerService);
 
     v8::HandleScope scope;
-    v8::Local<v8::String> title = v8::String::New("");
+    v8::Handle<v8::String> title = v8::String::New("");
 
     DebugServiceOutputStream outputStream;
     const v8::HeapSnapshot *snapshot = v8::HeapProfiler::TakeSnapshot(title, snapshotType);
@@ -314,6 +324,6 @@ void QV8ProfilerServicePrivate::sendMessages()
 
     q->sendMessages(messages);
 }
-
+#endif
 
 QT_END_NAMESPACE

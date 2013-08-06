@@ -47,7 +47,6 @@
 #include "parser/qqmljsmemorypool_p.h"
 #include "parser/qqmljsastvisitor_p.h"
 #include "parser/qqmljsast_p.h"
-#include <private/qqmlrewrite_p.h>
 
 #include <QStack>
 #include <QStringList>

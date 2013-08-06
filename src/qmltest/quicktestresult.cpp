@@ -472,22 +472,20 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
     return false;
 }
 
-void QuickTestResult::stringify(QQmlV8Function *args)
+void QuickTestResult::stringify(QQmlV4Function *args)
 {
-    if (args->Length() < 1)
-        args->returnValue(v8::Null());
+    if (args->length() < 1)
+        args->setReturnValue(QV4::Value::nullValue());
 
-    v8::Local<v8::Value> value = (*args)[0];
+    QV4::Value value = (*args)[0];
 
     QString result;
     QV8Engine *engine = args->engine();
 
     //Check for Object Type
-    if (value->IsObject()
-    && !value->IsFunction()
-    && !value->IsArray()
-    && !value->IsDate()
-    && !value->IsRegExp()) {
+    if (value.isObject()
+    && !value.asFunctionObject()
+    && !value.asArrayObject()) {
         QVariant v = engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
@@ -505,15 +503,14 @@ void QuickTestResult::stringify(QQmlV8Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        v8::Local<v8::String> jsstr = value->ToString();
-        QString tmp = engine->toString(jsstr);
-        if (value->IsArray())
+        QString tmp = value.toQString();
+        if (value.asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else
             result.append(tmp);
     }
 
-    args->returnValue(args->engine()->toString(result));
+    args->setReturnValue(args->engine()->toString(result));
 }
 
 bool QuickTestResult::compare

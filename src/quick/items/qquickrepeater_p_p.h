@@ -75,7 +75,7 @@ private:
 
     QPointer<QQmlInstanceModel> model;
     QVariant dataSource;
-    QQmlGuard<QObject> dataSourceAsObject;
+    QPointer<QObject> dataSourceAsObject;
     bool ownModel : 1;
     bool inRequest : 1;
     bool dataSourceIsObject : 1;

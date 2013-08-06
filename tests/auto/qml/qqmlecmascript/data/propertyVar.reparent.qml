@@ -21,7 +21,6 @@ Item {
 
     function deassignVarProp() {
         vp = 2;
-        gc();
     }
 }
 

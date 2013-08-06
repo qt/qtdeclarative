@@ -50,8 +50,11 @@
 #include "qqmlbinding_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
 
-#include <private/qv8variantresource_p.h>
 #include <private/qqmlglobal_p.h>
+
+#include <private/qv4object_p.h>
+#include <private/qv4variantobject_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,9 +70,11 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
-        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.IsEmpty()) {
+        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isEmpty()) {
             // Set the var property to NULL
-            m_target->varProperties->Set(m_index - m_target->firstVarPropertyIndex, v8::Null());
+            QV4::ArrayObject *a = m_target->varProperties.value().asArrayObject();
+            if (a)
+                a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::Value::nullValue());
         }
 
         m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
@@ -550,7 +555,7 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
                                      const QQmlVMEMetaData *meta)
-: QV8GCCallback::Node(GcPrologueCallback), object(obj),
+: object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
   hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
   varPropertiesInitialized(false), interceptors(0), v8methods(0)
@@ -573,7 +578,10 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
     int qobject_type = qMetaTypeId<QObject*>();
     int variant_type = qMetaTypeId<QVariant>();
-    bool needsGcCallback = (metaData->varPropertyCount > 0);
+    // Need JS wrapper to ensure variant and var properties are marked.
+    // ### FIXME: I hope that this can be removed once we have the proper scope chain
+    // set up and the JS wrappers always exist.
+    bool needsJSWrapper = (metaData->varPropertyCount > 0);
 
     // ### Optimize
     for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
@@ -581,20 +589,15 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
         if (t == list_type) {
             listProperties.append(List(methodOffset() + ii, this));
             data[ii].setValue(listProperties.count() - 1);
-        } else if (!needsGcCallback && (t == qobject_type || t == variant_type)) {
-            needsGcCallback = true;
+        } else if (!needsJSWrapper && (t == qobject_type || t == variant_type)) {
+            needsJSWrapper = true;
         }
     }
 
     firstVarPropertyIndex = metaData->propertyCount - metaData->varPropertyCount;
 
-    // both var properties and variant properties can keep references to
-    // other QObjects, and var properties can also keep references to
-    // JavaScript objects.  If we have any properties, we need to hook
-    // the gc() to ensure that references keep objects alive as needed.
-    if (needsGcCallback) {
-        QV8GCCallback::addGcCallbackNode(this);
-    }
+    if (needsJSWrapper)
+        ensureQObjectWrapper();
 }
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
@@ -602,14 +605,7 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     if (parent.isT1()) parent.asT1()->objectDestroyed(object);
     delete [] data;
     delete [] aliasEndpoints;
-
-    for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
-        qPersistentDispose(v8methods[ii]);
-    }
     delete [] v8methods;
-
-    if (metaData->varPropertyCount)
-        qPersistentDispose(varProperties); // if not weak, will not have been cleaned up by the callback.
 
     qDeleteAll(varObjectGuards);
 }
@@ -705,8 +701,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
                     QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
                     if (v8e) {
-                        v8::HandleScope handleScope;
-                        v8::Context::Scope contextScope(v8e->context());
                         if (c == QMetaObject::ReadProperty) {
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                         } else if (c == QMetaObject::WriteProperty) {
@@ -917,8 +911,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-                v8::Handle<v8::Function> function = method(id);
-                if (function.IsEmpty()) {
+                QV4::FunctionObject *function = method(id).asFunctionObject();
+                if (!function) {
                     // The function was not compiled.  There are some exceptional cases which the
                     // expression rewriter does not rewrite properly (e.g., \r-terminated lines
                     // are not rewritten correctly but this bug is deemed out-of-scope to fix for
@@ -932,29 +926,23 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                v8::HandleScope handle_scope;
-                v8::Context::Scope scope(ep->v8engine()->context());
-                v8::Handle<v8::Value> *args = 0;
+                QVarLengthArray<QV4::Value, 9> args(data->parameterCount);
 
-                if (data->parameterCount) {
-                    args = new v8::Handle<v8::Value>[data->parameterCount];
-                    for (int ii = 0; ii < data->parameterCount; ++ii) 
-                        args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
-                }
+                for (int ii = 0; ii < data->parameterCount; ++ii)
+                    args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
-                v8::TryCatch try_catch;
-
-                v8::Local<v8::Value> result = function->Call(ep->v8engine()->global(), data->parameterCount, args);
-
-                QVariant rv;
-                if (try_catch.HasCaught()) {
+                QV4::Value result = QV4::Value::undefinedValue();
+                QV4::ExecutionContext *ctx = function->engine()->current;
+                try {
+                    result = function->call(ep->v8engine()->global(), args.data(), data->parameterCount);
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
+                } catch (QV4::Exception &e) {
+                    e.accept(ctx);
                     QQmlError error;
-                    QQmlExpressionPrivate::exceptionToError(try_catch.Message(), error);
+                    QQmlExpressionPrivate::exceptionToError(e, error);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
-                } else {
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -970,17 +958,17 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
         return object->qt_metacall(c, _id, a);
 }
 
-v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
+QV4::Value QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return v8::Handle<v8::Function>();
+        return QV4::Value::emptyValue();
     }
 
     if (!v8methods) 
-        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
+        v8methods = new QV4::PersistentValue[metaData->methodCount];
 
-    if (v8methods[index].IsEmpty()) {
+    if (v8methods[index].isEmpty()) {
         QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
 
         const char *body = ((const char*)metaData) + data->bodyOffset;
@@ -989,29 +977,28 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
         // XXX We should evaluate all methods in a single big script block to 
         // improve the call time between dynamic methods defined on the same
         // object
-        v8methods[index] = QQmlExpressionPrivate::evalFunction(ctxt, object, body,
-                                                                       bodyLength,
-                                                                       ctxt->urlString,
-                                                                       data->lineNumber);
+        v8methods[index] = QQmlExpressionPrivate::evalFunction(ctxt, object, QString::fromUtf8(body, bodyLength),
+                                                               ctxt->urlString, data->lineNumber);
     }
 
     return v8methods[index];
 }
 
-v8::Handle<v8::Value> QQmlVMEMetaObject::readVarProperty(int id)
+QV4::Value QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
     if (ensureVarPropertiesAllocated())
-        return varProperties->Get(id - firstVarPropertyIndex);
-    return v8::Handle<v8::Value>();
+        return varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
+    return QV4::Value::emptyValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
         if (ensureVarPropertiesAllocated())
-            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex), -1);
+            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(
+                        varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex), -1);
         return QVariant();
     } else {
         if (data[id].dataType() == QMetaType::QObjectStar) {
@@ -1022,7 +1009,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
     }
 }
 
-void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
+void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
     if (!ensureVarPropertiesAllocated())
@@ -1030,25 +1017,21 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
-    if (oldv->IsObject()) {
-        QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
-        if (r) {
-            r->removeVmePropertyReference();
-        }
-    }
+    QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
+    if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
+        v->removeVmePropertyReference();
 
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
 
-    if (value->IsObject()) {
+    if (QV4::Object *o = value.asObject()) {
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        if (QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(value))) {
-            r->addVmePropertyReference();
-        } else if (QV8QObjectResource *r = v8_resource_cast<QV8QObjectResource>(v8::Handle<v8::Object>::Cast(value))) {
+        if (QV4::VariantObject *v = o->as<QV4::VariantObject>()) {
+            v->addVmePropertyReference();
+        } else if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
             // We need to track this QObject to signal its deletion
-            valueObject = r->object;
+            valueObject = wrapper->object();
 
             // Do we already have a QObject guard for this property?
             if (valueObject && !guard) {
@@ -1063,7 +1046,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
     }
 
     // Write the value and emit change signal as appropriate.
-    varProperties->Set(id - firstVarPropertyIndex, value);
+    varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, value);
     activate(object, methodOffset() + id, 0);
 }
 
@@ -1075,27 +1058,19 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
-        if (oldv->IsObject()) {
-            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
-            if (r) {
-                r->removeVmePropertyReference();
-            }
-        }
+        QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
+        if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
+            v->removeVmePropertyReference();
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        v8::Handle<v8::Value> newv = QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
-        if (newv->IsObject()) {
-            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(newv));
-            if (r) {
-                r->addVmePropertyReference();
-            }
-        }
+        QV4::Value newv = QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
+        if (QV4::VariantObject *v = newv.as<QV4::VariantObject>())
+            v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        varProperties->Set(id - firstVarPropertyIndex, newv);
+        varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
             activate(object, methodOffset() + id, 0);
     } else {
@@ -1169,7 +1144,7 @@ quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
     return data->lineNumber;
 }
 
-v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
+QV4::Value QQmlVMEMetaObject::vmeMethod(int index)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1181,25 +1156,23 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
 }
 
 // Used by debugger
-void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> value)
+void QQmlVMEMetaObject::setVmeMethod(int index, QV4::PersistentValue function)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
-        return parentVMEMetaObject()->setVmeMethod(index, value);
+        return parentVMEMetaObject()->setVmeMethod(index, function);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
 
     if (!v8methods) 
-        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
+        v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;
-    if (!v8methods[methodIndex].IsEmpty()) 
-        qPersistentDispose(v8methods[methodIndex]);
-    v8methods[methodIndex] = value;
+    v8methods[methodIndex] = function;
 }
 
-v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)
+QV4::Value QQmlVMEMetaObject::vmeProperty(int index)
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1208,7 +1181,7 @@ v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)
     return readVarProperty(index - propOffset());
 }
 
-void QQmlVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> v)
+void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1228,59 +1201,45 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
     // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
     // In this situation, the varProperties handle will be (and should remain)
     // empty.
-    return !varProperties.IsEmpty();
+    return !varProperties.isEmpty();
 }
 
-// see also: QV8GCCallback::garbageCollectorPrologueCallback()
-void QQmlVMEMetaObject::allocateVarPropertiesArray()
+void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
-    v8::HandleScope handleScope;
-    v8::Context::Scope cs(QQmlEnginePrivate::get(ctxt->engine)->v8engine()->context());
-    varProperties = qPersistentNew(v8::Array::New(metaData->varPropertyCount));
-    varProperties.MakeWeak(static_cast<void*>(this), VarPropertiesWeakReferenceCallback);
-    varPropertiesInitialized = true;
+    QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
+    QV4::ExecutionEngine *v4 = (ep == 0) ? 0 : ep->v4engine();
+    QV4::QObjectWrapper::wrap(v4, object);
 }
 
-/*
-   The "var" properties are stored in a v8::Array which will be strong persistent if the object has cpp-ownership
-   and the root QObject in the parent chain does not have JS-ownership.  In the weak persistent handle case,
-   this callback will dispose the handle when the v8object which owns the lifetime of the var properties array
-   is cleared as a result of all other handles to that v8object being released.
-   See QV8GCCallback::garbageCollectorPrologueCallback() for more information.
- */
-void QQmlVMEMetaObject::VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter)
+void QQmlVMEMetaObject::mark()
 {
-    QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(parameter);
-    Q_ASSERT(vmemo);
-    qPersistentDispose(object);
-    vmemo->varProperties.Clear();
-}
-
-void QQmlVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
-{
-    QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(node);
-    Q_ASSERT(vmemo);
-
-    if (!vmemo->ctxt || !vmemo->ctxt->engine)
-        return;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(vmemo->ctxt->engine);
+    varProperties.markOnce();
 
     // add references created by VMEVariant properties
-    int maxDataIdx = vmemo->metaData->propertyCount - vmemo->metaData->varPropertyCount;
+    int maxDataIdx = metaData->propertyCount - metaData->varPropertyCount;
     for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimize?
-        if (vmemo->data[ii].dataType() == QMetaType::QObjectStar) {
+        if (data[ii].dataType() == QMetaType::QObjectStar) {
             // possible QObject reference.
-            QObject *ref = vmemo->data[ii].asQObject();
+            QObject *ref = data[ii].asQObject();
             if (ref) {
-                ep->v8engine()->addRelationshipForGC(vmemo->object, ref);
+                QQmlData *ddata = QQmlData::get(ref);
+                if (ddata)
+                    ddata->jsWrapper.markOnce();
             }
         }
     }
 
-    // add references created by var properties
-    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty())
-        return;
-    ep->v8engine()->addRelationshipForGC(vmemo->object, vmemo->varProperties);
+    if (QQmlVMEMetaObject *parent = parentVMEMetaObject())
+        parent->mark();
+}
+
+void QQmlVMEMetaObject::allocateVarPropertiesArray()
+{
+    QQmlEngine *qml = qmlEngine(object);
+    assert(qml);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
+    varProperties = QV4::Value::fromObject(v4->newArrayObject(metaData->varPropertyCount));
+    varPropertiesInitialized = true;
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

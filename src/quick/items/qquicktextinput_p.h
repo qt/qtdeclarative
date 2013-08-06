@@ -159,7 +159,7 @@ public:
                     };
 
     //Auxilliary functions needed to control the TextInput from QML
-    Q_INVOKABLE void positionAt(QQmlV8Function *args) const;
+    Q_INVOKABLE void positionAt(QQmlV4Function *args) const;
     Q_INVOKABLE QRectF positionToRectangle(int pos) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);

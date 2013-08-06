@@ -91,7 +91,7 @@ public:
 
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
-    enum BindingType { Binding = 0, V4 = 1, V8 = 2, ValueTypeProxy = 3 };
+    enum BindingType { Binding = 0, ValueTypeProxy = 1 };
     inline BindingType bindingType() const;
 
     // Destroy the binding.  Use this instead of calling delete.
@@ -149,7 +149,6 @@ private:
     friend class QQmlPropertyPrivate;
     friend class QQmlVME;
     friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
-    friend class QV8QObjectWrapper;
     friend class QV4Bindings;
 
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;

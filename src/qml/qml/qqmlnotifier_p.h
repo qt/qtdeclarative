@@ -43,7 +43,6 @@
 #define QQMLNOTIFIER_P_H
 
 #include "qqmldata_p.h"
-#include "qqmlguard_p.h"
 #include <QtCore/qmetaobject.h>
 #include <private/qmetaobject_p.h>
 
@@ -104,8 +103,8 @@ private:
 
     // Contains either the QObject*, or the QQmlNotifier* that this
     // endpoint is connected to.  While the endpoint is notifying, the
-    // senderPtr points to another intptr_t that contains this value.
-    intptr_t senderPtr;
+    // senderPtr points to another qintptr that contains this value.
+    qintptr senderPtr;
     inline QObject *senderAsObject() const;
     inline QQmlNotifier *senderAsNotifier() const;
 
@@ -130,7 +129,7 @@ QQmlNotifier::~QQmlNotifier()
         QQmlNotifierEndpoint *n = endpoint;
         endpoint = n->next;
 
-        if (n->isNotifying()) *((intptr_t *)(n->senderPtr & ~0x1)) = 0;
+        if (n->isNotifying()) *((qintptr *)(n->senderPtr & ~0x1)) = 0;
 
         n->next = 0;
         n->prev = 0;
@@ -184,7 +183,7 @@ void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
     if (next) { next->prev = &next; }
     notifier->endpoints = this;
     prev = &notifier->endpoints;
-    senderPtr = intptr_t(notifier);
+    senderPtr = qintptr(notifier);
 }
 
 void QQmlNotifierEndpoint::disconnect()
@@ -200,7 +199,7 @@ void QQmlNotifierEndpoint::disconnect()
         priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
     }
 
-    if (isNotifying()) *((intptr_t *)(senderPtr & ~0x1)) = 0;
+    if (isNotifying()) *((qintptr *)(senderPtr & ~0x1)) = 0;
     next = 0;
     prev = 0;
     senderPtr = 0;
@@ -225,20 +224,20 @@ Cancel any notifies that are in progress.
 void QQmlNotifierEndpoint::cancelNotify() 
 {
     if (isNotifying()) {
-        intptr_t sp = *((intptr_t *)(senderPtr & ~0x1));
-        *((intptr_t *)(senderPtr & ~0x1)) = 0;
+        qintptr sp = *((qintptr *)(senderPtr & ~0x1));
+        *((qintptr *)(senderPtr & ~0x1)) = 0;
         senderPtr = sp;
     }
 }
 
 QObject *QQmlNotifierEndpoint::senderAsObject() const
 {
-    return isNotifying()?((QObject *)(*((intptr_t *)(senderPtr & ~0x1)))):((QObject *)senderPtr);
+    return isNotifying()?((QObject *)(*((qintptr *)(senderPtr & ~0x1)))):((QObject *)senderPtr);
 }
 
 QQmlNotifier *QQmlNotifierEndpoint::senderAsNotifier() const
 {
-    return isNotifying()?((QQmlNotifier *)(*((intptr_t *)(senderPtr & ~0x1)))):((QQmlNotifier *)senderPtr);
+    return isNotifying()?((QQmlNotifier *)(*((qintptr *)(senderPtr & ~0x1)))):((QQmlNotifier *)senderPtr);
 }
 
 QT_END_NAMESPACE

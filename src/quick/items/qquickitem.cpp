@@ -69,6 +69,9 @@
 #include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
+#include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
+
 #ifndef QT_NO_CURSOR
 # include <QtGui/qcursor.h>
 #endif
@@ -3854,43 +3857,45 @@ void QQuickItem::polish()
 /*!
     \internal
   */
-void QQuickItem::mapFromItem(QQmlV8Function *args) const
+void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
-    if (args->Length() != 0) {
-        v8::Local<v8::Value> item = (*args)[0];
-        QV8Engine *engine = args->engine();
+    if (args->length() != 0) {
+        QV4::Value item = (*args)[0];
 
         QQuickItem *itemObj = 0;
-        if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item));
+        if (!item.isNull()) {
+            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+                itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
+        }
 
-        if (!itemObj && !item->IsNull()) {
-            qmlInfo(this) << "mapFromItem() given argument \"" << engine->toString(item->ToString())
+        if (!itemObj && !item.isNull()) {
+            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQString()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        v8::Local<v8::Object> rv = v8::Object::New();
-        args->returnValue(rv);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
+        QV4::Object *rv = v4->newObject();
+        args->setReturnValue(QV4::Value::fromObject(rv));
 
-        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
-        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
+        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
-        if (args->Length() > 3) {
-            qreal w = (*args)[3]->NumberValue();
-            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
+        if (args->length() > 3) {
+            qreal w = (*args)[3].asDouble();
+            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
-            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
-            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(r.x()));
+            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(r.y()));
+            rv->put(v4->newString(QStringLiteral("width")), QV4::Value::fromDouble(r.width()));
+            rv->put(v4->newString(QStringLiteral("height")), QV4::Value::fromDouble(r.height()));
         } else {
             QPointF p = mapFromItem(itemObj, QPointF(x, y));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(p.x()));
+            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(p.y()));
         }
     }
 }
@@ -3926,43 +3931,45 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 /*!
     \internal
   */
-void QQuickItem::mapToItem(QQmlV8Function *args) const
+void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
-    if (args->Length() != 0) {
-        v8::Local<v8::Value> item = (*args)[0];
-        QV8Engine *engine = args->engine();
+    if (args->length() != 0) {
+        QV4::Value item = (*args)[0];
 
         QQuickItem *itemObj = 0;
-        if (!item->IsNull())
-            itemObj = qobject_cast<QQuickItem*>(engine->toQObject(item));
+        if (!item.isNull()) {
+            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+                itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
+        }
 
-        if (!itemObj && !item->IsNull()) {
-            qmlInfo(this) << "mapToItem() given argument \"" << engine->toString(item->ToString())
+        if (!itemObj && !item.isNull()) {
+            qmlInfo(this) << "mapToItem() given argument \"" << item.toQString()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        v8::Local<v8::Object> rv = v8::Object::New();
-        args->returnValue(rv);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
+        QV4::Object *rv = v4->newObject();
+        args->setReturnValue(QV4::Value::fromObject(rv));
 
-        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
-        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
+        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
-        if (args->Length() > 3) {
-            qreal w = (*args)[3]->NumberValue();
-            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
+        if (args->length() > 3) {
+            qreal w = (*args)[3].asDouble();
+            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
-            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
-            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(r.x()));
+            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(r.y()));
+            rv->put(v4->newString(QStringLiteral("width")), QV4::Value::fromDouble(r.width()));
+            rv->put(v4->newString(QStringLiteral("height")), QV4::Value::fromDouble(r.height()));
         } else {
             QPointF p = mapToItem(itemObj, QPointF(x, y));
 
-            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(p.x()));
+            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(p.y()));
         }
     }
 }

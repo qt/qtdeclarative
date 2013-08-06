@@ -81,11 +81,11 @@ public:
     int count() const;
 
     Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(QQmlV8Function *args);
-    Q_INVOKABLE void append(QQmlV8Function *args);
-    Q_INVOKABLE void insert(QQmlV8Function *args);
-    Q_INVOKABLE QQmlV8Handle get(int index) const;
-    Q_INVOKABLE void set(int index, const QQmlV8Handle &);
+    Q_INVOKABLE void remove(QQmlV4Function *args);
+    Q_INVOKABLE void append(QQmlV4Function *args);
+    Q_INVOKABLE void insert(QQmlV4Function *args);
+    Q_INVOKABLE QQmlV4Handle get(int index) const;
+    Q_INVOKABLE void set(int index, const QQmlV4Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
@@ -97,14 +97,15 @@ public:
         VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
         ~VariantRef() { if (a) a->release(); }
 
-        VariantRef &operator=(const VariantRef &o) { 
-            if (o.a) o.a->addref(); 
-            if (a) a->release(); a = o.a; 
-            return *this; 
+        VariantRef &operator=(const VariantRef &o) {
+            if (o.a) o.a->addref();
+            if (a) a->release(); a = o.a;
+            return *this;
         }
 
         QQmlListModelWorkerAgent *a;
     };
+
     void modelDestroyed();
 protected:
     virtual bool event(QEvent *);

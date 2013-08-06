@@ -64,6 +64,7 @@
 #include "../../shared/platforminputcontext.h"
 #include <private/qinputmethod_p.h>
 #include <QtGui/qstylehints.h>
+#include <qmath.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>

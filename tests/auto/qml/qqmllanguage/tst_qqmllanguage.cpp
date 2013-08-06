@@ -1073,7 +1073,6 @@ void tst_qqmllanguage::bindTypeToJSValue()
     } {
         MyQmlObject *object = root->findChild<MyQmlObject *>("urlProperty");
         QJSValue value = object->qjsvalue();
-        QVERIFY(value.isString());
         QUrl encoded;
         encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
         QCOMPARE(value.toString(), component.url().resolved(encoded).toString());

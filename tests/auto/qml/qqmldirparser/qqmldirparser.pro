@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmldirparser
-QT += qml testlib v8-private
+QT += qml testlib qml-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmldirparser.cpp

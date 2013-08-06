@@ -41,13 +41,23 @@
 
 #include "qjsvalueiterator.h"
 #include "qjsvalueiterator_p.h"
-
-#include "qscriptisolate_p.h"
 #include "qjsvalue_p.h"
-#include "qv8engine_p.h"
-#include "qscript_impl_p.h"
+#include "private/qv4string_p.h"
+#include "private/qv4object_p.h"
+#include "private/qv4exception_p.h"
 
 QT_BEGIN_NAMESPACE
+
+QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
+    : value(v)
+    , iterator(QJSValuePrivate::get(v)->value.asObject(), QV4::ObjectIterator::NoFlags)
+    , currentName(0)
+    , currentIndex(UINT_MAX)
+    , nextName(0)
+    , nextIndex(UINT_MAX)
+{
+}
+
 
 /*!
     \class QJSValueIterator
@@ -84,14 +94,17 @@ QT_BEGIN_NAMESPACE
     first property).
 */
 QJSValueIterator::QJSValueIterator(const QJSValue& object)
-    : d_ptr(new QJSValueIteratorPrivate(QJSValuePrivate::get(object)))
-{}
+    : d_ptr(new QJSValueIteratorPrivate(object))
+{
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+}
 
 /*!
     Destroys the iterator.
 */
 QJSValueIterator::~QJSValueIterator()
-{}
+{
+}
 
 /*!
     Returns true if there is at least one item ahead of the iterator
@@ -102,9 +115,9 @@ QJSValueIterator::~QJSValueIterator()
 */
 bool QJSValueIterator::hasNext() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d->hasNext();
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
+    return d_ptr->nextName != 0 || d_ptr->nextIndex != UINT_MAX;
 }
 
 /*!
@@ -120,9 +133,14 @@ bool QJSValueIterator::hasNext() const
 */
 bool QJSValueIterator::next()
 {
-    Q_D(QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d->next();
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
+    d_ptr->currentName = d_ptr->nextName;
+    d_ptr->currentIndex = d_ptr->nextIndex;
+    d_ptr->currentAttributes = d_ptr->nextAttributes;
+
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
+    return d_ptr->nextName != 0 || d_ptr->nextIndex != UINT_MAX;
 }
 
 /*!
@@ -133,9 +151,13 @@ bool QJSValueIterator::next()
 */
 QString QJSValueIterator::name() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return d_ptr->name();
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return false;
+    if (d_ptr->currentName)
+        return d_ptr->currentName->toQString();
+    if (d_ptr->currentIndex < UINT_MAX)
+        return QString::number(d_ptr->currentIndex);
+    return QString();
 }
 
 
@@ -147,9 +169,25 @@ QString QJSValueIterator::name() const
 */
 QJSValue QJSValueIterator::value() const
 {
-    Q_D(const QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->value());
+    if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
+        return QJSValue();
+
+    QV4::Object *o = d_ptr->iterator.object;
+    QV4::ExecutionEngine *engine = o->internalClass->engine;
+    QV4::ExecutionContext *ctx = engine->current;
+    try {
+        QV4::Value v;
+        if (d_ptr->currentName)
+            v = o->get(d_ptr->currentName);
+        else if (d_ptr->currentIndex != UINT_MAX)
+            v = o->getIndexed(d_ptr->currentIndex);
+        else
+            return QJSValue();
+        return new QJSValuePrivate(engine, v);
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+        return QJSValue();
+    }
 }
 
 
@@ -160,9 +198,8 @@ QJSValue QJSValueIterator::value() const
 */
 QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 {
-    Q_D(QJSValueIterator);
-    QScriptIsolate api(d->engine());
-    d_ptr.reset(new QJSValueIteratorPrivate(QJSValuePrivate::get(object)));
+    d_ptr->iterator = QV4::ObjectIterator(QJSValuePrivate::get(object)->value.asObject(), QV4::ObjectIterator::NoFlags);
+    d_ptr->iterator.next(&d_ptr->nextName, &d_ptr->nextIndex, &d_ptr->nextAttributes);
     return *this;
 }
 

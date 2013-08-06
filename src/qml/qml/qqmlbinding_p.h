@@ -82,9 +82,9 @@ public:
     QQmlBinding(const QString &, QObject *, QQmlContext *);
     QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
-    QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
+    QQmlBinding(const QString &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
-    QQmlBinding(void *, QObject *, QQmlContextData *,
+    QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
 
     void setTarget(const QQmlProperty &);
@@ -131,7 +131,7 @@ protected:
     ~QQmlBinding();
 
 private:
-    v8::Persistent<v8::Function> v8function;
+    QV4::PersistentValue v4function;
 
     inline bool updatingFlag() const;
     inline void setUpdatingFlag(bool);

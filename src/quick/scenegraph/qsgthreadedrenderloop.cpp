@@ -44,6 +44,7 @@
 #include <QtCore/QWaitCondition>
 #include <QtCore/QAnimationDriver>
 #include <QtCore/QQueue>
+#include <QtCore/QTime>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>

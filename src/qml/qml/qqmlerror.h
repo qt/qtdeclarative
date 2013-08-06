@@ -49,7 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-
 class QDebug;
 class QQmlErrorPrivate;
 class Q_QML_EXPORT QQmlError

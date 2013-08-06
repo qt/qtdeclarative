@@ -121,12 +121,12 @@ const QPointF QQuickTargetDirection::sample(const QPointF &from)
     }
     targetX += 0 - from.x() - m_targetVariation + rand()/(float)RAND_MAX * m_targetVariation*2;
     targetY += 0 - from.y() - m_targetVariation + rand()/(float)RAND_MAX * m_targetVariation*2;
-    qreal theta = atan2(targetY, targetX);
+    qreal theta = std::atan2(targetY, targetX);
     qreal mag = m_magnitude + rand()/(float)RAND_MAX * m_magnitudeVariation * 2 - m_magnitudeVariation;
     if (m_proportionalMagnitude)
-        mag *= sqrt(targetX * targetX + targetY * targetY);
-    ret.setX(mag * cos(theta));
-    ret.setY(mag * sin(theta));
+        mag *= std::sqrt(targetX * targetX + targetY * targetY);
+    ret.setX(mag * std::cos(theta));
+    ret.setY(mag * std::sin(theta));
     return ret;
 }
 

@@ -82,7 +82,7 @@ public:
     bool accepted() const { return event->isAccepted(); }
     void setAccepted(bool accepted) { event->setAccepted(accepted); }
 
-    Q_INVOKABLE void accept(QQmlV8Function *);
+    Q_INVOKABLE void accept(QQmlV4Function *);
 
 private:
     QQuickDropAreaPrivate *d;

@@ -323,15 +323,6 @@ void tst_qqmlinstruction::dump()
     }
 
     {
-        QQmlCompiledData::Instruction::StoreV4Binding i;
-        i.property = 27;
-        i.value = 2;
-        i.context = 4;
-        i.owner = 0;
-        data->addInstruction(i);
-    }
-
-    {
         QQmlCompiledData::Instruction::StoreValueSource i;
         i.property.coreIndex = 29;
         i.castValue = 4;
@@ -531,32 +522,31 @@ void tst_qqmlinstruction::dump()
         << "29\t\tASSIGN_SIGNAL_OBJECT\t4"
         << "30\t\tASSIGN_CUSTOMTYPE\t25\t6\t9"
         << "31\t\tSTORE_BINDING\t26\t3\t2"
-        << "32\t\tSTORE_COMPILED_BINDING\t27\t2\t4"
-        << "33\t\tSTORE_VALUE_SOURCE\t29\t4"
-        << "34\t\tSTORE_VALUE_INTERCEPTOR\t30\t-4"
-        << "35\t\tBEGIN\t\t\t4"
-        << "36\t\tSTORE_OBJECT_QLIST"
-        << "37\t\tASSIGN_OBJECT_LIST"
-        << "38\t\tFETCH_ATTACHED\t\t23"
-        << "39\t\tFETCH_QLIST\t\t32"
-        << "40\t\tFETCH\t\t\t33"
-        << "41\t\tFETCH_VALUE\t\t34\t6\t7"
-        << "42\t\tPOP"
-        << "43\t\tPOP_QLIST"
-        << "44\t\tPOP_VALUE\t\t35\t8"
+        << "32\t\tSTORE_VALUE_SOURCE\t29\t4"
+        << "33\t\tSTORE_VALUE_INTERCEPTOR\t30\t-4"
+        << "34\t\tBEGIN\t\t\t4"
+        << "35\t\tSTORE_OBJECT_QLIST"
+        << "36\t\tASSIGN_OBJECT_LIST"
+        << "37\t\tFETCH_ATTACHED\t\t23"
+        << "38\t\tFETCH_QLIST\t\t32"
+        << "39\t\tFETCH\t\t\t33"
+        << "40\t\tFETCH_VALUE\t\t34\t6\t7"
+        << "41\t\tPOP"
+        << "42\t\tPOP_QLIST"
+        << "43\t\tPOP_VALUE\t\t35\t8"
+        << "44\t\tDEFER\t\t\t7"
         << "45\t\tDEFER\t\t\t7"
-        << "46\t\tDEFER\t\t\t7"
-        << "47\t\tSTORE_IMPORTED_SCRIPT\t2"
-        << "48\t\tSTORE_VARIANT_INTEGER\t\t32\t11"
-        << "49\t\tSTORE_VARIANT_DOUBLE\t\t19\t33.7"
-        << "50\t\tDONE"
-        << "51\t\tSTORE_TR_STRING\t99\t3\t14\t14\t2"
-        << "52\t\tSTORE_TRID_STRING\t78\t7\t-1"
-        << "53\t\tSTORE_VAR\t\t79\t5\t\t\"color(1, 1, 1, 1)\""
-        << "54\t\tSTORE_VAR_OBJECT\t80"
-        << "55\t\tSTORE_VAR_INTEGER\t81\t23"
-        << "56\t\tSTORE_VAR_DOUBLE\t82\t66.3"
-        << "57\t\tSTORE_VAR_BOOL\t\t83\ttrue"
+        << "46\t\tSTORE_IMPORTED_SCRIPT\t2"
+        << "47\t\tSTORE_VARIANT_INTEGER\t\t32\t11"
+        << "48\t\tSTORE_VARIANT_DOUBLE\t\t19\t33.7"
+        << "49\t\tDONE"
+        << "50\t\tSTORE_TR_STRING\t99\t3\t14\t14\t2"
+        << "51\t\tSTORE_TRID_STRING\t78\t7\t-1"
+        << "52\t\tSTORE_VAR\t\t79\t5\t\t\"color(1, 1, 1, 1)\""
+        << "53\t\tSTORE_VAR_OBJECT\t80"
+        << "54\t\tSTORE_VAR_INTEGER\t81\t23"
+        << "55\t\tSTORE_VAR_DOUBLE\t82\t66.3"
+        << "56\t\tSTORE_VAR_BOOL\t\t83\ttrue"
         << "-------------------------------------------------------------------------------";
 
     QQmlTestMessageHandler messageHandler;

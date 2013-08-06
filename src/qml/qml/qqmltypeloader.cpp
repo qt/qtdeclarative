@@ -2260,12 +2260,13 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Locati
 }
 
 QQmlScriptData::QQmlScriptData()
-: importCache(0), pragmas(QQmlScript::Object::ScriptBlock::None), m_loaded(false) 
+: importCache(0), pragmas(QQmlScript::Object::ScriptBlock::None), m_loaded(false), m_program(0)
 {
 }
 
 QQmlScriptData::~QQmlScriptData()
 {
+    delete m_program;
 }
 
 void QQmlScriptData::clear()
@@ -2278,9 +2279,6 @@ void QQmlScriptData::clear()
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
     scripts.clear();
-
-    qPersistentDispose(m_program);
-    qPersistentDispose(m_value);
 
     // An addref() was made when the QQmlCleanup was added to the engine.
     release();

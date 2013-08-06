@@ -55,6 +55,7 @@
 #include <private/qv8engine_p.h>
 #include <QtCore/QWaitCondition>
 
+#include <private/qv4value_p.h>
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
 
@@ -174,7 +175,7 @@ public:
     QSGDynamicTexture *texture() const;
     QImage toImage(const QRectF& bounds);
 
-    v8::Handle<v8::Object> v8value() const;
+    QV4::Value v4value() const;
     void setV8Engine(QV8Engine *eng);
 
     QQuickCanvasItem* canvas() const { return m_canvas; }
@@ -234,13 +235,13 @@ public:
     QQuickCanvasItem* m_canvas;
     QQuickContext2DCommandBuffer* m_buffer;
     QPainterPath m_path;
-    v8::Local<v8::Value> m_fillStyle;
-    v8::Local<v8::Value> m_strokeStyle;
-    v8::Handle<v8::Value> m_v8path;
+    QV4::PersistentValue m_fillStyle;
+    QV4::PersistentValue m_strokeStyle;
+    QV4::PersistentValue m_v4path;
     QV8Engine *m_v8engine;
     QSurface *m_surface;
     QOpenGLContext *m_glContext;
-    v8::Persistent<v8::Object> m_v8value;
+    QV4::PersistentValue m_v4value;
     QQuickContext2DTexture *m_texture;
     QQuickCanvasItem::RenderTarget m_renderTarget;
     QQuickCanvasItem::RenderStrategy m_renderStrategy;

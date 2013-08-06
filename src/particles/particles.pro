@@ -3,7 +3,6 @@ TARGET = QtQuickParticles
 CONFIG += internal_module
 
 QT = core-private gui-private qml-private quick-private
-QT_PRIVATE = v8-private
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS

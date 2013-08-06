@@ -160,7 +160,7 @@ bool QQmlDirParser::parse(const QString &source)
             }
             if (!firstLine) {
                 reportError(lineNumber, 0,
-                            QString::fromUtf8("module identifier directive must be the first command in a qmldir file"));
+                            QString::fromUtf8("module identifier directive must be the first directive in a qmldir file"));
                 continue;
             }
 

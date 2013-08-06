@@ -103,7 +103,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV8Handle,qreal));
+    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV4Handle,qreal));
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)
@@ -143,15 +143,16 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     if (m_onceOff)
         dt = 1.0;
 
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
-    v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
+    QQmlEngine *qmlEngine = ::qmlEngine(this);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+
+    QV4::ArrayObject *array = v4->newArrayObject(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
-        array->Set(i, toAffect[i]->v8Value().toHandle());
+        array->putIndexed(i, toAffect[i]->v4Value().toValue());
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
+        emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
@@ -159,12 +160,12 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
             affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QQmlV8Handle::fromHandle(array), simulationDelta);
+            emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), simulationDelta);
         }
         m_system->timeInt = realTime;
         if (dt > 0.0) {
             affectProperties(toAffect, dt);
-            emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
+            emit affectParticles(QQmlV4Handle(QV4::Value::fromObject(array)), dt);
         }
     }
 

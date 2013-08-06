@@ -5,7 +5,8 @@ Item {
     id: testOwnership
     property bool test: false
 
-    function runTest() {
+    function createComponent()
+    {
         var o;
         var c = Qt.createComponent("ComponentWithVarProp.qml");
         if (c.status == Component.Ready) {
@@ -15,8 +16,12 @@ Item {
         }
         o.varprop = true;                // causes initialization of varProperties.
         SingletonType.QObject.trackObject(o);        // stores QObject ptr
-        if (SingletonType.QObject.trackedObject() == null) return;        // is still valid, should have a valid v8object.
-        o = new Date();                  // causes object to be gc-able.
+        if (SingletonType.QObject.trackedObject() == null) return false // is still valid, should have a valid v8object.
+        return true;
+    }
+
+    function runTest() {
+        if (!createComponent()) return;
         gc();  // collect object's v8object + varProperties, queues deleteLater.
         if (SingletonType.QObject.trackedObject() != null) return;        // v8object was previously collected.
         SingletonType.QObject.setTrackedObjectProperty("varprop");        // deferences varProperties of object.

@@ -50,6 +50,10 @@
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/QBuffer>
+#include <QtCore/qdatetime.h>
+
+#include <private/qv4value_p.h>
+#include <private/qv4functionobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -176,7 +180,7 @@ public:
     QString contextType;
     QHash<QUrl, QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QUrl baseUrl;
-    QMap<int, v8::Persistent<v8::Function> > animationCallbacks;
+    QMap<int, QV4::PersistentValue> animationCallbacks;
 };
 
 QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
@@ -359,13 +363,13 @@ void QQuickCanvasItem::setContextType(const QString &contextType)
     this property will contain the current drawing context, otherwise null.
 */
 
-QQmlV8Handle QQuickCanvasItem::context() const
+QQmlV4Handle QQuickCanvasItem::context() const
 {
     Q_D(const QQuickCanvasItem);
     if (d->context)
-        return QQmlV8Handle::fromHandle(d->context->v8value());
+        return QQmlV4Handle(d->context->v4value());
 
-    return QQmlV8Handle::fromHandle(v8::Null());
+    return QQmlV4Handle(QV4::Value::nullValue());
 }
 
 /*!
@@ -652,16 +656,15 @@ void QQuickCanvasItem::updatePolish()
         d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
 
     if (d->animationCallbacks.size() > 0 && isVisible()) {
-        QMap<int, v8::Persistent<v8::Function> > animationCallbacks = d->animationCallbacks;
+        QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
         d->animationCallbacks.clear();
 
         foreach (int key, animationCallbacks.keys()) {
-            v8::HandleScope handle_scope;
-            v8::Handle<v8::Object> self = QQmlEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this).As<v8::Object>();
-            v8::Handle<v8::Value> args[] = { v8::Uint32::New(QDateTime::currentDateTimeUtc().toTime_t()) };
-            v8::Persistent<v8::Function> f = animationCallbacks.value(key);
-            f->Call(self, 1, args);
-            f.Dispose();
+            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
+            QV4::Value self = QV4::QObjectWrapper::wrap(v4, this);
+            QV4::Value args[] = { QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t()) };
+            QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
+            f->call(self, args, 1);
         }
     }
     else {
@@ -728,39 +731,39 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     Canvas only supports a 2d context.
 */
 
-void QQuickCanvasItem::getContext(QQmlV8Function *args)
+void QQuickCanvasItem::getContext(QQmlV4Function *args)
 {
     Q_D(QQuickCanvasItem);
 
-    if (args->Length() < 1 || !(*args)[0]->IsString()) {
+    if (args->length() < 1 || !(*args)[0].isString()) {
         qmlInfo(this) << "getContext should be called with a string naming the required context type";
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
     if (!d->available) {
         qmlInfo(this) << "Unable to use getContext() at this time, please wait for available: true";
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
-    QString contextId = QString::fromUtf16(*v8::String::Value((*args)[0]));
+    QString contextId = (*args)[0].toQString();
 
     if (d->context != 0) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
-            args->returnValue(d->context->v8value());
+            args->setReturnValue(d->context->v4value());
             return;
         }
 
         qmlInfo(this) << "Canvas already initialized with a different context type";
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
     if (createContext(contextId))
-        args->returnValue(d->context->v8value());
+        args->setReturnValue(d->context->v4value());
     else
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
 }
 
 /*!
@@ -770,11 +773,11 @@ void QQuickCanvasItem::getContext(QQmlV8Function *args)
     scene.
 */
 
-void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
+void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 {
-    if (args->Length() < 1 || !(*args)[0]->IsFunction()) {
+    if (args->length() < 1 || !(*args)[0].asFunctionObject()) {
         qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
@@ -782,12 +785,12 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
 
     static int id = 0;
 
-    d->animationCallbacks.insert(++id, v8::Persistent<v8::Function>::New(((*args)[0]).As<v8::Function>()));
+    d->animationCallbacks.insert(++id, QV4::PersistentValue((*args)[0]));
 
     if (isVisible())
         polish();
 
-    args->returnValue(v8::Int32::New(id));
+    args->setReturnValue(QV4::Value::fromInt32(id));
 }
 
 /*!
@@ -796,15 +799,15 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
     This function will cancel the animation callback referenced by \a handle.
 */
 
-void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV8Function *args)
+void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4Function *args)
 {
-    if (args->Length() < 1 || !(*args)[0]->IsInt32()) {
+    if (args->length() < 1 || !(*args)[0].isInteger()) {
         qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
-        args->returnValue(v8::Null());
+        args->setReturnValue(QV4::Value::nullValue());
         return;
     }
 
-    d_func()->animationCallbacks.remove((*args)[0]->Int32Value());
+    d_func()->animationCallbacks.remove((*args)[0].integerValue());
 }
 
 

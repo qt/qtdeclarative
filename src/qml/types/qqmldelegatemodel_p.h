@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQmlChangeSet;
 class QQmlComponent;
 class QQuickPackage;
-class QQmlV8Function;
+class QQmlV4Function;
 class QQmlDelegateModelGroup;
 class QQmlDelegateModelAttached;
 class QQmlDelegateModelPrivate;
@@ -165,23 +165,23 @@ public:
     bool defaultInclude() const;
     void setDefaultInclude(bool include);
 
-    Q_INVOKABLE QQmlV8Handle get(int index);
+    Q_INVOKABLE QQmlV4Handle get(int index);
 
 public Q_SLOTS:
-    void insert(QQmlV8Function *);
-    void create(QQmlV8Function *);
-    void resolve(QQmlV8Function *);
-    void remove(QQmlV8Function *);
-    void addGroups(QQmlV8Function *);
-    void removeGroups(QQmlV8Function *);
-    void setGroups(QQmlV8Function *);
-    void move(QQmlV8Function *);
+    void insert(QQmlV4Function *);
+    void create(QQmlV4Function *);
+    void resolve(QQmlV4Function *);
+    void remove(QQmlV4Function *);
+    void addGroups(QQmlV4Function *);
+    void removeGroups(QQmlV4Function *);
+    void setGroups(QQmlV4Function *);
+    void move(QQmlV4Function *);
 
 Q_SIGNALS:
     void countChanged();
     void nameChanged();
     void defaultIncludeChanged();
-    void changed(const QQmlV8Handle &removed, const QQmlV8Handle &inserted);
+    void changed(const QQmlV4Handle &removed, const QQmlV4Handle &inserted);
 private:
     Q_DECLARE_PRIVATE(QQmlDelegateModelGroup)
 };

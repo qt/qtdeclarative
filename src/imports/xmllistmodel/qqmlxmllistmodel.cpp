@@ -43,6 +43,10 @@
 
 #include <qqmlcontext.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv8engine_p.h>
+#include <private/qv4value_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4object_p.h>
 
 #include <QDebug>
 #include <QStringList>
@@ -63,6 +67,7 @@ Q_DECLARE_METATYPE(QQuickXmlQueryResult)
 
 QT_BEGIN_NAMESPACE
 
+using namespace QV4;
 
 typedef QPair<int, int> QQuickXmlListRange;
 
@@ -907,22 +912,24 @@ void QQuickXmlListModel::setNamespaceDeclarations(const QString &declarations)
     var title = model.get(0).title;
     \endjs
 */
-QQmlV8Handle QQuickXmlListModel::get(int index) const
+QQmlV4Handle QQuickXmlListModel::get(int index) const
 {
     // Must be called with a context and handle scope
     Q_D(const QQuickXmlListModel);
 
     if (index < 0 || index >= count())
-        return QQmlV8Handle::fromHandle(v8::Undefined());
+        return QQmlV4Handle(Value::undefinedValue());
 
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
-    v8::Local<v8::Object> rv = v8::Object::New();
-    for (int ii = 0; ii < d->roleObjects.count(); ++ii)
-        rv->Set(v8engine->toString(d->roleObjects[ii]->name()),
-                v8engine->fromVariant(d->data.value(ii).value(index)));
+    ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    Object *o = v4engine->newObject();
+    for (int ii = 0; ii < d->roleObjects.count(); ++ii) {
+        Property *p = o->insertMember(v4engine->newIdentifier(d->roleObjects[ii]->name()), PropertyAttributes());
+        p->value = v8engine->fromVariant(d->data.value(ii).value(index));
+    }
 
-    return QQmlV8Handle::fromHandle(rv);
+    return QQmlV4Handle(Value::fromObject(o));
 }
 
 /*!

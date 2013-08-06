@@ -287,7 +287,8 @@ int Lexer::lex()
         break;
 
     case BalancedParentheses:
-        _parenthesesState = IgnoreParentheses;
+        if (_tokenKind != T_DO)
+            _parenthesesState = IgnoreParentheses;
         break;
     } // switch
 
@@ -1037,7 +1038,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             _patternFlags = 0;
             while (isIdentLetter(_char)) {
                 int flag = regExpFlagFromChar(_char);
-                if (flag == 0) {
+                if (flag == 0 || _patternFlags & flag) {
                     _errorMessage = QCoreApplication::translate("QQmlParser", "Invalid regular expression flag '%0'")
                              .arg(QChar(_char));
                     return false;

@@ -40,6 +40,8 @@
 ****************************************************************************/
 
 #include "qquickfriction_p.h"
+#include <math.h>
+
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Friction

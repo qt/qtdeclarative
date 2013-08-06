@@ -60,7 +60,6 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 
-#include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlscript_p.h>
 #include <private/qqmlimport_p.h>
@@ -69,6 +68,9 @@
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlabstracturlinterceptor_p.h>
+
+#include <private/qv4value_p.h>
+#include <private/qv4script_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -511,8 +513,8 @@ private:
 
     bool m_loaded;
     QByteArray m_programSource;
-    v8::Persistent<v8::Script> m_program;
-    v8::Persistent<v8::Object> m_value;
+    QV4::Script *m_program;
+    QV4::PersistentValue m_value;
     QQmlError m_error;
 };
 

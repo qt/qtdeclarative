@@ -45,7 +45,6 @@
 #include <qqmlcontext.h>
 #include <qqmlexpression.h>
 #include <qqmlinfo.h>
-#include <private/qqmlguard_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>

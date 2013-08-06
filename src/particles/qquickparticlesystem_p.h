@@ -51,7 +51,7 @@
 #include <private/qquicksprite_p.h>
 #include <QAbstractAnimation>
 #include <QtQml/qqml.h>
-#include <private/qv8engine_p.h> //For QQmlV8Handle
+#include <private/qv8engine_p.h> //For QQmlV4Handle
 
 QT_BEGIN_NAMESPACE
 
@@ -63,7 +63,7 @@ class QQuickParticleData;
 class QQuickParticleSystemAnimation;
 class QQuickStochasticEngine;
 class QQuickSprite;
-class QQuickV8ParticleData;
+class QQuickV4ParticleData;
 class QQuickParticleGroup;
 class QQuickImageParticle;
 
@@ -228,10 +228,10 @@ public:
     float lifeLeft();
     float curSize();
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
-    QQmlV8Handle v8Value();
+    QQmlV4Handle v4Value();
     void extendLife(float time);
 private:
-    QQuickV8ParticleData* v8Datum;
+    QQuickV4ParticleData* v8Datum;
 };
 
 class Q_AUTOTEST_EXPORT QQuickParticleSystem : public QQuickItem

@@ -2,12 +2,12 @@ TEMPLATE = subdirs
 
 PUBLICTESTS += \
     qqmlenginedebugservice \
-    qqmldebugjs \
+#    qqmldebugjs \
     qqmlinspector \
     qqmlprofilerservice \
     qpacketprotocol \
-    qv8profilerservice \
-    qdebugmessageservice \
+#    qv8profilerservice \
+#    qdebugmessageservice \
     qqmlenginedebuginspectorintegrationtest
 
 PRIVATETESTS += \

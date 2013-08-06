@@ -1,0 +1,451 @@
+/****************************************************************************
+**
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Digia gives you certain additional
+** rights.  These rights are described in the Digia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+#ifndef QV4CODEGEN_P_H
+#define QV4CODEGEN_P_H
+
+#include "qv4global_p.h"
+#include "qv4jsir_p.h"
+#include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsast_p.h>
+#include <QtCore/QStringList>
+#include <assert.h>
+
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+struct DiagnosticMessage;
+struct ExecutionContext;
+}
+
+namespace QQmlJS {
+namespace AST {
+class UiParameterList;
+}
+
+
+
+class ErrorHandler
+{
+public:
+    virtual void syntaxError(QV4::DiagnosticMessage *message) = 0;
+};
+
+class Q_QML_EXPORT Codegen: protected AST::Visitor
+{
+public:
+    Codegen(QV4::ExecutionContext *ctx, bool strict);
+    Codegen(ErrorHandler *errorHandler, bool strictMode);
+
+    enum Mode {
+        GlobalCode,
+        EvalCode,
+        FunctionCode,
+        QmlBinding
+    };
+
+    V4IR::Function *operator()(const QString &fileName,
+                             const QString &sourceCode,
+                             AST::Program *ast,
+                             V4IR::Module *module,
+                             Mode mode = GlobalCode,
+                             const QStringList &inheritedLocals = QStringList());
+    V4IR::Function *operator()(const QString &fileName,
+                             const QString &sourceCode,
+                             AST::FunctionExpression *ast,
+                             V4IR::Module *module);
+
+protected:
+    enum Format { ex, cx, nx };
+    struct Result {
+        V4IR::Expr *code;
+        V4IR::BasicBlock *iftrue;
+        V4IR::BasicBlock *iffalse;
+        Format format;
+        Format requested;
+
+        explicit Result(Format requested = ex)
+            : code(0)
+            , iftrue(0)
+            , iffalse(0)
+            , format(ex)
+            , requested(requested) {}
+
+        explicit Result(V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+            : code(0)
+            , iftrue(iftrue)
+            , iffalse(iffalse)
+            , format(ex)
+            , requested(cx) {}
+
+        inline V4IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
+        inline V4IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
+
+        bool accept(Format f)
+        {
+            if (requested == f) {
+                format = f;
+                return true;
+            }
+            return false;
+        }
+    };
+
+    struct Environment {
+        Environment *parent;
+
+        enum MemberType {
+            UndefinedMember,
+            VariableDefinition,
+            VariableDeclaration,
+            FunctionDefinition
+        };
+        struct Member {
+            MemberType type;
+            int index;
+            AST::FunctionExpression *function;
+        };
+        typedef QMap<QString, Member> MemberMap;
+
+        MemberMap members;
+        AST::FormalParameterList *formals;
+        int maxNumberOfArguments;
+        bool hasDirectEval;
+        bool hasNestedFunctions;
+        bool isStrict;
+        bool isNamedFunctionExpression;
+        enum UsesArgumentsObject {
+            ArgumentsObjectUnknown,
+            ArgumentsObjectNotUsed,
+            ArgumentsObjectUsed
+        };
+
+        UsesArgumentsObject usesArgumentsObject;
+
+        Environment(Environment *parent)
+            : parent(parent)
+            , formals(0)
+            , maxNumberOfArguments(0)
+            , hasDirectEval(false)
+            , hasNestedFunctions(false)
+            , isStrict(false)
+            , isNamedFunctionExpression(false)
+            , usesArgumentsObject(ArgumentsObjectUnknown)
+        {
+            if (parent && parent->isStrict)
+                isStrict = true;
+        }
+
+        int findMember(const QString &name) const
+        {
+            MemberMap::const_iterator it = members.find(name);
+            if (it == members.end())
+                return -1;
+            assert((*it).index != -1 || !parent);
+            return (*it).index;
+        }
+
+        bool lookupMember(const QString &name, Environment **scope, int *index, int *distance)
+        {
+            Environment *it = this;
+            *distance = 0;
+            for (; it; it = it->parent, ++(*distance)) {
+                int idx = it->findMember(name);
+                if (idx != -1) {
+                    *scope = it;
+                    *index = idx;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void enter(const QString &name, MemberType type, AST::FunctionExpression *function = 0)
+        {
+            if (! name.isEmpty()) {
+                if (type != FunctionDefinition) {
+                    for (AST::FormalParameterList *it = formals; it; it = it->next)
+                        if (it->name == name)
+                            return;
+                }
+                MemberMap::iterator it = members.find(name);
+                if (it == members.end()) {
+                    Member m;
+                    m.index = -1;
+                    m.type = type;
+                    m.function = function;
+                    members.insert(name, m);
+                } else {
+                    if ((*it).type <= type) {
+                        (*it).type = type;
+                        (*it).function = function;
+                    }
+                }
+            }
+        }
+    };
+
+    Environment *newEnvironment(AST::Node *node, Environment *parent)
+    {
+        Environment *env = new Environment(parent);
+        _envMap.insert(node, env);
+        return env;
+    }
+
+    struct UiMember {
+    };
+
+    struct ScopeAndFinally {
+        enum ScopeType {
+            WithScope,
+            TryScope,
+            CatchScope
+        };
+
+        ScopeAndFinally *parent;
+        AST::Finally *finally;
+        V4IR::ExprList *finishTryArgs;
+        ScopeType type;
+
+        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), finishTryArgs(0), type(t) {}
+        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, V4IR::ExprList *finishTryArgs)
+        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), type(TryScope)
+        {}
+    };
+
+    struct Loop {
+        AST::LabelledStatement *labelledStatement;
+        AST::Statement *node;
+        V4IR::BasicBlock *groupStartBlock;
+        V4IR::BasicBlock *breakBlock;
+        V4IR::BasicBlock *continueBlock;
+        Loop *parent;
+        ScopeAndFinally *scopeAndFinally;
+
+        Loop(AST::Statement *node, V4IR::BasicBlock *groupStartBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock, Loop *parent)
+            : labelledStatement(0), node(node), groupStartBlock(groupStartBlock), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
+    };
+
+    void enterEnvironment(AST::Node *node);
+    void leaveEnvironment();
+
+    void enterLoop(AST::Statement *node, V4IR::BasicBlock *startBlock, V4IR::BasicBlock *breakBlock, V4IR::BasicBlock *continueBlock);
+    void leaveLoop();
+    V4IR::BasicBlock *groupStartBlock() const
+    {
+        for (Loop *it = _loop; it; it = it->parent)
+            if (it->groupStartBlock)
+                return it->groupStartBlock;
+        return 0;
+    }
+
+    V4IR::Expr *member(V4IR::Expr *base, const QString *name);
+    V4IR::Expr *subscript(V4IR::Expr *base, V4IR::Expr *index);
+    V4IR::Expr *argument(V4IR::Expr *expr);
+    V4IR::Expr *reference(V4IR::Expr *expr);
+    V4IR::Expr *unop(V4IR::AluOp op, V4IR::Expr *expr);
+    V4IR::Expr *binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
+    V4IR::Expr *call(V4IR::Expr *base, V4IR::ExprList *args);
+    void move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op = V4IR::OpInvalid);
+    void cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+
+    V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
+                                 AST::FormalParameterList *formals,
+                                 AST::SourceElements *body,
+                                 Mode mode = FunctionCode,
+                                 const QStringList &inheritedLocals = QStringList());
+
+    void unwindException(ScopeAndFinally *outest);
+
+    void statement(AST::Statement *ast);
+    void statement(AST::ExpressionNode *ast);
+    void condition(AST::ExpressionNode *ast, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    Result expression(AST::ExpressionNode *ast);
+    QString propertyName(AST::PropertyName *ast);
+    Result sourceElement(AST::SourceElement *ast);
+    UiMember uiObjectMember(AST::UiObjectMember *ast);
+
+    void accept(AST::Node *node);
+
+    void functionBody(AST::FunctionBody *ast);
+    void program(AST::Program *ast);
+    void sourceElements(AST::SourceElements *ast);
+    void variableDeclaration(AST::VariableDeclaration *ast);
+    void variableDeclarationList(AST::VariableDeclarationList *ast);
+
+    V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+
+    // nodes
+    virtual bool visit(AST::ArgumentList *ast);
+    virtual bool visit(AST::CaseBlock *ast);
+    virtual bool visit(AST::CaseClause *ast);
+    virtual bool visit(AST::CaseClauses *ast);
+    virtual bool visit(AST::Catch *ast);
+    virtual bool visit(AST::DefaultClause *ast);
+    virtual bool visit(AST::ElementList *ast);
+    virtual bool visit(AST::Elision *ast);
+    virtual bool visit(AST::Finally *ast);
+    virtual bool visit(AST::FormalParameterList *ast);
+    virtual bool visit(AST::FunctionBody *ast);
+    virtual bool visit(AST::Program *ast);
+    virtual bool visit(AST::PropertyNameAndValue *ast);
+    virtual bool visit(AST::PropertyAssignmentList *ast);
+    virtual bool visit(AST::PropertyGetterSetter *ast);
+    virtual bool visit(AST::SourceElements *ast);
+    virtual bool visit(AST::StatementList *ast);
+    virtual bool visit(AST::UiArrayMemberList *ast);
+    virtual bool visit(AST::UiImport *ast);
+    virtual bool visit(AST::UiImportList *ast);
+    virtual bool visit(AST::UiObjectInitializer *ast);
+    virtual bool visit(AST::UiObjectMemberList *ast);
+    virtual bool visit(AST::UiParameterList *ast);
+    virtual bool visit(AST::UiProgram *ast);
+    virtual bool visit(AST::UiQualifiedId *ast);
+    virtual bool visit(AST::VariableDeclaration *ast);
+    virtual bool visit(AST::VariableDeclarationList *ast);
+
+    // expressions
+    virtual bool visit(AST::Expression *ast);
+    virtual bool visit(AST::ArrayLiteral *ast);
+    virtual bool visit(AST::ArrayMemberExpression *ast);
+    virtual bool visit(AST::BinaryExpression *ast);
+    virtual bool visit(AST::CallExpression *ast);
+    virtual bool visit(AST::ConditionalExpression *ast);
+    virtual bool visit(AST::DeleteExpression *ast);
+    virtual bool visit(AST::FalseLiteral *ast);
+    virtual bool visit(AST::FieldMemberExpression *ast);
+    virtual bool visit(AST::FunctionExpression *ast);
+    virtual bool visit(AST::IdentifierExpression *ast);
+    virtual bool visit(AST::NestedExpression *ast);
+    virtual bool visit(AST::NewExpression *ast);
+    virtual bool visit(AST::NewMemberExpression *ast);
+    virtual bool visit(AST::NotExpression *ast);
+    virtual bool visit(AST::NullExpression *ast);
+    virtual bool visit(AST::NumericLiteral *ast);
+    virtual bool visit(AST::ObjectLiteral *ast);
+    virtual bool visit(AST::PostDecrementExpression *ast);
+    virtual bool visit(AST::PostIncrementExpression *ast);
+    virtual bool visit(AST::PreDecrementExpression *ast);
+    virtual bool visit(AST::PreIncrementExpression *ast);
+    virtual bool visit(AST::RegExpLiteral *ast);
+    virtual bool visit(AST::StringLiteral *ast);
+    virtual bool visit(AST::ThisExpression *ast);
+    virtual bool visit(AST::TildeExpression *ast);
+    virtual bool visit(AST::TrueLiteral *ast);
+    virtual bool visit(AST::TypeOfExpression *ast);
+    virtual bool visit(AST::UnaryMinusExpression *ast);
+    virtual bool visit(AST::UnaryPlusExpression *ast);
+    virtual bool visit(AST::VoidExpression *ast);
+    virtual bool visit(AST::FunctionDeclaration *ast);
+
+    // property names
+    virtual bool visit(AST::IdentifierPropertyName *ast);
+    virtual bool visit(AST::NumericLiteralPropertyName *ast);
+    virtual bool visit(AST::StringLiteralPropertyName *ast);
+
+    // source elements
+    virtual bool visit(AST::FunctionSourceElement *ast);
+    virtual bool visit(AST::StatementSourceElement *ast);
+
+    // statements
+    virtual bool visit(AST::Block *ast);
+    virtual bool visit(AST::BreakStatement *ast);
+    virtual bool visit(AST::ContinueStatement *ast);
+    virtual bool visit(AST::DebuggerStatement *ast);
+    virtual bool visit(AST::DoWhileStatement *ast);
+    virtual bool visit(AST::EmptyStatement *ast);
+    virtual bool visit(AST::ExpressionStatement *ast);
+    virtual bool visit(AST::ForEachStatement *ast);
+    virtual bool visit(AST::ForStatement *ast);
+    virtual bool visit(AST::IfStatement *ast);
+    virtual bool visit(AST::LabelledStatement *ast);
+    virtual bool visit(AST::LocalForEachStatement *ast);
+    virtual bool visit(AST::LocalForStatement *ast);
+    virtual bool visit(AST::ReturnStatement *ast);
+    virtual bool visit(AST::SwitchStatement *ast);
+    virtual bool visit(AST::ThrowStatement *ast);
+    virtual bool visit(AST::TryStatement *ast);
+    virtual bool visit(AST::VariableStatement *ast);
+    virtual bool visit(AST::WhileStatement *ast);
+    virtual bool visit(AST::WithStatement *ast);
+
+    // ui object members
+    virtual bool visit(AST::UiArrayBinding *ast);
+    virtual bool visit(AST::UiObjectBinding *ast);
+    virtual bool visit(AST::UiObjectDefinition *ast);
+    virtual bool visit(AST::UiPublicMember *ast);
+    virtual bool visit(AST::UiScriptBinding *ast);
+    virtual bool visit(AST::UiSourceElement *ast);
+
+    void throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
+
+    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
+    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+
+private:
+    QString _fileName;
+    Result _expr;
+    QString _property;
+    UiMember _uiMember;
+    V4IR::Module *_module;
+    V4IR::Function *_function;
+    V4IR::BasicBlock *_block;
+    V4IR::BasicBlock *_exitBlock;
+    V4IR::BasicBlock *_throwBlock;
+    unsigned _returnAddress;
+    Mode _mode;
+    Environment *_env;
+    Loop *_loop;
+    AST::LabelledStatement *_labelledStatement;
+    ScopeAndFinally *_scopeAndFinally;
+    QHash<AST::Node *, Environment *> _envMap;
+    QHash<AST::FunctionExpression *, int> _functionMap;
+    QV4::ExecutionContext *_context;
+    bool _strictMode;
+    ErrorHandler *_errorHandler;
+
+    class ScanFunctions;
+};
+
+}
+
+QT_END_NAMESPACE
+
+#endif // QV4CODEGEN_P_H

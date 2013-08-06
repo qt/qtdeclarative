@@ -43,9 +43,13 @@
 #include "qjsengine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "qscriptisolate_p.h"
-#include "qscript_impl_p.h"
 #include "qv8engine_p.h"
+
+#include "private/qv4engine_p.h"
+#include "private/qv4mm_p.h"
+#include "private/qv4globalobject_p.h"
+#include "private/qv4script_p.h"
+#include "private/qv4exception_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -62,13 +66,13 @@
 #include <qmutex.h>
 #include <qwaitcondition.h>
 #include <private/qqmlglobal_p.h>
+#include <qqmlengine.h>
 
 #undef Q_D
 #undef Q_Q
 #define Q_D(blah)
 #define Q_Q(blah)
 
-Q_DECLARE_METATYPE(QObjectList)
 Q_DECLARE_METATYPE(QList<int>)
 
 /*!
@@ -223,9 +227,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d);
-    d->collectGarbage();
+    d->m_v4Engine->memoryManager->runGC();
 }
 
 /*!
@@ -258,10 +260,18 @@ void QJSEngine::collectGarbage()
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->evaluate(program, fileName, qmlSourceCoordinate(lineNumber)));
+    QV4::ExecutionContext *ctx = d->m_v4Engine->current;
+    try {
+        QV4::Script script(ctx, program, fileName, lineNumber);
+        script.strictMode = ctx->strictMode;
+        script.inheritContext = true;
+        script.parse();
+        QV4::Value result = script.run();
+        return new QJSValuePrivate(d->m_v4Engine, result);
+    } catch (QV4::Exception& ex) {
+        ex.accept(ctx);
+        return new QJSValuePrivate(d->m_v4Engine, ex.value());
+    }
 }
 
 /*!
@@ -274,10 +284,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Object::New()));
+    return new QJSValuePrivate(d->m_v4Engine->newObject());
 }
 
 /*!
@@ -287,10 +294,11 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->newArray(length));
+    QV4::ArrayObject *array = d->m_v4Engine->newArrayObject();
+    if (length < 0x1000)
+        array->arrayReserve(length);
+    array->setArrayLengthUnchecked(length);
+    return new QJSValuePrivate(array);
 }
 
 /*!
@@ -316,9 +324,9 @@ QJSValue QJSEngine::newArray(uint length)
 QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QQmlEngine::setObjectOwnership(object, QQmlEngine::JavaScriptOwnership);
+    return new QJSValuePrivate(v4, QV4::QObjectWrapper::wrap(v4, object));
 }
 
 /*!
@@ -333,10 +341,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 */
 QJSValue QJSEngine::globalObject() const
 {
-    Q_D(const QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->global());
+    return new QJSValuePrivate(d->m_v4Engine->globalObject);
 }
 
 /*!
@@ -346,9 +351,7 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->metaTypeToJS(type, ptr));
+    return new QJSValuePrivate(d->m_v4Engine, d->metaTypeToJS(type, ptr));
 }
 
 /*!
@@ -358,51 +361,49 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
-    QV8Engine *engine = vp->engine();
+    QV8Engine *engine = vp->engine ? vp->engine->v8Engine : 0;
     if (engine) {
-        QScriptIsolate api(engine, QScriptIsolate::NotNullEngine);
-        v8::HandleScope handleScope;
-        return engine->metaTypeFromJS(*vp, type, ptr);
+        return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);
     } else {
         switch (type) {
             case QMetaType::Bool:
-                *reinterpret_cast<bool*>(ptr) = vp->toBool();
+                *reinterpret_cast<bool*>(ptr) = vp->value.toBoolean();
                 return true;
             case QMetaType::Int:
-                *reinterpret_cast<int*>(ptr) = vp->toInt32();
+                *reinterpret_cast<int*>(ptr) = vp->value.toInt32();
                 return true;
             case QMetaType::UInt:
-                *reinterpret_cast<uint*>(ptr) = vp->toUInt32();
+                *reinterpret_cast<uint*>(ptr) = vp->value.toUInt32();
                 return true;
             case QMetaType::LongLong:
-                *reinterpret_cast<qlonglong*>(ptr) = vp->toInteger();
+                *reinterpret_cast<qlonglong*>(ptr) = vp->value.toInteger();
                 return true;
             case QMetaType::ULongLong:
-                *reinterpret_cast<qulonglong*>(ptr) = vp->toInteger();
+                *reinterpret_cast<qulonglong*>(ptr) = vp->value.toInteger();
                 return true;
             case QMetaType::Double:
-                *reinterpret_cast<double*>(ptr) = vp->toNumber();
+                *reinterpret_cast<double*>(ptr) = vp->value.toNumber();
                 return true;
             case QMetaType::QString:
-                *reinterpret_cast<QString*>(ptr) = vp->toString();
+                *reinterpret_cast<QString*>(ptr) = value.toString();
                 return true;
             case QMetaType::Float:
-                *reinterpret_cast<float*>(ptr) = vp->toNumber();
+                *reinterpret_cast<float*>(ptr) = vp->value.toNumber();
                 return true;
             case QMetaType::Short:
-                *reinterpret_cast<short*>(ptr) = vp->toInt32();
+                *reinterpret_cast<short*>(ptr) = vp->value.toInt32();
                 return true;
             case QMetaType::UShort:
-                *reinterpret_cast<unsigned short*>(ptr) = vp->toUInt16();
+                *reinterpret_cast<unsigned short*>(ptr) = vp->value.toUInt16();
                 return true;
             case QMetaType::Char:
-                *reinterpret_cast<char*>(ptr) = vp->toInt32();
+                *reinterpret_cast<char*>(ptr) = vp->value.toInt32();
                 return true;
             case QMetaType::UChar:
-                *reinterpret_cast<unsigned char*>(ptr) = vp->toUInt16();
+                *reinterpret_cast<unsigned char*>(ptr) = vp->value.toUInt16();
                 return true;
             case QMetaType::QChar:
-                *reinterpret_cast<QChar*>(ptr) = vp->toUInt16();
+                *reinterpret_cast<QChar*>(ptr) = vp->value.toUInt16();
                 return true;
             default:
                 return false;
@@ -423,35 +424,6 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 
     \sa toScriptValue()
 */
-
-/*!
-    \internal
-
-    Returns this engine's internal V8 context.
-
-    The context enables direct use of the V8 API.
-    The caller is responsible for ensuring that a handle scope is in place,
-    and for entering/exiting the context.
-    Example:
-
-    \code
-    QJSEngine eng;
-    ...
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    // Do stuff (e.g., call v8::Script::Compile()) ...
-    \endcode
-
-    \sa qt_QJSValueV8Value()
-*/
-Q_QML_EXPORT v8::Local<v8::Context> qt_QJSEngineV8Context(QJSEngine *engine)
-{
-    Q_ASSERT(engine != 0);
-    QV8Engine *d = engine->handle();
-    return v8::Local<v8::Context>::New(d->context());
-}
 
 QT_END_NAMESPACE
 

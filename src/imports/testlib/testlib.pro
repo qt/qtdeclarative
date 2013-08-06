@@ -3,7 +3,7 @@ TARGET  = qmltestplugin
 TARGETPATH = QtTest
 IMPORT_VERSION = 1.0
 
-QT += qml quick qmltest qmltest-private v8-private qml-private core-private testlib
+QT += qml quick qmltest qmltest-private  qml-private core-private testlib
 
 SOURCES += main.cpp
 

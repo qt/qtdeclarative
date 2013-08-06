@@ -18,8 +18,13 @@ Item {
         }
     }
 
+    function createObject()
+    {
+        internalComponent.createObject();
+    }
+
     Component.onCompleted: {
-        internalComponent.createObject()
+        createObject()
         gc()
     }
 }

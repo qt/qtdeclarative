@@ -23,7 +23,6 @@ SOURCES += \
     $$PWD/qqmlinfo.cpp \
     $$PWD/qqmlerror.cpp \
     $$PWD/qqmlscript.cpp \
-    $$PWD/qqmlrewrite.cpp \
     $$PWD/qqmlvaluetype.cpp \
     $$PWD/qqmlaccessors.cpp \
     $$PWD/qqmlxmlhttprequest.cpp \
@@ -31,7 +30,6 @@ SOURCES += \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
     $$PWD/qqmlnotifier.cpp \
-    $$PWD/qqmlintegercache.cpp \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
@@ -52,7 +50,11 @@ SOURCES += \
     $$PWD/qqmlplatform.cpp \
     $$PWD/qqmlbinding.cpp \
     $$PWD/qqmlabstracturlinterceptor.cpp \
-    $$PWD/qqmlapplicationengine.cpp
+    $$PWD/qqmlapplicationengine.cpp \
+    $$PWD/qqmllistwrapper.cpp \
+    $$PWD/qqmlcontextwrapper.cpp \
+    $$PWD/qqmlvaluetypewrapper.cpp \
+    $$PWD/qqmltypewrapper.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -92,7 +94,6 @@ HEADERS += \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlerror.h \
     $$PWD/qqmlscript_p.h \
-    $$PWD/qqmlrewrite_p.h \
     $$PWD/qqmlvaluetype_p.h \
     $$PWD/qqmlaccessors_p.h \
     $$PWD/qqmlxmlhttprequest_p.h \
@@ -100,7 +101,6 @@ HEADERS += \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \
     $$PWD/qqmlnotifier_p.h \
-    $$PWD/qqmlintegercache_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \
@@ -126,11 +126,14 @@ HEADERS += \
     $$PWD/qqmlextensionplugin_p.h \
     $$PWD/qqmlabstracturlinterceptor_p.h \
     $$PWD/qqmlapplicationengine_p.h \
-    $$PWD/qqmlapplicationengine.h
-
+    $$PWD/qqmlapplicationengine.h \
+    $$PWD/qqmllistwrapper_p.h \
+    $$PWD/qqmlcontextwrapper_p.h \
+    $$PWD/qqmlvaluetypewrapper_p.h \
+    $$PWD/qqmltypewrapper_p.h
 
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(ftw/ftw.pri)
-include(v4/v4.pri)
 include(v8/v8.pri)
+include(v4/v4.pri)

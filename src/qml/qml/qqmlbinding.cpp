@@ -49,7 +49,6 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
-#include <private/qqmlrewrite_p.h>
 #include <private/qqmlscriptstring_p.h>
 
 #include <QVariant>
@@ -86,7 +85,7 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
         Q_ASSERT(typeData);
 
         if (QQmlCompiledData *cdata = typeData->compiledData()) {
-            rv = new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, 0);
+            rv = new QQmlBinding(cdata->primitives.at(id), obj, ctxtdata, url, lineNumber, 0);
         }
 
         typeData->release();
@@ -108,11 +107,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
     setScopeObject(obj);
 
-    QQmlRewrite::RewriteBinding rewriteBinding;
-    QString code = rewriteBinding(str);
-
     m_expression = str.toUtf8();
-    v8function = evalFunction(context(), obj, code, QString(), 0);
+    v4function = qmlBinding(context(), obj, str, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
@@ -125,7 +121,6 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
-    bool needRewrite = true;
     QString code;
 
     int id = scriptPrivate->bindingId;
@@ -137,18 +132,12 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
-                needRewrite = false;
                 code = cdata->primitives.at(id);
                 m_url = cdata->name;
             }
 
             typeData->release();
         }
-    }
-
-    if (needRewrite) {
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        code = rewriteBinding(scriptPrivate->script);
     }
 
     setNotifyOnValueChanged(true);
@@ -159,7 +148,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     m_lineNumber = scriptPrivate->lineNumber;
     m_columnNumber = scriptPrivate->columnNumber;
 
-    v8function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
+    v4function = qmlBinding(context(), scopeObject(), code, QString(), m_lineNumber);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
@@ -170,14 +159,11 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    QQmlRewrite::RewriteBinding rewriteBinding;
-    QString code = rewriteBinding(str);
-
     m_expression = str.toUtf8();
-    v8function = evalFunction(ctxt, obj, code, QString(), 0);
+    v4function = qmlBinding(ctxt, obj, str, QString(), 0);
 }
 
-QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
+QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
@@ -187,28 +173,12 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    QString code;
-    if (isRewritten) {
-        code = str;
-    } else {
-        QQmlRewrite::RewriteBinding rewriteBinding;
-        code = rewriteBinding(str);
-    }
-
     m_expression = str.toUtf8();
 
-    v8function = evalFunction(ctxt, obj, code, url, m_lineNumber);
+    v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
 }
 
-/*!
-    \internal
-
-    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.
-    For example:
-        v8::Handle<v8::Function> function;
-        new QQmlBinding(&function, scope, ctxt);
- */
-QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
+QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
   m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
@@ -217,12 +187,11 @@ QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v8function = qPersistentNew<v8::Function>(*(v8::Handle<v8::Function> *)functionPtr);
+    v4function = functionPtr;
 }
 
 QQmlBinding::~QQmlBinding()
 {
-    qPersistentDispose(v8function);
 }
 
 void QQmlBinding::setEvaluateFlags(EvaluateFlags flags)
@@ -279,10 +248,8 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool isUndefined = false;
 
-            v8::HandleScope handle_scope;
-            v8::Context::Scope scope(ep->v8engine()->context());
-            v8::Local<v8::Value> result =
-                QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
+            QV4::Value result =
+                    QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
             trace.event("writing binding result");
 
@@ -322,10 +289,8 @@ QVariant QQmlBinding::evaluate()
 
     bool isUndefined = false;
 
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(ep->v8engine()->context());
-    v8::Local<v8::Value> result =
-        QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
+    QV4::Value result =
+            QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
 
     ep->dereferenceScarceResources();
 
@@ -336,7 +301,7 @@ QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBinding *This = static_cast<QQmlBinding *>(e);
 
-    return QLatin1Char('"') + QString::fromUtf8(This->m_expression) + QLatin1Char('"');
+    return This->m_url + QLatin1Char(':') + QString::number(This->m_lineNumber) + QLatin1Char(':') + QString::number(This->m_columnNumber);
 }
 
 void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)

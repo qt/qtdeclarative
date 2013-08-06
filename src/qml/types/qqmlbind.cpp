@@ -44,7 +44,6 @@
 #include <private/qqmlnullablevalue_p_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
-#include <private/qqmlguard_p.h>
 
 #include <qqmlengine.h>
 #include <qqmlcontext.h>
@@ -66,7 +65,7 @@ public:
 
     QQmlNullableValue<bool> when;
     bool componentComplete;
-    QQmlGuard<QObject> obj;
+    QPointer<QObject> obj;
     QString propName;
     QQmlNullableValue<QVariant> value;
     QQmlProperty prop;

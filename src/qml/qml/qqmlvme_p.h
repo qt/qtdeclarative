@@ -64,7 +64,6 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qtypeinfo.h>
 
-#include <private/qv8_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qfinitestack_p.h>
 
@@ -152,7 +151,7 @@ private:
                  , void *const**storeJumpTable = 0
 #endif
                 );
-    v8::Persistent<v8::Object> run(QQmlContextData *, QQmlScriptData *);
+    QV4::PersistentValue run(QQmlContextData *, QQmlScriptData *);
 
 #ifdef QML_THREADED_VME_INTERPRETER
     static void *const*instructionJumpTable();
@@ -203,7 +202,7 @@ public:
 
 private:
     int m_objectCount;
-    QQmlGuard<QObject> *m_objects;
+    QPointer<QObject> *m_objects;
     int m_contextCount;
     QQmlGuardedContextData *m_contexts;
 };
