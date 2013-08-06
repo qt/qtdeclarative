@@ -118,7 +118,9 @@ public:
         Blending            = 0x0001,
         RequiresDeterminant = 0x0002, // Allow precalculated translation and 2D rotation
         RequiresFullMatrixExceptTranslate = 0x0004 | RequiresDeterminant, // Allow precalculated translation
-        RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate
+        RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
+
+        CustomCompileStep   = 0x0010
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
