@@ -963,8 +963,11 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window, bool inDestru
 
 void QSGThreadedRenderLoop::polishAndSync()
 {
-    if (!anyoneShowing())
+    if (!anyoneShowing()) {
+        killTimer(m_update_timer);
+        m_update_timer = 0;
         return;
+    }
 
     RLDEBUG("GUI: polishAndSync()");
 
