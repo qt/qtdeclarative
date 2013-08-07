@@ -326,8 +326,6 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
 {
     Q_ASSERT(engine);
 
-    QString scheme = url.scheme();
-
     clear();
     d->url = url;
 
@@ -717,7 +715,6 @@ bool QQmlFile::bundleDirectoryExists(const QString &dir, QQmlEngine *e)
         return false;
 
     QStringRef identifier(&dir, 9, index - 9);
-    QStringRef path(&dir, index + 1, dir.length() - index - 1);
 
     QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(identifier);
 
