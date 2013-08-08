@@ -52,7 +52,7 @@
 #include "qv4runtime_p.h"
 #include "qv4variantobject_p.h"
 #include "qv4regexpobject_p.h"
-#include "qv8engine_p.h"
+#include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4exception_p.h>
 

@@ -1,5 +1,3 @@
-include(script.pri)
-
 HEADERS += \
     $$PWD/qv8debug_p.h \
     $$PWD/qv8profiler_p.h \

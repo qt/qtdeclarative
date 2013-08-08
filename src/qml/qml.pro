@@ -22,6 +22,7 @@ HEADERS += qtqmlglobal.h \
 #modules
 include(util/util.pri)
 include(compiler/compiler.pri)
+include(jsapi/jsapi.pri)
 include(jsruntime/jsruntime.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)

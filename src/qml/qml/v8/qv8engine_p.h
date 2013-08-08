@@ -63,8 +63,6 @@
 #include <QtCore/QThreadStorage>
 
 #include <qjsengine.h>
-#include <qjsvalue.h>
-#include "qjsvalueiterator_p.h"
 #include "private/qintrusivelist_p.h"
 
 #include <private/qqmlpropertycache_p.h>

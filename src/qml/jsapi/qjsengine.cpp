@@ -43,7 +43,7 @@
 #include "qjsengine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
-#include "qv8engine_p.h"
+#include "private/qv8engine_p.h"
 
 #include "private/qv4engine_p.h"
 #include "private/qv4mm_p.h"
