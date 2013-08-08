@@ -399,6 +399,8 @@ Value ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
     String *P = ctx->argument(0).toString(ctx);
     Object *O = ctx->thisObject.toObject(ctx);
     bool r = O->__getOwnProperty__(P) != 0;
+    if (!r)
+        r = !O->query(P).isEmpty();
     return Value::fromBoolean(r);
 }
 

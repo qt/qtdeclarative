@@ -131,9 +131,7 @@ struct Q_QML_EXPORT Object: Managed {
     Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
 
     bool __hasProperty__(String *name) const;
-    bool __hasProperty__(uint index) const {
-        return __getPropertyDescriptor__(index);
-    }
+    bool __hasProperty__(uint index) const;
 
     bool __defineOwnProperty__(ExecutionContext *ctx, Property *current, String *member, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs);

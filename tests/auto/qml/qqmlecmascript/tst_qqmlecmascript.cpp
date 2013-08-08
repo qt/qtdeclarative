@@ -1710,7 +1710,6 @@ void tst_qqmlecmascript::objectHasOwnProperty()
     QVERIFY(object != 0);
 
     // test QObjects in QML
-    QEXPECT_FAIL("", "hasOwnProperty is currently not properly supported for dynamic objects that re-implement get()", Abort);
     QMetaObject::invokeMethod(object, "testHasOwnPropertySuccess");
     QVERIFY(object->property("result").value<bool>() == true);
     QMetaObject::invokeMethod(object, "testHasOwnPropertyFailure");

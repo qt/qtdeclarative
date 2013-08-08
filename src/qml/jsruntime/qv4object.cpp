@@ -411,7 +411,30 @@ bool Object::__hasProperty__(String *name) const
 {
     if (__getPropertyDescriptor__(name))
         return true;
-    return !query(name).isEmpty();
+
+    const Object *o = this;
+    while (o) {
+        if (!o->query(name).isEmpty())
+            return true;
+        o = o->prototype;
+    }
+
+    return false;
+}
+
+bool Object::__hasProperty__(uint index) const
+{
+    if (__getPropertyDescriptor__(index))
+        return true;
+
+    const Object *o = this;
+    while (o) {
+        if (!o->queryIndexed(index).isEmpty())
+            return true;
+        o = o->prototype;
+    }
+
+    return false;
 }
 
 Value Object::get(Managed *m, String *name, bool *hasProperty)
@@ -441,32 +464,26 @@ PropertyAttributes Object::query(const Managed *m, String *name)
         return queryIndexed(m, idx);
 
     const Object *o = static_cast<const Object *>(m);
-    while (o) {
-        uint idx = o->internalClass->find(name);
-        if (idx < UINT_MAX)
-            return o->internalClass->propertyData[idx];
+    idx = o->internalClass->find(name);
+    if (idx < UINT_MAX)
+        return o->internalClass->propertyData[idx];
 
-        o = o->prototype;
-    }
     return Attr_Invalid;
 }
 
 PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
 {
     const Object *o = static_cast<const Object *>(m);
-    while (o) {
-        uint pidx = o->propertyIndexFromArrayIndex(index);
-        if (pidx < UINT_MAX) {
-            if (o->arrayAttributes)
-                return o->arrayAttributes[pidx];
+    uint pidx = o->propertyIndexFromArrayIndex(index);
+    if (pidx < UINT_MAX) {
+        if (o->arrayAttributes)
+            return o->arrayAttributes[pidx];
+        return Attr_Data;
+    }
+    if (o->isStringObject()) {
+        Property *p = static_cast<const StringObject *>(o)->getIndex(index);
+        if (p)
             return Attr_Data;
-        }
-        if (o->isStringObject()) {
-            Property *p = static_cast<const StringObject *>(o)->getIndex(index);
-            if (p)
-                return Attr_Data;
-        }
-        o = o->prototype;
     }
     return Attr_Invalid;
 }
