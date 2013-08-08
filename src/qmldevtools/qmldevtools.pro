@@ -12,4 +12,4 @@ MODULE_PRIVATE_INCLUDES = \
 
 load(qt_module)
 
-include(../qml/qml/parser/parser.pri)
+include(../qml/parser/parser.pri)
