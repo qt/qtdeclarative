@@ -1,9 +1,6 @@
-include(llvm_installation.pri)
 include(../../../3rdparty/masm/masm-defs.pri)
 
 CONFIG += exceptions
-
-!llvm: DEFINES += QMLJS_NO_LLVM
 
 CONFIG += warn_off
 
@@ -20,7 +17,6 @@ SOURCES += \
     $$PWD/qv4value.cpp \
     $$PWD/qv4syntaxchecker.cpp \
     $$PWD/qv4isel_masm.cpp \
-    $$PWD/llvm_runtime.cpp \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
@@ -116,39 +112,6 @@ HEADERS += \
     $$PWD/qv4qmlextensions_p.h \
     $$PWD/qv4stacktrace_p.h \
     $$PWD/qv4exception_p.h
-
-llvm-libs {
-
-SOURCES += \
-    $$PWD/qv4isel_llvm.cpp
-
-HEADERS += \
-    $$PWD/qv4isel_llvm_p.h \
-    $$PWD/qv4_llvm_p.h
-
-LLVM_RUNTIME_BC = $$PWD/llvm_runtime.bc
-DEFINES += LLVM_RUNTIME="\"\\\"$$LLVM_RUNTIME_BC\\\"\""
-DEFINES += QMLJS_WITH_LLVM
-
-INCLUDEPATH += \
-    $$system($$LLVM_CONFIG --includedir)
-
-QMAKE_CXXFLAGS += $$system($$LLVM_CONFIG --cppflags) -fvisibility-inlines-hidden
-QMAKE_CXXFLAGS -= -pedantic
-QMAKE_CXXFLAGS -= -Wcovered-switch-default
-
-LIBS += \
-    $$system($$LLVM_CONFIG --ldflags) \
-    $$system($$LLVM_CONFIG --libs core jit bitreader linker ipo target x86 arm native)
-
-QMAKE_EXTRA_TARGETS += gen_llvm_runtime
-
-GEN_LLVM_RUNTIME_FLAGS = $$system($$LLVM_CONFIG --cppflags)
-GEN_LLVM_RUNTIME_FLAGS -= -pedantic
-
-gen_llvm_runtime.target = llvm_runtime
-gen_llvm_runtime.commands = clang -O2 -emit-llvm -c -I$$PWD -I$$PWD/../3rdparty/masm $$join(QT.core.includes, " -I", "-I") $$GEN_LLVM_RUNTIME_FLAGS -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp -o $$LLVM_RUNTIME_BC
-}
 
 # Use SSE2 floating point math on 32 bit instead of the default
 # 387 to make test results pass on 32 and on 64 bit builds.
