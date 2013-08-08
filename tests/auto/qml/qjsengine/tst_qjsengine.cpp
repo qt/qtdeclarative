@@ -1578,6 +1578,11 @@ void tst_QJSEngine::automaticSemicolonInsertion()
         QVERIFY(ret.isError());
     }
     {
+        QJSValue ret = eng.evaluate("n = 0; if (1) --n;else\n ++n;\n n");
+        QVERIFY(ret.isNumber());
+        QCOMPARE(ret.toInt(), -1);
+    }
+    {
         QJSValue ret = eng.evaluate("while (0)");
         QVERIFY(ret.isError());
     }
