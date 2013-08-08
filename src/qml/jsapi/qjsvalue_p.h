@@ -54,6 +54,7 @@
 #define QJSVALUE_P_H
 
 #include <qjsvalue.h>
+#include <private/qtqmlglobal_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4engine_p.h>
@@ -65,7 +66,7 @@ QT_BEGIN_NAMESPACE
   \internal
   \class QJSValuePrivate
 */
-class QJSValuePrivate : public QV4::PersistentValuePrivate
+class Q_QML_PRIVATE_EXPORT QJSValuePrivate : public QV4::PersistentValuePrivate
 {
 public:
     QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::Value &v)
