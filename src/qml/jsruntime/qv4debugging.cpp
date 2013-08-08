@@ -43,7 +43,7 @@
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4function_p.h"
-#include "moth/qv4instr_moth_p.h"
+#include "qv4instr_moth_p.h"
 #include <iostream>
 
 using namespace QV4;

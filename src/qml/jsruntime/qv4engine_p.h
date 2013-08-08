@@ -42,7 +42,7 @@
 #define QV4ENGINE_H
 
 #include "qv4global_p.h"
-#include "qv4isel_p.h"
+#include "private/qv4isel_p.h"
 #include "qv4util_p.h"
 #include "qv4context_p.h"
 #include "qv4property_p.h"

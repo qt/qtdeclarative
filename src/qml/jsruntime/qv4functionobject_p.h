@@ -47,8 +47,6 @@
 #include "qv4context_p.h"
 #include "qv4object_p.h"
 #include "qv4string_p.h"
-#include "qv4codegen_p.h"
-#include "qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"

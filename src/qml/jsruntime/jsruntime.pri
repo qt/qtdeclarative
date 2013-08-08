@@ -1,5 +1,3 @@
-include(../../../3rdparty/masm/masm-defs.pri)
-
 CONFIG += exceptions
 
 CONFIG += warn_off
@@ -8,16 +6,10 @@ INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
 SOURCES += \
-    $$PWD/qv4codegen.cpp \
-    $$PWD/qv4ssa.cpp \
-    $$PWD/qv4jsir.cpp \
     $$PWD/qv4engine.cpp \
     $$PWD/qv4context.cpp \
     $$PWD/qv4runtime.cpp \
     $$PWD/qv4value.cpp \
-    $$PWD/qv4syntaxchecker.cpp \
-    $$PWD/qv4isel_masm.cpp \
-    $$PWD/qv4isel_p.cpp \
     $$PWD/qv4debugging.cpp \
     $$PWD/qv4lookup.cpp \
     $$PWD/qv4identifier.cpp \
@@ -58,19 +50,12 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qv4global_p.h \
-    $$PWD/qv4codegen_p.h \
-    $$PWD/qv4ssa_p.h \
-    $$PWD/qv4jsir_p.h \
     $$PWD/qv4engine_p.h \
     $$PWD/qv4context_p.h \
     $$PWD/qv4runtime_p.h \
     $$PWD/qv4math_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4value_def_p.h \
-    $$PWD/qv4syntaxchecker_p.h \
-    $$PWD/qv4isel_masm_p.h \
-    $$PWD/qv4isel_p.h \
-    $$PWD/qv4isel_util_p.h \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
     $$PWD/qv4identifier_p.h \
@@ -156,6 +141,4 @@ win32 {
     LIBS_PRIVATE += -lDbgHelp
 }
 
-include(moth/moth.pri)
-include(../../../3rdparty/masm/masm.pri)
-include(../../../3rdparty/double-conversion/double-conversion.pri)
+include(../../3rdparty/double-conversion/double-conversion.pri)

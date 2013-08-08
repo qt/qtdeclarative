@@ -41,13 +41,13 @@
 #ifndef QV4ISEL_MASM_P_H
 #define QV4ISEL_MASM_P_H
 
-#include "qv4global_p.h"
+#include "private/qv4global_p.h"
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include "qv4object_p.h"
-#include "qv4runtime_p.h"
-#include "qv4lookup_p.h"
+#include "private/qv4object_p.h"
+#include "private/qv4runtime_p.h"
+#include "private/qv4lookup_p.h"
 
 #include <QtCore/QHash>
 #include <config.h>

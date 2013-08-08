@@ -45,7 +45,6 @@
 #include "qv4global_p.h"
 #include "qv4engine_p.h"
 #include "qv4context_p.h"
-#include "qv4jsir_p.h"
 
 #include <QHash>
 #include <QThread>

@@ -52,7 +52,7 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
+#include "private/qv4global_p.h"
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qqmljsastfwd_p.h>
 

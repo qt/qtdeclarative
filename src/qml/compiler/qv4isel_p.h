@@ -42,7 +42,7 @@
 #ifndef QV4ISEL_P_H
 #define QV4ISEL_P_H
 
-#include "qv4global_p.h"
+#include "private/qv4global_p.h"
 #include "qv4jsir_p.h"
 
 #include <qglobal.h>

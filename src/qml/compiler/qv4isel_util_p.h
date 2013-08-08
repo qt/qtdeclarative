@@ -42,7 +42,7 @@
 #ifndef QV4ISEL_UTIL_P_H
 #define QV4ISEL_UTIL_P_H
 
-#include "qv4runtime_p.h"
+#include "private/qv4runtime_p.h"
 #include "qv4jsir_p.h"
 
 QT_BEGIN_NAMESPACE
