@@ -133,14 +133,23 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (!resource)
         v4->current->throwTypeError();
 
+    // In V8 the JS global object would come _before_ the QML global object,
+    // so simulate that here.
+    bool hasProp;
+    QV4::Value result = v4->globalObject->get(name, &hasProp);
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result;
+    }
+
     if (resource->isNullWrapper)
         return Object::get(m, name, hasProperty);
 
     if (QV4::QmlContextWrapper::callingContext(v4) != resource->context)
         return Object::get(m, name, hasProperty);
 
-    bool hasProp;
-    Value result = Object::get(m, name, &hasProp);
+    result = Object::get(m, name, &hasProp);
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
