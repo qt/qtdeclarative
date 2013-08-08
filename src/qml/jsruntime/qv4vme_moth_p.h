@@ -43,7 +43,7 @@
 #define QV4VME_MOTH_P_H
 
 #include <private/qv4runtime_p.h>
-#include "qv4instr_moth_p.h"
+#include <private/qv4instr_moth_p.h>
 
 QT_BEGIN_NAMESPACE
 
