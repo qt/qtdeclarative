@@ -46,7 +46,7 @@
 #include <private/qv4isel_p.h>
 #include <private/qv4isel_util_p.h>
 #include <private/qv4jsir_p.h>
-#include <private/qv4object_p.h>
+#include <private/qv4value_def_p.h>
 #include "qv4instr_moth_p.h"
 
 QT_BEGIN_NAMESPACE

@@ -43,10 +43,9 @@
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
 #include "qv4ssa_p.h"
-#include <private/qv4functionobject_p.h>
-#include <private/qv4regexpobject_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
+#include <private/qv4regexpobject_p.h>
 
 #undef USE_TYPE_INFO
 

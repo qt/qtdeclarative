@@ -72,6 +72,7 @@ struct ExecutionContext;
 struct ScriptFunction;
 struct InternalClass;
 struct Property;
+struct Value;
 
 struct BooleanObject;
 struct NumberObject;
