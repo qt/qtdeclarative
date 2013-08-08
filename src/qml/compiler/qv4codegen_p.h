@@ -46,12 +46,12 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <QtCore/QStringList>
+#include <qqmlerror.h>
 #include <assert.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-struct DiagnosticMessage;
 struct ExecutionContext;
 }
 
@@ -61,18 +61,10 @@ class UiParameterList;
 }
 
 
-
-class ErrorHandler
-{
-public:
-    virtual void syntaxError(QV4::DiagnosticMessage *message) = 0;
-};
-
 class Q_QML_EXPORT Codegen: protected AST::Visitor
 {
 public:
-    Codegen(QV4::ExecutionContext *ctx, bool strict);
-    Codegen(ErrorHandler *errorHandler, bool strictMode);
+    Codegen(bool strict);
 
     enum Mode {
         GlobalCode,
@@ -415,11 +407,12 @@ protected:
     virtual bool visit(AST::UiSourceElement *ast);
 
     void throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
+    virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
+    virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
-    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
-    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+    QList<QQmlError> errors();
 
-private:
+protected:
     QString _fileName;
     Result _expr;
     QString _property;
@@ -437,11 +430,25 @@ private:
     ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
-    QV4::ExecutionContext *_context;
     bool _strictMode;
-    ErrorHandler *_errorHandler;
+
+    QList<QQmlError> _errors;
 
     class ScanFunctions;
+};
+
+class RuntimeCodegen : public Codegen
+{
+public:
+    RuntimeCodegen(QV4::ExecutionContext *ctx, bool strict)
+        : Codegen(strict)
+        , context(ctx)
+    {}
+
+    virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
+    virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+private:
+    QV4::ExecutionContext *context;
 };
 
 }

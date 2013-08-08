@@ -47,37 +47,9 @@
 #include "qv4mm_p.h"
 #include <qv4argumentsobject_p.h>
 #include "qv4function_p.h"
+#include "qv4errorobject_p.h"
 
 using namespace QV4;
-
-DiagnosticMessage::DiagnosticMessage()
-    : offset(0)
-    , length(0)
-    , startLine(0)
-    , startColumn(0)
-    , type(0)
-    , next(0)
-{}
-
-DiagnosticMessage::~DiagnosticMessage()
-{
-    delete next;
-}
-
-String *DiagnosticMessage::buildFullMessage(ExecutionContext *ctx) const
-{
-    QString msg;
-    if (!fileName.isEmpty())
-        msg = fileName + QLatin1Char(':');
-    msg += QString::number(startLine) + QLatin1Char(':') + QString::number(startColumn) + QLatin1String(": ");
-    if (type == QV4::DiagnosticMessage::Error)
-        msg += QLatin1String("error");
-    else
-        msg += QLatin1String("warning");
-    msg += ": " + message;
-
-    return ctx->engine->newString(msg);
-}
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
@@ -254,7 +226,7 @@ bool ExecutionContext::deleteProperty(String *name)
     }
 
     if (strictMode)
-        throwSyntaxError(0);
+        throwSyntaxError(QString("Can't delete property %1").arg(name->toQString()));
     return true;
 }
 
@@ -551,9 +523,16 @@ void ExecutionContext::throwError(const QString &message)
     throwError(Value::fromObject(engine->newErrorObject(v)));
 }
 
-void ExecutionContext::throwSyntaxError(DiagnosticMessage *message)
+void ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
 {
-    throwError(Value::fromObject(engine->newSyntaxErrorObject(this, message)));
+    Object *error = engine->newSyntaxErrorObject(message, fileName, line, column);
+    throwError(Value::fromObject(error));
+}
+
+void ExecutionContext::throwSyntaxError(const QString &message)
+{
+    Object *error = engine->newSyntaxErrorObject(message);
+    throwError(Value::fromObject(error));
 }
 
 void ExecutionContext::throwTypeError()
@@ -579,11 +558,10 @@ void ExecutionContext::throwReferenceError(Value value)
     throwError(Value::fromObject(engine->newReferenceErrorObject(msg)));
 }
 
-void ExecutionContext::throwReferenceError(Value value, const QString &fileName, int line)
+void ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
 {
-    String *s = value.toString(this);
-    QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(msg, fileName, line)));
+    QString msg = message + QStringLiteral(" is not defined");
+    throwError(Value::fromObject(engine->newReferenceErrorObject(msg, fileName, line, column)));
 }
 
 void ExecutionContext::throwRangeError(Value value)

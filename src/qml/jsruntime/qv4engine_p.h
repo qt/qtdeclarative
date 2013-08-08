@@ -75,6 +75,7 @@ struct FunctionObject;
 struct BoundFunction;
 struct RegExpObject;
 struct ErrorObject;
+struct SyntaxErrorObject;
 struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
@@ -267,10 +268,10 @@ struct Q_QML_EXPORT ExecutionEngine
     RegExpObject *newRegExpObject(const QRegExp &re);
 
     Object *newErrorObject(const Value &value);
-    Object *newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message);
+    Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Object *newSyntaxErrorObject(const QString &message);
     Object *newReferenceErrorObject(const QString &message);
-    Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber);
+    Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
     Object *newTypeErrorObject(const QString &message);
     Object *newRangeErrorObject(const QString &message);
     Object *newURIErrorObject(Value message);

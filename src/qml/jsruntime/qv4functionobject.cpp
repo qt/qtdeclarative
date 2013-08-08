@@ -211,7 +211,7 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
 
     QQmlJS::V4IR::Module module;
 
-    QQmlJS::Codegen cg(v4->current, f->strictMode);
+    QQmlJS::RuntimeCodegen cg(v4->current, f->strictMode);
     QQmlJS::V4IR::Function *irf = cg(QString(), function, fe, &module);
 
     QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));

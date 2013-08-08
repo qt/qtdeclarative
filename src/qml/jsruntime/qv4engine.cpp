@@ -515,14 +515,14 @@ Object *ExecutionEngine::newErrorObject(const Value &value)
     return object;
 }
 
-Object *ExecutionEngine::newSyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *message)
-{
-    return new (memoryManager) SyntaxErrorObject(ctx, message);
-}
-
 Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    return new (memoryManager) SyntaxErrorObject(this, message);
+    return new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+}
+
+Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
+{
+    return new (memoryManager) SyntaxErrorObject(this, message, fileName, line, column);
 }
 
 
@@ -531,9 +531,9 @@ Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
     return new (memoryManager) ReferenceErrorObject(this, message);
 }
 
-Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber)
+Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
 {
-    return new (memoryManager) ReferenceErrorObject(this, message, fileName, lineNumber);
+    return new (memoryManager) ReferenceErrorObject(this, message, fileName, lineNumber, columnNumber);
 }
 
 

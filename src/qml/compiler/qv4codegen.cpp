@@ -445,7 +445,7 @@ private: // fields:
     bool _allowFuncDecls;
 };
 
-Codegen::Codegen(QV4::ExecutionContext *context, bool strict)
+Codegen::Codegen(bool strict)
     : _module(0)
     , _function(0)
     , _block(0)
@@ -457,27 +457,7 @@ Codegen::Codegen(QV4::ExecutionContext *context, bool strict)
     , _loop(0)
     , _labelledStatement(0)
     , _scopeAndFinally(0)
-    , _context(context)
     , _strictMode(strict)
-    , _errorHandler(0)
-{
-}
-
-Codegen::Codegen(ErrorHandler *errorHandler, bool strictMode)
-    : _module(0)
-    , _function(0)
-    , _block(0)
-    , _exitBlock(0)
-    , _throwBlock(0)
-    , _returnAddress(0)
-    , _mode(GlobalCode)
-    , _env(0)
-    , _loop(0)
-    , _labelledStatement(0)
-    , _scopeAndFinally(0)
-    , _context(0)
-    , _strictMode(strictMode)
-    , _errorHandler(errorHandler)
 {
 }
 
@@ -2594,26 +2574,30 @@ void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
-    QV4::DiagnosticMessage *msg = new QV4::DiagnosticMessage;
-    msg->fileName = _fileName;
-    msg->offset = loc.begin();
-    msg->startLine = loc.startLine;
-    msg->startColumn = loc.startColumn;
-    msg->message = detail;
-    if (_context)
-        _context->throwSyntaxError(msg);
-    else if (_errorHandler)
-        _errorHandler->syntaxError(msg);
-    else
-        Q_ASSERT(!"No error handler available.");
+    QQmlError error;
+    error.setUrl(QUrl::fromLocalFile(_fileName));
+    error.setDescription(detail);
+    error.setLine(loc.startLine);
+    error.setColumn(loc.startColumn);
+    _errors << error;
 }
 
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
-    if (_context)
-        _context->throwReferenceError(QV4::Value::fromString(_context, detail), _fileName, loc.startLine);
-    else if (_errorHandler)
-        throwSyntaxError(loc, detail);
-    else
-        Q_ASSERT(!"No error handler available.");
+    QQmlError error;
+    error.setUrl(QUrl::fromLocalFile(_fileName));
+    error.setDescription(detail);
+    error.setLine(loc.startLine);
+    error.setColumn(loc.startColumn);
+    _errors << error;
+}
+
+void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
+{
+    context->throwSyntaxError(detail, _fileName, loc.startLine, loc.startColumn);
+}
+
+void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
+{
+    context->throwReferenceError(detail, _fileName, loc.startLine, loc.startColumn);
 }

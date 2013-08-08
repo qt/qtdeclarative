@@ -52,25 +52,6 @@ struct Object;
 struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
-
-struct Q_QML_EXPORT DiagnosticMessage
-{
-    enum { Error, Warning };
-
-    QString fileName;
-    quint32 offset;
-    quint32 length;
-    quint32 startLine;
-    unsigned startColumn: 31;
-    unsigned type: 1;
-    QString message;
-    DiagnosticMessage *next;
-
-    DiagnosticMessage();
-    ~DiagnosticMessage();
-    String *buildFullMessage(ExecutionContext *ctx) const;
-};
-
 struct CallContext;
 
 struct Q_QML_EXPORT ExecutionContext
@@ -128,11 +109,12 @@ struct Q_QML_EXPORT ExecutionContext
 
     void Q_NORETURN throwError(const Value &value);
     void Q_NORETURN throwError(const QString &message);
-    void Q_NORETURN throwSyntaxError(DiagnosticMessage *message);
+    void Q_NORETURN throwSyntaxError(const QString &message);
+    void Q_NORETURN throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
     void Q_NORETURN throwTypeError();
     void Q_NORETURN throwTypeError(const QString &message);
     void Q_NORETURN throwReferenceError(Value value);
-    void Q_NORETURN throwReferenceError(Value value, const QString &fileName, int line);
+    void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
     void Q_NORETURN throwRangeError(Value value);
     void Q_NORETURN throwURIError(Value msg);
     void Q_NORETURN throwUnimplemented(const QString &message);

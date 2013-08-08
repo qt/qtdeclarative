@@ -139,25 +139,14 @@ void Script::parse()
 
     const bool parsed = parser.parseProgram();
 
-    DiagnosticMessage *error = 0, **errIt = &error;
     foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
         if (m.isError()) {
-            *errIt = new DiagnosticMessage;
-            (*errIt)->fileName = sourceFile;
-            (*errIt)->offset = m.loc.offset;
-            (*errIt)->length = m.loc.length;
-            (*errIt)->startLine = m.loc.startLine;
-            (*errIt)->startColumn = m.loc.startColumn;
-            (*errIt)->type = DiagnosticMessage::Error;
-            (*errIt)->message = m.message;
-            errIt = &(*errIt)->next;
+            scope->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
         } else {
             qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
                       << ": warning: " << m.message;
         }
     }
-    if (error)
-        scope->throwSyntaxError(error);
 
     if (parsed) {
         using namespace AST;
@@ -173,7 +162,7 @@ void Script::parse()
             for (String * const *i = scope->variables(), * const *ei = i + scope->variableCount(); i < ei; ++i)
                 inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
-        Codegen cg(scope, strictMode);
+        RuntimeCodegen cg(scope, strictMode);
         V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module,
                                           parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
@@ -186,7 +175,7 @@ void Script::parse()
 
     if (!vmFunction)
         // ### FIX file/line number
-        v4->current->throwError(QV4::Value::fromObject(v4->newSyntaxErrorObject(v4->current, 0)));
+        v4->current->throwError(QV4::Value::fromObject(v4->newSyntaxErrorObject("Syntax error")));
 }
 
 Value Script::run()

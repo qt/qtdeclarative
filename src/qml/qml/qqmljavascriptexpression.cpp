@@ -298,24 +298,18 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 
 void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlError &error)
 {
-    QV4::ErrorObject *errorObj = e.value().asErrorObject();
-    if (errorObj && errorObj->subtype == QV4::ErrorObject::SyntaxError) {
-        QV4::DiagnosticMessage *msg = static_cast<QV4::SyntaxErrorObject*>(errorObj)->message();
-        error.setUrl(QUrl(msg->fileName));
-        error.setLine(msg->startLine);
-        error.setColumn(msg->startColumn);
-        error.setDescription(msg->message);
-        // ### FIXME: support msg->next
-    } else {
-        QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
-        if (!trace.isEmpty()) {
-            QV4::ExecutionEngine::StackFrame frame = trace.first();
-            error.setUrl(QUrl(frame.source));
-            error.setLine(frame.line);
-            error.setColumn(frame.column);
-        }
-        error.setDescription(e.value().toQString());
+    QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
+    if (!trace.isEmpty()) {
+        QV4::ExecutionEngine::StackFrame frame = trace.first();
+        error.setUrl(QUrl(frame.source));
+        error.setLine(frame.line);
+        error.setColumn(frame.column);
     }
+    QV4::ErrorObject *errorObj = e.value().asErrorObject();
+    if (errorObj && errorObj->asSyntaxError())
+        error.setDescription(errorObj->get(errorObj->engine()->newString("message")).toQString());
+    else
+        error.setDescription(e.value().toQString());
 }
 
 QV4::PersistentValue

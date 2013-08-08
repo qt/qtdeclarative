@@ -875,7 +875,7 @@ Value JsonObject::method_parse(SimpleCallContext *ctx)
     Value result = parser.parse(&error);
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        ctx->throwSyntaxError(0);
+        ctx->throwSyntaxError("JSON.parse: Parse error");
     }
 
     return result;

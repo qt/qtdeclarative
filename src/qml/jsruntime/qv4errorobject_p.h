@@ -64,6 +64,7 @@ struct ErrorObject: Object {
     };
 
     ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t = Error);
+    ErrorObject(ExecutionEngine *engine, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
 
@@ -87,20 +88,13 @@ struct RangeErrorObject: ErrorObject {
 struct ReferenceErrorObject: ErrorObject {
     ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
-    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber);
+    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject: ErrorObject {
     SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
-    SyntaxErrorObject(ExecutionEngine *engine, const QString &msg);
-    SyntaxErrorObject(ExecutionContext *ctx, DiagnosticMessage *msg);
-    ~SyntaxErrorObject() { delete msg; }
-    static void destroy(Managed *that) { static_cast<SyntaxErrorObject *>(that)->~SyntaxErrorObject(); }
+    SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 
-    DiagnosticMessage *message() { return msg; }
-
-private:
-    DiagnosticMessage *msg;
 protected:
     static const ManagedVTable static_vtbl;
 };
@@ -217,7 +211,7 @@ struct ReferenceErrorPrototype: ReferenceErrorObject
 
 struct SyntaxErrorPrototype: SyntaxErrorObject
 {
-    SyntaxErrorPrototype(ExecutionEngine *engine): SyntaxErrorObject(engine, 0) { vtbl = &static_vtbl; }
+    SyntaxErrorPrototype(ExecutionEngine *engine): SyntaxErrorObject(engine, Value::undefinedValue()) { vtbl = &static_vtbl; }
     void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
