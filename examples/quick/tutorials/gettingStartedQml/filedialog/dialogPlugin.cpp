@@ -41,11 +41,12 @@
 #include "dialogPlugin.h"
 #include "directory.h"
 #include "file.h"
-#include <QtQml/qqml.h>
+#include <QtQml>
 
 void DialogPlugin::registerTypes(const char *uri)
 {
-    //register the class Directory into QML as a "Directory" element version 1.0
+    // Register the class Directory into QML as a "Directory" type version 1.0
+    // @uri FileDialog
     qmlRegisterType<Directory>(uri, 1, 0, "Directory");
-    qmlRegisterType<File>(uri,1,0,"File");
+    qmlRegisterType<File>(uri, 1, 0, "File");
 }

@@ -43,20 +43,21 @@ import QtQml.Models 2.1
 
 Rectangle {
     id: menuBar
-    width: 1000; height:300
-    color:"transparent"
+    width: 1000; height: 300
+    color: "transparent"
     property color fileColor: "plum"
     property color editColor: "powderblue"
 
-    property real partition: 1/10
+    property real partition: 1 / 10
 
     Column {
         anchors.fill: parent
-        //container for the header and the buttons
         z: 1
+
+        // Container for the header and the buttons
         Rectangle {
             id: labelList
-            height:menuBar.height*partition
+            height: menuBar.height * partition
             width: menuBar.width
             color: "beige"
             gradient: Gradient {
@@ -65,43 +66,50 @@ Rectangle {
                 GradientStop { position: 0.98;color: "#3F3F3F" }
                 GradientStop { position: 1.0; color: "#0e1B20" }
             }
+
             Text {
                 height: parent.height
-                anchors { right: labelRow.left ; verticalCenter: parent.bottom }
-                text: "menu:    " 
+                anchors { right: labelRow.left; verticalCenter: parent.bottom }
+                text: "menu:    "
                 color: "lightblue"
                 font { weight: Font.Light; italic: true }
             }
-            //row displays its children in a vertical row
+
+            // Row displays its children in a vertical row
             Row {
                 id: labelRow
                 anchors.centerIn: parent
-                spacing:40
+                spacing: 40
+
                 Button {
                     id: fileButton
-                    height: 20; width: 50
+                    width: 50; height: 20
                     label: "File"
-                    buttonColor : menuListView.currentIndex == 0? fileColor : Qt.darker(fileColor, 1.5)
-                    scale: menuListView.currentIndex == 0? 1.25: 1
-                    labelSize: menuListView.currentIndex == 0? 16:12
+                    buttonColor: menuListView.currentIndex == 0 ? fileColor : Qt.darker(fileColor, 1.5)
+                    scale: menuListView.currentIndex == 0 ? 1.25 : 1
+                    labelSize: menuListView.currentIndex == 0 ? 16 : 12
                     radius: 1
-                    //on a button click, change the list's currently selected item to FileMenu
+
+                    // On a button click, change the list's currently selected item to FileMenu
                     onButtonClick: menuListView.currentIndex = 0
+
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: fileColor }
                         GradientStop { position: 1.0; color: "#136F6F6F" }
                     }
                 }
+
                 Button {
                     id: editButton
-                    height: 20; width: 50
-                    buttonColor : menuListView.currentIndex == 1? Qt.darker(editColor, 1.5) : Qt.darker(editColor, 1.9)
-                    scale: menuListView.currentIndex == 1? 1.25: 1    
+                    width: 50; height: 20
+                    buttonColor : menuListView.currentIndex == 1 ? Qt.darker(editColor, 1.5) : Qt.darker(editColor, 1.9)
+                    scale: menuListView.currentIndex == 1 ? 1.25 : 1
                     label: "Edit"
                     radius: 1
-                    labelSize: menuListView.currentIndex == 1? 16:12
+                    labelSize: menuListView.currentIndex == 1 ? 16 : 12
+
                     //on a button click, change the list's currently selected item to EditMenu
-                    onButtonClick: menuListView.currentIndex = 1    
+                    onButtonClick: menuListView.currentIndex = 1
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: editColor }
                         GradientStop { position: 1.0; color: "#136F6F6F" }
@@ -110,36 +118,40 @@ Rectangle {
             }
         }
 
-        //list view will display a model according to a delegate
+        // A ListView will display a model according to a delegate
         ListView {
             id: menuListView
-            width:menuBar.width; height: 9*menuBar.height*partition
+            width: menuBar.width
+            height: 9 * menuBar.height * partition
 
-            //the model contains the data
+            // The model contains the data
             model: menuListModel
 
             //control the movement of the menu switching
             snapMode: ListView.SnapOneItem
             orientation: ListView.Horizontal
-            boundsBehavior: Flickable.StopAtBounds 
+            boundsBehavior: Flickable.StopAtBounds
             flickDeceleration: 5000
             highlightFollowsCurrentItem: true
-            highlightMoveDuration:240
+            highlightMoveDuration: 240
             highlightRangeMode: ListView.StrictlyEnforceRange
         }
     }
-    //a list of visual items already have delegates handling their display
+
+    // A list of visual items that already have delegates handling their display
     ObjectModel {
         id: menuListModel
 
         FileMenu {
-            id:fileMenu
-            width: menuListView.width; height: menuListView.height
+            id: fileMenu
+            width: menuListView.width
+            height: menuListView.height
             color: fileColor
         }
         EditMenu {
             color: editColor
-            width:  menuListView.width; height: menuListView.height
+            width: menuListView.width
+            height: menuListView.height
         }
     }
 }

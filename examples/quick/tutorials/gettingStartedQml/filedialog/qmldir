@@ -1,1 +1,2 @@
-plugin FileDialog ../plugins
+module FileDialog
+plugin filedialogplugin
