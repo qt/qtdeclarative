@@ -1294,23 +1294,23 @@ void tst_qquickwindow::cursor()
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 100));
 
     // Remove the cursor item from the scene. Theoretically this should make parentItem the
-    // cursorItem, but given the situation will correct itself after the next mouse move it's
-    // probably better left as is to avoid unnecessary work during tear down.
+    // cursorItem, but given the situation will correct itself after the next mouse move it
+    // simply unsets the window cursor for now.
     childItem.setParentItem(0);
-    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
     parentItem.setCursor(Qt::SizeAllCursor);
     QCOMPARE(parentItem.cursor().shape(), Qt::SizeAllCursor);
-    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
     // Changing the cursor of an un-parented item doesn't affect the window's cursor.
     childItem.setCursor(Qt::ClosedHandCursor);
     QCOMPARE(childItem.cursor().shape(), Qt::ClosedHandCursor);
-    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
     childItem.unsetCursor();
     QCOMPARE(childItem.cursor().shape(), Qt::ArrowCursor);
-    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
     QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 101));
     QCOMPARE(window.cursor().shape(), Qt::SizeAllCursor);

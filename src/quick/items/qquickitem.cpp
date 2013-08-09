@@ -2565,8 +2565,10 @@ void QQuickItemPrivate::derefWindow()
     if (c->mouseGrabberItem == q)
         c->mouseGrabberItem = 0;
 #ifndef QT_NO_CURSOR
-    if (c->cursorItem == q)
+    if (c->cursorItem == q) {
         c->cursorItem = 0;
+        window->unsetCursor();
+    }
 #endif
     c->hoverItems.removeAll(q);
     if (itemNodeInstance)
