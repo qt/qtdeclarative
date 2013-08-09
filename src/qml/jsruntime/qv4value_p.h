@@ -183,9 +183,7 @@ inline bool Value::toBoolean() const
     case Value::Object_Type:
         return true;
     default: // double
-        if (! doubleValue() || std::isnan(doubleValue()))
-            return false;
-        return true;
+        return doubleValue() && !std::isnan(doubleValue());
     }
 }
 
@@ -212,7 +210,7 @@ inline int Value::toInt32() const
     if ((d >= -D31 && d < D31))
         return static_cast<int>(d);
 
-    return Value::toInt32(__qmljs_to_number(*this));
+    return Value::toInt32(d);
 }
 
 inline unsigned int Value::toUInt32() const
@@ -226,8 +224,8 @@ inline unsigned int Value::toUInt32() const
         d = __qmljs_to_number(*this);
 
     const double D32 = 4294967296.0;
-    if (dbl >= 0 && dbl < D32)
-        return static_cast<uint>(dbl);
+    if (d >= 0 && d < D32)
+        return static_cast<uint>(d);
     return toUInt32(d);
 }
 
