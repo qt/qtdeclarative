@@ -129,79 +129,79 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Moth {
 
+struct Param {
+    enum {
+        ValueType    = 0,
+        ArgumentType = 1,
+        LocalType    = 2,
+        TempType     = 3,
+        ScopedLocalType  = 4
+    };
+    QV4::Value value;
+    unsigned type  : 3;
+    unsigned scope : 29;
+    unsigned index;
+
+    bool isValue() const { return type == ValueType; }
+    bool isArgument() const { return type == ArgumentType; }
+    bool isLocal() const { return type == LocalType; }
+    bool isTemp() const { return type == TempType; }
+    bool isScopedLocal() const { return type == ScopedLocalType; }
+
+    static Param createValue(const QV4::Value &v)
+    {
+        Param p;
+        p.type = ValueType;
+        p.scope = 0;
+        p.value = v;
+        return p;
+    }
+
+    static Param createArgument(unsigned idx, uint scope)
+    {
+        Param p;
+        p.type = ArgumentType;
+        p.scope = scope;
+        p.index = idx;
+        return p;
+    }
+
+    static Param createLocal(unsigned idx)
+    {
+        Param p;
+        p.type = LocalType;
+        p.scope = 0;
+        p.index = idx;
+        return p;
+    }
+
+    static Param createTemp(unsigned idx)
+    {
+        Param p;
+        p.type = TempType;
+        p.scope = 0;
+        p.index = idx;
+        return p;
+    }
+
+    static Param createScopedLocal(unsigned idx, uint scope)
+    {
+        Param p;
+        p.type = ScopedLocalType;
+        p.scope = scope;
+        p.index = idx;
+        return p;
+    }
+
+    inline bool operator==(const Param &other) const
+    { return type == other.type && scope == other.scope && index == other.index; }
+
+    inline bool operator!=(const Param &other) const
+    { return !(*this == other); }
+};
+
 union Instr
 {
-    struct Param {
-        enum {
-            ValueType    = 0,
-            ArgumentType = 1,
-            LocalType    = 2,
-            TempType     = 3,
-            ScopedLocalType  = 4
-        };
-        QV4::Value value;
-        unsigned type  : 3;
-        unsigned scope : 29;
-        unsigned index;
-
-        bool isValue() const { return type == ValueType; }
-        bool isArgument() const { return type == ArgumentType; }
-        bool isLocal() const { return type == LocalType; }
-        bool isTemp() const { return type == TempType; }
-        bool isScopedLocal() const { return type == ScopedLocalType; }
-
-        static Param createValue(const QV4::Value &v)
-        {
-            Param p;
-            p.type = ValueType;
-            p.scope = 0;
-            p.value = v;
-            return p;
-        }
-
-        static Param createArgument(unsigned idx, uint scope)
-        {
-            Param p;
-            p.type = ArgumentType;
-            p.scope = scope;
-            p.index = idx;
-            return p;
-        }
-
-        static Param createLocal(unsigned idx)
-        {
-            Param p;
-            p.type = LocalType;
-            p.scope = 0;
-            p.index = idx;
-            return p;
-        }
-
-        static Param createTemp(unsigned idx)
-        {
-            Param p;
-            p.type = TempType;
-            p.scope = 0;
-            p.index = idx;
-            return p;
-        }
-
-        static Param createScopedLocal(unsigned idx, uint scope)
-        {
-            Param p;
-            p.type = ScopedLocalType;
-            p.scope = scope;
-            p.index = idx;
-            return p;
-        }
-
-        inline bool operator==(const Param &other) const
-        { return type == other.type && scope == other.scope && index == other.index; }
-
-        inline bool operator!=(const Param &other) const
-        { return !(*this == other); }
-    };
-
     enum Type {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };

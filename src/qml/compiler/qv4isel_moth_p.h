@@ -126,7 +126,7 @@ protected:
     virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
 
 private:
-    Instr::Param binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
+    Param binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
 
     struct Instruction {
 #define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
@@ -136,14 +136,14 @@ private:
         Instruction();
     };
 
-    Instr::Param getParam(V4IR::Expr *e);
+    Param getParam(V4IR::Expr *e);
 
-    Instr::Param getResultParam(V4IR::Temp *result)
+    Param getResultParam(V4IR::Temp *result)
     {
         if (result)
             return getParam(result);
         else
-            return Instr::Param::createTemp(scratchTempIndex());
+            return Param::createTemp(scratchTempIndex());
     }
 
     void simpleMove(V4IR::Move *);

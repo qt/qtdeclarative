@@ -387,7 +387,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(QV4::Value::fromString(identifier(str)));
+    load.value = Param::createValue(QV4::Value::fromString(identifier(str)));
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -400,7 +400,7 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
     _vmFunction->generatedValues.append(v);
 
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(v);
+    load.value = Param::createValue(v);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -509,7 +509,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
     binopHelper(oper, leftSource, rightSource, target);
 }
 
-Instr::Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
 #ifdef USE_TYPE_INFO
     if (leftSource->type & V4IR::NumberType && rightSource->type & V4IR::NumberType) {
@@ -555,6 +555,7 @@ Instr::Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *lef
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
+        Q_ASSERT(binop.alu);
         addInstruction(binop);
         return binop.result;
     } else {
@@ -563,6 +564,7 @@ Instr::Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *lef
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
+        Q_ASSERT(binop.alu);
         addInstruction(binop);
         return binop.result;
     }
@@ -667,7 +669,7 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
         while (e) {
             Instruction::MoveTemp move;
             move.source = getParam(e->expr);
-            move.result = Instr::Param::createTemp(argLocation);
+            move.result = Param::createTemp(argLocation);
             addInstruction(move);
             ++argLocation;
             ++argc;
@@ -693,7 +695,7 @@ void InstructionSelection::visitJump(V4IR::Jump *s)
 
 void InstructionSelection::visitCJump(V4IR::CJump *s)
 {
-    Instr::Param condition;
+    Param condition;
     if (V4IR::Temp *t = s->cond->asTemp()) {
         condition = getResultParam(t);
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
@@ -811,7 +813,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(QV4::Value::fromBoolean(false));
+    load.value = Param::createValue(QV4::Value::fromBoolean(false));
     load.result = getResultParam(result);
     addInstruction(load);
 }
@@ -977,7 +979,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 
         Instruction::MoveTemp move;
         move.source = getParam(it->expr);
-        move.result = Instr::Param::createTemp(argLocation);
+        move.result = Param::createTemp(argLocation);
         addInstruction(move);
         ++argLocation;
 
@@ -986,7 +988,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 
             Instruction::MoveTemp move;
             move.source = getParam(it->expr);
-            move.result = Instr::Param::createTemp(argLocation);
+            move.result = Param::createTemp(argLocation);
             addInstruction(move);
             ++argLocation;
         }
@@ -1063,8 +1065,8 @@ QV4::String *InstructionSelection::identifier(const QString &s)
     return str;
 }
 
-Instr::Param InstructionSelection::getParam(V4IR::Expr *e) {
-    typedef Instr::Param Param;
+Param InstructionSelection::getParam(V4IR::Expr *e) {
+    typedef Param Param;
     assert(e);
 
     if (V4IR::Const *c = e->asConst()) {

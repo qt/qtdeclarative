@@ -136,7 +136,7 @@ static VMStats vmStats;
 
 static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
                                      QV4::Value* stack,
-                                     const Instr::Param &param
+                                     const Param &param
 #if !defined(QT_NO_DEBUG)
                                      , unsigned stackSize
 #endif
