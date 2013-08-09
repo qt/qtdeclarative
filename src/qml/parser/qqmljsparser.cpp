@@ -50,6 +50,7 @@
 #include <string.h>
 
 
+
 #include "qqmljsparser_p.h"
 
 #include <QtCore/qvarlengtharray.h>
