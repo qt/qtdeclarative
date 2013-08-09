@@ -59,6 +59,7 @@ struct Q_QML_EXPORT Script {
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
         , qml(Value::fromObject(qml)), vmFunction(0), parseAsBinding(true) {}
+    ~Script();
     QString sourceFile;
     int line;
     int column;

@@ -67,6 +67,7 @@ struct QmlBindingWrapper : FunctionObject
     {
         vtbl = &static_vtbl;
         function = f;
+        function->ref();
         usesArgumentsObject = function->usesArgumentsObject;
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
@@ -111,6 +112,10 @@ Value QmlBindingWrapper::call(Managed *that, const Value &, Value *, int)
 
 }
 
+
+Script::~Script()
+{
+}
 
 void Script::parse()
 {
@@ -174,8 +179,9 @@ void Script::parse()
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
         if (inheritContext)
             isel->setUseFastLookups(false);
-        if (globalIRCode)
+        if (globalIRCode) {
             vmFunction = isel->vmFunction(globalIRCode);
+        }
     }
 
     if (!vmFunction)

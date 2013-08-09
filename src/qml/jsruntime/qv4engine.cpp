@@ -96,7 +96,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
-#ifdef V4_ENABLE_JIT
+#if 0
         factory = new QQmlJS::MASM::ISelFactory;
 #else // !V4_ENABLE_JIT
         factory = new QQmlJS::Moth::ISelFactory;
@@ -280,7 +280,6 @@ ExecutionEngine::~ExecutionEngine()
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
-    qDeleteAll(functions);
     delete regExpAllocator;
     delete executableAllocator;
 }
@@ -379,7 +378,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
 Function *ExecutionEngine::newFunction(const QString &name)
 {
-    Function *f = new Function(newIdentifier(name));
+    Function *f = new Function(this, newIdentifier(name));
     functions.append(f);
     functionsNeedSort = true;
     return f;

@@ -90,7 +90,7 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     vmFunction->sourceFile = irFunction->sourceFile;
 
     if (outer)
-        outer->nestedFunctions.append(vmFunction);
+        outer->addNestedFunction(vmFunction);
 
     foreach (const QString *formal, irFunction->formals)
         if (formal)
