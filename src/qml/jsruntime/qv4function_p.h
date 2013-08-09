@@ -99,7 +99,6 @@ struct Function {
     QVector<Value> generatedValues;
     QVector<String *> identifiers;
     QVector<Function *> nestedFunctions;
-    Function *outer;
 
     Lookup *lookups;
 
@@ -117,7 +116,6 @@ struct Function {
         , code(0)
         , codeData(0)
         , codeSize(0)
-        , outer(0)
         , lookups(0)
         , hasNestedFunctions(0)
         , hasDirectEval(false)

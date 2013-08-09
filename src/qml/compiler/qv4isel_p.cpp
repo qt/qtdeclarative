@@ -86,7 +86,6 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     vmFunction->usesArgumentsObject = irFunction->usesArgumentsObject;
     vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
     vmFunction->isStrict = irFunction->isStrict;
-    vmFunction->outer = outer;
     vmFunction->isNamedExpression = irFunction->isNamedExpression;
     vmFunction->sourceFile = irFunction->sourceFile;
 
