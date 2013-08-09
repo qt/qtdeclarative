@@ -35,3 +35,7 @@
     \title W3Schools JavaScript Reference
 */
 
+/*!
+    \externalpage https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
+    \title Mozilla Developer Network Date Reference
+*/

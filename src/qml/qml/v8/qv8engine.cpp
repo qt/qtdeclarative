@@ -42,7 +42,7 @@
 #include "qv8engine_p.h"
 
 #include "qv4sequenceobject_p.h"
-#include "qjsengine_p.h"
+#include "private/qjsengine_p.h"
 
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>

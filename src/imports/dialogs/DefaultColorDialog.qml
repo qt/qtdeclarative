@@ -45,11 +45,23 @@ import "qml"
 
 AbstractColorDialog {
     id: root
+    property bool _valueSet: true // guard to prevent binding loops
+    function _setControlsFromColor() {
+        _valueSet = false
+        hueSlider.value = root.hue
+        saturationSlider.value = root.saturation
+        lightnessSlider.value = root.lightness
+        alphaSlider.value = root.alpha
+        crosshairs.x = root.lightness * paletteMap.width
+        crosshairs.y = (1.0 - root.saturation) * paletteMap.height
+        _valueSet = true
+    }
+    onColorChanged: _setControlsFromColor()
 
     Rectangle {
         id: content
         property int maxSize: 0.9 * Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
-        implicitHeight: Math.max(maxSize, Screen.logicalPixelDensity * (usePaletteMap ? 10 : 5))
+        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * (usePaletteMap ? 100 : 50))
         implicitWidth: usePaletteMap ? implicitHeight - bottomMinHeight : implicitHeight * 1.5
         color: palette.window
         property real bottomMinHeight: sliders.height + buttonRow.height + outerSpacing * 3
@@ -61,12 +73,6 @@ AbstractColorDialog {
         onHeightChanged: implicitHeight = Math.max((usePaletteMap ? 480 : bottomMinHeight), height)
 
         SystemPalette { id: palette }
-
-        Binding {
-            target: root
-            property: "color"
-            value: Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
-        }
 
         Item {
             id: paletteFrame
@@ -83,6 +89,7 @@ AbstractColorDialog {
                 id: paletteMap
                 x: (parent.width - width) / 2
                 width: height
+                onWidthChanged: root._setControlsFromColor()
                 height: parent.height
                 source: "images/checkers.png"
                 fillMode: Image.Tile
@@ -197,6 +204,7 @@ AbstractColorDialog {
             ColorSlider {
                 id: hueSlider
                 value: 0.5
+                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Hue")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -217,6 +225,7 @@ AbstractColorDialog {
                 id: saturationSlider
                 visible: !content.usePaletteMap
                 value: 0.5
+                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Saturation")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -232,6 +241,7 @@ AbstractColorDialog {
                 id: lightnessSlider
                 visible: !content.usePaletteMap
                 value: 0.5
+                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Luminosity")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -249,6 +259,7 @@ AbstractColorDialog {
                 minimum: 0.0
                 maximum: 1.0
                 value: 1.0
+                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Alpha")
                 visible: root.showAlphaChannel
                 trackDelegate: Item {
@@ -273,7 +284,7 @@ AbstractColorDialog {
 
         Item {
             id: buttonRow
-            height: buttonsOnly.height
+            height: Math.max(buttonsOnly.height, copyIcon.height)
             width: parent.width
             anchors {
                 left: parent.left

@@ -39,10 +39,6 @@
 **
 ****************************************************************************/
 
-#ifdef QMLJS_WITH_LLVM
-#  include "private/qv4_llvm_p.h"
-#endif // QMLJS_WITH_LLVM
-
 #include "private/qv4object_p.h"
 #include "private/qv4runtime_p.h"
 #include "private/qv4functionobject_p.h"
@@ -51,7 +47,6 @@
 #include "private/qv4codegen_p.h"
 #include "private/qv4isel_moth_p.h"
 #include "private/qv4vme_moth_p.h"
-#include "private/qv4syntaxchecker_p.h"
 #include "private/qv4objectproto_p.h"
 #include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
@@ -149,121 +144,6 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exce
     }
 }
 
-#ifdef QMLJS_WITH_LLVM
-int executeLLVMCode(void *codePtr)
-{
-    using namespace QQmlJS;
-
-    if (!codePtr)
-        return EXIT_FAILURE;
-    void (*code)(VM::ExecutionContext *) = (void (*)(VM::ExecutionContext *)) codePtr;
-
-    QScopedPointer<QQmlJS::EvalISelFactory> iSelFactory(new QQmlJS::Moth::ISelFactory);
-    VM::ExecutionEngine vm(iSelFactory.data());
-    VM::ExecutionContext *ctx = vm.rootContext;
-
-#if THIS_NEEDS_TO_BE_FIXED
-    QV4::Object *globalObject = vm.globalObject.objectValue();
-    globalObject->__put__(ctx, vm.newIdentifier(QStringLiteral("print")),
-                          QV4::Value::fromObject(new (ctx->engine->memoryManager) builtins::Print(ctx)));
-
-    void * buf = __qmljs_create_exception_handler(ctx);
-    if (setjmp(*(jmp_buf *)buf)) {
-        showException(ctx);
-        return EXIT_FAILURE;
-    }
-
-    code(ctx);
-#else
-    Q_UNUSED(ctx);
-    Q_UNUSED(code);
-#endif
-    return EXIT_SUCCESS;
-}
-
-int compile(const QString &fileName, const QString &source, QQmlJS::LLVMOutputType outputType)
-{
-    using namespace QQmlJS;
-
-    IR::Module module;
-    QQmlJS::Engine ee, *engine = &ee;
-    Lexer lexer(engine);
-    lexer.setCode(source, 1, false);
-    Parser parser(engine);
-
-    const bool parsed = parser.parseProgram();
-
-    foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-        std::cerr << qPrintable(fileName) << ':'
-                  << m.loc.startLine << ':'
-                  << m.loc.startColumn << ": error: "
-                  << qPrintable(m.message) << std::endl;
-    }
-
-    if (!parsed)
-        return EXIT_FAILURE;
-
-    using namespace AST;
-    Program *program = AST::cast<Program *>(parser.rootNode());
-
-    class MyErrorHandler: public ErrorHandler {
-    public:
-        virtual void syntaxError(QV4::DiagnosticMessage *message) {
-            for (; message; message = message->next) {
-                std::cerr << qPrintable(message->fileName) << ':'
-                          << message->startLine << ':'
-                          << message->startColumn << ": "
-                          << (message->type == QV4::DiagnosticMessage::Error ? "error" : "warning") << ": "
-                          << qPrintable(message->message) << std::endl;
-            }
-        }
-    } errorHandler;
-
-    Codegen cg(&errorHandler, false);
-    // FIXME: if the program is empty, we should we generate an empty %entry, or give an error?
-    /*IR::Function *globalCode =*/ cg(fileName, source, program, &module);
-
-    int (*exec)(void *) = outputType == LLVMOutputJit ? executeLLVMCode : 0;
-    return compileWithLLVM(&module, fileName, outputType, exec);
-}
-
-int compileFiles(const QStringList &files, QQmlJS::LLVMOutputType outputType)
-{
-    foreach (const QString &fileName, files) {
-        QFile file(fileName);
-        if (file.open(QFile::ReadOnly)) {
-            QString source = QString::fromUtf8(file.readAll());
-            int result = compile(fileName, source, outputType);
-            if (result != EXIT_SUCCESS)
-                return result;
-        } else {
-            std::cerr << "Error: cannot open file " << fileName.toUtf8().constData() << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
-    return EXIT_SUCCESS;
-}
-
-int evaluateCompiledCode(const QStringList &files)
-{
-    using namespace QQmlJS;
-
-    foreach (const QString &libName, files) {
-        QFileInfo libInfo(libName);
-        QLibrary lib(libInfo.absoluteFilePath());
-        lib.load();
-        QFunctionPointer ptr = lib.resolve("%entry");
-//        qDebug("_%%entry resolved to address %p", ptr);
-        int result = executeLLVMCode((void *) ptr);
-        if (result != EXIT_SUCCESS)
-            return result;
-    }
-
-    return EXIT_SUCCESS;
-}
-#endif // QMLJS_WITH_LLVM
-
-
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -272,10 +152,7 @@ int main(int argc, char *argv[])
 
     enum {
         use_masm,
-        use_moth,
-        use_llvm_compiler,
-        use_llvm_runtime,
-        use_llvm_jit
+        use_moth
     } mode;
 #ifdef V4_ENABLE_JIT
     mode = use_masm;
@@ -283,9 +160,6 @@ int main(int argc, char *argv[])
     mode = use_moth;
 #endif
 
-#ifdef QMLJS_WITH_LLVM
-    QQmlJS::LLVMOutputType fileType = QQmlJS::LLVMOutputObject;
-#endif // QMLJS_WITH_LLVM
     bool runAsQml = false;
 
     if (!args.isEmpty()) {
@@ -304,34 +178,6 @@ int main(int argc, char *argv[])
             args.removeFirst();
         }
 
-#ifdef QMLJS_WITH_LLVM
-        if (args.first() == QLatin1String("--compile")) {
-            mode = use_llvm_compiler;
-            args.removeFirst();
-
-            if (!args.isEmpty() && args.first() == QLatin1String("-t")) {
-                args.removeFirst();
-                // Note: keep this list in sync with the enum!
-                static QStringList fileTypes = QStringList() << QLatin1String("ll") << QLatin1String("bc") << QLatin1String("asm") << QLatin1String("obj");
-                if (args.isEmpty() || !fileTypes.contains(args.first())) {
-                    std::cerr << "file types: ll, bc, asm, obj" << std::endl;
-                    return EXIT_FAILURE;
-                }
-                fileType = (QQmlJS::LLVMOutputType) fileTypes.indexOf(args.first());
-                args.removeFirst();
-            }
-        }
-
-        if (args.first() == QLatin1String("--aot")) {
-            mode = use_llvm_runtime;
-            args.removeFirst();
-        }
-
-        if (args.first() == QLatin1String("--llvm-jit")) {
-            mode = use_llvm_jit;
-            args.removeFirst();
-        }
-#endif // QMLJS_WITH_LLVM
         if (args.first() == QLatin1String("--help")) {
             std::cerr << "Usage: v4 [|--debug|-d] [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
             return EXIT_SUCCESS;
@@ -339,20 +185,6 @@ int main(int argc, char *argv[])
     }
 
     switch (mode) {
-#ifdef QMLJS_WITH_LLVM
-    case use_llvm_jit:
-        return compileFiles(args, QQmlJS::LLVMOutputJit);
-    case use_llvm_compiler:
-        return compileFiles(args, fileType);
-    case use_llvm_runtime:
-        return evaluateCompiledCode(args);
-#else // !QMLJS_WITH_LLVM
-    case use_llvm_compiler:
-    case use_llvm_runtime:
-    case use_llvm_jit:
-        std::cerr << "LLVM backend was not built, compiler is unavailable." << std::endl;
-        return EXIT_FAILURE;
-#endif // QMLJS_WITH_LLVM
     case use_masm:
     case use_moth: {
         QQmlJS::EvalISelFactory* iSelFactory = 0;

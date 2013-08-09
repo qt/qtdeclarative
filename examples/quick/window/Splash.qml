@@ -60,7 +60,7 @@ Window {
 
     Image {
         id: splashImage
-        source: "../../shared/images/qt-logo.png"
+        source: "../shared/images/qt-logo.png"
         MouseArea {
             anchors.fill: parent
             onClicked: Qt.quit()

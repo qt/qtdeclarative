@@ -63,6 +63,8 @@ protected:
     virtual const char *fragmentShader() const;
 
     void updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc);
+    void updateColor(const QVector4D &c);
+    void updateTextureScale(const QVector2D &ts);
 
     float m_fontScale;
     float m_matrixScale;
@@ -72,6 +74,11 @@ protected:
     int m_alphaMin_id;
     int m_alphaMax_id;
     int m_color_id;
+
+    QVector2D m_lastTextureScale;
+    QVector4D m_lastColor;
+    float m_lastAlphaMin;
+    float m_lastAlphaMax;
 };
 
 const char *QSGDistanceFieldTextMaterialShader::vertexShader() const {
@@ -109,6 +116,8 @@ char const *const *QSGDistanceFieldTextMaterialShader::attributeNames() const {
 QSGDistanceFieldTextMaterialShader::QSGDistanceFieldTextMaterialShader()
     : m_fontScale(1.0)
     , m_matrixScale(1.0)
+    , m_lastAlphaMin(-1)
+    , m_lastAlphaMax(-1)
 {
 }
 
@@ -119,8 +128,30 @@ void QSGDistanceFieldTextMaterialShader::updateAlphaRange(ThresholdFunc threshol
     float range = spreadFunc(combinedScale);
     float alphaMin = qMax(0.0f, base - range);
     float alphaMax = qMin(base + range, 1.0f);
-    program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
-    program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
+    if (alphaMin != m_lastAlphaMin) {
+        program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
+        m_lastAlphaMin = alphaMin;
+    }
+    if (alphaMax != m_lastAlphaMax) {
+        program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
+        m_lastAlphaMax = alphaMax;
+    }
+}
+
+void QSGDistanceFieldTextMaterialShader::updateColor(const QVector4D &c)
+{
+    if (m_lastColor != c) {
+        program()->setUniformValue(m_color_id, c);
+        m_lastColor = c;
+    }
+}
+
+void QSGDistanceFieldTextMaterialShader::updateTextureScale(const QVector2D &ts)
+{
+    if (m_lastTextureScale != ts) {
+        program()->setUniformValue(m_textureScale_id, ts);
+        m_lastTextureScale = ts;
+    }
 }
 
 void QSGDistanceFieldTextMaterialShader::initialize()
@@ -146,7 +177,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
            || state.isOpacityDirty()) {
         QVector4D color = material->color();
         color *= state.opacity();
-        program()->setUniformValue(m_color_id, color);
+        updateColor(color);
     }
 
     bool updateRange = false;
@@ -170,8 +201,9 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     if (updated
             || oldMaterial == 0
             || oldMaterial->texture()->textureId != material->texture()->textureId) {
-        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->textureSize().width(),
-                                                                1.0 / material->textureSize().height()));
+        updateTextureScale(QVector2D(1.0 / material->textureSize().width(),
+                                     1.0 / material->textureSize().height()));
+
         glBindTexture(GL_TEXTURE_2D, material->texture()->textureId);
 
         if (updated) {

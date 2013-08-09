@@ -42,6 +42,7 @@
 #include "qqmllistwrapper_p.h"
 #include <private/qv8engine_p.h>
 #include <private/qqmllist_p.h>
+#include <private/qv4objectproto_p.h>
 
 #include <private/qv4functionobject_p.h>
 
@@ -56,6 +57,7 @@ QmlListWrapper::QmlListWrapper(QV8Engine *engine)
       v8(engine)
 {
     vtbl = &static_vtbl;
+    prototype = QV8Engine::getV4(engine)->objectPrototype;
 }
 
 QmlListWrapper::~QmlListWrapper()
@@ -113,7 +115,7 @@ Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (idx != UINT_MAX)
         return getIndexed(m, idx, hasProperty);
 
-    return Value::undefinedValue();
+    return Object::get(m, name, hasProperty);
 }
 
 Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)

@@ -132,8 +132,5 @@ HEADERS += \
     $$PWD/qqmlvaluetypewrapper_p.h \
     $$PWD/qqmltypewrapper_p.h
 
-include(parser/parser.pri)
-include(rewriter/rewriter.pri)
 include(ftw/ftw.pri)
 include(v8/v8.pri)
-include(v4/v4.pri)

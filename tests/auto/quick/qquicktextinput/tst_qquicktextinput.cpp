@@ -1574,7 +1574,7 @@ void tst_qquicktextinput::verticalAlignment()
     QQuickView window(testFileUrl("horizontalAlignment.qml"));
     QQuickTextInput *textInput = window.rootObject()->findChild<QQuickTextInput*>("text");
     QVERIFY(textInput != 0);
-    window.show();
+    window.showNormal();
 
     QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignTop);
     QVERIFY(textInput->boundingRect().bottom() < window.height() / 2);
@@ -2776,7 +2776,6 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::remoteCursorDelegate()
 {
-    QSKIP("This test is unstable");
     TestHTTPServer server(SERVER_PORT);
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
@@ -2799,10 +2798,6 @@ void tst_qquicktextinput::remoteCursorDelegate()
 
     textInputObject->setFocus(true);
     QVERIFY(textInputObject->isCursorVisible());
-
-    QCOMPARE(component.status(), QQmlComponent::Loading);
-    QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
-    server.sendDelayedItem();
 
     // Wait for component to load.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
@@ -3315,7 +3310,7 @@ void tst_qquicktextinput::focusOnPress()
     QQuickWindow window;
     window.resize(100, 50);
     textInputObject->setParentItem(window.contentItem());
-    window.show();
+    window.showNormal();
     window.requestActivate();
     QTest::qWaitForWindowActive(&window);
 
@@ -3378,7 +3373,7 @@ void tst_qquicktextinput::openInputPanel()
     inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 
@@ -3770,7 +3765,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     input->setFocus(true);
     input->setText("");
 
-    view.show();
+    view.showNormal();
     view.requestActivate();
     QTest::qWaitForWindowActive(&view);
 

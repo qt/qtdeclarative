@@ -339,7 +339,7 @@ void QSGDefaultRectangleNode::update()
         m_dirty_geometry = false;
     }
     m_material.setFlag(QSGMaterial::Blending, (m_gradient_stops.size() > 0 && !m_gradient_is_opaque)
-                                               || m_color.alpha() < 255
+                                               || (m_color.alpha() < 255 && m_color.alpha() != 0)
                                                || (m_pen_width > 0 && m_border_color.alpha() < 255));
 }
 

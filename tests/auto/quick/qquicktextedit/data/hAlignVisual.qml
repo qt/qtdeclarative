@@ -6,8 +6,9 @@ Rectangle {
 
     Text {
         objectName: "textItem"
-        text: "AA\nBBBBB\nCCCCCCCCCCCCCCCC"
+        text: "AA\nBBBBBBB\nCCCCCCCCCCCCCCCC"
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignLeft
+        font.pointSize: 12
     }
 }

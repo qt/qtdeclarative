@@ -128,7 +128,7 @@ void tst_QuickPath::catmullromCurve()
     pos = obj->pointAt(.75);
     QCOMPARE(pos.toPoint(), QPoint(51,105)); //fuzzy compare
     pos = obj->pointAt(1);
-    QCOMPARE(pos, QPointF(100,150));
+    QCOMPARE(pos.toPoint(), QPoint(100,150));
 }
 
 void tst_QuickPath::closedCatmullromCurve()
@@ -227,7 +227,7 @@ void tst_QuickPath::line()
         QCOMPARE(p1.x(), p1.y());
 
         QPointF p2 = path2->pointAt(t);
-        QCOMPARE(p1, p2);
+        QCOMPARE(p1.toPoint(), p2.toPoint());
     }
 }
 

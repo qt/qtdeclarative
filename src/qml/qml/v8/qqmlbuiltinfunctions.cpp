@@ -61,6 +61,7 @@
 #include <private/qv4stringobject_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4objectproto_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
@@ -1308,6 +1309,8 @@ Value QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 QV4::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
     : Object(v4)
 {
+    prototype = v4->objectPrototype;
+
     defineDefaultProperty(v4, QStringLiteral("debug"), method_log);
     defineDefaultProperty(v4, QStringLiteral("log"), method_log);
     defineDefaultProperty(v4, QStringLiteral("info"), method_log);

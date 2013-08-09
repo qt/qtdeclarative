@@ -54,6 +54,10 @@ QQmlApplicationEnginePrivate::QQmlApplicationEnginePrivate(QQmlEngine *e)
 
 QQmlApplicationEnginePrivate::~QQmlApplicationEnginePrivate()
 {
+}
+
+void QQmlApplicationEnginePrivate::cleanUp()
+{
     qDeleteAll(objects);
 #ifndef QT_NO_TRANSLATIONS
     qDeleteAll(translators);
@@ -229,7 +233,8 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *p
 */
 QQmlApplicationEngine::~QQmlApplicationEngine()
 {
-    //Instantiated root objects cleaned up in private class
+    Q_D(QQmlApplicationEngine);
+    d->cleanUp();//Instantiated root objects must be deleted before the engine
 }
 
 /*!

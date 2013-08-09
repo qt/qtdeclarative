@@ -157,7 +157,7 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision);
+                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -181,7 +181,7 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision);
+                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
                 // Fall through to base implementation
             }
@@ -193,8 +193,7 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     } else if (w->typeNamespace) {
         Q_ASSERT(w->importNamespace);
-        QQmlTypeNameCache::Result r = w->typeNamespace->query(name,
-                                                                             w->importNamespace);
+        QQmlTypeNameCache::Result r = w->typeNamespace->query(name, w->importNamespace);
 
         if (r.isValid()) {
             QQmlContextData *context = v8engine->callingContext();
@@ -258,6 +257,14 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
             }
         }
     }
+}
+
+PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
+{
+    // ### Implement more efficiently.
+    bool hasProperty = false;
+    const_cast<Managed*>(m)->get(name, &hasProperty);
+    return hasProperty ? Attr_Data : Attr_Invalid;
 }
 
 void QmlTypeWrapper::destroy(Managed *that)

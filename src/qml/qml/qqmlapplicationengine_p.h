@@ -70,6 +70,7 @@ public:
     QQmlApplicationEnginePrivate(QQmlEngine *e);
     ~QQmlApplicationEnginePrivate();
     void init();
+    void cleanUp();
 
     void startLoad(const QUrl &url, const QByteArray &data = QByteArray(), bool dataFlag = false);
     void loadTranslations(const QUrl &rootFile);

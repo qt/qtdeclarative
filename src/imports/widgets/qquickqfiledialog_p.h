@@ -53,6 +53,7 @@
 // We mean it.
 //
 
+#include <QFileDialog>
 #include "../dialogs/qquickabstractfiledialog_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -69,6 +70,34 @@ protected:
     QPlatformFileDialogHelper *helper();
 
     Q_DISABLE_COPY(QQuickQFileDialog)
+};
+
+class QFileDialogHelper : public QPlatformFileDialogHelper
+{
+    Q_OBJECT
+public:
+    QFileDialogHelper();
+
+    bool defaultNameFilterDisables() const Q_DECL_OVERRIDE { return true; }
+    void setDirectory(const QUrl &dir) Q_DECL_OVERRIDE { m_dialog.setDirectoryUrl(dir); }
+    QUrl directory() const Q_DECL_OVERRIDE { return m_dialog.directoryUrl(); }
+    void selectFile(const QUrl &f) Q_DECL_OVERRIDE { m_dialog.selectUrl(f); }
+    QList<QUrl> selectedFiles() const Q_DECL_OVERRIDE;
+    void setFilter() Q_DECL_OVERRIDE;
+    void selectNameFilter(const QString &f) Q_DECL_OVERRIDE { m_dialog.selectNameFilter(f); }
+    QString selectedNameFilter() const Q_DECL_OVERRIDE { return m_dialog.selectedNameFilter(); }
+    void exec() Q_DECL_OVERRIDE { m_dialog.exec(); }
+    bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) Q_DECL_OVERRIDE;
+    void hide() Q_DECL_OVERRIDE { m_dialog.hide(); }
+
+private slots:
+    void currentChanged(const QString& path);
+    void directoryEntered(const QString& path);
+    void fileSelected(const QString& path);
+    void filesSelected(const QStringList& paths);
+
+private:
+    QFileDialog m_dialog;
 };
 
 QT_END_NAMESPACE

@@ -290,14 +290,21 @@ Item {
         return qtest_results.grabImage(item);
     }
 
-    function tryCompare(obj, prop, value, timeout) {
+    function tryCompare(obj, prop, value, timeout, msg) {
         if (arguments.length == 2) {
             qtest_results.fail("A value is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
+        if (timeout !== undefined && typeof(timeout) != "number") {
+            qtest_results.fail("timeout should be a number",
+                        util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
         if (!timeout)
             timeout = 5000
+        if (msg === undefined)
+            msg = "property " + prop
         if (!qtest_compareInternal(obj[prop], value))
             wait(0)
         var i = 0
@@ -309,7 +316,7 @@ Item {
         var act = qtest_results.stringify(actual)
         var exp = qtest_results.stringify(value)
         var success = qtest_compareInternal(actual, value)
-        if (!qtest_results.compare(success, "property " + prop, act, exp, util.callerFile(), util.callerLine()))
+        if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
 

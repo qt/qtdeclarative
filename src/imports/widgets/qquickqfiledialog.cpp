@@ -50,68 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QFileDialogHelper : public QPlatformFileDialogHelper
-{
-public:
-    QFileDialogHelper() :
-        QPlatformFileDialogHelper()
-    {
-        connect(&m_dialog, SIGNAL(currentChanged(const QString&)), this, SIGNAL(currentChanged(const QString&)));
-        connect(&m_dialog, SIGNAL(directoryEntered(const QString&)), this, SIGNAL(directoryEntered(const QString&)));
-        connect(&m_dialog, SIGNAL(fileSelected(const QString&)), this, SIGNAL(fileSelected(const QString&)));
-        connect(&m_dialog, SIGNAL(filesSelected(const QStringList&)), this, SIGNAL(filesSelected(const QStringList&)));
-        connect(&m_dialog, SIGNAL(filterSelected(const QString&)), this, SIGNAL(filterSelected(const QString&)));
-        connect(&m_dialog, SIGNAL(accepted()), this, SIGNAL(accept()));
-        connect(&m_dialog, SIGNAL(rejected()), this, SIGNAL(reject()));
-    }
-
-    virtual bool defaultNameFilterDisables() const { return true; }
-    virtual void setDirectory(const QUrl &dir) { m_dialog.setDirectoryUrl(dir); }
-    virtual QUrl directory() const { return m_dialog.directoryUrl(); }
-    virtual void selectFile(const QUrl &f) { m_dialog.selectUrl(f); }
-    virtual QList<QUrl> selectedFiles() const;
-
-    virtual void setFilter() {
-        m_dialog.setWindowTitle(QPlatformFileDialogHelper::options()->windowTitle());
-        if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::LookIn))
-            m_dialog.setLabelText(m_dialog.LookIn, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::LookIn));
-        if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::FileName))
-            m_dialog.setLabelText(m_dialog.FileName, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::FileName));
-        if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::FileType))
-            m_dialog.setLabelText(m_dialog.FileType, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::FileType));
-        if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::Accept))
-            m_dialog.setLabelText(m_dialog.Accept, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::Accept));
-        if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::Reject))
-            m_dialog.setLabelText(m_dialog.Reject, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::Reject));
-        m_dialog.setFilter(QPlatformFileDialogHelper::options()->filter());
-        m_dialog.setNameFilters(QPlatformFileDialogHelper::options()->nameFilters());
-        m_dialog.selectNameFilter(QPlatformFileDialogHelper::options()->initiallySelectedNameFilter());
-        m_dialog.setFileMode(QFileDialog::FileMode(QPlatformFileDialogHelper::options()->fileMode()));
-        m_dialog.setOptions((QFileDialog::Options)((int)(QPlatformFileDialogHelper::options()->options())));
-        m_dialog.setAcceptMode(QFileDialog::AcceptMode(QPlatformFileDialogHelper::options()->acceptMode()));
-    }
-
-    virtual void selectNameFilter(const QString &f) { m_dialog.selectNameFilter(f); }
-    virtual QString selectedNameFilter() const { return m_dialog.selectedNameFilter(); }
-    virtual void exec() { m_dialog.exec(); }
-
-    virtual bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
-        m_dialog.winId();
-        QWindow *window = m_dialog.windowHandle();
-        Q_ASSERT(window);
-        window->setTransientParent(parent);
-        window->setFlags(f);
-        m_dialog.setWindowModality(m);
-        m_dialog.show();
-        return m_dialog.isVisible();
-    }
-
-    virtual void hide() { m_dialog.hide(); }
-
-private:
-    QFileDialog m_dialog;
-};
-
 /*!
     \qmltype QtFileDialog
     \instantiates QQuickQFileDialog
@@ -190,8 +128,8 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
 
     if (!m_dlgHelper) {
         m_dlgHelper = new QFileDialogHelper();
-        connect(m_dlgHelper, SIGNAL(directoryEntered(QString)), this, SIGNAL(folderChanged()));
-        connect(m_dlgHelper, SIGNAL(filterSelected(QString)), this, SIGNAL(filterSelected()));
+        connect(m_dlgHelper, SIGNAL(directoryEntered(const QUrl &)), this, SIGNAL(folderChanged()));
+        connect(m_dlgHelper, SIGNAL(filterSelected(const QString &)), this, SIGNAL(filterSelected()));
         connect(m_dlgHelper, SIGNAL(accept()), this, SLOT(accept()));
         connect(m_dlgHelper, SIGNAL(reject()), this, SLOT(reject()));
     }
@@ -199,9 +137,75 @@ QPlatformFileDialogHelper *QQuickQFileDialog::helper()
     return m_dlgHelper;
 }
 
+QFileDialogHelper::QFileDialogHelper() :
+    QPlatformFileDialogHelper()
+{
+    connect(&m_dialog, SIGNAL(currentChanged(const QString&)), this, SLOT(currentChanged(const QString&)));
+    connect(&m_dialog, SIGNAL(directoryEntered(const QString&)), this, SLOT(directoryEntered(const QString&)));
+    connect(&m_dialog, SIGNAL(fileSelected(const QString&)), this, SLOT(fileSelected(const QString&)));
+    connect(&m_dialog, SIGNAL(filesSelected(const QStringList&)), this, SLOT(filesSelected(const QStringList&)));
+    connect(&m_dialog, SIGNAL(filterSelected(const QString&)), this, SIGNAL(filterSelected(const QString&)));
+    connect(&m_dialog, SIGNAL(accepted()), this, SIGNAL(accept()));
+    connect(&m_dialog, SIGNAL(rejected()), this, SIGNAL(reject()));
+}
+
 QList<QUrl> QFileDialogHelper::selectedFiles() const
 {
     return m_dialog.selectedUrls();
+}
+
+void QFileDialogHelper::setFilter() {
+    m_dialog.setWindowTitle(QPlatformFileDialogHelper::options()->windowTitle());
+    if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::LookIn))
+        m_dialog.setLabelText(m_dialog.LookIn, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::LookIn));
+    if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::FileName))
+        m_dialog.setLabelText(m_dialog.FileName, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::FileName));
+    if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::FileType))
+        m_dialog.setLabelText(m_dialog.FileType, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::FileType));
+    if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::Accept))
+        m_dialog.setLabelText(m_dialog.Accept, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::Accept));
+    if (QPlatformFileDialogHelper::options()->isLabelExplicitlySet(QFileDialogOptions::Reject))
+        m_dialog.setLabelText(m_dialog.Reject, QPlatformFileDialogHelper::options()->labelText(QFileDialogOptions::Reject));
+    m_dialog.setFilter(QPlatformFileDialogHelper::options()->filter());
+    m_dialog.setNameFilters(QPlatformFileDialogHelper::options()->nameFilters());
+    m_dialog.selectNameFilter(QPlatformFileDialogHelper::options()->initiallySelectedNameFilter());
+    m_dialog.setFileMode(QFileDialog::FileMode(QPlatformFileDialogHelper::options()->fileMode()));
+    m_dialog.setOptions((QFileDialog::Options)((int)(QPlatformFileDialogHelper::options()->options())));
+    m_dialog.setAcceptMode(QFileDialog::AcceptMode(QPlatformFileDialogHelper::options()->acceptMode()));
+}
+
+bool QFileDialogHelper::show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
+    m_dialog.winId();
+    QWindow *window = m_dialog.windowHandle();
+    Q_ASSERT(window);
+    window->setTransientParent(parent);
+    window->setFlags(f);
+    m_dialog.setWindowModality(m);
+    m_dialog.show();
+    return m_dialog.isVisible();
+}
+
+void QFileDialogHelper::currentChanged(const QString& path)
+{
+    emit QPlatformFileDialogHelper::currentChanged(QUrl::fromLocalFile(path));
+}
+
+void QFileDialogHelper::directoryEntered(const QString& path)
+{
+    emit QPlatformFileDialogHelper::directoryEntered(QUrl::fromLocalFile(path));
+}
+
+void QFileDialogHelper::fileSelected(const QString& path)
+{
+    emit QPlatformFileDialogHelper::fileSelected(QUrl::fromLocalFile(path));
+}
+
+void QFileDialogHelper::filesSelected(const QStringList& paths)
+{
+    QList<QUrl> pathUrls;
+    foreach (const QString &path, paths)
+        pathUrls << QUrl::fromLocalFile(path);
+    emit QPlatformFileDialogHelper::filesSelected(pathUrls);
 }
 
 QT_END_NAMESPACE

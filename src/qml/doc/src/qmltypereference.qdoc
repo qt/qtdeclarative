@@ -104,14 +104,10 @@ When integrating with C++, note that any QDate value
 \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
 converted into a \c date value, and vice-versa.
 
-Note that the date type has comparison semantics which match
-those of the JavaScript Date object.  To compare the value
-of two date properties, you should compare their "toString()"
-values.
+This basic type is provided by the QML language. It can be implicitly converted
+to a \l{QtQml2::Date}{Date} object.
 
-This basic type is provided by the QML language.
-
-\sa {QML Basic Types}
+\sa {QtQml2::Date}{QML Date object}, {QML Basic Types}
 */
 
 /*!

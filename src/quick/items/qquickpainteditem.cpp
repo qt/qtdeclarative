@@ -67,9 +67,6 @@ QT_BEGIN_NAMESPACE
 
     To enable QPainter to do anti-aliased rendering, use setAntialiasing().
 
-    QQuickPaintedItem is meant to make it easier to port old code that is using the
-    QPainter API to the QML Scene Graph API and it should be used only for that purpose.
-
     To write your own painted item, you first create a subclass of QQuickPaintedItem, and then
     start by implementing its only pure virtual public function: paint(), which implements
     the actual painting. To get the size of the area painted by the item, use
