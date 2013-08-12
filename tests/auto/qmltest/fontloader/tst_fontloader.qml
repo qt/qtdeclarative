@@ -63,8 +63,8 @@ Item {
         name: "FontLoader"
 
         function test_fontloading() {
-            if (Qt.platform.os === "mac")
-                skip("Skipped for QTBUG-25306")
+            if (Qt.platform.os === "osx")
+                skip("See QTBUG-32650")
 
             compare(fontloader.status, FontLoader.Null)
             compare(testinput.font.family, "")
@@ -81,8 +81,8 @@ Item {
         }
 
         function test_fontswitching() {
-            if (Qt.platform.os === "mac")
-                skip("Skipped for QTBUG-25306")
+            if (Qt.platform.os === "osx")
+                skip("See QTBUG-32650")
 
             compare(fontswitch.status, FontLoader.Null)
             fontswitch.source = "tarzeau_ocr_a.ttf";
