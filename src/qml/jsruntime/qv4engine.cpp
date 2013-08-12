@@ -96,7 +96,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
-#if 0
+#ifdef V4_ENABLE_JIT
         factory = new QQmlJS::MASM::ISelFactory;
 #else // !V4_ENABLE_JIT
         factory = new QQmlJS::Moth::ISelFactory;
