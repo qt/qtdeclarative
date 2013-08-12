@@ -1198,18 +1198,15 @@ void tst_QQuickMouseArea::transformedMouseArea()
     foreach (const QPoint &point, points) {
         // check hover
         QTest::mouseMove(window, point);
-        QTest::qWait(10);
-        QCOMPARE(mouseArea->property("containsMouse").toBool(), insideTarget);
+        QTRY_COMPARE(mouseArea->property("containsMouse").toBool(), insideTarget);
 
         // check mouse press
         QTest::mousePress(window, Qt::LeftButton, 0, point);
-        QTest::qWait(10);
-        QCOMPARE(mouseArea->property("pressed").toBool(), insideTarget);
+        QTRY_COMPARE(mouseArea->property("pressed").toBool(), insideTarget);
 
         // check mouse release
         QTest::mouseRelease(window, Qt::LeftButton, 0, point);
-        QTest::qWait(10);
-        QCOMPARE(mouseArea->property("pressed").toBool(), false);
+        QTRY_COMPARE(mouseArea->property("pressed").toBool(), false);
     }
 
     delete window;
@@ -1514,8 +1511,8 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
     QTest::mouseMove(&view, position);
     axis += invert ? -threshold : threshold;
     QTest::mouseMove(&view, position);
-    QCOMPARE(outer->drag()->active(), false);
-    QCOMPARE(inner->drag()->active(), true);
+    QTRY_COMPARE(outer->drag()->active(), false);
+    QTRY_COMPARE(inner->drag()->active(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 }
 

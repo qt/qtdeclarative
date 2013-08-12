@@ -867,6 +867,9 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QGuiApplication::processEvents();
 
     //QVERIFY(flickable->isMovingHorizontally());
+
+    // Wait for flick to end
+    QTRY_VERIFY(!flickable->isMoving());
     qDebug() << "Pos: " << rect->position();
 
     // pinch

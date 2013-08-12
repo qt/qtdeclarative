@@ -982,6 +982,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     q->setKeepMouseGrab(stealMouse);
     clearDelayedPress();
     pressed = true;
+
     if (hData.transitionToBounds)
         hData.transitionToBounds->stopTransition();
     if (vData.transitionToBounds)
@@ -2095,7 +2096,8 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
         d->lastPosTime = -1;
         returnToBounds();
     }
-    if (event->type() == QEvent::MouseButtonRelease) {
+    if (event->type() == QEvent::MouseButtonRelease || (grabber && grabber->keepMouseGrab() && !grabberDisabled)) {
+        // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
         d->stealMouse = false;
@@ -2108,7 +2110,7 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    if (!isVisible() || !isEnabled())
+    if (!isVisible() || !isEnabled() || !isInteractive())
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::MouseButtonPress:

@@ -484,7 +484,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 item->grabMouse();
             item->grabTouchPoints(QVector<int>() << touchMouseId);
 
-            q->sendEvent(item, mousePress.data());
+            QQuickItemPrivate::get(item)->deliverMouseEvent(mousePress.data());
             event->setAccepted(mousePress->isAccepted());
             if (!mousePress->isAccepted()) {
                 touchMouseId = -1;
@@ -497,7 +497,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
 
             if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
                 QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item));
-                q->sendEvent(item, mouseDoubleClick.data());
+                QQuickItemPrivate::get(item)->deliverMouseEvent(mouseDoubleClick.data());
                 event->setAccepted(mouseDoubleClick->isAccepted());
                 if (mouseDoubleClick->isAccepted()) {
                     return true;
@@ -518,7 +518,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             if (p.state() & Qt::TouchPointMoved) {
                 if (mouseGrabberItem) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem));
-                    q->sendEvent(mouseGrabberItem, me.data());
+                    QQuickItemPrivate::get(item)->deliverMouseEvent(me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
                         itemForTouchPointId[p.id()] = mouseGrabberItem; // N.B. the mouseGrabberItem may be different after returning from sendEvent()
@@ -548,7 +548,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 touchMouseId = -1;
                 if (mouseGrabberItem) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem));
-                    q->sendEvent(mouseGrabberItem, me.data());
+                    QQuickItemPrivate::get(item)->deliverMouseEvent(me.data());
                     if (mouseGrabberItem) // might have ungrabbed due to event
                         mouseGrabberItem->ungrabMouse();
                     return me->isAccepted();
