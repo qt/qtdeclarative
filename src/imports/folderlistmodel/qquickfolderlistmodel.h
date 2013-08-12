@@ -74,7 +74,7 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst)
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
-    Q_PROPERTY(int count READ count NOTIFY rowCountChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 //![class props]
 
 //![abslistmodel]
@@ -149,6 +149,7 @@ public:
 Q_SIGNALS:
     void folderChanged();
     void rowCountChanged() const;
+    void countChanged() const;
 //![notifier]
 
 //![class end]

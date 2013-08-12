@@ -100,6 +100,7 @@ void QQuickFolderListModelPrivate::init()
                q, SLOT(_q_directoryUpdated(QString, QList<FileProperty>, int, int)));
     q->connect(&fileInfoThread, SIGNAL(sortFinished(QList<FileProperty>)),
                q, SLOT(_q_sortFinished(QList<FileProperty>)));
+    q->connect(q, SIGNAL(rowCountChanged()), q, SIGNAL(countChanged()));
 }
 
 
