@@ -728,7 +728,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = identifier(t->exceptionVarName);
+    enterTry.exceptionVarName = identifier(*t->exceptionVarName);
     enterTry.exceptionVar = getParam(t->exceptionVar);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 

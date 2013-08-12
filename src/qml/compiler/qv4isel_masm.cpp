@@ -888,7 +888,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
 
     generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
                          Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
-                         identifier(t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
+                         identifier(*t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
     _as->jump(Assembler::ReturnValueRegister);
 }
 

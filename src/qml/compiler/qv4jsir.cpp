@@ -881,7 +881,7 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName, Temp *exceptionVar)
+Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
 {
     if (isTerminated())
         return 0;
