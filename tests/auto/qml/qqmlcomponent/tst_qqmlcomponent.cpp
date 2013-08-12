@@ -96,6 +96,23 @@ public slots:
     }
 };
 
+// The JavaScriptCore GC marks the C stack. To try to ensure that there is
+// no JSObject* left in stack memory by the compiler, we call this function
+// to zap some bytes of memory before calling collectGarbage().
+static void zapSomeStack()
+{
+    char *buf = (char*)alloca(4096);
+    memset(buf, 0, 4096);
+}
+
+static void gc(QQmlEngine &engine)
+{
+    zapSomeStack();
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
 class tst_qqmlcomponent : public QQmlDataTest
 {
     Q_OBJECT
@@ -377,6 +394,7 @@ void tst_qqmlcomponent::onDestructionLookup()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("onDestructionLookup.qml"));
     QScopedPointer<QObject> object(component.create());
+    gc(engine);
     QVERIFY(object != 0);
     QVERIFY(object->property("success").toBool());
 }
