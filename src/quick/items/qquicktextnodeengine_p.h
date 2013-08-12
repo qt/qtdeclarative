@@ -103,13 +103,13 @@ public:
         int leftChildIndex;
         int rightChildIndex;
 
-        static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree, const QRectF &rect, const QImage &image, qreal ascent, SelectionState selectionState)
+        static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QRectF &rect, const QImage &image, qreal ascent, SelectionState selectionState)
         { insert(binaryTree, BinaryTreeNode(rect, image, selectionState, ascent)); }
 
-        static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
+        static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
                            QQuickTextNode::Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position);
-        static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree, const BinaryTreeNode &binaryTreeNode);
-        static void inOrder(const QVarLengthArray<BinaryTreeNode> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
+        static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode);
+        static void inOrder(const QVarLengthArray<BinaryTreeNode, 16> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
     };
 
     QQuickTextNodeEngine() : m_hasSelection(false), m_hasContents(false) {}
@@ -216,7 +216,7 @@ private:
 
     QList<QPair<QRectF, QColor> > m_backgrounds;
     QList<QRectF> m_selectionRects;
-    QVarLengthArray<BinaryTreeNode> m_currentLineTree;
+    QVarLengthArray<BinaryTreeNode, 16> m_currentLineTree;
 
     QList<TextDecoration> m_lines;
     QVector<BinaryTreeNode> m_processedNodes;

@@ -151,10 +151,10 @@ public:
     static void updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &sourceRect);
 
     void setIndexDataPattern(DataPattern p);
-    DataPattern indexDataPattern() const { return (DataPattern) m_index_usage_pattern; }
+    DataPattern indexDataPattern() const { return DataPattern(m_index_usage_pattern); }
 
     void setVertexDataPattern(DataPattern p);
-    DataPattern vertexDataPattern() const { return (DataPattern) m_vertex_usage_pattern; }
+    DataPattern vertexDataPattern() const { return DataPattern(m_vertex_usage_pattern); }
 
     void markIndexDataDirty();
     void markVertexDataDirty();
@@ -190,25 +190,25 @@ private:
 inline uint *QSGGeometry::indexDataAsUInt()
 {
     Q_ASSERT(m_index_type == GL_UNSIGNED_INT);
-    return (uint *) indexData();
+    return static_cast<uint *>(indexData());
 }
 
 inline quint16 *QSGGeometry::indexDataAsUShort()
 {
     Q_ASSERT(m_index_type == GL_UNSIGNED_SHORT);
-    return (quint16 *) indexData();
+    return static_cast<quint16 *>(indexData());
 }
 
 inline const uint *QSGGeometry::indexDataAsUInt() const
 {
     Q_ASSERT(m_index_type == GL_UNSIGNED_INT);
-    return (uint *) indexData();
+    return static_cast<const uint *>(indexData());
 }
 
 inline const quint16 *QSGGeometry::indexDataAsUShort() const
 {
     Q_ASSERT(m_index_type == GL_UNSIGNED_SHORT);
-    return (quint16 *) indexData();
+    return static_cast<const quint16 *>(indexData());
 }
 
 inline QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()
@@ -218,7 +218,7 @@ inline QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
     Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
     Q_ASSERT(m_attributes.attributes[0].position == 0);
-    return (Point2D *) m_data;
+    return static_cast<Point2D *>(m_data);
 }
 
 inline QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()
@@ -231,7 +231,7 @@ inline QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 2);
     Q_ASSERT(m_attributes.attributes[1].type == GL_FLOAT);
-    return (TexturedPoint2D *) m_data;
+    return static_cast<TexturedPoint2D *>(m_data);
 }
 
 inline QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()
@@ -244,7 +244,7 @@ inline QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 4);
     Q_ASSERT(m_attributes.attributes[1].type == GL_UNSIGNED_BYTE);
-    return (ColoredPoint2D *) m_data;
+    return static_cast<ColoredPoint2D *>(m_data);
 }
 
 inline const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const
@@ -254,7 +254,7 @@ inline const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
     Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
     Q_ASSERT(m_attributes.attributes[0].position == 0);
-    return (const Point2D *) m_data;
+    return static_cast<const Point2D *>(m_data);
 }
 
 inline const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D() const
@@ -267,7 +267,7 @@ inline const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoin
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 2);
     Q_ASSERT(m_attributes.attributes[1].type == GL_FLOAT);
-    return (const TexturedPoint2D *) m_data;
+    return static_cast<const TexturedPoint2D *>(m_data);
 }
 
 inline const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D() const
@@ -280,7 +280,7 @@ inline const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 4);
     Q_ASSERT(m_attributes.attributes[1].type == GL_UNSIGNED_BYTE);
-    return (const ColoredPoint2D *) m_data;
+    return static_cast<const ColoredPoint2D *>(m_data);
 }
 
 int QSGGeometry::sizeOfIndex() const

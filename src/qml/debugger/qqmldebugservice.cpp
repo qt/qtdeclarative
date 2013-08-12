@@ -215,25 +215,25 @@ QList<QObject*> QQmlDebugService::objectForLocationInfo(const QString &filename,
 {
     ObjectReferenceHash *hash = objectReferenceHash();
     QList<QObject*> objects;
-    QHash<int, QObject *>::Iterator iter;
-    for (iter = hash->ids.begin(); iter != hash->ids.end(); ++iter) {
-        QQmlData *ddata = QQmlData::get(iter.value());
-        if (!ddata || !ddata->outerContext)
-            continue;
-        //column number may be different due to qmlrewriter
-        if (QFileInfo(ddata->outerContext->urlString).fileName() == filename &&
-                ddata->lineNumber == lineNumber &&
-                ddata->columnNumber >= columnNumber) {
-            QHash<QObject *, ObjectReference>::Iterator objIter =
-                    hash->objects.find(*iter);
-            Q_ASSERT(objIter != hash->objects.end());
+    QHash<int, QObject *>::Iterator iter = hash->ids.begin();
+    while (iter != hash->ids.end()) {
+        QHash<QObject *, ObjectReference>::Iterator objIter =
+                hash->objects.find(*iter);
+        Q_ASSERT(objIter != hash->objects.end());
 
-            if (objIter->object == 0) {
-                hash->ids.erase(iter);
-                hash->objects.erase(objIter);
-            } else {
-                objects << *iter;
+        if (objIter->object == 0) {
+            iter = hash->ids.erase(iter);
+            hash->objects.erase(objIter);
+        } else {
+            QQmlData *ddata = QQmlData::get(iter.value());
+            if (ddata && ddata->outerContext) {
+                if (QFileInfo(ddata->outerContext->urlString).fileName() == filename &&
+                    ddata->lineNumber == lineNumber &&
+                    ddata->columnNumber >= columnNumber) {
+                    objects << *iter;
+                }
             }
+            ++iter;
         }
     }
     return objects;
