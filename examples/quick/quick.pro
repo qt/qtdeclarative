@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = accessibility \
+SUBDIRS =   quick-accessibility \
             animation \
             draganddrop \
             canvas \
