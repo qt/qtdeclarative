@@ -523,10 +523,7 @@ struct Stmt {
     };
 
     struct Data {
-        QVector<unsigned> uses;
-        QVector<unsigned> defs;
-        QBitArray liveIn;
-        QBitArray liveOut;
+        QVector<Expr *> incoming; // used by Phi nodes
     };
 
     Data *d;
@@ -661,7 +658,6 @@ struct Try: Stmt {
 
 struct Phi: Stmt {
     Temp *targetTemp;
-    QVector<Expr *> incoming;
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
