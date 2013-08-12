@@ -273,10 +273,10 @@ ExecutionEngine::~ExecutionEngine()
     delete debugger;
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
+    delete identifierTable;
     delete memoryManager;
     delete m_qmlExtensions;
     emptyClass->destroy();
-    delete identifierTable;
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);

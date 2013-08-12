@@ -67,6 +67,9 @@ IdentifierTable::IdentifierTable(ExecutionEngine *engine)
 
 IdentifierTable::~IdentifierTable()
 {
+    for (int i = 0; i < alloc; ++i)
+        if (entries[i])
+            delete entries[i]->identifier;
     free(entries);
 }
 
