@@ -9,5 +9,5 @@ SUBDIRS += \
 
 EXAMPLE_FILES = \
     dynamicscene \
-    i18n \
+    qml-i18n \
     locale

@@ -1,7 +1,7 @@
 import QmlProject 1.1
 
 Project {
-    mainFile: "i18n.qml"
+    mainFile: "qml-i18n.qml"
 
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {

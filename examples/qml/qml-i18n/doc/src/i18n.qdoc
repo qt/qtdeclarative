@@ -26,21 +26,21 @@
 ****************************************************************************/
 /*!
     \title QML Examples - Internationalization
-    \example i18n
+    \example qml-i18n
     \image qml-i18n-example.png
     \brief This is an internationalization example
 
  The QML runtime automatically loads a translation from the i18n subdirectory of the root
  QML file, based on the system language.
 
- The files are created/updated by running:
+ The files are created or updated by running:
 
 \code
-   lupdate i18n.qml -ts i18n/base.ts
+   lupdate qml-i18n.qml -ts i18n/base.ts
 \endcode
 
- Translations for new languages are created by copying i18n/base.ts to i18n/qml_<lang>.ts
- The .ts files can then be edited with Linguist:
+ Translations for new languages are created by copying \e i18n/base.ts to \e i18n/qml_<lang>.ts
+ The .ts files can then be edited with \l {Qt Linguist}:
 
 \code
    linguist i18n/qml_fr.ts
