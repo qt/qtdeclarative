@@ -176,7 +176,7 @@ void tst_qv4debugger::init()
 void tst_qv4debugger::cleanup()
 {
     m_javaScriptThread->exit();
-    waitForSignal(m_javaScriptThread, SIGNAL(finished()), /*timeout*/ 0);
+    m_javaScriptThread->wait();
     delete m_engine;
     delete m_javaScriptThread;
     m_engine = 0;
