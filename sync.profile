@@ -20,5 +20,4 @@
 %dependencies = (
         "qtbase" => "",
         "qtxmlpatterns" => "",
-        "qtjsbackend" => "",
 );
