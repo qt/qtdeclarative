@@ -2389,7 +2389,7 @@ bool Codegen::visit(TryStatement *ast)
     int exception_to_rethrow  = _block->newTemp();
 
     _block->TRY(tryBody, catchBody,
-                ast->catchExpression ? ast->catchExpression->name.toString() : QString(),
+                _function->newString(ast->catchExpression ? ast->catchExpression->name.toString() : QString()),
                 _block->TEMP(exception_to_rethrow));
 
     _block = tryBody;

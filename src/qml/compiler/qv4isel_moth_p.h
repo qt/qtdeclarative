@@ -126,6 +126,8 @@ protected:
     virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
 
 private:
+    Instr::Param binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
+
     struct Instruction {
 #define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
     FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)

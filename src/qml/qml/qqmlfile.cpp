@@ -60,12 +60,12 @@ Supports file://, qrc:/, bundle:// uris and whatever QNetworkAccessManager suppo
 
 QT_BEGIN_NAMESPACE
 
-static QString qrc_string(QLatin1String("qrc"));
-static QString file_string(QLatin1String("file"));
-static QString bundle_string(QLatin1String("bundle"));
+static char qrc_string[] = "qrc";
+static char file_string[] = "file";
+static char bundle_string[] = "bundle";
 
 #if defined(Q_OS_ANDROID)
-static QString assets_string(QLatin1String("assets"));
+static char assets_string[] = "assets";
 #endif
 
 class QQmlFilePrivate;
@@ -326,8 +326,6 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
 {
     Q_ASSERT(engine);
 
-    QString scheme = url.scheme();
-
     clear();
     d->url = url;
 
@@ -495,13 +493,13 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 {
     QString scheme = url.scheme();
 
-    if ((scheme.length() == 4 && 0 == scheme.compare(file_string, Qt::CaseInsensitive)) ||
-        (scheme.length() == 6 && 0 == scheme.compare(bundle_string, Qt::CaseInsensitive)) ||
-        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive))) {
+    if ((scheme.length() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
+        (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(bundle_string), Qt::CaseInsensitive)) ||
+        (scheme.length() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
         return true;
 
 #if defined(Q_OS_ANDROID)
-    } else if (scheme.length() == 6 && 0 == scheme.compare(assets_string, Qt::CaseInsensitive)) {
+    } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string), Qt::CaseInsensitive)) {
         return true;
 #endif
 
@@ -527,19 +525,19 @@ bool QQmlFile::isSynchronous(const QString &url)
     if (f == QLatin1Char('f') || f == QLatin1Char('F')) {
 
         return url.length() >= 7 /* file:// */ &&
-               url.startsWith(file_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(file_string), Qt::CaseInsensitive) &&
                url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('b') || f == QLatin1Char('B')) {
 
         return url.length() >= 9 /* bundle:// */ &&
-               url.startsWith(bundle_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(bundle_string), Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/') && url[8] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
         return url.length() >= 5 /* qrc:/ */ &&
-               url.startsWith(qrc_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive) &&
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
@@ -547,7 +545,7 @@ bool QQmlFile::isSynchronous(const QString &url)
 #if defined(Q_OS_ANDROID)
     else if (f == QLatin1Char('a') || f == QLatin1Char('A')) {
         return url.length() >= 8 /* assets:/ */ &&
-               url.startsWith(assets_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
 
     }
@@ -563,7 +561,7 @@ Bundle urls have a bundle:// scheme.
 */
 bool QQmlFile::isBundle(const QString &url)
 {
-    return url.length() >= 9 && url.startsWith(bundle_string, Qt::CaseInsensitive) &&
+    return url.length() >= 9 && url.startsWith(QLatin1String(bundle_string), Qt::CaseInsensitive) &&
            url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/') && url[8] == QLatin1Char('/');
 }
 
@@ -576,7 +574,7 @@ bool QQmlFile::isBundle(const QUrl &url)
 {
     QString scheme = url.scheme();
 
-    return scheme.length() == 6 && 0 == scheme.compare(bundle_string, Qt::CaseInsensitive);
+    return scheme.length() == 6 && 0 == scheme.compare(QLatin1String(bundle_string), Qt::CaseInsensitive);
 }
 
 /*!
@@ -590,12 +588,12 @@ bool QQmlFile::isLocalFile(const QUrl &url)
 {
     QString scheme = url.scheme();
 
-    if ((scheme.length() == 4 && 0 == scheme.compare(file_string, Qt::CaseInsensitive)) ||
-        (scheme.length() == 3 && 0 == scheme.compare(qrc_string, Qt::CaseInsensitive))) {
+    if ((scheme.length() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
+        (scheme.length() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
         return true;
 
 #if defined(Q_OS_ANDROID)
-    } else if (scheme.length() == 6 && 0 == scheme.compare(assets_string, Qt::CaseInsensitive)) {
+    } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string), Qt::CaseInsensitive)) {
         return true;
 #endif
 
@@ -621,20 +619,20 @@ bool QQmlFile::isLocalFile(const QString &url)
     if (f == QLatin1Char('f') || f == QLatin1Char('F')) {
 
         return url.length() >= 7 /* file:// */ &&
-               url.startsWith(file_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(file_string), Qt::CaseInsensitive) &&
                url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
         return url.length() >= 5 /* qrc:/ */ &&
-               url.startsWith(qrc_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive) &&
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
 #if defined(Q_OS_ANDROID)
     else if (f == QLatin1Char('a') || f == QLatin1Char('A')) {
         return url.length() >= 8 /* assets:/ */ &&
-               url.startsWith(assets_string, Qt::CaseInsensitive) &&
+               url.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
 
     }
@@ -717,7 +715,6 @@ bool QQmlFile::bundleDirectoryExists(const QString &dir, QQmlEngine *e)
         return false;
 
     QStringRef identifier(&dir, 9, index - 9);
-    QStringRef path(&dir, index + 1, dir.length() - index - 1);
 
     QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(identifier);
 

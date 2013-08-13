@@ -49,6 +49,7 @@
 #include "qv4string_p.h"
 #include <QtCore/QDebug>
 #include "qv4managed_p.h"
+#include <private/qtqmlglobal_p.h>
 
 //#include <wtf/MathExtras.h>
 
@@ -329,7 +330,7 @@ inline Value Managed::call(const Value &thisObject, Value *args, int argc) {
     return vtbl->call(this, thisObject, args, argc);
 }
 
-struct PersistentValuePrivate
+struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate
 {
     PersistentValuePrivate(const Value &v, ExecutionEngine *engine = 0, bool weak = false);
     virtual ~PersistentValuePrivate();

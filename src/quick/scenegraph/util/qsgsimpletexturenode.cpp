@@ -51,9 +51,11 @@ public:
     QSGSimpleTextureNodePrivate()
         : QSGGeometryNodePrivate()
         , m_texCoordMode(QSGSimpleTextureNode::NoTransform)
+        , isAtlasTexture(false)
     {}
 
     QSGSimpleTextureNode::TextureCoordinatesTransformMode m_texCoordMode;
+    uint isAtlasTexture : 1;
 };
 
 static void qsgsimpletexturenode_update(QSGGeometry *g,
@@ -103,6 +105,9 @@ QSGSimpleTextureNode::QSGSimpleTextureNode()
     setGeometry(&m_geometry);
     setMaterial(&m_material);
     setOpaqueMaterial(&m_opaque_material);
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("simpletexture"));
+#endif
 }
 
 /*!
@@ -174,7 +179,16 @@ void QSGSimpleTextureNode::setTexture(QSGTexture *texture)
     m_opaque_material.setTexture(texture);
     Q_D(QSGSimpleTextureNode);
     qsgsimpletexturenode_update(&m_geometry, texture, m_rect, d->m_texCoordMode);
-    markDirty(DirtyMaterial);
+
+    DirtyState dirty = DirtyMaterial;
+    // It would be tempting to skip the extra bit here and instead use
+    // m_material.texture to get the old state, but that texture could
+    // have been deleted in the mean time.
+    bool wasAtlas = d->isAtlasTexture;
+    d->isAtlasTexture = texture->isAtlasTexture();
+    if (wasAtlas || d->isAtlasTexture)
+        dirty |= DirtyGeometry;
+    markDirty(dirty);
 }
 
 

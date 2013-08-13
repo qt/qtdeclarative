@@ -25,6 +25,5 @@ Item {
 
     Component.onCompleted: {
         createObject()
-        gc()
     }
 }

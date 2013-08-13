@@ -93,6 +93,12 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
          defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
 }
 
+FunctionObject::~FunctionObject()
+{
+    if (function)
+        function->deref();
+}
+
 Value FunctionObject::newInstance()
 {
     return construct(0, 0);
@@ -318,6 +324,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 {
     vtbl = &static_vtbl;
     this->function = function;
+    this->function->ref();
     assert(function);
     assert(function->code);
 

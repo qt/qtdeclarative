@@ -171,12 +171,12 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     If the URL passed to QQmlComponent is a network resource, or if the QML document references a
     network resource, the QQmlComponent has to fetch the network data before it is able to create
-    objects.  In this case, the QQmlComponent will have a \l {QQmlComponent::Loading}{Loading}
-    \l {QQmlComponent::status()}{status}.  An application will have to wait until the component
+    objects. In this case, the QQmlComponent will have a \l {QQmlComponent::Loading}{Loading}
+    \l {QQmlComponent::status()}{status}. An application will have to wait until the component
     is \l {QQmlComponent::Ready}{Ready} before calling \l {QQmlComponent::create()}.
 
-    The following example shows how to load a QML file from a network resource.  After creating
-    the QQmlComponent, it tests whether the component is loading.  If it is, it connects to the
+    The following example shows how to load a QML file from a network resource. After creating
+    the QQmlComponent, it tests whether the component is loading. If it is, it connects to the
     QQmlComponent::statusChanged() signal and otherwise calls the \c {continueLoading()} method
     directly. Note that QQmlComponent::isLoading() may be false for a network component if the
     component has been cached and is ready immediately.
@@ -231,11 +231,12 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     because it is defined inside a \c Component. The component encapsulates the
     QML types within, as if they were defined in a separate QML
     file, and is not loaded until requested (in this case, by the
-    two \l Loader objects).
+    two \l Loader objects). Because Component is not derived from Item, you cannot
+    anchor anything to it.
 
     Defining a \c Component is similar to defining a \l {QML Document}{QML document}.
-    A QML document has a single top-level item that defines the behaviors and
-    properties of that component, and cannot define properties or behaviors outside
+    A QML document has a single top-level item that defines the behavior and
+    properties of that component, and cannot define properties or behavior outside
     of that top-level item. In the same way, a \c Component definition contains a single
     top level item (which in the above example is a \l Rectangle) and cannot define any
     data outside of this item, with the exception of an \e id (which in the above example
@@ -273,12 +274,12 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 /*!
     \qmlattachedsignal Component::onCompleted()
 
-    Emitted after component "startup" has completed.  This can be used to
+    Emitted after component "startup" has completed. This can be used to
     execute script code at startup, once the full QML environment has been
     established.
 
     The \c {Component::onCompleted} attached property can be declared on
-    any object.  The order of running the \c onCompleted scripts is
+    any object. The order of running the \c onCompleted scripts is
     undefined.
 
     \qml
@@ -294,13 +295,13 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 /*!
     \qmlattachedsignal Component::onDestruction()
 
-    Emitted as the component begins destruction.  This can be used to undo
+    Emitted as the component begins destruction. This can be used to undo
     work done in the onCompleted signal, or other imperative code in your
     application.
 
     The \c {Component::onDestruction} attached property can be declared on
-    any object.  However, it applies to the destruction of the component as
-    a whole, and not the destruction of the specific object.  The order of
+    any object. However, it applies to the destruction of the component as
+    a whole, and not the destruction of the specific object. The order of
     running the \c onDestruction scripts is undefined.
 
     \qml
@@ -320,10 +321,10 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     Specifies the loading status of the QQmlComponent.
 
-    \value Null This QQmlComponent has no data.  Call loadUrl() or setData() to add QML content.
+    \value Null This QQmlComponent has no data. Call loadUrl() or setData() to add QML content.
     \value Ready This QQmlComponent is ready and create() may be called.
     \value Loading This QQmlComponent is loading network data.
-    \value Error An error has occurred.  Call errors() to retrieve a list of \{QQmlError}{errors}.
+    \value Error An error has occurred. Call errors() to retrieve a list of \{QQmlError}{errors}.
 */
 
 /*!
@@ -332,7 +333,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     Specifies whether the QQmlComponent should load the component immediately, or asynchonously.
 
     \value PreferSynchronous Prefer loading/compiling the component immediately, blocking the thread.
-    This is not always possible, e.g. remote URLs will always load asynchronously.
+    This is not always possible; for example, remote URLs will always load asynchronously.
     \value Asynchronous Load/compile the component in a background thread.
 */
 
@@ -419,7 +420,8 @@ QQmlComponent::~QQmlComponent()
 
 /*!
     \qmlproperty enumeration Component::status
-    This property holds the status of component loading.  It can be one of:
+    This property holds the status of component loading. The status can be one of the
+    following:
     \list
     \li Component.Null - no data is available for the component
     \li Component.Ready - the component has been loaded, and can be used to create instances.
@@ -499,14 +501,14 @@ qreal QQmlComponent::progress() const
 /*!
     \fn void QQmlComponent::progressChanged(qreal progress)
 
-    Emitted whenever the component's loading progress changes.  \a progress will be the
+    Emitted whenever the component's loading progress changes. \a progress will be the
     current progress between 0.0 (nothing loaded) and 1.0 (finished).
 */
 
 /*!
     \fn void QQmlComponent::statusChanged(QQmlComponent::Status status)
 
-    Emitted whenever the component's status changes.  \a status will be the
+    Emitted whenever the component's status changes. \a status will be the
     new status.
 */
 
@@ -540,7 +542,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
 
 /*!
     Create a QQmlComponent from the given \a url and give it the
-    specified \a parent and \a engine.  If \a mode is \l Asynchronous,
+    specified \a parent and \a engine. If \a mode is \l Asynchronous,
     the component will be loaded and compiled asynchronously.
 
     Ensure that the URL provided is full and correct, in particular, use
@@ -574,7 +576,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 
 /*!
     Create a QQmlComponent from the given \a fileName and give it the specified
-    \a parent and \a engine.  If \a mode is \l Asynchronous,
+    \a parent and \a engine. If \a mode is \l Asynchronous,
     the component will be loaded and compiled asynchronously.
 
     \sa loadUrl()
@@ -604,7 +606,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QQmlCompiledData *cc, int start
 }
 
 /*!
-    Sets the QQmlComponent to use the given QML \a data.  If \a url
+    Sets the QQmlComponent to use the given QML \a data. If \a url
     is provided, it is used to set the component name and to provide
     a base path for items resolved by this component.
 */
@@ -631,7 +633,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 }
 
 /*!
-Returns the QQmlContext the component was created in.  This is only
+Returns the QQmlContext the component was created in. This is only
 valid for components created directly from QML.
 */
 QQmlContext *QQmlComponent::creationContext() const
@@ -713,7 +715,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
 
 /*!
     Return the list of errors that occurred during the last compile or create
-    operation.  An empty list is returned if isError() is not set.
+    operation. An empty list is returned if isError() is not set.
 */
 QList<QQmlError> QQmlComponent::errors() const
 {
@@ -727,10 +729,10 @@ QList<QQmlError> QQmlComponent::errors() const
 /*!
     \qmlmethod string Component::errorString()
 
-    Returns a human-readable description of any errors.
+    Returns a human-readable description of any error.
 
     The string includes the file, location, and description of each error.
-    If multiple errors are present they are separated by a newline character.
+    If multiple errors are present, they are separated by a newline character.
 
     If no errors are present, an empty string is returned.
 */
@@ -755,13 +757,13 @@ QString QQmlComponent::errorString() const
 
 /*!
     \qmlproperty url Component::url
-    The component URL.  This is the URL that was used to construct the component.
+    The component URL. This is the URL that was used to construct the component.
 */
 
 /*!
     \property QQmlComponent::url
-    The component URL.  This is the URL passed to either the constructor,
-    or the loadUrl() or setData() methods.
+    The component URL. This is the URL passed to either the constructor,
+    or the loadUrl(), or setData() methods.
 */
 QUrl QQmlComponent::url() const
 {
@@ -778,8 +780,8 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 }
 
 /*!
-    Create an object instance from this component.  Returns 0 if creation
-    failed.  \a context specifies the context within which to create the object
+    Create an object instance from this component. Returns 0 if creation
+    failed. \a context specifies the context within which to create the object
     instance.
 
     If \a context is 0 (the default), it will create the instance in the
@@ -808,8 +810,8 @@ QObject *QQmlComponent::create(QQmlContext *context)
     In general, programmers should use QQmlComponent::create() to create a
     component.
 
-    Create an object instance from this component.  Returns 0 if creation
-    failed.  \a publicContext specifies the context within which to create the object
+    Create an object instance from this component. Returns 0 if creation
+    failed. \a publicContext specifies the context within which to create the object
     instance.
 
     When QQmlComponent constructs an instance, it occurs in three steps:
@@ -819,7 +821,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
     \endlist
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
-    only performs step 1.  QQmlComponent::completeCreate() must be called to
+    only performs step 1. QQmlComponent::completeCreate() must be called to
     complete steps 2 and 3.
 
     This breaking point is sometimes useful when using attached properties to
@@ -1027,7 +1029,7 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
 
 /*!
     Create an object instance from this component using the provided
-    \a incubator.  \a context specifies the context within which to create the object
+    \a incubator. \a context specifies the context within which to create the object
     instance.
 
     If \a context is 0 (the default), it will create the instance in the
@@ -1036,7 +1038,7 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     \a forContext specifies a context that this object creation depends upon.
     If the \a forContext is being created asynchronously, and the
     \l QQmlIncubator::IncubationMode is \l QQmlIncubator::AsynchronousIfNested,
-    this object will also be created asynchronously.  If \a forContext is 0
+    this object will also be created asynchronously. If \a forContext is 0
     (the default), the \a context will be used for this decision.
 
     The created object and its creation status are available via the
@@ -1148,20 +1150,20 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     If you wish to create an object without setting a parent, specify \c null for
     the \a parent value. Note that if the returned object is to be displayed, you
     must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent}
-    property, or else the object will not be visible.
+    property, otherwise the object will not be visible.
 
     If a \a parent is not provided to createObject(), a reference to the returned object must be held so that
-    it is not destroyed by the garbage collector.  This is true regardless of whether \l{Item::parent} is set afterwards,
-    since setting the Item parent does not change object ownership; only the graphical parent is changed.
+    it is not destroyed by the garbage collector. This is true regardless of whether \l{Item::parent} is set afterwards,
+    because setting the Item parent does not change object ownership. Only the graphical parent is changed.
 
     As of \c {QtQuick 1.1}, this method accepts an optional \a properties argument that specifies a
-    map of initial property values for the created object. These values are applied before object
+    map of initial property values for the created object. These values are applied before the object
     creation is finalized. This is more efficient than setting property values after object creation,
     particularly where large sets of property values are defined, and also allows property bindings
     to be set up (using \l{Qt::binding}{Qt.binding}) before the object is created.
 
     The \a properties argument is specified as a map of property-value items. For example, the code
-    below creates an object with initial \c x and \c y values of 100 and 200, respectively:
+    below creates an object with initial \c x and \c y values of 100 and 100, respectively:
 
     \js
         var component = Qt.createComponent("Button.qml");
@@ -1242,31 +1244,31 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 /*!
     \qmlmethod object Component::incubateObject(Item parent, object properties, enumeration mode)
 
-    Creates an incubator for instance of this component.  Incubators allow new component
-    instances to be instantiated asynchronously and not cause freezes in the UI.
+    Creates an incubator for an instance of this component. Incubators allow new component
+    instances to be instantiated asynchronously and do not cause freezes in the UI.
 
-    The \a parent argument specifies the parent the created instance will have.  Omitting the
-    parameter or passing null will create an object with no parent.  In this case, a reference
+    The \a parent argument specifies the parent the created instance will have. Omitting the
+    parameter or passing null will create an object with no parent. In this case, a reference
     to the created object must be held so that it is not destroyed by the garbage collector.
 
     The \a properties argument is specified as a map of property-value items which will be
-    set on the created object during its construction.  \a mode may be Qt.Synchronous or
-    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously.
-    The default is asynchronously.  In some circumstances, even if Qt.Synchronous is specified,
-    the incubator may create the object asynchronously.  This happens if the component calling
+    set on the created object during its construction. \a mode may be Qt.Synchronous or
+    Qt.Asynchronous, and controls whether the instance is created synchronously or asynchronously.
+    The default is asynchronous. In some circumstances, even if Qt.Synchronous is specified,
+    the incubator may create the object asynchronously. This happens if the component calling
     incubateObject() is itself being created asynchronously.
 
     All three arguments are optional.
 
-    If successful, the method returns an incubator, otherwise null.  The incubator has the following
+    If successful, the method returns an incubator, otherwise null. The incubator has the following
     properties:
 
     \list
-    \li status The status of the incubator.  Valid values are Component.Ready, Component.Loading and
+    \li status The status of the incubator. Valid values are Component.Ready, Component.Loading and
        Component.Error.
-    \li object The created object instance.  Will only be available once the incubator is in the
+    \li object The created object instance. Will only be available once the incubator is in the
        Ready status.
-    \li onStatusChanged Specifies a callback function to be invoked when the status changes.  The
+    \li onStatusChanged Specifies a callback function to be invoked when the status changes. The
        status is passed as a parameter to the callback.
     \li forceCompletion() Call to complete incubation synchronously.
     \endlist

@@ -43,6 +43,9 @@
 #include "qv4managed_p.h"
 #include "qv4string_p.h"
 #include "qv4value_p.h"
+#include "qv4engine_p.h"
+#include "qv4lookup_p.h"
+#include "qv4unwindhelper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -50,7 +53,14 @@ using namespace QV4;
 
 Function::~Function()
 {
+    engine->functions.remove(engine->functions.indexOf(this));
+    UnwindHelper::deregisterFunction(this);
+
+    Q_ASSERT(!refCount);
     delete[] codeData;
+    delete[] lookups;
+    foreach (Function *f, nestedFunctions)
+        f->deref();
 }
 
 void Function::mark()

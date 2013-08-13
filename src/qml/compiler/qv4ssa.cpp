@@ -524,15 +524,16 @@ void insertPhiNode(const Temp &a, BasicBlock *y, Function *f) {
 #endif
 
     Phi *phiNode = f->New<Phi>();
+    phiNode->d = new Stmt::Data;
     phiNode->targetTemp = f->New<Temp>();
     phiNode->targetTemp->init(a.kind, a.index, 0);
     y->statements.prepend(phiNode);
 
-    phiNode->incoming.resize(y->in.size());
+    phiNode->d->incoming.resize(y->in.size());
     for (int i = 0, ei = y->in.size(); i < ei; ++i) {
         Temp *t = f->New<Temp>();
         t->init(a.kind, a.index, 0);
-        phiNode->incoming[i] = t;
+        phiNode->d->incoming[i] = t;
     }
 }
 
@@ -652,7 +653,7 @@ public:
             Q_ASSERT(j >= 0 && j < Y->in.size());
             foreach (Stmt *s, Y->statements) {
                 if (Phi *phi = s->asPhi()) {
-                    Temp *t = phi->incoming[j]->asTemp();
+                    Temp *t = phi->d->incoming[j]->asTemp();
                     unsigned newTmp = stack[*t].top();
 //                    qDebug()<<"I: replacing phi use"<<a<<"with"<<newTmp<<"in L"<<Y->index;
                     t->index = newTmp;
@@ -913,7 +914,7 @@ protected:
 
     virtual void visitPhi(Phi *s) {
         addDef(s->targetTemp);
-        foreach (Expr *e, s->incoming)
+        foreach (Expr *e, s->d->incoming)
             addUse(e->asTemp());
     }
 
@@ -990,6 +991,7 @@ void cleanupPhis(DefUsesCalculator &defUses)
 
         BasicBlock *bb = defUses.defStmtBlock(targetVar);
         int idx = bb->statements.indexOf(phi);
+        bb->statements[idx]->destroyData();
         bb->statements.remove(idx);
 
         foreach (const Temp &usedVar, defUses.usedVars(phi))
@@ -1376,9 +1378,9 @@ protected:
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
     virtual void visitTry(Try *s) { setType(s->exceptionVar, ObjectType); _ty = TypingResult(MissingType); }
     virtual void visitPhi(Phi *s) {
-        _ty = run(s->incoming[0]);
-        for (int i = 1, ei = s->incoming.size(); i != ei; ++i) {
-            TypingResult ty = run(s->incoming[i]);
+        _ty = run(s->d->incoming[0]);
+        for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
+            TypingResult ty = run(s->d->incoming[i]);
             _ty.type |= ty.type;
             _ty.fullyTyped &= ty.fullyTyped;
         }
@@ -1549,7 +1551,7 @@ protected:
     virtual void visitTry(Try *) {}
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
-        foreach (Expr *e, s->incoming)
+        foreach (Expr *e, s->d->incoming)
             if (e->asConst())
                 run(e, ty);
     }
@@ -1896,7 +1898,7 @@ private:
 
             foreach (Stmt *s, successor->statements) {
                 if (Phi *phi = s->asPhi()) {
-                    if (Temp *t = phi->incoming[bbIndex]->asTemp())
+                    if (Temp *t = phi->d->incoming[bbIndex]->asTemp())
                         live.insert(*t);
                 } else {
                     break;
@@ -2080,8 +2082,9 @@ void Optimizer::convertOutOfSSA() {
             Stmt *s = stmts.first();
             if (Phi *phi = s->asPhi()) {
                 stmts.removeFirst();
-                for (int i = 0, ei = phi->incoming.size(); i != ei; ++i)
-                    insertMove(function, bb->in[i], phi->targetTemp, phi->incoming[i]);
+                for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i)
+                    insertMove(function, bb->in[i], phi->targetTemp, phi->d->incoming[i]);
+                phi->destroyData();
             } else {
                 break;
             }
@@ -2099,7 +2102,7 @@ QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicB
         foreach (Stmt *s, outEdge->statements) {
             if (Phi *phi = s->asPhi()) {
                 SSADeconstructionMove m;
-                m.source = phi->incoming[inIdx];
+                m.source = phi->d->incoming[inIdx];
                 m.target = phi->targetTemp;
                 moves.append(m);
             } else {

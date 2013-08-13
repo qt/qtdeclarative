@@ -49,7 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-//#define QML_RUNTIME_TESTING
+// #define QSG_RUNTIME_DESCRIPTION
 
 class QSGRenderer;
 
@@ -146,10 +146,6 @@ public:
 
     virtual void preprocess() { }
 
-#ifdef QML_RUNTIME_TESTING
-    QString description;
-#endif
-
 protected:
     QSGNode(NodeType type);
     QSGNode(QSGNodePrivate &dd, NodeType type);
@@ -172,8 +168,14 @@ private:
     DirtyState m_dirtyState;
 
 protected:
+    friend class QSGNodePrivate;
+
     QScopedPointer<QSGNodePrivate> d_ptr;
 };
+
+#ifdef QSG_RUNTIME_DESCRIPTION
+void qsgnode_set_description(QSGNode *node, const QString &description);
+#endif
 
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
 {

@@ -216,16 +216,13 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
 {
     int32_t offset = 0;
     int scope = t->scope;
-    QV4::Function *f = _vmFunction;
     RegisterID context = ContextRegister;
     if (scope) {
         loadPtr(Address(ContextRegister, offsetof(ExecutionContext, outer)), ScratchRegister);
         --scope;
-        f = f->outer;
         context = ScratchRegister;
         while (scope) {
             loadPtr(Address(context, offsetof(ExecutionContext, outer)), context);
-            f = f->outer;
             --scope;
         }
     }
@@ -891,7 +888,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
 
     generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
                          Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
-                         identifier(t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
+                         identifier(*t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
     _as->jump(Assembler::ReturnValueRegister);
 }
 

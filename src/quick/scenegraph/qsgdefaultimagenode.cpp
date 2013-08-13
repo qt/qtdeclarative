@@ -213,8 +213,8 @@ QSGDefaultImageNode::QSGDefaultImageNode()
     setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
 
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("image");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("image"));
 #endif
 }
 

@@ -447,6 +447,13 @@ QSGTexture *QSGContext::createTexture(const QImage &image) const
     return t;
 }
 
+QSGTexture *QSGContext::createTextureNoAtlas(const QImage &image) const
+{
+    QSGPlainTexture *t = new QSGPlainTexture();
+    if (!image.isNull())
+        t->setImage(image);
+    return t;
+}
 
 
 /*!

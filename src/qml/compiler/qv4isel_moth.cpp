@@ -506,6 +506,11 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
 
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
+    binopHelper(oper, leftSource, rightSource, target);
+}
+
+Instr::Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+{
 #ifdef USE_TYPE_INFO
     if (leftSource->type & V4IR::NumberType && rightSource->type & V4IR::NumberType) {
         // TODO: add Temp+Const variation on the topic.
@@ -516,21 +521,21 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return;
+        } return instr.result;
         case V4IR::OpMul: {
             Instruction::MulNumberParams instr;
             instr.lhs = getParam(leftSource);
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return;
+        } return instr.result;
         case V4IR::OpSub: {
             Instruction::SubNumberParams instr;
             instr.lhs = getParam(leftSource);
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return;
+        } return instr.result;
         default:
             break;
         }
@@ -551,6 +556,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
         addInstruction(binop);
+        return binop.result;
     } else {
         Instruction::Binop binop;
         binop.alu = aluOpFunction(oper);
@@ -558,6 +564,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
         addInstruction(binop);
+        return binop.result;
     }
 }
 
@@ -690,13 +697,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
     if (V4IR::Temp *t = s->cond->asTemp()) {
         condition = getResultParam(t);
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
-        condition = getResultParam(0);
-        Instruction::Binop binop;
-        binop.alu = aluOpFunction(b->op);
-        binop.lhs = getParam(b->left);
-        binop.rhs = getParam(b->right);
-        binop.result = condition;
-        addInstruction(binop);
+        condition = binopHelper(b->op, b->left, b->right, /*target*/0);
     } else {
         Q_UNIMPLEMENTED();
     }
@@ -727,7 +728,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = identifier(t->exceptionVarName);
+    enterTry.exceptionVarName = identifier(*t->exceptionVarName);
     enterTry.exceptionVar = getParam(t->exceptionVar);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 

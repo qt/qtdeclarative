@@ -523,10 +523,7 @@ struct Stmt {
     };
 
     struct Data {
-        QVector<unsigned> uses;
-        QVector<unsigned> defs;
-        QBitArray liveIn;
-        QBitArray liveOut;
+        QVector<Expr *> incoming; // used by Phi nodes
     };
 
     Data *d;
@@ -640,10 +637,10 @@ struct Ret: Stmt {
 struct Try: Stmt {
     BasicBlock *tryBlock;
     BasicBlock *catchBlock;
-    QString exceptionVarName;
+    const QString *exceptionVarName;
     Temp *exceptionVar; // place to store the caught exception, for use when re-throwing
 
-    void init(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName, Temp *exceptionVar)
+    void init(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
     {
         this->tryBlock = tryBlock;
         this->catchBlock = catchBlock;
@@ -661,7 +658,6 @@ struct Try: Stmt {
 
 struct Phi: Stmt {
     Temp *targetTemp;
-    QVector<Expr *> incoming;
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
@@ -816,7 +812,7 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
-    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName, Temp *exceptionVar);
+    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 

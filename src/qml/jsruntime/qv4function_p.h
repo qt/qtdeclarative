@@ -87,6 +87,7 @@ struct LineNumberMapping
 };
 
 struct Function {
+    int refCount;
     String *name;
 
     Value (*code)(ExecutionContext *, const uchar *);
@@ -99,7 +100,6 @@ struct Function {
     QVector<Value> generatedValues;
     QVector<String *> identifiers;
     QVector<Function *> nestedFunctions;
-    Function *outer;
 
     Lookup *lookups;
 
@@ -112,20 +112,32 @@ struct Function {
     QString sourceFile;
     QVector<LineNumberMapping> lineNumberMappings;
 
-    Function(String *name)
-        : name(name)
+    ExecutionEngine *engine;
+
+    Function(ExecutionEngine *engine, String *name)
+        : refCount(0)
+        , name(name)
         , code(0)
         , codeData(0)
         , codeSize(0)
-        , outer(0)
         , lookups(0)
         , hasNestedFunctions(0)
         , hasDirectEval(false)
         , usesArgumentsObject(false)
         , isStrict(false)
         , isNamedExpression(false)
+        , engine(engine)
     {}
     ~Function();
+
+    void ref() { ++refCount; }
+    void deref() { if (!--refCount) delete this; }
+
+    void addNestedFunction(Function *f)
+    {
+        f->ref();
+        nestedFunctions.append(f);
+    }
 
     inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
 

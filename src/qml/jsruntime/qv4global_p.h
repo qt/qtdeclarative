@@ -59,6 +59,14 @@ inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
 inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
+#if defined(Q_OS_QNX)
+#include <math.h>
+#undef isnan
+#undef isfinite
+#undef isinf
+#undef signbit
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

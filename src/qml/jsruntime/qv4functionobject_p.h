@@ -108,6 +108,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Function *function;
 
     FunctionObject(ExecutionContext *scope, String *name = 0);
+    ~FunctionObject();
 
     Value newInstance();
 
@@ -124,6 +125,8 @@ protected:
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
     static bool hasInstance(Managed *that, const Value &value);
+    static void destroy(Managed *that)
+    { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
 
 struct FunctionCtor: FunctionObject

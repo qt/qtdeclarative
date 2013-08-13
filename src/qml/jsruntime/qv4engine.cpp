@@ -280,7 +280,6 @@ ExecutionEngine::~ExecutionEngine()
     delete bumperPointerAllocator;
     delete regExpCache;
     UnwindHelper::deregisterFunctions(functions);
-    qDeleteAll(functions);
     delete regExpAllocator;
     delete executableAllocator;
 }
@@ -379,7 +378,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
 Function *ExecutionEngine::newFunction(const QString &name)
 {
-    Function *f = new Function(newIdentifier(name));
+    Function *f = new Function(this, newIdentifier(name));
     functions.append(f);
     functionsNeedSort = true;
     return f;

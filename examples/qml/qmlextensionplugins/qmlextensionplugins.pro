@@ -16,9 +16,8 @@ pluginfiles.files += \
     imports/TimeExample/minute.png
 
 qml.files = plugins.qml
-qml.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins
-target.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins/imports/TimeExample
-pluginfiles.path += $$[QT_INSTALL_EXAMPLES]/qml/plugins/imports/TimeExample
+qml.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins
+target.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins/imports/TimeExample
+pluginfiles.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins/imports/TimeExample
 
 INSTALLS += target qml pluginfiles
-

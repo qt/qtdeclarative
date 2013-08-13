@@ -867,9 +867,9 @@ QSGTransformNode *QQuickItemPrivate::itemNode()
     if (!itemNodeInstance) {
         itemNodeInstance = createTransformNode();
         itemNodeInstance->setFlag(QSGNode::OwnedByParent, false);
-#ifdef QML_RUNTIME_TESTING
+#ifdef QSG_RUNTIME_DESCRIPTION
         Q_Q(QQuickItem);
-        itemNodeInstance->description = QString::fromLatin1("QQuickItem(%1)").arg(QString::fromLatin1(q->metaObject()->className()));
+        qsgnode_set_description(itemNodeInstance, QString::fromLatin1("QQuickItem(%1)").arg(QString::fromLatin1(q->metaObject()->className())));
 #endif
     }
     return itemNodeInstance;
@@ -887,8 +887,8 @@ QSGNode *QQuickItemPrivate::childContainerNode()
             opacityNode()->appendChildNode(groupNode);
         else
             itemNode()->appendChildNode(groupNode);
-#ifdef QML_RUNTIME_TESTING
-        groupNode->description = QLatin1String("group");
+#ifdef QSG_RUNTIME_DESCRIPTION
+        qsgnode_set_description(groupNode, QLatin1String("group"));
 #endif
     }
     return groupNode;

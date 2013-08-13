@@ -390,8 +390,8 @@ QQuickShaderEffectNode::QQuickShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
 
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("shadereffect");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("shadereffect"));
 #endif
 }
 

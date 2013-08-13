@@ -83,8 +83,8 @@ namespace {
 QQuickTextNode::QQuickTextNode(QSGContext *context, QQuickItem *ownerElement)
     : m_context(context), m_cursorNode(0), m_ownerElement(ownerElement), m_useNativeRenderer(false)
 {
-#if defined(QML_RUNTIME_TESTING)
-    description = QLatin1String("text");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("text"));
 #endif
 }
 

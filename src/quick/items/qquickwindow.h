@@ -72,7 +72,8 @@ public:
     enum CreateTextureOption {
         TextureHasAlphaChannel  = 0x0001,
         TextureHasMipmaps       = 0x0002,
-        TextureOwnsGLTexture    = 0x0004
+        TextureOwnsGLTexture    = 0x0004,
+        TextureCanUseAtlas      = 0x0008
     };
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
@@ -107,6 +108,7 @@ public:
 
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
+    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption(0)) const;
 
     void setClearBeforeRendering(bool enabled);

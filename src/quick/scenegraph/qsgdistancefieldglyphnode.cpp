@@ -61,8 +61,8 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGContext *context)
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
     setFlag(UsePreprocess);
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("glyphs");
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QLatin1String("glyphs"));
 #endif
 }
 

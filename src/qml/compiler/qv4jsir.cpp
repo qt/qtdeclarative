@@ -581,11 +581,11 @@ void Phi::dump(QTextStream &out, Stmt::Mode mode)
 {
     targetTemp->dump(out);
     out << " = phi(";
-    for (int i = 0, ei = incoming.size(); i < ei; ++i) {
+    for (int i = 0, ei = d->incoming.size(); i < ei; ++i) {
         if (i > 0)
             out << ", ";
-        if (incoming[i])
-            incoming[i]->dump(out);
+        if (d->incoming[i])
+            d->incoming[i]->dump(out);
     }
     out << ");";
 }
@@ -881,7 +881,7 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString &exceptionVarName, Temp *exceptionVar)
+Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
 {
     if (isTerminated())
         return 0;
