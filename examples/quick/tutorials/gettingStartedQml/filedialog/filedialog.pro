@@ -2,21 +2,32 @@ TEMPLATE = lib
 CONFIG += plugin
 QT += qml
 
-DESTDIR +=  ../plugins
+DESTDIR +=  ../imports/FileDialog
 OBJECTS_DIR = tmp
 MOC_DIR = tmp
 
-TARGET = FileDialog
+TARGET = filedialogplugin
 
-HEADERS +=     directory.h \
+HEADERS += \
+        directory.h \
         file.h \
         dialogPlugin.h
 
-SOURCES +=    directory.cpp \
+SOURCES += \
+        directory.cpp \
         file.cpp \
         dialogPlugin.cpp
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick/tutorials/gettingStartedQml/filedialog
-qml.files = qmldir
-qml.path = $$[QT_INSTALL_EXAMPLES]/quick/tutorials/gettingStartedQml/filedialog
-INSTALLS += target qml
+OTHER_FILES += qmldir
+
+copyfile = $$PWD/qmldir
+copydest = $$DESTDIR
+
+# On Windows, use backslashes as directory separators
+win32: {
+    copyfile ~= s,/,\\,g
+    copydest ~= s,/,\\,g
+}
+
+# Copy the qmldir file to the same folder as the plugin binary
+QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$copyfile) $$quote($$copydest) $$escape_expand(\\n\\t)

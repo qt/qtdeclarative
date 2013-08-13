@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.1
+import QtQuick.Window 2.1
 
 Item {
     id: container
@@ -48,8 +49,8 @@ Item {
     signal clicked
     property alias containsMouse: mouseArea.containsMouse
     property alias pressed: mouseArea.pressed
-    implicitHeight: buttonLabel.implicitHeight * 1.2
-    implicitWidth: buttonLabel.implicitWidth * 1.2
+    implicitHeight: Math.max(Screen.logicalPixelDensity * 7, buttonLabel.implicitHeight * 1.2)
+    implicitWidth: Math.max(Screen.logicalPixelDensity * 11, buttonLabel.implicitWidth * 1.3)
     height: implicitHeight
     width: implicitWidth
 
@@ -64,7 +65,7 @@ Item {
             GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
         }
         antialiasing: true
-        radius: height / 4
+        radius: height / 6
         border.color: Qt.darker(palette.button, 1.5)
         border.width: 1
     }

@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.1
 
 Item {
     id: tabWidget
@@ -65,7 +66,8 @@ Item {
         Repeater {
             model: stack.children.length
             delegate: Rectangle {
-                width: tabWidget.width / stack.children.length; height: 36
+                width: tabWidget.width / stack.children.length
+                height: Math.max(Screen.logicalPixelDensity * 11, label.implicitHeight * 1.2)
 
                 Rectangle {
                     width: parent.width; height: 1
@@ -79,6 +81,7 @@ Item {
                     visible: tabWidget.current == index
                 }
                 Text {
+                    id: label
                     horizontalAlignment: Qt.AlignHCenter; verticalAlignment: Qt.AlignVCenter
                     anchors.fill: parent
                     text: stack.children[index].title

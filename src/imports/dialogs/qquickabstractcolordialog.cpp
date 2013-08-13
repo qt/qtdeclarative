@@ -66,6 +66,8 @@ void QQuickAbstractColorDialog::setVisible(bool v)
 {
     if (helper() && v) {
         m_dlgHelper->setOptions(m_options);
+        // Due to the fact that QColorDialogOptions doesn't have currentColor...
+        m_dlgHelper->setCurrentColor(m_color);
     }
     QQuickAbstractDialog::setVisible(v);
 }
@@ -100,6 +102,9 @@ void QQuickAbstractColorDialog::setTitle(const QString &t)
 
 void QQuickAbstractColorDialog::setColor(QColor arg)
 {
+    if (m_dlgHelper)
+        m_dlgHelper->setCurrentColor(arg);
+    // m_options->setCustomColor or setStandardColor don't make sense here
     if (m_color != arg) {
         m_color = arg;
         emit colorChanged();
