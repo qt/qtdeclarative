@@ -340,7 +340,7 @@ int QSGDistanceFieldStyledTextMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
     const QSGDistanceFieldStyledTextMaterial *other = static_cast<const QSGDistanceFieldStyledTextMaterial *>(o);
-    if (m_styleColor != other->m_color)
+    if (m_styleColor != other->m_styleColor)
         return &m_styleColor < &other->m_styleColor ? -1 : 1;
     return QSGDistanceFieldTextMaterial::compare(o);
 }
