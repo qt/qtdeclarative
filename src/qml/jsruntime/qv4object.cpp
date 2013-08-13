@@ -1065,16 +1065,49 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, c
 
 void Object::copyArrayData(Object *other)
 {
-    arrayReserve(other->arrayDataLen);
-    arrayDataLen = other->arrayDataLen;
-    memcpy(arrayData, other->arrayData, arrayDataLen*sizeof(Property));
+    Q_ASSERT(isArrayObject());
+
+    bool protoHasArray = false;
+    Object *p = other;
+    while ((p = p->prototype))
+        if (p->arrayDataLen)
+            protoHasArray = true;
+
+    bool arrayHasGetter = false;
+    if (!protoHasArray && other->arrayAttributes) {
+        for (uint i = 0; i < other->arrayDataLen; ++i) {
+            if (other->arrayAttributes[i].isAccessor()) {
+                const Property &pd = other->arrayData[i];
+                FunctionObject *getter = pd.getter();
+                if (getter) {
+                    arrayHasGetter = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (protoHasArray || arrayHasGetter) {
+        uint len = other->arrayLength();
+        Q_ASSERT(len);
+
+        for (uint i = 0; i < len; ++i) {
+            arraySet(i, other->getIndexed(i));
+        }
+    } else {
+        arrayReserve(other->arrayDataLen);
+        arrayDataLen = other->arrayDataLen;
+        memcpy(arrayData, other->arrayData, arrayDataLen*sizeof(Property));
+    }
+
     arrayOffset = 0;
+
     if (other->sparseArray) {
         sparseArray = new SparseArray(*other->sparseArray);
         arrayFreeList = other->arrayFreeList;
     }
-    if (isArrayObject())
-        setArrayLengthUnchecked(other->arrayLength());
+
+    setArrayLengthUnchecked(other->arrayLength());
 }
 
 

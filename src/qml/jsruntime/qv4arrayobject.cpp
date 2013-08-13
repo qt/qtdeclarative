@@ -147,9 +147,12 @@ Value ArrayPrototype::method_concat(SimpleCallContext *ctx)
 
     if (ArrayObject *instance = ctx->thisObject.asArrayObject()) {
         result->copyArrayData(instance);
-    } else {
+    } else if (ctx->thisObject.asStringObject()) {
         QString v = ctx->thisObject.toString(ctx)->toQString();
         result->arraySet(0, Value::fromString(ctx, v));
+    } else {
+        Object *instance = ctx->thisObject.asObject();
+        result->arraySet(0, ctx->thisObject);
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
