@@ -642,7 +642,6 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
 {
     QV4::CompiledData::MasmCompilationUnit *masmUnit = new QV4::CompiledData::MasmCompilationUnit;
     compilationUnit = masmUnit;
-    masmUnit->rootFunction = _irToVM[module->rootFunction];
 }
 
 InstructionSelection::~InstructionSelection()
@@ -733,6 +732,14 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_locals, locals);
     delete _as;
     _as = oldAssembler;
+}
+
+void InstructionSelection::backendCompileStep()
+{
+    QV4::CompiledData::MasmCompilationUnit *masmUnit = static_cast<QV4::CompiledData::MasmCompilationUnit*>(compilationUnit);
+    masmUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
+    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
+        masmUnit->runtimeFunctions << _irToVM[irFunction];
 }
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)

@@ -42,6 +42,7 @@
 #include "qv4compileddata_p.h"
 #include "qv4jsir_p.h"
 #include <private/qv4engine_p.h>
+#include <private/qv4function_p.h>
 
 namespace QV4 {
 
@@ -72,7 +73,25 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 // ### Move to masm
 QV4::Function *MasmCompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 {
-    return rootFunction;
+    QV4::Function *rootRuntimeFunction = 0;
+
+    const CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
+
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        QV4::Function *runtimeFunction = runtimeFunctions.at(i);
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+
+        runtimeFunction->compilationUnit = this;
+        runtimeFunction->compilationUnit->ref();
+        runtimeFunction->compiledFunction = compiledFunction;
+
+        if (compiledFunction == compiledRootFunction) {
+            assert(!rootRuntimeFunction);
+            rootRuntimeFunction = runtimeFunction;
+        }
+    }
+
+    return rootRuntimeFunction;
 }
 
 }

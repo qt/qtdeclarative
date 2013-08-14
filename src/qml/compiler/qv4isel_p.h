@@ -73,6 +73,7 @@ protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
     QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
+    virtual void backendCompileStep() {}
 
     int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
 

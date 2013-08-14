@@ -120,11 +120,7 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
 
     compilationUnit->data = jsUnitGenerator.generateUnit();
 
-    for (QHash<V4IR::Function *, QV4::Function *>::Iterator it = _irToVM.begin(), end = _irToVM.end();
-         it != end; ++it) {
-        compilationUnit->ref();
-        (*it)->compilationUnit = compilationUnit;
-    }
+    backendCompileStep();
 
     return compilationUnit;
 }

@@ -118,11 +118,12 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         string += QV4::CompiledData::String::calculateSize(qstr);
     }
 
-    // pointer to the entry function
-    uint *functionTable = (uint *)data + unit->offsetToFunctionTable;
+    uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
+    for (uint i = 0; i < irModule->functions.size(); ++i)
+        functionTable[i] = functionOffsets.value(irModule->functions.at(i));
+
     char *f = data + unitSize + stringDataSize;
     writeFunction(f, irModule->rootFunction);
-    ++functionTable;
     f += QV4::CompiledData::Function::calculateSize(irModule->rootFunction);
     unit->indexOfRootFunction = 0;
 
@@ -132,7 +133,6 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             continue;
 
         writeFunction(f, function);
-        ++functionTable;
         f += QV4::CompiledData::Function::calculateSize(function);
     }
 

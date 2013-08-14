@@ -62,6 +62,7 @@ struct ExecutionContext;
 namespace CompiledData {
 
 struct String;
+struct Function;
 
 static const char magic_str[] = "qv4cdata";
 
@@ -86,6 +87,12 @@ struct Unit
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+    }
+
+    const Function *functionAt(int idx) const {
+        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToFunctionTable);
+        const uint offset = offsetTable[idx];
+        return reinterpret_cast<const Function*>(reinterpret_cast<const char *>(this) + offset);
     }
 
     static int calculateSize(uint nStrings, uint nFunctions) { return (sizeof(Unit) + (nStrings + nFunctions) * sizeof(uint) + 7) & ~7; }
@@ -251,8 +258,7 @@ struct MasmCompilationUnit : public CompilationUnit
 
     // Coderef + execution engine
 
-    // ### remove
-    QV4::Function *rootFunction;
+    QList<QV4::Function *> runtimeFunctions;
 };
 
 struct MothCompilationUnit : public CompilationUnit

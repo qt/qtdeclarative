@@ -787,6 +787,8 @@ public:
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
 
 protected:
+    virtual void backendCompileStep();
+
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
     virtual void callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
