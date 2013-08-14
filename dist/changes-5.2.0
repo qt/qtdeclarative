@@ -1,0 +1,70 @@
+Qt 5.2 introduces many new features and improvements as well as bugfixes
+over the 5.1.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+  http://qt-project.org/doc/qt-5.2
+
+The Qt version 5.2 series is binary compatible with the 5.1.x series.
+Applications compiled for 5.1 will continue to run with 5.2.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  http://bugreports.qt-project.org/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                           General                                        *
+****************************************************************************
+
+General Improvements
+--------------------
+
+Third party components
+----------------------
+
+****************************************************************************
+*                   Important Behavior Changes                             *
+****************************************************************************
+
+****************************************************************************
+*                          Library                                         *
+****************************************************************************
+
+QtQml
+------
+
+QtQuick
+------
+
+****************************************************************************
+*                          Database Drivers                                *
+****************************************************************************
+
+
+****************************************************************************
+*                      Platform Specific Changes                           *
+****************************************************************************
+
+
+****************************************************************************
+*                      Compiler Specific Changes                           *
+****************************************************************************
+
+
+****************************************************************************
+*                          Tools                                           *
+****************************************************************************
+
+
+****************************************************************************
+*                          Plugins                                         *
+****************************************************************************
+
+- A new experimental QML Settings type provides means for applications to
+  manage persistent settings in a platform-independent manner. The type is
+  made available by importing the Qt.labs.settings module. Note: types in
+  the Qt.labs module are not guaranteed to remain compatible in future
+  versions.
