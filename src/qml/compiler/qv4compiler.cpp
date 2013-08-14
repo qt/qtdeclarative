@@ -1,0 +1,170 @@
+/****************************************************************************
+**
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Digia gives you certain additional
+** rights.  These rights are described in the Digia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include <qv4compiler_p.h>
+#include <qv4compileddata_p.h>
+#include <qv4isel_p.h>
+#include <qv4engine_p.h>
+
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::ExecutionEngine *engine, QQmlJS::V4IR::Module *module)
+    : irModule(module)
+    , stringDataSize(0)
+{
+    isel = engine->iselFactory->create(engine, irModule);
+}
+
+int QV4::Compiler::JSUnitGenerator::registerString(const QString &str)
+{
+    QHash<QString, int>::ConstIterator it = stringToId.find(str);
+    if (it != stringToId.end())
+        return *it;
+    stringToId.insert(str, strings.size());
+    strings.append(str);
+    stringDataSize += QV4::CompiledData::String::calculateSize(str);
+    return strings.size() - 1;
+}
+
+int QV4::Compiler::JSUnitGenerator::getStringId(const QString &string) const
+{
+    Q_ASSERT(stringToId.contains(string));
+    return stringToId.value(string);
+}
+
+QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
+{
+    foreach (QQmlJS::V4IR::Function *f, irModule->functions) {
+        registerString(*f->name);
+        for (int i = 0; i < f->formals.size(); ++i)
+            registerString(*f->formals.at(i));
+        for (int i = 0; i < f->locals.size(); ++i)
+            registerString(*f->locals.at(i));
+    }
+
+    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size());
+
+    uint functionDataSize = 0;
+    for (int i = 0; i < irModule->functions.size(); ++i) {
+        QQmlJS::V4IR::Function *f = irModule->functions.at(i);
+        functionOffsets.insert(f, functionDataSize + unitSize + stringDataSize);
+        functionDataSize += QV4::CompiledData::Function::calculateSize(f);
+    }
+
+    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize);
+    QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
+
+    memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
+    unit->architecture = 0; // ###
+    unit->flags = QV4::CompiledData::Unit::IsJavascript;
+    unit->version = 1;
+    unit->stringTableSize = strings.size();
+    unit->offsetToStringTable = sizeof(QV4::CompiledData::Unit);
+    unit->functionTableSize = irModule->functions.size();
+    unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+
+    // write strings and string table
+    uint *stringTable = (uint *)(data + unit->offsetToStringTable);
+    char *string = data + unitSize;
+    for (int i = 0; i < strings.size(); ++i) {
+        stringTable[i] = string - data;
+        const QString &qstr = strings.at(i);
+
+        QV4::CompiledData::String *s = (QV4::CompiledData::String*)(string);
+        s->hash = QV4::String::createHashValue(qstr.constData(), qstr.length());
+        s->flags = 0; // ###
+        s->str.ref.atomic.store(-1);
+        s->str.size = qstr.length();
+        s->str.alloc = 0;
+        s->str.capacityReserved = false;
+        s->str.offset = sizeof(QArrayData);
+        memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
+
+        string += QV4::CompiledData::String::calculateSize(qstr);
+    }
+
+    // pointer to the entry function
+    uint *functionTable = (uint *)data + unit->offsetToFunctionTable;
+    char *f = data + unitSize + stringDataSize;
+    writeFunction(f, irModule->rootFunction);
+    ++functionTable;
+    f += QV4::CompiledData::Function::calculateSize(irModule->rootFunction);
+
+    for (uint i = 0; i < irModule->functions.size(); ++i) {
+        QQmlJS::V4IR::Function *function = irModule->functions.at(i);
+        if (function == irModule->rootFunction)
+            continue;
+
+        writeFunction(f, function);
+        ++functionTable;
+        f += QV4::CompiledData::Function::calculateSize(function);
+    }
+
+    return unit;
+}
+
+void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QQmlJS::V4IR::Function *irFunction)
+{
+    QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
+    function->nameIndex = getStringId(*irFunction->name);
+    function->flags = 0; // ###
+    function->nFormals = irFunction->formals.size();
+    function->formalsOffset = sizeof(QV4::CompiledData::Function);
+    function->nLocals = irFunction->locals.size();
+    function->localsOffset = function->formalsOffset + function->nFormals * sizeof(quint32);
+    function->nInnerFunctions = irFunction->nestedFunctions.size();
+    function->innerFunctionsOffset = function->localsOffset + function->nLocals * sizeof(quint32);
+
+    // write formals
+    quint32 *formals = (quint32 *)(f + function->formalsOffset);
+    for (int i = 0; i < irFunction->formals.size(); ++i)
+        formals[i] = getStringId(*irFunction->formals.at(i));
+
+    // write locals
+    quint32 *locals = (quint32 *)(f + function->localsOffset);
+    for (int i = 0; i < irFunction->locals.size(); ++i)
+        locals[i] = getStringId(*irFunction->locals.at(i));
+
+    // write inner functions
+    quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);
+    for (int i = 0; i < irFunction->nestedFunctions.size(); ++i)
+        innerFunctions[i] = functionOffsets.value(irFunction->nestedFunctions.at(i));
+}
+
+

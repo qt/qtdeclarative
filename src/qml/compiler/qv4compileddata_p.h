@@ -42,8 +42,17 @@
 #define QV4COMPILEDDATA_P_H
 
 #include <QtCore/qstring.h>
+#include <QVector>
+#include <QStringList>
+#include <private/qv4value_def_p.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QQmlJS {
+namespace V4IR {
+struct Function;
+}
+}
 
 namespace QV4 {
 
@@ -53,7 +62,7 @@ namespace CompiledData {
 
 static const char magic_str[] = "qv4cdata";
 
-struct Header
+struct Unit
 {
     char magic[8];
     qint16 architecture;
@@ -64,12 +73,18 @@ struct Header
         IsQml = 0x2
     };
     quint32 flags;
+    uint stringTableSize;
+    uint offsetToStringTable;
+    uint functionTableSize;
+    uint offsetToFunctionTable;
+
+    static int calculateSize(uint nStrings, uint nFunctions) { return (sizeof(Unit) + (nStrings + nFunctions) * sizeof(uint) + 7) & ~7; }
 };
 
 struct Function
 {
-    Value (*code)(ExecutionContext *, const uchar *);
-    quint32 offsetToName;
+    QV4::Value (*code)(ExecutionContext *, const uchar *);
+    quint32 nameIndex;
     qint64 flags; // strict, etc.
     quint32 nFormals;
     quint32 formalsOffset;
@@ -77,10 +92,15 @@ struct Function
     quint32 localsOffset;
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
-//    quint32 offsetForFormals[nFormals]
-//    quint32 offsetForLocals[nLocals]
+//    quint32 formalsIndex[nFormals]
+//    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
 //    Function[nInnerFunctions]
+
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions) * sizeof(quint32) + 7) & ~0x7;
+    }
+    static int calculateSize(QQmlJS::V4IR::Function *f);
 };
 
 struct String
@@ -89,14 +109,10 @@ struct String
     quint32 flags; // isArrayIndex
     QArrayData str;
     // uint16 strdata[]
-};
 
-
-struct JSUnit
-{
-    Header header;
-    Function entry;
-    // String stringTable;
+    static int calculateSize(const QString &str) {
+        return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
+    }
 };
 
 
@@ -171,7 +187,7 @@ struct Imports
 
 struct QmlUnit
 {
-    Header header;
+    Unit header;
     int offsetToTypeName;
     Imports imports;
     Object object;
@@ -186,7 +202,7 @@ struct QmlUnit
 struct CompilationUnit
 {
     virtual ~CompilationUnit();
-    Header *data;
+    Unit *data;
 
     // ### runtime data
     // pointer to qml data for QML unit
