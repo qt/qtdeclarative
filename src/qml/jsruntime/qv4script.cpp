@@ -68,7 +68,7 @@ struct QmlBindingWrapper : FunctionObject
         vtbl = &static_vtbl;
         function = f;
         function->ref();
-        usesArgumentsObject = function->usesArgumentsObject;
+        usesArgumentsObject = function->usesArgumentsObject();
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 
@@ -203,7 +203,7 @@ Value Script::run()
         bool strict = scope->strictMode;
         Lookup *lookups = scope->lookups;
 
-        scope->strictMode = vmFunction->isStrict;
+        scope->strictMode = vmFunction->isStrict();
         scope->lookups = vmFunction->lookups;
 
         QV4::Value result;

@@ -124,30 +124,6 @@ void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos)
     *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
 
-Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
-                                    bool hasDirectEval,
-                                    bool usesArgumentsObject, bool isStrict,
-                                    bool hasNestedFunctions,
-                                    String **formals, unsigned formalCount,
-                                    String **locals, unsigned localCount)
-{
-    Function *f = ctx->engine->newFunction(name ? name->toQString() : QString());
-
-    f->hasDirectEval = hasDirectEval;
-    f->usesArgumentsObject = usesArgumentsObject;
-    f->isStrict = isStrict;
-    f->hasNestedFunctions = hasNestedFunctions;
-
-    for (unsigned i = 0; i < formalCount; ++i)
-        if (formals[i])
-            f->formals.append(formals[i]);
-    for (unsigned i = 0; i < localCount; ++i)
-        if (locals[i])
-            f->locals.append(locals[i]);
-
-    return f;
-}
-
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
 {
     if (Object *o = base.asObject()) {

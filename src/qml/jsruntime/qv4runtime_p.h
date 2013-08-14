@@ -131,12 +131,6 @@ void __qmljs_resolve_string_as_value(QV4::ExecutionContext *ctx, QV4::Value *res
 
 // constructors
 void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::Value *result, QV4::Function *clos);
-QV4::Function *__qmljs_register_function(QV4::ExecutionContext *ctx, QV4::String *name,
-                                         bool hasDirectEval,
-                                         bool usesArgumentsObject, bool isStrict,
-                                         bool hasNestedFunctions,
-                                         QV4::String **formals, unsigned formalCount,
-                                         QV4::String **locals, unsigned localCount);
 
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);

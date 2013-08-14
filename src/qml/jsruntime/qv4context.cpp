@@ -393,7 +393,7 @@ Value ExecutionContext::getProperty(String *name)
                 if (hasProperty)
                     return v;
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }
@@ -455,7 +455,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                 if (hasProperty)
                     return v;
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }
@@ -520,7 +520,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                     return v;
                 }
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }

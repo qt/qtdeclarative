@@ -143,7 +143,15 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QQmlJS::V4IR::Functi
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
     function->nameIndex = getStringId(*irFunction->name);
-    function->flags = 0; // ###
+    function->flags = 0;
+    if (irFunction->hasDirectEval)
+        function->flags |= CompiledData::Function::HasDirectEval;
+    if (irFunction->usesArgumentsObject)
+        function->flags |= CompiledData::Function::UsesArgumentsObject;
+    if (irFunction->isStrict)
+        function->flags |= CompiledData::Function::IsStrict;
+    if (irFunction->isNamedExpression)
+        function->flags |= CompiledData::Function::IsNamedExpression;
     function->nFormals = irFunction->formals.size();
     function->formalsOffset = sizeof(QV4::CompiledData::Function);
     function->nLocals = irFunction->locals.size();

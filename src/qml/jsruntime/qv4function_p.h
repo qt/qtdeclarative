@@ -106,12 +106,6 @@ struct Function {
 
     Lookup *lookups;
 
-    bool hasNestedFunctions;
-    bool hasDirectEval;
-    bool usesArgumentsObject;
-    bool isStrict;
-    bool isNamedExpression;
-
     QString sourceFile;
     QVector<LineNumberMapping> lineNumberMappings;
 
@@ -126,11 +120,6 @@ struct Function {
         , codeData(0)
         , codeSize(0)
         , lookups(0)
-        , hasNestedFunctions(0)
-        , hasDirectEval(false)
-        , usesArgumentsObject(false)
-        , isStrict(false)
-        , isNamedExpression(false)
         , engine(engine)
     {}
     ~Function();
@@ -144,7 +133,12 @@ struct Function {
         nestedFunctions.append(f);
     }
 
-    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval || usesArgumentsObject; }
+    inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
+    inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
+    inline bool isNamedExpression() const { return compiledFunction->flags & CompiledData::Function::IsNamedExpression; }
+
+    inline bool needsActivation() const
+    { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
 
     void mark();
 

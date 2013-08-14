@@ -100,9 +100,16 @@ struct Unit
 
 struct Function
 {
+    enum Flags {
+        HasDirectEval       = 0x1,
+        UsesArgumentsObject = 0x2,
+        IsStrict            = 0x4,
+        IsNamedExpression   = 0x8
+    };
+
     QV4::Value (*code)(ExecutionContext *, const uchar *);
     quint32 nameIndex;
-    qint64 flags; // strict, etc.
+    qint64 flags;
     quint32 nFormals;
     quint32 formalsOffset;
     quint32 nLocals;

@@ -336,8 +336,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject;
-    strictMode = function->isStrict;
+    usesArgumentsObject = function->usesArgumentsObject();
+    strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));

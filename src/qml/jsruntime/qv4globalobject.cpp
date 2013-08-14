@@ -383,9 +383,9 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     if (!function)
         return Value::undefinedValue();
 
-    strictMode = function->isStrict || (ctx->strictMode);
+    strictMode = function->isStrict() || (ctx->strictMode);
 
-    usesArgumentsObject = function->usesArgumentsObject;
+    usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
 
     if (strictMode) {
