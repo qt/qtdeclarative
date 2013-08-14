@@ -61,7 +61,12 @@ Rectangle {
         selectFolder: fileDialogSelectFolder.checked
         nameFilters: [ "Image files (*.png *.jpg)", "All files (*)" ]
         selectedNameFilter: "All files (*)"
-        onAccepted: { console.log("Accepted: " + fileUrls) }
+        onAccepted: {
+            console.log("Accepted: " + fileUrls)
+            if (fileDialogOpenFiles.checked)
+                for (var i = 0; i < fileUrls.length; ++i)
+                    Qt.openUrlExternally(fileUrls[i])
+        }
         onRejected: { console.log("Rejected") }
     }
     //! [filedialog]
@@ -96,6 +101,10 @@ Rectangle {
             id: fileDialogSelectMultiple
             text: "Select Multiple Files"
             Binding on checked { value: fileDialog.selectMultiple }
+        }
+        CheckBox {
+            id: fileDialogOpenFiles
+            text: "Open Files After Accepting"
         }
         CheckBox {
             id: fileDialogVisible
