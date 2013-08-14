@@ -52,6 +52,7 @@
 #include <config.h>
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,9 +63,12 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
 
+    virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int functionIndex);
+
     // Coderef + execution engine
 
     QList<QV4::Function *> runtimeFunctions;
+    QVector<JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
 class Assembler : public JSC::MacroAssembler
@@ -755,7 +759,7 @@ public:
         return Jump();
     }
 
-    void link(QV4::Function *vmFunc);
+    JSC::MacroAssemblerCodeRef link(QV4::Function *vmFunc);
 
     void recordLineNumber(int lineNumber);
 
@@ -931,6 +935,7 @@ private:
     int _locals;
 
     CompilationUnit *compilationUnit;
+    QHash<V4IR::Function*, JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

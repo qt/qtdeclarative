@@ -87,6 +87,16 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     return rootRuntimeFunction;
 }
 
+QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)
+{
+    if (functionIndex < 0 || functionIndex >= codeRefs.count())
+        return 0;
+    JSC::ExecutableMemoryHandle *handle = codeRefs[functionIndex].executableMemory();
+    if (!handle)
+        return 0;
+    return handle->chunk();
+}
+
 namespace {
 class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
 {
@@ -546,7 +556,7 @@ void Assembler::recordLineNumber(int lineNumber)
 }
 
 
-void Assembler::link(QV4::Function *vmFunc)
+JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
 {
     Label endOfCode = label();
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
@@ -604,6 +614,8 @@ void Assembler::link(QV4::Function *vmFunc)
     UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), linkBuffer.offsetOf(endOfCode));
 #endif
 
+    JSC::MacroAssemblerCodeRef codeRef;
+
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
 #if OS(LINUX) && !defined(Q_OS_ANDROID)
@@ -632,7 +644,7 @@ void Assembler::link(QV4::Function *vmFunc)
             name.prepend("IR::Function(0x");
             name.append(")");
         }
-        vmFunc->codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
+        codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
 #if (OS(LINUX) && !defined(Q_OS_ANDROID)) || OS(MAC_OS_X)
@@ -649,10 +661,11 @@ void Assembler::link(QV4::Function *vmFunc)
 #  endif
 #endif
     } else {
-        vmFunc->codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
+        codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    vmFunc->code = (Value (*)(QV4::ExecutionContext *, const uchar *)) vmFunc->codeRef.code().executableAddress();
+    vmFunc->code = (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRef.code().executableAddress();
+    return codeRef;
 }
 
 InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
@@ -738,7 +751,8 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
         }
     }
 
-    _as->link(_vmFunction);
+    JSC::MacroAssemblerCodeRef codeRef =_as->link(_vmFunction);
+    codeRefs[_function] = codeRef;
 
     if (_lookups.size()) {
         _vmFunction->lookups = new Lookup[_lookups.size()];
@@ -760,8 +774,12 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
     compilationUnit->data = jsUnitGenerator.generateUnit();
     compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
-    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
+    compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
+    int i = 0;
+    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions) {
         compilationUnit->runtimeFunctions << _irToVM[irFunction];
+        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
+    }
     return compilationUnit;
 }
 

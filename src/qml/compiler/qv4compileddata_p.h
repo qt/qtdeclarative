@@ -45,6 +45,7 @@
 #include <QVector>
 #include <QStringList>
 #include <private/qv4value_def_p.h>
+#include <private/qv4executableallocator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,6 +109,7 @@ struct Function
     };
 
     QV4::Value (*code)(ExecutionContext *, const uchar *);
+    quint32 index; // in CompilationUnit's function table
     quint32 nameIndex;
     quint32 sourceFileIndex;
     qint64 flags;
@@ -248,6 +250,7 @@ struct CompilationUnit
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 
+    virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int /*functionIndex*/) { return 0; }
 
     // ### runtime data
     // pointer to qml data for QML unit

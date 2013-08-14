@@ -48,6 +48,7 @@
 #include <wtf/Platform.h>
 #include <wtf/PageAllocation.h>
 #include <ExecutableAllocator.h>
+#include <private/qv4isel_masm_p.h>
 
 #include <QMap>
 #include <QMutex>
@@ -126,13 +127,12 @@ UnwindInfo::~UnwindInfo()
 
 static void ensureUnwindInfo(Function *f)
 {
-    if (!f->codeRef)
+    if (!f->code)
         return; // Not a JIT generated function
 
-    JSC::ExecutableMemoryHandle *handle = f->codeRef.executableMemory();
-    if (!handle)
+    ExecutableAllocator::ChunkOfPages *chunk = f->compilationUnit->chunkForFunction(f->compiledFunction->index);
+    if (!chunk)
         return;
-    ExecutableAllocator::ChunkOfPages *chunk = handle->chunk();
 
     // Already registered?
     if (chunk->unwindInfo)

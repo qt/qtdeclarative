@@ -124,25 +124,22 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionTable[i] = functionOffsets.value(irModule->functions.at(i));
 
     char *f = data + unitSize + stringDataSize;
-    writeFunction(f, irModule->rootFunction);
-    f += QV4::CompiledData::Function::calculateSize(irModule->rootFunction);
-    unit->indexOfRootFunction = 0;
-
     for (uint i = 0; i < irModule->functions.size(); ++i) {
         QQmlJS::V4IR::Function *function = irModule->functions.at(i);
         if (function == irModule->rootFunction)
-            continue;
+            unit->indexOfRootFunction = i;
 
-        writeFunction(f, function);
+        writeFunction(f, i, function);
         f += QV4::CompiledData::Function::calculateSize(function);
     }
 
     return unit;
 }
 
-void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QQmlJS::V4IR::Function *irFunction)
+void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction)
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
+    function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
     function->sourceFileIndex = getStringId(irFunction->sourceFile);
     function->flags = 0;

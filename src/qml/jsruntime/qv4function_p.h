@@ -48,7 +48,6 @@
 #include <QtCore/qurl.h>
 
 #include <config.h>
-#include <assembler/MacroAssemblerCodeRef.h>
 #include "qv4value_def_p.h"
 #include <private/qv4compileddata_p.h>
 
@@ -95,7 +94,6 @@ struct Function {
     CompiledData::CompilationUnit *compilationUnit;
     Value (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
-    JSC::MacroAssemblerCodeRef codeRef;
     quint32 codeSize;
 
     QVector<String *> formals;

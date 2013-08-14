@@ -63,7 +63,7 @@ struct JSUnitGenerator {
     int getStringId(const QString &string) const;
 
     QV4::CompiledData::Unit *generateUnit();
-    void writeFunction(char *f, QQmlJS::V4IR::Function *irFunction);
+    void writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
 
     QHash<QString, int> stringToId;
     QStringList strings;
