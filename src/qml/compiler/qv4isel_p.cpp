@@ -84,8 +84,6 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     QV4::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
     _irToVM.insert(irFunction, vmFunction);
 
-    vmFunction->sourceFile = irFunction->sourceFile;
-
     if (outer)
         outer->addNestedFunction(vmFunction);
 

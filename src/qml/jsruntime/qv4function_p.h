@@ -106,7 +106,6 @@ struct Function {
 
     Lookup *lookups;
 
-    QString sourceFile;
     QVector<LineNumberMapping> lineNumberMappings;
 
     ExecutionEngine *engine;
@@ -132,6 +131,8 @@ struct Function {
         f->ref();
         nestedFunctions.append(f);
     }
+
+    inline QString sourceFile() const { return compilationUnit->data->stringAt(compiledFunction->sourceFileIndex)->qString(); }
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }

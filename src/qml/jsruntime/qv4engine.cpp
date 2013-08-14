@@ -625,7 +625,7 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
         if (CallContext *callCtx = c->asCallContext()) {
             StackFrame frame;
             if (callCtx->function->function)
-                frame.source = callCtx->function->function->sourceFile;
+                frame.source = callCtx->function->function->sourceFile();
             frame.function = callCtx->function->name->toQString();
             frame.line = -1;
             frame.column = -1;
@@ -641,7 +641,7 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
 
     if (frameLimit && globalCode) {
         StackFrame frame;
-        frame.source = globalCode->sourceFile;
+        frame.source = globalCode->sourceFile();
         frame.function = globalCode->name->toQString();
         frame.line = -1;
         frame.column = -1;
@@ -677,14 +677,14 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     while (c) {
         if (CallContext *callCtx = c->asCallContext()) {
             if (callCtx->function->function)
-                base.setUrl(callCtx->function->function->sourceFile);
+                base.setUrl(callCtx->function->function->sourceFile());
             break;
         }
         c = c->parent;
     }
 
     if (base.isEmpty() && globalCode)
-            base.setUrl(globalCode->sourceFile);
+        base.setUrl(globalCode->sourceFile());
 
     if (base.isEmpty())
         return src;

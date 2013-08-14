@@ -71,6 +71,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
     foreach (QQmlJS::V4IR::Function *f, irModule->functions) {
         registerString(*f->name);
+        registerString(f->sourceFile);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
         for (int i = 0; i < f->locals.size(); ++i)
@@ -143,6 +144,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QQmlJS::V4IR::Functi
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
     function->nameIndex = getStringId(*irFunction->name);
+    function->sourceFileIndex = getStringId(irFunction->sourceFile);
     function->flags = 0;
     if (irFunction->hasDirectEval)
         function->flags |= CompiledData::Function::HasDirectEval;

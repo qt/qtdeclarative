@@ -109,6 +109,7 @@ struct Function
 
     QV4::Value (*code)(ExecutionContext *, const uchar *);
     quint32 nameIndex;
+    quint32 sourceFileIndex;
     qint64 flags;
     quint32 nFormals;
     quint32 formalsOffset;

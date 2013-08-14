@@ -130,7 +130,7 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
     }
 
     state.function = function;
-    state.fileName = function->sourceFile;
+    state.fileName = function->sourceFile();
 
     qptrdiff relativeProgramCounter = code - function->codeData;
     state.lineNumber = function->lineNumberForProgramCounter(relativeProgramCounter);
@@ -343,7 +343,7 @@ bool Debugger::BreakPoints::contains(const QString &fileName, int lineNumber) co
 
 void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreakPoints)
 {
-    Iterator breakPointsForFile = find(function->sourceFile);
+    Iterator breakPointsForFile = find(function->sourceFile());
     if (breakPointsForFile == end())
         return;
 
