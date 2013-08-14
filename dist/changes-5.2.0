@@ -29,6 +29,19 @@ Third party components
 *                   Important Behavior Changes                             *
 ****************************************************************************
 
+ - QSGMaterialShader::compile() will not be called on all instances anymore.
+   To enforce the old behavior, set the QSGMaterial::CustomCompilation flag.
+
+ - QSGMaterialShader::activate() and QSGMaterialShader::deactivate() are
+   no longer responsible for calling glEnableVertexAttribPointer(),
+   glDisableVertexAttribPointer() and binding the shader program. This is
+   now done by the renderer. Reimplementations of these functions which
+   are not calling the baseclass will need to take this into account.
+
+ - The scene graph now requires a call to QSGNode::markDirty() with the
+   flag QSGNode::DirtySubtreeBlocked whenever the state of
+   QSGNode::isSubtreeBlocked() is changed.
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************
@@ -38,6 +51,13 @@ QtQml
 
 QtQuick
 ------
+
+- New scene graph renderer should reduce state changes, number of draw calls,
+  CPU->GPU bandwidth and generally improve performance.
+
+- Textures in the scene graph can now be entered into an atlas, facilitating
+  in better batching in the renderer. Atlas textures are enabled by passing
+  QQuickWindow::TextureCanUseAtlas to QQuickWindow::createTextureFromImage()
 
 ****************************************************************************
 *                          Database Drivers                                *

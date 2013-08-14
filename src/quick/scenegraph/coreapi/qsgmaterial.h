@@ -49,6 +49,10 @@ QT_BEGIN_NAMESPACE
 
 class QSGMaterial;
 
+namespace QSGBatchRenderer {
+    class ShaderManager;
+}
+
 class Q_QUICK_EXPORT QSGMaterialShader
 {
 public:
@@ -95,8 +99,8 @@ public:
     inline QOpenGLShaderProgram *program() { return &m_program; }
 
 protected:
-
     friend class QSGContext;
+    friend class QSGBatchRenderer::ShaderManager;
 
     virtual void compile();
     virtual void initialize() { }

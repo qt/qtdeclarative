@@ -42,12 +42,15 @@
 #include <QtCore/QString>
 #include <QtTest/QtTest>
 
+#include <QtGui/QOffscreenSurface>
+#include <QtGui/QOpenGLContext>
+
 #include <QtQuick/qsgnode.h>
-#include <QtQuick/private/qsgrenderer_p.h>
+#include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>
 
 #include <QtQuick/qsgsimplerectnode.h>
-#include <QtOpenGL/QGLWidget>
+
 class NodesTest : public QObject
 {
     Q_OBJECT
@@ -57,41 +60,45 @@ public:
 
 private Q_SLOTS:
     void initTestCase();
-    void cleanupTestCase() {
-        delete widget;
-    }
+    void cleanupTestCase();
 
     // Root nodes
     void propegate();
     void propegateWithMultipleRoots();
-    void simulatedEffect_data();
-    void simulatedEffect();
 
     // Opacity nodes
     void basicOpacityNode();
     void opacityPropegation();
 
-    // QSGNodeUpdater
     void isBlockedCheck();
 
 private:
-    QGLWidget *widget;
-
-    QSGNodeUpdater updater;
+    QOffscreenSurface *surface;
+    QOpenGLContext *context;
 };
 
 void NodesTest::initTestCase()
 {
-    widget = new QGLWidget();
-    widget->resize(100, 30);
-    widget->show();
+    surface = new QOffscreenSurface;
+    surface->create();
+
+    context = new QOpenGLContext();
+    context->create();
+    context->makeCurrent(surface);
 }
 
-class DummyRenderer : public QSGRenderer
+void NodesTest::cleanupTestCase()
+{
+    context->doneCurrent();
+    delete context;
+    delete surface;
+}
+
+class DummyRenderer : public QSGBatchRenderer::Renderer
 {
 public:
     DummyRenderer(QSGRootNode *root)
-        : QSGRenderer(QSGContext::createDefaultContext())
+        : QSGBatchRenderer::Renderer(QSGContext::createDefaultContext())
         , changedNode(0)
         , changedState(0)
         , renderCount(0)
@@ -107,7 +114,7 @@ public:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) {
         changedNode = node;
         changedState = state;
-        QSGRenderer::nodeChanged(node, state);
+        QSGBatchRenderer::Renderer::nodeChanged(node, state);
     }
 
     QSGNode *changedNode;
@@ -163,114 +170,6 @@ void NodesTest::propegateWithMultipleRoots()
     QCOMPARE((int) ren2.changedState, (int) QSGNode::DirtyGeometry);
 }
 
-
-
-class SimulatedEffectRenderer : public DummyRenderer
-{
-public:
-    SimulatedEffectRenderer(QSGRootNode *root, QSGBasicGeometryNode *c)
-        : DummyRenderer(root)
-    {
-        child = c;
-    }
-
-    void render() {
-        matrix = child->matrix() ? *child->matrix() : QMatrix4x4();
-        DummyRenderer::render();
-    }
-
-    QSGBasicGeometryNode *child;
-    QMatrix4x4 matrix;
-};
-
-
-class PseudoEffectNode : public QSGNode {
-public:
-    PseudoEffectNode(QSGRenderer *r)
-        : renderer(r)
-    {
-        setFlag(UsePreprocess);
-    }
-
-    void preprocess() {
-
-        if (renderer->rootNode()->parent()) {
-            // Mark the root dirty to build a clean state from the root and down
-            renderer->rootNode()->markDirty(QSGNode::DirtyForceUpdate);
-        }
-
-        renderer->renderScene();
-
-        if (renderer->rootNode()->parent()) {
-            // Mark the parent of the root dirty to force the root and down to be updated.
-            renderer->rootNode()->parent()->markDirty(QSGNode::DirtyForceUpdate);
-        }
-    }
-
-    QSGRenderer *renderer;
-};
-
-void NodesTest::simulatedEffect_data()
-{
-    QTest::addColumn<bool>("connected");
-
-    QTest::newRow("connected") << true;
-    QTest::newRow("disconnected") << false;
-}
-
-void NodesTest::simulatedEffect()
-{
-    QFETCH(bool, connected);
-
-    QSGRootNode root;
-    QSGRootNode source;
-    QSGTransformNode xform;
-    QSGSimpleRectNode geometry;
-    geometry.setRect(QRectF(0, 0, 1, 1));
-    geometry.setColor(Qt::red);
-
-    root.setFlag(QSGNode::OwnedByParent, false);
-    source.setFlag(QSGNode::OwnedByParent, false);
-    xform.setFlag(QSGNode::OwnedByParent, false);
-    geometry.setFlag(QSGNode::OwnedByParent, false);
-
-    SimulatedEffectRenderer rootRenderer(&root, &geometry);
-    SimulatedEffectRenderer sourceRenderer(&source, &geometry);
-
-    PseudoEffectNode effect(&sourceRenderer);
-
-    /*
-      root              Source is redirected into effect using  the SimulatedEffectRenderer
-     /    \
-  xform  effect
-    |
-  source
-    |
- geometry
-    */
-
-    root.appendChildNode(&xform);
-    root.appendChildNode(&effect);
-    if (connected)
-        xform.appendChildNode(&source);
-    source.appendChildNode(&geometry);
-    QMatrix4x4 m; m.translate(1, 2, 3);
-    xform.setMatrix(m);
-
-    // Clear all dirty states...
-    updater.updateStates(&root);
-
-    rootRenderer.renderScene();
-
-    // compare that we got one render call to each
-    QCOMPARE(rootRenderer.renderCount, 1);
-    QCOMPARE(sourceRenderer.renderCount, 1);
-    QVERIFY(sourceRenderer.renderingOrder < rootRenderer.renderingOrder);
-    if (connected) // geometry is not rendered in this case, so skip it...
-        QCOMPARE(rootRenderer.matrix, xform.matrix());
-    QCOMPARE(sourceRenderer.matrix, QMatrix4x4());
-}
-
 void NodesTest::basicOpacityNode()
 {
     QSGOpacityNode n;
@@ -296,6 +195,8 @@ void NodesTest::opacityPropegation()
     QSGSimpleRectNode *geometry = new QSGSimpleRectNode;
     geometry->setRect(0, 0, 100, 100);
 
+    DummyRenderer renderer(&root);
+
     root.appendChildNode(a);
     a->appendChildNode(b);
     b->appendChildNode(c);
@@ -305,7 +206,7 @@ void NodesTest::opacityPropegation()
     b->setOpacity(0.8);
     c->setOpacity(0.7);
 
-    updater.updateStates(&root);
+    renderer.renderScene();
 
     QCOMPARE(a->combinedOpacity(), 0.9);
     QCOMPARE(b->combinedOpacity(), 0.9 * 0.8);
@@ -313,7 +214,7 @@ void NodesTest::opacityPropegation()
     QCOMPARE(geometry->inheritedOpacity(), 0.9 * 0.8 * 0.7);
 
     b->setOpacity(0.1);
-    updater.updateStates(&root);
+    renderer.renderScene();
 
     QCOMPARE(a->combinedOpacity(), 0.9);
     QCOMPARE(b->combinedOpacity(), 0.9 * 0.1);
@@ -321,7 +222,7 @@ void NodesTest::opacityPropegation()
     QCOMPARE(geometry->inheritedOpacity(), 0.9 * 0.1 * 0.7);
 
     b->setOpacity(0);
-    updater.updateStates(&root);
+    renderer.renderScene();
 
     QVERIFY(b->isSubtreeBlocked());
 

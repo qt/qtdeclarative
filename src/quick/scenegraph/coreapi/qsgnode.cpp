@@ -367,7 +367,7 @@ QSGNode::~QSGNode()
 
 bool QSGNode::isSubtreeBlocked() const
 {
-    return m_subtreeRenderableCount == 0;
+    return false;
 }
 
 /*!
@@ -656,10 +656,6 @@ void QSGNode::setFlags(Flags f, bool enabled)
 
 void QSGNode::markDirty(DirtyState bits)
 {
-    m_dirtyState |= (bits & DirtyPropagationMask);
-
-    DirtyState subtreeBits = DirtyState((bits & DirtyPropagationMask) << 16);
-
     int renderableCountDiff = 0;
     if (bits & DirtyNodeAdded)
         renderableCountDiff += m_subtreeRenderableCount;
@@ -668,7 +664,6 @@ void QSGNode::markDirty(DirtyState bits)
 
     QSGNode *p = m_parent;
     while (p) {
-        p->m_dirtyState |= subtreeBits;
         p->m_subtreeRenderableCount += renderableCountDiff;
         if (p->type() == RootNodeType)
             static_cast<QSGRootNode *>(p)->notifyNodeChange(this, bits);
@@ -1309,7 +1304,7 @@ QSGOpacityNode::~QSGOpacityNode()
     Returns this opacity node's opacity.
  */
 
-
+const qreal OPACITY_THRESHOLD = 0.001;
 
 /*!
     Sets the opacity of this node to \a opacity.
@@ -1325,8 +1320,14 @@ void QSGOpacityNode::setOpacity(qreal opacity)
     opacity = qBound<qreal>(0, opacity, 1);
     if (m_opacity == opacity)
         return;
+    DirtyState dirtyState = DirtyOpacity;
+
+    if ((m_opacity < OPACITY_THRESHOLD && opacity > OPACITY_THRESHOLD)
+        || (m_opacity > OPACITY_THRESHOLD && opacity < OPACITY_THRESHOLD))
+        dirtyState |= DirtySubtreeBlocked;
+
     m_opacity = opacity;
-    markDirty(DirtyOpacity);
+    markDirty(dirtyState);
 }
 
 
@@ -1370,7 +1371,7 @@ void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
-    return QSGNode::isSubtreeBlocked() || m_opacity < 0.001;
+    return m_opacity < OPACITY_THRESHOLD;
 }
 
 
@@ -1583,6 +1584,16 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     case QSGNode::OpacityNodeType:
         d << static_cast<const QSGOpacityNode *>(n);
+        break;
+    case QSGNode::RenderNodeType:
+        d << "RenderNode(" << hex << (void *) n << dec
+          << "dirty=" << hex << (int) n->dirtyState()
+          << "flags=" << (int) n->flags() << dec
+          << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+#ifdef QSG_RUNTIME_DESCRIPTION
+        d << QSGNodePrivate::description(n);
+#endif
+        d << ')';
         break;
     default:
         d << "Node(" << hex << (void *) n << dec

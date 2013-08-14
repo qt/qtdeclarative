@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <QtQuick/private/qsgdefaultrenderer_p.h>
+#include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultrectanglenode_p.h>
@@ -50,6 +50,7 @@
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/QSGFlatColorMaterial>
+#include <QtQuick/private/qsgatlastexture_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
@@ -114,6 +115,7 @@ public:
     #else
         , distanceFieldAntialiasing(QSGGlyphNode::GrayAntialiasing)
     #endif
+        , atlasManager(0)
         , flashMode(qmlFlashMode())
         , distanceFieldDisabled(qmlDisableDistanceField())
     {
@@ -133,6 +135,8 @@ public:
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
 
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
+
+    QSGAtlasTexture::Manager *atlasManager;
 
     bool flashMode;
     float renderAlpha;
@@ -196,6 +200,25 @@ void QSGContext::invalidate()
     d->gl = 0;
 
     emit invalidated();
+
+    /* The cleanup of the atlas textures is a bit intruiging.
+        As part of the cleanup in the threaded render loop, we
+        do:
+        1. call this function
+        2. call QCoreApp::sendPostedEvents() to immediately process
+           any pending deferred deletes.
+        3. delete the GL context.
+        As textures need the atlas manager while cleaning up, the
+        manager needs to be cleaned up after the textures, so
+        we post a deleteLater here at the very bottom so it gets
+        deferred deleted last.
+
+        Another alternative would be to use a QPointer in
+        QSGAtlasTexture::Texture, but this seemed simpler.
+     */
+
+    d->atlasManager->deleteLater();
+    d->atlasManager = 0;
 }
 
 
@@ -259,6 +282,8 @@ void QSGContext::initialize(QOpenGLContext *context)
         qWarning("QSGContext::initialize: depth buffer support missing, expect rendering errors");
     if (requested.stencilBufferSize() > 0 && actual.stencilBufferSize() <= 0)
         qWarning("QSGContext::initialize: stencil buffer support missing, expect rendering errors");
+
+    d->atlasManager = new QSGAtlasTexture::Manager();
 
     Q_ASSERT(!d->gl);
     d->gl = context;
@@ -414,7 +439,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
  */
 QSGRenderer *QSGContext::createRenderer()
 {
-    return new QSGDefaultRenderer(this);
+    return new QSGBatchRenderer::Renderer(this);
 }
 
 
@@ -441,10 +466,11 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 
 QSGTexture *QSGContext::createTexture(const QImage &image) const
 {
-    QSGPlainTexture *t = new QSGPlainTexture();
-    if (!image.isNull())
-        t->setImage(image);
-    return t;
+    Q_D(const QSGContext);
+    QSGTexture *at = d->atlasManager->create(image);
+    if (at)
+        return at;
+    return createTextureNoAtlas(image);
 }
 
 QSGTexture *QSGContext::createTextureNoAtlas(const QImage &image) const
@@ -454,7 +480,6 @@ QSGTexture *QSGContext::createTextureNoAtlas(const QImage &image) const
         t->setImage(image);
     return t;
 }
-
 
 /*!
     Returns the minimum supported framebuffer object size.

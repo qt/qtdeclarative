@@ -58,6 +58,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QSGBatchRenderer {
+    class Renderer;
+}
+
 class Q_QUICK_PRIVATE_EXPORT QSGRenderNode : public QSGNode
 {
 public:
@@ -98,6 +102,7 @@ public:
 
 private:
     friend class QSGNodeUpdater;
+    friend class QSGBatchRenderer::Renderer;
 
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;

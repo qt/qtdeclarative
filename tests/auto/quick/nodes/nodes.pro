@@ -6,5 +6,5 @@ SOURCES += tst_nodestest.cpp
 
 CONFIG+=parallel_test
 
-QT += core-private gui-private qml-private quick-private opengl widgets testlib
+QT += core-private gui-private qml-private quick-private testlib
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

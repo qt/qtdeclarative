@@ -606,7 +606,7 @@ void QSGRenderThread::syncAndRender()
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing)
-            qDebug("window Time: sinceLast=%d, sync=%d, first render=%d, after final swap=%d",
+            qDebug("Render Thread: framedelta=%d, sync=%d, first render=%d, after final swap=%d",
                    int(sinceLastTime/1000000),
                    int(syncTime/1000000),
                    int((renderTime - syncTime)/1000000),
@@ -1030,7 +1030,7 @@ void QSGThreadedRenderLoop::polishAndSync()
 
 #ifndef QSG_NO_RENDER_TIMING
     if (qsg_render_timing)
-        qDebug(" - polish=%d, wait=%d, sync=%d -- animations=%d",
+        qDebug(" - on GUI: polish=%d, lock=%d, block/sync=%d -- animations=%d",
                int(polishTime/1000000),
                int((waitTime - polishTime)/1000000),
                int((syncTime - waitTime)/1000000),

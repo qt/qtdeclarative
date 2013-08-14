@@ -234,14 +234,6 @@ QSGMaterialShader::QSGMaterialShader()
 
 void QSGMaterialShader::activate()
 {
-    Q_ASSERT(program()->isLinked());
-
-    program()->bind();
-    char const *const *attr = attributeNames();
-    for (int i = 0; attr[i]; ++i) {
-        if (*attr[i])
-            program()->enableAttributeArray(i);
-    }
 }
 
 
@@ -256,11 +248,6 @@ void QSGMaterialShader::activate()
 
 void QSGMaterialShader::deactivate()
 {
-    char const *const *attr = attributeNames();
-    for (int i = 0; attr[i]; ++i) {
-        if (*attr[i])
-            program()->disableAttributeArray(i);
-    }
 }
 
 
@@ -603,6 +590,7 @@ QSGMaterial::~QSGMaterial()
     the full matrix of the geometry nodes for rendering.
 
     \value CustomCompileStep Starting with Qt 5.2, the scene graph will not always call
+
     QSGMaterialShader::compile() when its shader program is compiled and linked.
     Set this flag to enforce that the function is called.
 
