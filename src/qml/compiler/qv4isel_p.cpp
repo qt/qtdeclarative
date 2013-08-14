@@ -62,7 +62,6 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine,
     : _engine(engine)
     , useFastLookups(true)
     , jsUnitGenerator(engine, module)
-    , compilationUnit(0)
 {
     assert(engine);
     assert(module);
@@ -111,11 +110,7 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
             run(it.value(), it.key());
     }
 
-    compilationUnit->data = jsUnitGenerator.generateUnit();
-
-    backendCompileStep();
-
-    return compilationUnit;
+    return backendCompileStep();
 }
 
 void IRDecoder::visitMove(V4IR::Move *s)

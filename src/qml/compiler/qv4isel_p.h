@@ -73,7 +73,7 @@ protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
     QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
-    virtual void backendCompileStep() {}
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep() { return 0; }
 
     int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
 
@@ -83,7 +83,6 @@ protected:
     QHash<V4IR::Function *, QV4::Function *> _irToVM;
     bool useFastLookups;
     QV4::Compiler::JSUnitGenerator jsUnitGenerator;
-    QV4::CompiledData::CompilationUnit *compilationUnit; // subclass ctor needs to initialize.
 };
 
 class Q_QML_EXPORT EvalISelFactory

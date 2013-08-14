@@ -58,6 +58,15 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace MASM {
 
+struct CompilationUnit : public QV4::CompiledData::CompilationUnit
+{
+    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
+
+    // Coderef + execution engine
+
+    QList<QV4::Function *> runtimeFunctions;
+};
+
 class Assembler : public JSC::MacroAssembler
 {
 public:
@@ -787,7 +796,7 @@ public:
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
 
 protected:
-    virtual void backendCompileStep();
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
@@ -920,6 +929,8 @@ private:
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
     int _locals;
+
+    CompilationUnit *compilationUnit;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

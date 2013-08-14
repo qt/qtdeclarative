@@ -64,6 +64,29 @@ using namespace QQmlJS;
 using namespace QQmlJS::MASM;
 using namespace QV4;
 
+QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
+{
+    QV4::Function *rootRuntimeFunction = 0;
+
+    const CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
+
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        QV4::Function *runtimeFunction = runtimeFunctions.at(i);
+        const CompiledData::Function *compiledFunction = data->functionAt(i);
+
+        runtimeFunction->compilationUnit = this;
+        runtimeFunction->compilationUnit->ref();
+        runtimeFunction->compiledFunction = compiledFunction;
+
+        if (compiledFunction == compiledRootFunction) {
+            assert(!rootRuntimeFunction);
+            rootRuntimeFunction = runtimeFunction;
+        }
+    }
+
+    return rootRuntimeFunction;
+}
+
 namespace {
 class ConvertTemps: protected V4IR::StmtVisitor, protected V4IR::ExprVisitor
 {
@@ -640,8 +663,7 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     , _as(0)
     , _locals(0)
 {
-    QV4::CompiledData::MasmCompilationUnit *masmUnit = new QV4::CompiledData::MasmCompilationUnit;
-    compilationUnit = masmUnit;
+    compilationUnit = new CompilationUnit;
 }
 
 InstructionSelection::~InstructionSelection()
@@ -734,12 +756,13 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     _as = oldAssembler;
 }
 
-void InstructionSelection::backendCompileStep()
+QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    QV4::CompiledData::MasmCompilationUnit *masmUnit = static_cast<QV4::CompiledData::MasmCompilationUnit*>(compilationUnit);
-    masmUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
+    compilationUnit->data = jsUnitGenerator.generateUnit();
+    compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
     foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
-        masmUnit->runtimeFunctions << _irToVM[irFunction];
+        compilationUnit->runtimeFunctions << _irToVM[irFunction];
+    return compilationUnit;
 }
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)

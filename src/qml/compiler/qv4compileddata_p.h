@@ -256,19 +256,6 @@ protected:
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
 };
 
-struct MasmCompilationUnit : public CompilationUnit
-{
-    virtual ~MasmCompilationUnit() {
-        // free all jitted code
-    }
-
-    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
-
-    // Coderef + execution engine
-
-    QList<QV4::Function *> runtimeFunctions;
-};
-
 struct MothCompilationUnit : public CompilationUnit
 {
     virtual ~MothCompilationUnit() {
