@@ -61,6 +61,8 @@ using namespace QQmlJS::V4IR;
 EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine, Module *module)
     : _engine(engine)
     , useFastLookups(true)
+    , jsUnitGenerator(engine, module)
+    , compilationUnit(0)
 {
     assert(engine);
     assert(module);
@@ -105,11 +107,26 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     return vmFunction;
 }
 
-QV4::Function *EvalInstructionSelection::vmFunction(Function *f) {
-    QV4::Function *function = _irToVM[f];
-    if (!function->code)
-        run(function, f);
-    return function;
+QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
+{
+    Function *rootFunction = jsUnitGenerator.irModule->rootFunction;
+    if (!rootFunction)
+        return 0;
+    for (QHash<V4IR::Function*, QV4::Function*>::Iterator it = _irToVM.begin(), end = _irToVM.end();
+         it != end; ++it) {
+        if (!(*it)->code)
+            run(it.value(), it.key());
+    }
+
+    compilationUnit->data = jsUnitGenerator.generateUnit();
+
+    for (QHash<V4IR::Function *, QV4::Function *>::Iterator it = _irToVM.begin(), end = _irToVM.end();
+         it != end; ++it) {
+        compilationUnit->ref();
+        (*it)->compilationUnit = compilationUnit;
+    }
+
+    return compilationUnit;
 }
 
 void IRDecoder::visitMove(V4IR::Move *s)

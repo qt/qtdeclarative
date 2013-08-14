@@ -50,6 +50,7 @@
 #include <config.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 #include "qv4value_def_p.h"
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,6 +91,7 @@ struct Function {
     int refCount;
     String *name;
 
+    CompiledData::CompilationUnit *compilationUnit;
     Value (*code)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     JSC::MacroAssemblerCodeRef codeRef;
@@ -117,6 +119,7 @@ struct Function {
     Function(ExecutionEngine *engine, String *name)
         : refCount(0)
         , name(name)
+        , compilationUnit(0)
         , code(0)
         , codeData(0)
         , codeSize(0)

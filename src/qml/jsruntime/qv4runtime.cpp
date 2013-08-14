@@ -1245,6 +1245,18 @@ void __qmljs_decrement(Value *result, const Value &value)
     }
 }
 
+String *__qmljs_resolve_string(ExecutionContext *ctx, int stringId)
+{
+    QV4::CallContext *callCtx = ctx->asCallContext();
+    QV4::Function *fun = callCtx ? callCtx->function->function : ctx->engine->globalCode;
+    return fun->compilationUnit->runtimeIdentifiers[stringId];
+}
+
+void __qmljs_resolve_string_as_value(ExecutionContext *ctx, Value *result, int stringId)
+{
+    *result = Value::fromString(__qmljs_resolve_string(ctx, stringId));
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

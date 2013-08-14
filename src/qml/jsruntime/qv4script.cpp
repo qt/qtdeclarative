@@ -174,14 +174,13 @@ void Script::parse()
                 inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
         Codegen cg(scope, strictMode);
-        V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module,
-                                          parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
+        cg(sourceFile, sourceCode, program, &module,
+           parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
         if (inheritContext)
             isel->setUseFastLookups(false);
-        if (globalIRCode) {
-            vmFunction = isel->vmFunction(globalIRCode);
-        }
+        QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+        vmFunction = compilationUnit->linkToEngine(v4);
     }
 
     if (!vmFunction)

@@ -54,13 +54,15 @@ using namespace QV4;
 Function::~Function()
 {
     engine->functions.remove(engine->functions.indexOf(this));
-    UnwindHelper::deregisterFunction(this);
+    UnwindHelper::deregisterFunction(this); // ### move to masm compilation unit
 
     Q_ASSERT(!refCount);
     delete[] codeData;
     delete[] lookups;
     foreach (Function *f, nestedFunctions)
         f->deref();
+    if (compilationUnit)
+        compilationUnit->deref();
 }
 
 void Function::mark()

@@ -211,10 +211,11 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
     QQmlJS::V4IR::Module module;
 
     QQmlJS::Codegen cg(v4->current, f->strictMode);
-    QQmlJS::V4IR::Function *irf = cg(QString(), function, fe, &module);
+    cg(QString(), function, fe, &module);
 
     QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
-    QV4::Function *vmf = isel->vmFunction(irf);
+    QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+    QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
     return Value::fromObject(v4->newScriptFunction(v4->rootContext, vmf));
 }

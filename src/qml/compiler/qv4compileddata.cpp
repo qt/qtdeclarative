@@ -41,6 +41,7 @@
 
 #include "qv4compileddata_p.h"
 #include "qv4jsir_p.h"
+#include <private/qv4engine_p.h>
 
 namespace QV4 {
 
@@ -51,6 +52,28 @@ int Function::calculateSize(QQmlJS::V4IR::Function *f)
     return calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size());
 }
 
+CompilationUnit::~CompilationUnit()
+{
+    free(data);
+    free(runtimeIdentifiers);
+}
+
+QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
+{
+    assert(!runtimeIdentifiers);
+    assert(data);
+    runtimeIdentifiers = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
+    for (int i = 0; i < data->stringTableSize; ++i)
+        runtimeIdentifiers[i] = engine->newIdentifier(data->stringAt(i)->qString());
+
+    return linkBackendToEngine(engine);
+}
+
+// ### Move to masm
+QV4::Function *MasmCompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
+{
+    return rootFunction;
+}
 
 }
 

@@ -423,7 +423,7 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    QV4::Function *vmFunc = vmFunction(closure->value);
+    QV4::Function *vmFunc = _irToVM[closure->value];
     assert(vmFunc);
     Instruction::LoadClosure load;
     load.value = vmFunc;

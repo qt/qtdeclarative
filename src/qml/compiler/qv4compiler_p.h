@@ -43,7 +43,6 @@
 
 #include <QtCore/qstring.h>
 #include "qv4jsir_p.h"
-#include <qv4isel_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,7 +58,6 @@ struct JSUnitGenerator {
     JSUnitGenerator(QV4::ExecutionEngine *engine, QQmlJS::V4IR::Module *module);
 
     QQmlJS::V4IR::Module *irModule;
-    QQmlJS::EvalInstructionSelection *isel;
 
     int registerString(const QString &str);
     int getStringId(const QString &string) const;

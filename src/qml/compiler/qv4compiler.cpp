@@ -48,7 +48,6 @@ QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::ExecutionEngine *engine, QQ
     : irModule(module)
     , stringDataSize(0)
 {
-    isel = engine->iselFactory->create(engine, irModule);
 }
 
 int QV4::Compiler::JSUnitGenerator::registerString(const QString &str)
@@ -125,6 +124,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     writeFunction(f, irModule->rootFunction);
     ++functionTable;
     f += QV4::CompiledData::Function::calculateSize(irModule->rootFunction);
+    unit->indexOfRootFunction = 0;
 
     for (uint i = 0; i < irModule->functions.size(); ++i) {
         QQmlJS::V4IR::Function *function = irModule->functions.at(i);

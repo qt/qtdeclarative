@@ -44,6 +44,8 @@
 
 #include "private/qv4global_p.h"
 #include "qv4jsir_p.h"
+#include <private/qv4compileddata_p.h>
+#include <private/qv4compiler_p.h>
 
 #include <qglobal.h>
 #include <QHash>
@@ -63,7 +65,7 @@ public:
     EvalInstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
-    QV4::Function *vmFunction(V4IR::Function *f);
+    QV4::CompiledData::CompilationUnit *compile();
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
@@ -72,11 +74,15 @@ protected:
     QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
 
+    int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
+
 private:
     QV4::ExecutionEngine *_engine;
-    QHash<V4IR::Function *, QV4::Function *> _irToVM;
 protected:
+    QHash<V4IR::Function *, QV4::Function *> _irToVM;
     bool useFastLookups;
+    QV4::Compiler::JSUnitGenerator jsUnitGenerator;
+    QV4::CompiledData::CompilationUnit *compilationUnit; // subclass ctor needs to initialize.
 };
 
 class Q_QML_EXPORT EvalISelFactory

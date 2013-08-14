@@ -640,6 +640,9 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     , _as(0)
     , _locals(0)
 {
+    QV4::CompiledData::MasmCompilationUnit *masmUnit = new QV4::CompiledData::MasmCompilationUnit;
+    compilationUnit = masmUnit;
+    masmUnit->rootFunction = _irToVM[module->rootFunction];
 }
 
 InstructionSelection::~InstructionSelection()
@@ -1003,8 +1006,8 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    Value v = Value::fromString(identifier(str));
-    _as->storeValue(v, targetTemp);
+    int id = stringId(str);
+    generateFunctionCall(Assembler::Void, __qmljs_resolve_string_as_value, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp), Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
@@ -1035,7 +1038,7 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    QV4::Function *vmFunc = vmFunction(closure->value);
+    QV4::Function *vmFunc = _irToVM[closure->value];
     assert(vmFunc);
     generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImmPtr(vmFunc));
 }

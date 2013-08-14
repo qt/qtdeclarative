@@ -56,9 +56,12 @@ struct Function;
 
 namespace QV4 {
 
+struct Function;
 struct ExecutionContext;
 
 namespace CompiledData {
+
+struct String;
 
 static const char magic_str[] = "qv4cdata";
 
@@ -77,6 +80,13 @@ struct Unit
     uint offsetToStringTable;
     uint functionTableSize;
     uint offsetToFunctionTable;
+    uint indexOfRootFunction;
+
+    const String *stringAt(int idx) const {
+        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
+        const uint offset = offsetTable[idx];
+        return reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+    }
 
     static int calculateSize(uint nStrings, uint nFunctions) { return (sizeof(Unit) + (nStrings + nFunctions) * sizeof(uint) + 7) & ~7; }
 };
@@ -109,6 +119,11 @@ struct String
     quint32 flags; // isArrayIndex
     QArrayData str;
     // uint16 strdata[]
+
+    QString qString() const {
+        QStringDataPtr holder { const_cast<QStringData *>(static_cast<const QStringData*>(&str)) };
+        return QString(holder);
+    }
 
     static int calculateSize(const QString &str) {
         return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
@@ -201,11 +216,29 @@ struct QmlUnit
 
 struct CompilationUnit
 {
+    CompilationUnit()
+        : refCount(0)
+        , data(0)
+        , runtimeIdentifiers(0)
+    {}
     virtual ~CompilationUnit();
+
+    void ref() { ++refCount; }
+    void deref() { if (!--refCount) delete this; }
+
+    int refCount;
     Unit *data;
+
+    QV4::String **runtimeIdentifiers; // Array
+
+    QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
+
 
     // ### runtime data
     // pointer to qml data for QML unit
+
+protected:
+    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
 };
 
 struct MasmCompilationUnit : public CompilationUnit
@@ -214,8 +247,12 @@ struct MasmCompilationUnit : public CompilationUnit
         // free all jitted code
     }
 
+    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
+
     // Coderef + execution engine
 
+    // ### remove
+    QV4::Function *rootFunction;
 };
 
 struct MothCompilationUnit : public CompilationUnit
