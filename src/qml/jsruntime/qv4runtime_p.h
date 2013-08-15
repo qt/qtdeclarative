@@ -126,8 +126,7 @@ void __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::Value *array,
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::Value &object, QV4::String *name, const QV4::Value *getter, const QV4::Value *setter);
 void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, QV4::InternalClass *klass);
 
-QV4::String *__qmljs_resolve_string(QV4::ExecutionContext *ctx, int stringId);
-void __qmljs_resolve_string_as_value(QV4::ExecutionContext *ctx, QV4::Value *result, int stringId);
+void __qmljs_value_from_string(QV4::Value *result, QV4::String *string);
 
 // constructors
 void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::Value *result, QV4::Function *clos);

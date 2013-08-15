@@ -239,7 +239,7 @@ struct CompilationUnit
     CompilationUnit()
         : refCount(0)
         , data(0)
-        , runtimeIdentifiers(0)
+        , runtimeStrings(0)
     {}
     virtual ~CompilationUnit();
 
@@ -251,7 +251,7 @@ struct CompilationUnit
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex)->qString(); }
 
-    QV4::String **runtimeIdentifiers; // Array
+    QV4::String **runtimeStrings; // Array
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 

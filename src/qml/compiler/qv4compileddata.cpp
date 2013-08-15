@@ -56,16 +56,16 @@ int Function::calculateSize(QQmlJS::V4IR::Function *f)
 CompilationUnit::~CompilationUnit()
 {
     free(data);
-    free(runtimeIdentifiers);
+    free(runtimeStrings);
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 {
-    assert(!runtimeIdentifiers);
+    assert(!runtimeStrings);
     assert(data);
-    runtimeIdentifiers = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
+    runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
     for (int i = 0; i < data->stringTableSize; ++i)
-        runtimeIdentifiers[i] = engine->newIdentifier(data->stringAt(i)->qString());
+        runtimeStrings[i] = engine->newIdentifier(data->stringAt(i)->qString());
 
     return linkBackendToEngine(engine);
 }

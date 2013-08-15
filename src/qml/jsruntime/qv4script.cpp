@@ -201,17 +201,20 @@ Value Script::run()
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         bool strict = scope->strictMode;
-        Lookup *lookups = scope->lookups;
+        Lookup *oldLookups = scope->lookups;
+        String **oldRuntimeStrings = scope->runtimeStrings;
 
         scope->strictMode = vmFunction->isStrict();
         scope->lookups = vmFunction->lookups;
+        scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
         QV4::Value result;
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
         } catch (Exception &e) {
             scope->strictMode = strict;
-            scope->lookups = lookups;
+            scope->lookups = oldLookups;
+            scope->runtimeStrings = oldRuntimeStrings;
             throw;
         }
 

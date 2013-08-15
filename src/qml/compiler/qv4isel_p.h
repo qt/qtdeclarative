@@ -69,13 +69,13 @@ public:
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
+    int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
+
 protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
     QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() { return 0; }
-
-    int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
 
 private:
     QV4::ExecutionEngine *_engine;

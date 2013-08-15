@@ -208,8 +208,8 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine)
-    : _function(function), _vmFunction(vmFunction), _engine(engine), _nextBlock(0)
+Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine)
+    : _function(function), _vmFunction(vmFunction), _isel(isel), _engine(engine), _nextBlock(0)
 {
 }
 
@@ -279,6 +279,13 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
         Q_UNIMPLEMENTED();
     }
     return Pointer(reg, offset);
+}
+
+Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
+{
+    loadPtr(Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, runtimeStrings)), reg);
+    const int id = _isel->stringId(string);
+    return Pointer(reg, id * sizeof(QV4::String*));
 }
 
 template <typename Result, typename Source>
@@ -691,7 +698,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_lookups, lookups);
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(_function, _vmFunction, engine());
+    _as = new Assembler(this, _function, _vmFunction, engine());
 
     V4IR::Optimizer opt(_function);
     opt.run();
@@ -1052,8 +1059,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    int id = stringId(str);
-    generateFunctionCall(Assembler::Void, __qmljs_resolve_string_as_value, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp), Assembler::TrustedImm32(id));
+    generateFunctionCall(Assembler::Void, __qmljs_value_from_string, Assembler::PointerToValue(targetTemp), Assembler::PointerToString(str));
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)

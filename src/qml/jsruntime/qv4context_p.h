@@ -94,6 +94,7 @@ struct Q_QML_EXPORT ExecutionContext
     ExecutionContext *parent;
     ExecutionContext *outer;
     Lookup *lookups;
+    String **runtimeStrings;
     ExecutionContext *next; // used in the GC
 
     struct EvalCode
@@ -115,6 +116,7 @@ struct Q_QML_EXPORT ExecutionContext
         parent = parentContext;
         outer = 0;
         lookups = 0;
+        runtimeStrings = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
     }

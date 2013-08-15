@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace MASM {
 
+class InstructionSelection;
+
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
@@ -74,7 +76,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine);
+    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -258,6 +260,10 @@ public:
         PointerToValue(V4IR::Temp *value) : value(value) {}
         V4IR::Temp *value;
     };
+    struct PointerToString {
+        explicit PointerToString(const QString &string) : string(string) {}
+        QString string;
+    };
     struct Reference {
         Reference(V4IR::Temp *value) : value(value) {}
         V4IR::Temp *value;
@@ -287,6 +293,7 @@ public:
     void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
+    Pointer loadStringAddress(RegisterID reg, const QString &string);
 
     void loadArgumentInRegister(RegisterID source, RegisterID dest)
     {
@@ -311,6 +318,11 @@ public:
             Pointer addr = loadTempAddress(dest, temp.value);
             loadArgumentInRegister(addr, dest);
         }
+    }
+    void loadArgumentInRegister(PointerToString temp, RegisterID dest)
+    {
+        Pointer addr = loadStringAddress(dest, temp.string);
+        loadPtr(addr, dest);
     }
 
     void loadArgumentInRegister(Reference temp, RegisterID dest)
@@ -429,6 +441,14 @@ public:
         } else {
             poke(TrustedImmPtr(0), StackSlot);
         }
+    }
+
+    template <int StackSlot>
+    void loadArgumentOnStack(PointerToString temp)
+    {
+        Pointer ptr = loadStringAddress(ScratchRegister, temp.string);
+        loadPtr(ptr, ScratchRegister);
+        poke(ScratchRegister, StackSlot);
     }
 
     template <int StackSlot>
@@ -780,6 +800,7 @@ private:
     V4IR::BasicBlock *_nextBlock;
 
     QV4::ExecutionEngine *_engine;
+    InstructionSelection *_isel;
 
     struct CodeLineNumerMapping
     {

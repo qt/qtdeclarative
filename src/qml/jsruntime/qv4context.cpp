@@ -138,6 +138,7 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
     thisObject = p->thisObject;
     outer = p;
     lookups = p->lookups;
+    runtimeStrings = p->runtimeStrings;
 
     withObject = with;
 }
@@ -149,6 +150,7 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     thisObject = p->thisObject;
     outer = p;
     lookups = p->lookups;
+    runtimeStrings = p->runtimeStrings;
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
@@ -172,8 +174,10 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
 
     activation = 0;
 
-    if (function->function)
+    if (function->function) {
         lookups = function->function->lookups;
+        runtimeStrings = function->function->compilationUnit->runtimeStrings;
+    }
 
     uint argc = argumentCount;
 
@@ -220,6 +224,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
     activation = qml;
 
     lookups = function->function->lookups;
+    runtimeStrings = function->function->compilationUnit->runtimeStrings;
 
     locals = (Value *)(this + 1);
     if (function->varCount)
