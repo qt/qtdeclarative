@@ -1,5 +1,5 @@
 CONFIG += testcase
-QT += core-private v8-private qml-private testlib
+QT += core-private qml-private testlib
 TEMPLATE = app
 TARGET = tst_pointers
 macx:CONFIG -= app_bundle
