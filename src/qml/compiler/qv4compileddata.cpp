@@ -56,6 +56,7 @@ int Function::calculateSize(QQmlJS::V4IR::Function *f)
 
 CompilationUnit::~CompilationUnit()
 {
+    engine->compilationUnits.erase(engine->compilationUnits.find(this));
     free(data);
     free(runtimeStrings);
     delete [] runtimeLookups;
@@ -63,6 +64,9 @@ CompilationUnit::~CompilationUnit()
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 {
+    this->engine = engine;
+    engine->compilationUnits.insert(this);
+
     assert(!runtimeStrings);
     assert(data);
     runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
@@ -91,6 +95,12 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     return linkBackendToEngine(engine);
+}
+
+void CompilationUnit::markObjects()
+{
+    for (int i = 0; i < data->stringTableSize; ++i)
+        runtimeStrings[i]->mark();
 }
 
 }

@@ -256,6 +256,7 @@ struct CompilationUnit
 {
     CompilationUnit()
         : refCount(0)
+        , engine(0)
         , data(0)
         , runtimeStrings(0)
         , runtimeLookups(0)
@@ -266,6 +267,7 @@ struct CompilationUnit
     void deref() { if (!--refCount) delete this; }
 
     int refCount;
+    ExecutionEngine *engine;
     Unit *data;
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex)->qString(); }
@@ -279,6 +281,8 @@ struct CompilationUnit
 
     // ### runtime data
     // pointer to qml data for QML unit
+
+    void markObjects();
 
 protected:
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

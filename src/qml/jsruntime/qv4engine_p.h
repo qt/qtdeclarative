@@ -60,6 +60,9 @@ namespace QV4 {
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
+namespace CompiledData {
+struct CompilationUnit;
+}
 }
 
 namespace QV4 {
@@ -200,6 +203,8 @@ struct Q_QML_EXPORT ExecutionEngine
 
     mutable QVector<Function *> functions;
     mutable bool functionsNeedSort;
+
+    QSet<CompiledData::CompilationUnit*> compilationUnits;
 
     quint32 m_engineId;
 
