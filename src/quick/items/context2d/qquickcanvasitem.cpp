@@ -597,7 +597,7 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &
         emit canvasWindowChanged();
     }
 
-    if (d->available)
+    if (d->available && newSize != oldGeometry.size())
         requestPaint();
 }
 
