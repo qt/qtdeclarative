@@ -899,7 +899,6 @@ protected:
         return argumentAddressForCall(0);
     }
 
-    QV4::String *identifier(const QString &s);
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);

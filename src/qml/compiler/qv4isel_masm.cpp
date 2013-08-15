@@ -1008,7 +1008,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 
         bool isData = it->expr->asConst()->value;
         it = it->next;
-        klass = klass->addMember(identifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
+        klass = klass->addMember(engine()->newIdentifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
 
         _as->copyValue(argumentAddressForCall(argc++), it->expr);
 
@@ -1280,13 +1280,6 @@ void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
     // FIXME: do something more useful with this info
     copyValue(source, target);
-}
-
-String *InstructionSelection::identifier(const QString &s)
-{
-    String *str = engine()->newIdentifier(s);
-    _vmFunction->identifiers.append(str);
-    return str;
 }
 
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
