@@ -47,6 +47,7 @@
 #include "qv4function_p.h"
 #include "qv4mm_p.h"
 #include "qv4exception_p.h"
+#include "qv4arrayobject_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -255,34 +256,36 @@ Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
 
 Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
-    Value thisArg = ctx->argument(0);
-
-    Value arg = ctx->argument(1);
-    QVector<Value> args;
-
-    if (Object *arr = arg.asObject()) {
-        quint32 len = arr->get(ctx->engine->id_length).toUInt32();
-        for (quint32 i = 0; i < len; ++i) {
-            Value a = arr->getIndexed(i);
-            args.append(a);
-        }
-    } else if (!(arg.isUndefined() || arg.isNull())) {
-        ctx->throwTypeError();
-        return Value::undefinedValue();
-    }
-
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    return o->call(thisArg, args.data(), args.size());
+    Value thisArg = ctx->argument(0);
+    Value arg = ctx->argument(1);
+
+    Object *arr = arg.asObject();
+
+    if (!arr) {
+        if (!(arg.isUndefined() || arg.isNull())) {
+            ctx->throwTypeError();
+            return Value::undefinedValue();
+        }
+    }
+    quint32 len = arr ? arr->get(ctx->engine->id_length).toUInt32() : 0;
+
+    QVarLengthArray<Value, 32> args(len);
+    for (quint32 i = 0; i < len; ++i)
+        args[i] = arr->getIndexed(i);
+
+
+    return o->call(thisArg, len ? args.data() : 0, len);
 }
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
-    QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
+    QVarLengthArray<Value, 32> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
     if (ctx->argumentCount)
         qCopy(ctx->arguments + 1,
               ctx->arguments + ctx->argumentCount, args.begin());
