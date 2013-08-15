@@ -83,6 +83,7 @@ struct Unit
     uint functionTableSize;
     uint offsetToFunctionTable;
     uint indexOfRootFunction;
+    quint32 sourceFileIndex;
 
     const String *stringAt(int idx) const {
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
@@ -111,7 +112,6 @@ struct Function
     QV4::Value (*code)(ExecutionContext *, const uchar *);
     quint32 index; // in CompilationUnit's function table
     quint32 nameIndex;
-    quint32 sourceFileIndex;
     qint64 flags;
     quint32 nFormals;
     quint32 formalsOffset;
@@ -245,6 +245,8 @@ struct CompilationUnit
 
     int refCount;
     Unit *data;
+
+    QString fileName() const { return data->stringAt(data->sourceFileIndex)->qString(); }
 
     QV4::String **runtimeIdentifiers; // Array
 

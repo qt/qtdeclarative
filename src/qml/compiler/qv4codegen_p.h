@@ -420,7 +420,6 @@ protected:
     void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
 private:
-    QString _fileName;
     Result _expr;
     QString _property;
     UiMember _uiMember;

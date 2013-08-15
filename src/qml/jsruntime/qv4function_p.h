@@ -130,7 +130,7 @@ struct Function {
         nestedFunctions.append(f);
     }
 
-    inline QString sourceFile() const { return compilationUnit->data->stringAt(compiledFunction->sourceFileIndex)->qString(); }
+    inline QString sourceFile() const { return compilationUnit->fileName(); }
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }

@@ -610,6 +610,15 @@ Module::~Module()
     }
 }
 
+void Module::setFileName(const QString &name)
+{
+    if (fileName.isEmpty())
+        fileName = name;
+    else {
+        Q_ASSERT(fileName == name);
+    }
+}
+
 Function::~Function()
 {
     // destroy the Stmt::Data blocks manually, because memory pool cleanup won't

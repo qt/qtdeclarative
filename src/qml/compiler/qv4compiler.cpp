@@ -69,9 +69,9 @@ int QV4::Compiler::JSUnitGenerator::getStringId(const QString &string) const
 
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
+    registerString(irModule->fileName);
     foreach (QQmlJS::V4IR::Function *f, irModule->functions) {
         registerString(*f->name);
-        registerString(f->sourceFile);
         for (int i = 0; i < f->formals.size(); ++i)
             registerString(*f->formals.at(i));
         for (int i = 0; i < f->locals.size(); ++i)
@@ -98,6 +98,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToStringTable = sizeof(QV4::CompiledData::Unit);
     unit->functionTableSize = irModule->functions.size();
     unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+    unit->sourceFileIndex = getStringId(irModule->fileName);
 
     // write strings and string table
     uint *stringTable = (uint *)(data + unit->offsetToStringTable);
@@ -141,7 +142,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
     function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
-    function->sourceFileIndex = getStringId(irFunction->sourceFile);
     function->flags = 0;
     if (irFunction->hasDirectEval)
         function->flags |= CompiledData::Function::HasDirectEval;

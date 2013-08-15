@@ -490,9 +490,10 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
 {
     assert(node);
 
-    _fileName = fileName;
     _module = module;
     _env = 0;
+
+    _module->setFileName(fileName);
 
     ScanFunctions scan(this, sourceCode);
     scan(node);
@@ -510,8 +511,8 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
                                   AST::FunctionExpression *ast,
                                   V4IR::Module *module)
 {
-    _fileName = fileName;
     _module = module;
+    _module->setFileName(fileName);
     _env = 0;
 
     ScanFunctions scan(this, sourceCode);
@@ -1808,7 +1809,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterEnvironment(ast);
     V4IR::Function *function = _module->newFunction(name, _function);
-    function->sourceFile = _fileName;
 
     V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock());
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
@@ -2581,7 +2581,7 @@ void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
     QV4::DiagnosticMessage *msg = new QV4::DiagnosticMessage;
-    msg->fileName = _fileName;
+    msg->fileName = _module->fileName;
     msg->offset = loc.begin();
     msg->startLine = loc.startLine;
     msg->startColumn = loc.startColumn;
@@ -2597,7 +2597,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
     if (_context)
-        _context->throwReferenceError(QV4::Value::fromString(_context, detail), _fileName, loc.startLine);
+        _context->throwReferenceError(QV4::Value::fromString(_context, detail), _module->fileName, loc.startLine);
     else if (_errorHandler)
         throwSyntaxError(loc, detail);
     else
