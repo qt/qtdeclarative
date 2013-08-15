@@ -43,6 +43,7 @@
 #include "qv4jsir_p.h"
 #include <private/qv4engine_p.h>
 #include <private/qv4function_p.h>
+#include <private/qv4lookup_p.h>
 
 namespace QV4 {
 
@@ -57,6 +58,7 @@ CompilationUnit::~CompilationUnit()
 {
     free(data);
     free(runtimeStrings);
+    delete [] runtimeLookups;
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -66,6 +68,27 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i)->qString());
+
+    if (data->lookupTableSize) {
+        runtimeLookups = new QV4::Lookup[data->lookupTableSize];
+        const CompiledData::Lookup *compiledLookups = data->lookupTable();
+        for (uint i = 0; i < data->lookupTableSize; ++i) {
+            QV4::Lookup *l = runtimeLookups + i;
+
+            if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_Getter)
+                l->getter = QV4::Lookup::getterGeneric;
+            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_Setter)
+                l->setter = QV4::Lookup::setterGeneric;
+            else if (compiledLookups[i].type_and_flags == CompiledData::Lookup::Type_GlobalGetter)
+                l->globalGetter = QV4::Lookup::globalGetterGeneric;
+
+            for (int i = 0; i < QV4::Lookup::Size; ++i)
+                l->classList[i] = 0;
+            l->level = -1;
+            l->index = UINT_MAX;
+            l->name = runtimeStrings[compiledLookups[i].nameIndex];
+        }
+    }
 
     return linkBackendToEngine(engine);
 }

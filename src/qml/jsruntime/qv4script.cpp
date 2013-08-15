@@ -205,7 +205,7 @@ Value Script::run()
         String **oldRuntimeStrings = scope->runtimeStrings;
 
         scope->strictMode = vmFunction->isStrict();
-        scope->lookups = vmFunction->lookups;
+        scope->lookups = vmFunction->compilationUnit->runtimeLookups;
         scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
         QV4::Value result;

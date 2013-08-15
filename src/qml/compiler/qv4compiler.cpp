@@ -67,6 +67,33 @@ int QV4::Compiler::JSUnitGenerator::getStringId(const QString &string) const
     return stringToId.value(string);
 }
 
+uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_Getter;
+    l.nameIndex = registerString(name);
+    lookups << l;
+    return lookups.size() - 1;
+}
+
+uint QV4::Compiler::JSUnitGenerator::registerSetterLookup(const QString &name)
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_Setter;
+    l.nameIndex = registerString(name);
+    lookups << l;
+    return lookups.size() - 1;
+}
+
+uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(const QString &name)
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_GlobalGetter;
+    l.nameIndex = registerString(name);
+    lookups << l;
+    return lookups.size() - 1;
+}
+
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
     registerString(irModule->fileName);
@@ -87,7 +114,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionDataSize += QV4::CompiledData::Function::calculateSize(f);
     }
 
-    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize);
+    const uint lookupDataSize = CompiledData::Lookup::calculateSize() * lookups.count();
+
+    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize + lookupDataSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
 
     memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
@@ -98,6 +127,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToStringTable = sizeof(QV4::CompiledData::Unit);
     unit->functionTableSize = irModule->functions.size();
     unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+    unit->lookupTableSize = lookups.count();
+    unit->offsetToLookupTable = unitSize + stringDataSize + functionDataSize;
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
     // write strings and string table
@@ -133,6 +164,10 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         writeFunction(f, i, function);
         f += QV4::CompiledData::Function::calculateSize(function);
     }
+
+    CompiledData::Lookup *lookupsToWrite = (CompiledData::Lookup*)(data + unit->offsetToLookupTable);
+    foreach (const CompiledData::Lookup &l, lookups)
+        *lookupsToWrite++ = l;
 
     return unit;
 }

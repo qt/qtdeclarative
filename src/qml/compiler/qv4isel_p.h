@@ -70,6 +70,9 @@ public:
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
     int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
+    uint registerGetterLookup(const QString &str) { return jsUnitGenerator.registerGetterLookup(str); }
+    uint registerSetterLookup(const QString &str) { return jsUnitGenerator.registerSetterLookup(str); }
+    uint registerGlobalGetterLookup(const QString &str) { return jsUnitGenerator.registerGlobalGetterLookup(str); }
 
 protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);

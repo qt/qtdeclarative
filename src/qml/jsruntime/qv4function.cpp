@@ -58,7 +58,6 @@ Function::~Function()
 
     Q_ASSERT(!refCount);
     delete[] codeData;
-    delete[] lookups;
     foreach (Function *f, nestedFunctions)
         f->deref();
     if (compilationUnit)

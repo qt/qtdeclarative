@@ -923,10 +923,6 @@ private:
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
-    uint addLookup(QV4::String *name);
-    uint addSetterLookup(QV4::String *name);
-    uint addGlobalLookup(QV4::String *name);
-
     template <typename Arg1, typename Arg2>
     void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
@@ -950,7 +946,6 @@ private:
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
     QV4::Function* _vmFunction;
-    QVector<QV4::Lookup> _lookups;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
     int _locals;

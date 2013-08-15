@@ -64,6 +64,7 @@ namespace CompiledData {
 
 struct String;
 struct Function;
+struct Lookup;
 
 static const char magic_str[] = "qv4cdata";
 
@@ -82,6 +83,8 @@ struct Unit
     uint offsetToStringTable;
     uint functionTableSize;
     uint offsetToFunctionTable;
+    uint lookupTableSize;
+    uint offsetToLookupTable;
     uint indexOfRootFunction;
     quint32 sourceFileIndex;
 
@@ -96,6 +99,8 @@ struct Unit
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const Function*>(reinterpret_cast<const char *>(this) + offset);
     }
+
+    const Lookup *lookupTable() const { return reinterpret_cast<const Lookup*>(reinterpret_cast<const char *>(this) + offsetToLookupTable); }
 
     static int calculateSize(uint nStrings, uint nFunctions) { return (sizeof(Unit) + (nStrings + nFunctions) * sizeof(uint) + 7) & ~7; }
 };
@@ -150,6 +155,19 @@ struct String
     }
 };
 
+struct Lookup
+{
+    enum Type {
+        Type_Getter = 0x0,
+        Type_Setter = 0x1,
+        Type_GlobalGetter = 2
+    };
+
+    quint32 type_and_flags;
+    quint32 nameIndex;
+
+    static int calculateSize() { return sizeof(Lookup); }
+};
 
 // Qml data structures
 
@@ -240,6 +258,7 @@ struct CompilationUnit
         : refCount(0)
         , data(0)
         , runtimeStrings(0)
+        , runtimeLookups(0)
     {}
     virtual ~CompilationUnit();
 
@@ -252,6 +271,7 @@ struct CompilationUnit
     QString fileName() const { return data->stringAt(data->sourceFileIndex)->qString(); }
 
     QV4::String **runtimeStrings; // Array
+    QV4::Lookup *runtimeLookups;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 

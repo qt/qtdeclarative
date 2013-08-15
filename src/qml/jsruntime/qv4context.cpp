@@ -175,7 +175,7 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
     activation = 0;
 
     if (function->function) {
-        lookups = function->function->lookups;
+        lookups = function->function->compilationUnit->runtimeLookups;
         runtimeStrings = function->function->compilationUnit->runtimeStrings;
     }
 
@@ -223,7 +223,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     activation = qml;
 
-    lookups = function->function->lookups;
+    lookups = function->function->compilationUnit->runtimeLookups;
     runtimeStrings = function->function->compilationUnit->runtimeStrings;
 
     locals = (Value *)(this + 1);

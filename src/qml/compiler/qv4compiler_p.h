@@ -50,6 +50,7 @@ namespace QV4 {
 
 namespace CompiledData {
 struct Unit;
+struct Lookup;
 }
 
 namespace Compiler {
@@ -62,13 +63,18 @@ struct JSUnitGenerator {
     int registerString(const QString &str);
     int getStringId(const QString &string) const;
 
+    uint registerGetterLookup(const QString &name);
+    uint registerSetterLookup(const QString &name);
+    uint registerGlobalGetterLookup(const QString &name);
+
     QV4::CompiledData::Unit *generateUnit();
     void writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
 
     QHash<QString, int> stringToId;
     QStringList strings;
-    QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
     int stringDataSize;
+    QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
+    QList<CompiledData::Lookup> lookups;
 };
 
 }

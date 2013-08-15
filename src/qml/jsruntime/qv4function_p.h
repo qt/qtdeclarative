@@ -102,8 +102,6 @@ struct Function {
     QVector<String *> identifiers;
     QVector<Function *> nestedFunctions;
 
-    Lookup *lookups;
-
     QVector<LineNumberMapping> lineNumberMappings;
 
     ExecutionEngine *engine;
@@ -116,7 +114,6 @@ struct Function {
         , code(0)
         , codeData(0)
         , codeSize(0)
-        , lookups(0)
         , engine(engine)
     {}
     ~Function();
