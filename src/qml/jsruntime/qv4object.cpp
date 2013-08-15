@@ -298,6 +298,9 @@ Property *Object::insertMember(String *s, PropertyAttributes attributes)
     uint idx;
     internalClass = internalClass->addMember(s, attributes, &idx);
 
+    if (attributes.isAccessor())
+        hasAccessorProperty = 1;
+
     if (idx >= memberDataAlloc) {
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
         Property *newMemberData = new Property[memberDataAlloc];
@@ -912,6 +915,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             cattrs->setWritable(false);
         if (!succeeded)
             goto reject;
+        if (attrs.isAccessor())
+            hasAccessorProperty = 1;
         return true;
     }
 
@@ -1049,6 +1054,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, Str
         if (arrayAttributes)
             arrayAttributes[current - arrayData] = cattrs;
     }
+    if (attrs.isAccessor())
+        hasAccessorProperty = 1;
     return true;
   reject:
     if (ctx->strictMode)
@@ -1067,27 +1074,7 @@ void Object::copyArrayData(Object *other)
 {
     Q_ASSERT(isArrayObject());
 
-    bool protoHasArray = false;
-    Object *p = other;
-    while ((p = p->prototype))
-        if (p->arrayDataLen)
-            protoHasArray = true;
-
-    bool arrayHasGetter = false;
-    if (!protoHasArray && other->arrayAttributes) {
-        for (uint i = 0; i < other->arrayDataLen; ++i) {
-            if (other->arrayAttributes[i].isAccessor()) {
-                const Property &pd = other->arrayData[i];
-                FunctionObject *getter = pd.getter();
-                if (getter) {
-                    arrayHasGetter = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (protoHasArray || arrayHasGetter) {
+    if (other->protoHasArray() || other->hasAccessorProperty) {
         uint len = other->arrayLength();
         Q_ASSERT(len);
 
@@ -1113,13 +1100,7 @@ void Object::copyArrayData(Object *other)
 
 Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
-    bool protoHasArray = false;
-    Object *p = o;
-    while ((p = p->prototype))
-        if (p->arrayDataLen)
-            protoHasArray = true;
-
-    if (protoHasArray || o->arrayAttributes) {
+    if (o->protoHasArray() || o->arrayAttributes) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;

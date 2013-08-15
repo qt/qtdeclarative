@@ -269,13 +269,7 @@ Value ArrayPrototype::method_push(SimpleCallContext *ctx)
         return Value::fromDouble(newLen);
     }
 
-    bool protoHasArray = false;
-    Object *p = instance;
-    while ((p = p->prototype))
-        if (p->arrayDataLen)
-            protoHasArray = true;
-
-    if (!protoHasArray && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         for (uint i = 0; i < ctx->argumentCount; ++i) {
             Value v = ctx->argument(i);
 
@@ -349,13 +343,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
 
     Value result = front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Value::undefinedValue();
 
-    bool protoHasArray = false;
-    Object *p = instance;
-    while ((p = p->prototype))
-        if (p->arrayDataLen)
-            protoHasArray = true;
-
-    if (!protoHasArray && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         if (!instance->sparseArray) {
             if (instance->arrayDataLen) {
                 ++instance->arrayOffset;
@@ -502,13 +490,7 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
-    bool protoHasArray = false;
-    Object *p = instance;
-    while ((p = p->prototype))
-        if (p->arrayDataLen)
-            protoHasArray = true;
-
-    if (!protoHasArray && instance->arrayDataLen <= len) {
+    if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         for (int i = ctx->argumentCount - 1; i >= 0; --i) {
             Value v = ctx->argument(i);
 

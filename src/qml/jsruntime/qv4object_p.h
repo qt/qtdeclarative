@@ -223,6 +223,8 @@ public:
     void setArrayLengthUnchecked(uint l);
 
     Property *arrayInsert(uint index, PropertyAttributes attributes = Attr_Data) {
+        if (attributes.isAccessor())
+            hasAccessorProperty = 1;
 
         Property *pd;
         if (!sparseArray && (index < 0x1000 || index < arrayDataLen + (arrayDataLen >> 2))) {
@@ -316,6 +318,16 @@ public:
 
     void arrayReserve(uint n);
     void ensureArrayAttributes();
+
+    inline bool protoHasArray() {
+        Object *p = this;
+
+        while ((p = p->prototype))
+            if (p->arrayDataLen)
+                return true;
+
+        return false;
+    }
 
     inline Value get(String *name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }

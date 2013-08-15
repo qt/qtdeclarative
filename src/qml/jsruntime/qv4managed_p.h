@@ -155,7 +155,7 @@ private:
 protected:
     Managed(InternalClass *internal)
         : _data(0), vtbl(&static_vtbl), internalClass(internal)
-    { inUse = 1; extensible = 1; }
+    { inUse = 1; extensible = 1; hasAccessorProperty = 0; }
 
 public:
     void *operator new(size_t size, MemoryManager *mm);
@@ -290,7 +290,8 @@ public:
             uint type : 8;
             mutable uint subtype : 3;
             uint bindingKeyFlag : 1;
-            uint unused : 12;
+            uint hasAccessorProperty : 1;
+            uint unused : 11;
         };
     };
 
