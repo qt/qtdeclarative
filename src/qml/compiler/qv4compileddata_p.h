@@ -124,6 +124,9 @@ struct Function
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
 //    Function[nInnerFunctions]
 
+    const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
+    const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
+
     static int calculateSize(int nFormals, int nLocals, int nInnerfunctions) {
         return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions) * sizeof(quint32) + 7) & ~0x7;
     }

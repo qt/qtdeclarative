@@ -65,6 +65,25 @@ Function::~Function()
         compilationUnit->deref();
 }
 
+void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
+{
+    Q_ASSERT(!compilationUnit);
+    compilationUnit = unit;
+    compilationUnit->ref();
+    compiledFunction = function;
+
+    formals.resize(compiledFunction->nFormals);
+    const quint32 *formalsIndices = compiledFunction->formalsTable();
+    for (int i = 0; i < compiledFunction->nFormals; ++i)
+        formals[i] = engine->newString(unit->data->stringAt(formalsIndices[i])->qString());
+
+
+    locals.resize(compiledFunction->nLocals);
+    const quint32 *localsIndices = compiledFunction->localsTable();
+    for (int i = 0; i < compiledFunction->nLocals; ++i)
+        locals[i] = engine->newString(unit->data->stringAt(localsIndices[i])->qString());
+}
+
 void Function::mark()
 {
     if (name)

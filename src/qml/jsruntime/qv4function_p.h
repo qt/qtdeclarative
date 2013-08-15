@@ -121,6 +121,9 @@ struct Function {
     {}
     ~Function();
 
+    // ### Merge with constructor later.
+    void init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function);
+
     void ref() { ++refCount; }
     void deref() { if (!--refCount) delete this; }
 

@@ -86,13 +86,6 @@ QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *ou
     if (outer)
         outer->addNestedFunction(vmFunction);
 
-    foreach (const QString *formal, irFunction->formals)
-        if (formal)
-            vmFunction->formals.append(_engine->newString(*formal));
-    foreach (const QString *local, irFunction->locals)
-        if (local)
-            vmFunction->locals.append(_engine->newString(*local));
-
     foreach (V4IR::Function *function, irFunction->nestedFunctions)
         createFunctionMapping(vmFunction, function);
 

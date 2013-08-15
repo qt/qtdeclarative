@@ -74,9 +74,7 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         QV4::Function *runtimeFunction = runtimeFunctions.at(i);
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        runtimeFunction->compilationUnit = this;
-        runtimeFunction->compilationUnit->ref();
-        runtimeFunction->compiledFunction = compiledFunction;
+        runtimeFunction->init(this, compiledFunction);
 
         if (compiledFunction == compiledRootFunction) {
             assert(!rootRuntimeFunction);
