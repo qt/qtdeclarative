@@ -152,6 +152,8 @@ struct Q_QML_EXPORT ExecutionContext
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+
+    const Function *runtimeFunction() const;
 };
 
 struct SimpleCallContext : public ExecutionContext

@@ -1056,10 +1056,8 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
-    Value v = Value::fromObject(engine()->newRegExpObject(*sourceRegexp->value,
-                                                          sourceRegexp->flags));
-    _vmFunction->generatedValues.append(v);
-    _as->storeValue(v, targetTemp);
+    int id = jsUnitGenerator.registerRegExp(sourceRegexp);
+    generateFunctionCall(Assembler::Void, __qmljs_lookup_runtime_regexp, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp), Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)

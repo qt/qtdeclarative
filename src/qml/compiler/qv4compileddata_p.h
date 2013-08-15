@@ -65,6 +65,20 @@ namespace CompiledData {
 struct String;
 struct Function;
 struct Lookup;
+struct RegExp;
+
+struct RegExp
+{
+    enum Flags {
+        RegExp_Global     = 0x01,
+        RegExp_IgnoreCase = 0x02,
+        RegExp_Multiline  = 0x04
+    };
+    quint32 flags;
+    quint32 stringIndex;
+
+    static int calculateSize() { return sizeof(RegExp); }
+};
 
 static const char magic_str[] = "qv4cdata";
 
@@ -85,6 +99,8 @@ struct Unit
     uint offsetToFunctionTable;
     uint lookupTableSize;
     uint offsetToLookupTable;
+    uint regexpTableSize;
+    uint offsetToRegexpTable;
     uint indexOfRootFunction;
     quint32 sourceFileIndex;
 
@@ -101,8 +117,11 @@ struct Unit
     }
 
     const Lookup *lookupTable() const { return reinterpret_cast<const Lookup*>(reinterpret_cast<const char *>(this) + offsetToLookupTable); }
+    const RegExp *regexpAt(int index) const {
+        return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
+    }
 
-    static int calculateSize(uint nStrings, uint nFunctions) { return (sizeof(Unit) + (nStrings + nFunctions) * sizeof(uint) + 7) & ~7; }
+    static int calculateSize(uint nStrings, uint nFunctions, uint nRegExps) { return (sizeof(Unit) + (nStrings + nFunctions ) * sizeof(uint) + nRegExps * RegExp::calculateSize() + 7) & ~7; }
 };
 
 struct Function
@@ -274,6 +293,7 @@ struct CompilationUnit
 
     QV4::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
+    QV4::Value *runtimeRegularExpressions;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 

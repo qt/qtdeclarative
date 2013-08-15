@@ -610,6 +610,16 @@ void ExecutionContext::throwURIError(Value msg)
     throwError(Value::fromObject(engine->newURIErrorObject(msg)));
 }
 
+const Function *ExecutionContext::runtimeFunction() const
+{
+    if (type >= Type_CallContext) {
+        const QV4::FunctionObject *f = asCallContext()->function;
+        Q_ASSERT(f);
+        return f ? f->function : 0;
+    }
+    Q_ASSERT(type == Type_GlobalContext);
+    return engine->globalCode;
+}
 
 void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)
 {

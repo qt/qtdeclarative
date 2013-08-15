@@ -1226,6 +1226,13 @@ void __qmljs_value_from_string(Value *result, String *string)
     *result = Value::fromString(string);
 }
 
+void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, Value *result, int id)
+{
+    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
+    Q_ASSERT(runtimeFunction);
+    *result = runtimeFunction->compilationUnit->runtimeRegularExpressions[id];
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

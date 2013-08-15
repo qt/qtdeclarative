@@ -44,6 +44,7 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4regexpobject_p.h>
 
 namespace QV4 {
 
@@ -60,6 +61,7 @@ CompilationUnit::~CompilationUnit()
     free(data);
     free(runtimeStrings);
     delete [] runtimeLookups;
+    delete [] runtimeRegularExpressions;
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -72,6 +74,20 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i)->qString());
+
+    runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
+    for (int i = 0; i < data->regexpTableSize; ++i) {
+        const CompiledData::RegExp *re = data->regexpAt(i);
+        int flags = 0;
+        if (re->flags & CompiledData::RegExp::RegExp_Global)
+            flags |= QQmlJS::V4IR::RegExp::RegExp_Global;
+        if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
+            flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
+        if (re->flags & CompiledData::RegExp::RegExp_Multiline)
+            flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
+        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex)->qString(), flags);
+        runtimeRegularExpressions[i] = QV4::Value::fromObject(obj);
+    }
 
     if (data->lookupTableSize) {
         runtimeLookups = new QV4::Lookup[data->lookupTableSize];
@@ -101,6 +117,8 @@ void CompilationUnit::markObjects()
 {
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i]->mark();
+    for (int i = 0; i < data->regexpTableSize; ++i)
+        runtimeRegularExpressions[i].mark();
 }
 
 }

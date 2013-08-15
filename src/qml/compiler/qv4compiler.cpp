@@ -94,6 +94,23 @@ uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(const QString &n
     return lookups.size() - 1;
 }
 
+int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::V4IR::RegExp *regexp)
+{
+    CompiledData::RegExp re;
+    re.stringIndex = registerString(*regexp->value);
+
+    re.flags = 0;
+    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_Global)
+        re.flags |= CompiledData::RegExp::RegExp_Global;
+    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_IgnoreCase)
+        re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
+    if (regexp->flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
+        re.flags |= CompiledData::RegExp::RegExp_Multiline;
+
+    regexps.append(re);
+    return regexps.size() - 1;
+}
+
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
     registerString(irModule->fileName);
@@ -105,7 +122,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size());
+    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -128,6 +145,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->functionTableSize = irModule->functions.size();
     unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     unit->lookupTableSize = lookups.count();
+    unit->regexpTableSize = regexps.size();
+    unit->offsetToRegexpTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->offsetToLookupTable = unitSize + stringDataSize + functionDataSize;
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
@@ -168,6 +187,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     CompiledData::Lookup *lookupsToWrite = (CompiledData::Lookup*)(data + unit->offsetToLookupTable);
     foreach (const CompiledData::Lookup &l, lookups)
         *lookupsToWrite++ = l;
+
+    CompiledData::RegExp *regexpTable = (CompiledData::RegExp *)(data + unit->offsetToRegexpTable);
+    memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
 
     return unit;
 }
