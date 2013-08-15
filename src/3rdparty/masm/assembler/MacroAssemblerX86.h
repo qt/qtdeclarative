@@ -124,15 +124,17 @@ public:
     }
 
 #if 0 // FIXME: UNTESTED!
-    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, FPRegisterID scratch)
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, RegisterID scratch)
     {
-        // compare this with what the Clang compiler with -O3 generates for:
-        //    double f(unsigned u) { return (double) u; }
-        static const double magic = 4.503600e+15; // 0x4330000000000000
-        m_assembler.loadDouble(&magic, scratch);
-        m_assembler.movd_rr(src, dst);
-        m_assembler.orpd_rr(scratch, dest);
-        m_assembler.subsd(scratch, dest);
+        Jump intRange = branch32(GreaterThanOrEqual, src, TrustedImm32(0));
+        and32(TrustedImm32(INT_MAX), src, scratch);
+        convertInt32ToDouble(scratch, dst);
+        static const double magic = INT_MAX + 1;
+        addDouble(&magic, dst);
+        Jump done = jump();
+        intRange.link(this);
+        convertInt32ToDouble(src, dst);
+        done.link(this);
     }
 #endif
 
