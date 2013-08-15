@@ -146,7 +146,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         s->str.alloc = 0;
         s->str.capacityReserved = false;
         s->str.offset = sizeof(QArrayData);
-        memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
+        memcpy(s + 1, qstr.constData(), (qstr.length() + 1)*sizeof(ushort));
 
         string += QV4::CompiledData::String::calculateSize(qstr);
     }
