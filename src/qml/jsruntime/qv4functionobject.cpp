@@ -96,7 +96,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
 FunctionObject::~FunctionObject()
 {
     if (function)
-        function->deref();
+        function->compilationUnit->deref();
 }
 
 Value FunctionObject::newInstance()
@@ -325,7 +325,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 {
     vtbl = &static_vtbl;
     this->function = function;
-    this->function->ref();
+    this->function->compilationUnit->ref();
     assert(function);
     assert(function->code);
 

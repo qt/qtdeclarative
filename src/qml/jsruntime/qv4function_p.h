@@ -87,7 +87,6 @@ struct LineNumberMapping
 };
 
 struct Function {
-    int refCount;
     String *name;
 
     const CompiledData::Function *compiledFunction;
@@ -98,13 +97,11 @@ struct Function {
 
     QVector<String *> formals;
     QVector<String *> locals;
-    QVector<Function *> nestedFunctions;
 
     ExecutionEngine *engine;
 
     Function(ExecutionEngine *engine, String *name)
-        : refCount(0)
-        , name(name)
+        : name(name)
         , compiledFunction(0)
         , compilationUnit(0)
         , code(0)
@@ -117,15 +114,6 @@ struct Function {
     // ### Merge with constructor later.
     void init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
               Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
-
-    void ref() { ++refCount; }
-    void deref() { if (!--refCount) delete this; }
-
-    void addNestedFunction(Function *f)
-    {
-        f->ref();
-        nestedFunctions.append(f);
-    }
 
     inline QString sourceFile() const { return compilationUnit->fileName(); }
 

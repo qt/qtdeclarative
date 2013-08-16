@@ -67,7 +67,7 @@ struct QmlBindingWrapper : FunctionObject
     {
         vtbl = &static_vtbl;
         function = f;
-        function->ref();
+        function->compilationUnit->ref();
         usesArgumentsObject = function->usesArgumentsObject();
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));

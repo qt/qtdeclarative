@@ -55,12 +55,6 @@ Function::~Function()
 {
     engine->functions.remove(engine->functions.indexOf(this));
     UnwindHelper::deregisterFunction(this); // ### move to masm compilation unit
-
-    Q_ASSERT(!refCount);
-    foreach (Function *f, nestedFunctions)
-        f->deref();
-    if (compilationUnit)
-        compilationUnit->deref();
 }
 
 void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Value (*codePtr)(ExecutionContext *, const uchar *),
@@ -68,7 +62,6 @@ void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Fun
 {
     Q_ASSERT(!compilationUnit);
     compilationUnit = unit;
-    compilationUnit->ref();
     compiledFunction = function;
 
     code = codePtr;

@@ -58,6 +58,7 @@ CompilationUnit::~CompilationUnit()
     delete [] runtimeLookups;
     delete [] runtimeRegularExpressions;
     free(runtimeClasses);
+    qDeleteAll(runtimeFunctions);
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
