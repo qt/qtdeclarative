@@ -124,7 +124,7 @@ void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, QV4
 void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::Value &object, QV4::String *name, QV4::Value *val);
 void __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::Value *array, QV4::Value *values, uint length);
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::Value &object, QV4::String *name, const QV4::Value *getter, const QV4::Value *setter);
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, QV4::InternalClass *klass);
+void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, int classId);
 
 void __qmljs_value_from_string(QV4::Value *result, QV4::String *string);
 void __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, QV4::Value *result, int id);

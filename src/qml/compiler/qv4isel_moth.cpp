@@ -965,15 +965,13 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 {
     int argLocation = outgoingArgumentTempStart();
 
-    QV4::InternalClass *klass = engine()->emptyClass;
+    const int classId = registerJSClass(args);
     V4IR::ExprList *it = args;
     while (it) {
-        V4IR::Name *name = it->expr->asName();
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
         it = it->next;
-        klass = klass->addMember(identifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
 
         Instruction::MoveTemp move;
         move.source = getParam(it->expr);
@@ -995,7 +993,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
     }
 
     Instruction::CallBuiltinDefineObjectLiteral call;
-    call.internalClass = klass;
+    call.internalClassId = classId;
     call.args = outgoingArgumentTempStart();
     call.result = getResultParam(result);
     addInstruction(call);

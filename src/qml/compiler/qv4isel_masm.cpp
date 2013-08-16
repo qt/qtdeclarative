@@ -1000,15 +1000,14 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 {
     int argc = 0;
 
-    InternalClass *klass = engine()->emptyClass;
+    const int classId = registerJSClass(args);
+
     V4IR::ExprList *it = args;
     while (it) {
-        V4IR::Name *name = it->expr->asName();
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
         it = it->next;
-        klass = klass->addMember(engine()->newIdentifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
 
         _as->copyValue(argumentAddressForCall(argc++), it->expr);
 
@@ -1022,7 +1021,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 
     generateFunctionCall(Assembler::Void, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
                          Assembler::PointerToValue(result), baseAddressForCallArguments(),
-                         Assembler::TrustedImmPtr(klass));
+                         Assembler::TrustedImm32(classId));
 }
 
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)

@@ -436,7 +436,7 @@ union Instr
     };
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
-        QV4::InternalClass *internalClass;
+        int internalClassId;
         quint32 args;
         Param result;
     };

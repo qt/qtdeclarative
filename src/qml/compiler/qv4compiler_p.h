@@ -52,6 +52,7 @@ namespace CompiledData {
 struct Unit;
 struct Lookup;
 struct RegExp;
+struct JSClassMember;
 }
 
 namespace Compiler {
@@ -72,6 +73,8 @@ struct JSUnitGenerator {
 
     void registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings);
 
+    int registerJSClass(QQmlJS::V4IR::ExprList *args);
+
     QV4::CompiledData::Unit *generateUnit();
     // Returns bytes written
     int writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
@@ -83,6 +86,8 @@ struct JSUnitGenerator {
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
+    QList<QList<CompiledData::JSClassMember> > jsClasses;
+    int jsClassDataSize;
 };
 
 }

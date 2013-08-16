@@ -464,7 +464,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
         QV4::Value *args = stack + instr.args;
-        __qmljs_builtin_define_object_literal(context, VALUEPTR(instr.result), args, instr.internalClass);
+        __qmljs_builtin_define_object_literal(context, VALUEPTR(instr.result), args, instr.internalClassId);
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CreateValue)

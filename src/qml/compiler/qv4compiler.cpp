@@ -47,6 +47,7 @@
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::ExecutionEngine *engine, QQmlJS::V4IR::Module *module)
     : irModule(module)
     , stringDataSize(0)
+    , jsClassDataSize(0)
 {
 }
 
@@ -116,6 +117,37 @@ void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QQmlJS::V4IR::Fun
     lineNumberMappingsPerFunction.insert(function, mappings);
 }
 
+int QV4::Compiler::JSUnitGenerator::registerJSClass(QQmlJS::V4IR::ExprList *args)
+{
+    // ### re-use existing class definitions.
+
+    QList<CompiledData::JSClassMember> members;
+
+    QQmlJS::V4IR::ExprList *it = args;
+    while (it) {
+        CompiledData::JSClassMember member;
+
+        QQmlJS::V4IR::Name *name = it->expr->asName();
+        it = it->next;
+
+        const bool isData = it->expr->asConst()->value;
+        it = it->next;
+
+        member.nameOffset = registerString(*name->id);
+        member.isAccessor = !isData;
+        members << member;
+
+        if (!isData)
+            it = it->next;
+
+        it = it->next;
+    }
+
+    jsClasses << members;
+    jsClassDataSize += CompiledData::JSClass::calculateSize(members.count());
+    return jsClasses.size() - 1;
+}
+
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
     registerString(irModule->fileName);
@@ -127,7 +159,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size(), lookups.size());
+    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size(), lookups.size(), jsClasses.count());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -142,7 +174,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount);
     }
 
-    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize);
+    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize + jsClassDataSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
 
     memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
@@ -157,6 +189,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->regexpTableSize = regexps.size();
     unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
+    unit->jsClassTableSize = jsClasses.count();
+    unit->offsetToJSClassTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
     // write strings and string table
@@ -199,6 +233,24 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 
     CompiledData::RegExp *regexpTable = (CompiledData::RegExp *)(data + unit->offsetToRegexpTable);
     memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
+
+    // write js classes and js class lookup table
+    uint *jsClassTable = (uint*)(data + unit->offsetToJSClassTable);
+    char *jsClass = data + unitSize + stringDataSize + functionDataSize;
+    for (int i = 0; i < jsClasses.count(); ++i) {
+        jsClassTable[i] = jsClass - data;
+
+        const QList<CompiledData::JSClassMember> members = jsClasses.at(i);
+
+        CompiledData::JSClass *c = reinterpret_cast<CompiledData::JSClass*>(jsClass);
+        c->nMembers = members.count();
+
+        CompiledData::JSClassMember *memberToWrite = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + sizeof(CompiledData::JSClass));
+        foreach (const CompiledData::JSClassMember &member, members)
+            *memberToWrite++ = member;
+
+        jsClass += CompiledData::JSClass::calculateSize(members.count());
+    }
 
     return unit;
 }

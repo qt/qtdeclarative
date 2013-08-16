@@ -1179,8 +1179,11 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, QV4::InternalClass *klass)
+void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, int classId)
 {
+    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
+    Q_ASSERT(runtimeFunction);
+    QV4::InternalClass *klass = runtimeFunction->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
 
     for (int i = 0; i < klass->size; ++i) {

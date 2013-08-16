@@ -94,6 +94,20 @@ struct Lookup
     static int calculateSize() { return sizeof(Lookup); }
 };
 
+struct JSClassMember
+{
+    uint nameOffset : 31;
+    uint isAccessor : 1;
+};
+
+struct JSClass
+{
+    uint nMembers;
+    // JSClassMember[nMembers]
+
+    static int calculateSize(int nMembers) { return (sizeof(JSClass) + nMembers * sizeof(JSClassMember) + 7) & ~7; }
+};
+
 static const char magic_str[] = "qv4cdata";
 
 struct Unit
@@ -115,6 +129,8 @@ struct Unit
     uint offsetToLookupTable;
     uint regexpTableSize;
     uint offsetToRegexpTable;
+    uint jsClassTableSize;
+    uint offsetToJSClassTable;
     uint indexOfRootFunction;
     quint32 sourceFileIndex;
 
@@ -135,10 +151,19 @@ struct Unit
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
 
+    const JSClassMember *jsClassAt(int idx, int *nMembers) const {
+        const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
+        const uint offset = offsetTable[idx];
+        const char *ptr = reinterpret_cast<const char *>(this) + offset;
+        const JSClass *klass = reinterpret_cast<const JSClass *>(ptr);
+        *nMembers = klass->nMembers;
+        return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
+    }
+
     static int calculateSize(uint nStrings, uint nFunctions, uint nRegExps,
-                             uint nLookups) {
+                             uint nLookups, uint nClasses) {
         return (sizeof(Unit)
-                + (nStrings + nFunctions) * sizeof(uint)
+                + (nStrings + nFunctions + nClasses) * sizeof(uint)
                 + nRegExps * RegExp::calculateSize()
                 + nLookups * Lookup::calculateSize()
                 + 7) & ~7; }
@@ -287,6 +312,7 @@ struct CompilationUnit
         , data(0)
         , runtimeStrings(0)
         , runtimeLookups(0)
+        , runtimeClasses(0)
     {}
     virtual ~CompilationUnit();
 
@@ -302,6 +328,7 @@ struct CompilationUnit
     QV4::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
+    QV4::InternalClass **runtimeClasses;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 
