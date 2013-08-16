@@ -124,6 +124,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_constructor = newIdentifier(QStringLiteral("constructor"));
     id_arguments = newIdentifier(QStringLiteral("arguments"));
     id_caller = newIdentifier(QStringLiteral("caller"));
+    id_callee = newIdentifier(QStringLiteral("callee"));
     id_this = newIdentifier(QStringLiteral("this"));
     id___proto__ = newIdentifier(QStringLiteral("__proto__"));
     id_enumerable = newIdentifier(QStringLiteral("enumerable"));
@@ -137,6 +138,10 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_name = newIdentifier(QStringLiteral("name"));
 
     arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
+    InternalClass *argsClass = emptyClass->addMember(id_length, Attr_NotEnumerable);
+    argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
+    strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     initRootContext();
 
     objectPrototype = new (memoryManager) ObjectPrototype(this);

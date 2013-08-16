@@ -56,28 +56,45 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
     vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
 
-    defineDefaultProperty(context->engine->id_length, Value::fromInt32(actualParameterCount));
     if (context->strictMode) {
-        for (uint i = 0; i < context->argumentCount; ++i)
-            Object::put(context, QString::number(i), context->arguments[i]);
+        internalClass = engine()->strictArgumentsObjectClass;
+
         FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
         Property pd = Property::fromAccessor(thrower, thrower);
-        __defineOwnProperty__(context, QStringLiteral("callee"), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        __defineOwnProperty__(context, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        assert(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
+        assert(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
+        memberData[CalleePropertyIndex] = pd;
+        memberData[CallerPropertyIndex] = pd;
+
+        arrayReserve(context->argumentCount);
+        for (unsigned int i = 0; i < context->argumentCount; ++i)
+            arrayData[i].value = context->arguments[i];
+        arrayDataLen = context->argumentCount;
     } else {
+        internalClass = engine()->argumentsObjectClass;
+        assert(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
+        memberData[CalleePropertyIndex].value = Value::fromObject(context->function);
+        isNonStrictArgumentsObject = true;
+
         uint numAccessors = qMin(formalParameterCount, actualParameterCount);
+        uint argCount = qMin((uint)actualParameterCount, context->argumentCount);
+        arrayReserve(argCount);
+        ensureArrayAttributes();
         context->engine->requireArgumentsAccessors(numAccessors);
         for (uint i = 0; i < (uint)numAccessors; ++i) {
             mappedArguments.append(context->argument(i));
-            __defineOwnProperty__(context, i, context->engine->argumentsAccessors.at(i), Attr_Accessor);
+            arrayData[i] = context->engine->argumentsAccessors.at(i);
+            arrayAttributes[i] = Attr_Accessor;
         }
-        for (uint i = numAccessors; i < qMin((uint)actualParameterCount, context->argumentCount); ++i) {
-            Property pd = Property::fromValue(context->argument(i));
-            __defineOwnProperty__(context, i, pd, Attr_Data);
+        for (uint i = numAccessors; i < argCount; ++i) {
+            arrayData[i] = Property::fromValue(context->argument(i));
+            arrayAttributes[i] = Attr_Data;
         }
-        defineDefaultProperty(context, QStringLiteral("callee"), Value::fromObject(context->function));
-        isNonStrictArgumentsObject = true;
+        arrayDataLen = argCount;
     }
+    assert(LengthPropertyIndex == internalClass->find(context->engine->id_length));
+    Property *lp = memberData + ArrayObject::LengthPropertyIndex;
+    lp->value = Value::fromInt32(actualParameterCount);
 }
 
 void ArgumentsObject::destroy(Managed *that)

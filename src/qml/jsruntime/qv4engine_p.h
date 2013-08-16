@@ -167,6 +167,8 @@ struct Q_QML_EXPORT ExecutionEngine
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
     InternalClass *arrayClass;
+    InternalClass *argumentsObjectClass;
+    InternalClass *strictArgumentsObjectClass;
 
     EvalFunction *evalFunction;
 
@@ -186,6 +188,7 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_constructor;
     String *id_arguments;
     String *id_caller;
+    String *id_callee;
     String *id_this;
     String *id___proto__;
     String *id_enumerable;

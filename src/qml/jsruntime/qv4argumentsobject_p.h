@@ -81,6 +81,11 @@ struct ArgumentsObject: Object {
     ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount);
     ~ArgumentsObject() {}
 
+    enum {
+        LengthPropertyIndex = 0,
+        CalleePropertyIndex = 1,
+        CallerPropertyIndex = 2
+    };
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
 
     static void markObjects(Managed *that);
