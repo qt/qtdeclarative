@@ -100,8 +100,6 @@ struct Function {
     QVector<String *> locals;
     QVector<Function *> nestedFunctions;
 
-    QVector<LineNumberMapping> lineNumberMappings;
-
     ExecutionEngine *engine;
 
     Function(ExecutionEngine *engine, String *name)

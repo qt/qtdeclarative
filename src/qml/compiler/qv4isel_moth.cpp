@@ -245,18 +245,17 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     push.value = quint32(locals);
     addInstruction(push);
 
+    QVector<uint> lineNumberMappings;
+    lineNumberMappings.reserve(_function->basicBlocks.size() * 2);
+
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
 
         foreach (V4IR::Stmt *s, _block->statements) {
-            if (s->location.isValid()) {
-                QV4::LineNumberMapping mapping;
-                mapping.codeOffset = _codeNext - _codeStart;
-                mapping.lineNumber = s->location.startLine;
-                _vmFunction->lineNumberMappings.append(mapping);
-            }
+            if (s->location.isValid())
+                lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
 
             if (opt.isInSSA() && s->asTerminator()) {
                 foreach (const V4IR::Optimizer::SSADeconstructionMove &move,
@@ -273,6 +272,8 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
             s->accept(this);
         }
     }
+
+    registerLineNumberMapping(_function, lineNumberMappings);
 
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
