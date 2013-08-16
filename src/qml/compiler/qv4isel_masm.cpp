@@ -74,7 +74,11 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         QV4::Function *runtimeFunction = runtimeFunctions.at(i);
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        runtimeFunction->init(this, compiledFunction);
+        runtimeFunction->init(this, compiledFunction,
+                              (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
+                              codeRefs[i].size());
+
+        UnwindHelper::registerFunction(runtimeFunction);
 
         if (compiledFunction == compiledRootFunction) {
             assert(!rootRuntimeFunction);
@@ -208,8 +212,8 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine)
-    : _function(function), _vmFunction(vmFunction), _isel(isel), _engine(engine), _nextBlock(0)
+Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutionEngine *engine)
+    : _function(function), _isel(isel), _engine(engine), _nextBlock(0)
 {
 }
 
@@ -531,8 +535,7 @@ void Assembler::generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::T
         binOpFinished.link(this);
 }
 #if OS(LINUX) || OS(MAC_OS_X)
-static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions,
-                                             const QVector<String*> &identifiers)
+static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
 {
     QByteArray processedOutput(output);
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
@@ -540,13 +543,6 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
         QByteArray ptrString = QByteArray::number(quintptr(it.key()), 16);
         ptrString.prepend("0x");
         processedOutput = processedOutput.replace(ptrString, it.value());
-    }
-    for (QVector<String*>::ConstIterator it = identifiers.begin(), end = identifiers.end();
-         it != end; ++it) {
-        QByteArray ptrString = QByteArray::number(quintptr(*it), 16);
-        ptrString.prepend("0x");
-        QByteArray replacement = "\"" + (*it)->toQString().toUtf8() + "\"";
-        processedOutput = processedOutput.replace(ptrString, replacement);
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
 }
@@ -561,9 +557,8 @@ void Assembler::recordLineNumber(int lineNumber)
 }
 
 
-JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
+JSC::MacroAssemblerCodeRef Assembler::link()
 {
-    Label endOfCode = label();
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     // Let the ARM exception table follow right after that
     for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
@@ -584,7 +579,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
 
     JSC::JSGlobalData dummy(_engine->executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
-    vmFunc->codeSize = linkBuffer.offsetOf(endOfCode);
 
     QVector<uint> lineNumberMapping(codeLineNumberMappings.count() * 2);
 
@@ -659,7 +653,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
 #  endif
 #  if CPU(X86) || CPU(X86_64)
         QHash<void*, String*> idents;
-        printDisassembledOutputWithCalls(disasmOutput, functions, _vmFunction->identifiers);
+        printDisassembledOutputWithCalls(disasmOutput, functions);
 #  endif
 #  if OS(LINUX)
         free(disasmOutput);
@@ -669,7 +663,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
         codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-    vmFunc->code = (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRef.code().executableAddress();
     return codeRef;
 }
 
@@ -677,7 +670,6 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     : EvalInstructionSelection(engine, module)
     , _block(0)
     , _function(0)
-    , _vmFunction(0)
     , _as(0)
     , _locals(0)
 {
@@ -694,10 +686,9 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     QVector<Lookup> lookups;
     QSet<V4IR::BasicBlock*> reentryBlocks;
     qSwap(_function, function);
-    qSwap(_vmFunction, vmFunction);
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, _vmFunction, engine());
+    _as = new Assembler(this, _function, engine());
 
     V4IR::Optimizer opt(_function);
     opt.run();
@@ -755,12 +746,9 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
         }
     }
 
-    JSC::MacroAssemblerCodeRef codeRef =_as->link(_vmFunction);
+    JSC::MacroAssemblerCodeRef codeRef =_as->link();
     codeRefs[_function] = codeRef;
 
-    UnwindHelper::registerFunction(_vmFunction);
-
-    qSwap(_vmFunction, vmFunction);
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
     qSwap(_locals, locals);

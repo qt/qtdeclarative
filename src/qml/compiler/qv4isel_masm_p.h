@@ -76,7 +76,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine);
+    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutionEngine *engine);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -779,13 +779,12 @@ public:
         return Jump();
     }
 
-    JSC::MacroAssemblerCodeRef link(QV4::Function *vmFunc);
+    JSC::MacroAssemblerCodeRef link();
 
     void recordLineNumber(int lineNumber);
 
 private:
     V4IR::Function *_function;
-    QV4::Function *_vmFunction;
     QHash<V4IR::BasicBlock *, Label> _addrs;
     QHash<V4IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
@@ -944,7 +943,6 @@ private:
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
-    QV4::Function* _vmFunction;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
     int _locals;

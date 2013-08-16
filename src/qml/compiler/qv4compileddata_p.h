@@ -178,7 +178,6 @@ struct Function
         IsNamedExpression   = 0x8
     };
 
-    QV4::Value (*code)(ExecutionContext *, const uchar *);
     quint32 index; // in CompilationUnit's function table
     quint32 nameIndex;
     qint64 flags;

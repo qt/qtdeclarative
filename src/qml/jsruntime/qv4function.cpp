@@ -64,12 +64,16 @@ Function::~Function()
         compilationUnit->deref();
 }
 
-void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
+void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Value (*codePtr)(ExecutionContext *, const uchar *),
+                    quint32 _codeSize)
 {
     Q_ASSERT(!compilationUnit);
     compilationUnit = unit;
     compilationUnit->ref();
     compiledFunction = function;
+
+    code = codePtr;
+    codeSize = _codeSize;
 
     formals.resize(compiledFunction->nFormals);
     const quint32 *formalsIndices = compiledFunction->formalsTable();
