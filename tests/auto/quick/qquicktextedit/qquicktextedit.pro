@@ -16,3 +16,4 @@ QT += core-private gui-private v8-private qml-private quick-private network-priv
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 mac:CONFIG += insignificant_test # QTBUG-27740
+win32:CONFIG += insignificant_test # QTBUG-32540
