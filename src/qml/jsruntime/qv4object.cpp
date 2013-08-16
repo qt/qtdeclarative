@@ -293,14 +293,8 @@ void Object::markObjects(Managed *that)
     o->markArrayObjects();
 }
 
-Property *Object::insertMember(String *s, PropertyAttributes attributes)
+void Object::ensureMemberIndex(uint idx)
 {
-    uint idx;
-    internalClass = internalClass->addMember(s, attributes, &idx);
-
-    if (attributes.isAccessor())
-        hasAccessorProperty = 1;
-
     if (idx >= memberDataAlloc) {
         memberDataAlloc = qMax((uint)8, 2*memberDataAlloc);
         Property *newMemberData = new Property[memberDataAlloc];
@@ -310,6 +304,18 @@ Property *Object::insertMember(String *s, PropertyAttributes attributes)
             delete [] memberData;
         memberData = newMemberData;
     }
+}
+
+Property *Object::insertMember(String *s, PropertyAttributes attributes)
+{
+    uint idx;
+    internalClass = internalClass->addMember(s, attributes, &idx);
+
+    if (attributes.isAccessor())
+        hasAccessorProperty = 1;
+
+    ensureMemberIndex(idx);
+
     return memberData + idx;
 }
 
@@ -540,7 +546,8 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Object *o = static_cast<Object *>(m);
 
-    uint idx = o->internalClass->find(l->name);
+    InternalClass *c = o->internalClass;
+    uint idx = c->find(l->name);
     if (!o->isArrayObject() || idx != ArrayObject::LengthPropertyIndex) {
         if (idx != UINT_MAX && o->internalClass->propertyData[idx].isData() && o->internalClass->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass;
@@ -557,6 +564,29 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
     }
 
     o->put(l->name, value);
+
+    if (o->internalClass == c)
+        return;
+    idx = o->internalClass->find(l->name);
+    if (idx == UINT_MAX)
+        return;
+    l->classList[0] = c;
+    l->classList[3] = o->internalClass;
+    l->index = idx;
+    if (!o->prototype) {
+        l->setter = Lookup::setterInsert0;
+        return;
+    }
+    o = o->prototype;
+    l->classList[1] = o->internalClass;
+    if (!o->prototype) {
+        l->setter = Lookup::setterInsert1;
+        return;
+    }
+    o = o->prototype;
+    l->classList[2] = o->internalClass;
+    if (!o->prototype)
+        l->setter = Lookup::setterInsert2;
 }
 
 Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)

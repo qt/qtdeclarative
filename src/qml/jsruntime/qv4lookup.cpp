@@ -362,4 +362,55 @@ void Lookup::setter0(Lookup *l, const Value &object, const Value &value)
     setterGeneric(l, object, value);
 }
 
+void Lookup::setterInsert0(Lookup *l, const Value &object, const Value &value)
+{
+    Object *o = object.asObject();
+    if (o && o->internalClass == l->classList[0]) {
+        if (!o->prototype) {
+            o->memberData[l->index].value = value;
+            o->internalClass = l->classList[3];
+            return;
+        }
+    }
+
+    l->setter = setterGeneric;
+    setterGeneric(l, object, value);
+}
+
+void Lookup::setterInsert1(Lookup *l, const Value &object, const Value &value)
+{
+    Object *o = object.asObject();
+    if (o && o->internalClass == l->classList[0]) {
+        Object *p = o->prototype;
+        if (p && p->internalClass == l->classList[1]) {
+            o->memberData[l->index].value = value;
+            o->internalClass = l->classList[3];
+            return;
+        }
+    }
+
+    l->setter = setterGeneric;
+    setterGeneric(l, object, value);
+}
+
+void Lookup::setterInsert2(Lookup *l, const Value &object, const Value &value)
+{
+    Object *o = object.asObject();
+    if (o && o->internalClass == l->classList[0]) {
+        Object *p = o->prototype;
+        if (p && p->internalClass == l->classList[1]) {
+            p = p->prototype;
+            if (p && p->internalClass == l->classList[2]) {
+                o->ensureMemberIndex(l->index);
+                o->memberData[l->index].value = value;
+                o->internalClass = l->classList[3];
+                return;
+            }
+        }
+    }
+
+    l->setter = setterGeneric;
+    setterGeneric(l, object, value);
+}
+
 QT_END_NAMESPACE

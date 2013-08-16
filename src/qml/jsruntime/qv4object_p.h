@@ -328,6 +328,7 @@ public:
 
         return false;
     }
+    void ensureMemberIndex(uint idx);
 
     inline Value get(String *name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }

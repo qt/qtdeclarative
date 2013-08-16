@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Lookup {
-    enum { Size = 3 };
+    enum { Size = 4 };
     union {
         void (*getter)(Lookup *l, Value *result, const Value &object);
         void (*globalGetter)(Lookup *l, ExecutionContext *ctx, Value *result);
@@ -82,6 +82,9 @@ struct Lookup {
 
     static void setterGeneric(Lookup *l, const Value &object, const Value &value);
     static void setter0(Lookup *l, const Value &object, const Value &value);
+    static void setterInsert0(Lookup *l, const Value &object, const Value &value);
+    static void setterInsert1(Lookup *l, const Value &object, const Value &value);
+    static void setterInsert2(Lookup *l, const Value &object, const Value &value);
 
     Property *lookup(Object *obj, PropertyAttributes *attrs);
 
