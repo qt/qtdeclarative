@@ -98,7 +98,6 @@ struct Function {
 
     QVector<String *> formals;
     QVector<String *> locals;
-    QVector<Value> generatedValues;
     QVector<Function *> nestedFunctions;
 
     QVector<LineNumberMapping> lineNumberMappings;

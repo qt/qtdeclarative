@@ -408,13 +408,8 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
-    QV4::Value v = QV4::Value::fromObject(engine()->newRegExpObject(
-                                            *sourceRegexp->value,
-                                            sourceRegexp->flags));
-    _vmFunction->generatedValues.append(v);
-
-    Instruction::LoadValue load;
-    load.value = Instr::Param::createValue(v);
+    Instruction::LoadRegExp load;
+    load.regExpId = jsUnitGenerator.registerRegExp(sourceRegexp);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }

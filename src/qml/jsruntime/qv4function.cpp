@@ -94,9 +94,6 @@ void Function::mark()
         formals.at(i)->mark();
     for (int i = 0; i < locals.size(); ++i)
         locals.at(i)->mark();
-    for (int i = 0; i < generatedValues.size(); ++i)
-        if (Managed *m = generatedValues.at(i).asManaged())
-            m->mark();
 }
 
 namespace QV4 {

@@ -265,6 +265,11 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         VALUE(instr.result) = QV4::Value::fromString(runtimeStrings[instr.stringId]);
     MOTH_END_INSTR(LoadString)
 
+    MOTH_BEGIN_INSTR(LoadRegExp)
+//        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
+        VALUE(instr.result) = context->runtimeFunction()->compilationUnit->runtimeRegularExpressions[instr.regExpId];
+    MOTH_END_INSTR(LoadRegExp)
+
     MOTH_BEGIN_INSTR(LoadClosure)
         __qmljs_init_closure(context, VALUEPTR(instr.result), instr.value);
     MOTH_END_INSTR(LoadClosure)

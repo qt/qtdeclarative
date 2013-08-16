@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
     F(Ret, ret) \
     F(LoadValue, loadValue) \
     F(LoadString, loadString) \
+    F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(MoveTemp, moveTemp) \
     F(LoadName, loadName) \
@@ -222,6 +223,11 @@ union Instr
     struct instr_loadString {
         MOTH_INSTR_HEADER
         int stringId;
+        Param result;
+    };
+    struct instr_loadRegExp {
+        MOTH_INSTR_HEADER
+        int regExpId;
         Param result;
     };
     struct instr_moveTemp {
@@ -544,6 +550,7 @@ union Instr
     instr_ret ret;
     instr_loadValue loadValue;
     instr_loadString loadString;
+    instr_loadRegExp loadRegExp;
     instr_moveTemp moveTemp;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
