@@ -824,11 +824,8 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     else
         baseObject = __qmljs_convert_to_object(context, thisObject);
 
-    PropertyAttributes attrs;
-    Property *p = l->lookup(baseObject, &attrs);
-    if (!p)
-        context->throwTypeError();
-    Value func = attrs.isData() ? p->value : baseObject->getValue(p, attrs);
+    Value func;
+    l->getter(l, &func, Value::fromObject(baseObject));
     FunctionObject *o = func.asFunctionObject();
     if (!o)
         context->throwTypeError();
