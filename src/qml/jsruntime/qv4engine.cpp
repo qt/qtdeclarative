@@ -87,7 +87,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , debugger(0)
     , globalObject(0)
     , globalCode(0)
-    , functionsNeedSort(false)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
@@ -279,7 +278,6 @@ ExecutionEngine::~ExecutionEngine()
     delete identifierTable;
     delete bumperPointerAllocator;
     delete regExpCache;
-    UnwindHelper::deregisterFunctions(functions);
     delete regExpAllocator;
     delete executableAllocator;
 }
@@ -379,8 +377,6 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 Function *ExecutionEngine::newFunction(const QString &name)
 {
     Function *f = new Function(this, newIdentifier(name));
-    functions.append(f);
-    functionsNeedSort = true;
     return f;
 }
 
@@ -732,9 +728,6 @@ void ExecutionEngine::markObjects()
         c = c->parent;
     }
 
-    for (int i = 0; i < functions.size(); ++i)
-        functions.at(i)->mark();
-
     id_length->mark();
     id_prototype->mark();
     id_constructor->mark();
@@ -796,11 +789,6 @@ void ExecutionEngine::markObjects()
 }
 
 namespace {
-    bool functionSortHelper(Function *lhs, Function *rhs)
-    {
-        return reinterpret_cast<quintptr>(lhs->code) < reinterpret_cast<quintptr>(rhs->code);
-    }
-
     struct FindHelper
     {
         bool operator()(Function *function, quintptr pc)
@@ -818,15 +806,15 @@ namespace {
 
 Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
 {
-    if (functionsNeedSort) {
-        qSort(functions.begin(), functions.end(), functionSortHelper);
-        functionsNeedSort = false;
+    for (QSet<QV4::CompiledData::CompilationUnit*>::ConstIterator unitIt = compilationUnits.constBegin(), unitEnd = compilationUnits.constEnd();
+         unitIt != unitEnd; ++unitIt) {
+        const QVector<Function*> &functions = (*unitIt)->runtimeFunctionsSortedByAddress;
+        QVector<Function*>::ConstIterator it = qBinaryFind(functions.constBegin(),
+                                                           functions.constEnd(),
+                                                           pc, FindHelper());
+        if (it != functions.constEnd())
+            return *it;
     }
-
-    QVector<Function*>::ConstIterator it = qBinaryFind(functions.constBegin(), functions.constEnd(),
-            pc, FindHelper());
-    if (it != functions.constEnd())
-        return *it;
     return 0;
 }
 

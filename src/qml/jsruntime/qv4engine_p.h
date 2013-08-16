@@ -201,9 +201,6 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_uintMax;
     String *id_name;
 
-    mutable QVector<Function *> functions;
-    mutable bool functionsNeedSort;
-
     QSet<CompiledData::CompilationUnit*> compilationUnits;
 
     quint32 m_engineId;

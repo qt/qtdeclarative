@@ -53,8 +53,6 @@ using namespace QV4;
 
 Function::~Function()
 {
-    engine->functions.remove(engine->functions.indexOf(this));
-    UnwindHelper::deregisterFunction(this); // ### move to masm compilation unit
 }
 
 void Function::init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Value (*codePtr)(ExecutionContext *, const uchar *),

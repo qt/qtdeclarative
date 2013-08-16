@@ -63,6 +63,8 @@ class InstructionSelection;
 
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
+    virtual ~CompilationUnit();
+
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
 
     virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int functionIndex);

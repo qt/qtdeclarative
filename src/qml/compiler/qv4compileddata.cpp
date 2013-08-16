@@ -45,10 +45,18 @@
 #include <private/qv4function_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4unwindhelper_p.h>
 
 namespace QV4 {
 
 namespace CompiledData {
+
+namespace {
+    bool functionSortHelper(QV4::Function *lhs, QV4::Function *rhs)
+    {
+        return reinterpret_cast<quintptr>(lhs->code) < reinterpret_cast<quintptr>(rhs->code);
+    }
+}
 
 CompilationUnit::~CompilationUnit()
 {
@@ -121,7 +129,13 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
-    return linkBackendToEngine(engine);
+    QV4::Function *entry = linkBackendToEngine(engine);
+
+    runtimeFunctionsSortedByAddress.resize(runtimeFunctions.size());
+    memcpy(runtimeFunctionsSortedByAddress.data(), runtimeFunctions.data(), runtimeFunctions.size() * sizeof(QV4::Function*));
+    qSort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
+
+    return entry;
 }
 
 void CompilationUnit::markObjects()
@@ -130,6 +144,8 @@ void CompilationUnit::markObjects()
         runtimeStrings[i]->mark();
     for (int i = 0; i < data->regexpTableSize; ++i)
         runtimeRegularExpressions[i].mark();
+    for (int i = 0; i < runtimeFunctions.count(); ++i)
+        runtimeFunctions[i]->mark();
 }
 
 }

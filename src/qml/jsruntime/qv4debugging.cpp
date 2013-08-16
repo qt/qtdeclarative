@@ -185,9 +185,11 @@ void Debugger::pauseAndWait()
 
 void Debugger::applyPendingBreakPoints()
 {
-    foreach (Function *function, _engine->functions) {
-        m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
-        m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
+    foreach (QV4::CompiledData::CompilationUnit *unit, _engine->compilationUnits) {
+        foreach (Function *function, unit->runtimeFunctions) {
+            m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
+            m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
+        }
     }
 
     for (BreakPoints::ConstIterator it = m_pendingBreakPointsToAdd.constBegin(),

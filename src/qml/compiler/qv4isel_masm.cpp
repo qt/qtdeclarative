@@ -64,6 +64,11 @@ using namespace QQmlJS;
 using namespace QQmlJS::MASM;
 using namespace QV4;
 
+CompilationUnit::~CompilationUnit()
+{
+    UnwindHelper::deregisterFunctions(runtimeFunctions);
+}
+
 QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 {
     QV4::Function *rootRuntimeFunction = 0;
@@ -78,13 +83,13 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
                               (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
                               codeRefs[i].size());
 
-        UnwindHelper::registerFunction(runtimeFunction);
-
         if (compiledFunction == compiledRootFunction) {
             assert(!rootRuntimeFunction);
             rootRuntimeFunction = runtimeFunction;
         }
     }
+
+    UnwindHelper::registerFunctions(runtimeFunctions);
 
     return rootRuntimeFunction;
 }
