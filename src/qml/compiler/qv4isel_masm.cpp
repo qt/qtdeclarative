@@ -75,13 +75,15 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 
     const CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
 
+    runtimeFunctions.resize(data->functionTableSize);
+
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
-        QV4::Function *runtimeFunction = runtimeFunctions.at(i);
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        runtimeFunction->init(this, compiledFunction,
-                              (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
-                              codeRefs[i].size());
+        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
+                                                           (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
+                                                           codeRefs[i].size());
+        runtimeFunctions[i] = runtimeFunction;
 
         if (compiledFunction == compiledRootFunction) {
             assert(!rootRuntimeFunction);

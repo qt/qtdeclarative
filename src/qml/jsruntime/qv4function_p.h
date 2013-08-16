@@ -100,20 +100,9 @@ struct Function {
 
     ExecutionEngine *engine;
 
-    Function(ExecutionEngine *engine, String *name)
-        : name(name)
-        , compiledFunction(0)
-        , compilationUnit(0)
-        , code(0)
-        , codeData(0)
-        , codeSize(0)
-        , engine(engine)
-    {}
+    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
+             Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
     ~Function();
-
-    // ### Merge with constructor later.
-    void init(CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-              Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
 
     inline QString sourceFile() const { return compilationUnit->fileName(); }
 

@@ -80,10 +80,6 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i)->qString());
 
-    runtimeFunctions.resize(data->functionTableSize);
-    for (int i = 0; i < data->functionTableSize; ++i)
-        runtimeFunctions[i] = new QV4::Function(engine, runtimeStrings[data->functionAt(i)->nameIndex]);
-
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     for (int i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);

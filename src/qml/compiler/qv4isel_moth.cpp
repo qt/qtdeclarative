@@ -1088,14 +1088,15 @@ QV4::Function *CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine
 
     const QV4::CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
 
+    runtimeFunctions.resize(data->functionTableSize);
+
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
-        QV4::Function *runtimeFunction = runtimeFunctions.at(i);
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
 
-        runtimeFunction->init(this, compiledFunction,
-                              &VME::exec, /*size - doesn't matter for moth*/0);
-
+        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
+                                                           &VME::exec, /*size - doesn't matter for moth*/0);
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
+        runtimeFunctions[i] = runtimeFunction;
 
         if (QV4::Debugging::Debugger *debugger = engine->debugger)
             debugger->setPendingBreakpoints(runtimeFunction);
