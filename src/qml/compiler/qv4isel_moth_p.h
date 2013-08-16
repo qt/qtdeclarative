@@ -56,6 +56,15 @@ namespace Moth {
 
 class StackSlotAllocator;
 
+struct CompilationUnit : public QV4::CompiledData::CompilationUnit
+{
+    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine);
+
+    QVector<QByteArray> codeRefs;
+
+};
+
+
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::IRDecoder,
         public EvalInstructionSelection
@@ -67,6 +76,8 @@ public:
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
 
 protected:
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
+
     virtual void visitJump(V4IR::Jump *);
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
@@ -157,7 +168,7 @@ private:
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
     void patchJumpAddresses();
-    uchar *squeezeCode() const;
+    QByteArray squeezeCode() const;
 
     QV4::String *identifier(const QString &s);
 
@@ -175,6 +186,9 @@ private:
 
     StackSlotAllocator *_stackSlotAllocator;
     V4IR::Stmt *_currentStatement;
+
+    CompilationUnit *compilationUnit;
+    QHash<V4IR::Function *, QByteArray> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

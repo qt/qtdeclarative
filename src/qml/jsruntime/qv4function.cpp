@@ -57,7 +57,6 @@ Function::~Function()
     UnwindHelper::deregisterFunction(this); // ### move to masm compilation unit
 
     Q_ASSERT(!refCount);
-    delete[] codeData;
     foreach (Function *f, nestedFunctions)
         f->deref();
     if (compilationUnit)

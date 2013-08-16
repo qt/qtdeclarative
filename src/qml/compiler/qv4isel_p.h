@@ -80,7 +80,7 @@ protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
     QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
-    virtual QV4::CompiledData::CompilationUnit *backendCompileStep() { return 0; }
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
 private:
     QV4::ExecutionEngine *_engine;

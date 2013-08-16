@@ -69,7 +69,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 
     // Coderef + execution engine
 
-    QList<QV4::Function *> runtimeFunctions;
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
 };
 

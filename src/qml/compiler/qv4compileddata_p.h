@@ -328,6 +328,7 @@ struct CompilationUnit
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
+    QList<QV4::Function *> runtimeFunctions;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 
@@ -340,16 +341,6 @@ struct CompilationUnit
 
 protected:
     virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
-};
-
-struct MothCompilationUnit : public CompilationUnit
-{
-    virtual ~MothCompilationUnit() {
-        // free all bytecode
-    }
-
-    // vector of bytecode
-
 };
 
 }

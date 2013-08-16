@@ -297,8 +297,10 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
         locals[i] = getStringId(*irFunction->locals.at(i));
 
     // write line number mappings
-    quint32 *mappingsToWrite = (quint32*)(f + function->lineNumberMappingOffset);
-    memcpy(mappingsToWrite, lineNumberMapping->constData(), 2 * function->nLineNumberMappingEntries * sizeof(quint32));
+    if (function->nLineNumberMappingEntries) {
+        quint32 *mappingsToWrite = (quint32*)(f + function->lineNumberMappingOffset);
+        memcpy(mappingsToWrite, lineNumberMapping->constData(), 2 * function->nLineNumberMappingEntries * sizeof(quint32));
+    }
 
     // write inner functions
     quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);

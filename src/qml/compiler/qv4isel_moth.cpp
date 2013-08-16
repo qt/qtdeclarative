@@ -46,6 +46,7 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4compileddata_p.h>
 
 #undef USE_TYPE_INFO
 
@@ -198,6 +199,7 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     , _stackSlotAllocator(0)
     , _currentStatement(0)
 {
+    compilationUnit = new CompilationUnit;
 }
 
 InstructionSelection::~InstructionSelection()
@@ -275,8 +277,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
 
-    _vmFunction->code = VME::exec;
-    _vmFunction->codeData = squeezeCode();
+    codeRefs.insert(_function, squeezeCode());
 
     if (QV4::Debugging::Debugger *debugger = engine()->debugger)
         debugger->setPendingBreakpoints(_vmFunction);
@@ -295,6 +296,19 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(codeEnd, _codeEnd);
 
     delete[] codeStart;
+}
+
+QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
+{
+    compilationUnit->data = jsUnitGenerator.generateUnit();
+    compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
+    compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
+    int i = 0;
+    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions) {
+        compilationUnit->runtimeFunctions << _irToVM[irFunction];
+        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
+    }
+    return compilationUnit;
 }
 
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
@@ -1046,11 +1060,12 @@ void InstructionSelection::patchJumpAddresses()
     _addrs.clear();
 }
 
-uchar *InstructionSelection::squeezeCode() const
+QByteArray InstructionSelection::squeezeCode() const
 {
     int codeSize = _codeNext - _codeStart;
-    uchar *squeezed = new uchar[codeSize];
-    ::memcpy(squeezed, _codeStart, codeSize);
+    QByteArray squeezed;
+    squeezed.resize(codeSize);
+    ::memcpy(squeezed.data(), _codeStart, codeSize);
     return squeezed;
 }
 
@@ -1084,4 +1099,29 @@ Instr::Param InstructionSelection::getParam(V4IR::Expr *e) {
         Q_UNIMPLEMENTED();
         return Param();
     }
+}
+
+
+QV4::Function *CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
+{
+    QV4::Function *rootRuntimeFunction = 0;
+
+    const QV4::CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
+
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        QV4::Function *runtimeFunction = runtimeFunctions.at(i);
+        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
+
+        runtimeFunction->init(this, compiledFunction,
+                              &VME::exec, /*size - doesn't matter for moth*/0);
+
+        runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
+
+        if (compiledFunction == compiledRootFunction) {
+            assert(!rootRuntimeFunction);
+            rootRuntimeFunction = runtimeFunction;
+        }
+    }
+
+    return rootRuntimeFunction;
 }
