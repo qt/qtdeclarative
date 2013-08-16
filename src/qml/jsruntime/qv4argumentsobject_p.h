@@ -78,7 +78,7 @@ protected:
 struct ArgumentsObject: Object {
     CallContext *context;
     QVector<Value> mappedArguments;
-    ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount);
+    ArgumentsObject(CallContext *context);
     ~ArgumentsObject() {}
 
     enum {

@@ -977,6 +977,12 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
                          Assembler::TrustedImmPtr(klass));
 }
 
+void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_setup_arguments_object, Assembler::ContextRegister,
+                         Assembler::PointerToValue(result));
+}
+
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     int argc = prepareVariableArguments(args);

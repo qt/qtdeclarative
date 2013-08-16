@@ -160,6 +160,7 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
 
     this->function = function;
     this->arguments = _arguments;
+    this->realArgumentCount = _argumentCount;
     this->argumentCount = _argumentCount;
     this->thisObject = _thisObject;
 
@@ -190,14 +191,6 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
         if (argc < function->formalParameterCount)
             std::fill(arguments + argc, arguments + function->formalParameterCount, Value::undefinedValue());
 
-    }
-
-    if (function->usesArgumentsObject) {
-        ArgumentsObject *args = new (engine->memoryManager) ArgumentsObject(this, function->formalParameterCount, argc);
-        args->prototype = engine->objectPrototype;
-        activation = engine->newObject();
-        Property desc = Property::fromValue(Value::fromObject(args));
-        activation->__defineOwnProperty__(this, engine->id_arguments, desc, Attr_NotConfigurable);
     }
 }
 

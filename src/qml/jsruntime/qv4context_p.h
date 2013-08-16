@@ -157,6 +157,7 @@ struct SimpleCallContext : public ExecutionContext
     void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
     Value *arguments;
+    unsigned int realArgumentCount;
     unsigned int argumentCount;
 };
 

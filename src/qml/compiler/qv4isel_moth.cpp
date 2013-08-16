@@ -1003,6 +1003,13 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
     addInstruction(call);
 }
 
+void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
+{
+    Instruction::CallBuiltinSetupArgumentsObject call;
+    call.result = getResultParam(result);
+    addInstruction(call);
+}
+
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
 #ifdef MOTH_THREADED_INTERPRETER

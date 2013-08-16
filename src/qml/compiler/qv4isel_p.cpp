@@ -428,6 +428,10 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         callBuiltinDefineObjectLiteral(result, call->args);
         return;
 
+    case V4IR::Name::builtin_setup_argument_object:
+        callBuiltinSetupArgumentObject(result);
+        return;
+
     default:
         break;
     }

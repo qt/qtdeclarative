@@ -1820,10 +1820,13 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
     V4IR::BasicBlock *throwBlock = function->newBasicBlock(groupStartBlock());
     function->hasDirectEval = _env->hasDirectEval;
-    function->usesArgumentsObject = (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
+    function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
+
+    if (function->usesArgumentsObject)
+        _env->enter("arguments", Environment::VariableDeclaration);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_mode == FunctionCode) {
@@ -1896,6 +1899,11 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                 move(_block->LOCAL(member.index, 0), _block->CLOSURE(function));
             }
         }
+    }
+    if (_function->usesArgumentsObject) {
+        move(_block->NAME("arguments", ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
+             _block->CALL(_block->NAME(V4IR::Name::builtin_setup_argument_object,
+                     ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
 
     sourceElements(body);

@@ -50,7 +50,7 @@ static Value throwTypeError(SimpleCallContext *ctx)
 
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
-ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount, int actualParameterCount)
+ArgumentsObject::ArgumentsObject(CallContext *context)
     : Object(context->engine), context(context)
 {
     vtbl = &static_vtbl;
@@ -76,8 +76,8 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
         memberData[CalleePropertyIndex].value = Value::fromObject(context->function);
         isNonStrictArgumentsObject = true;
 
-        uint numAccessors = qMin(formalParameterCount, actualParameterCount);
-        uint argCount = qMin((uint)actualParameterCount, context->argumentCount);
+        uint numAccessors = qMin(context->function->formalParameterCount, context->realArgumentCount);
+        uint argCount = qMin((uint)context->realArgumentCount, context->argumentCount);
         arrayReserve(argCount);
         ensureArrayAttributes();
         context->engine->requireArgumentsAccessors(numAccessors);
@@ -94,7 +94,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context, int formalParameterCount,
     }
     assert(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
-    lp->value = Value::fromInt32(actualParameterCount);
+    lp->value = Value::fromInt32(context->realArgumentCount);
 }
 
 void ArgumentsObject::destroy(Managed *that)

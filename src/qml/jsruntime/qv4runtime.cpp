@@ -46,6 +46,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4globalobject_p.h"
 #include "qv4stringobject_p.h"
+#include "qv4argumentsobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "qv4exception_p.h"
@@ -1221,6 +1222,15 @@ void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Valu
     *result = Value::fromObject(o);
 }
 
+void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, Value *result)
+{
+    assert(ctx->type >= ExecutionContext::Type_CallContext);
+    CallContext *c = static_cast<CallContext *>(ctx);
+    ArgumentsObject *args = new (c->engine->memoryManager) ArgumentsObject(c);
+    args->prototype = c->engine->objectPrototype;
+    *result = Value::fromObject(args);
+}
+
 void __qmljs_increment(Value *result, const Value &value)
 {
     TRACE1(value);
@@ -1264,6 +1274,7 @@ unsigned __qmljs_double_to_uint32(double d)
 {
     return Value::toUInt32(d);
 }
+
 } // namespace QV4
 
 QT_END_NAMESPACE
