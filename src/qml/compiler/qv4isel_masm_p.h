@@ -75,7 +75,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutionEngine *engine);
+    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -797,7 +797,7 @@ private:
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
     V4IR::BasicBlock *_nextBlock;
 
-    QV4::ExecutionEngine *_engine;
+    QV4::ExecutableAllocator *_executableAllocator;
     InstructionSelection *_isel;
 
     struct CodeLineNumerMapping

@@ -212,8 +212,8 @@ const int Assembler::calleeSavedRegisterCount = sizeof(calleeSavedRegisters) / s
 
 const Assembler::VoidType Assembler::Void;
 
-Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutionEngine *engine)
-    : _function(function), _isel(isel), _engine(engine), _nextBlock(0)
+Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
+    : _function(function), _isel(isel), _executableAllocator(executableAllocator), _nextBlock(0)
 {
 }
 
@@ -577,7 +577,7 @@ JSC::MacroAssemblerCodeRef Assembler::link()
         }
     }
 
-    JSC::JSGlobalData dummy(_engine->executableAllocator);
+    JSC::JSGlobalData dummy(_executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
 
     QVector<uint> lineNumberMapping(codeLineNumberMappings.count() * 2);
@@ -688,7 +688,7 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, engine());
+    _as = new Assembler(this, _function, engine()->executableAllocator);
 
     V4IR::Optimizer opt(_function);
     opt.run();

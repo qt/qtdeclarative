@@ -280,9 +280,6 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
 
     codeRefs.insert(_function, squeezeCode());
 
-    if (QV4::Debugging::Debugger *debugger = engine()->debugger)
-        debugger->setPendingBreakpoints(_vmFunction);
-
     qSwap(_currentStatement, cs);
     qSwap(_stackSlotAllocator, stackSlotAllocator);
     delete stackSlotAllocator;
@@ -1105,6 +1102,9 @@ QV4::Function *CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine
                               &VME::exec, /*size - doesn't matter for moth*/0);
 
         runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
+
+        if (QV4::Debugging::Debugger *debugger = engine->debugger)
+            debugger->setPendingBreakpoints(runtimeFunction);
 
         if (compiledFunction == compiledRootFunction) {
             assert(!rootRuntimeFunction);
