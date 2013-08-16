@@ -1070,9 +1070,8 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    QV4::Function *vmFunc = _irToVM[closure->value];
-    assert(vmFunc);
-    generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImmPtr(vmFunc));
+    int id = jsUnitGenerator.irModule->functions.indexOf(closure->value);
+    generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target)

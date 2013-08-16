@@ -118,8 +118,10 @@ void __qmljs_numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos)
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, int functionId)
 {
+    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
+    QV4::Function *clos = runtimeFunction->compilationUnit->runtimeFunctions[functionId];
     assert(clos);
     *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }

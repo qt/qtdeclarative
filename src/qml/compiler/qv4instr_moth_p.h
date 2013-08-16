@@ -237,7 +237,7 @@ union Instr
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
-        QV4::Function *value;
+        int value;
         Param result;
     };
     struct instr_loadName {
