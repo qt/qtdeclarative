@@ -59,7 +59,6 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , code(0)
         , codeData(0)
         , codeSize(0)
-        , engine(engine)
 {
     Q_ASSERT(!compilationUnit);
     compilationUnit = unit;
