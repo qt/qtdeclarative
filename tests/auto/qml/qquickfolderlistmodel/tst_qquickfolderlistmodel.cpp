@@ -52,21 +52,6 @@
 #include <qt_windows.h>
 #endif
 
-static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
-{
-    QEventLoop loop;
-    QObject::connect(obj, signal, &loop, SLOT(quit()));
-    QTimer timer;
-    QSignalSpy timeoutSpy(&timer, SIGNAL(timeout()));
-    if (timeout > 0) {
-        QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-        timer.setSingleShot(true);
-        timer.start(timeout);
-    }
-    loop.exec();
-    return timeoutSpy.isEmpty();
-}
-
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
 const int FilePathRole = Qt::UserRole+2;
@@ -131,8 +116,16 @@ void tst_qquickfolderlistmodel::basicProperties()
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
 
+    QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml"); // from basic.qml
+    QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(QDir::currentPath()));
+
+    // wait for the initial directory listing (it will find at least the "data" dir,
+    // and other dirs on Windows).
+    QTRY_VERIFY(flm->property("count").toInt() > 0);
+
+    QSignalSpy folderChangedSpy(flm, SIGNAL(folderChanged()));
     flm->setProperty("folder", dataDirectoryUrl());
-    ::waitForSignal(flm, SIGNAL(folderChanged()), 0);
+    QVERIFY(folderChangedSpy.wait());
     QCOMPARE(flm->property("count").toInt(), 5);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
