@@ -127,7 +127,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size());
+    int unitSize = QV4::CompiledData::Unit::calculateSize(strings.size(), irModule->functions.size(), regexps.size(), lookups.size());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -142,9 +142,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount);
     }
 
-    const uint lookupDataSize = CompiledData::Lookup::calculateSize() * lookups.count();
-
-    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize + lookupDataSize);
+    char *data = (char *)malloc(unitSize + functionDataSize + stringDataSize);
     QV4::CompiledData::Unit *unit = (QV4::CompiledData::Unit*)data;
 
     memcpy(unit->magic, QV4::CompiledData::magic_str, sizeof(unit->magic));
@@ -156,9 +154,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     unit->functionTableSize = irModule->functions.size();
     unit->offsetToFunctionTable = unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     unit->lookupTableSize = lookups.count();
+    unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->regexpTableSize = regexps.size();
-    unit->offsetToRegexpTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
-    unit->offsetToLookupTable = unitSize + stringDataSize + functionDataSize;
+    unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
     // write strings and string table

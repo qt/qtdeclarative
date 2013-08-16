@@ -80,6 +80,20 @@ struct RegExp
     static int calculateSize() { return sizeof(RegExp); }
 };
 
+struct Lookup
+{
+    enum Type {
+        Type_Getter = 0x0,
+        Type_Setter = 0x1,
+        Type_GlobalGetter = 2
+    };
+
+    quint32 type_and_flags;
+    quint32 nameIndex;
+
+    static int calculateSize() { return sizeof(Lookup); }
+};
+
 static const char magic_str[] = "qv4cdata";
 
 struct Unit
@@ -121,7 +135,13 @@ struct Unit
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
 
-    static int calculateSize(uint nStrings, uint nFunctions, uint nRegExps) { return (sizeof(Unit) + (nStrings + nFunctions ) * sizeof(uint) + nRegExps * RegExp::calculateSize() + 7) & ~7; }
+    static int calculateSize(uint nStrings, uint nFunctions, uint nRegExps,
+                             uint nLookups) {
+        return (sizeof(Unit)
+                + (nStrings + nFunctions) * sizeof(uint)
+                + nRegExps * RegExp::calculateSize()
+                + nLookups * Lookup::calculateSize()
+                + 7) & ~7; }
 };
 
 struct Function
@@ -174,20 +194,6 @@ struct String
     static int calculateSize(const QString &str) {
         return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
     }
-};
-
-struct Lookup
-{
-    enum Type {
-        Type_Getter = 0x0,
-        Type_Setter = 0x1,
-        Type_GlobalGetter = 2
-    };
-
-    quint32 type_and_flags;
-    quint32 nameIndex;
-
-    static int calculateSize() { return sizeof(Lookup); }
 };
 
 // Qml data structures
