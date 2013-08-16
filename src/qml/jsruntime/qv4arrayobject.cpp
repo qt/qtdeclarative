@@ -147,12 +147,15 @@ Value ArrayPrototype::method_concat(SimpleCallContext *ctx)
 
     if (ArrayObject *instance = ctx->thisObject.asArrayObject()) {
         result->copyArrayData(instance);
+    } else if (ctx->thisObject.isString()) {
+        QString v = ctx->thisObject.stringValue()->toQString();
+        result->arraySet(0, Value::fromString(ctx, v));
     } else if (ctx->thisObject.asStringObject()) {
         QString v = ctx->thisObject.toString(ctx)->toQString();
         result->arraySet(0, Value::fromString(ctx, v));
     } else {
-        Object *instance = ctx->thisObject.asObject();
-        result->arraySet(0, ctx->thisObject);
+        Object *instance = ctx->thisObject.toObject(ctx);
+        result->arraySet(0, Value::fromObject(instance));
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
@@ -646,7 +649,7 @@ Value ArrayPrototype::method_every(SimpleCallContext *ctx)
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
-        args[2] = ctx->thisObject;
+        args[2] = Value::fromObject(instance);
         Value r = callback->call(thisArg, args, 3);
         ok = r.toBoolean();
     }
@@ -674,7 +677,7 @@ Value ArrayPrototype::method_some(SimpleCallContext *ctx)
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
-        args[2] = ctx->thisObject;
+        args[2] = Value::fromObject(instance);
         Value r = callback->call(thisArg, args, 3);
         if (r.toBoolean())
             return Value::fromBoolean(true);
@@ -703,7 +706,7 @@ Value ArrayPrototype::method_forEach(SimpleCallContext *ctx)
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
-        args[2] = ctx->thisObject;
+        args[2] = Value::fromObject(instance);
         callback->call(thisArg, args, 3);
     }
     return Value::undefinedValue();
@@ -734,7 +737,7 @@ Value ArrayPrototype::method_map(SimpleCallContext *ctx)
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
-        args[2] = ctx->thisObject;
+        args[2] = Value::fromObject(instance);
         Value mapped = callback->call(thisArg, args, 3);
         a->arraySet(k, mapped);
     }
@@ -766,7 +769,7 @@ Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
         Value args[3];
         args[0] = v;
         args[1] = Value::fromDouble(k);
-        args[2] = ctx->thisObject;
+        args[2] = Value::fromObject(instance);
         Value selected = callback->call(thisArg, args, 3);
         if (selected.toBoolean()) {
             a->arraySet(to, v);
@@ -810,7 +813,7 @@ Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
             args[0] = acc;
             args[1] = v;
             args[2] = Value::fromDouble(k);
-            args[3] = ctx->thisObject;
+            args[3] = Value::fromObject(instance);
             acc = callback->call(Value::undefinedValue(), args, 4);
         }
         ++k;
@@ -858,7 +861,7 @@ Value ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
             args[0] = acc;
             args[1] = v;
             args[2] = Value::fromDouble(k - 1);
-            args[3] = ctx->thisObject;
+            args[3] = Value::fromObject(instance);
             acc = callback->call(Value::undefinedValue(), args, 4);
         }
         --k;

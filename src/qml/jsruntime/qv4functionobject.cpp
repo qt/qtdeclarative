@@ -447,15 +447,7 @@ Value BuiltinFunctionOld::call(Managed *that, const Value &thisObject, Value *ar
     ctx.argumentCount = argc;
     v4->pushContext(&ctx);
 
-    if (!f->strictMode && !thisObject.isObject()) {
-        // Built-in functions allow for the this object to be null or undefined. This overrides
-        // the behaviour of changing thisObject to the global object if null/undefined and allows
-        // the built-in functions for example to throw a type error if null is passed.
-        if (!thisObject.isUndefined() && !thisObject.isNull())
-            ctx.thisObject = Value::fromObject(thisObject.toObject(context));
-    }
-
-    Value result = Value::undefinedValue();
+    Value result;
     try {
         result = f->code(&ctx);
     } catch (Exception &ex) {
@@ -481,15 +473,7 @@ Value IndexedBuiltinFunction::call(Managed *that, const Value &thisObject, Value
     ctx.argumentCount = argc;
     v4->pushContext(&ctx);
 
-    if (!f->strictMode && !thisObject.isObject()) {
-        // Built-in functions allow for the this object to be null or undefined. This overrides
-        // the behaviour of changing thisObject to the global object if null/undefined and allows
-        // the built-in functions for example to throw a type error if null is passed.
-        if (!thisObject.isUndefined() && !thisObject.isNull())
-            ctx.thisObject = Value::fromObject(thisObject.toObject(context));
-    }
-
-    Value result = Value::undefinedValue();
+    Value result;
     try {
         result = f->code(&ctx, f->index);
     } catch (Exception &ex) {

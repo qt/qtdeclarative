@@ -96,17 +96,19 @@ void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
 
+inline Value thisNumberValue(ExecutionContext *ctx)
+{
+    if (ctx->thisObject.isNumber())
+        return ctx->thisObject;
+    NumberObject *n = ctx->thisObject.asNumberObject();
+    if (!n)
+        ctx->throwTypeError();
+    return n->value;
+}
+
 Value NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
-    double num;
-    if (ctx->thisObject.isNumber()) {
-        num = ctx->thisObject.asDouble();
-    } else {
-        NumberObject *thisObject = ctx->thisObject.asNumberObject();
-        if (!thisObject)
-            ctx->throwTypeError();
-        num = thisObject->value.asDouble();
-    }
+    double num = thisNumberValue(ctx).asDouble();
 
     Value arg = ctx->argument(0);
     if (!arg.isUndefined()) {
@@ -160,28 +162,20 @@ Value NumberPrototype::method_toString(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    Value v = thisNumberValue(ctx);
 
-    String *str = thisObject->value.toString(ctx);
+    String *str = v.toString(ctx);
     return Value::fromString(str);
 }
 
 Value NumberPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
-
-    return thisObject->value;
+    return thisNumberValue(ctx);
 }
 
 Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    double v = thisNumberValue(ctx).asDouble();
 
     double fdigits = 0;
 
@@ -194,7 +188,6 @@ Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     if (fdigits < 0 || fdigits > 20)
         ctx->throwRangeError(ctx->thisObject);
 
-    double v = thisObject->value.asDouble();
     QString str;
     if (std::isnan(v))
         str = QString::fromLatin1("NaN");
@@ -209,9 +202,7 @@ Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    double d = thisNumberValue(ctx).asDouble();
 
     Value fraction = ctx->argument(0);
     int fdigits = -1;
@@ -226,7 +217,7 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
     char str[100];
     double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(thisObject->value.asDouble(), fdigits, &builder);
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(d, fdigits, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
     return Value::fromString(ctx, result);
@@ -234,13 +225,11 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
-    NumberObject *thisObject = ctx->thisObject.asNumberObject();
-    if (!thisObject)
-        ctx->throwTypeError();
+    Value v = thisNumberValue(ctx);
 
     Value prec = ctx->argument(0);
     if (prec.isUndefined())
-        return __qmljs_to_string(thisObject->value, ctx);
+        return __qmljs_to_string(v, ctx);
 
     double precision = prec.toInt32();
     if (precision < 1 || precision > 21) {
@@ -250,7 +239,7 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     char str[100];
     double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(thisObject->value.asDouble(), precision, &builder);
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v.asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
     return Value::fromString(ctx, result);
