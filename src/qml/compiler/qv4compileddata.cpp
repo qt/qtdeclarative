@@ -50,11 +50,6 @@ namespace QV4 {
 
 namespace CompiledData {
 
-int Function::calculateSize(QQmlJS::V4IR::Function *f)
-{
-    return calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size());
-}
-
 CompilationUnit::~CompilationUnit()
 {
     engine->compilationUnits.erase(engine->compilationUnits.find(this));

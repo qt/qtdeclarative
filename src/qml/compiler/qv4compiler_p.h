@@ -70,8 +70,11 @@ struct JSUnitGenerator {
 
     int registerRegExp(QQmlJS::V4IR::RegExp *regexp);
 
+    void registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings);
+
     QV4::CompiledData::Unit *generateUnit();
-    void writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
+    // Returns bytes written
+    int writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
 
     QHash<QString, int> stringToId;
     QStringList strings;
@@ -79,6 +82,7 @@ struct JSUnitGenerator {
     QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
+    QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
 };
 
 }

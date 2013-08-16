@@ -111,6 +111,11 @@ int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::V4IR::RegExp *regexp)
     return regexps.size() - 1;
 }
 
+void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings)
+{
+    lineNumberMappingsPerFunction.insert(function, mappings);
+}
+
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
 {
     registerString(irModule->fileName);
@@ -128,7 +133,13 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     for (int i = 0; i < irModule->functions.size(); ++i) {
         QQmlJS::V4IR::Function *f = irModule->functions.at(i);
         functionOffsets.insert(f, functionDataSize + unitSize + stringDataSize);
-        functionDataSize += QV4::CompiledData::Function::calculateSize(f);
+
+        int lineNumberMappingCount = 0;
+        QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(f);
+        if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd())
+            lineNumberMappingCount = lineNumberMapping->count() / 2;
+
+        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount);
     }
 
     const uint lookupDataSize = CompiledData::Lookup::calculateSize() * lookups.count();
@@ -180,8 +191,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
         if (function == irModule->rootFunction)
             unit->indexOfRootFunction = i;
 
-        writeFunction(f, i, function);
-        f += QV4::CompiledData::Function::calculateSize(function);
+        const int bytes = writeFunction(f, i, function);
+        f += bytes;
     }
 
     CompiledData::Lookup *lookupsToWrite = (CompiledData::Lookup*)(data + unit->offsetToLookupTable);
@@ -194,9 +205,12 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit()
     return unit;
 }
 
-void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction)
+int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction)
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
+
+    QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
+
     function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
     function->flags = 0;
@@ -212,8 +226,15 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V
     function->formalsOffset = sizeof(QV4::CompiledData::Function);
     function->nLocals = irFunction->locals.size();
     function->localsOffset = function->formalsOffset + function->nFormals * sizeof(quint32);
+
+    function->nLineNumberMappingEntries = 0;
+    if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd()) {
+        function->nLineNumberMappingEntries = lineNumberMapping->count() / 2;
+    }
+    function->lineNumberMappingOffset = function->localsOffset + function->nLocals * sizeof(quint32);
+
     function->nInnerFunctions = irFunction->nestedFunctions.size();
-    function->innerFunctionsOffset = function->localsOffset + function->nLocals * sizeof(quint32);
+    function->innerFunctionsOffset = function->lineNumberMappingOffset + function->nLineNumberMappingEntries * 2 * sizeof(quint32);
 
     // write formals
     quint32 *formals = (quint32 *)(f + function->formalsOffset);
@@ -225,10 +246,16 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(*irFunction->locals.at(i));
 
+    // write line number mappings
+    quint32 *mappingsToWrite = (quint32*)(f + function->lineNumberMappingOffset);
+    memcpy(mappingsToWrite, lineNumberMapping->constData(), 2 * function->nLineNumberMappingEntries * sizeof(quint32));
+
     // write inner functions
     quint32 *innerFunctions = (quint32 *)(f + function->innerFunctionsOffset);
     for (int i = 0; i < irFunction->nestedFunctions.size(); ++i)
         innerFunctions[i] = functionOffsets.value(irFunction->nestedFunctions.at(i));
+
+    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions, function->nLineNumberMappingEntries);
 }
 
 

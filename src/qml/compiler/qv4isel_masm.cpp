@@ -586,13 +586,13 @@ JSC::MacroAssemblerCodeRef Assembler::link(QV4::Function *vmFunc)
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
     vmFunc->codeSize = linkBuffer.offsetOf(endOfCode);
 
-    vmFunc->lineNumberMappings.resize(codeLineNumberMappings.count());
+    QVector<uint> lineNumberMapping(codeLineNumberMappings.count() * 2);
+
     for (int i = 0; i < codeLineNumberMappings.count(); ++i) {
-        QV4::LineNumberMapping mapping;
-        mapping.codeOffset = linkBuffer.offsetOf(codeLineNumberMappings.at(i).location);
-        mapping.lineNumber = codeLineNumberMappings.at(i).lineNumber;
-        vmFunc->lineNumberMappings[i] = mapping;
+        lineNumberMapping[i * 2] = linkBuffer.offsetOf(codeLineNumberMappings.at(i).location);
+        lineNumberMapping[i * 2 + 1] = codeLineNumberMappings.at(i).lineNumber;
     }
+    _isel->registerLineNumberMapping(_function, lineNumberMapping);
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {

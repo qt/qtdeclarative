@@ -73,6 +73,7 @@ public:
     uint registerGetterLookup(const QString &str) { return jsUnitGenerator.registerGetterLookup(str); }
     uint registerSetterLookup(const QString &str) { return jsUnitGenerator.registerSetterLookup(str); }
     uint registerGlobalGetterLookup(const QString &str) { return jsUnitGenerator.registerGlobalGetterLookup(str); }
+    void registerLineNumberMapping(V4IR::Function *function, const QVector<uint> &mappings) { jsUnitGenerator.registerLineNumberMapping(function, mappings); }
 
 protected:
     QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);

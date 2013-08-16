@@ -350,10 +350,12 @@ void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreak
     QList<int>::Iterator breakPoint = breakPointsForFile->begin();
     while (breakPoint != breakPointsForFile->end()) {
         bool breakPointFound = false;
-        for (QVector<LineNumberMapping>::ConstIterator mapping = function->lineNumberMappings.constBegin(),
-             end = function->lineNumberMappings.constEnd(); mapping != end; ++mapping) {
-            if (mapping->lineNumber == *breakPoint) {
-                uchar *codePtr = const_cast<uchar *>(function->codeData) + mapping->codeOffset;
+        const quint32 *lineNumberMappings = function->compiledFunction->lineNumberMapping();
+        for (int i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
+            const int codeOffset = lineNumberMappings[i * 2];
+            const int lineNumber = lineNumberMappings[i * 2 + 1];
+            if (lineNumber == *breakPoint) {
+                uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
                 QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
                 instruction->common.breakPoint = !removeBreakPoints;
                 // Continue setting the next break point.

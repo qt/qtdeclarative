@@ -99,20 +99,42 @@ void Function::mark()
 }
 
 namespace QV4 {
-bool operator<(const LineNumberMapping &mapping, qptrdiff pc)
+struct LineNumberMappingHelper
 {
-    return mapping.codeOffset < pc;
-}
+    const quint32 *table;
+    int lowerBound(int begin, int end, qptrdiff offset) {
+        int middle;
+        int n = int(end - begin);
+        int half;
+
+        while (n > 0) {
+            half = n >> 1;
+            middle = begin + half;
+            if (table[middle * 2] < offset) {
+                begin = middle + 1;
+                n -= half + 1;
+            } else {
+                n = half;
+            }
+        }
+        return begin;
+    }
+};
+
 }
 
 int Function::lineNumberForProgramCounter(qptrdiff offset) const
 {
-    QVector<LineNumberMapping>::ConstIterator it = qLowerBound(lineNumberMappings.begin(), lineNumberMappings.end(), offset);
-    if (it != lineNumberMappings.constBegin() && lineNumberMappings.count() > 0)
-        --it;
-    if (it == lineNumberMappings.constEnd())
+    LineNumberMappingHelper helper;
+    helper.table = compiledFunction->lineNumberMapping();
+    const uint count = compiledFunction->nLineNumberMappingEntries;
+
+    int pos = helper.lowerBound(0, count, offset);
+    if (pos != 0 && count > 0)
+        --pos;
+    if (pos == count)
         return -1;
-    return it->lineNumber;
+    return helper.table[pos * 2 + 1];
 }
 
 QT_END_NAMESPACE

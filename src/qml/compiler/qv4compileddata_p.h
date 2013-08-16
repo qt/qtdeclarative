@@ -141,6 +141,8 @@ struct Function
     quint32 formalsOffset;
     quint32 nLocals;
     quint32 localsOffset;
+    quint32 nLineNumberMappingEntries;
+    quint32 lineNumberMappingOffset; // Array of uint pairs (offset and line number)
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
 //    quint32 formalsIndex[nFormals]
@@ -150,11 +152,11 @@ struct Function
 
     const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
+    const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions) * sizeof(quint32) + 7) & ~0x7;
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings) * sizeof(quint32) + 7) & ~0x7;
     }
-    static int calculateSize(QQmlJS::V4IR::Function *f);
 };
 
 struct String
