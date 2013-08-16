@@ -1421,6 +1421,7 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     arrayReserve(len);
     for (int ii = 0; ii < len; ++ii)
         arrayData[ii].value = Value::fromString(engine->newString(list.at(ii)));
+    arrayDataLen = len;
     setArrayLengthUnchecked(len);
 }
 
@@ -1429,7 +1430,6 @@ void ArrayObject::init(ExecutionEngine *engine)
     type = Type_ArrayObject;
     internalClass = engine->arrayClass;
 
-    memberData = new Property[4];
     memberData[LengthPropertyIndex].value = Value::fromInt32(0);
 }
 
