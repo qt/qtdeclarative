@@ -374,12 +374,6 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-Function *ExecutionEngine::newFunction(const QString &name)
-{
-    Function *f = new Function(this, newIdentifier(name));
-    return f;
-}
-
 FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
 {
     BuiltinFunctionOld *f = new (memoryManager) BuiltinFunctionOld(scope, name, code);

@@ -65,11 +65,6 @@ EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine,
 {
     assert(engine);
     assert(module);
-
-    createFunctionMapping(0, module->rootFunction);
-    foreach (V4IR::Function *f, module->functions) {
-        assert(_irToVM.contains(f));
-    }
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()
@@ -78,27 +73,13 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *outer, Function *irFunction)
-{
-    QV4::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
-    _irToVM.insert(irFunction, vmFunction);
-
-    foreach (V4IR::Function *function, irFunction->nestedFunctions)
-        createFunctionMapping(vmFunction, function);
-
-    return vmFunction;
-}
-
 QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
 {
     Function *rootFunction = jsUnitGenerator.irModule->rootFunction;
     if (!rootFunction)
         return 0;
-    for (QHash<V4IR::Function*, QV4::Function*>::Iterator it = _irToVM.begin(), end = _irToVM.end();
-         it != end; ++it) {
-        if (!(*it)->code)
-            run(it.value(), it.key());
-    }
+    foreach (V4IR::Function *f, jsUnitGenerator.irModule->functions)
+        run(f);
 
     return backendCompileStep();
 }

@@ -77,15 +77,13 @@ public:
     int registerJSClass(QQmlJS::V4IR::ExprList *args) { return jsUnitGenerator.registerJSClass(args); }
 
 protected:
-    QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
     QV4::ExecutionEngine *engine() const { return _engine; }
-    virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
+    virtual void run(V4IR::Function *function) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
 private:
     QV4::ExecutionEngine *_engine;
 protected:
-    QHash<V4IR::Function *, QV4::Function *> _irToVM;
     bool useFastLookups;
     QV4::Compiler::JSUnitGenerator jsUnitGenerator;
 };

@@ -686,7 +686,7 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
-void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
+void InstructionSelection::run(V4IR::Function *function)
 {
     QVector<Lookup> lookups;
     QSet<V4IR::BasicBlock*> reentryBlocks;
@@ -767,10 +767,8 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
     compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
     compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
     int i = 0;
-    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions) {
-        compilationUnit->runtimeFunctions << _irToVM[irFunction];
+    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
-    }
     return compilationUnit;
 }
 

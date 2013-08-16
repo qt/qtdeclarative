@@ -191,7 +191,6 @@ private:
 InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
     : EvalInstructionSelection(engine, module)
     , _function(0)
-    , _vmFunction(0)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
@@ -206,7 +205,7 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
+void InstructionSelection::run(V4IR::Function *function)
 {
     V4IR::BasicBlock *block = 0, *nextBlock = 0;
 
@@ -220,7 +219,6 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     uchar *codeEnd = codeStart + codeSize;
 
     qSwap(_function, function);
-    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
@@ -284,7 +282,6 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(_stackSlotAllocator, stackSlotAllocator);
     delete stackSlotAllocator;
     qSwap(_function, function);
-    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
@@ -302,10 +299,8 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
     compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
     compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
     int i = 0;
-    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions) {
-        compilationUnit->runtimeFunctions << _irToVM[irFunction];
+    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
-    }
     return compilationUnit;
 }
 

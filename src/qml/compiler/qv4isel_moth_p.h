@@ -73,7 +73,7 @@ public:
     InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
+    virtual void run(V4IR::Function *function);
 
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
@@ -171,7 +171,6 @@ private:
     QByteArray squeezeCode() const;
 
     V4IR::Function *_function;
-    QV4::Function *_vmFunction;
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_nextBlock;
 
