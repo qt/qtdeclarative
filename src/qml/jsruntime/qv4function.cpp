@@ -97,8 +97,6 @@ void Function::mark()
     for (int i = 0; i < generatedValues.size(); ++i)
         if (Managed *m = generatedValues.at(i).asManaged())
             m->mark();
-    for (int i = 0; i < identifiers.size(); ++i)
-        identifiers.at(i)->mark();
 }
 
 namespace QV4 {

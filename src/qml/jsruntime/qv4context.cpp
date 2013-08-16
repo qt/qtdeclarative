@@ -612,12 +612,15 @@ void ExecutionContext::throwURIError(Value msg)
 
 const Function *ExecutionContext::runtimeFunction() const
 {
-    if (type >= Type_CallContext) {
-        const QV4::FunctionObject *f = asCallContext()->function;
+    const ExecutionContext *ctx = this;
+    if (ctx->type == Type_CatchContext)
+        ctx = ctx->parent;
+    if (ctx->type >= Type_CallContext) {
+        const QV4::FunctionObject *f = ctx->asCallContext()->function;
         Q_ASSERT(f);
         return f ? f->function : 0;
     }
-    Q_ASSERT(type == Type_GlobalContext);
+    Q_ASSERT(ctx->type == Type_GlobalContext);
     return engine->globalCode;
 }
 

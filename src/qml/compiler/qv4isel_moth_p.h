@@ -170,8 +170,6 @@ private:
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
 
-    QV4::String *identifier(const QString &s);
-
     V4IR::Function *_function;
     QV4::Function *_vmFunction;
     V4IR::BasicBlock *_block;
