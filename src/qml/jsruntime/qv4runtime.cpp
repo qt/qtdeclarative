@@ -120,8 +120,7 @@ void __qmljs_numberToString(QString *result, double num, int radix)
 
 void __qmljs_init_closure(ExecutionContext *ctx, Value *result, int functionId)
 {
-    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
-    QV4::Function *clos = runtimeFunction->compilationUnit->runtimeFunctions[functionId];
+    QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     assert(clos);
     *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
 }
@@ -1183,9 +1182,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
 
 void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, int classId)
 {
-    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
-    Q_ASSERT(runtimeFunction);
-    QV4::InternalClass *klass = runtimeFunction->compilationUnit->runtimeClasses[classId];
+    QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
 
     for (int i = 0; i < klass->size; ++i) {
@@ -1233,9 +1230,7 @@ void __qmljs_value_from_string(Value *result, String *string)
 
 void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, Value *result, int id)
 {
-    const QV4::Function *runtimeFunction = ctx->runtimeFunction();
-    Q_ASSERT(runtimeFunction);
-    *result = runtimeFunction->compilationUnit->runtimeRegularExpressions[id];
+    *result = ctx->compilationUnit->runtimeRegularExpressions[id];
 }
 
 } // namespace QV4

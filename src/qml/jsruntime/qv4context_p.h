@@ -53,6 +53,11 @@ struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
 
+namespace CompiledData {
+struct CompilationUnit;
+struct Function;
+};
+
 struct Q_QML_EXPORT DiagnosticMessage
 {
     enum { Error, Warning };
@@ -95,6 +100,8 @@ struct Q_QML_EXPORT ExecutionContext
     ExecutionContext *outer;
     Lookup *lookups;
     String **runtimeStrings;
+    CompiledData::CompilationUnit *compilationUnit;
+    const CompiledData::Function *compiledFunction;
     ExecutionContext *next; // used in the GC
 
     struct EvalCode
@@ -117,6 +124,8 @@ struct Q_QML_EXPORT ExecutionContext
         outer = 0;
         lookups = 0;
         runtimeStrings = 0;
+        compilationUnit = 0;
+        compiledFunction = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
     }
@@ -152,8 +161,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
-
-    const Function *runtimeFunction() const;
 };
 
 struct SimpleCallContext : public ExecutionContext

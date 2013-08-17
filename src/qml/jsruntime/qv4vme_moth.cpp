@@ -239,7 +239,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     }
 #endif
 
-    QV4::String ** const runtimeStrings = context->runtimeFunction()->compilationUnit->runtimeStrings;
+    QV4::String ** const runtimeStrings = context->runtimeStrings;
     context->interpreterInstructionPointer = &code;
 
 #ifdef MOTH_THREADED_INTERPRETER
@@ -267,7 +267,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(LoadRegExp)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = context->runtimeFunction()->compilationUnit->runtimeRegularExpressions[instr.regExpId];
+        VALUE(instr.result) = context->compilationUnit->runtimeRegularExpressions[instr.regExpId];
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)

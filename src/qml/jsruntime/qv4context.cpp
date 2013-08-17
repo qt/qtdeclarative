@@ -139,6 +139,8 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
     outer = p;
     lookups = p->lookups;
     runtimeStrings = p->runtimeStrings;
+    compilationUnit = p->compilationUnit;
+    compiledFunction = p->compiledFunction;
 
     withObject = with;
 }
@@ -151,6 +153,8 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     outer = p;
     lookups = p->lookups;
     runtimeStrings = p->runtimeStrings;
+    compilationUnit = p->compilationUnit;
+    compiledFunction = p->compiledFunction;
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
@@ -175,8 +179,10 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
     activation = 0;
 
     if (function->function) {
-        lookups = function->function->compilationUnit->runtimeLookups;
-        runtimeStrings = function->function->compilationUnit->runtimeStrings;
+        compilationUnit = function->function->compilationUnit;
+        compiledFunction = function->function->compiledFunction;
+        lookups = compilationUnit->runtimeLookups;
+        runtimeStrings = compilationUnit->runtimeStrings;
     }
 
     uint argc = argumentCount;
@@ -223,8 +229,10 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     activation = qml;
 
-    lookups = function->function->compilationUnit->runtimeLookups;
-    runtimeStrings = function->function->compilationUnit->runtimeStrings;
+    compilationUnit = function->function->compilationUnit;
+    compiledFunction = function->function->compiledFunction;
+    lookups = compilationUnit->runtimeLookups;
+    runtimeStrings = compilationUnit->runtimeStrings;
 
     locals = (Value *)(this + 1);
     if (function->varCount)
@@ -608,20 +616,6 @@ void ExecutionContext::throwRangeError(Value value)
 void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(msg)));
-}
-
-const Function *ExecutionContext::runtimeFunction() const
-{
-    const ExecutionContext *ctx = this;
-    if (ctx->type == Type_CatchContext)
-        ctx = ctx->parent;
-    if (ctx->type >= Type_CallContext) {
-        const QV4::FunctionObject *f = ctx->asCallContext()->function;
-        Q_ASSERT(f);
-        return f ? f->function : 0;
-    }
-    Q_ASSERT(ctx->type == Type_GlobalContext);
-    return engine->globalCode;
 }
 
 void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)

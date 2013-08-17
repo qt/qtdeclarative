@@ -202,10 +202,14 @@ Value Script::run()
 
         bool strict = scope->strictMode;
         Lookup *oldLookups = scope->lookups;
-        String **oldRuntimeStrings = scope->runtimeStrings;
+        CompiledData::CompilationUnit * const oldCompilationUnit = scope->compilationUnit;
+        const CompiledData::Function * const oldCompiledFunction = scope->compiledFunction;
+        String ** const oldRuntimeStrings = scope->runtimeStrings;
 
         scope->strictMode = vmFunction->isStrict();
         scope->lookups = vmFunction->compilationUnit->runtimeLookups;
+        scope->compilationUnit = vmFunction->compilationUnit;
+        scope->compiledFunction = vmFunction->compiledFunction;
         scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
         QV4::Value result;
@@ -214,9 +218,16 @@ Value Script::run()
         } catch (Exception &e) {
             scope->strictMode = strict;
             scope->lookups = oldLookups;
+            scope->compilationUnit = oldCompilationUnit;
+            scope->compiledFunction = oldCompiledFunction;
             scope->runtimeStrings = oldRuntimeStrings;
             throw;
         }
+
+        scope->lookups = oldLookups;
+        scope->compilationUnit = oldCompilationUnit;
+        scope->compiledFunction = oldCompiledFunction;
+        scope->runtimeStrings = oldRuntimeStrings;
 
         return result;
 
