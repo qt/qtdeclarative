@@ -327,16 +327,6 @@ CatchContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const V
     return c;
 }
 
-CallContext *ExecutionEngine::newCallContext(FunctionObject *f, const Value &thisObject, Value *args, int argc)
-{
-    CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, argc)));
-    ExecutionContext *p = current;
-    current = c;
-    c->initCallContext(p, f, args, argc, thisObject);
-
-    return c;
-}
-
 CallContext *ExecutionEngine::newQmlContext(FunctionObject *f, Object *qml)
 {
     CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
