@@ -78,7 +78,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     assert(data);
     runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
     for (int i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i] = engine->newIdentifier(data->stringAt(i)->qString());
+        runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     for (int i = 0; i < data->regexpTableSize; ++i) {
@@ -90,7 +90,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
-        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex)->qString(), flags);
+        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
         runtimeRegularExpressions[i] = QV4::Value::fromObject(obj);
     }
 

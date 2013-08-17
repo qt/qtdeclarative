@@ -108,6 +108,18 @@ struct JSClass
     static int calculateSize(int nMembers) { return (sizeof(JSClass) + nMembers * sizeof(JSClassMember) + 7) & ~7; }
 };
 
+struct String
+{
+    quint32 hash;
+    quint32 flags; // isArrayIndex
+    QArrayData str;
+    // uint16 strdata[]
+
+    static int calculateSize(const QString &str) {
+        return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
+    }
+};
+
 static const char magic_str[] = "qv4cdata";
 
 struct Unit
@@ -118,7 +130,8 @@ struct Unit
 
     enum {
         IsJavascript = 0x1,
-        IsQml = 0x2
+        IsQml = 0x2,
+        StaticData = 0x4 // Unit data persistent in memory?
     };
     quint32 flags;
     uint stringTableSize;
@@ -134,10 +147,15 @@ struct Unit
     uint indexOfRootFunction;
     quint32 sourceFileIndex;
 
-    const String *stringAt(int idx) const {
+    QString stringAt(int idx) const {
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const uint offset = offsetTable[idx];
-        return reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+        const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
+        QStringDataPtr holder = { const_cast<QStringData *>(static_cast<const QStringData*>(&str->str)) };
+        QString qstr(holder);
+        if (flags & StaticData)
+            return qstr;
+        return QString(qstr.constData(), qstr.length());
     }
 
     const Function *functionAt(int idx) const {
@@ -200,23 +218,6 @@ struct Function
 
     static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings) {
         return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings) * sizeof(quint32) + 7) & ~0x7;
-    }
-};
-
-struct String
-{
-    quint32 hash;
-    quint32 flags; // isArrayIndex
-    QArrayData str;
-    // uint16 strdata[]
-
-    QString qString() const {
-        QStringDataPtr holder { const_cast<QStringData *>(static_cast<const QStringData*>(&str)) };
-        return QString(holder);
-    }
-
-    static int calculateSize(const QString &str) {
-        return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
     }
 };
 
@@ -322,7 +323,7 @@ struct CompilationUnit
     ExecutionEngine *engine;
     Unit *data;
 
-    QString fileName() const { return data->stringAt(data->sourceFileIndex)->qString(); }
+    QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 
     QV4::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
