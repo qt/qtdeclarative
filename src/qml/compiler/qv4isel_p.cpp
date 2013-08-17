@@ -58,12 +58,12 @@ QTextStream qout(stderr, QIODevice::WriteOnly);
 using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine, Module *module)
-    : _engine(engine)
-    , useFastLookups(true)
-    , jsUnitGenerator(engine, module)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module)
+    : useFastLookups(true)
+    , executableAllocator(execAllocator)
+    , jsUnitGenerator(module)
 {
-    assert(engine);
+    assert(execAllocator);
     assert(module);
 }
 

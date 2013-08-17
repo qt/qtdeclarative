@@ -176,7 +176,7 @@ void Script::parse()
         Codegen cg(scope, strictMode);
         cg(sourceFile, sourceCode, program, &module,
            parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
         if (inheritContext)
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();

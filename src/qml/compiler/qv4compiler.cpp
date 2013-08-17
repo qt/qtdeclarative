@@ -44,7 +44,7 @@
 #include <qv4isel_p.h>
 #include <qv4engine_p.h>
 
-QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::ExecutionEngine *engine, QQmlJS::V4IR::Module *module)
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module)
     : irModule(module)
     , stringDataSize(0)
     , jsClassDataSize(0)

@@ -58,7 +58,7 @@ struct JSClassMember;
 namespace Compiler {
 
 struct JSUnitGenerator {
-    JSUnitGenerator(QV4::ExecutionEngine *engine, QQmlJS::V4IR::Module *module);
+    JSUnitGenerator(QQmlJS::V4IR::Module *module);
 
     QQmlJS::V4IR::Module *irModule;
 

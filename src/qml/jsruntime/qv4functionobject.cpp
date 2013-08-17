@@ -213,7 +213,7 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
     QQmlJS::Codegen cg(v4->current, f->strictMode);
     cg(QString(), function, fe, &module);
 
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 

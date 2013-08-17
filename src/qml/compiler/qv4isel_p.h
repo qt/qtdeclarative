@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-struct ExecutionEngine;
+struct ExecutableAllocator;
 struct Function;
 }
 
@@ -62,7 +62,7 @@ namespace QQmlJS {
 class Q_QML_EXPORT EvalInstructionSelection
 {
 public:
-    EvalInstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
+    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
     QV4::CompiledData::CompilationUnit *compile();
@@ -77,14 +77,12 @@ public:
     int registerJSClass(QQmlJS::V4IR::ExprList *args) { return jsUnitGenerator.registerJSClass(args); }
 
 protected:
-    QV4::ExecutionEngine *engine() const { return _engine; }
     virtual void run(V4IR::Function *function) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
-private:
-    QV4::ExecutionEngine *_engine;
 protected:
     bool useFastLookups;
+    QV4::ExecutableAllocator *executableAllocator;
     QV4::Compiler::JSUnitGenerator jsUnitGenerator;
 };
 
@@ -92,7 +90,7 @@ class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module) = 0;
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module) = 0;
     virtual bool jitCompileRegexps() const = 0;
 };
 

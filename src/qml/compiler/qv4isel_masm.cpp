@@ -673,8 +673,8 @@ JSC::MacroAssemblerCodeRef Assembler::link()
     return codeRef;
 }
 
-InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
-    : EvalInstructionSelection(engine, module)
+InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
+    : EvalInstructionSelection(execAllocator, module)
     , _block(0)
     , _function(0)
     , _as(0)
@@ -695,7 +695,7 @@ void InstructionSelection::run(V4IR::Function *function)
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
     Assembler* oldAssembler = _as;
-    _as = new Assembler(this, _function, engine()->executableAllocator);
+    _as = new Assembler(this, _function, executableAllocator);
 
     V4IR::Optimizer opt(_function);
     opt.run();

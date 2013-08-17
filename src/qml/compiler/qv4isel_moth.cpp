@@ -188,8 +188,8 @@ private:
     }
 };
 
-InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
-    : EvalInstructionSelection(engine, module)
+InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
+    : EvalInstructionSelection(execAllocator, module)
     , _function(0)
     , _block(0)
     , _codeStart(0)
