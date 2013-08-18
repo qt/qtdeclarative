@@ -47,6 +47,8 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4unwindhelper_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QV4 {
 
 namespace CompiledData {
@@ -151,3 +153,5 @@ void CompilationUnit::markObjects()
 }
 
 }
+
+QT_END_NAMESPACE
