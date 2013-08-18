@@ -295,7 +295,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
 Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
 {
     loadPtr(Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, runtimeStrings)), reg);
-    const int id = _isel->stringId(string);
+    const int id = _isel->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
 }
 
@@ -765,11 +765,10 @@ void InstructionSelection::run(V4IR::Function *function)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = jsUnitGenerator.generateUnit();
-    compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
-    compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
+    compilationUnit->data = generateUnit();
+    compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
-    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
+    foreach (V4IR::Function *irFunction, irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     return compilationUnit;
 }
@@ -1048,7 +1047,7 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
-    int id = jsUnitGenerator.registerRegExp(sourceRegexp);
+    int id = registerRegExp(sourceRegexp);
     generateFunctionCall(Assembler::Void, __qmljs_lookup_runtime_regexp, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp), Assembler::TrustedImm32(id));
 }
 
@@ -1070,7 +1069,7 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    int id = jsUnitGenerator.irModule->functions.indexOf(closure->value);
+    int id = irModule->functions.indexOf(closure->value);
     generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImm32(id));
 }
 

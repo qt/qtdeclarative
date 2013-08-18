@@ -59,7 +59,7 @@ struct Function;
 
 namespace QQmlJS {
 
-class Q_QML_EXPORT EvalInstructionSelection
+class Q_QML_EXPORT EvalInstructionSelection : public QV4::Compiler::JSUnitGenerator
 {
 public:
     EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
@@ -69,13 +69,6 @@ public:
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
-    int stringId(const QString &str) { return jsUnitGenerator.registerString(str); }
-    uint registerGetterLookup(const QString &str) { return jsUnitGenerator.registerGetterLookup(str); }
-    uint registerSetterLookup(const QString &str) { return jsUnitGenerator.registerSetterLookup(str); }
-    uint registerGlobalGetterLookup(const QString &str) { return jsUnitGenerator.registerGlobalGetterLookup(str); }
-    void registerLineNumberMapping(V4IR::Function *function, const QVector<uint> &mappings) { jsUnitGenerator.registerLineNumberMapping(function, mappings); }
-    int registerJSClass(QQmlJS::V4IR::ExprList *args) { return jsUnitGenerator.registerJSClass(args); }
-
 protected:
     virtual void run(V4IR::Function *function) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
@@ -83,7 +76,6 @@ protected:
 protected:
     bool useFastLookups;
     QV4::ExecutableAllocator *executableAllocator;
-    QV4::Compiler::JSUnitGenerator jsUnitGenerator;
 };
 
 class Q_QML_EXPORT EvalISelFactory

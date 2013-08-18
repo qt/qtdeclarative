@@ -59,9 +59,9 @@ using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
 EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module)
-    : useFastLookups(true)
+    : QV4::Compiler::JSUnitGenerator(module)
+    , useFastLookups(true)
     , executableAllocator(execAllocator)
-    , jsUnitGenerator(module)
 {
     assert(execAllocator);
     assert(module);
@@ -75,10 +75,10 @@ EvalISelFactory::~EvalISelFactory()
 
 QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
 {
-    Function *rootFunction = jsUnitGenerator.irModule->rootFunction;
+    Function *rootFunction = irModule->rootFunction;
     if (!rootFunction)
         return 0;
-    foreach (V4IR::Function *f, jsUnitGenerator.irModule->functions)
+    foreach (V4IR::Function *f, irModule->functions)
         run(f);
 
     return backendCompileStep();

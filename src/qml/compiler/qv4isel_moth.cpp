@@ -295,11 +295,10 @@ void InstructionSelection::run(V4IR::Function *function)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = jsUnitGenerator.generateUnit();
-    compilationUnit->runtimeFunctions.reserve(jsUnitGenerator.irModule->functions.size());
-    compilationUnit->codeRefs.resize(jsUnitGenerator.irModule->functions.size());
+    compilationUnit->data = generateUnit();
+    compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
-    foreach (V4IR::Function *irFunction, jsUnitGenerator.irModule->functions)
+    foreach (V4IR::Function *irFunction, irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     return compilationUnit;
 }
@@ -318,7 +317,7 @@ void InstructionSelection::callProperty(V4IR::Temp *base, const QString &name, V
     // call the property on the loaded base
     Instruction::CallProperty call;
     call.base = getParam(base);
-    call.name = stringId(name);
+    call.name = registerString(name);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -349,7 +348,7 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
                                                        V4IR::Temp *result)
 {
     Instruction::CreateActivationProperty create;
-    create.name = stringId(*func->id);
+    create.name = registerString(*func->id);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -359,7 +358,7 @@ void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &na
 {
     Instruction::CreateProperty create;
     create.base = getParam(base);
-    create.name = stringId(name);
+    create.name = registerString(name);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -394,7 +393,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
     Instruction::LoadString load;
-    load.stringId = stringId(str);
+    load.stringId = registerString(str);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -402,7 +401,7 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
     Instruction::LoadRegExp load;
-    load.regExpId = jsUnitGenerator.registerRegExp(sourceRegexp);
+    load.regExpId = registerRegExp(sourceRegexp);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -410,7 +409,7 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
     Instruction::LoadName load;
-    load.name = stringId(*name->id);
+    load.name = registerString(*name->id);
     load.result = getResultParam(temp);
     addInstruction(load);
 }
@@ -419,13 +418,13 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 {
     Instruction::StoreName store;
     store.source = getParam(source);
-    store.name = stringId(targetName);
+    store.name = registerString(targetName);
     addInstruction(store);
 }
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    int id = jsUnitGenerator.irModule->functions.indexOf(closure->value);
+    int id = irModule->functions.indexOf(closure->value);
     Instruction::LoadClosure load;
     load.value = id;
     load.result = getResultParam(target);
@@ -436,7 +435,7 @@ void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4
 {
     Instruction::LoadProperty load;
     load.base = getParam(base);
-    load.name = stringId(name);
+    load.name = registerString(name);
     load.result = getResultParam(target);
     addInstruction(load);
 }
@@ -445,7 +444,7 @@ void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBas
 {
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
-    store.name = stringId(targetName);
+    store.name = registerString(targetName);
     store.source = getParam(source);
     addInstruction(store);
 }
@@ -590,7 +589,7 @@ void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSour
     if (op) {
         Instruction::InplaceNameOp ieo;
         ieo.alu = op;
-        ieo.name = stringId(targetName);
+        ieo.name = registerString(targetName);
         ieo.source = getParam(rightSource);
         addInstruction(ieo);
     }
@@ -643,7 +642,7 @@ void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source,
     Instruction::InplaceMemberOp imo;
     imo.alu = op;
     imo.base = getParam(targetBase);
-    imo.member = stringId(targetName);
+    imo.member = registerString(targetName);
     imo.source = getParam(source);
     addInstruction(imo);
 }
@@ -729,7 +728,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = stringId(*t->exceptionVarName);
+    enterTry.exceptionVarName = registerString(*t->exceptionVarName);
     enterTry.exceptionVar = getParam(t->exceptionVar);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 
@@ -743,7 +742,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallActivationProperty call;
-    call.name = stringId(*func->id);
+    call.name = registerString(*func->id);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -753,7 +752,7 @@ void InstructionSelection::callBuiltinTypeofMember(V4IR::Temp *base, const QStri
 {
     Instruction::CallBuiltinTypeofMember call;
     call.base = getParam(base);
-    call.member = stringId(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -770,7 +769,7 @@ void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Te
 void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofName call;
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -787,7 +786,7 @@ void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QStri
 {
     Instruction::CallBuiltinDeleteMember call;
     call.base = getParam(base);
-    call.member = stringId(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -804,7 +803,7 @@ void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Te
 void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteName call;
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -821,7 +820,7 @@ void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, cons
 {
     Instruction::CallBuiltinPostDecMember call;
     call.base = getParam(base);
-    call.member = stringId(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -838,7 +837,7 @@ void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V
 void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecName call;
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -855,7 +854,7 @@ void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, cons
 {
     Instruction::CallBuiltinPostIncMember call;
     call.base = getParam(base);
-    call.member = stringId(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -872,7 +871,7 @@ void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V
 void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncName call;
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -931,7 +930,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
 {
     Instruction::CallBuiltinDeclareVar call;
     call.isDeletable = deletable;
-    call.varName = stringId(name);
+    call.varName = registerString(name);
     addInstruction(call);
 }
 
@@ -939,7 +938,7 @@ void InstructionSelection::callBuiltinDefineGetterSetter(V4IR::Temp *object, con
 {
     Instruction::CallBuiltinDefineGetterSetter call;
     call.object = getParam(object);
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.getter = getParam(getter);
     call.setter = getParam(setter);
     addInstruction(call);
@@ -949,7 +948,7 @@ void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const Q
 {
     Instruction::CallBuiltinDefineProperty call;
     call.object = getParam(object);
-    call.name = stringId(name);
+    call.name = registerString(name);
     call.value = getParam(value);
     addInstruction(call);
 }
