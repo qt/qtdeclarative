@@ -567,6 +567,7 @@ void Assembler::recordLineNumber(int lineNumber)
 JSC::MacroAssemblerCodeRef Assembler::link()
 {
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
+    Label endOfCode = label();
     // Let the ARM exception table follow right after that
     for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
         nop();
