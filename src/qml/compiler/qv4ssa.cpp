@@ -2100,6 +2100,67 @@ void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector
         delete bb;
     }
 }
+
+bool tryOptimizingComparison(Expr *&expr)
+{
+    Binop *b = expr->asBinop();
+    if (!b)
+        return false;
+    Const *leftConst = b->left->asConst();
+    if (!leftConst || leftConst->type == StringType || leftConst->type == ObjectType)
+        return false;
+    Const *rightConst = b->right->asConst();
+    if (!rightConst || rightConst->type == StringType || rightConst->type == ObjectType)
+        return false;
+
+    QV4::Value l = convertToValue(leftConst);
+    QV4::Value r = convertToValue(rightConst);
+
+    switch (b->op) {
+    case OpGt:
+        leftConst->value = __qmljs_cmp_gt(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    case OpLt:
+        leftConst->value = __qmljs_cmp_lt(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    case OpGe:
+        leftConst->value = __qmljs_cmp_ge(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    case OpLe:
+        leftConst->value = __qmljs_cmp_le(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    case OpStrictEqual:
+        if (!strictlyEqualTypes(leftConst->type, rightConst->type))
+            return false;
+        // intentional fall-through
+    case OpEqual:
+        leftConst->value = __qmljs_cmp_eq(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    case OpStrictNotEqual:
+        if (!strictlyEqualTypes(leftConst->type, rightConst->type))
+            return false;
+        // intentional fall-through
+    case OpNotEqual:
+        leftConst->value = __qmljs_cmp_ne(l, r);
+        leftConst->type = BoolType;
+        expr = leftConst;
+        return true;
+    default:
+        break;
+    }
+
+    return false;
+}
 } // anonymous namespace
 
 void optimizeSSA(Function *function, DefUsesCalculator &defUses)
@@ -2246,7 +2307,59 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
 
-                // TODO: Constant binary expression evaluation
+                if (Binop *b = m->source->asBinop()) {
+                    // TODO: More constant binary expression evaluation
+                    // TODO: If the result of the move is only used in one single cjump, then
+                    //       inline the binop into the cjump.
+                    Const *leftConst = b->left->asConst();
+                    if (!leftConst || leftConst->type == StringType || leftConst->type == ObjectType)
+                        continue;
+                    Const *rightConst = b->right->asConst();
+                    if (!rightConst || rightConst->type == StringType || rightConst->type == ObjectType)
+                        continue;
+
+                    double l = __qmljs_to_number(convertToValue(leftConst));
+                    double r = __qmljs_to_number(convertToValue(rightConst));
+
+                    switch (b->op) {
+                    case OpMul:
+                        leftConst->value = l * r;
+                        leftConst->type = DoubleType;
+                        m->source = leftConst;
+                        W += m;
+                        break;
+                    case OpAdd:
+                        leftConst->value = l + r;
+                        leftConst->type = DoubleType;
+                        m->source = leftConst;
+                        W += m;
+                        break;
+                    case OpSub:
+                        leftConst->value = l - r;
+                        leftConst->type = DoubleType;
+                        m->source = leftConst;
+                        W += m;
+                        break;
+                    case OpDiv:
+                        leftConst->value = l / r;
+                        leftConst->type = DoubleType;
+                        m->source = leftConst;
+                        W += m;
+                        break;
+                    case OpMod:
+                        leftConst->value = std::fmod(l, r);
+                        leftConst->type = DoubleType;
+                        m->source = leftConst;
+                        W += m;
+                        break;
+                    default:
+                        if (tryOptimizingComparison(m->source))
+                            W += m;
+                        break;
+                    }
+
+                    continue;
+                }
             }
         } else if (CJump *cjump = s->asCJump()) {
             if (Const *c = cjump->cond->asConst()) {
@@ -2263,9 +2376,12 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 *ref[s] = jump;
 
                 continue;
+            } else if (cjump->cond->asBinop()) {
+                if (tryOptimizingComparison(cjump->cond))
+                    W += cjump;
+                continue;
             }
             // TODO: Constant unary expression evaluation
-            // TODO: Constant binary expression evaluation
         }
     }
 
@@ -2597,9 +2713,10 @@ void Optimizer::run()
 
 //    showMeTheCode(function);
 
+    static bool doSSA = /*qgetenv("QV4_NO_SSA").isEmpty();*/ false;
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
-    if (!function->hasTry && !function->hasWith && doOpt && false) {
+    if (!function->hasTry && !function->hasWith && doSSA) {
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);
 //        showMeTheCode(function);
@@ -2622,9 +2739,11 @@ void Optimizer::run()
         DeadCodeElimination(defUses, function).run();
 //        showMeTheCode(function);
 
-//        qout << "Running SSA optimization..." << endl;
-        optimizeSSA(function, defUses);
-//        showMeTheCode(function);
+        if (doOpt) {
+//            qout << "Running SSA optimization..." << endl;
+            optimizeSSA(function, defUses);
+//            showMeTheCode(function);
+        }
 
 //        qout << "Running type inference..." << endl;
         TypeInference(defUses).run(function);

@@ -183,6 +183,12 @@ enum Type {
     StringType    = 1 << 7,
     ObjectType    = 1 << 8
 };
+
+inline bool strictlyEqualTypes(Type t1, Type t2)
+{
+    return t1 == t2 || ((t1 & NumberType) && (t2 & NumberType));
+}
+
 QString typeName(Type t);
 
 struct ExprVisitor {
