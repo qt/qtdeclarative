@@ -131,13 +131,13 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
-    QV4::Function *entry = linkBackendToEngine(engine);
+    linkBackendToEngine(engine);
 
     runtimeFunctionsSortedByAddress.resize(runtimeFunctions.size());
     memcpy(runtimeFunctionsSortedByAddress.data(), runtimeFunctions.data(), runtimeFunctions.size() * sizeof(QV4::Function*));
     qSort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
 
-    return entry;
+    return runtimeFunctions[data->indexOfRootFunction];
 }
 
 void CompilationUnit::markObjects()

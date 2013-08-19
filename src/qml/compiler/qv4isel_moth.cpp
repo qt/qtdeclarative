@@ -1081,14 +1081,9 @@ Instr::Param InstructionSelection::getParam(V4IR::Expr *e) {
 }
 
 
-QV4::Function *CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
+void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
-    QV4::Function *rootRuntimeFunction = 0;
-
-    const QV4::CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
-
     runtimeFunctions.resize(data->functionTableSize);
-
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
 
@@ -1099,12 +1094,5 @@ QV4::Function *CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine
 
         if (QV4::Debugging::Debugger *debugger = engine->debugger)
             debugger->setPendingBreakpoints(runtimeFunction);
-
-        if (compiledFunction == compiledRootFunction) {
-            assert(!rootRuntimeFunction);
-            rootRuntimeFunction = runtimeFunction;
-        }
     }
-
-    return rootRuntimeFunction;
 }

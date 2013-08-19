@@ -342,7 +342,7 @@ struct CompilationUnit
     void markObjects();
 
 protected:
-    virtual QV4::Function *linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
+    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
 };
 
 }

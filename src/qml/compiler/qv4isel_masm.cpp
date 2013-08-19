@@ -69,14 +69,9 @@ CompilationUnit::~CompilationUnit()
     UnwindHelper::deregisterFunctions(runtimeFunctions);
 }
 
-QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
+void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 {
-    QV4::Function *rootRuntimeFunction = 0;
-
-    const CompiledData::Function *compiledRootFunction = data->functionAt(data->indexOfRootFunction);
-
     runtimeFunctions.resize(data->functionTableSize);
-
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
@@ -84,16 +79,9 @@ QV4::Function *CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
                                                            (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
                                                            codeRefs[i].size());
         runtimeFunctions[i] = runtimeFunction;
-
-        if (compiledFunction == compiledRootFunction) {
-            assert(!rootRuntimeFunction);
-            rootRuntimeFunction = runtimeFunction;
-        }
     }
 
     UnwindHelper::registerFunctions(runtimeFunctions);
-
-    return rootRuntimeFunction;
 }
 
 QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)
