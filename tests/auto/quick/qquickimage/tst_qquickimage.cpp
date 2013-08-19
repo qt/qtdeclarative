@@ -105,6 +105,7 @@ private slots:
     void progressAndStatusChanges();
     void sourceSizeChanges();
     void correctStatus();
+    void highdpi();
 
 private:
     QQmlEngine engine;
@@ -925,6 +926,49 @@ void tst_qquickimage::correctStatus()
     QCOMPARE(obj->property("status").toInt(), int(QQuickImage::Loading));
 
     QTest::qWait(400);
+    delete obj;
+}
+
+void tst_qquickimage::highdpi()
+{
+    TestHTTPServer server(14449);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory());
+
+    QString componentStr = "import QtQuick 2.0\nImage { source: srcImage ;  }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQmlContext *ctxt = engine.rootContext();
+
+    // Testing "@2x" high-dpi image loading:
+    // The basic case is as follows. Suppose you have foo.png,
+    // which is a 64x64 png that fits in a QML layout. Now,
+    // on a high-dpi system that pixmap would not provide
+    // enough pixels. To fix this the app developer provides
+    // a 128x128 foo@2x.png, which Qt automatically loads.
+    // The image continues to be referred to as "foo.png" in
+    // the QML sources, and reports a size of 64x64.
+    //
+
+    // Load "heart-highdpi@2x.png", which is a 300x300 png. As a 2x scale image it
+    // should render and report a geometry of 150x150.
+    ctxt->setContextProperty("srcImage", testFileUrl("heart-highdpi@2x.png"));
+
+    QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
+    QVERIFY(obj != 0);
+
+    QCOMPARE(obj->width(), 150.0);
+    QCOMPARE(obj->height(), 150.0);
+    QCOMPARE(obj->paintedWidth(), 150.0);
+    QCOMPARE(obj->paintedHeight(), 150.0);
+
+    // Load a normal 1x image.
+    ctxt->setContextProperty("srcImage", testFileUrl("heart.png"));
+    QCOMPARE(obj->width(), 300.0);
+    QCOMPARE(obj->height(), 300.0);
+    QCOMPARE(obj->paintedWidth(), 300.0);
+    QCOMPARE(obj->paintedHeight(), 300.0);
+
     delete obj;
 }
 

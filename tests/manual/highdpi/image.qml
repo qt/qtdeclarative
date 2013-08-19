@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,55 +39,14 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKIMAGEBASE_P_P_H
-#define QQUICKIMAGEBASE_P_P_H
+import QtQuick 2.0
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Rectangle {
+    width: 400
+    height: 400
 
-#include "qquickimplicitsizeitem_p_p.h"
-#include "qquickimagebase_p.h"
-
-#include <QtQuick/private/qquickpixmapcache_p.h>
-
-QT_BEGIN_NAMESPACE
-
-class QNetworkReply;
-class QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickImageBase)
-
-public:
-    QQuickImageBasePrivate()
-      : status(QQuickImageBase::Null),
-        progress(0.0),
-        devicePixelRatio(1.0),
-        async(false),
-        cache(true),
-        mirror(false)
-    {
+    Image {
+        source : "heart.png"
+        anchors.centerIn: parent
     }
-
-    QQuickPixmap pix;
-    QQuickImageBase::Status status;
-    QUrl url;
-    qreal progress;
-    QSize sourcesize;
-    QSize oldSourceSize;
-    qreal devicePixelRatio;
-    bool async : 1;
-    bool cache : 1;
-    bool mirror: 1;
-};
-
-QT_END_NAMESPACE
-
-#endif // QQUICKIMAGEBASE_P_P_H
+}

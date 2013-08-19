@@ -589,8 +589,8 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     QSGTexture::WrapMode hWrap = QSGTexture::ClampToEdge;
     QSGTexture::WrapMode vWrap = QSGTexture::ClampToEdge;
 
-    qreal pixWidth = (d->fillMode == PreserveAspectFit) ? d->paintedWidth : d->pix.width();
-    qreal pixHeight = (d->fillMode == PreserveAspectFit) ? d->paintedHeight : d->pix.height();
+    qreal pixWidth = (d->fillMode == PreserveAspectFit) ? d->paintedWidth : d->pix.width() / d->devicePixelRatio;
+    qreal pixHeight = (d->fillMode == PreserveAspectFit) ? d->paintedHeight :  d->pix.height() / d->devicePixelRatio;
 
     int xOffset = 0;
     if (d->hAlign == QQuickImage::AlignHCenter)
@@ -671,10 +671,12 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         break;
     };
 
-    QRectF nsrect(sourceRect.x() / d->pix.width(),
-                  sourceRect.y() / d->pix.height(),
-                  sourceRect.width() / d->pix.width(),
-                  sourceRect.height() / d->pix.height());
+    qreal nsWidth = (hWrap == QSGTexture::Repeat) ? d->pix.width() / d->devicePixelRatio : d->pix.width();
+    qreal nsHeight = (vWrap == QSGTexture::Repeat) ? d->pix.height() / d->devicePixelRatio : d->pix.height();
+    QRectF nsrect(sourceRect.x() / nsWidth,
+                  sourceRect.y() / nsHeight,
+                  sourceRect.width() / nsWidth,
+                  sourceRect.height() / nsHeight);
 
     if (targetRect.isEmpty()
         || !qIsFinite(targetRect.width()) || !qIsFinite(targetRect.height())
