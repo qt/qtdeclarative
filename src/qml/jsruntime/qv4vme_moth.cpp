@@ -260,10 +260,10 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         VALUE(instr.result) = VALUE(instr.value);
     MOTH_END_INSTR(LoadValue)
 
-    MOTH_BEGIN_INSTR(LoadString)
+    MOTH_BEGIN_INSTR(LoadRuntimeString)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
         VALUE(instr.result) = QV4::Value::fromString(runtimeStrings[instr.stringId]);
-    MOTH_END_INSTR(LoadString)
+    MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());

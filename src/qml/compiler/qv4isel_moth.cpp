@@ -392,7 +392,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    Instruction::LoadString load;
+    Instruction::LoadRuntimeString load;
     load.stringId = registerString(str);
     load.result = getResultParam(targetTemp);
     addInstruction(load);

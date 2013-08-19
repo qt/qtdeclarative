@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
     F(LoadValue, loadValue) \
-    F(LoadString, loadString) \
+    F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(MoveTemp, moveTemp) \
@@ -220,7 +220,7 @@ union Instr
         Param value;
         Param result;
     };
-    struct instr_loadString {
+    struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
         Param result;
@@ -549,7 +549,7 @@ union Instr
     instr_common common;
     instr_ret ret;
     instr_loadValue loadValue;
-    instr_loadString loadString;
+    instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_moveTemp moveTemp;
     instr_loadClosure loadClosure;
