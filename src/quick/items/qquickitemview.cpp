@@ -326,7 +326,7 @@ void QQuickItemView::setModel(const QVariant &model)
             d->updateSectionCriteria();
             d->refill();
             d->currentIndex = -1;
-            setCurrentIndex(0);
+            setCurrentIndex(d->model->count() > 0 ? 0 : -1);
             d->updateViewport();
 
             if (d->transitioner && d->transitioner->populateTransition) {

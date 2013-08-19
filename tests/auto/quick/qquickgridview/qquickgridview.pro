@@ -11,4 +11,8 @@ include (../shared/util.pri)
 TESTDATA = data/*
 
 QT += core-private gui-private  qml-private quick-private testlib
+
+win32:CONFIG += insignificant_test # QTBUG-33017
+macx:CONFIG += insignificant_test # QTBUG-33017
+
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

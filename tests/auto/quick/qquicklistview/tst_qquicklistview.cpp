@@ -2605,6 +2605,11 @@ void tst_QQuickListView::currentIndex()
     listview->setContentY(200);
     QTRY_VERIFY(!delegateVisible(listview->currentItem()));
 
+    // empty model should reset currentIndex to -1
+    QaimModel emptyModel;
+    ctxt->setContextProperty("testModel", &emptyModel);
+    QCOMPARE(listview->currentIndex(), -1);
+
     delete window;
 }
 

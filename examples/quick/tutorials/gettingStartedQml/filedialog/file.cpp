@@ -38,7 +38,6 @@
 **
 ****************************************************************************/
 
-
 #include "file.h"
 
 File::File(QObject *parent) : QObject(parent)
@@ -57,4 +56,3 @@ void File::setName(const QString &str)
         emit nameChanged();
     }
 }
-

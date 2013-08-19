@@ -44,41 +44,40 @@
 #include "file.h"
 
 #include <QDir>
-#include <QObject>
-#include <QQmlListProperty>
 #include <QStringList>
 #include <QTextStream>
+#include <QQmlListProperty>
+#include <QObject>
 
-class Directory : public QObject
-{
+class Directory : public QObject {
     Q_OBJECT
 
-    // number of files in the directory
+    // Number of files in the directory
     Q_PROPERTY(int filesCount READ filesCount)
 
-    // list property containing file names as QString
+    // List property containing file names as QString
     Q_PROPERTY(QQmlListProperty<File> files READ files CONSTANT)
 
-    // file name of the text file to read/write
+    // File name of the text file to read/write
     Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
 
-    // text content of the file
+    // Text content of the file
     Q_PROPERTY(QString fileContent READ fileContent WRITE setFileContent NOTIFY fileContentChanged)
 
 public:
     Directory(QObject *parent = 0);
 
-    // properties' read functions
+    // Properties' read functions
     int filesCount() const;
     QString filename() const;
     QString fileContent() const;
     QQmlListProperty<File> files();
 
-    // properties' write functions
+    // Properties' write functions
     void setFilename(const QString &str);
     void setFileContent(const QString &str);
 
-    // accessible from QML
+    // Accessible from QML
     Q_INVOKABLE void saveFile();
     Q_INVOKABLE void loadFile();
 
@@ -94,13 +93,13 @@ private:
     QString m_saveDir;
     QStringList m_filterList;
 
-    //contains the file data in QString format
+    // Contains the file data in QString format
     QString m_fileContent;
 
-    //Registered to QML in a plugin. Accessible from QML as a property of Directory
+    // Registered to QML in a plugin. Accessible from QML as a property of Directory
     QList<File *> m_fileList;
 
-    //refresh content of the directory
+    // Refresh content of the directory
     void refresh();
 };
 

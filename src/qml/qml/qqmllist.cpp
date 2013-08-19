@@ -409,8 +409,9 @@ Construct a QQmlListProperty from a set of operation functions.  An opaque \a da
 may be passed which can be accessed from within the operation functions.  The list property 
 remains valid while \a object exists.
 
-You can pass a null pointer, but than the list will be not designable or changeable by the debugger.
-So provide all function, except it is not possible.
+Null pointers can be passed for any function. If any null pointers are passed in, the list
+will be neither designable nor alterable by the debugger. It is recommended to provide valid
+pointers for all functions.
 */
 
 /*!
