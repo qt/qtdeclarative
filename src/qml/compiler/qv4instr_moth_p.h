@@ -52,6 +52,8 @@ QT_BEGIN_NAMESPACE
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
     F(LoadValue, loadValue) \
+    F(LoadRuntimeString, loadRuntimeString) \
+    F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(MoveTemp, moveTemp) \
     F(LoadName, loadName) \
@@ -219,6 +221,16 @@ union Instr
         Param value;
         Param result;
     };
+    struct instr_loadRuntimeString {
+        MOTH_INSTR_HEADER
+        int stringId;
+        Param result;
+    };
+    struct instr_loadRegExp {
+        MOTH_INSTR_HEADER
+        int regExpId;
+        Param result;
+    };
     struct instr_moveTemp {
         MOTH_INSTR_HEADER
         Param source;
@@ -226,28 +238,28 @@ union Instr
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
-        QV4::Function *value;
+        int value;
         Param result;
     };
     struct instr_loadName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param result;
     };
     struct instr_storeName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param source;
     };
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param base;
         Param result;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param base;
         Param source;
     };
@@ -271,7 +283,7 @@ union Instr
         MOTH_INSTR_HEADER
         ptrdiff_t tryOffset;
         ptrdiff_t catchOffset;
-        QV4::String *exceptionVarName;
+        int exceptionVarName;
         Param exceptionVar;
     };
     struct instr_callValue {
@@ -283,7 +295,7 @@ union Instr
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         quint32 argc;
         quint32 args;
         Param base;
@@ -299,7 +311,7 @@ union Instr
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         quint32 argc;
         quint32 args;
         Param result;
@@ -330,7 +342,7 @@ union Instr
     };
     struct instr_callBuiltinDeleteMember {
         MOTH_INSTR_HEADER
-        QV4::String *member;
+        int member;
         Param base;
         Param result;
     };
@@ -342,12 +354,12 @@ union Instr
     };
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param result;
     };
     struct instr_callBuiltinTypeofMember {
         MOTH_INSTR_HEADER
-        QV4::String *member;
+        int member;
         Param base;
         Param result;
     };
@@ -359,7 +371,7 @@ union Instr
     };
     struct instr_callBuiltinTypeofName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param result;
     };
     struct instr_callBuiltinTypeofValue {
@@ -370,7 +382,7 @@ union Instr
     struct instr_callBuiltinPostIncMember {
         MOTH_INSTR_HEADER
         Param base;
-        QV4::String *member;
+        int member;
         Param result;
     };
     struct instr_callBuiltinPostIncSubscript {
@@ -381,7 +393,7 @@ union Instr
     };
     struct instr_callBuiltinPostIncName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param result;
     };
     struct instr_callBuiltinPostIncValue {
@@ -392,7 +404,7 @@ union Instr
     struct instr_callBuiltinPostDecMember {
         MOTH_INSTR_HEADER
         Param base;
-        QV4::String *member;
+        int member;
         Param result;
     };
     struct instr_callBuiltinPostDecSubscript {
@@ -403,7 +415,7 @@ union Instr
     };
     struct instr_callBuiltinPostDecName {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param result;
     };
     struct instr_callBuiltinPostDecValue {
@@ -413,19 +425,19 @@ union Instr
     };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
-        QV4::String *varName;
+        int varName;
         bool isDeletable;
     };
     struct instr_callBuiltinDefineGetterSetter {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param object;
         Param getter;
         Param setter;
     };
     struct instr_callBuiltinDefineProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         Param object;
         Param value;
     };
@@ -437,7 +449,7 @@ union Instr
     };
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
-        QV4::InternalClass *internalClass;
+        int internalClassId;
         quint32 args;
         Param result;
     };
@@ -454,7 +466,7 @@ union Instr
     };
     struct instr_createProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         quint32 argc;
         quint32 args;
         Param base;
@@ -462,7 +474,7 @@ union Instr
     };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
-        QV4::String *name;
+        int name;
         quint32 argc;
         quint32 args;
         Param result;
@@ -528,20 +540,22 @@ union Instr
     struct instr_inplaceMemberOp {
         MOTH_INSTR_HEADER
         QV4::InplaceBinOpMember alu;
-        QV4::String *member;
+        int member;
         Param base;
         Param source;
     };
     struct instr_inplaceNameOp {
         MOTH_INSTR_HEADER
         QV4::InplaceBinOpName alu;
-        QV4::String *name;
+        int name;
         Param source;
     };
 
     instr_common common;
     instr_ret ret;
     instr_loadValue loadValue;
+    instr_loadRuntimeString loadRuntimeString;
+    instr_loadRegExp loadRegExp;
     instr_moveTemp moveTemp;
     instr_loadClosure loadClosure;
     instr_loadName loadName;

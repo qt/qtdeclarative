@@ -110,6 +110,9 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
     thisObject = p->thisObject;
     outer = p;
     lookups = p->lookups;
+    runtimeStrings = p->runtimeStrings;
+    compilationUnit = p->compilationUnit;
+    compiledFunction = p->compiledFunction;
 
     withObject = with;
 }
@@ -121,6 +124,9 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     thisObject = p->thisObject;
     outer = p;
     lookups = p->lookups;
+    runtimeStrings = p->runtimeStrings;
+    compilationUnit = p->compilationUnit;
+    compiledFunction = p->compiledFunction;
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
@@ -145,8 +151,12 @@ void CallContext::initCallContext(ExecutionContext *parentContext, FunctionObjec
 
     activation = 0;
 
-    if (function->function)
-        lookups = function->function->lookups;
+    if (function->function) {
+        compilationUnit = function->function->compilationUnit;
+        compiledFunction = function->function->compiledFunction;
+        lookups = compilationUnit->runtimeLookups;
+        runtimeStrings = compilationUnit->runtimeStrings;
+    }
 
     uint argc = argumentCount;
 
@@ -184,7 +194,10 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     activation = qml;
 
-    lookups = function->function->lookups;
+    compilationUnit = function->function->compilationUnit;
+    compiledFunction = function->function->compiledFunction;
+    lookups = compilationUnit->runtimeLookups;
+    runtimeStrings = compilationUnit->runtimeStrings;
 
     locals = (Value *)(this + 1);
     if (function->varCount)
@@ -358,7 +371,7 @@ Value ExecutionContext::getProperty(String *name)
                 if (hasProperty)
                     return v;
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }
@@ -420,7 +433,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
                 if (hasProperty)
                     return v;
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }
@@ -485,7 +498,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                     return v;
                 }
             }
-            if (f->function && f->function->isNamedExpression
+            if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
                 return Value::fromObject(c->function);
         }
@@ -575,7 +588,6 @@ void ExecutionContext::throwURIError(Value msg)
 {
     throwError(Value::fromObject(engine->newURIErrorObject(msg)));
 }
-
 
 void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)
 {

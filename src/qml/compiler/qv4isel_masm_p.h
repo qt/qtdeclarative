@@ -52,16 +52,32 @@
 #include <config.h>
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace MASM {
 
+class InstructionSelection;
+
+struct CompilationUnit : public QV4::CompiledData::CompilationUnit
+{
+    virtual ~CompilationUnit();
+
+    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
+
+    virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int functionIndex);
+
+    // Coderef + execution engine
+
+    QVector<JSC::MacroAssemblerCodeRef> codeRefs;
+};
+
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(V4IR::Function* function, QV4::Function *vmFunction, QV4::ExecutionEngine *engine);
+    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -245,6 +261,10 @@ public:
         PointerToValue(V4IR::Temp *value) : value(value) {}
         V4IR::Temp *value;
     };
+    struct PointerToString {
+        explicit PointerToString(const QString &string) : string(string) {}
+        QString string;
+    };
     struct Reference {
         Reference(V4IR::Temp *value) : value(value) {}
         V4IR::Temp *value;
@@ -274,6 +294,7 @@ public:
     void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
+    Pointer loadStringAddress(RegisterID reg, const QString &string);
 
     void loadArgumentInRegister(RegisterID source, RegisterID dest)
     {
@@ -298,6 +319,11 @@ public:
             Pointer addr = loadTempAddress(dest, temp.value);
             loadArgumentInRegister(addr, dest);
         }
+    }
+    void loadArgumentInRegister(PointerToString temp, RegisterID dest)
+    {
+        Pointer addr = loadStringAddress(dest, temp.string);
+        loadPtr(addr, dest);
     }
 
     void loadArgumentInRegister(Reference temp, RegisterID dest)
@@ -416,6 +442,14 @@ public:
         } else {
             poke(TrustedImmPtr(0), StackSlot);
         }
+    }
+
+    template <int StackSlot>
+    void loadArgumentOnStack(PointerToString temp)
+    {
+        Pointer ptr = loadStringAddress(ScratchRegister, temp.string);
+        loadPtr(ptr, ScratchRegister);
+        poke(ScratchRegister, StackSlot);
     }
 
     template <int StackSlot>
@@ -746,13 +780,12 @@ public:
         return Jump();
     }
 
-    void link(QV4::Function *vmFunc);
+    JSC::MacroAssemblerCodeRef link();
 
     void recordLineNumber(int lineNumber);
 
 private:
     V4IR::Function *_function;
-    QV4::Function *_vmFunction;
     QHash<V4IR::BasicBlock *, Label> _addrs;
     QHash<V4IR::BasicBlock *, QVector<Jump> > _patches;
     QList<CallToLink> _callsToLink;
@@ -766,7 +799,8 @@ private:
     QHash<V4IR::BasicBlock *, QVector<DataLabelPtr> > _labelPatches;
     V4IR::BasicBlock *_nextBlock;
 
-    QV4::ExecutionEngine *_engine;
+    QV4::ExecutableAllocator *_executableAllocator;
+    InstructionSelection *_isel;
 
     struct CodeLineNumerMapping
     {
@@ -781,12 +815,14 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
+    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
+    virtual void run(V4IR::Function *function);
 
 protected:
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
+
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
     virtual void callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
@@ -864,7 +900,6 @@ protected:
         return argumentAddressForCall(0);
     }
 
-    QV4::String *identifier(const QString &s);
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
@@ -888,10 +923,6 @@ private:
 #define callRuntimeMethod(result, function, ...) \
     callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
-    uint addLookup(QV4::String *name);
-    uint addSetterLookup(QV4::String *name);
-    uint addGlobalLookup(QV4::String *name);
-
     template <typename Arg1, typename Arg2>
     void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
@@ -914,19 +945,20 @@ private:
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
-    QV4::Function* _vmFunction;
-    QVector<QV4::Lookup> _lookups;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
     int _locals;
+
+    CompilationUnit *compilationUnit;
+    QHash<V4IR::Function*, JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
-    { return new InstructionSelection(engine, module); }
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
+    { return new InstructionSelection(execAllocator, module); }
     virtual bool jitCompileRegexps() const
     { return true; }
 };

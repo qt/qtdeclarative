@@ -383,9 +383,9 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     if (!function)
         return Value::undefinedValue();
 
-    strictMode = function->isStrict || (ctx->strictMode);
+    strictMode = function->isStrict() || (ctx->strictMode);
 
-    usesArgumentsObject = function->usesArgumentsObject;
+    usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
 
     if (strictMode) {
@@ -402,12 +402,22 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     bool cstrict = ctx->strictMode;
     ctx->strictMode = strictMode;
 
+    CompiledData::CompilationUnit * const oldCompilationUnit = ctx->compilationUnit;
+    const CompiledData::Function * const oldCompiledFunction = ctx->compiledFunction;
+    String ** const oldRuntimeStrings = ctx->runtimeStrings;
+    ctx->compilationUnit = function->compilationUnit;
+    ctx->compiledFunction = function->compiledFunction;
+    ctx->runtimeStrings = function->compilationUnit->runtimeStrings;
+
     Value result = Value::undefinedValue();
     try {
         result = function->code(ctx, function->codeData);
     } catch (Exception &ex) {
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;
+        ctx->compilationUnit = oldCompilationUnit;
+        ctx->compiledFunction = oldCompiledFunction;
+        ctx->runtimeStrings = oldRuntimeStrings;
         if (strictMode)
             ex.partiallyUnwindContext(parentContext);
         throw;
@@ -415,6 +425,9 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     ctx->strictMode = cstrict;
     ctx->currentEvalCode = evalCode.next;
+    ctx->compilationUnit = oldCompilationUnit;
+    ctx->compiledFunction = oldCompiledFunction;
+    ctx->runtimeStrings = oldRuntimeStrings;
 
     while (engine->current != parentContext)
         engine->popContext();

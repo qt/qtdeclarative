@@ -51,17 +51,40 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
+Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
+                   Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
+        : name(0)
+        , compiledFunction(0)
+        , compilationUnit(0)
+        , code(0)
+        , codeData(0)
+        , codeSize(0)
+{
+    Q_ASSERT(!compilationUnit);
+    compilationUnit = unit;
+    compiledFunction = function;
+
+    name = compilationUnit->runtimeStrings[compiledFunction->nameIndex];
+
+    code = codePtr;
+    codeSize = _codeSize;
+
+    formals.resize(compiledFunction->nFormals);
+    const quint32 *formalsIndices = compiledFunction->formalsTable();
+    for (int i = 0; i < compiledFunction->nFormals; ++i)
+        formals[i] = engine->newString(unit->data->stringAt(formalsIndices[i]));
+
+
+    locals.resize(compiledFunction->nLocals);
+    const quint32 *localsIndices = compiledFunction->localsTable();
+    for (int i = 0; i < compiledFunction->nLocals; ++i)
+        locals[i] = engine->newString(unit->data->stringAt(localsIndices[i]));
+}
+
 Function::~Function()
 {
-    engine->functions.remove(engine->functions.indexOf(this));
-    UnwindHelper::deregisterFunction(this);
-
-    Q_ASSERT(!refCount);
-    delete[] codeData;
-    delete[] lookups;
-    foreach (Function *f, nestedFunctions)
-        f->deref();
 }
+
 
 void Function::mark()
 {
@@ -71,28 +94,45 @@ void Function::mark()
         formals.at(i)->mark();
     for (int i = 0; i < locals.size(); ++i)
         locals.at(i)->mark();
-    for (int i = 0; i < generatedValues.size(); ++i)
-        if (Managed *m = generatedValues.at(i).asManaged())
-            m->mark();
-    for (int i = 0; i < identifiers.size(); ++i)
-        identifiers.at(i)->mark();
 }
 
 namespace QV4 {
-bool operator<(const LineNumberMapping &mapping, qptrdiff pc)
+struct LineNumberMappingHelper
 {
-    return mapping.codeOffset < pc;
-}
+    const quint32 *table;
+    int lowerBound(int begin, int end, qptrdiff offset) {
+        int middle;
+        int n = int(end - begin);
+        int half;
+
+        while (n > 0) {
+            half = n >> 1;
+            middle = begin + half;
+            if (table[middle * 2] < offset) {
+                begin = middle + 1;
+                n -= half + 1;
+            } else {
+                n = half;
+            }
+        }
+        return begin;
+    }
+};
+
 }
 
 int Function::lineNumberForProgramCounter(qptrdiff offset) const
 {
-    QVector<LineNumberMapping>::ConstIterator it = qLowerBound(lineNumberMappings.begin(), lineNumberMappings.end(), offset);
-    if (it != lineNumberMappings.constBegin() && lineNumberMappings.count() > 0)
-        --it;
-    if (it == lineNumberMappings.constEnd())
+    LineNumberMappingHelper helper;
+    helper.table = compiledFunction->lineNumberMapping();
+    const uint count = compiledFunction->nLineNumberMappingEntries;
+
+    int pos = helper.lowerBound(0, count, offset);
+    if (pos != 0 && count > 0)
+        --pos;
+    if (pos == count)
         return -1;
-    return it->lineNumber;
+    return helper.table[pos * 2 + 1];
 }
 
 QT_END_NAMESPACE

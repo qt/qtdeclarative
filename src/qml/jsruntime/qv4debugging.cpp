@@ -130,7 +130,7 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
     }
 
     state.function = function;
-    state.fileName = function->sourceFile;
+    state.fileName = function->sourceFile();
 
     qptrdiff relativeProgramCounter = code - function->codeData;
     state.lineNumber = function->lineNumberForProgramCounter(relativeProgramCounter);
@@ -185,9 +185,11 @@ void Debugger::pauseAndWait()
 
 void Debugger::applyPendingBreakPoints()
 {
-    foreach (Function *function, _engine->functions) {
-        m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
-        m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
+    foreach (QV4::CompiledData::CompilationUnit *unit, _engine->compilationUnits) {
+        foreach (Function *function, unit->runtimeFunctions) {
+            m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
+            m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
+        }
     }
 
     for (BreakPoints::ConstIterator it = m_pendingBreakPointsToAdd.constBegin(),
@@ -343,17 +345,19 @@ bool Debugger::BreakPoints::contains(const QString &fileName, int lineNumber) co
 
 void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreakPoints)
 {
-    Iterator breakPointsForFile = find(function->sourceFile);
+    Iterator breakPointsForFile = find(function->sourceFile());
     if (breakPointsForFile == end())
         return;
 
     QList<int>::Iterator breakPoint = breakPointsForFile->begin();
     while (breakPoint != breakPointsForFile->end()) {
         bool breakPointFound = false;
-        for (QVector<LineNumberMapping>::ConstIterator mapping = function->lineNumberMappings.constBegin(),
-             end = function->lineNumberMappings.constEnd(); mapping != end; ++mapping) {
-            if (mapping->lineNumber == *breakPoint) {
-                uchar *codePtr = const_cast<uchar *>(function->codeData) + mapping->codeOffset;
+        const quint32 *lineNumberMappings = function->compiledFunction->lineNumberMapping();
+        for (int i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
+            const int codeOffset = lineNumberMappings[i * 2];
+            const int lineNumber = lineNumberMappings[i * 2 + 1];
+            if (lineNumber == *breakPoint) {
+                uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
                 QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
                 instruction->common.breakPoint = !removeBreakPoints;
                 // Continue setting the next break point.

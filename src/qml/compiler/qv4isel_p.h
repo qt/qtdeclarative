@@ -44,6 +44,8 @@
 
 #include "private/qv4global_p.h"
 #include "qv4jsir_p.h"
+#include <private/qv4compileddata_p.h>
+#include <private/qv4compiler_p.h>
 
 #include <qglobal.h>
 #include <QHash>
@@ -51,39 +53,36 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-struct ExecutionEngine;
+class ExecutableAllocator;
 struct Function;
 }
 
 namespace QQmlJS {
 
-class Q_QML_EXPORT EvalInstructionSelection
+class Q_QML_EXPORT EvalInstructionSelection : public QV4::Compiler::JSUnitGenerator
 {
 public:
-    EvalInstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
+    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     virtual ~EvalInstructionSelection() = 0;
 
-    QV4::Function *vmFunction(V4IR::Function *f);
+    QV4::CompiledData::CompilationUnit *compile();
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
 protected:
-    QV4::Function *createFunctionMapping(QV4::Function *outer, V4IR::Function *irFunction);
-    QV4::ExecutionEngine *engine() const { return _engine; }
-    virtual void run(QV4::Function *vmFunction, V4IR::Function *function) = 0;
+    virtual void run(V4IR::Function *function) = 0;
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
-private:
-    QV4::ExecutionEngine *_engine;
-    QHash<V4IR::Function *, QV4::Function *> _irToVM;
 protected:
     bool useFastLookups;
+    QV4::ExecutableAllocator *executableAllocator;
 };
 
 class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module) = 0;
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module) = 0;
     virtual bool jitCompileRegexps() const = 0;
 };
 

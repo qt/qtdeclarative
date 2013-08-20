@@ -97,7 +97,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
 FunctionObject::~FunctionObject()
 {
     if (function)
-        function->deref();
+        function->compilationUnit->deref();
 }
 
 Value FunctionObject::newInstance()
@@ -212,10 +212,11 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
     QQmlJS::V4IR::Module module;
 
     QQmlJS::RuntimeCodegen cg(v4->current, f->strictMode);
-    QQmlJS::V4IR::Function *irf = cg(QString(), function, fe, &module);
+    cg(QString(), function, fe, &module);
 
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
-    QV4::Function *vmf = isel->vmFunction(irf);
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
+    QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+    QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
     return Value::fromObject(v4->newScriptFunction(v4->rootContext, vmf));
 }
@@ -327,7 +328,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 {
     vtbl = &static_vtbl;
     this->function = function;
-    this->function->ref();
+    this->function->compilationUnit->ref();
     assert(function);
     assert(function->code);
 
@@ -338,8 +339,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject;
-    strictMode = function->isStrict;
+    usesArgumentsObject = function->usesArgumentsObject();
+    strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));

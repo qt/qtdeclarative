@@ -60,6 +60,9 @@ namespace QV4 {
 namespace Debugging {
 class Debugger;
 } // namespace Debugging
+namespace CompiledData {
+struct CompilationUnit;
+}
 }
 
 namespace QV4 {
@@ -202,8 +205,7 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_uintMax;
     String *id_name;
 
-    mutable QVector<Function *> functions;
-    mutable bool functionsNeedSort;
+    QSet<CompiledData::CompilationUnit*> compilationUnits;
 
     quint32 m_engineId;
 
@@ -240,8 +242,6 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *pushGlobalContext();
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
-
-    Function *newFunction(const QString &name);
 
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
     FunctionObject *newScriptFunction(ExecutionContext *scope, Function *function);

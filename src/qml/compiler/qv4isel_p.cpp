@@ -58,17 +58,13 @@ QTextStream qout(stderr, QIODevice::WriteOnly);
 using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutionEngine *engine, Module *module)
-    : _engine(engine)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module)
+    : QV4::Compiler::JSUnitGenerator(module)
     , useFastLookups(true)
+    , executableAllocator(execAllocator)
 {
-    assert(engine);
+    assert(execAllocator);
     assert(module);
-
-    createFunctionMapping(0, module->rootFunction);
-    foreach (V4IR::Function *f, module->functions) {
-        assert(_irToVM.contains(f));
-    }
 }
 
 EvalInstructionSelection::~EvalInstructionSelection()
@@ -77,39 +73,15 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-QV4::Function *EvalInstructionSelection::createFunctionMapping(QV4::Function *outer, Function *irFunction)
+QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
 {
-    QV4::Function *vmFunction = _engine->newFunction(irFunction->name ? *irFunction->name : QString());
-    _irToVM.insert(irFunction, vmFunction);
+    Function *rootFunction = irModule->rootFunction;
+    if (!rootFunction)
+        return 0;
+    foreach (V4IR::Function *f, irModule->functions)
+        run(f);
 
-    vmFunction->hasDirectEval = irFunction->hasDirectEval;
-    vmFunction->usesArgumentsObject = irFunction->usesArgumentsObject;
-    vmFunction->hasNestedFunctions = !irFunction->nestedFunctions.isEmpty();
-    vmFunction->isStrict = irFunction->isStrict;
-    vmFunction->isNamedExpression = irFunction->isNamedExpression;
-    vmFunction->sourceFile = irFunction->sourceFile;
-
-    if (outer)
-        outer->addNestedFunction(vmFunction);
-
-    foreach (const QString *formal, irFunction->formals)
-        if (formal)
-            vmFunction->formals.append(_engine->newString(*formal));
-    foreach (const QString *local, irFunction->locals)
-        if (local)
-            vmFunction->locals.append(_engine->newString(*local));
-
-    foreach (V4IR::Function *function, irFunction->nestedFunctions)
-        createFunctionMapping(vmFunction, function);
-
-    return vmFunction;
-}
-
-QV4::Function *EvalInstructionSelection::vmFunction(Function *f) {
-    QV4::Function *function = _irToVM[f];
-    if (!function->code)
-        run(function, f);
-    return function;
+    return backendCompileStep();
 }
 
 void IRDecoder::visitMove(V4IR::Move *s)

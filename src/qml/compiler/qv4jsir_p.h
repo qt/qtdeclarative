@@ -672,11 +672,14 @@ struct Q_QML_EXPORT Module {
     MemoryPool pool;
     QVector<Function *> functions;
     Function *rootFunction;
+    QString fileName;
 
     Function *newFunction(const QString &name, Function *outer);
 
     Module() : rootFunction(0) {}
     ~Module();
+
+    void setFileName(const QString &name);
 };
 
 struct Function {
@@ -691,8 +694,6 @@ struct Function {
     QList<const QString *> locals;
     QVector<Function *> nestedFunctions;
     Function *outer;
-
-    QString sourceFile;
 
     int insideWithOrCatch;
 

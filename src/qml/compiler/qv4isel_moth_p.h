@@ -56,17 +56,28 @@ namespace Moth {
 
 class StackSlotAllocator;
 
+struct CompilationUnit : public QV4::CompiledData::CompilationUnit
+{
+    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
+
+    QVector<QByteArray> codeRefs;
+
+};
+
+
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::IRDecoder,
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module);
+    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(QV4::Function *vmFunction, V4IR::Function *function);
+    virtual void run(V4IR::Function *function);
 
 protected:
+    virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
+
     virtual void visitJump(V4IR::Jump *);
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
@@ -158,12 +169,9 @@ private:
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
     ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
     void patchJumpAddresses();
-    uchar *squeezeCode() const;
-
-    QV4::String *identifier(const QString &s);
+    QByteArray squeezeCode() const;
 
     V4IR::Function *_function;
-    QV4::Function *_vmFunction;
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_nextBlock;
 
@@ -176,14 +184,17 @@ private:
 
     StackSlotAllocator *_stackSlotAllocator;
     V4IR::Stmt *_currentStatement;
+
+    CompilationUnit *compilationUnit;
+    QHash<V4IR::Function *, QByteArray> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QV4::ExecutionEngine *engine, V4IR::Module *module)
-    { return new InstructionSelection(engine, module); }
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
+    { return new InstructionSelection(execAllocator, module); }
     virtual bool jitCompileRegexps() const
     { return false; }
 };

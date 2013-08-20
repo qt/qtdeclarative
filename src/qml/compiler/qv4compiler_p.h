@@ -38,77 +38,59 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4FUNCTION_H
-#define QV4FUNCTION_H
+#ifndef QV4COMPILER_P_H
+#define QV4COMPILER_P_H
 
-#include "qv4global_p.h"
-
-#include <QtCore/QVector>
-#include <QtCore/QByteArray>
-#include <QtCore/qurl.h>
-
-#include <config.h>
-#include "qv4value_def_p.h"
-#include <private/qv4compileddata_p.h>
+#include <QtCore/qstring.h>
+#include "qv4jsir_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct String;
-struct Function;
-struct Object;
-struct FunctionObject;
-struct ExecutionContext;
-struct ExecutionEngine;
-class MemoryManager;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-struct InternalClass;
+namespace CompiledData {
+struct Unit;
 struct Lookup;
+struct RegExp;
+struct JSClassMember;
+}
 
-struct Function {
-    String *name;
+namespace Compiler {
 
-    const CompiledData::Function *compiledFunction;
-    CompiledData::CompilationUnit *compilationUnit;
-    Value (*code)(ExecutionContext *, const uchar *);
-    const uchar *codeData;
-    quint32 codeSize;
+struct JSUnitGenerator {
+    JSUnitGenerator(QQmlJS::V4IR::Module *module);
 
-    QVector<String *> formals;
-    QVector<String *> locals;
+    QQmlJS::V4IR::Module *irModule;
 
-    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
-    ~Function();
+    int registerString(const QString &str);
+    int getStringId(const QString &string) const;
 
-    inline QString sourceFile() const { return compilationUnit->fileName(); }
+    uint registerGetterLookup(const QString &name);
+    uint registerSetterLookup(const QString &name);
+    uint registerGlobalGetterLookup(const QString &name);
 
-    inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
-    inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
-    inline bool isNamedExpression() const { return compiledFunction->flags & CompiledData::Function::IsNamedExpression; }
+    int registerRegExp(QQmlJS::V4IR::RegExp *regexp);
 
-    inline bool needsActivation() const
-    { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
+    void registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings);
 
-    void mark();
+    int registerJSClass(QQmlJS::V4IR::ExprList *args);
 
-    int lineNumberForProgramCounter(qptrdiff offset) const;
+    QV4::CompiledData::Unit *generateUnit();
+    // Returns bytes written
+    int writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
+
+    QHash<QString, int> stringToId;
+    QStringList strings;
+    int stringDataSize;
+    QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
+    QList<CompiledData::Lookup> lookups;
+    QVector<CompiledData::RegExp> regexps;
+    QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
+    QList<QList<CompiledData::JSClassMember> > jsClasses;
+    int jsClassDataSize;
 };
+
+}
 
 }
 

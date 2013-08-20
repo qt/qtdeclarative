@@ -119,34 +119,11 @@ void __qmljs_numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-void __qmljs_init_closure(ExecutionContext *ctx, Value *result, Function *clos)
+void __qmljs_init_closure(ExecutionContext *ctx, Value *result, int functionId)
 {
+    QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     assert(clos);
     *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
-}
-
-Function *__qmljs_register_function(ExecutionContext *ctx, String *name,
-                                    bool hasDirectEval,
-                                    bool usesArgumentsObject, bool isStrict,
-                                    bool hasNestedFunctions,
-                                    String **formals, unsigned formalCount,
-                                    String **locals, unsigned localCount)
-{
-    Function *f = ctx->engine->newFunction(name ? name->toQString() : QString());
-
-    f->hasDirectEval = hasDirectEval;
-    f->usesArgumentsObject = usesArgumentsObject;
-    f->isStrict = isStrict;
-    f->hasNestedFunctions = hasNestedFunctions;
-
-    for (unsigned i = 0; i < formalCount; ++i)
-        if (formals[i])
-            f->formals.append(formals[i]);
-    for (unsigned i = 0; i < localCount; ++i)
-        if (locals[i])
-            f->locals.append(locals[i]);
-
-    return f;
 }
 
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
@@ -1201,8 +1178,9 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, QV4::InternalClass *klass)
+void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, int classId)
 {
+    QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
 
     for (int i = 0; i < klass->size; ++i) {
@@ -1270,6 +1248,16 @@ unsigned __qmljs_value_to_uint32(const Value &value)
 unsigned __qmljs_double_to_uint32(double d)
 {
     return Value::toUInt32(d);
+}
+
+void __qmljs_value_from_string(Value *result, String *string)
+{
+    *result = Value::fromString(string);
+}
+
+void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, Value *result, int id)
+{
+    *result = ctx->compilationUnit->runtimeRegularExpressions[id];
 }
 
 } // namespace QV4

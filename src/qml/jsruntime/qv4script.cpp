@@ -67,8 +67,8 @@ struct QmlBindingWrapper : FunctionObject
     {
         vtbl = &static_vtbl;
         function = f;
-        function->ref();
-        usesArgumentsObject = function->usesArgumentsObject;
+        function->compilationUnit->ref();
+        usesArgumentsObject = function->usesArgumentsObject();
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 
@@ -163,14 +163,13 @@ void Script::parse()
                 inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
         RuntimeCodegen cg(scope, strictMode);
-        V4IR::Function *globalIRCode = cg(sourceFile, sourceCode, program, &module,
-                                          parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4, &module));
+        cg(sourceFile, sourceCode, program, &module,
+           parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
         if (inheritContext)
             isel->setUseFastLookups(false);
-        if (globalIRCode) {
-            vmFunction = isel->vmFunction(globalIRCode);
-        }
+        QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
+        vmFunction = compilationUnit->linkToEngine(v4);
     }
 
     if (!vmFunction)
@@ -191,19 +190,33 @@ Value Script::run()
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         bool strict = scope->strictMode;
-        Lookup *lookups = scope->lookups;
+        Lookup *oldLookups = scope->lookups;
+        CompiledData::CompilationUnit * const oldCompilationUnit = scope->compilationUnit;
+        const CompiledData::Function * const oldCompiledFunction = scope->compiledFunction;
+        String ** const oldRuntimeStrings = scope->runtimeStrings;
 
-        scope->strictMode = vmFunction->isStrict;
-        scope->lookups = vmFunction->lookups;
+        scope->strictMode = vmFunction->isStrict();
+        scope->lookups = vmFunction->compilationUnit->runtimeLookups;
+        scope->compilationUnit = vmFunction->compilationUnit;
+        scope->compiledFunction = vmFunction->compiledFunction;
+        scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
         QV4::Value result;
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
         } catch (Exception &e) {
             scope->strictMode = strict;
-            scope->lookups = lookups;
+            scope->lookups = oldLookups;
+            scope->compilationUnit = oldCompilationUnit;
+            scope->compiledFunction = oldCompiledFunction;
+            scope->runtimeStrings = oldRuntimeStrings;
             throw;
         }
+
+        scope->lookups = oldLookups;
+        scope->compilationUnit = oldCompilationUnit;
+        scope->compiledFunction = oldCompiledFunction;
+        scope->runtimeStrings = oldRuntimeStrings;
 
         return result;
 

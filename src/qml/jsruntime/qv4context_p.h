@@ -52,6 +52,12 @@ struct Object;
 struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
+
+namespace CompiledData {
+struct CompilationUnit;
+struct Function;
+};
+
 struct CallContext;
 
 struct Q_QML_EXPORT ExecutionContext
@@ -75,6 +81,9 @@ struct Q_QML_EXPORT ExecutionContext
     ExecutionContext *parent;
     ExecutionContext *outer;
     Lookup *lookups;
+    String **runtimeStrings;
+    CompiledData::CompilationUnit *compilationUnit;
+    const CompiledData::Function *compiledFunction;
     ExecutionContext *next; // used in the GC
 
     struct EvalCode
@@ -96,6 +105,9 @@ struct Q_QML_EXPORT ExecutionContext
         parent = parentContext;
         outer = 0;
         lookups = 0;
+        runtimeStrings = 0;
+        compilationUnit = 0;
+        compiledFunction = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
     }

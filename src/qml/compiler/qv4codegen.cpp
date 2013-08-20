@@ -470,9 +470,10 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
 {
     assert(node);
 
-    _fileName = fileName;
     _module = module;
     _env = 0;
+
+    _module->setFileName(fileName);
 
     ScanFunctions scan(this, sourceCode);
     scan(node);
@@ -490,8 +491,8 @@ V4IR::Function *Codegen::operator()(const QString &fileName,
                                   AST::FunctionExpression *ast,
                                   V4IR::Module *module)
 {
-    _fileName = fileName;
     _module = module;
+    _module->setFileName(fileName);
     _env = 0;
 
     ScanFunctions scan(this, sourceCode);
@@ -1794,7 +1795,6 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterEnvironment(ast);
     V4IR::Function *function = _module->newFunction(name, _function);
-    function->sourceFile = _fileName;
 
     V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock());
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
@@ -2575,7 +2575,7 @@ void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_fileName));
+    error.setUrl(QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
@@ -2585,7 +2585,7 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
     QQmlError error;
-    error.setUrl(QUrl::fromLocalFile(_fileName));
+    error.setUrl(QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
@@ -2594,10 +2594,10 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
 
 void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
 {
-    context->throwSyntaxError(detail, _fileName, loc.startLine, loc.startColumn);
+    context->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
 void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
 {
-    context->throwReferenceError(detail, _fileName, loc.startLine, loc.startColumn);
+    context->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }

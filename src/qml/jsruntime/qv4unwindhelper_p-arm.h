@@ -79,7 +79,7 @@ static Function *lookupFunction(void *pc)
     if (it == allFunctions.end())
         return 0;
 
-    quintptr codeStart = reinterpret_cast<quintptr>(removeThumbBit((*it)->codeRef.code().executableAddress()));
+    quintptr codeStart = reinterpret_cast<quintptr>(removeThumbBit((void*)(*it)->code));
     if (key < codeStart || key >= codeStart + (*it)->codeSize)
         return 0;
     return *it;
@@ -217,7 +217,7 @@ extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount
         QV4::Function *function = QT_PREPEND_NAMESPACE(QV4::lookupFunction(pc));
         if (function) {
             *entryCount = 1;
-            void * codeStart = QT_PREPEND_NAMESPACE(QV4::removeThumbBit(function->codeRef.code().executableAddress()));
+            void * codeStart = QT_PREPEND_NAMESPACE(QV4::removeThumbBit((void*)function->code));
             // At the end of the function we store our synthetic exception table entry.
             return (char *)codeStart + function->codeSize;
         }

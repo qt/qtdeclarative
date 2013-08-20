@@ -46,6 +46,7 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4compileddata_p.h>
 
 #undef USE_TYPE_INFO
 
@@ -187,10 +188,9 @@ private:
     }
 };
 
-InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::Module *module)
-    : EvalInstructionSelection(engine, module)
+InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
+    : EvalInstructionSelection(execAllocator, module)
     , _function(0)
-    , _vmFunction(0)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
@@ -198,13 +198,14 @@ InstructionSelection::InstructionSelection(QV4::ExecutionEngine *engine, V4IR::M
     , _stackSlotAllocator(0)
     , _currentStatement(0)
 {
+    compilationUnit = new CompilationUnit;
 }
 
 InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *function)
+void InstructionSelection::run(V4IR::Function *function)
 {
     V4IR::BasicBlock *block = 0, *nextBlock = 0;
 
@@ -218,7 +219,6 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     uchar *codeEnd = codeStart + codeSize;
 
     qSwap(_function, function);
-    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
@@ -243,18 +243,17 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     push.value = quint32(locals);
     addInstruction(push);
 
+    QVector<uint> lineNumberMappings;
+    lineNumberMappings.reserve(_function->basicBlocks.size() * 2);
+
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
 
         foreach (V4IR::Stmt *s, _block->statements) {
-            if (s->location.isValid()) {
-                QV4::LineNumberMapping mapping;
-                mapping.codeOffset = _codeNext - _codeStart;
-                mapping.lineNumber = s->location.startLine;
-                _vmFunction->lineNumberMappings.append(mapping);
-            }
+            if (s->location.isValid())
+                lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
 
             if (opt.isInSSA() && s->asTerminator()) {
                 foreach (const V4IR::Optimizer::SSADeconstructionMove &move,
@@ -272,20 +271,17 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
         }
     }
 
+    registerLineNumberMapping(_function, lineNumberMappings);
+
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
 
-    _vmFunction->code = VME::exec;
-    _vmFunction->codeData = squeezeCode();
-
-    if (QV4::Debugging::Debugger *debugger = engine()->debugger)
-        debugger->setPendingBreakpoints(_vmFunction);
+    codeRefs.insert(_function, squeezeCode());
 
     qSwap(_currentStatement, cs);
     qSwap(_stackSlotAllocator, stackSlotAllocator);
     delete stackSlotAllocator;
     qSwap(_function, function);
-    qSwap(_vmFunction, vmFunction);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
     qSwap(patches, _patches);
@@ -295,6 +291,16 @@ void InstructionSelection::run(QV4::Function *vmFunction, V4IR::Function *functi
     qSwap(codeEnd, _codeEnd);
 
     delete[] codeStart;
+}
+
+QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
+{
+    compilationUnit->data = generateUnit();
+    compilationUnit->codeRefs.resize(irModule->functions.size());
+    int i = 0;
+    foreach (V4IR::Function *irFunction, irModule->functions)
+        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
+    return compilationUnit;
 }
 
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
@@ -311,7 +317,7 @@ void InstructionSelection::callProperty(V4IR::Temp *base, const QString &name, V
     // call the property on the loaded base
     Instruction::CallProperty call;
     call.base = getParam(base);
-    call.name = identifier(name);
+    call.name = registerString(name);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -342,7 +348,7 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
                                                        V4IR::Temp *result)
 {
     Instruction::CreateActivationProperty create;
-    create.name = identifier(*func->id);
+    create.name = registerString(*func->id);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -352,7 +358,7 @@ void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &na
 {
     Instruction::CreateProperty create;
     create.base = getParam(base);
-    create.name = identifier(name);
+    create.name = registerString(name);
     prepareCallArgs(args, create.argc, create.args);
     create.result = getResultParam(result);
     addInstruction(create);
@@ -386,21 +392,16 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    Instruction::LoadValue load;
-    load.value = Param::createValue(QV4::Value::fromString(identifier(str)));
+    Instruction::LoadRuntimeString load;
+    load.stringId = registerString(str);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
-    QV4::Value v = QV4::Value::fromObject(engine()->newRegExpObject(
-                                            *sourceRegexp->value,
-                                            sourceRegexp->flags));
-    _vmFunction->generatedValues.append(v);
-
-    Instruction::LoadValue load;
-    load.value = Param::createValue(v);
+    Instruction::LoadRegExp load;
+    load.regExpId = registerRegExp(sourceRegexp);
     load.result = getResultParam(targetTemp);
     addInstruction(load);
 }
@@ -408,7 +409,7 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
     Instruction::LoadName load;
-    load.name = identifier(*name->id);
+    load.name = registerString(*name->id);
     load.result = getResultParam(temp);
     addInstruction(load);
 }
@@ -417,16 +418,15 @@ void InstructionSelection::setActivationProperty(V4IR::Temp *source, const QStri
 {
     Instruction::StoreName store;
     store.source = getParam(source);
-    store.name = identifier(targetName);
+    store.name = registerString(targetName);
     addInstruction(store);
 }
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    QV4::Function *vmFunc = vmFunction(closure->value);
-    assert(vmFunc);
+    int id = irModule->functions.indexOf(closure->value);
     Instruction::LoadClosure load;
-    load.value = vmFunc;
+    load.value = id;
     load.result = getResultParam(target);
     addInstruction(load);
 }
@@ -435,7 +435,7 @@ void InstructionSelection::getProperty(V4IR::Temp *base, const QString &name, V4
 {
     Instruction::LoadProperty load;
     load.base = getParam(base);
-    load.name = identifier(name);
+    load.name = registerString(name);
     load.result = getResultParam(target);
     addInstruction(load);
 }
@@ -444,7 +444,7 @@ void InstructionSelection::setProperty(V4IR::Temp *source, V4IR::Temp *targetBas
 {
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
-    store.name = identifier(targetName);
+    store.name = registerString(targetName);
     store.source = getParam(source);
     addInstruction(store);
 }
@@ -591,7 +591,7 @@ void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSour
     if (op) {
         Instruction::InplaceNameOp ieo;
         ieo.alu = op;
-        ieo.name = identifier(targetName);
+        ieo.name = registerString(targetName);
         ieo.source = getParam(rightSource);
         addInstruction(ieo);
     }
@@ -644,7 +644,7 @@ void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source,
     Instruction::InplaceMemberOp imo;
     imo.alu = op;
     imo.base = getParam(targetBase);
-    imo.member = identifier(targetName);
+    imo.member = registerString(targetName);
     imo.source = getParam(source);
     addInstruction(imo);
 }
@@ -730,7 +730,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
     Instruction::EnterTry enterTry;
     enterTry.tryOffset = 0;
     enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = identifier(*t->exceptionVarName);
+    enterTry.exceptionVarName = registerString(*t->exceptionVarName);
     enterTry.exceptionVar = getParam(t->exceptionVar);
     ptrdiff_t enterTryLoc = addInstruction(enterTry);
 
@@ -744,7 +744,7 @@ void InstructionSelection::visitTry(V4IR::Try *t)
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallActivationProperty call;
-    call.name = identifier(*func->id);
+    call.name = registerString(*func->id);
     prepareCallArgs(args, call.argc, call.args);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -754,7 +754,7 @@ void InstructionSelection::callBuiltinTypeofMember(V4IR::Temp *base, const QStri
 {
     Instruction::CallBuiltinTypeofMember call;
     call.base = getParam(base);
-    call.member = identifier(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -771,7 +771,7 @@ void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Te
 void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinTypeofName call;
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -788,7 +788,7 @@ void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QStri
 {
     Instruction::CallBuiltinDeleteMember call;
     call.base = getParam(base);
-    call.member = identifier(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -805,7 +805,7 @@ void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Te
 void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinDeleteName call;
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -822,7 +822,7 @@ void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, cons
 {
     Instruction::CallBuiltinPostDecMember call;
     call.base = getParam(base);
-    call.member = identifier(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -839,7 +839,7 @@ void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V
 void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostDecName call;
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -856,7 +856,7 @@ void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, cons
 {
     Instruction::CallBuiltinPostIncMember call;
     call.base = getParam(base);
-    call.member = identifier(name);
+    call.member = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -873,7 +873,7 @@ void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V
 void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
 {
     Instruction::CallBuiltinPostIncName call;
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -932,7 +932,7 @@ void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &
 {
     Instruction::CallBuiltinDeclareVar call;
     call.isDeletable = deletable;
-    call.varName = identifier(name);
+    call.varName = registerString(name);
     addInstruction(call);
 }
 
@@ -940,7 +940,7 @@ void InstructionSelection::callBuiltinDefineGetterSetter(V4IR::Temp *object, con
 {
     Instruction::CallBuiltinDefineGetterSetter call;
     call.object = getParam(object);
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.getter = getParam(getter);
     call.setter = getParam(setter);
     addInstruction(call);
@@ -950,7 +950,7 @@ void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const Q
 {
     Instruction::CallBuiltinDefineProperty call;
     call.object = getParam(object);
-    call.name = identifier(name);
+    call.name = registerString(name);
     call.value = getParam(value);
     addInstruction(call);
 }
@@ -967,15 +967,13 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
 {
     int argLocation = outgoingArgumentTempStart();
 
-    QV4::InternalClass *klass = engine()->emptyClass;
+    const int classId = registerJSClass(args);
     V4IR::ExprList *it = args;
     while (it) {
-        V4IR::Name *name = it->expr->asName();
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
         it = it->next;
-        klass = klass->addMember(identifier(*name->id), isData ? QV4::Attr_Data : QV4::Attr_Accessor);
 
         Instruction::MoveTemp move;
         move.source = getParam(it->expr);
@@ -997,7 +995,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
     }
 
     Instruction::CallBuiltinDefineObjectLiteral call;
-    call.internalClass = klass;
+    call.internalClassId = classId;
     call.args = outgoingArgumentTempStart();
     call.result = getResultParam(result);
     addInstruction(call);
@@ -1057,19 +1055,13 @@ void InstructionSelection::patchJumpAddresses()
     _addrs.clear();
 }
 
-uchar *InstructionSelection::squeezeCode() const
+QByteArray InstructionSelection::squeezeCode() const
 {
     int codeSize = _codeNext - _codeStart;
-    uchar *squeezed = new uchar[codeSize];
-    ::memcpy(squeezed, _codeStart, codeSize);
+    QByteArray squeezed;
+    squeezed.resize(codeSize);
+    ::memcpy(squeezed.data(), _codeStart, codeSize);
     return squeezed;
-}
-
-QV4::String *InstructionSelection::identifier(const QString &s)
-{
-    QV4::String *str = engine()->newIdentifier(s);
-    _vmFunction->identifiers.append(str);
-    return str;
 }
 
 Param InstructionSelection::getParam(V4IR::Expr *e) {
@@ -1094,5 +1086,22 @@ Param InstructionSelection::getParam(V4IR::Expr *e) {
     } else {
         Q_UNIMPLEMENTED();
         return Param();
+    }
+}
+
+
+void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
+{
+    runtimeFunctions.resize(data->functionTableSize);
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
+
+        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
+                                                           &VME::exec, /*size - doesn't matter for moth*/0);
+        runtimeFunction->codeData = reinterpret_cast<const uchar *>(codeRefs.at(i).constData());
+        runtimeFunctions[i] = runtimeFunction;
+
+        if (QV4::Debugging::Debugger *debugger = engine->debugger)
+            debugger->setPendingBreakpoints(runtimeFunction);
     }
 }

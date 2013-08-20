@@ -413,7 +413,6 @@ protected:
     QList<QQmlError> errors();
 
 protected:
-    QString _fileName;
     Result _expr;
     QString _property;
     UiMember _uiMember;
