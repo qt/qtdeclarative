@@ -64,8 +64,6 @@
 #include <stdlib.h>
 #endif
 
-#include <stdint.h>
-
 QT_BEGIN_NAMESPACE
 
 // Enable this to debug hash linking assumptions.
@@ -164,7 +162,7 @@ public:
     QString toUtf16() const;
     inline int utf16length() const;
     inline void writeUtf16(QChar *) const;
-    inline void writeUtf16(uint16_t *) const;
+    inline void writeUtf16(quint16 *) const;
 private:
     friend class QHashedStringRef;
 
@@ -232,7 +230,7 @@ public:
     void setQString(bool v) { if (v) next.setFlag(); else next.clearFlag(); }
 
     inline char *cStrData() const { return (char *)ckey; }
-    inline uint16_t *utf16Data() const { return (uint16_t *)strData->data(); }
+    inline quint16 *utf16Data() const { return (quint16 *)strData->data(); }
 
     inline bool equals(const QV4::Value &string) const {
         QString s = string.toQString();
@@ -1274,10 +1272,10 @@ int QHashedCStringRef::utf16length() const
 
 void QHashedCStringRef::writeUtf16(QChar *output) const
 {
-    writeUtf16((uint16_t *)output);
+    writeUtf16((quint16 *)output);
 }
 
-void QHashedCStringRef::writeUtf16(uint16_t *output) const
+void QHashedCStringRef::writeUtf16(quint16 *output) const
 {
     int l = m_length;
     const char *d = m_data;

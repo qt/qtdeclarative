@@ -1,4 +1,4 @@
-!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT
+!wince*:!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT
 
 # On Qt/Android/ARM release builds are thumb and debug builds arm,
 # but we'll force the JIT to always generate thumb2
@@ -33,3 +33,4 @@ INCLUDEPATH += $$PWD/disassembler
 INCLUDEPATH += $$PWD/disassembler/udis86
 INCLUDEPATH += $$_OUT_PWD
 
+win32-msvc2008|wince*: INCLUDEPATH += $$PWD/stubs/compat

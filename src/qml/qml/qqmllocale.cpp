@@ -416,7 +416,7 @@ QV4::Value QQmlNumberExtension::toLocaleString(QV4::SimpleCallContext *ctx)
 
     GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
-    uint16_t format = 'f';
+    quint16 format = 'f';
     if (ctx->argumentCount > 1) {
         if (!ctx->arguments[1].isString())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");

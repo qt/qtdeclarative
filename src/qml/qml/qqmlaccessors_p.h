@@ -94,7 +94,7 @@ class QQmlNotifier;
     } while (false);
 
 #define QML_PRIVATE_ACCESSOR(clazz, cpptype, name, variable) \
-    static void clazz ## _ ## name ## Read(QObject *o, intptr_t, void *rv) \
+    static void clazz ## _ ## name ## Read(QObject *o, qintptr, void *rv) \
     { \
         clazz ## Private *d = clazz ## Private::get(static_cast<clazz *>(o)); \
         *static_cast<cpptype *>(rv) = d->variable; \
@@ -105,15 +105,15 @@ class QQmlNotifier;
 class QQmlAccessors
 {
 public:
-    void (*read)(QObject *object, intptr_t property, void *output);
-    void (*notifier)(QObject *object, intptr_t property, QQmlNotifier **notifier);
+    void (*read)(QObject *object, qintptr property, void *output);
+    void (*notifier)(QObject *object, qintptr property, QQmlNotifier **notifier);
 };
 
 namespace QQmlAccessorProperties {
     struct Property {
         const char *name;
         unsigned int nameLength;
-        intptr_t data;
+        qintptr data;
         QQmlAccessors *accessors;
     };
 

@@ -106,7 +106,7 @@ void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
 }
 #endif
 
-static void QQuickItem_parentNotifier(QObject *o, intptr_t, QQmlNotifier **n)
+static void QQuickItem_parentNotifier(QObject *o, qintptr, QQmlNotifier **n)
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
     *n = &d->parentNotifier;

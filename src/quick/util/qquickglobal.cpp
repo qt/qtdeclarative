@@ -398,7 +398,7 @@ public:
             return QMatrix4x4();
 
         float matVals[16];
-        for (uint32_t i = 0; i < 16; ++i) {
+        for (quint32 i = 0; i < 16; ++i) {
             QV4::Value v = array->getIndexed(i);
             if (!v.isNumber())
                 return QMatrix4x4();

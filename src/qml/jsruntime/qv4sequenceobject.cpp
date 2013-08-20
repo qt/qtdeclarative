@@ -454,8 +454,8 @@ public:
     static QVariant toVariant(QV4::ArrayObject *array)
     {
         Container result;
-        uint32_t length = array->arrayLength();
-        for (uint32_t i = 0; i < length; ++i)
+        quint32 length = array->arrayLength();
+        for (quint32 i = 0; i < length; ++i)
             result << convertValueToElement<typename Container::value_type>(array->getIndexed(i));
         return QVariant::fromValue(result);
     }

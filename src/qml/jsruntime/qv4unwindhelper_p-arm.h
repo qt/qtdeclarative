@@ -64,7 +64,7 @@ namespace QV4 {
 
 static void *removeThumbBit(void *addr)
 {
-    return reinterpret_cast<void*>(reinterpret_cast<intptr_t>(addr) & ~1u);
+    return reinterpret_cast<void*>(reinterpret_cast<qintptr>(addr) & ~1u);
 }
 
 static QMutex functionProtector;

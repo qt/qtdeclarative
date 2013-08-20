@@ -47,6 +47,9 @@
 #include <qtqmlglobal.h>
 
 #if defined(Q_CC_MSVC)
+#include <float.h>
+#include <math.h>
+
 namespace std {
 
 inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }

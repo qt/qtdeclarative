@@ -205,7 +205,7 @@ public:
         };
         struct { // When HasAccessors
             QQmlAccessors *accessors;
-            intptr_t accessorData;
+            qintptr accessorData;
         };
     };
 

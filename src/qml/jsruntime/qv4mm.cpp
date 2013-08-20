@@ -150,7 +150,7 @@ MemoryManager::MemoryManager()
     // TLS is at the top of each thread's stack,
     // so the stack base for thread is the result of __tls()
     m_d->stackTop = reinterpret_cast<quintptr *>(
-          (((uintptr_t)__tls() + __PAGESIZE - 1) & ~(__PAGESIZE - 1)));
+          (((quintptr)__tls() + __PAGESIZE - 1) & ~(__PAGESIZE - 1)));
 #elif USE(PTHREADS)
 #  if OS(DARWIN)
     void *st = pthread_get_stackaddr_np(pthread_self());
@@ -404,7 +404,7 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
 
-        assert((intptr_t) chunk % 16 == 0);
+        assert((qintptr) chunk % 16 == 0);
 
         if (m->inUse) {
             if (m->markBit) {

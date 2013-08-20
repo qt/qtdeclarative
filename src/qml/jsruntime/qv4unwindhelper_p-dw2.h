@@ -89,7 +89,7 @@ static const int initial_location_offset = 28;
 static const int address_range_offset = 32;
 #endif
 
-void writeIntPtrValue(unsigned char *addr, intptr_t val)
+void writeIntPtrValue(unsigned char *addr, qintptr val)
 {
     addr[0] = (val >>  0) & 0xff;
     addr[1] = (val >>  8) & 0xff;
@@ -144,7 +144,7 @@ static void ensureUnwindInfo(Function *f)
     unsigned char *cie_and_fde = reinterpret_cast<unsigned char *>(info.data());
     memcpy(cie_and_fde, cie_fde_data, sizeof(cie_fde_data));
 
-    intptr_t ptr = static_cast<char *>(chunk->pages->base()) - static_cast<char *>(0);
+    qintptr ptr = static_cast<char *>(chunk->pages->base()) - static_cast<char *>(0);
     writeIntPtrValue(cie_and_fde + initial_location_offset, ptr);
 
     writeIntPtrValue(cie_and_fde + address_range_offset, chunk->pages->size());

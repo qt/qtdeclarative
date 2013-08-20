@@ -191,7 +191,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
     return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
 }
 
-static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, uint32_t index, bool *hasProperty = 0)
+static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     QV8Engine *v8 = v4->v8Engine;
 
@@ -263,8 +263,8 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
         if (ctx->argumentCount > 1) {
             Value values = ctx->arguments[1];
             if (ArrayObject *array = values.asArrayObject()) {
-                uint32_t size = array->arrayLength();
-                for (uint32_t ii = 0; ii < size; ++ii)
+                quint32 size = array->arrayLength();
+                for (quint32 ii = 0; ii < size; ++ii)
                     query.bindValue(ii, engine->toVariant(array->getIndexed(ii), -1));
             } else if (Object *object = values.asObject()) {
                 ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);

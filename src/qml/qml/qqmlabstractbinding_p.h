@@ -171,7 +171,7 @@ private:
     // the vTables array are used for dispatching.
     // This saves a compiler-generated pointer to a compiler-generated vTable, and thus reduces
     // the binding object size by sizeof(void*).
-    uintptr_t m_nextBindingPtr;
+    qintptr m_nextBindingPtr;
 
     static VTable *vTables[];
     inline const VTable *vtable() const { return vTables[bindingType()]; }
@@ -200,7 +200,7 @@ QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
 
 void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
 {
-    m_nextBindingPtr = uintptr_t(b) | (m_nextBindingPtr & 0x3);
+    m_nextBindingPtr = qintptr(b) | (m_nextBindingPtr & 0x3);
 }
 
 QQmlAbstractBinding::BindingType QQmlAbstractBinding::bindingType() const

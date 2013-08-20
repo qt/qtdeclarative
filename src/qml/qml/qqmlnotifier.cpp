@@ -61,15 +61,15 @@ static Callback QQmlNotifier_callbacks[] = {
 
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
 {
-    intptr_t originalSenderPtr;
-    intptr_t *disconnectWatch;
+    qintptr originalSenderPtr;
+    qintptr *disconnectWatch;
 
     if (!endpoint->isNotifying()) {
         originalSenderPtr = endpoint->senderPtr;
         disconnectWatch = &originalSenderPtr;
-        endpoint->senderPtr = intptr_t(disconnectWatch) | 0x1;
+        endpoint->senderPtr = qintptr(disconnectWatch) | 0x1;
     } else {
-        disconnectWatch = (intptr_t *)(endpoint->senderPtr & ~0x1);
+        disconnectWatch = (qintptr *)(endpoint->senderPtr & ~0x1);
     }
 
     if (endpoint->next)
@@ -111,7 +111,7 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
                qPrintable(engineName));
     }
 
-    senderPtr = intptr_t(source);
+    senderPtr = qintptr(source);
     this->sourceSignal = sourceSignal;
     QQmlPropertyPrivate::flushSignal(source, sourceSignal);
     QQmlData *ddata = QQmlData::get(source, true);

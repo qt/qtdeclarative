@@ -394,7 +394,7 @@ QString QHashedCStringRef::toUtf16() const
 
     QString rv;
     rv.resize(m_length);
-    writeUtf16((uint16_t*)rv.data());
+    writeUtf16((quint16*)rv.data());
     return rv;
 }
 
