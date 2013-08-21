@@ -1361,6 +1361,8 @@ void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
     if (target->type == V4IR::DoubleType)
         convertTypeToDouble(source, target);
+    else if (target->type == V4IR::BoolType)
+        convertTypeToBool(source, target);
     else
         convertTypeSlowPath(source, target);
 }
@@ -1429,6 +1431,49 @@ void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *t
     } break;
     default:
         convertTypeSlowPath(source, target);
+        break;
+    }
+}
+
+void InstructionSelection::convertTypeToBool(V4IR::Temp *source, V4IR::Temp *target)
+{
+    switch (source->type) {
+    case V4IR::SInt32Type:
+    case V4IR::UInt32Type:
+        convertIntToBool(source, target);
+        break;
+    case V4IR::DoubleType: {
+        // The source is in a register if the register allocator is used. If the register
+        // allocator was not used, then that means that we can use any register for to
+        // load the double into.
+        Assembler::FPRegisterID reg;
+        if (source->kind == V4IR::Temp::PhysicalRegister)
+            reg = (Assembler::FPRegisterID) source->index;
+        else
+            reg = _as->toDoubleRegister(source, (Assembler::FPRegisterID) 1);
+        Assembler::Jump nonZero = _as->branchDoubleNonZero(reg, Assembler::FPGpr0);
+
+        // it's 0, so false:
+        _as->storeBool(false, target);
+        Assembler::Jump done = _as->jump();
+
+        // it's non-zero, so true:
+        nonZero.link(_as);
+        _as->storeBool(true, target);
+
+        // done:
+        done.link(_as);
+    } break;
+    case V4IR::UndefinedType:
+    case V4IR::NullType:
+        _as->storeBool(false, target);
+        break;
+    case V4IR::StringType:
+    case V4IR::ObjectType:
+    default:
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean,
+                             Assembler::PointerToValue(source));
+        _as->storeBool(Assembler::ReturnValueRegister, target);
         break;
     }
 }

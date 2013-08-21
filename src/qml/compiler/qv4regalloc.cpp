@@ -251,9 +251,10 @@ protected: // IRDecoder
 #if 0 // TODO: change masm to generate code
         case SInt32Type:
         case UInt32Type:
-        case BoolType:
 #endif
+        case BoolType:
             switch (source->type) {
+            case UInt32Type:
             case BoolType:
             case DoubleType:
                 sourceReg = Use::MustHaveRegister;

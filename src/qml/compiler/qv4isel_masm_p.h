@@ -1240,6 +1240,7 @@ protected:
 private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
+    void convertTypeToBool(V4IR::Temp *source, V4IR::Temp *target);
 
     void convertIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
@@ -1280,15 +1281,17 @@ private:
 
     void convertIntToBool(V4IR::Temp *source, V4IR::Temp *target)
     {
+        Assembler::RegisterID reg = Assembler::ScratchRegister;
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-            _as->storeBool(_as->toInt32Register(source, Assembler::ScratchRegister), target);
+            reg = _as->toInt32Register(source, reg);
         } else if (target->kind == V4IR::Temp::StackSlot) {
-            _as->move(_as->toInt32Register(source, Assembler::ScratchRegister),
-                      Assembler::ScratchRegister);
-            _as->storeBool(Assembler::ScratchRegister, target);
+            _as->move(_as->toInt32Register(source, reg), reg);
         } else {
             Q_UNIMPLEMENTED();
         }
+
+        _as->compare32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0), reg);
+        _as->storeBool(reg, target);
     }
 
     #define isel_stringIfyx(s) #s
