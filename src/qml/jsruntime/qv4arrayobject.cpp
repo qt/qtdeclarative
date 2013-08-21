@@ -41,6 +41,7 @@
 
 #include "qv4arrayobject_p.h"
 #include "qv4sparsearray_p.h"
+#include "qv4objectproto_p.h"
 
 using namespace QV4;
 
@@ -133,7 +134,14 @@ Value ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_toString(SimpleCallContext *ctx)
 {
-    return method_join(ctx);
+    QV4::Object *o = ctx->thisObject.toObject(ctx);
+    FunctionObject *f = o->get(ctx->engine->newString("join")).asFunctionObject();
+    if (f) {
+        CALLDATA(0);
+        d.thisObject = ctx->thisObject;
+        return f->call(d);
+    }
+    return ObjectPrototype::method_toString(ctx);
 }
 
 Value ArrayPrototype::method_toLocaleString(SimpleCallContext *ctx)
