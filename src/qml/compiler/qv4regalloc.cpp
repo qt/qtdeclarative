@@ -240,7 +240,6 @@ protected: // IRDecoder
         bool needsCall = true;
         Use::RegisterFlag sourceReg = Use::CouldHaveRegister;
 
-#if 0 // TODO: change masm to generate code
         // TODO: verify this method
         switch (target->type) {
         case DoubleType:
@@ -249,9 +248,11 @@ protected: // IRDecoder
                 needsCall = false;
                 break;
             }
+#if 0 // TODO: change masm to generate code
         case SInt32Type:
         case UInt32Type:
         case BoolType:
+#endif
             switch (source->type) {
             case BoolType:
             case DoubleType:
@@ -268,7 +269,6 @@ protected: // IRDecoder
         default:
             break;
         }
-#endif
 
         addUses(source, sourceReg);
 

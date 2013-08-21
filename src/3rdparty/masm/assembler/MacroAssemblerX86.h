@@ -123,20 +123,18 @@ public:
         m_assembler.cvtsi2sd_mr(src.m_ptr, dest);
     }
 
-#if 0 // FIXME: UNTESTED!
     void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, RegisterID scratch)
     {
         Jump intRange = branch32(GreaterThanOrEqual, src, TrustedImm32(0));
         and32(TrustedImm32(INT_MAX), src, scratch);
-        convertInt32ToDouble(scratch, dst);
-        static const double magic = INT_MAX + 1;
-        addDouble(&magic, dst);
+        convertInt32ToDouble(scratch, dest);
+        static const double magic = double(INT_MAX) + 1;
+        addDouble(AbsoluteAddress(&magic), dest);
         Jump done = jump();
         intRange.link(this);
-        convertInt32ToDouble(src, dst);
+        convertInt32ToDouble(src, dest);
         done.link(this);
     }
-#endif
 
     void store32(TrustedImm32 imm, void* address)
     {

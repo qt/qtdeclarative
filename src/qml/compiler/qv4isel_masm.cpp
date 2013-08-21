@@ -1359,7 +1359,14 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
-    // FIXME: do something more useful with this info
+    if (target->type == V4IR::DoubleType)
+        convertTypeToDouble(source, target);
+    else
+        convertTypeSlowPath(source, target);
+}
+
+void InstructionSelection::convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target)
+{
     if (target->type & V4IR::NumberType)
         unop(V4IR::OpUPlus, source, target);
     else if (target->type == V4IR::BoolType) {
@@ -1368,6 +1375,62 @@ void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
         _as->storeBool(Assembler::ReturnValueRegister, target);
     } else
         copyValue(source, target);
+}
+
+void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target)
+{
+    switch (source->type) {
+    case V4IR::SInt32Type:
+    case V4IR::BoolType:
+    case V4IR::NullType:
+        convertIntToDouble(source, target);
+        break;
+    case V4IR::UInt32Type:
+        convertUIntToDouble(source, target);
+        break;
+    case V4IR::UndefinedType:
+    case V4IR::StringType:
+    case V4IR::ObjectType: {
+        // load the tag:
+        Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        tagAddr.offset += 4;
+        _as->load32(tagAddr, Assembler::ScratchRegister);
+
+        // check if it's an int32:
+        Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                                Assembler::TrustedImm32(Value::_Integer_Type));
+        convertIntToDouble(source, target);
+        Assembler::Jump intDone = _as->jump();
+
+        // not an int, check if it's NOT a double:
+        isNoInt.link(_as);
+        _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
+        Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                              Assembler::TrustedImm32(Value::NotDouble_Mask));
+
+        generateFunctionCall(Assembler::Void, __qmljs_value_to_double,
+                             Assembler::PointerToValue(target),
+                             Assembler::PointerToValue(source));
+        storeTarget(0, target);
+        Assembler::Jump noDoubleDone = _as->jump();
+
+        // it is a double:
+        isDbl.link(_as);
+        Assembler::Pointer addr2 = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        if (target->kind == V4IR::Temp::StackSlot) {
+            _as->loadDouble(addr2, Assembler::FPGpr0);
+            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+        } else {
+            _as->loadDouble(addr2, (Assembler::FPRegisterID) target->index);
+        }
+
+        noDoubleDone.link(_as);
+        intDone.link(_as);
+    } break;
+    default:
+        convertTypeSlowPath(source, target);
+        break;
+    }
 }
 
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)

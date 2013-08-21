@@ -546,6 +546,11 @@ public:
         move(ReturnValueRegister, dest);
     }
 
+    void storeReturnValue(FPRegisterID dest)
+    {
+        moveDouble(FPGpr0, dest);
+    }
+
 #ifdef VALUE_FITS_IN_REGISTER
     void storeReturnValue(const Pointer &dest)
     {
@@ -1033,7 +1038,7 @@ public:
 
     void storeUInt32(RegisterID reg, Pointer addr)
     {
-#if CPU(X86_64)
+#if CPU(X86_64) | CPU(X86)
         Q_ASSERT(reg != ScratchRegister);
         Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
         convertUInt32ToDouble(reg, FPGpr0, ScratchRegister);
@@ -1233,6 +1238,9 @@ protected:
     virtual void visitTry(V4IR::Try *);
 
 private:
+    void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);
+    void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
+
     void convertIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
@@ -1250,10 +1258,18 @@ private:
     void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-#if CPU(X86_64)
+#if CPU(X86_64) || CPU(X86)
             _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                        (Assembler::FPRegisterID) target->index,
                                        Assembler::ScratchRegister);
+#else
+        Q_ASSERT(!"Not supported on this platform!");
+#endif
+        } else if (target->kind == V4IR::Temp::StackSlot) {
+#if CPU(X86_64) || CPU(X86)
+            _as->convertUInt32ToDouble(_as->toUInt32Register(source, Assembler::ScratchRegister),
+                                      Assembler::FPGpr0, Assembler::ScratchRegister);
+            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
 #else
         Q_ASSERT(!"Not supported on this platform!");
 #endif

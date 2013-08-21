@@ -1232,6 +1232,11 @@ void __qmljs_decrement(Value *result, const Value &value)
     }
 }
 
+void __qmljs_value_to_double(double *result, const Value &value)
+{
+    *result = __qmljs_to_number(value);
+}
+
 int __qmljs_value_to_int32(const Value &value)
 {
     return value.toInt32();

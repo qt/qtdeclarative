@@ -178,6 +178,7 @@ void __qmljs_not(QV4::Value *result, const QV4::Value &value);
 void __qmljs_increment(QV4::Value *result, const QV4::Value &value);
 void __qmljs_decrement(QV4::Value *result, const QV4::Value &value);
 
+Q_QML_EXPORT void __qmljs_value_to_double(double *result, const Value &value);
 Q_QML_EXPORT int __qmljs_value_to_int32(const Value &value);
 Q_QML_EXPORT int __qmljs_double_to_int32(double d);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const Value &value);
