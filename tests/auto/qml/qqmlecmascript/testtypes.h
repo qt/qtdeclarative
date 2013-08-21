@@ -376,6 +376,34 @@ private:
     QObject *m_object2;
 };
 
+class MyVeryDeferredObject : public QObject
+{
+    Q_OBJECT
+    //For inDestruction test
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty)
+    Q_CLASSINFO("DeferredPropertyNames", "objectProperty")
+
+public:
+    MyVeryDeferredObject() : m_value(0), m_object(0) {}
+    ~MyVeryDeferredObject() {
+        qmlExecuteDeferred(this); //Not a realistic case, see QTBUG-33112 to see how this could happen in practice
+    }
+
+    int value() const { return m_value; }
+    void setValue(int v) { m_value = v; emit valueChanged(); }
+
+    QObject *objectProperty() const { return m_object; }
+    void setObjectProperty(QObject *obj) { m_object = obj; }
+
+signals:
+    void valueChanged();
+
+private:
+    int m_value;
+    QObject *m_object;
+};
+
 class MyBaseExtendedObject : public QObject
 {
 Q_OBJECT

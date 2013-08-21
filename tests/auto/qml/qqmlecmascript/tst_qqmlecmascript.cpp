@@ -102,6 +102,7 @@ private slots:
     void deferredProperties();
     void deferredPropertiesErrors();
     void deferredPropertiesInComponents();
+    void deferredPropertiesInDestruction();
     void extensionObjects();
     void overrideExtensionProperties();
     void attachedProperties();
@@ -922,6 +923,19 @@ void tst_qqmlecmascript::deferredPropertiesInComponents()
     QCOMPARE(defObjectB->objectProperty()->property("value").value<int>(), 10);
 
     delete object;
+}
+
+void tst_qqmlecmascript::deferredPropertiesInDestruction()
+{
+    //Test that the component does not get created at all if creation is deferred until the containing context is destroyed
+    //Very specific operation ordering is needed for this to occur, currently accessing object from object destructor.
+    //
+    QQmlComponent component(&engine, testFileUrl("deferredPropertiesInDestruction.qml"));
+    QObject *object = component.create();
+    if (!object)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+    delete object; //QTBUG-33112 was that this used to cause a crash
 }
 
 void tst_qqmlecmascript::extensionObjects()
