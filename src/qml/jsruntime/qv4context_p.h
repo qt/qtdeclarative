@@ -112,6 +112,9 @@ struct Q_QML_EXPORT ExecutionContext
         interpreterInstructionPointer = 0;
     }
 
+    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
+
+
     String * const *formals() const;
     unsigned int formalCount() const;
     String * const *variables() const;
@@ -157,8 +160,6 @@ struct SimpleCallContext : public ExecutionContext
 
 struct CallContext : public SimpleCallContext
 {
-    void initCallContext(ExecutionContext *parentContext, FunctionObject *function, Value *args, int argc,
-                         const Value &thisObject);
     void initQmlContext(ExecutionContext *parentContext, Object *qml, QV4::FunctionObject *function);
     bool needsOwnArguments() const;
 

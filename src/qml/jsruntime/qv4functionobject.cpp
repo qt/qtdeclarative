@@ -373,7 +373,7 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
 
     ExecutionContext *context = v4->current;
     quintptr stackSpace[stackContextSize/sizeof(quintptr)];
-    ExecutionContext *ctx = v4->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
 
     Value result;
     try {
@@ -395,7 +395,7 @@ Value ScriptFunction::call(Managed *that, const Value &thisObject, Value *args, 
     assert(f->function->code);
     quintptr stackSpace[stackContextSize/sizeof(quintptr)];
     ExecutionContext *context = f->engine()->current;
-    ExecutionContext *ctx = f->engine()->newCallContext(stackSpace, f, thisObject, args, argc);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f, thisObject, args, argc);
 
     if (!f->strictMode && !thisObject.isObject()) {
         if (thisObject.isUndefined() || thisObject.isNull()) {

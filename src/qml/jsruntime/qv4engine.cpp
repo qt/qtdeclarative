@@ -336,27 +336,6 @@ CallContext *ExecutionEngine::newQmlContext(FunctionObject *f, Object *qml)
     return c;
 }
 
-CallContext *ExecutionEngine::newCallContext(void *stackSpace, FunctionObject *f, const Value &thisObject, Value *args, int argc)
-{
-    CallContext *c;
-    uint memory = requiredMemoryForExecutionContect(f, argc);
-    if (f->needsActivation || memory > stackContextSize) {
-        c = static_cast<CallContext *>(memoryManager->allocContext(memory));
-    } else {
-        c = (CallContext *)stackSpace;
-#ifndef QT_NO_DEBUG
-        c->next = (CallContext *)0x1;
-#endif
-    }
-
-    ExecutionContext *p = current;
-    current = c;
-    c->initCallContext(p, f, args, argc, thisObject);
-
-    return c;
-}
-
-
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     GlobalContext *g = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
