@@ -1116,12 +1116,12 @@ void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *re
 ExecutionContext *__qmljs_builtin_push_with_scope(const Value &o, ExecutionContext *ctx)
 {
     Object *obj = o.toObject(ctx);
-    return ctx->engine->newWithContext(obj);
+    return ctx->newWithContext(obj);
 }
 
 ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const Value &exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->engine->newCatchContext(exceptionVarName, exceptionValue);
+    return ctx->newCatchContext(exceptionVarName, exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)

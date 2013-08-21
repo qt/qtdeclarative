@@ -142,6 +142,32 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Va
     return c;
 }
 
+WithContext *ExecutionContext::newWithContext(Object *with)
+{
+    WithContext *w = static_cast<WithContext *>(engine->memoryManager->allocContext(sizeof(WithContext)));
+    engine->current = w;
+    w->initWithContext(this, with);
+    return w;
+}
+
+CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+{
+    CatchContext *c = static_cast<CatchContext *>(engine->memoryManager->allocContext(sizeof(CatchContext)));
+    engine->current = c;
+    c->initCatchContext(this, exceptionVarName, exceptionValue);
+    return c;
+}
+
+CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
+{
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
+
+    engine->current = c;
+    c->initQmlContext(this, qml, f);
+
+    return c;
+}
+
 
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)

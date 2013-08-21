@@ -236,9 +236,6 @@ struct Q_QML_EXPORT ExecutionEngine
 
     void enableDebugger();
 
-    WithContext *newWithContext(Object *with);
-    CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
-    CallContext *newQmlContext(FunctionObject *f, Object *qml);
     ExecutionContext *pushGlobalContext();
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();

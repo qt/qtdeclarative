@@ -74,7 +74,7 @@ struct QmlBindingWrapper : FunctionObject
         needsActivation = function->needsActivation();
         defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 
-        qmlContext = scope->engine->newQmlContext(this, qml);
+        qmlContext = scope->engine->current->newQmlContext(this, qml);
         scope->engine->popContext();
     }
 

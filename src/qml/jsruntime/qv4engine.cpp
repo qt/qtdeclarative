@@ -307,35 +307,6 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool.allocate(sizeof(InternalClass))) InternalClass(other);
 }
 
-WithContext *ExecutionEngine::newWithContext(Object *with)
-{
-    WithContext *w = static_cast<WithContext *>(memoryManager->allocContext(sizeof(WithContext)));
-    ExecutionContext *p = current;
-    current = w;
-    w->initWithContext(p, with);
-    return w;
-}
-
-CatchContext *ExecutionEngine::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
-{
-    CatchContext *c = static_cast<CatchContext *>(memoryManager->allocContext(sizeof(CatchContext)));
-    ExecutionContext *p = current;
-    current = c;
-    c->initCatchContext(p, exceptionVarName, exceptionValue);
-    return c;
-}
-
-CallContext *ExecutionEngine::newQmlContext(FunctionObject *f, Object *qml)
-{
-    CallContext *c = static_cast<CallContext *>(memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
-
-    ExecutionContext *p = current;
-    current = c;
-    c->initQmlContext(p, qml, f);
-
-    return c;
-}
-
 ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     GlobalContext *g = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));

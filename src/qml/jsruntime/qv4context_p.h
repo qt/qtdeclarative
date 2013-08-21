@@ -59,6 +59,8 @@ struct Function;
 };
 
 struct CallContext;
+struct CatchContext;
+struct WithContext;
 
 struct Q_QML_EXPORT ExecutionContext
 {
@@ -114,7 +116,9 @@ struct Q_QML_EXPORT ExecutionContext
 
     CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
     CallContext *newCallContext(FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
-
+    WithContext *newWithContext(Object *with);
+    CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
+    CallContext *newQmlContext(FunctionObject *f, Object *qml);
 
     String * const *formals() const;
     unsigned int formalCount() const;
