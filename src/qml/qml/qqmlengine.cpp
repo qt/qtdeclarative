@@ -749,7 +749,7 @@ void QQmlEnginePrivate::init()
         QQmlEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
         QQmlEngineDebugService::instance()->addEngine(q);
-        QV8DebugService::initialize(v8engine());
+        QV8DebugService::addEngine(v8engine());
         QV8ProfilerService::initialize();
         QQmlProfilerService::initialize();
         QDebugMessageService::instance();
@@ -838,6 +838,7 @@ QQmlEngine::~QQmlEngine()
     Q_D(QQmlEngine);
     if (d->isDebugging) {
         QQmlEngineDebugService::instance()->remEngine(this);
+        QV8DebugService::removeEngine(handle());
     }
 
     // Emit onDestruction signals for the root context before

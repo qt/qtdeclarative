@@ -139,6 +139,7 @@ const char *EXCEPTION_QMLFILE = "exception.qml";
 const char *ONCOMPLETED_QMLFILE = "oncompleted.qml";
 const char *CREATECOMPONENT_QMLFILE = "createComponent.qml";
 const char *CONDITION_QMLFILE = "condition.qml";
+const char *QUIT_QMLFILE = "quit.qml";
 const char *CHANGEBREAKPOINT_QMLFILE = "changeBreakpoint.qml";
 const char *STEPACTION_QMLFILE = "stepAction.qml";
 const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
@@ -196,6 +197,7 @@ private slots:
     void setBreakpointInScriptOnEmptyLine();
     void setBreakpointInScriptOnOptimizedBinding();
     void setBreakpointInScriptWithCondition();
+    void setBreakpointInScriptThatQuits();
     //void setBreakpointInFunction(); //NOT SUPPORTED
     void setBreakpointOnEvent();
 //    void setBreakpointWhenAttaching();
@@ -1336,6 +1338,29 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
     body = value.value("body").toMap();
 
     QVERIFY(body.value("value").toInt() > out);
+}
+
+void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
+{
+    QVERIFY(init(QUIT_QMLFILE));
+
+    int sourceLine = 49;
+
+    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(QUIT_QMLFILE), sourceLine, -1, true);
+    client->connect();
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
+
+    QString jsonString(client->response);
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    QVariantMap body = value.value("body").toMap();
+
+    QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QUIT_QMLFILE));
+
+    client->continueDebugging(QJSDebugClient::Continue);
+    QVERIFY(process->waitForFinished());
+    QCOMPARE(process->exitStatus(), QProcess::NormalExit);
 }
 
 /* TODO fails because of a race condition when starting up the engine before the view
