@@ -142,13 +142,19 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
     markGlyphsToRender(glyphsToRender);
 }
 
-void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> &glyphs)
+void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
     QHash<TextureInfo *, QVector<glyph_t> > glyphTextures;
 
-    QHash<glyph_t, QImage>::const_iterator it;
-    for (it = glyphs.constBegin(); it != glyphs.constEnd(); ++it) {
-        glyph_t glyphIndex = it.key();
+    GLint alignment = 4; // default value
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+
+    // Distance field data is always tightly packed
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    for (int i = 0; i < glyphs.size(); ++i) {
+        QDistanceField glyph = glyphs.at(i);
+        glyph_t glyphIndex = glyph.glyph();
         TexCoord c = glyphTexCoord(glyphIndex);
         TextureInfo *texInfo = m_glyphsTexture.value(glyphIndex);
 
@@ -157,7 +163,6 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
 
         glyphTextures[texInfo].append(glyphIndex);
 
-        QImage glyph = it.value();
         int expectedWidth = qCeil(c.width + c.xMargin * 2);
         if (glyph.width() != expectedWidth)
             glyph = glyph.copy(0, 0, expectedWidth, glyph.height());
@@ -167,14 +172,16 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
             uchar *outBits = texInfo->image.scanLine(int(c.y)) + int(c.x);
             for (int y = 0; y < glyph.height(); ++y) {
                 memcpy(outBits, inBits, glyph.width());
-                inBits += glyph.bytesPerLine();
-                outBits += texInfo->image.bytesPerLine();
+                inBits += glyph.width();
+                outBits += texInfo->image.width();
             }
         }
 
-        for (int i = 0; i < glyph.height(); ++i)
-            glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y + i, glyph.width(), 1, GL_ALPHA, GL_UNSIGNED_BYTE, glyph.scanLine(i));
+        glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
     }
+
+    // restore to previous alignment
+    glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
 
     QHash<TextureInfo *, QVector<glyph_t> >::const_iterator i;
     for (i = glyphTextures.constBegin(); i != glyphTextures.constEnd(); ++i) {
@@ -198,7 +205,7 @@ void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyph
 void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int width, int height)
 {
     if (useWorkaround() && texInfo->image.isNull())
-        texInfo->image = QImage(width, height, QImage::Format_Indexed8);
+        texInfo->image = QDistanceField(width, height);
 
     while (glGetError() != GL_NO_ERROR) { }
 
@@ -243,8 +250,14 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
     updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
     if (useWorkaround()) {
-        for (int i = 0; i < oldHeight; ++i)
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, oldWidth, 1, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.scanLine(i));
+        GLint alignment = 4; // default value
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.constBits());
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, alignment); // restore to previous value
+
         texInfo->image = texInfo->image.copy(0, 0, width, height);
         glDeleteTextures(1, &oldTexture);
         return;

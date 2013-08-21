@@ -300,7 +300,7 @@ void QSGSharedDistanceFieldGlyphCache::waitForGlyphs()
     }
 }
 
-void QSGSharedDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> &glyphs)
+void QSGSharedDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
     {
         QMutexLocker locker(&m_pendingGlyphsMutex);
@@ -312,14 +312,12 @@ void QSGSharedDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> 
         int glyphCount = glyphs.size();
         QVector<quint32> glyphIds(glyphCount);
         QVector<QImage> images(glyphCount);
-        QHash<glyph_t, QImage>::const_iterator it = glyphs.constBegin();
-        int i=0;
-        while (it != glyphs.constEnd()) {
-            m_requestedGlyphsThatHaveNotBeenReturned.insert(it.key());
-            glyphIds[i] = it.key();
-            images[i] = it.value();
-
-            ++it; ++i;
+        for (int i = 0; i < glyphs.size(); ++i) {
+            const QDistanceField &df = glyphs.at(i);
+            m_requestedGlyphsThatHaveNotBeenReturned.insert(df.glyph());
+            glyphIds[i] = df.glyph();
+            // ### TODO: Handle QDistanceField in QPlatformSharedGraphicsCache
+            images[i] = df.toImage(QImage::Format_Indexed8);
         }
 
         m_hasPostedEvents = true;
