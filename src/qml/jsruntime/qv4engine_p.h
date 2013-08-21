@@ -314,8 +314,6 @@ inline void ExecutionEngine::pushContext(SimpleCallContext *context)
 
 inline ExecutionContext *ExecutionEngine::popContext()
 {
-    CallContext *c = current->asCallContext();
-
     current = current->parent;
     return current;
 }

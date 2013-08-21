@@ -505,19 +505,20 @@ QJSValue QJSValue::call(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    QVarLengthArray<Value, 9> arguments(args.length());
+    CALLDATA(args.length());
+    d.thisObject = Value::fromObject(engine->globalObject);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        arguments[i] = args.at(i).d->getValue(engine);
+        d.args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(Value::fromObject(engine->globalObject), arguments.data(), arguments.size());
+        result = f->call(d);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();
@@ -560,19 +561,20 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         return QJSValue();
     }
 
-    QVarLengthArray<Value, 9> arguments(args.length());
+    CALLDATA(args.size());
+    d.thisObject = instance.d->getValue(engine);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        arguments[i] = args.at(i).d->getValue(engine);
+        d.args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(instance.d->getValue(engine), arguments.data(), arguments.size());
+        result = f->call(d);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();
@@ -608,19 +610,19 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    QVarLengthArray<Value, 9> arguments(args.length());
+    CALLDATA(args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        arguments[i] = args.at(i).d->getValue(engine);
+        d.args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->construct(arguments.data(), arguments.size());
+        result = f->construct(d);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();

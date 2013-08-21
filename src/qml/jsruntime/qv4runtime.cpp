@@ -446,14 +446,18 @@ Value __qmljs_object_default_value(Object *object, int typeHint)
 
     Value conv = object->get(meth1);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(Value::fromObject(object), 0, 0);
+        CALLDATA(0);
+        d.thisObject = Value::fromObject(object);
+        Value r = o->call(d);
         if (r.isPrimitive())
             return r;
     }
 
     conv = object->get(meth2);
     if (FunctionObject *o = conv.asFunctionObject()) {
-        Value r = o->call(Value::fromObject(object), 0, 0);
+        CALLDATA(0);
+        d.thisObject = Value::fromObject(object);
+        Value r = o->call(d);
         if (r.isPrimitive())
             return r;
     }
@@ -600,9 +604,10 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
                     return;
                 }
 
-                Value args[1];
-                args[0] = value;
-                setter->call(Value::fromObject(o), args, 1);
+                CALLDATA(1);
+                d.args[0] = value;
+                d.thisObject = Value::fromObject(o);
+                setter->call(d);
                 return;
             }
         }
@@ -730,7 +735,11 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
         return;
     }
 
-    Value res = o->call(thisObject, args, argc);
+    CallData d;
+    d.thisObject = thisObject;
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -758,7 +767,11 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         return;
     }
 
-    Value res = o->call(thisObject, args, argc);
+    CallData d;
+    d.thisObject = thisObject;
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -784,7 +797,11 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
         context->throwTypeError(error);
     }
 
-    Value res = o->call(thisObject, args, argc);
+    CallData d;
+    d.thisObject = thisObject;
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -807,7 +824,11 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(thisObject, args, argc);
+    CallData d;
+    d.thisObject = thisObject;
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -822,7 +843,11 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(thisObject, args, argc);
+    CallData d;
+    d.thisObject = thisObject;
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -832,7 +857,11 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *t
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
-    Value res = o->call(thisObject ? *thisObject : Value::undefinedValue(), args, argc);
+    CallData d;
+    d.thisObject = thisObject ? *thisObject : Value::undefinedValue();
+    d.args = args;
+    d.argc = argc;
+    Value res = o->call(d);
     if (result)
         *result = res;
 }
@@ -845,7 +874,10 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
     l->globalGetter(l, context, &func);
 
     if (Object *f = func.asObject()) {
-        Value res = f->construct(args, argc);
+        CallData d;
+        d.args = args;
+        d.argc = argc;
+        Value res = f->construct(d);
         if (result)
             *result = res;
         return;
@@ -864,7 +896,10 @@ void __qmljs_construct_activation_property(ExecutionContext *context, Value *res
 void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc)
 {
     if (Object *f = func.asObject()) {
-        Value res = f->construct(args, argc);
+        CallData d;
+        d.args = args;
+        d.argc = argc;
+        Value res = f->construct(d);
         if (result)
             *result = res;
         return;
@@ -879,7 +914,10 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
 
     Value func = thisObject->get(name);
     if (Object *f = func.asObject()) {
-        Value res = f->construct(args, argc);
+        CallData d;
+        d.args = args;
+        d.argc = argc;
+        Value res = f->construct(d);
         if (result)
             *result = res;
         return;

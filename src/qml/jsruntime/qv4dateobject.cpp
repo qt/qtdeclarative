@@ -659,15 +659,15 @@ DateCtor::DateCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(Managed *m, Value *args, int argc)
+Value DateCtor::construct(Managed *m, const CallData &d)
 {
     double t = 0;
 
-    if (argc == 0)
+    if (d.argc == 0)
         t = currentTime();
 
-    else if (argc == 1) {
-        Value arg = args[0];
+    else if (d.argc == 1) {
+        Value arg = d.args[0];
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
         else
@@ -679,25 +679,25 @@ Value DateCtor::construct(Managed *m, Value *args, int argc)
             t = TimeClip(arg.toNumber());
     }
 
-    else { // argc > 1
-        double year  = args[0].toNumber();
-        double month = args[1].toNumber();
-        double day  = argc >= 3 ? args[2].toNumber() : 1;
-        double hours = argc >= 4 ? args[3].toNumber() : 0;
-        double mins = argc >= 5 ? args[4].toNumber() : 0;
-        double secs = argc >= 6 ? args[5].toNumber() : 0;
-        double ms    = argc >= 7 ? args[6].toNumber() : 0;
+    else { // d.argc > 1
+        double year  = d.args[0].toNumber();
+        double month = d.args[1].toNumber();
+        double day  = d.argc >= 3 ? d.args[2].toNumber() : 1;
+        double hours = d.argc >= 4 ? d.args[3].toNumber() : 0;
+        double mins = d.argc >= 5 ? d.args[4].toNumber() : 0;
+        double secs = d.argc >= 6 ? d.args[5].toNumber() : 0;
+        double ms    = d.argc >= 7 ? d.args[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
         t = TimeClip(UTC(t));
     }
 
-    Object *d = m->engine()->newDateObject(Value::fromDouble(t));
-    return Value::fromObject(d);
+    Object *o = m->engine()->newDateObject(Value::fromDouble(t));
+    return Value::fromObject(o);
 }
 
-Value DateCtor::call(Managed *m, const Value &, Value *, int)
+Value DateCtor::call(Managed *m, const CallData &)
 {
     double t = currentTime();
     return Value::fromString(m->engine()->current, ToString(t));
@@ -1306,7 +1306,9 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
     if (!toIso)
         ctx->throwTypeError();
 
-    return toIso->call(ctx->thisObject, 0, 0);
+    CALLDATA(0);
+    d.thisObject = ctx->thisObject;
+    return toIso->call(d);
 }
 
 void DatePrototype::timezoneUpdated()

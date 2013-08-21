@@ -233,19 +233,23 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 
     QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
                                                           QQuickWorkerScriptEnginePrivate::sendMessage));
-    QV4::Value args[] = { function };
-    createsend = createsendconstructor->call(global(), args, 1);
+    CALLDATA(1);
+    d.args[0] = function;
+    d.thisObject = global();
+    createsend = createsendconstructor->call(d);
 }
 
 // Requires handle and context scope
 QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
-    QV4::Value args[] = { QV4::Value::fromInt32(id) };
     QV4::FunctionObject *f = createsend.value().asFunctionObject();
     QV4::Value v = QV4::Value::undefinedValue();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
     try {
-        v = f->call(global(), args, 1);
+        CALLDATA(1);
+        d.args[0] = QV4::Value::fromInt32(id);
+        d.thisObject = global();
+        v = f->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         v = e.value();
@@ -343,11 +347,15 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
 
     QV4::Value value = QV4::Serialize::deserialize(data, workerEngine);
 
-    QV4::Value args[] = { script->object.value(), value };
     QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
+
     try {
-        workerEngine->onmessage.value().asFunctionObject()->call(workerEngine->global(), args, 2);
+        CALLDATA(2);
+        d.thisObject = workerEngine->global();
+        d.args[0] = script->object.value();
+        d.args[1] = value;
+        f->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;

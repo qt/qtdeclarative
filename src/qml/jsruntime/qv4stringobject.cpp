@@ -148,21 +148,21 @@ StringCtor::StringCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(Managed *m, Value *argv, int argc)
+Value StringCtor::construct(Managed *m, const CallData &d)
 {
     Value value;
-    if (argc)
-        value = Value::fromString(argv[0].toString(m->engine()->current));
+    if (d.argc)
+        value = Value::fromString(d.args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return Value::fromObject(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *m, const Value &, Value *argv, int argc)
+Value StringCtor::call(Managed *m, const CallData &d)
 {
     Value value;
-    if (argc)
-        value = Value::fromString(argv[0].toString(m->engine()->current));
+    if (d.argc)
+        value = Value::fromString(d.args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return value;
@@ -340,8 +340,11 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.as<RegExpObject>();
-    if (!rx)
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(&regexp, 1).as<RegExpObject>();
+    if (!rx) {
+        CALLDATA(1);
+        d.args[0] = regexp;
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(d).as<RegExpObject>();
+    }
 
     if (!rx)
         // ### CHECK
@@ -352,9 +355,11 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     // ### use the standard builtin function, not the one that might be redefined in the proto
     FunctionObject *exec = context->engine->regExpPrototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
-    Value arg = Value::fromString(s);
+    CALLDATA(1);
+    d.thisObject = Value::fromObject(rx);
+    d.args[0] = Value::fromString(s);
     if (!global)
-        return exec->call(Value::fromObject(rx), &arg, 1);
+        return exec->call(d);
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
@@ -363,7 +368,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(Value::fromObject(rx), &arg, 1);
+        Value result = exec->call(d);
         if (result.isNull())
             break;
         assert(result.isObject());
@@ -477,8 +482,8 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     Value replaceValue = ctx->argument(1);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         int replacementDelta = 0;
-        int argc = numCaptures + 2;
-        Value *args = (Value*)alloca((numCaptures + 2) * sizeof(Value));
+        CALLDATA(numCaptures + 2);
+        d.thisObject = Value::undefinedValue();
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
                 int idx = (i * numCaptures + k) * 2;
@@ -487,13 +492,14 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
                 Value entry = Value::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = Value::fromString(ctx, string.mid(start, end - start));
-                args[k] = entry;
+                d.args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            args[numCaptures] = Value::fromUInt32(matchStart);
-            args[numCaptures + 1] = Value::fromString(ctx, string);
-            Value replacement = searchCallback->call(Value::undefinedValue(), args, argc);
+            d.args[numCaptures] = Value::fromUInt32(matchStart);
+            d.args[numCaptures + 1] = Value::fromString(ctx, string);
+
+            Value replacement = searchCallback->call(d);
             QString replacementString = replacement.toString(ctx)->toQString();
             result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacementString);
             replacementDelta += replacementString.length() - matchEnd + matchStart;
@@ -529,7 +535,9 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
     Value regExpValue = ctx->argument(0);
     RegExpObject *regExp = regExpValue.as<RegExpObject>();
     if (!regExp) {
-        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(&regExpValue, 1);
+        CALLDATA(1);
+        d.args[0] = regExpValue;
+        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(d);
         regExp = regExpValue.as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));

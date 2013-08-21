@@ -320,11 +320,11 @@ inline ErrorObject *Value::asErrorObject() const
 }
 
 // ###
-inline Value Managed::construct(Value *args, int argc) {
-    return vtbl->construct(this, args, argc);
+inline Value Managed::construct(const CallData &d) {
+    return vtbl->construct(this, d);
 }
-inline Value Managed::call(const Value &thisObject, Value *args, int argc) {
-    return vtbl->call(this, thisObject, args, argc);
+inline Value Managed::call(const CallData &d) {
+    return vtbl->call(this, d);
 }
 
 struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate

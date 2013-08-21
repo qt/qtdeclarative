@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
+#include <qv4alloca_p.h>
 
 using namespace QV4;
 
@@ -128,8 +129,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
-            Value arg = desc.value;
-            map.setter()->call(Value::fromObject(this), &arg, 1);
+            CALLDATA(1);
+            d.thisObject = Value::fromObject(this);
+            d.args[0] = desc.value;
+            map.setter()->call(d);
         }
         if (attrs.isWritable()) {
             *pd = map;
@@ -144,10 +147,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
 DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
 
-Value ArgumentsGetterFunction::call(Managed *getter, const Value &thisObject, Value *, int)
+Value ArgumentsGetterFunction::call(Managed *getter, const CallData &d)
 {
     ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
-    Object *that = thisObject.asObject();
+    Object *that = d.thisObject.asObject();
     if (!that)
         getter->engine()->current->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
@@ -160,10 +163,10 @@ Value ArgumentsGetterFunction::call(Managed *getter, const Value &thisObject, Va
 
 DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
 
-Value ArgumentsSetterFunction::call(Managed *setter, const Value &thisObject, Value *args, int argc)
+Value ArgumentsSetterFunction::call(Managed *setter, const CallData &d)
 {
     ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
-    Object *that = thisObject.asObject();
+    Object *that = d.thisObject.asObject();
     if (!that)
         setter->engine()->current->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
@@ -171,7 +174,7 @@ Value ArgumentsSetterFunction::call(Managed *setter, const Value &thisObject, Va
         setter->engine()->current->throwTypeError();
 
     assert(s->index < o->context->argumentCount);
-    o->context->arguments[s->index] = argc ? args[0] : Value::undefinedValue();
+    o->context->arguments[s->index] = d.argc ? d.args[0] : Value::undefinedValue();
     return Value::undefinedValue();
 }
 

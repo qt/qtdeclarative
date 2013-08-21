@@ -125,7 +125,8 @@ QV4::Value
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function, bool *isUndefined)
 {
-    return evaluate(context, function, 0, 0, isUndefined);
+    QV4::Value args[QV4::Global::ReservedArgumentCount];
+    return evaluate(context, function, 0, args, isUndefined);
 }
 
 QV4::Value
@@ -172,7 +173,11 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 This = value;
         }
 
-        result = function.asFunctionObject()->call(This, args, argc);
+        QV4::CallData d;
+        d.thisObject = This;
+        d.args = args;
+        d.argc = argc;
+        result = function.asFunctionObject()->call(d);
 
         if (isUndefined)
             *isUndefined = result.isUndefined();

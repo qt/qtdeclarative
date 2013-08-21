@@ -176,12 +176,12 @@ bool Managed::hasInstance(Managed *m, const Value &)
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::construct(Managed *m, Value *, int)
+Value Managed::construct(Managed *m, const CallData &)
 {
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::call(Managed *m, const Value &, Value *, int)
+Value Managed::call(Managed *m, const CallData &)
 {
     m->engine()->current->throwTypeError();
 }

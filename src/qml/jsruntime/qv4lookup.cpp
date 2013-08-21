@@ -157,10 +157,13 @@ void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
         if (l->classList[0] == o->internalClass) {
             Value res;
             FunctionObject *getter = o->memberData[l->index].getter();
-            if (!getter)
+            if (!getter) {
                 res = Value::undefinedValue();
-            else
-                res = getter->call(object, 0, 0);
+            } else {
+                CALLDATA(0);
+                d.thisObject = object;
+                res = getter->call(d);
+            }
             if (result)
                 *result = res;
             return;
@@ -177,10 +180,13 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
             l->classList[1] == o->prototype->internalClass) {
             Value res;
             FunctionObject *getter = o->prototype->memberData[l->index].getter();
-            if (!getter)
+            if (!getter) {
                 res = Value::undefinedValue();
-            else
-                res = getter->call(object, 0, 0);
+            } else {
+                CALLDATA(0);
+                d.thisObject = object;
+                res = getter->call(d);
+            }
             if (result)
                 *result = res;
             return;
@@ -200,10 +206,13 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
                 if (l->classList[2] == o->internalClass) {
                     Value res;
                     FunctionObject *getter = o->memberData[l->index].getter();
-                    if (!getter)
+                    if (!getter) {
                         res = Value::undefinedValue();
-                    else
-                        res = getter->call(object, 0, 0);
+                    } else {
+                        CALLDATA(0);
+                        d.thisObject = object;
+                        res = getter->call(d);
+                    }
                     if (result)
                         *result = res;
                     return;
@@ -292,10 +301,13 @@ void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
         FunctionObject *getter = o->memberData[l->index].getter();
-        if (!getter)
+        if (!getter) {
             *result = Value::undefinedValue();
-        else
-            *result = getter->call(Value::undefinedValue(), 0, 0);
+        } else {
+            CALLDATA(0);
+            d.thisObject = Value::undefinedValue();
+            *result = getter->call(d);
+        }
         return;
     }
     l->globalGetter = globalGetterGeneric;
@@ -308,10 +320,13 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
     if (l->classList[0] == o->internalClass &&
         l->classList[1] == o->prototype->internalClass) {
         FunctionObject *getter = o->prototype->memberData[l->index].getter();
-        if (!getter)
+        if (!getter) {
             *result = Value::undefinedValue();
-        else
-            *result = getter->call(Value::undefinedValue(), 0, 0);
+        } else {
+            CALLDATA(0);
+            d.thisObject = Value::undefinedValue();
+            *result = getter->call(d);
+        }
         return;
     }
     l->globalGetter = globalGetterGeneric;
@@ -327,10 +342,13 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
             o = o->prototype;
             if (l->classList[2] == o->internalClass) {
                 FunctionObject *getter = o->memberData[l->index].getter();
-                if (!getter)
+                if (!getter) {
                     *result = Value::undefinedValue();
-                else
-                    *result = getter->call(Value::undefinedValue(), 0, 0);
+                } else {
+                    CALLDATA(0);
+                    d.thisObject = Value::undefinedValue();
+                    *result = getter->call(d);
+                }
                 return;
             }
         }

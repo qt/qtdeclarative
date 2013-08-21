@@ -102,10 +102,12 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     if (!f)
         return;
 
-    QV4::Value args[] = { status };
     QV4::ExecutionContext *ctx = f->engine()->current;
     try {
-        f->call(QV4::Value::fromObject(f->engine()->globalObject), args, 1);
+        CALLDATA(1);
+        d.thisObject = QV4::Value::fromObject(f->engine()->globalObject);
+        d.args[0] = status;
+        f->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }

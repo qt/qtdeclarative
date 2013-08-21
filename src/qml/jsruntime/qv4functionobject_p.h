@@ -112,13 +112,13 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     Value newInstance();
 
-    static Value construct(Managed *that, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
-    inline Value construct(Value *args, int argc) {
-        return vtbl->construct(this, args, argc);
+    static Value construct(Managed *that, const CallData &);
+    static Value call(Managed *that, const CallData &d);
+    inline Value construct(const CallData &d) {
+        return vtbl->construct(this, d);
     }
-    inline Value call(const Value &thisObject, Value *args, int argc) {
-        return vtbl->call(this, thisObject, args, argc);
+    inline Value call(const CallData &d) {
+        return vtbl->call(this, d);
     }
 
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
@@ -135,8 +135,8 @@ struct FunctionCtor: FunctionObject
 {
     FunctionCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *that, const CallData &);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -158,8 +158,8 @@ struct BuiltinFunctionOld: FunctionObject {
 
     BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
 
-    static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -181,21 +181,21 @@ struct IndexedBuiltinFunction: FunctionObject
         isBuiltinFunction = true;
     }
 
-    static Value construct(Managed *m, Value *, int)
+    static Value construct(Managed *m, const CallData &)
     {
         m->engine()->current->throwTypeError();
         return Value::undefinedValue();
     }
 
-    static Value call(Managed *that, const Value &thisObject, Value *args, int argc);
+    static Value call(Managed *that, const CallData &d);
 };
 
 
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, Function *function);
 
-    static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -204,8 +204,8 @@ protected:
 struct SimpleScriptFunction: FunctionObject {
     SimpleScriptFunction(ExecutionContext *scope, Function *function);
 
-    static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -220,8 +220,8 @@ struct BoundFunction: FunctionObject {
     ~BoundFunction() {}
 
 
-    static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *);

@@ -135,16 +135,19 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    return getter->call(thisObject, 0, 0);
+    CALLDATA(0);
+    d.thisObject = thisObject;
+    return getter->call(d);
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            Value args[1];
-            args[0] = value;
-            pd->set->call(Value::fromObject(this), args, 1);
+            CALLDATA(1);
+            d.args[0] = value;
+            d.thisObject = Value::fromObject(this);
+            pd->set->call(d);
             return;
         }
         goto reject;
@@ -773,9 +776,10 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        Value args[1];
-        args[0] = value;
-        pd->setter()->call(Value::fromObject(this), args, 1);
+        CALLDATA(1);
+        d.args[0] = value;
+        d.thisObject = Value::fromObject(this);
+        pd->setter()->call(d);
         return;
     }
 
@@ -850,9 +854,10 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        Value args[1];
-        args[0] = value;
-        pd->setter()->call(Value::fromObject(this), args, 1);
+        CALLDATA(1);
+        d.args[0] = value;
+        d.thisObject = Value::fromObject(this);
+        pd->setter()->call(d);
         return;
     }
 

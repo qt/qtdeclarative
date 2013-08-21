@@ -341,9 +341,11 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         ok = false;
         db.transaction();
 
-        Value callbackArgs[] = { Value::fromObject(w) };
+        CALLDATA(1);
+        d.thisObject = engine->global();
+        d.args[0] = Value::fromObject(w);
         try {
-            f->call(engine->global(), callbackArgs, 1);
+            f->call(d);
         } catch (Exception &) {
             db.rollback();
             throw;
@@ -393,9 +395,11 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
 
     db.transaction();
     if (callback) {
-        Value callbackArgs[] = { Value::fromObject(w) };
+        CALLDATA(1);
+        d.thisObject = engine->global();
+        d.args[0] = Value::fromObject(w);
         try {
-            callback->call(engine->global(), callbackArgs, 1);
+            callback->call(d);
         } catch (Exception &) {
             w->inTransaction = false;
             db.rollback();
@@ -674,8 +678,10 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     db->version = version;
 
     if (created && dbcreationCallback) {
-        Value args[] = { Value::fromObject(db) };
-        dbcreationCallback->call(engine->global(), args, 1);
+        CALLDATA(1);
+        d.thisObject = engine->global();
+        d.args[0] = Value::fromObject(db);
+        dbcreationCallback->call(d);
     }
 
     args->setReturnValue(Value::fromObject(db));

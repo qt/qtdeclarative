@@ -113,8 +113,8 @@ struct ErrorCtor: FunctionObject
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, String *name);
 
-    static Value construct(Managed *, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -124,7 +124,7 @@ struct EvalErrorCtor: ErrorCtor
 {
     EvalErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -134,7 +134,7 @@ struct RangeErrorCtor: ErrorCtor
 {
     RangeErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -144,7 +144,7 @@ struct ReferenceErrorCtor: ErrorCtor
 {
     ReferenceErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -154,7 +154,7 @@ struct SyntaxErrorCtor: ErrorCtor
 {
     SyntaxErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -164,7 +164,7 @@ struct TypeErrorCtor: ErrorCtor
 {
     TypeErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -174,7 +174,7 @@ struct URIErrorCtor: ErrorCtor
 {
     URIErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, Value *args, int argc);
+    static Value construct(Managed *m, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;

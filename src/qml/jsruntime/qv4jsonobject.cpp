@@ -702,8 +702,10 @@ QString Stringify::Str(const QString &key, Value value)
     if (Object *o = value.asObject()) {
         FunctionObject *toJSON = o->get(ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
-            Value arg = Value::fromString(ctx, key);
-            value = toJSON->call(value, &arg, 1);
+            CALLDATA(1);
+            d.thisObject = value;
+            d.args[0] = Value::fromString(ctx, key);
+            value = toJSON->call(d);
         }
     }
 
@@ -711,10 +713,11 @@ QString Stringify::Str(const QString &key, Value value)
         Object *holder = ctx->engine->newObject();
         Value holderValue = Value::fromObject(holder);
         holder->put(ctx, QString(), value);
-        Value args[2];
-        args[0] = Value::fromString(ctx, key);
-        args[1] = value;
-        value = replacerFunction->call(holderValue, args, 2);
+        CALLDATA(2);
+        d.args[0] = Value::fromString(ctx, key);
+        d.args[1] = value;
+        d.thisObject = holderValue;
+        value = replacerFunction->call(d);
     }
 
     if (Object *o = value.asObject()) {

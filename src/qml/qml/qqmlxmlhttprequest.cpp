@@ -1482,8 +1482,11 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
 
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
-        if (callingContext)
-            callback->call(activationObject, 0, 0);
+        if (callingContext) {
+            CALLDATA(0);
+            d.thisObject = activationObject;
+            callback->call(d);
+        }
 
         // if the callingContext object is no longer valid, then it has been
         // deleted explicitly (e.g., by a Loader deleting the itemContext when
@@ -1562,7 +1565,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (c->proto)
             c->proto->mark();
     }
-    static Value construct(Managed *that, Value *, int)
+    static Value construct(Managed *that, const QV4::CallData &)
     {
         QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
         if (!ctor)
@@ -1575,7 +1578,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return Value::fromObject(w);
     }
 
-    static Value call(Managed *, const Value &, Value *, int) {
+    static Value call(Managed *, const QV4::CallData &) {
         return Value::undefinedValue();
     }
 

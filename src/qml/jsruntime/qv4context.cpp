@@ -51,7 +51,7 @@
 
 using namespace QV4;
 
-CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *function, const Value &thisObject, Value *args, int argc)
+CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *function, const CallData &d)
 {
     CallContext *c = (CallContext *)stackSpace;
 #ifndef QT_NO_DEBUG
@@ -63,10 +63,10 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
     c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
-    c->arguments = args;
-    c->realArgumentCount = argc;
-    c->argumentCount = argc;
-    c->thisObject = thisObject;
+    c->arguments = d.args;
+    c->realArgumentCount = d.argc;
+    c->argumentCount = d.argc;
+    c->thisObject = d.thisObject;
 
     c->strictMode = function->strictMode;
     c->marked = false;
@@ -89,27 +89,30 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
-    if (argc < function->formalParameterCount) {
-        std::fill(c->arguments + argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
+    if (d.argc < function->formalParameterCount) {
+#ifndef QT_NO_DEBUG
+        Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
+#endif
+        std::fill(c->arguments + d.argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
         c->argumentCount = function->formalParameterCount;
     }
 
     return c;
 }
 
-CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Value &thisObject, Value *args, int argc)
+CallContext *ExecutionContext::newCallContext(FunctionObject *function, const CallData &d)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, argc)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, d.argc)));
 
     engine->current = c;
 
     c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
-    c->arguments = args;
-    c->realArgumentCount = argc;
-    c->argumentCount = argc;
-    c->thisObject = thisObject;
+    c->arguments = d.args;
+    c->realArgumentCount = d.argc;
+    c->argumentCount = d.argc;
+    c->thisObject = d.thisObject;
 
     c->strictMode = function->strictMode;
     c->marked = false;
@@ -132,12 +135,12 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Va
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
-    c->argumentCount = qMax((uint)argc, function->formalParameterCount);
+    c->argumentCount = qMax((uint)d.argc, function->formalParameterCount);
     c->arguments = c->locals + function->varCount;
-    if (argc)
-        ::memcpy(c->arguments, args, argc * sizeof(Value));
-    if (argc < function->formalParameterCount)
-        std::fill(c->arguments + argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
+    if (d.argc)
+        ::memcpy(c->arguments, d.args, c->realArgumentCount * sizeof(Value));
+    if (d.argc < function->formalParameterCount)
+        std::fill(c->arguments + d.argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
 
     return c;
 }

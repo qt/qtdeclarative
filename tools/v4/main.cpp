@@ -77,10 +77,10 @@ struct Print: FunctionObject
         name = scope->engine->newString("print");
     }
 
-    static Value call(Managed *, const Value &, Value *args, int argc)
+    static Value call(Managed *, const CallData &d)
     {
-        for (int i = 0; i < argc; ++i) {
-            QString s = args[i].toQString();
+        for (int i = 0; i < d.argc; ++i) {
+            QString s = d.args[i].toQString();
             if (i)
                 std::cout << ' ';
             std::cout << qPrintable(s);
@@ -102,7 +102,7 @@ struct GC: public FunctionObject
         vtbl = &static_vtbl;
         name = scope->engine->newString("gc");
     }
-    static Value call(Managed *m, const Value &, Value *, int)
+    static Value call(Managed *m, const CallData &)
     {
         m->engine()->memoryManager->runGC();
         return Value::undefinedValue();

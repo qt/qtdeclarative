@@ -183,8 +183,11 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
         int argCount = argsTypes ? *argsTypes : 0;
 
-        QVarLengthArray<QV4::Value, 9> args(argCount);
-
+        QV4::Value *args = (QV4::Value *)alloca(qMax(argCount, (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value));
+#ifndef QT_NO_DEBUG
+        for (int ii = 0; ii < qMax(argCount, (int)QV4::Global::ReservedArgumentCount); ++ii)
+            args[ii] = QV4::Value::undefinedValue();
+#endif
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
             //### ideally we would use metaTypeToJS, however it currently gives different results
@@ -207,7 +210,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             }
         }
 
-        QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args.data(), 0);
+        QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

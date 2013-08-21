@@ -242,14 +242,14 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope, String *name)
     vtbl = &static_vtbl;
 }
 
-Value ErrorCtor::construct(Managed *m, Value *args, int argc)
+Value ErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(m->engine()->newErrorObject(argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(m->engine()->newErrorObject(d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
-Value ErrorCtor::call(Managed *that, const Value &, Value *args, int argc)
+Value ErrorCtor::call(Managed *that, const CallData &d)
 {
-    return that->construct(args, argc);
+    return that->construct(d);
 }
 
 EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
@@ -258,9 +258,9 @@ EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value EvalErrorCtor::construct(Managed *m, Value *args, int argc)
+Value EvalErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) EvalErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) EvalErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
@@ -269,9 +269,9 @@ RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RangeErrorCtor::construct(Managed *m, Value *args, int argc)
+Value RangeErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) RangeErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) RangeErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
@@ -280,9 +280,9 @@ ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ReferenceErrorCtor::construct(Managed *m, Value *args, int argc)
+Value ReferenceErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) ReferenceErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) ReferenceErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
@@ -291,9 +291,9 @@ SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value SyntaxErrorCtor::construct(Managed *m, Value *args, int argc)
+Value SyntaxErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) SyntaxErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) SyntaxErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
@@ -302,9 +302,9 @@ TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value TypeErrorCtor::construct(Managed *m, Value *args, int argc)
+Value TypeErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) TypeErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) TypeErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
@@ -313,9 +313,9 @@ URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value URIErrorCtor::construct(Managed *m, Value *args, int argc)
+Value URIErrorCtor::construct(Managed *m, const CallData &d)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) URIErrorObject(m->engine(), argc ? args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) URIErrorObject(m->engine(), d.argc ? d.args[0] : Value::undefinedValue()));
 }
 
 void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *obj)

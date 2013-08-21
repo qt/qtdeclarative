@@ -102,7 +102,8 @@ FunctionObject::~FunctionObject()
 
 Value FunctionObject::newInstance()
 {
-    return construct(0, 0);
+    CALLDATA(0);
+    return construct(d);
 }
 
 bool FunctionObject::hasInstance(Managed *that, const Value &value)
@@ -130,7 +131,7 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
     return false;
 }
 
-Value FunctionObject::construct(Managed *that, Value *, int)
+Value FunctionObject::construct(Managed *that, const CallData &)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -142,7 +143,7 @@ Value FunctionObject::construct(Managed *that, Value *, int)
     return Value::fromObject(obj);
 }
 
-Value FunctionObject::call(Managed *, const Value &, Value *, int)
+Value FunctionObject::call(Managed *, const CallData &)
 {
     return Value::undefinedValue();
 }
@@ -181,7 +182,7 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 }
 
 // 15.3.2
-Value FunctionCtor::construct(Managed *that, Value *args, int argc)
+Value FunctionCtor::construct(Managed *that, const CallData &d)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
     MemoryManager::GCBlocker gcBlocker(f->engine()->memoryManager);
@@ -189,13 +190,13 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
     ExecutionContext *ctx = f->engine()->current;
     QString arguments;
     QString body;
-    if (argc > 0) {
-        for (uint i = 0; i < argc - 1; ++i) {
+    if (d.argc > 0) {
+        for (uint i = 0; i < d.argc - 1; ++i) {
             if (i)
                 arguments += QLatin1String(", ");
-            arguments += args[i].toString(ctx)->toQString();
+            arguments += d.args[i].toString(ctx)->toQString();
         }
-        body = args[argc - 1].toString(ctx)->toQString();
+        body = d.args[d.argc - 1].toString(ctx)->toQString();
     }
 
     QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
@@ -229,9 +230,9 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(Managed *that, const Value &, Value *args, int argc)
+Value FunctionCtor::call(Managed *that, const CallData &d)
 {
-    return construct(that, args, argc);
+    return construct(that, d);
 }
 
 FunctionPrototype::FunctionPrototype(ExecutionContext *ctx)
@@ -281,28 +282,27 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     }
     quint32 len = arr ? arr->get(ctx->engine->id_length).toUInt32() : 0;
 
-    QVarLengthArray<Value, 32> args(len);
+    CALLDATA(len);
     for (quint32 i = 0; i < len; ++i)
-        args[i] = arr->getIndexed(i);
-
-
-    return o->call(thisArg, len ? args.data() : 0, len);
+        d.args[i] = arr->getIndexed(i);
+    d.thisObject = thisArg;
+    return o->call(d);
 }
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Value thisArg = ctx->argument(0);
 
-    QVarLengthArray<Value, 32> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount)
-        qCopy(ctx->arguments + 1,
-              ctx->arguments + ctx->argumentCount, args.begin());
-
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    return o->call(thisArg, args.data(), args.size());
+    CALLDATA(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
+    if (ctx->argumentCount)
+        qCopy(ctx->arguments + 1,
+              ctx->arguments + ctx->argumentCount, d.args);
+    d.thisObject = thisArg;
+    return o->call(d);
 }
 
 Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
@@ -368,7 +368,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     }
 }
 
-Value ScriptFunction::construct(Managed *that, Value *args, int argc)
+Value ScriptFunction::construct(Managed *that, const CallData &d)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -378,7 +378,9 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
         obj->prototype = proto.objectValue();
 
     ExecutionContext *context = v4->current;
-    ExecutionContext *ctx = context->newCallContext(f, Value::fromObject(obj), args, argc);
+    CallData dd = d;
+    dd.thisObject = Value::fromObject(obj);
+    ExecutionContext *ctx = context->newCallContext(f, dd);
 
     Value result;
     try {
@@ -394,18 +396,18 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
     return Value::fromObject(obj);
 }
 
-Value ScriptFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
+Value ScriptFunction::call(Managed *that, const CallData &d)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     void *stackSpace;
     ExecutionContext *context = f->engine()->current;
-    ExecutionContext *ctx = context->newCallContext(f, thisObject, args, argc);
+    ExecutionContext *ctx = context->newCallContext(f, d);
 
-    if (!f->strictMode && !thisObject.isObject()) {
-        if (thisObject.isUndefined() || thisObject.isNull()) {
+    if (!f->strictMode && !d.thisObject.isObject()) {
+        if (d.thisObject.isUndefined() || d.thisObject.isNull()) {
             ctx->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
-            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
+            ctx->thisObject = Value::fromObject(d.thisObject.toObject(context));
         }
     }
 
@@ -460,7 +462,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     }
 }
 
-Value SimpleScriptFunction::construct(Managed *that, Value *args, int argc)
+Value SimpleScriptFunction::construct(Managed *that, const CallData &d)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -471,7 +473,9 @@ Value SimpleScriptFunction::construct(Managed *that, Value *args, int argc)
 
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
+    CallData dd = d;
+    dd.thisObject = Value::fromObject(obj);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f, dd);
 
     Value result;
     try {
@@ -487,18 +491,18 @@ Value SimpleScriptFunction::construct(Managed *that, Value *args, int argc)
     return Value::fromObject(obj);
 }
 
-Value SimpleScriptFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
+Value SimpleScriptFunction::call(Managed *that, const CallData &d)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = f->engine()->current;
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, thisObject, args, argc);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f, d);
 
-    if (!f->strictMode && !thisObject.isObject()) {
-        if (thisObject.isUndefined() || thisObject.isNull()) {
+    if (!f->strictMode && !d.thisObject.isObject()) {
+        if (d.thisObject.isUndefined() || d.thisObject.isNull()) {
             ctx->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
-            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
+            ctx->thisObject = Value::fromObject(d.thisObject.toObject(context));
         }
     }
 
@@ -526,13 +530,13 @@ BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Va
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunctionOld::construct(Managed *f, Value *, int)
+Value BuiltinFunctionOld::construct(Managed *f, const CallData &d)
 {
     f->engine()->current->throwTypeError();
     return Value::undefinedValue();
 }
 
-Value BuiltinFunctionOld::call(Managed *that, const Value &thisObject, Value *args, int argc)
+Value BuiltinFunctionOld::call(Managed *that, const CallData &d)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -541,9 +545,9 @@ Value BuiltinFunctionOld::call(Managed *that, const Value &thisObject, Value *ar
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = thisObject;
-    ctx.arguments = args;
-    ctx.argumentCount = argc;
+    ctx.thisObject = d.thisObject;
+    ctx.arguments = d.args;
+    ctx.argumentCount = d.argc;
     v4->pushContext(&ctx);
 
     Value result;
@@ -558,7 +562,7 @@ Value BuiltinFunctionOld::call(Managed *that, const Value &thisObject, Value *ar
     return result;
 }
 
-Value IndexedBuiltinFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
+Value IndexedBuiltinFunction::call(Managed *that, const CallData &d)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -567,9 +571,9 @@ Value IndexedBuiltinFunction::call(Managed *that, const Value &thisObject, Value
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = thisObject;
-    ctx.arguments = args;
-    ctx.argumentCount = argc;
+    ctx.thisObject = d.thisObject;
+    ctx.arguments = d.args;
+    ctx.argumentCount = d.argc;
     v4->pushContext(&ctx);
 
     Value result;
@@ -612,24 +616,24 @@ void BoundFunction::destroy(Managed *that)
     static_cast<BoundFunction *>(that)->~BoundFunction();
 }
 
-Value BoundFunction::call(Managed *that, const Value &, Value *args, int argc)
+Value BoundFunction::call(Managed *that, const CallData &dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
-    memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
 
-    return f->target->call(f->boundThis, newArgs, f->boundArgs.size() + argc);
+    CALLDATA(f->boundArgs.size() + dd.argc);
+    d.thisObject = f->boundThis;
+    memcpy(d.args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(d.args + f->boundArgs.size(), dd.args, dd.argc*sizeof(Value));
+    return f->target->call(d);
 }
 
-Value BoundFunction::construct(Managed *that, Value *args, int argc)
+Value BoundFunction::construct(Managed *that, const CallData &dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    Value *newArgs = static_cast<Value *>(alloca(sizeof(Value)*(f->boundArgs.size() + argc)));
-    memcpy(newArgs, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(newArgs + f->boundArgs.size(), args, argc*sizeof(Value));
-
-    return f->target->construct(newArgs, f->boundArgs.size() + argc);
+    CALLDATA(f->boundArgs.size() + dd.argc);
+    memcpy(d.args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
+    memcpy(d.args + f->boundArgs.size(), dd.args, dd.argc*sizeof(Value));
+    return f->target->construct(d);
 }
 
 bool BoundFunction::hasInstance(Managed *that, const Value &value)

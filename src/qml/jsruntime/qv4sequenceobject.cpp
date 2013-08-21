@@ -353,11 +353,11 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Managed *fun = this->m_compareFn.asManaged();
-            QV4::Value argv[2] = {
-                convertElementToValue(this->m_ctx->engine, lhs),
-                convertElementToValue(this->m_ctx->engine, rhs)
-            };
-            QV4::Value result = fun->call(QV4::Value::fromObject(this->m_ctx->engine->globalObject), argv, 2);
+            CALLDATA(2);
+            d.args[0] = convertElementToValue(this->m_ctx->engine, lhs);
+            d.args[1] = convertElementToValue(this->m_ctx->engine, rhs);
+            d.thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
+            QV4::Value result = fun->call(d);
             return result.toNumber() < 0;
         }
 

@@ -114,8 +114,8 @@ struct Q_QML_EXPORT ExecutionContext
         interpreterInstructionPointer = 0;
     }
 
-    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
-    CallContext *newCallContext(FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
+    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const CallData &d);
+    CallContext *newCallContext(FunctionObject *f, const CallData &d);
     WithContext *newWithContext(Object *with);
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, Object *qml);

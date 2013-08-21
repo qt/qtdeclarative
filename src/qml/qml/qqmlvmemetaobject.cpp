@@ -926,15 +926,16 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                QVarLengthArray<QV4::Value, 9> args(data->parameterCount);
+                CALLDATA(data->parameterCount);
+                d.thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
+                    d.args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::Value result = QV4::Value::undefinedValue();
                 QV4::ExecutionContext *ctx = function->engine()->current;
                 try {
-                    result = function->call(ep->v8engine()->global(), args.data(), data->parameterCount);
+                    result = function->call(d);
                     if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 } catch (QV4::Exception &e) {
                     e.accept(ctx);

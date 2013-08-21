@@ -1225,8 +1225,11 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
-        QV4::Value args[] = { object, valuemap };
-        f.asFunctionObject()->call(QV4::Value::fromObject(v4engine->globalObject), args, 2);
+        CALLDATA(2);
+        d.thisObject = QV4::Value::fromObject(v4engine->globalObject);
+        d.args[0] = object;
+        d.args[1] = valuemap;
+        f.asFunctionObject()->call(d);
     }
 
     d->completeCreate();
@@ -1369,8 +1372,11 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
-        QV4::Value args[] = { object, valuemap };
-        f.asFunctionObject()->call(QV4::Value::fromObject(v4engine->globalObject), args, 2);
+        CALLDATA(2);
+        d.thisObject = QV4::Value::fromObject(v4engine->globalObject);
+        d.args[0] = object;
+        d.args[1] = valuemap;
+        f.asFunctionObject()->call(d);
     }
 }
 
@@ -1465,8 +1471,11 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
         QV4::Value f = QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
-        QV4::Value args[] = { QV4::QObjectWrapper::wrap(v4, o), valuemap };
-        f.asFunctionObject()->call(QV4::Value::fromObject(v4->globalObject), args, 2);
+        CALLDATA(2);
+        d.thisObject = QV4::Value::fromObject(v4->globalObject);
+        d.args[0] = QV4::QObjectWrapper::wrap(v4, o);
+        d.args[1] = valuemap;
+        f.asFunctionObject()->call(d);
     }
 }
 
@@ -1498,9 +1507,11 @@ void QmlIncubatorObject::statusChanged(Status s)
 
     if (QV4::FunctionObject *f = callback.asFunctionObject()) {
         QV4::ExecutionContext *ctx = f->engine()->current;
-        QV4::Value args[] = { QV4::Value::fromUInt32(s) };
         try {
-            f->call(QV4::Value::fromObject(this), args, 1);
+            CALLDATA(1);
+            d.thisObject = QV4::Value::fromObject(this);
+            d.args[0] = QV4::Value::fromUInt32(s);
+            f->call(d);
         } catch (QV4::Exception &e) {
             e.accept(ctx);
             QQmlError error;

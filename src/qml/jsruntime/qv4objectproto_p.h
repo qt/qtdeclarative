@@ -53,8 +53,8 @@ struct ObjectCtor: FunctionObject
 {
     ObjectCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, Value *args, int argc);
-    static Value call(Managed *that, const Value &, Value *, int);
+    static Value construct(Managed *that, const CallData &d);
+    static Value call(Managed *that, const CallData &d);
 
 protected:
     static const ManagedVTable static_vtbl;

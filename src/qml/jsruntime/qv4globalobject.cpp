@@ -390,7 +390,9 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     if (strictMode) {
         FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
-        return e->call(ctx->thisObject, 0, 0);
+        CALLDATA(0);
+        d.thisObject = ctx->thisObject;
+        return e->call(d);
     }
 
     ExecutionContext::EvalCode evalCode;
@@ -436,10 +438,10 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 }
 
 
-Value EvalFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
+Value EvalFunction::call(Managed *that, const CallData &d)
 {
     // indirect call
-    return static_cast<EvalFunction *>(that)->evalCall(thisObject, args, argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(d.thisObject, d.args, d.argc, false);
 }
 
 
