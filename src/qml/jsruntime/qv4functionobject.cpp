@@ -164,6 +164,13 @@ void FunctionObject::markObjects(Managed *that)
     Object::markObjects(that);
 }
 
+FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function)
+{
+    if (function->needsActivation() || function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount)
+        return new (scope->engine->memoryManager) ScriptFunction(scope, function);
+    return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function);
+}
+
 
 DEFINE_MANAGED_VTABLE(FunctionCtor);
 
@@ -218,7 +225,7 @@ Value FunctionCtor::construct(Managed *that, Value *args, int argc)
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return Value::fromObject(v4->newScriptFunction(v4->rootContext, vmf));
+    return Value::fromObject(FunctionObject::creatScriptFunction(v4->rootContext, vmf));
 }
 
 // 15.3.1: This is equivalent to new Function(...)
@@ -364,7 +371,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 Value ScriptFunction::construct(Managed *that, Value *args, int argc)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    assert(f->function->code);
     ExecutionEngine *v4 = f->engine();
     Object *obj = v4->newObject();
     Value proto = f->get(v4->id_prototype);
@@ -372,8 +378,7 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
         obj->prototype = proto.objectValue();
 
     ExecutionContext *context = v4->current;
-    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
+    ExecutionContext *ctx = context->newCallContext(f, Value::fromObject(obj), args, argc);
 
     Value result;
     try {
@@ -392,8 +397,100 @@ Value ScriptFunction::construct(Managed *that, Value *args, int argc)
 Value ScriptFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    assert(f->function->code);
-    quintptr stackSpace[stackContextSize/sizeof(quintptr)];
+    void *stackSpace;
+    ExecutionContext *context = f->engine()->current;
+    ExecutionContext *ctx = context->newCallContext(f, thisObject, args, argc);
+
+    if (!f->strictMode && !thisObject.isObject()) {
+        if (thisObject.isUndefined() || thisObject.isNull()) {
+            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
+        } else {
+            ctx->thisObject = Value::fromObject(thisObject.toObject(context));
+        }
+    }
+
+    Value result;
+    try {
+        result = f->function->code(ctx, f->function->codeData);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(context);
+        throw;
+    }
+    ctx->engine->popContext();
+    return result;
+}
+
+DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
+
+SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
+    : FunctionObject(scope, function->name)
+{
+    vtbl = &static_vtbl;
+    this->function = function;
+    this->function->compilationUnit->ref();
+    assert(function);
+    assert(function->code);
+
+    // global function
+    if (!scope)
+        return;
+
+    MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
+
+    needsActivation = function->needsActivation();
+    usesArgumentsObject = function->usesArgumentsObject();
+    strictMode = function->isStrict();
+    formalParameterCount = function->formals.size();
+    formalParameterList = function->formals.constData();
+    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
+
+    varCount = function->locals.size();
+    varList = function->locals.constData();
+
+    Object *proto = scope->engine->newObject();
+    proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
+    Property *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
+    pd->value = Value::fromObject(proto);
+
+    if (scope->strictMode) {
+        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
+        Property pd = Property::fromAccessor(thrower, thrower);
+        __defineOwnProperty__(scope, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
+        __defineOwnProperty__(scope, QStringLiteral("arguments"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
+    }
+}
+
+Value SimpleScriptFunction::construct(Managed *that, Value *args, int argc)
+{
+    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
+    ExecutionEngine *v4 = f->engine();
+    Object *obj = v4->newObject();
+    Value proto = f->get(v4->id_prototype);
+    if (proto.isObject())
+        obj->prototype = proto.objectValue();
+
+    ExecutionContext *context = v4->current;
+    void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f, Value::fromObject(obj), args, argc);
+
+    Value result;
+    try {
+        result = f->function->code(ctx, f->function->codeData);
+    } catch (Exception &ex) {
+        ex.partiallyUnwindContext(context);
+        throw;
+    }
+    ctx->engine->popContext();
+
+    if (result.isObject())
+        return result;
+    return Value::fromObject(obj);
+}
+
+Value SimpleScriptFunction::call(Managed *that, const Value &thisObject, Value *args, int argc)
+{
+    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
+    void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = f->engine()->current;
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, thisObject, args, argc);
 
@@ -415,6 +512,7 @@ Value ScriptFunction::call(Managed *that, const Value &thisObject, Value *args, 
     ctx->engine->popContext();
     return result;
 }
+
 
 
 

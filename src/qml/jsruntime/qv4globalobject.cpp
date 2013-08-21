@@ -389,7 +389,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     needsActivation = function->needsActivation();
 
     if (strictMode) {
-        FunctionObject *e = engine->newScriptFunction(ctx, function);
+        FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
         return e->call(ctx->thisObject, 0, 0);
     }
 

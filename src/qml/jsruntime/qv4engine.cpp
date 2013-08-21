@@ -354,14 +354,6 @@ FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, Str
     return f;
 }
 
-FunctionObject *ExecutionEngine::newScriptFunction(ExecutionContext *scope, Function *function)
-{
-    assert(function);
-
-    ScriptFunction *f = new (memoryManager) ScriptFunction(scope, function);
-    return f;
-}
-
 BoundFunction *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
 {
     assert(target);

@@ -1756,7 +1756,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     V4IR::BasicBlock *throwBlock = function->newBasicBlock(groupStartBlock());
     function->hasDirectEval = _env->hasDirectEval;
     function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
-    function->maxNumberOfArguments = _env->maxNumberOfArguments;
+    function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
 

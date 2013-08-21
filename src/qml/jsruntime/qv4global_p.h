@@ -98,6 +98,11 @@ struct Lookup;
 struct ExecutionEngine;
 struct QObjectWrapper;
 
+namespace Global {
+    enum {
+        ReservedArgumentCount = 6
+    };
+}
 
 enum PropertyFlag {
     Attr_Data = 0,

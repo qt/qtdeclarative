@@ -244,7 +244,6 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *popContext();
 
     FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
-    FunctionObject *newScriptFunction(ExecutionContext *scope, Function *function);
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
@@ -319,10 +318,6 @@ inline void ExecutionEngine::pushContext(SimpleCallContext *context)
 inline ExecutionContext *ExecutionEngine::popContext()
 {
     CallContext *c = current->asCallContext();
-    if (c && !c->needsOwnArguments()) {
-        c->arguments = 0;
-        c->argumentCount = 0;
-    }
 
     current = current->parent;
     return current;

@@ -113,6 +113,7 @@ struct Q_QML_EXPORT ExecutionContext
     }
 
     CallContext *newCallContext(void *stackSpace, FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
+    CallContext *newCallContext(FunctionObject *f, const QV4::Value &thisObject, QV4::Value *args, int argc);
 
 
     String * const *formals() const;
@@ -212,6 +213,8 @@ inline const CallContext *ExecutionContext::asCallContext() const
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
+#define requiredMemoryForExecutionContectSimple(f) \
+    sizeof(CallContext) + sizeof(Value) * f->varCount
 #define requiredMemoryForQmlExecutionContect(f) \
     sizeof(CallContext) + sizeof(Value) * (f->locals.size())
 #define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))

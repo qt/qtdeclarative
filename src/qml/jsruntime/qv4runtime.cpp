@@ -123,7 +123,7 @@ void __qmljs_init_closure(ExecutionContext *ctx, Value *result, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     assert(clos);
-    *result = Value::fromObject(ctx->engine->newScriptFunction(ctx, clos));
+    *result = Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
 }
 
 void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)

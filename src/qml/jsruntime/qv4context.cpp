@@ -53,16 +53,10 @@ using namespace QV4;
 
 CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *function, const Value &thisObject, Value *args, int argc)
 {
-    CallContext *c;
-    uint memory = requiredMemoryForExecutionContect(function, argc);
-    if (function->needsActivation || memory > stackContextSize) {
-        c = static_cast<CallContext *>(engine->memoryManager->allocContext(memory));
-    } else {
-        c = (CallContext *)stackSpace;
+    CallContext *c = (CallContext *)stackSpace;
 #ifndef QT_NO_DEBUG
-        c->next = (CallContext *)0x1;
+    c->next = (CallContext *)0x1;
 #endif
-    }
 
     engine->current = c;
 
@@ -91,18 +85,59 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
     }
 
     c->locals = (Value *)(c + 1);
+
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
-    if (c->needsOwnArguments()) {
-        c->argumentCount = qMax((uint)argc, function->formalParameterCount);
-        c->arguments = c->locals + function->varCount;
-        if (argc)
-            ::memcpy(c->arguments, args, argc * sizeof(Value));
-        if (argc < function->formalParameterCount)
-            std::fill(c->arguments + argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
-
+    if (argc < function->formalParameterCount) {
+        std::fill(c->arguments + argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
+        c->argumentCount = function->formalParameterCount;
     }
+
+    return c;
+}
+
+CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Value &thisObject, Value *args, int argc)
+{
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, argc)));
+
+    engine->current = c;
+
+    c->initBaseContext(Type_CallContext, engine, this);
+
+    c->function = function;
+    c->arguments = args;
+    c->realArgumentCount = argc;
+    c->argumentCount = argc;
+    c->thisObject = thisObject;
+
+    c->strictMode = function->strictMode;
+    c->marked = false;
+    c->outer = function->scope;
+#ifndef QT_NO_DEBUG
+    assert(c->outer->next != (ExecutionContext *)0x1);
+#endif
+
+    c->activation = 0;
+
+    if (function->function) {
+        c->compilationUnit = function->function->compilationUnit;
+        c->compiledFunction = function->function->compiledFunction;
+        c->lookups = c->compilationUnit->runtimeLookups;
+        c->runtimeStrings = c->compilationUnit->runtimeStrings;
+    }
+
+    c->locals = (Value *)(c + 1);
+
+    if (function->varCount)
+        std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
+
+    c->argumentCount = qMax((uint)argc, function->formalParameterCount);
+    c->arguments = c->locals + function->varCount;
+    if (argc)
+        ::memcpy(c->arguments, args, argc * sizeof(Value));
+    if (argc < function->formalParameterCount)
+        std::fill(c->arguments + argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
 
     return c;
 }

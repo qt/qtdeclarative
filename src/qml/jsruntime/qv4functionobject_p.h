@@ -121,6 +121,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return vtbl->call(this, thisObject, args, argc);
     }
 
+    static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
+
 protected:
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
@@ -191,6 +193,16 @@ struct IndexedBuiltinFunction: FunctionObject
 
 struct ScriptFunction: FunctionObject {
     ScriptFunction(ExecutionContext *scope, Function *function);
+
+    static Value construct(Managed *, Value *args, int argc);
+    static Value call(Managed *that, const Value &, Value *, int);
+
+protected:
+    static const ManagedVTable static_vtbl;
+};
+
+struct SimpleScriptFunction: FunctionObject {
+    SimpleScriptFunction(ExecutionContext *scope, Function *function);
 
     static Value construct(Managed *, Value *args, int argc);
     static Value call(Managed *that, const Value &, Value *, int);
