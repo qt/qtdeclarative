@@ -41,12 +41,12 @@
 
 #include "qqmlscript_p.h"
 
-#include "parser/qqmljsengine_p.h"
-#include "parser/qqmljsparser_p.h"
-#include "parser/qqmljslexer_p.h"
-#include "parser/qqmljsmemorypool_p.h"
-#include "parser/qqmljsastvisitor_p.h"
-#include "parser/qqmljsast_p.h"
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsmemorypool_p.h>
+#include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsast_p.h>
 
 #include <QStack>
 #include <QStringList>
