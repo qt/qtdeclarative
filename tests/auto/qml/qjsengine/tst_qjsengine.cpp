@@ -158,6 +158,8 @@ private slots:
     void dateConversionQtJS();
     void functionPrototypeExtensions();
     void threadedEngine();
+
+    void functionDeclarationsInConditionals();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -2677,6 +2679,22 @@ void tst_QJSEngine::threadedEngine()
     thread2.wait();
     QCOMPARE(thread1.result, 2);
     QCOMPARE(thread2.result, 2);
+}
+
+void tst_QJSEngine::functionDeclarationsInConditionals()
+{
+    // Even though this is bad practice (and test262 covers it with best practices test cases),
+    // we do allow for function declarations in if and while statements, as unfortunately that's
+    // real world JavaScript. (QTBUG-33064 for example)
+    QJSEngine eng;
+    QJSValue result = eng.evaluate("if (true) {\n"
+                                   "    function blah() { return false; }\n"
+                                   "} else {\n"
+                                   "    function blah() { return true; }\n"
+                                   "}\n"
+                                   "blah();");
+    QVERIFY(result.isBool());
+    QCOMPARE(result.toBool(), true);
 }
 
 QTEST_MAIN(tst_QJSEngine)

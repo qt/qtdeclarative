@@ -477,12 +477,8 @@ protected:
         virtual bool visit(AST::FunctionDeclaration *ast);
         virtual void endVisit(AST::FunctionDeclaration *);
 
-        virtual bool visit(AST::FunctionBody *ast);
-
         virtual bool visit(AST::WithStatement *ast);
 
-        virtual bool visit(AST::IfStatement *ast);
-        virtual bool visit(AST::WhileStatement *ast);
         virtual bool visit(AST::DoWhileStatement *ast);
         virtual bool visit(AST::ForStatement *ast);
         virtual bool visit(AST::LocalForStatement *ast);
@@ -500,7 +496,6 @@ protected:
         Environment *_env;
         QStack<Environment *> _envStack;
 
-        bool _inFuncBody;
         bool _allowFuncDecls;
     };
 

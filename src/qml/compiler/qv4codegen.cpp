@@ -71,7 +71,6 @@ Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode)
     : _cg(cg)
     , _sourceCode(sourceCode)
     , _env(0)
-    , _inFuncBody(false)
     , _allowFuncDecls(true)
 {
 }
@@ -298,13 +297,6 @@ void Codegen::ScanFunctions::endVisit(FunctionDeclaration *)
     leaveEnvironment();
 }
 
-bool Codegen::ScanFunctions::visit(FunctionBody *ast)
-{
-    TemporaryBoolAssignment inFuncBody(_inFuncBody, true);
-    Node::accept(ast->elements, this);
-    return false;
-}
-
 bool Codegen::ScanFunctions::visit(WithStatement *ast)
 {
     if (_env->isStrict) {
@@ -313,25 +305,6 @@ bool Codegen::ScanFunctions::visit(WithStatement *ast)
     }
 
     return true;
-}
-
-bool Codegen::ScanFunctions::visit(IfStatement *ast) {
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
-    Node::accept(ast->ok, this);
-    Node::accept(ast->ko, this);
-
-    return false;
-}
-
-bool Codegen::ScanFunctions::visit(WhileStatement *ast) {
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_inFuncBody);
-    Node::accept(ast->statement, this);
-
-    return false;
 }
 
 bool Codegen::ScanFunctions::visit(DoWhileStatement *ast) {
