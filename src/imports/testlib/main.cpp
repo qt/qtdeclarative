@@ -111,9 +111,9 @@ public Q_SLOTS:
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
 
-        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 1);
-        if (stack.size() > frameIndex)
-            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex).source)));
+        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+        if (stack.size() > frameIndex + 1)
+            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex + 1).source)));
         return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const
@@ -121,9 +121,9 @@ public Q_SLOTS:
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
 
-        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 1);
-        if (stack.size() > frameIndex)
-            return stack.at(frameIndex).line;
+        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+        if (stack.size() > frameIndex + 1)
+            return stack.at(frameIndex + 1).line;
         return -1;
     }
 };
