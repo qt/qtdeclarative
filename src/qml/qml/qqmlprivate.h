@@ -260,12 +260,21 @@ namespace QQmlPrivate
         const char *typeName;
     };
 
+    struct RegisterCompositeSingletonType {
+        QUrl url;
+        const char *uri;
+        int versionMajor;
+        int versionMinor;
+        const char *typeName;
+    };
+
     enum RegistrationType {
         TypeRegistration       = 0,
         InterfaceRegistration  = 1,
         AutoParentRegistration = 2,
         SingletonRegistration  = 3,
-        CompositeRegistration  = 4
+        CompositeRegistration  = 4,
+        CompositeSingletonRegistration = 5
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);

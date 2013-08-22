@@ -193,6 +193,23 @@ private slots:
 
     void deepProperty();
 
+    void compositeSingletonProperties();
+    void compositeSingletonSameEngine();
+    void compositeSingletonDifferentEngine();
+    void compositeSingletonNonTypeError();
+    void compositeSingletonQualifiedNamespace();
+    void compositeSingletonModule();
+    void compositeSingletonModuleVersioned();
+    void compositeSingletonModuleQualified();
+    void compositeSingletonInstantiateError();
+    void compositeSingletonDynamicPropertyError();
+    void compositeSingletonDynamicSignal();
+    void compositeSingletonQmlRegisterTypeError();
+    void compositeSingletonQmldirNoPragmaError();
+    void compositeSingletonQmlDirError();
+    void compositeSingletonRemote();
+    void compositeSingletonJavaScriptPragma();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -210,6 +227,9 @@ private:
                 || userType == (int) QVariant::UInt
                 || userType == (int) QVariant::Double;
     }
+
+    void getSingletonInstance(QQmlEngine& engine, const char* fileName, const char* propertyName, QObject** result /* out */);
+    void getSingletonInstance(QObject* o, const char* propertyName, QObject** result /* out */);
 };
 
 #define DETERMINE_ERRORS(errorfile,expected,actual)\
@@ -1893,6 +1913,7 @@ void tst_qqmllanguage::reservedWords_data()
     QTest::newRow("if") << QByteArray("if");
     QTest::newRow("implements") << QByteArray("implements");
     QTest::newRow("import") << QByteArray("import");
+    QTest::newRow("pragma") << QByteArray("pragma");
     QTest::newRow("in") << QByteArray("in");
     QTest::newRow("instanceof") << QByteArray("instanceof");
     QTest::newRow("int") << QByteArray("int");
@@ -3194,6 +3215,291 @@ void tst_qqmllanguage::implicitImportsLast()
     engine.setImportPathList(defaultImportPathList);
 }
 
+void tst_qqmllanguage::getSingletonInstance(QQmlEngine& engine, const char* fileName, const char* propertyName, QObject** result /* out */)
+{
+    QVERIFY(fileName != 0);
+    QVERIFY(propertyName != 0);
+
+    if (!fileName || !propertyName)
+        return;
+
+    QQmlComponent component(&engine, testFile(fileName));
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    getSingletonInstance(object, propertyName, result);
+}
+
+void tst_qqmllanguage::getSingletonInstance(QObject* o, const char* propertyName, QObject** result /* out */)
+{
+    QVERIFY(o != 0);
+    QVERIFY(propertyName != 0);
+
+    if (!o || !propertyName)
+        return;
+
+    QVariant variant = o->property(propertyName);
+    QVERIFY(variant.userType() == qMetaTypeId<QObject *>());
+
+    QObject *singleton = NULL;
+    if (variant.canConvert<QObject*>())
+        singleton = variant.value<QObject*>();
+
+    QVERIFY(singleton != 0);
+    *result = singleton;
+}
+
+void verifyCompositeSingletonPropertyValues(QObject* o, const char* n1, int v1, const char* n2, int v2)
+{
+    QCOMPARE(o->property(n1).userType(), (int)QMetaType::Int);
+    QCOMPARE(o->property(n1), QVariant(v1));
+
+    QCOMPARE(o->property(n2).userType(), (int)QVariant::String);
+    QString numStr;
+    QCOMPARE(o->property(n2), QVariant(QString(QLatin1String("Test value: ")).append(numStr.setNum(v2))));
+}
+
+// Reads values from a composite singleton type
+void tst_qqmllanguage::compositeSingletonProperties()
+{
+    QQmlComponent component(&engine, testFile("singletonTest1.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 125, "value2", -55);
+}
+
+// Checks that the addresses of the composite singletons used in the same
+// engine are the same.
+void tst_qqmllanguage::compositeSingletonSameEngine()
+{
+    QObject* s1 = NULL;
+    getSingletonInstance(engine, "singletonTest2.qml", "singleton1", &s1);
+    QVERIFY(s1 != 0);
+    s1->setProperty("testProp2", QVariant(13));
+
+    QObject* s2 = NULL;
+    getSingletonInstance(engine, "singletonTest3.qml", "singleton2", &s2);
+    QVERIFY(s2 != 0);
+    QCOMPARE(s2->property("testProp2"), QVariant(13));
+
+    QVERIFY(s1 == s2);
+}
+
+// Checks that the addresses of the composite singletons used in different
+// engines are different.
+void tst_qqmllanguage::compositeSingletonDifferentEngine()
+{
+    QQmlEngine e2;
+
+    QObject* s1 = NULL;
+    getSingletonInstance(engine, "singletonTest2.qml", "singleton1", &s1);
+    QVERIFY(s1 != 0);
+    s1->setProperty("testProp2", QVariant(13));
+
+    QObject* s2 = NULL;
+    getSingletonInstance(e2, "singletonTest3.qml", "singleton2", &s2);
+    QVERIFY(s2 != 0);
+    QCOMPARE(s2->property("testProp2"), QVariant(25));
+
+    QVERIFY(s1 != s2);
+}
+
+// pragma Singleton in a non-type qml file fails
+void tst_qqmllanguage::compositeSingletonNonTypeError()
+{
+    QQmlComponent component(&engine, testFile("singletonTest4.qml"));
+    VERIFY_ERRORS("singletonTest4.error.txt");
+}
+
+// Loads the singleton using a namespace qualifier
+void tst_qqmllanguage::compositeSingletonQualifiedNamespace()
+{
+    QQmlComponent component(&engine, testFile("singletonTest5.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 125, "value2", -55);
+
+    // lets verify that the singleton instance we are using is the same
+    // when loaded through another file (without namespace!)
+    QObject *s1 = NULL;
+    getSingletonInstance(o, "singletonInstance", &s1);
+    QVERIFY(s1 != 0);
+
+    QObject* s2 = NULL;
+    getSingletonInstance(engine, "singletonTest5a.qml", "singletonInstance", &s2);
+    QVERIFY(s2 != 0);
+
+    QVERIFY(s1 == s2);
+}
+
+// Loads a singleton from a module
+void tst_qqmllanguage::compositeSingletonModule()
+{
+    engine.addImportPath(testFile("singleton/module"));
+
+    QQmlComponent component(&engine, testFile("singletonTest6.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 125, "value2", -55);
+    verifyCompositeSingletonPropertyValues(o, "value3", 125, "value4", -55);
+
+    // lets verify that the singleton instance we are using is the same
+    // when loaded through another file
+    QObject *s1 = NULL;
+    getSingletonInstance(o, "singletonInstance", &s1);
+    QVERIFY(s1 != 0);
+
+    QObject* s2 = NULL;
+    getSingletonInstance(engine, "singletonTest6a.qml", "singletonInstance", &s2);
+    QVERIFY(s2 != 0);
+
+    QVERIFY(s1 == s2);
+}
+
+// Loads a singleton from a module with a higher version
+void tst_qqmllanguage::compositeSingletonModuleVersioned()
+{
+    engine.addImportPath(testFile("singleton/module"));
+
+    QQmlComponent component(&engine, testFile("singletonTest7.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 225, "value2", 55);
+    verifyCompositeSingletonPropertyValues(o, "value3", 225, "value4", 55);
+
+    // lets verify that the singleton instance we are using is the same
+    // when loaded through another file
+    QObject *s1 = NULL;
+    getSingletonInstance(o, "singletonInstance", &s1);
+    QVERIFY(s1 != 0);
+
+    QObject* s2 = NULL;
+    getSingletonInstance(engine, "singletonTest7a.qml", "singletonInstance", &s2);
+    QVERIFY(s2 != 0);
+
+    QVERIFY(s1 == s2);
+}
+
+// Loads a singleton from a module with a qualified namespace
+void tst_qqmllanguage::compositeSingletonModuleQualified()
+{
+    engine.addImportPath(testFile("singleton/module"));
+
+    QQmlComponent component(&engine, testFile("singletonTest8.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 225, "value2", 55);
+    verifyCompositeSingletonPropertyValues(o, "value3", 225, "value4", 55);
+
+    // lets verify that the singleton instance we are using is the same
+    // when loaded through another file
+    QObject *s1 = NULL;
+    getSingletonInstance(o, "singletonInstance", &s1);
+    QVERIFY(s1 != 0);
+
+    QObject* s2 = NULL;
+    getSingletonInstance(engine, "singletonTest8a.qml", "singletonInstance", &s2);
+    QVERIFY(s2 != 0);
+
+    QVERIFY(s1 == s2);
+}
+
+// Tries to instantiate a type with a pragma Singleton and fails
+void tst_qqmllanguage::compositeSingletonInstantiateError()
+{
+    QQmlComponent component(&engine, testFile("singletonTest9.qml"));
+    VERIFY_ERRORS("singletonTest9.error.txt");
+}
+
+// Having a composite singleton type as dynamic property type fails
+// (like C++ singleton)
+void tst_qqmllanguage::compositeSingletonDynamicPropertyError()
+{
+    QQmlComponent component(&engine, testFile("singletonTest10.qml"));
+    VERIFY_ERRORS("singletonTest10.error.txt");
+}
+
+// Having a composite singleton type as dynamic signal parameter succeeds
+// (like C++ singleton)
+void tst_qqmllanguage::compositeSingletonDynamicSignal()
+{
+    QQmlComponent component(&engine, testFile("singletonTest11.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 99, "value2", -55);
+}
+
+// Use qmlRegisterType to register a qml composite type with pragma Singleton defined in it.
+// This will fail as qmlRegisterType will only instantiate CompositeTypes.
+void tst_qqmllanguage::compositeSingletonQmlRegisterTypeError()
+{
+    qmlRegisterType(testFileUrl("singleton/registeredComposite/CompositeType.qml"),
+        "CompositeSingletonTest", 1, 0, "RegisteredCompositeType");
+    QQmlComponent component(&engine, testFile("singletonTest12.qml"));
+    VERIFY_ERRORS("singletonTest12.error.txt");
+}
+
+// Qmldir defines a type as a singleton, but the qml file does not have a pragma Singleton.
+void tst_qqmllanguage::compositeSingletonQmldirNoPragmaError()
+{
+    QQmlComponent component(&engine, testFile("singletonTest13.qml"));
+    VERIFY_ERRORS("singletonTest13.error.txt");
+}
+
+// Invalid singleton definition in the qmldir file results in an error
+void tst_qqmllanguage::compositeSingletonQmlDirError()
+{
+    QQmlComponent component(&engine, testFile("singletonTest14.qml"));
+    VERIFY_ERRORS("singletonTest14.error.txt");
+}
+
+// Load a remote composite singleton type via qmldir that defines the type as a singleton
+void tst_qqmllanguage::compositeSingletonRemote()
+{
+    TestHTTPServer server(14447);
+    server.serveDirectory(dataDirectory());
+
+    QQmlComponent component(&engine, testFile("singletonTest15.qml"));
+
+    while (component.isLoading())
+        QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
+
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 525, "value2", 355);
+}
+
+// Load a composite singleton type and a javascript file that has .pragma library
+// in it. This will make sure that the javascript .pragma does not get mixed with
+// the pragma Singleton changes.
+void tst_qqmllanguage::compositeSingletonJavaScriptPragma()
+{
+    QQmlComponent component(&engine, testFile("singletonTest16.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    // The value1 that is read from the SingletonType was changed from 125 to 99
+    // in compositeSingletonDynamicSignal() above. As the type is a singleton and
+    // the engine has not been destroyed, we just retrieve the old instance and
+    // the value is still 99.
+    verifyCompositeSingletonPropertyValues(o, "value1", 99, "value2", 333);
+}
 
 QTEST_MAIN(tst_qqmllanguage)
 

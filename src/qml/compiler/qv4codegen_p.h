@@ -326,12 +326,14 @@ protected:
     virtual bool visit(AST::StatementList *ast);
     virtual bool visit(AST::UiArrayMemberList *ast);
     virtual bool visit(AST::UiImport *ast);
-    virtual bool visit(AST::UiImportList *ast);
+    virtual bool visit(AST::UiHeaderItemList *ast);
+    virtual bool visit(AST::UiPragma *ast);
     virtual bool visit(AST::UiObjectInitializer *ast);
     virtual bool visit(AST::UiObjectMemberList *ast);
     virtual bool visit(AST::UiParameterList *ast);
     virtual bool visit(AST::UiProgram *ast);
     virtual bool visit(AST::UiQualifiedId *ast);
+    virtual bool visit(AST::UiQualifiedPragmaId *ast);
     virtual bool visit(AST::VariableDeclaration *ast);
     virtual bool visit(AST::VariableDeclarationList *ast);
 

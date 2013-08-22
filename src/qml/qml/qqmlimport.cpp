@@ -129,25 +129,36 @@ bool isPathAbsolute(const QString &path)
 }
 
 // If the type does not already exist as a file import, add the type and return the new type
-QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeName, QList<QQmlError> *errors)
+QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeName, bool isCompositeSingleton, QList<QQmlError> *errors)
 {
     QUrl url(urlString);
     QQmlType *ret = QQmlMetaType::qmlType(url);
-    if (!ret) { //QQmlType not yet existing for composite type
+    if (!ret) { //QQmlType not yet existing for composite or composite singleton type
         int dot = typeName.indexOf(QLatin1Char('.'));
         QHashedStringRef unqualifiedtype = dot < 0 ? typeName : QHashedStringRef(typeName.constData() + dot + 1, typeName.length() - dot - 1);
 
         //XXX: The constData of the string ref is pointing somewhere unsafe in qmlregister, so we need to create a temporary copy
         QByteArray buf(unqualifiedtype.toString().toUtf8());
 
-        QQmlPrivate::RegisterCompositeType reg = {
-            url,
-            "", //Empty URI indicates loaded via file imports
-            -1,
-            -1,
-            buf.constData()
-        };
-        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
+        if (isCompositeSingleton) {
+            QQmlPrivate::RegisterCompositeSingletonType reg = {
+                url,
+                "", //Empty URI indicates loaded via file imports
+                -1,
+                -1,
+                buf.constData()
+            };
+            ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
+        } else {
+            QQmlPrivate::RegisterCompositeType reg = {
+                url,
+                "", //Empty URI indicates loaded via file imports
+                -1,
+                -1,
+                buf.constData()
+            };
+            ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
+        }
     }
     if (!ret) {//Usually when a type name is "found" but invalid
         //qDebug() << ret << urlString << QQmlMetaType::qmlType(url);
@@ -158,10 +169,9 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
         errors->prepend(error);
     }
     return ret;
-
 }
 
-}
+} // namespace
 
 struct RegisteredPlugin {
     QString uri;
@@ -362,6 +372,61 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
     }
 }
 
+// We need to exclude the entry for the current baseUrl. This can happen for example
+// when handling qmldir files on the remote dir case and the current type is marked as
+// singleton.
+bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QString baseUrl)
+{
+    if (importUrl.isEmpty())
+        return false;
+
+    if (baseUrl.startsWith(importUrl))
+    {
+        QString typeUrl(importUrl);
+        typeUrl.append(fileName);
+        if (typeUrl == baseUrl)
+            return false;
+    }
+
+    return true;
+}
+
+void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::CompositeSingletonReference> &resultList, QUrl baseUrl)
+{
+    typedef QQmlDirComponents::const_iterator ConstIterator;
+
+    for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+        const QQmlImportNamespace::Import *import = set.imports.at(ii);
+
+        const QQmlDirComponents &components = import->qmlDirComponents;
+
+        ConstIterator cend = components.constEnd();
+        for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
+            if (cit->singleton && excludeBaseUrl(import->url, cit->fileName, baseUrl.toString())) {
+                QQmlImports::CompositeSingletonReference ref;
+                ref.typeName = cit->typeName;
+                ref.prefix = set.prefix;
+                resultList.append(ref);
+            }
+        }
+    }
+}
+
+QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSingletons() const
+{
+    QList<QQmlImports::CompositeSingletonReference> compositeSingletons;
+
+    const QQmlImportNamespace &set = d->unqualifiedset;
+    findCompositeSingletons(set, compositeSingletons, baseUrl());
+
+    for (QQmlImportNamespace *ns = d->qualifiedSets.first(); ns; ns = d->qualifiedSets.next(ns)) {
+        const QQmlImportNamespace &set = *ns;
+        findCompositeSingletons(set, compositeSingletons, baseUrl());
+    }
+
+    return compositeSingletons;
+}
+
 QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
 {
     QList<QQmlImports::ScriptReference> scripts;
@@ -452,7 +517,9 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
                                               << ')' << "::resolveType: " << type.toString() << " => "
 
-                if (type_return && *type_return && (*type_return)->isComposite())
+                if (type_return && *type_return && (*type_return)->isCompositeSingleton())
+                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << (*type_return)->sourceUrl() << " TYPE/URL-SINGLETON";
+                else if (type_return && *type_return && (*type_return)->isComposite())
                     RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << (*type_return)->sourceUrl() << " TYPE/URL";
                 else if (type_return && *type_return)
                     RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << " TYPE";
@@ -544,6 +611,7 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
     QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type), end = qmlDirComponents.end();
     if (it != end) {
         QString componentUrl;
+        bool isCompositeSingleton = false;
         QQmlDirComponents::ConstIterator candidate = end;
         for ( ; it != end && it.key() == type; ++it) {
             const QQmlDirParser::Component &c = *it;
@@ -568,13 +636,14 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
 
                     // This is our best candidate so far
                     candidate = it;
+                    isCompositeSingleton = c.singleton;
                 }
             }
         }
 
         if (candidate != end) {
             if (type_return)
-                *type_return = getTypeForUrl(componentUrl, type, 0);
+                *type_return = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0);
             return (*type_return != 0);
         }
     } else if (!isLibrary) {
@@ -594,7 +663,7 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                     *typeRecursionDetected = true;
             } else {
                 if (type_return)
-                    *type_return = getTypeForUrl(qmlUrl, type, 0);
+                    *type_return = getTypeForUrl(qmlUrl, type, false, 0);
                 return (*type_return) != 0;
             }
         }
@@ -637,7 +706,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
             // qualified, and only 1 url
-            *type_return = getTypeForUrl(resolveLocalUrl(s->imports.at(0)->url, unqualifiedtype.toString() + QLatin1String(".qml")), type, errors);
+            *type_return = getTypeForUrl(resolveLocalUrl(s->imports.at(0)->url, unqualifiedtype.toString() + QLatin1String(".qml")), type, false, errors);
             return (*type_return != 0);
         }
     }

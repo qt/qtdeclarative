@@ -157,8 +157,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("four-sections")
         << "four-sections/qmldir"
-        << (QStringList() << "qmldir:1:12: unexpected token"
-                          << "qmldir:1: invalid qmldir directive contains too many tokens")
+        << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 4 were provided")
         << QStringList()
         << QStringList()
         << QStringList();
@@ -200,8 +199,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("excessive-plugin")
         << "excessive-plugin/qmldir"
-        << (QStringList() << "qmldir:1:15: unexpected token"
-                          << "qmldir:1: invalid qmldir directive contains too many tokens")
+        << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 3 were provided")
         << QStringList()
         << QStringList()
         << QStringList();

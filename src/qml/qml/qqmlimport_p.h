@@ -122,6 +122,14 @@ public:
 
     QList<ScriptReference> resolvedScripts() const;
 
+    struct CompositeSingletonReference
+    {
+        QString typeName;
+        QString prefix;
+    };
+
+    QList<CompositeSingletonReference> resolvedCompositeSingletons() const;
+
     static QString completeQmldirPath(const QString &uri, const QString &base, int vmaj, int vmin,
                                       QQmlImports::ImportVersion version);
 

@@ -86,7 +86,7 @@ public:
     static QQmlType *qmlType(const QMetaObject *);
     static QQmlType *qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
     static QQmlType *qmlType(int);
-    static QQmlType *qmlType(const QUrl &url);
+    static QQmlType *qmlType(const QUrl &url, bool includeNonFileImports = false);
     static QQmlType *qmlTypeFromIndex(int);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
@@ -169,6 +169,8 @@ public:
     bool isSingleton() const;
     bool isInterface() const;
     bool isComposite() const;
+    bool isCompositeSingleton() const;
+
     int typeId() const;
     int qListTypeId() const;
 
@@ -198,6 +200,7 @@ public:
         QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject;
         QString typeName;
+        QUrl url; // used by composite singletons
 
         void setQObjectApi(QQmlEngine *, QObject *);
         QObject *qobjectApi(QQmlEngine *) const;
@@ -211,6 +214,7 @@ public:
         QHash<QQmlEngine *, QObject *> qobjectApis;
     };
     SingletonInstanceInfo *singletonInstanceInfo() const;
+
     QUrl sourceUrl() const;
 
     int enumValue(const QHashedStringRef &, bool *ok) const;
@@ -225,7 +229,8 @@ private:
         CppType = 0,
         SingletonType = 1,
         InterfaceType = 2,
-        CompositeType = 3
+        CompositeType = 3,
+        CompositeSingletonType = 4
     };
     friend QString registrationTypeString(RegistrationType);
     friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
@@ -233,11 +238,13 @@ private:
     friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
     friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
+    friend int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &);
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeType &);
+    QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
     ~QQmlType();
 
     QQmlTypePrivate *d;

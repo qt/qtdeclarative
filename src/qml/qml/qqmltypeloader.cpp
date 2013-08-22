@@ -1172,7 +1172,7 @@ void QQmlDataLoader::shutdownThread()
 }
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
-: QQmlDataBlob(url, type), m_typeLoader(loader), m_imports(loader)
+  : QQmlDataBlob(url, type), m_typeLoader(loader), m_imports(loader), m_isSingleton(false)
 {
 }
 
@@ -1335,6 +1335,51 @@ bool QQmlTypeLoader::Blob::addImport(const QQmlScript::Import &import, QList<QQm
 
     return true;
 }
+
+bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQmlError> *errors)
+{
+    Q_ASSERT(errors);
+
+    if (pragma.type == QQmlScript::Pragma::Singleton) {
+        QUrl myUrl = url();
+
+        QQmlType *ret = QQmlMetaType::qmlType(myUrl, true);
+        if (!ret) {
+            QQmlError error;
+            error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
+            error.setUrl(myUrl);
+            error.setLine(pragma.location.start.line);
+            error.setColumn(pragma.location.start.column);
+            errors->prepend(error);
+            return false;
+        }
+
+        if (!ret->isCompositeSingleton()) {
+            QQmlError error;
+            error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(ret->qmlTypeName()));
+            error.setUrl(myUrl);
+            error.setLine(pragma.location.start.line);
+            error.setColumn(pragma.location.start.column);
+            errors->prepend(error);
+            return false;
+        }
+        // This flag is used for error checking when a qmldir file marks a type as
+        // composite singleton, but there is no pragma Singleton defined in QML.
+        m_isSingleton = true;
+    } else {
+        QQmlError error;
+        error.setDescription(QLatin1String("Invalid pragma"));
+        error.setUrl(url());
+        error.setLine(pragma.location.start.line);
+        error.setColumn(pragma.location.start.column);
+        errors->prepend(error);
+        return false;
+    }
+
+    return true;
+}
+
+
 
 void QQmlTypeLoader::Blob::dependencyError(QQmlDataBlob *blob)
 {
@@ -1941,6 +1986,11 @@ const QSet<QString> &QQmlTypeData::namespaces() const
     return m_namespaces;
 }
 
+const QList<QQmlTypeData::TypeReference> &QQmlTypeData::compositeSingletons() const
+{
+    return m_compositeSingletons;
+}
+
 QQmlCompiledData *QQmlTypeData::compiledData() const
 {
     return m_compiledData;
@@ -2014,6 +2064,36 @@ void QQmlTypeData::done()
         }
     }
     // ---
+
+    // Check all composite singleton type dependencies for errors
+    for (int ii = 0; !isError() && ii < m_compositeSingletons.count(); ++ii) {
+        const TypeReference &type = m_compositeSingletons.at(ii);
+        Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
+        if (type.typeData && type.typeData->isError()) {
+            QString typeName = type.type->qmlTypeName();
+
+            QList<QQmlError> errors = type.typeData->errors();
+            QQmlError error;
+            error.setUrl(finalUrl());
+            error.setLine(type.location.line);
+            error.setColumn(type.location.column);
+            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
+            errors.prepend(error);
+            setError(errors);
+        }
+    }
+
+    // If the type is CompositeSingleton but there was no pragma Singleton in the
+    // QML file, lets report an error.
+    QQmlType *type = QQmlMetaType::qmlType(url(), true);
+    if (type && type->isCompositeSingleton() && !m_isSingleton) {
+        QString typeName = type->qmlTypeName();
+
+        QQmlError error;
+        error.setDescription(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
+        error.setUrl(finalUrl());
+        setError(error);
+    }
 
     // Compile component
     if (!isError()) 
@@ -2136,6 +2216,14 @@ void QQmlTypeData::dataReceived(const Data &data)
             error.setLine(import.location.start.line);
             error.setColumn(import.location.start.column);
             errors.prepend(error); // put it back on the list after filling out information.
+            setError(errors);
+            return;
+        }
+    }
+
+    foreach (const QQmlScript::Pragma &pragma, scriptParser.pragmas()) {
+        if (!addPragma(pragma, &errors)) {
+            Q_ASSERT(errors.size());
             setError(errors);
             return;
         }
@@ -2327,61 +2415,51 @@ void QQmlTypeData::resolveTypes()
         m_scripts << ref;
     }
 
+    // Lets handle resolved composite singleton types
+    foreach (const QQmlImports::CompositeSingletonReference &csRef, m_imports.resolvedCompositeSingletons()) {
+        TypeReference ref;
+        QQmlScript::TypeReference parserRef;
+        parserRef.name = csRef.typeName;
+        // we are basing our type on the information from qmldir and therefore
+        // do not have a proper location.
+        parserRef.firstUse = NULL;
+
+        if (!csRef.prefix.isEmpty()) {
+            parserRef.name.prepend(csRef.prefix + QLatin1Char('.'));
+            // Add a reference to the enclosing namespace
+            m_namespaces.insert(csRef.prefix);
+        }
+
+        int majorVersion = -1;
+        int minorVersion = -1;
+
+        if (!resolveType(&parserRef, majorVersion, minorVersion, ref))
+            return;
+
+        if (ref.type->isCompositeSingleton()) {
+            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
+            addDependency(ref.typeData);
+            ref.prefix = csRef.prefix;
+
+            m_compositeSingletons << ref;
+        }
+    }
+
     // --- old compiler:
     foreach (QQmlScript::TypeReference *parserRef, scriptParser.referencedTypes()) {
         TypeReference ref;
 
         int majorVersion = -1;
         int minorVersion = -1;
-        QQmlImportNamespace *typeNamespace = 0;
-        QList<QQmlError> errors;
 
-        bool typeFound = m_imports.resolveType(parserRef->name, &ref.type,
-                &majorVersion, &minorVersion, &typeNamespace, &errors);
-        if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
-            // Lazy loading of implicit import
-            if (loadImplicitImport()) {
-                // Try again to find the type
-                errors.clear();
-                typeFound = m_imports.resolveType(parserRef->name, &ref.type,
-                    &majorVersion, &minorVersion, &typeNamespace, &errors);
-            } else {
-                return; //loadImplicitImport() hit an error, and called setError already
-            }
-        }
-
-        if (!typeFound || typeNamespace) {
-            // Known to not be a type:
-            //  - known to be a namespace (Namespace {})
-            //  - type with unknown namespace (UnknownNamespace.SomeType {})
-            QQmlError error;
-            if (typeNamespace) {
-                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(parserRef->name));
-            } else {
-                if (errors.size()) {
-                    error = errors.takeFirst();
-                } else {
-                    // this should not be possible!
-                    // Description should come from error provided by addImport() function.
-                    error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
-                }
-                error.setUrl(m_imports.baseUrl());
-                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(parserRef->name).arg(error.description()));
-            }
-
-            Q_ASSERT(parserRef->firstUse);
-            error.setLine(parserRef->firstUse->location.start.line);
-            error.setColumn(parserRef->firstUse->location.start.column);
-
-            errors.prepend(error);
-            setError(errors);
+        if (!resolveType(parserRef, majorVersion, minorVersion, ref))
             return;
-        }
 
         if (ref.type->isComposite()) {
             ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
             addDependency(ref.typeData);
         }
+
         ref.majorVersion = majorVersion;
         ref.minorVersion = minorVersion;
 
@@ -2464,6 +2542,58 @@ void QQmlTypeData::resolveTypes()
 
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
+}
+
+bool QQmlTypeData::resolveType(const QQmlScript::TypeReference *parserRef, int &majorVersion, int &minorVersion, TypeReference &ref)
+{
+    QQmlImportNamespace *typeNamespace = 0;
+    QList<QQmlError> errors;
+
+    bool typeFound = m_imports.resolveType(parserRef->name, &ref.type,
+                                          &majorVersion, &minorVersion, &typeNamespace, &errors);
+    if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
+        // Lazy loading of implicit import
+        if (loadImplicitImport()) {
+            // Try again to find the type
+            errors.clear();
+            typeFound = m_imports.resolveType(parserRef->name, &ref.type,
+                                              &majorVersion, &minorVersion, &typeNamespace, &errors);
+        } else {
+            return false; //loadImplicitImport() hit an error, and called setError already
+        }
+    }
+
+    if (!typeFound || typeNamespace) {
+        // Known to not be a type:
+        //  - known to be a namespace (Namespace {})
+        //  - type with unknown namespace (UnknownNamespace.SomeType {})
+        QQmlError error;
+        if (typeNamespace) {
+            error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(parserRef->name));
+        } else {
+            if (errors.size()) {
+                error = errors.takeFirst();
+            } else {
+                // this should not be possible!
+                // Description should come from error provided by addImport() function.
+                error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
+            }
+            error.setUrl(m_imports.baseUrl());
+            error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(parserRef->name).arg(error.description()));
+        }
+
+        if (parserRef->firstUse)
+        {
+            error.setLine(parserRef->firstUse->location.start.line);
+            error.setColumn(parserRef->firstUse->location.start.column);
+        }
+
+        errors.prepend(error);
+        setError(errors);
+        return false;
+    }
+
+    return true;
 }
 
 void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &/*nameSpace*/)

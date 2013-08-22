@@ -937,7 +937,13 @@ bool Codegen::visit(UiImport *)
     return false;
 }
 
-bool Codegen::visit(UiImportList *)
+bool Codegen::visit(UiHeaderItemList *)
+{
+    assert(!"unreachable");
+    return false;
+}
+
+bool Codegen::visit(UiPragma *)
 {
     assert(!"unreachable");
     return false;
@@ -968,6 +974,12 @@ bool Codegen::visit(UiProgram *)
 }
 
 bool Codegen::visit(UiQualifiedId *)
+{
+    assert(!"unreachable");
+    return false;
+}
+
+bool Codegen::visit(UiQualifiedPragmaId *)
 {
     assert(!"unreachable");
     return false;

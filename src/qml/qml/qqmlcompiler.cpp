@@ -821,6 +821,10 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
         QQmlScript::TypeReference *parserRef = referencedTypes.at(ii);
 
         if (tref.typeData) { //QML-based type
+            if (tref.type->isCompositeSingleton()) {
+                QString err = tr( "Composite Singleton Type %1 is not creatable.").arg(tref.type->qmlTypeName());
+                COMPILE_EXCEPTION(parserRef->firstUse, err);
+            }
             ref.component = tref.typeData->compiledData();
             ref.component->addref();
         } else if (tref.type) {//C++-based type
@@ -884,6 +888,12 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
     output->importCache = new QQmlTypeNameCache();
     foreach (const QString &ns, unit->namespaces()) {
         output->importCache->add(ns);
+    }
+
+    // Add any Composite Singletons that were used to the import cache
+    for (int i = 0; i < unit->compositeSingletons().count(); ++i) {
+        output->importCache->add(unit->compositeSingletons().at(i).type->qmlTypeName(),
+            unit->compositeSingletons().at(i).type->sourceUrl(), unit->compositeSingletons().at(i).prefix);
     }
 
     int scriptIndex = 0;
@@ -2546,7 +2556,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
 
     if (!type && typeName != QLatin1String("Qt"))
         return true;
-    if (type && type->isComposite()) //No enums on composite types
+    if (type && type->isComposite()) //No enums on composite (or composite singleton) types
         return true;
 
     int value = 0;
@@ -2984,6 +2994,8 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     if (!unit->imports().resolveType(s->parameterTypeNames.at(i).toString(), &qmltype, 0, 0, 0))
                         COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(s->parameterTypeNames.at(i).toString()));
 
+                    // We dont mind even if the composite type ends up being composite singleton, here
+                    // we just acquire the metaTypeId.
                     if (qmltype->isComposite()) {
                         QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
                         Q_ASSERT(tdata);

@@ -128,7 +128,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
 
     sourceCode = code;
 
-    accept(program->imports);
+    accept(program->headers);
 
     if (program->members->next) {
         QQmlError error;
@@ -241,7 +241,7 @@ bool QQmlCodeGenerator::visit(AST::UiArrayBinding *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(AST::UiImportList *list)
+bool QQmlCodeGenerator::visit(AST::UiHeaderItemList *list)
 {
     return AST::Visitor::visit(list);
 }
@@ -416,6 +416,11 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
     _imports.append(import);
 
     return false;
+}
+
+bool QQmlCodeGenerator::visit(AST::UiPragma *ast)
+{
+  return true;
 }
 
 static QStringList astNodeToStringList(QQmlJS::AST::Node *node)

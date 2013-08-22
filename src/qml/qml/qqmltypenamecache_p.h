@@ -74,6 +74,7 @@ public:
     inline bool isEmpty() const;
 
     void add(const QHashedString &name, int sciptIndex = -1, const QHashedString &nameSpace = QHashedString());
+    void add(const QHashedString &name, const QUrl &url, const QHashedString &nameSpace = QHashedString());
 
     struct Result {
         inline Result();
@@ -103,6 +104,9 @@ private:
 
         // Or, imported script
         int scriptIndex;
+
+        // Or, imported compositeSingletons
+        QStringHash<QUrl> compositeSingletons;
     };
 
     template<typename Key>
@@ -115,6 +119,19 @@ private:
             } else {
                 return Result(static_cast<const void *>(i));
             }
+        }
+
+        return Result();
+    }
+
+    template<typename Key>
+    Result query(const QStringHash<QUrl> &urls, Key key)
+    {
+        QUrl *url = urls.value(key);
+        if (url) {
+            QQmlType *type = QQmlMetaType::qmlType(*url);
+            if (type)
+                return Result(type);
         }
 
         return Result();
@@ -135,8 +152,7 @@ private:
     QStringHash<Import> m_namedImports;
     QMap<const Import *, QStringHash<Import> > m_namespacedImports;
     QVector<QQmlTypeModuleVersion> m_anonymousImports;
-
-    QQmlEngine *engine;
+    QStringHash<QUrl> m_anonymousCompositeSingletons;
 };
 
 QQmlTypeNameCache::Result::Result()
@@ -176,7 +192,8 @@ QQmlTypeNameCache::Import::Import()
 
 bool QQmlTypeNameCache::isEmpty() const
 {
-    return m_namedImports.isEmpty() && m_anonymousImports.isEmpty();
+    return m_namedImports.isEmpty() && m_anonymousImports.isEmpty()
+        && m_anonymousCompositeSingletons.isEmpty();
 }
 
 QT_END_NAMESPACE

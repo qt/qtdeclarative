@@ -279,6 +279,7 @@ public:
 
     protected:
         bool addImport(const QQmlScript::Import &import, QList<QQmlError> *errors);
+        bool addPragma(const QQmlScript::Pragma &pragma, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, const QQmlScript::Import *import, int priority, QList<QQmlError> *errors);
         bool updateQmldir(QQmlQmldirData *data, const QQmlScript::Import *import, QList<QQmlError> *errors);
@@ -294,6 +295,7 @@ public:
     protected:
         QQmlTypeLoader *m_typeLoader;
         QQmlImports m_imports;
+        bool m_isSingleton;
         QHash<const QQmlScript::Import *, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
     };
@@ -401,6 +403,7 @@ public:
         int majorVersion;
         int minorVersion;
         QQmlTypeData *typeData;
+        QString prefix; // used by CompositeSingleton types
     };
 
     struct ScriptReference
@@ -425,6 +428,7 @@ public:
     const QList<TypeReference> &resolvedTypes() const;
     const QList<ScriptReference> &resolvedScripts() const;
     const QSet<QString> &namespaces() const;
+    const QList<TypeReference> &compositeSingletons() const;
 
     QQmlCompiledData *compiledData() const;
 
@@ -447,6 +451,7 @@ protected:
 private:
     void resolveTypes();
     void compile();
+    bool resolveType(const QQmlScript::TypeReference *parserRef, int &majorVersion, int &minorVersion, TypeReference &ref);
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
@@ -459,6 +464,7 @@ private:
     QList<ScriptReference> m_scripts;
 
     QSet<QString> m_namespaces;
+    QList<TypeReference> m_compositeSingletons;
 
     // --- old compiler
     QList<TypeReference> m_types;

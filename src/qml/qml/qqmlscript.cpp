@@ -517,6 +517,7 @@ protected:
 
     virtual bool visit(AST::UiProgram *node);
     virtual bool visit(AST::UiImport *node);
+    virtual bool visit(AST::UiPragma *node);
     virtual bool visit(AST::UiObjectDefinition *node);
     virtual bool visit(AST::UiPublicMember *node);
     virtual bool visit(AST::UiObjectBinding *node);
@@ -794,10 +795,10 @@ LocationSpan ProcessAST::location(AST::SourceLocation start, AST::SourceLocation
     return rv;
 }
 
-// UiProgram: UiImportListOpt UiObjectMemberList ;
+// UiProgram: UiHeaderItemListOpt UiObjectMemberList ;
 bool ProcessAST::visit(AST::UiProgram *node)
 {
-    accept(node->imports);
+    accept(node->headers);
     accept(node->members->member);
     return false;
 }
@@ -885,6 +886,41 @@ bool ProcessAST::visit(AST::UiImport *node)
     import.uri = uri;
 
     _parser->_imports << import;
+
+    return false;
+}
+
+bool ProcessAST::visit(AST::UiPragma *node)
+{
+    QQmlScript::Pragma pragma;
+
+    // For now the only valid pragma is Singleton, so lets validate the input
+    if (!node->pragmaType->name.isNull())
+    {
+        if (QLatin1String("Singleton") == node->pragmaType->name.toString())
+        {
+            pragma.type = QQmlScript::Pragma::Singleton;
+        } else {
+            QQmlError error;
+            error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+            error.setLine(node->pragmaToken.startLine);
+            error.setColumn(node->pragmaToken.startColumn);
+            _parser->_errors << error;
+            return false;
+        }
+    } else {
+        QQmlError error;
+        error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+        error.setLine(node->pragmaToken.startLine);
+        error.setColumn(node->pragmaToken.startColumn);
+        _parser->_errors << error;
+        return false;
+    }
+
+    AST::SourceLocation startLoc = node->pragmaToken;
+    AST::SourceLocation endLoc = node->semicolonToken;
+    pragma.location = location(startLoc, endLoc);
+    _parser->_pragmas << pragma;
 
     return false;
 }
@@ -1364,6 +1400,11 @@ QList<QQmlScript::Import> QQmlScript::Parser::imports() const
     return _imports;
 }
 
+QList<QQmlScript::Pragma> QQmlScript::Parser::pragmas() const
+{
+    return _pragmas;
+}
+
 QList<QQmlError> QQmlScript::Parser::errors() const
 {
     return _errors;
@@ -1416,7 +1457,7 @@ QQmlScript::Object::ScriptBlock::Pragmas QQmlScript::Parser::extractPragmas(QStr
 
         token = l.lex();
 
-        if (token != QQmlJSGrammar::T_IDENTIFIER ||
+        if (token != QQmlJSGrammar::T_PRAGMA ||
             l.tokenStartLine() != startLine ||
             script.mid(l.tokenOffset(), l.tokenLength()) != pragma)
             return rv;
@@ -1506,7 +1547,6 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
     QQmlScript::Object::ScriptBlock::Pragmas &pragmas = rv.pragmas;
 
-    const QString pragma(QLatin1String("pragma"));
     const QString js(QLatin1String(".js"));
     const QString library(QLatin1String("library"));
 
@@ -1681,10 +1721,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 rv.imports << import;
             }
-
-        } else if (token == QQmlJSGrammar::T_IDENTIFIER &&
-                   script.mid(l.tokenOffset(), l.tokenLength()) == pragma) {
-
+        } else if (token == QQmlJSGrammar::T_PRAGMA) {
             token = l.lex();
 
             CHECK_TOKEN(T_IDENTIFIER);
@@ -1713,6 +1750,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
 void QQmlScript::Parser::clear()
 {
+    _pragmas.clear();
     _imports.clear();
     _refTypes.clear();
     _errors.clear();

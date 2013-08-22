@@ -120,6 +120,17 @@ public:
     QQmlScript::LocationSpan location;
 };
 
+class Pragma
+{
+public:
+    Pragma() : type(Singleton) {}
+
+    enum Type { Singleton };
+    Type type;
+
+    QQmlScript::LocationSpan location;
+};
+
 class Object;
 class TypeReference : public QQmlPool::Class
 {
@@ -474,6 +485,7 @@ public:
 
     QQmlScript::Object *tree() const;
     QList<Import> imports() const;
+    QList<Pragma> pragmas() const;
 
     void clear();
 
@@ -505,6 +517,7 @@ public:
     QQmlPool _pool;
     QQmlScript::Object *root;
     QList<Import> _imports;
+    QList<Pragma> _pragmas;
     QList<TypeReference*> _refTypes;
     QString _scriptFile;
     ParserJsASTData *data;

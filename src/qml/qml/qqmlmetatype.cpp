@@ -63,6 +63,7 @@
 #include <qvector.h>
 
 #include <ctype.h>
+#include "qqmlcomponent.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,10 @@ struct QQmlMetaTypeData
     Names nameToType;
     typedef QHash<QUrl, QQmlType *> Files; //For file imported composite types only
     Files urlToType;
+    Files urlToNonFileImportType; // For non-file imported composite and composite
+                                  // singleton types. This way we can locate any
+                                  // of them by url, even if it was registered as
+                                  // a module via qmlRegisterCompositeType.
     typedef QHash<const QMetaObject *, QQmlType *> MetaObjects;
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
@@ -225,6 +230,10 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         setScriptApi(e, scriptCallback(e, e));
     } else if (qobjectCallback && !qobjectApi(e)) {
         setQObjectApi(e, qobjectCallback(e, e));
+    } else if (!url.isEmpty() && !qobjectApi(e)) {
+        QQmlComponent component(e, url, QQmlComponent::PreferSynchronous);
+        QObject *o = component.create();
+        setQObjectApi(e, o);
     }
     v4->popContext();
 }
@@ -279,6 +288,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
         extraData.cd->propertyValueInterceptorCast = -1;
         break;
     case QQmlType::SingletonType:
+    case QQmlType::CompositeSingletonType:
         extraData.sd = new QQmlSingletonTypeData;
         extraData.sd->singletonInstanceInfo = 0;
         break;
@@ -300,6 +310,7 @@ QQmlTypePrivate::~QQmlTypePrivate()
         delete extraData.cd;
         break;
     case QQmlType::SingletonType:
+    case QQmlType::CompositeSingletonType:
         delete extraData.sd->singletonInstanceInfo;
         delete extraData.sd;
         break;
@@ -349,6 +360,22 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
         = (type.qobjectApi && type.version >= 1) ? type.instanceMetaObject : 0;
+}
+
+QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterCompositeSingletonType &type)
+  : d(new QQmlTypePrivate(CompositeSingletonType))
+{
+    d->elementName = elementName;
+    d->module = QString::fromUtf8(type.uri);
+
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+
+    d->index = index;
+
+    d->extraData.sd->singletonInstanceInfo = new SingletonInstanceInfo;
+    d->extraData.sd->singletonInstanceInfo->url = type.url;
+    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
 }
 
 QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterType &type)
@@ -650,7 +677,7 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 
 QByteArray QQmlType::typeName() const
 {
-    if (d->regType == SingletonType)
+    if (d->regType == SingletonType || d->regType == CompositeSingletonType)
         return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
     else if (d->baseMetaObject)
         return d->baseMetaObject->className();
@@ -710,7 +737,7 @@ void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) con
 
 QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
 {
-    if (d->regType != SingletonType)
+    if (d->regType != SingletonType && d->regType != CompositeSingletonType)
         return 0;
     return d->extraData.sd->singletonInstanceInfo;
 }
@@ -757,7 +784,7 @@ bool QQmlType::isExtendedType() const
 
 bool QQmlType::isSingleton() const
 {
-    return d->regType == SingletonType;
+    return d->regType == SingletonType || d->regType == CompositeSingletonType;
 }
 
 bool QQmlType::isInterface() const
@@ -767,7 +794,12 @@ bool QQmlType::isInterface() const
 
 bool QQmlType::isComposite() const
 {
-    return d->regType == CompositeType;
+    return d->regType == CompositeType || d->regType == CompositeSingletonType;
+}
+
+bool QQmlType::isCompositeSingleton() const
+{
+    return d->regType == CompositeSingletonType;
 }
 
 int QQmlType::typeId() const
@@ -869,9 +901,12 @@ int QQmlType::index() const
 
 QUrl QQmlType::sourceUrl() const
 {
-    if (d->regType != CompositeType)
+    if (d->regType == CompositeType)
+        return d->extraData.fd->url;
+    else if (d->regType == CompositeSingletonType)
+        return d->extraData.sd->singletonInstanceInfo->url;
+    else
         return QUrl();
-    return d->extraData.fd->url;
 }
 
 int QQmlType::enumValue(const QHashedStringRef &name, bool *ok) const
@@ -1006,7 +1041,6 @@ QList<QQmlType*> QQmlTypeModule::singletonTypes(int minor) const
     return retn;
 }
 
-
 QQmlTypeModuleVersion::QQmlTypeModuleVersion()
 : m_module(0), m_minor(0)
 {
@@ -1070,6 +1104,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
     data->idToType.clear();
     data->nameToType.clear();
     data->urlToType.clear();
+    data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
     data->uriToModule.clear();
 
@@ -1123,6 +1158,8 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
         typeStr = QStringLiteral("element");
     else if (typeType == QQmlType::SingletonType)
         typeStr = QStringLiteral("singleton type");
+    else if (typeType == QQmlType::CompositeSingletonType)
+        typeStr = QStringLiteral("composite singleton type");
     else
         typeStr = QStringLiteral("type");
     return typeStr;
@@ -1254,6 +1291,31 @@ int registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
     return index;
 }
 
+int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
+{
+    // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    QString typeName = QString::fromUtf8(type.typeName);
+    bool fileImport = false;
+    if (*(type.uri) == '\0')
+        fileImport = true;
+    if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? 0 : type.uri, typeName))
+        return -1;
+
+    int index = data->types.count();
+
+    QQmlType *dtype = new QQmlType(index, typeName, type);
+
+    data->types.append(dtype);
+    addTypeToData(dtype, data);
+
+    QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
+    files->insertMulti(type.url, dtype);
+
+    return index;
+}
+
 int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
 {
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
@@ -1272,8 +1334,8 @@ int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
     data->types.append(dtype);
     addTypeToData(dtype, data);
 
-    if (fileImport)
-        data->urlToType.insertMulti(type.url, dtype);
+    QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
+    files->insertMulti(type.url, dtype);
 
     return index;
 }
@@ -1295,6 +1357,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerSingletonType(*reinterpret_cast<RegisterSingletonType *>(data));
     } else if (type == CompositeRegistration) {
         return registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
+    } else if (type == CompositeSingletonRegistration) {
+        return registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
     }
     return -1;
 }
@@ -1708,12 +1772,15 @@ QQmlType *QQmlMetaType::qmlType(int userType)
 
     Returns null if no such type is registered.
 */
-QQmlType *QQmlMetaType::qmlType(const QUrl &url)
+QQmlType *QQmlMetaType::qmlType(const QUrl &url, bool includeNonFileImports /* = false */)
 {
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlType *type = data->urlToType.value(url);
+    if (!type && includeNonFileImports)
+        type = data->urlToNonFileImportType.value(url);
+
     if (type && type->sourceUrl() == url)
         return type;
     else
