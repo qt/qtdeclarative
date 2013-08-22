@@ -45,11 +45,12 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
 #include <private/qv8engine_p.h>
-#include <QtCore/qcoreapplication.h>
 #include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 
 #ifndef QT_NO_DRAGANDDROP
 
@@ -785,7 +786,8 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
 
 QQuickDrag::QQuickDrag(QObject *parent)
 : QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
-_xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
+_xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false),
+  _threshold(qApp->styleHints()->startDragDistance())
 {
 }
 
@@ -877,6 +879,25 @@ void QQuickDrag::setYmax(qreal m)
         return;
     _ymax = m;
     emit maximumYChanged();
+}
+
+
+qreal QQuickDrag::threshold() const
+{
+    return _threshold;
+}
+
+void QQuickDrag::setThreshold(qreal value)
+{
+    if (_threshold != value) {
+        _threshold = value;
+        emit thresholdChanged();
+    }
+}
+
+void QQuickDrag::resetThreshold()
+{
+    setThreshold(qApp->styleHints()->startDragDistance());
 }
 
 bool QQuickDrag::active() const

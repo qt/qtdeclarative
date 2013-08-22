@@ -2077,13 +2077,13 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     return false;
 }
 
-bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold)
 {
     QStyleHints *styleHints = qApp->styleHints();
     int caps = QGuiApplicationPrivate::mouseEventCaps(event);
     bool dragVelocityLimitAvailable = (caps & QTouchDevice::Velocity)
         && styleHints->startDragVelocity();
-    bool overThreshold = qAbs(d) > styleHints->startDragDistance();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
     if (dragVelocityLimitAvailable) {
         QVector2D velocityVec = QGuiApplicationPrivate::mouseEventVelocity(event);
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();

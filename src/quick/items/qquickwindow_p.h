@@ -221,7 +221,7 @@ public:
 
     static bool defaultAlphaBuffer;
 
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

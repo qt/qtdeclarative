@@ -48,10 +48,7 @@
 #include <private/qqmldata_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
-
 #include <QtGui/qevent.h>
-#include <QtGui/qguiapplication.h>
-#include <QtGui/qstylehints.h>
 
 #include <float.h>
 
@@ -695,8 +692,8 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
             d->drag->target()->setPosition(dragPos);
 
         if (!keepMouseGrab()
-                && (QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(), Qt::XAxis, event)
-                || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event))) {
+                && (QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(), Qt::XAxis, event, d->drag->threshold())
+                || QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(), Qt::YAxis, event, d->drag->threshold()))) {
             setKeepMouseGrab(true);
             d->stealMouse = true;
             d->startScene = event->windowPos();
@@ -1189,6 +1186,7 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
     \qmlproperty real QtQuick2::MouseArea::drag.minimumY
     \qmlproperty real QtQuick2::MouseArea::drag.maximumY
     \qmlproperty bool QtQuick2::MouseArea::drag.filterChildren
+    \qmlproperty real QtQuick2::MouseArea::drag.threshold
 
     \c drag provides a convenient way to make an item draggable.
 
@@ -1212,6 +1210,10 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 
     If \c drag.filterChildren is set to true, a drag can override descendant MouseAreas.  This
     enables a parent MouseArea to handle drags, for example, while descendants handle clicks:
+
+    \c drag.threshold determines the threshold in pixels of when the drag operation should
+    start. By default this is bound to a platform dependent value. This property was added in
+    Qt Quick 2.2.
 
     \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
 
