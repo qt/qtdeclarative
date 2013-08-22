@@ -79,12 +79,23 @@ public:
     QTestRootObject(QObject *parent = 0)
         : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {}
 
+    static QTestRootObject *instance() {
+        static QPointer<QTestRootObject> object = new QTestRootObject;
+        if (!object) {
+            qWarning("A new test root object has been created, the behavior may be compromised");
+            object = new QTestRootObject;
+        }
+        return object;
+    }
+
     bool hasQuit:1;
     bool hasTestCase() const { return m_hasTestCase; }
     void setHasTestCase(bool value) { m_hasTestCase = value; emit hasTestCaseChanged(); }
 
     bool windowShown() const { return m_windowShown; }
     void setWindowShown(bool value) { m_windowShown = value; emit windowShownChanged(); }
+
+    void init() { setWindowShown(false); setHasTestCase(false); hasQuit = false; }
 
 Q_SIGNALS:
     void windowShownChanged();
@@ -97,6 +108,13 @@ private:
     bool m_windowShown : 1;
     bool m_hasTestCase :1;
 };
+
+static QObject *testRootObject(QQmlEngine *engine, QJSEngine *jsEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(jsEngine);
+    return QTestRootObject::instance();
+}
 
 static inline QString stripQuotes(const QString &s)
 {
@@ -287,20 +305,21 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         return 1;
     }
 
+    // Register the test object
+    qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QQuickView.
     QQuickView *view = new QQuickView;
     view->setFlags(Qt::Window | Qt::WindowSystemMenuHint
                          | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
                          | Qt::WindowCloseButtonHint);
-    QTestRootObject rootobj;
     QEventLoop eventLoop;
     QObject::connect(view->engine(), SIGNAL(quit()),
-                     &rootobj, SLOT(quit()));
+                     QTestRootObject::instance(), SLOT(quit()));
     QObject::connect(view->engine(), SIGNAL(quit()),
                      &eventLoop, SLOT(quit()));
     view->rootContext()->setContextProperty
-        (QLatin1String("qtest"), &rootobj);
+        (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
     foreach (const QString &path, imports)
         view->engine()->addImportPath(path);
     foreach (const QString &file, files) {
@@ -310,9 +329,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
         view->setObjectName(fi.baseName());
         view->setTitle(view->objectName());
-        rootobj.setHasTestCase(false);
-        rootobj.setWindowShown(false);
-        rootobj.hasQuit = false;
+        QTestRootObject::instance()->init();
         QString path = fi.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
             view->setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
@@ -325,7 +342,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             handleCompileErrors(fi, view);
             continue;
         }
-        if (!rootobj.hasQuit) {
+        if (!QTestRootObject::instance()->hasQuit) {
             // If the test already quit, then it was performed
             // synchronously during setSource().  Otherwise it is
             // an asynchronous test and we need to show the window
@@ -341,8 +358,8 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             view->show();
             QTest::qWaitForWindowExposed(view);
             if (view->isExposed())
-                rootobj.setWindowShown(true);
-            if (!rootobj.hasQuit && rootobj.hasTestCase())
+                QTestRootObject::instance()->setWindowShown(true);
+            if (!QTestRootObject::instance()->hasQuit && QTestRootObject::instance()->hasTestCase())
                 eventLoop.exec();
             // view->hide(); Causes a crash in Qt 3D due to deletion of the GL context, see QTBUG-27696
         }

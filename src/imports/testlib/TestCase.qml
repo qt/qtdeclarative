@@ -42,6 +42,7 @@
 import QtQuick 2.0
 import QtTest 1.0
 import "testlogger.js" as TestLogger
+import Qt.test.qtestroot 1.0
 
 Item {
     id: testCase
@@ -66,7 +67,7 @@ Item {
     // other test failed which this one depends on).
     property bool optional: false
 
-    property bool windowShown: qtest.windowShown
+    property bool windowShown: QTestRootObject.windowShown
 
     // Internal private state.  Identifiers prefixed with qtest are reserved.
     property bool qtest_prevWhen: true
@@ -744,7 +745,7 @@ Item {
 
 
     Component.onCompleted: {
-        qtest.hasTestCase = true;
+        QTestRootObject.hasTestCase = true;
         qtest_componentCompleted = true;
 
         if (util.printAvailableFunctions) {
