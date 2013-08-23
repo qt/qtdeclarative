@@ -66,10 +66,11 @@ class QQuickAbstractColorDialog : public QQuickAbstractDialog
     Q_OBJECT
     Q_PROPERTY(bool showAlphaChannel READ showAlphaChannel WRITE setShowAlphaChannel NOTIFY showAlphaChannelChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(qreal hue READ hue NOTIFY colorChanged)
-    Q_PROPERTY(qreal saturation READ saturation NOTIFY colorChanged)
-    Q_PROPERTY(qreal lightness READ lightness NOTIFY colorChanged)
-    Q_PROPERTY(qreal alpha READ alpha NOTIFY colorChanged)
+    Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged)
+    Q_PROPERTY(qreal currentHue READ currentHue NOTIFY currentColorChanged)
+    Q_PROPERTY(qreal currentSaturation READ currentSaturation NOTIFY currentColorChanged)
+    Q_PROPERTY(qreal currentLightness READ currentLightness NOTIFY currentColorChanged)
+    Q_PROPERTY(qreal currentAlpha READ currentAlpha NOTIFY currentColorChanged)
 
 public:
     QQuickAbstractColorDialog(QObject *parent = 0);
@@ -78,27 +79,31 @@ public:
     virtual QString title() const;
     bool showAlphaChannel() const;
     QColor color() const { return m_color; }
-    qreal hue() const { return m_color.hslHueF(); }
-    qreal saturation() const { return m_color.hslSaturationF(); }
-    qreal lightness() const { return m_color.lightnessF(); }
-    qreal alpha() const { return m_color.alphaF(); }
+    QColor currentColor() const { return m_currentColor; }
+    qreal currentHue() const { return m_currentColor.hslHueF(); }
+    qreal currentSaturation() const { return m_currentColor.hslSaturationF(); }
+    qreal currentLightness() const { return m_currentColor.lightnessF(); }
+    qreal currentAlpha() const { return m_currentColor.alphaF(); }
 
 public Q_SLOTS:
     void setVisible(bool v);
     void setModality(Qt::WindowModality m);
     void setTitle(const QString &t);
     void setColor(QColor arg);
+    void setCurrentColor(QColor currentColor);
     void setShowAlphaChannel(bool arg);
 
 Q_SIGNALS:
     void showAlphaChannelChanged();
     void colorChanged();
+    void currentColorChanged();
     void selectionAccepted();
 
 protected:
     QPlatformColorDialogHelper *m_dlgHelper;
     QSharedPointer<QColorDialogOptions> m_options;
     QColor m_color;
+    QColor m_currentColor;
 
     Q_DISABLE_COPY(QQuickAbstractColorDialog)
 };

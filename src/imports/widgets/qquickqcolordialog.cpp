@@ -163,7 +163,7 @@ QPlatformColorDialogHelper *QQuickQColorDialog::helper()
 
     if (!m_dlgHelper) {
         m_dlgHelper = new QColorDialogHelper();
-        connect(m_dlgHelper, SIGNAL(currentColorChanged(const QColor&)), this, SLOT(setColor(QColor)));
+        connect(m_dlgHelper, SIGNAL(currentColorChanged(const QColor&)), this, SLOT(setCurrentColor(QColor)));
         connect(m_dlgHelper, SIGNAL(colorSelected(const QColor&)), this, SLOT(setColor(QColor)));
         connect(m_dlgHelper, SIGNAL(accept()), this, SLOT(accept()));
         connect(m_dlgHelper, SIGNAL(reject()), this, SLOT(reject()));
