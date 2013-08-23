@@ -2127,6 +2127,7 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
     QFETCH(int, cacheBuffer);
 
     QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
 
     QaimModel model;
     for (int i = 0; i < 10; i++)
@@ -4819,6 +4820,7 @@ void tst_QQuickListView::marginsResize()
     QQuickView *window = getView();
 
     window->setSource(testFileUrl("margins2.qml"));
+    QQuickViewTestUtil::moveMouseAway(window);
     window->show();
     qApp->processEvents();
 
@@ -4954,6 +4956,7 @@ void tst_QQuickListView::snapToItem()
     QFETCH(qreal, startExtent);
 
     QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapToItem.qml"));
     window->show();
@@ -5282,6 +5285,7 @@ void tst_QQuickListView::snapOneItem()
     QFETCH(qreal, startExtent);
 
     QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapOneItem.qml"));
     window->show();
@@ -6754,6 +6758,7 @@ void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QLi
 void tst_QQuickListView::flickBeyondBounds()
 {
     QQuickView *window = createView();
+    QQuickViewTestUtil::moveMouseAway(window);
 
     window->setSource(testFileUrl("flickBeyondBoundsBug.qml"));
     window->show();
@@ -6889,6 +6894,7 @@ void tst_QQuickListView::delayedChanges_QTBUG_30555()
 void tst_QQuickListView::outsideViewportChangeNotAffectingView()
 {
     QQuickView *window = createView();
+    QQuickViewTestUtil::moveMouseAway(window);
     window->setSource(testFileUrl("outsideViewportChangeNotAffectingView.qml"));
 
     QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();

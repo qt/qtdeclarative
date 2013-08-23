@@ -1444,6 +1444,7 @@ void tst_QQuickPathView::undefinedPath()
 void tst_QQuickPathView::mouseDrag()
 {
     QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
     window->requestActivate();
@@ -1736,6 +1737,7 @@ static inline bool hasFraction(qreal o)
 void tst_QQuickPathView::cancelDrag()
 {
     QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
     window->requestActivate();
@@ -1782,6 +1784,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 {
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("dragpath.qml"));
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -1827,6 +1830,7 @@ void tst_QQuickPathView::snapToItem()
     QFETCH(bool, enforceRange);
 
     QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("panels.qml"));
     QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView*>("view");
     QVERIFY(pathview != 0);
@@ -1865,6 +1869,7 @@ void tst_QQuickPathView::snapOneItem()
     QFETCH(bool, enforceRange);
 
     QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("panels.qml"));
     window->show();
     window->requestActivate();
