@@ -72,12 +72,15 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     // Coderef + execution engine
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
+    QList<QVector<QV4::Value> > constantValues;
 };
 
 class Assembler : public JSC::MacroAssembler
 {
 public:
-    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator);
+    Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::ExecutableAllocator *executableAllocator,
+              int maxArgCountForBuiltins);
+
 #if CPU(X86)
 
 #undef VALUE_FITS_IN_REGISTER
@@ -246,9 +249,132 @@ public:
         {}
     };
 
+    // Stack layout:
+    //   return address
+    //   old FP                    <- FP, LocalsRegister
+    //   callee saved reg n
+    //   ...
+    //   callee saved reg 0
+    //   function call argument n
+    //   ...
+    //   function call argument 0
+    //   local 0
+    //   ...
+    //   local n
+    //   saved const arg 0
+    //   ...
+    //   saved const arg n         <- SP
+    class StackLayout
+    {
+    public:
+        StackLayout(V4IR::Function *function, int maxArgCountForBuiltins)
+            : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
+            , maxOutgoingArgumentCount(qMax(function->maxNumberOfArguments, maxArgCountForBuiltins))
+            , localCount(function->tempCount)
+            , savedConstCount(maxArgCountForBuiltins)
+        {
+#if 0 // debug code
+            qDebug("calleeSavedRegCount.....: %d",calleeSavedRegCount);
+            qDebug("maxOutgoingArgumentCount: %d",maxOutgoingArgumentCount);
+            qDebug("localCount..............: %d",localCount);
+            qDebug("savedConstCount.........: %d",savedConstCount);
+            qDebug("argumentAddressForCall(0) = 0x%x / -0x%x", argumentAddressForCall(0).offset, -argumentAddressForCall(0).offset);
+            if (localCount)qDebug("local(0) = 0x%x / -0x%x", stackSlotPointer(0).offset, -stackSlotPointer(0).offset);
+            qDebug("savedReg(0) = 0x%x", savedRegPointer(0).offset);
+            qDebug("savedReg(1) = 0x%x", savedRegPointer(1).offset);
+            qDebug("savedReg(2) = 0x%x", savedRegPointer(2).offset);
+            qDebug("savedReg(3) = 0x%x", savedRegPointer(3).offset);
+            qDebug("savedReg(4) = 0x%x", savedRegPointer(4).offset);
+            qDebug("savedReg(5) = 0x%x", savedRegPointer(5).offset);
+#endif
+        }
+
+        int calculateStackFrameSize(bool withLocals) const
+        {
+            const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
+                                                     + RegisterSize; // saved StackFrameRegister
+
+            const int locals = withLocals ? (maxOutgoingArgumentCount + localCount + savedConstCount) : 0;
+
+            // space for the locals and the callee saved registers
+            int frameSize = locals * sizeof(QV4::Value) + RegisterSize * calleeSavedRegisterCount;
+
+            frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
+            frameSize -= stackSpaceAllocatedOtherwise;
+
+            return frameSize;
+        }
+
+        Address stackSlotPointer(int idx) const
+        {
+            Q_ASSERT(idx >= 0);
+            Q_ASSERT(idx < localCount);
+
+            Pointer addr = argumentAddressForCall(0);
+            addr.offset -= sizeof(QV4::Value) * (idx + 1);
+            return addr;
+        }
+
+        // Some run-time functions take (Value* args, int argc). This function is for populating
+        // the args.
+        Pointer argumentAddressForCall(int argument) const
+        {
+            Q_ASSERT(argument >= 0);
+            Q_ASSERT(argument < maxOutgoingArgumentCount);
+
+            const int index = maxOutgoingArgumentCount - argument;
+            return Pointer(Assembler::LocalsRegister,
+                           sizeof(QV4::Value) * (-index) - calleeSavedRegisterSpace());
+        }
+
+        Address savedRegPointer(int offset) const
+        {
+            Q_ASSERT(offset >= 0);
+            Q_ASSERT(offset < savedConstCount);
+
+            Address addr = argumentAddressForCall(0);
+            addr.offset -= sizeof(QV4::Value) * (offset + localCount + 1);
+            return addr;
+        }
+
+        int calleeSavedRegisterSpace() const
+        {
+            // plus 1 for the old FP
+            return RegisterSize * (calleeSavedRegCount + 1);
+        }
+
+    private:
+        int calleeSavedRegCount;
+
+        /// arg count for calls to JS functions
+        int maxOutgoingArgumentCount;
+
+        /// the number of spill slots needed by this function
+        int localCount;
+
+        /// used by built-ins to save arguments (e.g. constants) to the stack when they need to be
+        /// passed by reference.
+        int savedConstCount;
+    };
+
+    class ConstantTable
+    {
+    public:
+        ConstantTable(Assembler *as): _as(as) {}
+
+        int add(const QV4::Value &v);
+        ImplicitAddress loadValueAddress(V4IR::Const *c, RegisterID baseReg);
+        ImplicitAddress loadValueAddress(const QV4::Value &v, RegisterID baseReg);
+        void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
+
+    private:
+        Assembler *_as;
+        QVector<QV4::Value> _values;
+        QVector<DataLabelPtr> _toPatch;
+    };
+
     struct VoidType { VoidType() {} };
     static const VoidType Void;
-
 
     typedef JSC::FunctionPtr FunctionPtr;
 
@@ -258,8 +384,10 @@ public:
         const char* functionName;
     };
     struct PointerToValue {
-        PointerToValue(V4IR::Temp *value) : value(value) {}
-        V4IR::Temp *value;
+        PointerToValue(V4IR::Expr *value)
+            : value(value)
+        {}
+        V4IR::Expr *value;
     };
     struct PointerToString {
         explicit PointerToString(const QString &string) : string(string) {}
@@ -295,54 +423,71 @@ public:
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
-
-    void loadArgumentInRegister(RegisterID source, RegisterID dest)
+    Pointer stackSlotPointer(V4IR::Temp *t) const
     {
+        Q_ASSERT(t->kind == V4IR::Temp::StackSlot);
+        Q_ASSERT(t->scope == 0);
+
+        return Pointer(_stackLayout.stackSlotPointer(t->index));
+    }
+
+    void loadArgumentInRegister(RegisterID source, RegisterID dest, int argumentNumber)
+    {
+        Q_UNUSED(argumentNumber);
+
         move(source, dest);
     }
 
-    void loadArgumentInRegister(TrustedImmPtr ptr, RegisterID dest)
+    void loadArgumentInRegister(TrustedImmPtr ptr, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         move(TrustedImmPtr(ptr), dest);
     }
 
-    void loadArgumentInRegister(const Pointer& ptr, RegisterID dest)
+    void loadArgumentInRegister(const Pointer& ptr, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
         addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
-    void loadArgumentInRegister(PointerToValue temp, RegisterID dest)
+    void loadArgumentInRegister(PointerToValue temp, RegisterID dest, int argumentNumber)
     {
         if (!temp.value) {
-            loadArgumentInRegister(TrustedImmPtr(0), dest);
+            loadArgumentInRegister(TrustedImmPtr(0), dest, argumentNumber);
         } else {
-            Pointer addr = loadTempAddress(dest, temp.value);
-            loadArgumentInRegister(addr, dest);
+            Pointer addr = toAddress(dest, temp.value, argumentNumber);
+            loadArgumentInRegister(addr, dest, argumentNumber);
         }
     }
-    void loadArgumentInRegister(PointerToString temp, RegisterID dest)
+    void loadArgumentInRegister(PointerToString temp, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
         Pointer addr = loadStringAddress(dest, temp.string);
         loadPtr(addr, dest);
     }
 
-    void loadArgumentInRegister(Reference temp, RegisterID dest)
+    void loadArgumentInRegister(Reference temp, RegisterID dest, int argumentNumber)
     {
         assert(temp.value);
         Pointer addr = loadTempAddress(dest, temp.value);
-        loadArgumentInRegister(addr, dest);
+        loadArgumentInRegister(addr, dest, argumentNumber);
     }
 
-    void loadArgumentInRegister(ReentryBlock block, RegisterID dest)
+    void loadArgumentInRegister(ReentryBlock block, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         assert(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), dest);
         addPatch(patch, block.block);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
-    void loadArgumentInRegister(V4IR::Temp* temp, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Temp* temp, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         if (!temp) {
             QV4::Value undefined = QV4::Value::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
@@ -352,21 +497,25 @@ public:
         }
     }
 
-    void loadArgumentInRegister(V4IR::Const* c, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Const* c, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         QV4::Value v = convertToValue(c);
         move(TrustedImm64(v.val), dest);
     }
 
-    void loadArgumentInRegister(V4IR::Expr* expr, RegisterID dest)
+    void loadArgumentInRegister(V4IR::Expr* expr, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         if (!expr) {
             QV4::Value undefined = QV4::Value::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else if (expr->asTemp()){
-            loadArgumentInRegister(expr->asTemp(), dest);
+            loadArgumentInRegister(expr->asTemp(), dest, argumentNumber);
         } else if (expr->asConst()) {
-            loadArgumentInRegister(expr->asConst(), dest);
+            loadArgumentInRegister(expr->asConst(), dest, argumentNumber);
         } else {
             assert(!"unimplemented expression type in loadArgument");
         }
@@ -378,13 +527,15 @@ public:
     }
 #endif
 
-    void loadArgumentInRegister(QV4::String* string, RegisterID dest)
+    void loadArgumentInRegister(QV4::String* string, RegisterID dest, int argumentNumber)
     {
-        loadArgumentInRegister(TrustedImmPtr(string), dest);
+        loadArgumentInRegister(TrustedImmPtr(string), dest, argumentNumber);
     }
 
-    void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest)
+    void loadArgumentInRegister(TrustedImm32 imm32, RegisterID dest, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         xorPtr(dest, dest);
         if (imm32.m_value)
             move(imm32, dest);
@@ -415,55 +566,64 @@ public:
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(RegisterID reg)
+    void loadArgumentOnStack(RegisterID reg, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         poke(reg, StackSlot);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(TrustedImm32 value)
+    void loadArgumentOnStack(TrustedImm32 value, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         poke(value, StackSlot);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(const Pointer& ptr)
+    void loadArgumentOnStack(const Pointer& ptr, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         addPtr(TrustedImm32(ptr.offset), ptr.base, ScratchRegister);
         poke(ScratchRegister, StackSlot);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(PointerToValue temp)
+    void loadArgumentOnStack(PointerToValue temp, int argumentNumber)
     {
         if (temp.value) {
-            Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
-            loadArgumentOnStack<StackSlot>(ptr);
+            Pointer ptr = toAddress(ScratchRegister, temp.value, argumentNumber);
+            loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
         } else {
             poke(TrustedImmPtr(0), StackSlot);
         }
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(PointerToString temp)
+    void loadArgumentOnStack(PointerToString temp, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
         Pointer ptr = loadStringAddress(ScratchRegister, temp.string);
         loadPtr(ptr, ScratchRegister);
         poke(ScratchRegister, StackSlot);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(Reference temp)
+    void loadArgumentOnStack(Reference temp, int argumentNumber)
     {
         assert (temp.value);
 
         Pointer ptr = loadTempAddress(ScratchRegister, temp.value);
-        loadArgumentOnStack<StackSlot>(ptr);
+        loadArgumentOnStack<StackSlot>(ptr, argumentNumber);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(ReentryBlock block)
+    void loadArgumentOnStack(ReentryBlock block, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         assert(block.block);
         DataLabelPtr patch = moveWithPatch(TrustedImmPtr(0), ScratchRegister);
         poke(ScratchRegister, StackSlot);
@@ -471,15 +631,19 @@ public:
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(TrustedImmPtr ptr)
+    void loadArgumentOnStack(TrustedImmPtr ptr, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         move(TrustedImmPtr(ptr), ScratchRegister);
         poke(ScratchRegister, StackSlot);
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(QV4::String* name)
+    void loadArgumentOnStack(QV4::String* name, int argumentNumber)
     {
+        Q_UNUSED(argumentNumber);
+
         poke(TrustedImmPtr(name), StackSlot);
     }
 
@@ -515,20 +679,19 @@ public:
 
     void storeValue(QV4::Value value, V4IR::Temp* temp);
 
-    static int calculateStackFrameSize(int locals);
-    void enterStandardStackFrame(int locals);
-    void leaveStandardStackFrame(int locals);
+    void enterStandardStackFrame(bool withLocals);
+    void leaveStandardStackFrame(bool withLocals);
 
     template <int argumentNumber, typename T>
     void loadArgumentOnStackOrRegister(const T &value)
     {
         if (argumentNumber < RegisterArgumentCount)
-            loadArgumentInRegister(value, registerForArgument(argumentNumber));
+            loadArgumentInRegister(value, registerForArgument(argumentNumber), argumentNumber);
         else
 #if OS(WINDOWS) && CPU(X86_64)
-            loadArgumentOnStack<argumentNumber>(value);
+            loadArgumentOnStack<argumentNumber>(value, argumentNumber);
 #else // Sanity:
-            loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value);
+            loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value, argumentNumber);
 #endif
     }
 
@@ -636,8 +799,9 @@ public:
     };
 
     static const BinaryOperationInfo binaryOperations[QQmlJS::V4IR::LastAluOp + 1];
+    static const BinaryOperationInfo &binaryOperation(V4IR::AluOp operation)
+    { return binaryOperations[operation]; }
 
-    void generateBinOp(V4IR::AluOp operation, V4IR::Temp* target, V4IR::Temp* left, V4IR::Temp* right);
 
     Jump inline_add32(Address addr, RegisterID reg)
     {
@@ -780,11 +944,178 @@ public:
         return Jump();
     }
 
+    Pointer toAddress(RegisterID tmpReg, V4IR::Expr *e, int offset)
+    {
+        if (V4IR::Const *c = e->asConst()) {
+            Address addr = _stackLayout.savedRegPointer(offset);
+            Address tagAddr = addr;
+            tagAddr.offset += 4;
+
+            QV4::Value v = convertToValue(c);
+            store32(TrustedImm32(v.int_32), addr);
+            store32(TrustedImm32(v.tag), tagAddr);
+            return Pointer(addr);
+        }
+
+        V4IR::Temp *t = e->asTemp();
+        Q_ASSERT(t);
+        if (t->kind != V4IR::Temp::PhysicalRegister)
+            return loadTempAddress(tmpReg, t);
+
+        Pointer addr(_stackLayout.savedRegPointer(offset));
+        switch (t->type) {
+        case V4IR::BoolType:
+            storeBool((RegisterID) t->index, addr);
+            break;
+        case V4IR::SInt32Type:
+            storeInt32((RegisterID) t->index, addr);
+            break;
+        case V4IR::UInt32Type:
+            storeUInt32((RegisterID) t->index, addr);
+            break;
+        case V4IR::DoubleType:
+            storeDouble((FPRegisterID) t->index, addr);
+            break;
+        default:
+            Q_UNIMPLEMENTED();
+        }
+
+        return addr;
+    }
+
+    void storeBool(RegisterID reg, Pointer addr)
+    {
+        store32(reg, addr);
+        addr.offset += 4;
+        store32(TrustedImm32(QV4::Value::fromBoolean(0).tag), addr);
+    }
+
+    void storeBool(RegisterID reg, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) target->index);
+        } else if (target->kind == V4IR::Temp::StackSlot) {
+            Pointer addr = stackSlotPointer(target);
+            storeBool(reg, addr);
+        } else {
+            Q_UNIMPLEMENTED();
+        }
+    }
+
+    void storeBool(bool value, V4IR::Temp *target) {
+        TrustedImm32 trustedValue(value ? 1 : 0);
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            move(trustedValue, (RegisterID) target->index);
+        } else {
+            move(trustedValue, ScratchRegister);
+            storeBool(ScratchRegister, target);
+        }
+    }
+
+    void storeInt32(RegisterID reg, Pointer addr)
+    {
+        store32(reg, addr);
+        addr.offset += 4;
+        store32(TrustedImm32(QV4::Value::fromInt32(0).tag), addr);
+    }
+
+    void storeInt32(RegisterID reg, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) target->index);
+        } else if (target->kind == V4IR::Temp::StackSlot) {
+            Pointer addr = stackSlotPointer(target);
+            storeInt32(reg, addr);
+        } else {
+            Q_UNIMPLEMENTED();
+        }
+    }
+
+    void storeUInt32(RegisterID reg, Pointer addr)
+    {
+#if CPU(X86_64)
+        Q_ASSERT(reg != ScratchRegister);
+        Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
+        convertUInt32ToDouble(reg, FPGpr0, ScratchRegister);
+        storeDouble(FPGpr0, addr);
+        Jump done = jump();
+        intRange.link(this);
+        storeInt32(reg, addr);
+        done.link(this);
+#else
+        Q_ASSERT(!"Not supported on this platform!");
+#endif
+    }
+
+    FPRegisterID toDoubleRegister(V4IR::Expr *e, FPRegisterID target = FPGpr0)
+    {
+        if (V4IR::Const *c = e->asConst()) {
+            loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+            return target;
+        }
+
+        V4IR::Temp *t = e->asTemp();
+        Q_ASSERT(t);
+        if (t->kind == V4IR::Temp::PhysicalRegister)
+            return (FPRegisterID) t->index;
+
+        Q_ASSERT(t->kind == V4IR::Temp::StackSlot);
+        loadDouble(loadTempAddress(ScratchRegister, t), target);
+        return target;
+    }
+
+    RegisterID toInt32Register(V4IR::Expr *e, RegisterID scratchReg)
+    {
+        if (V4IR::Const *c = e->asConst()) {
+            move(TrustedImm32(convertToValue(c).int_32), scratchReg);
+            return scratchReg;
+        }
+
+        V4IR::Temp *t = e->asTemp();
+        Q_ASSERT(t);
+        if (t->kind == V4IR::Temp::PhysicalRegister)
+            return (RegisterID) t->index;
+
+        return toInt32Register(loadTempAddress(scratchReg, t), scratchReg);
+    }
+
+    RegisterID toInt32Register(Pointer addr, RegisterID scratchReg)
+    {
+        load32(addr, scratchReg);
+        return scratchReg;
+    }
+
+    RegisterID toUInt32Register(V4IR::Expr *e, RegisterID scratchReg)
+    {
+        if (V4IR::Const *c = e->asConst()) {
+            move(TrustedImm32(unsigned(c->value)), scratchReg);
+            return scratchReg;
+        }
+
+        V4IR::Temp *t = e->asTemp();
+        Q_ASSERT(t);
+        if (t->kind == V4IR::Temp::PhysicalRegister)
+            return (RegisterID) t->index;
+
+        return toUInt32Register(loadTempAddress(scratchReg, t), scratchReg);
+    }
+
+    RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
+    {
+        load32(addr, scratchReg);
+        return scratchReg;
+    }
+
     JSC::MacroAssemblerCodeRef link();
 
     void recordLineNumber(int lineNumber);
 
+    const StackLayout stackLayout() const { return _stackLayout; }
+    ConstantTable &constantTable() { return _constTable; }
+
 private:
+    const StackLayout _stackLayout;
+    ConstantTable _constTable;
     V4IR::Function *_function;
     QHash<V4IR::BasicBlock *, Label> _addrs;
     QHash<V4IR::BasicBlock *, QVector<Jump> > _patches;
@@ -820,16 +1151,17 @@ public:
 
     virtual void run(V4IR::Function *function);
 
+    void *addConstantTable(QVector<QV4::Value> *values);
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinTypeofMember(V4IR::Expr *base, const QString &name, V4IR::Temp *result);
+    virtual void callBuiltinTypeofSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *result);
     virtual void callBuiltinTypeofName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinTypeofValue(V4IR::Temp *value, V4IR::Temp *result);
+    virtual void callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp *result);
     virtual void callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
+    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result);
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
@@ -840,7 +1172,7 @@ protected:
     virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
     virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result);
-    virtual void callBuiltinThrow(V4IR::Temp *arg);
+    virtual void callBuiltinThrow(V4IR::Expr *arg);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
@@ -848,26 +1180,27 @@ protected:
     virtual void callBuiltinPopScope();
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name);
     virtual void callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter);
-    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value);
+    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Expr *value);
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result);
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
-    virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
+    virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void loadThisObject(V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
     virtual void getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp);
-    virtual void setActivationProperty(V4IR::Temp *source, const QString &targetName);
+    virtual void setActivationProperty(V4IR::Expr *source, const QString &targetName);
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
-    virtual void getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target);
-    virtual void setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
-    virtual void getElement(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *target);
-    virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex);
+    virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
+    virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
+    virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
+    virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
+    virtual void swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
     virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
     virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName);
@@ -885,19 +1218,9 @@ protected:
         return Address(Assembler::StackFrameRegister, (index + 2) * sizeof(void*));
     }
 
-    // Some run-time functions take (Value* args, int argc). This function is for populating
-    // the args.
-    Pointer argumentAddressForCall(int argument)
-    {
-        const int index = _function->maxNumberOfArguments - argument;
-        return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index)
-                                                      - sizeof(void*) // size of ebp
-                                                  - sizeof(void*) * Assembler::calleeSavedRegisterCount
-                       );
-    }
     Pointer baseAddressForCallArguments()
     {
-        return argumentAddressForCall(0);
+        return _as->stackLayout().argumentAddressForCall(0);
     }
 
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
@@ -910,6 +1233,48 @@ protected:
     virtual void visitTry(V4IR::Try *);
 
 private:
+    void convertIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                      (Assembler::FPRegisterID) target->index);
+        } else if (target->kind == V4IR::Temp::StackSlot) {
+            _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                      Assembler::FPGpr0);
+            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+        } else {
+            Q_UNIMPLEMENTED();
+        }
+    }
+
+    void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+#if CPU(X86_64)
+            _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
+                                       (Assembler::FPRegisterID) target->index,
+                                       Assembler::ScratchRegister);
+#else
+        Q_ASSERT(!"Not supported on this platform!");
+#endif
+        } else {
+            Q_UNIMPLEMENTED();
+        }
+    }
+
+    void convertIntToBool(V4IR::Temp *source, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            _as->storeBool(_as->toInt32Register(source, Assembler::ScratchRegister), target);
+        } else if (target->kind == V4IR::Temp::StackSlot) {
+            _as->move(_as->toInt32Register(source, Assembler::ScratchRegister),
+                      Assembler::ScratchRegister);
+            _as->storeBool(Assembler::ScratchRegister, target);
+        } else {
+            Q_UNIMPLEMENTED();
+        }
+    }
+
     #define isel_stringIfyx(s) #s
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
@@ -943,11 +1308,32 @@ private:
         generateLookupCall(index, getterSetterOffset, arg1, Assembler::VoidType());
     }
 
+    /// This is a temporary method, and will be removed when registers are fully supported.
+    void storeTarget(int argumentNumber, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            Address addr = _as->stackLayout().savedRegPointer(argumentNumber);
+            if (target->type == V4IR::DoubleType)
+                _as->loadDouble(addr, (Assembler::FPRegisterID) target->index);
+            else if (target->type == V4IR::SInt32Type)
+                generateFunctionCall((Assembler::RegisterID) target->index,
+                                     QV4::__qmljs_value_to_int32,
+                                     Assembler::Pointer(addr));
+            else if (target->type == V4IR::UInt32Type)
+                generateFunctionCall((Assembler::RegisterID) target->index,
+                                     QV4::__qmljs_value_to_uint32,
+                                     Assembler::Pointer(addr));
+            else if (target->type == V4IR::BoolType)
+                _as->load32(addr, (Assembler::RegisterID) target->index);
+            else
+                Q_ASSERT(!"WIP!");
+        }
+    }
+
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
-    int _locals;
 
     CompilationUnit *compilationUnit;
     QHash<V4IR::Function*, JSC::MacroAssemblerCodeRef> codeRefs;

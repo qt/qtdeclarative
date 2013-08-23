@@ -947,10 +947,8 @@ void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 
 void BasicBlock::appendStatement(Stmt *statement)
 {
-    if (nextLocation.isValid()) {
+    if (nextLocation.isValid())
         statement->location = nextLocation;
-        nextLocation = AST::SourceLocation();
-    }
     statements.append(statement);
 }
 

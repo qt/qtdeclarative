@@ -932,7 +932,8 @@ void __qmljs_builtin_typeof_name(ExecutionContext *context, Value *result, Strin
         *result = res;
 }
 
-void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, const Value &base, String *name)
+void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, const Value &base,
+                                   String *name)
 {
     Object *obj = base.toObject(context);
     Value res;
@@ -941,7 +942,8 @@ void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, con
         *result = res;
 }
 
-void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, const Value &base, const Value &index)
+void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, const Value &base,
+                                    const Value &index)
 {
     String *name = index.toString(context);
     Object *obj = base.toObject(context);

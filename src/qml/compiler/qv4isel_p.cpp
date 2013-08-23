@@ -88,8 +88,8 @@ void IRDecoder::visitMove(V4IR::Move *s)
 {
     if (s->op == V4IR::OpInvalid) {
         if (V4IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp()) {
-                setActivationProperty(s->source->asTemp(), *n->id);
+            if (s->source->asTemp() || s->source->asConst()) {
+                setActivationProperty(s->source, *n->id);
                 return;
             }
         } else if (V4IR::Temp *t = s->target->asTemp()) {
@@ -103,7 +103,10 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 loadConst(c, t);
                 return;
             } else if (V4IR::Temp *t2 = s->source->asTemp()) {
-                copyValue(t2, t);
+                if (s->swap)
+                    swapValues(t2, t);
+                else
+                    copyValue(t2, t);
                 return;
             } else if (V4IR::String *str = s->source->asString()) {
                 loadString(*str->value, t);
@@ -126,12 +129,12 @@ void IRDecoder::visitMove(V4IR::Move *s)
                     return;
                 }
             } else if (V4IR::Member *m = s->source->asMember()) {
-                if (V4IR::Temp *base = m->base->asTemp()) {
-                    getProperty(base, *m->name, t);
+                if (m->base->asTemp() || m->base->asConst()) {
+                    getProperty(m->base, *m->name, t);
                     return;
                 }
             } else if (V4IR::Subscript *ss = s->source->asSubscript()) {
-                getElement(ss->base->asTemp(), ss->index->asTemp(), t);
+                getElement(ss->base->asTemp(), ss->index, t);
                 return;
             } else if (V4IR::Unop *u = s->source->asUnop()) {
                 if (V4IR::Temp *e = u->expr->asTemp()) {
@@ -146,13 +149,10 @@ void IRDecoder::visitMove(V4IR::Move *s)
                     callBuiltin(c, t);
                     return;
                 } else if (Member *member = c->base->asMember()) {
-                    Q_ASSERT(member->base->asTemp());
-                    callProperty(member->base->asTemp(), *member->name, c->args, t);
+                    callProperty(member->base, *member->name, c->args, t);
                     return;
-                } else if (Subscript *s = c->base->asSubscript()) {
-                    Q_ASSERT(s->base->asTemp());
-                    Q_ASSERT(s->index->asTemp());
-                    callSubscript(s->base->asTemp(), s->index->asTemp(), c->args, t);
+                } else if (Subscript *ss = c->base->asSubscript()) {
+                    callSubscript(ss->base, ss->index, c->args, t);
                     return;
                 } else if (V4IR::Temp *value = c->base->asTemp()) {
                     callValue(value, c->args, t);
@@ -164,15 +164,15 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 return;
             }
         } else if (V4IR::Member *m = s->target->asMember()) {
-            if (V4IR::Temp *base = m->base->asTemp()) {
-                if (s->source->asTemp()) {
-                    setProperty(s->source->asTemp(), base, *m->name);
+            if (m->base->asTemp() || m->base->asConst()) {
+                if (s->source->asTemp() || s->source->asConst()) {
+                    setProperty(s->source, m->base, *m->name);
                     return;
                 }
             }
         } else if (V4IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp()) {
-                setElement(s->source->asTemp(), ss->base->asTemp(), ss->index->asTemp());
+            if (s->source->asTemp() || s->source->asConst()) {
+                setElement(s->source, ss->base, ss->index);
                 return;
             }
         }
@@ -248,17 +248,16 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
 
     case V4IR::Name::builtin_typeof: {
         if (V4IR::Member *m = call->args->expr->asMember()) {
-            callBuiltinTypeofMember(m->base->asTemp(), *m->name, result);
+            callBuiltinTypeofMember(m->base, *m->name, result);
             return;
         } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
-            callBuiltinTypeofSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            callBuiltinTypeofSubscript(ss->base, ss->index, result);
             return;
         } else if (V4IR::Name *n = call->args->expr->asName()) {
             callBuiltinTypeofName(*n->id, result);
             return;
-        } else if (V4IR::Temp *arg = call->args->expr->asTemp()){
-            assert(arg != 0);
-            callBuiltinTypeofValue(arg, result);
+        } else if (call->args->expr->asTemp() || call->args->expr->asConst()){
+            callBuiltinTypeofValue(call->args->expr, result);
             return;
         }
     } break;
@@ -268,7 +267,7 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
             callBuiltinDeleteMember(m->base->asTemp(), *m->name, result);
             return;
         } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
-            callBuiltinDeleteSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
+            callBuiltinDeleteSubscript(ss->base->asTemp(), ss->index, result);
             return;
         } else if (V4IR::Name *n = call->args->expr->asName()) {
             callBuiltinDeleteName(*n->id, result);
@@ -315,8 +314,8 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
     } break;
 
     case V4IR::Name::builtin_throw: {
-        V4IR::Temp *arg = call->args->expr->asTemp();
-        assert(arg != 0);
+        V4IR::Expr *arg = call->args->expr;
+        assert(arg->asTemp() || arg->asConst());
         callBuiltinThrow(arg);
     } return;
 
@@ -387,7 +386,7 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         V4IR::Name *name = args->expr->asName();
         args = args->next;
         assert(args);
-        V4IR::Temp *value = args->expr->asTemp();
+        V4IR::Expr *value = args->expr;
 
         callBuiltinDefineProperty(object, *name->id, value);
     } return;

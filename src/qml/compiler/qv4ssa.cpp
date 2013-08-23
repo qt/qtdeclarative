@@ -142,10 +142,14 @@ void showMeTheCode(Function *function)
             if (s->id > 0)
                 out << s->id << ": ";
             s->dump(out, Stmt::MIR);
-            out.flush();
+            if (s->location.isValid()) {
+                out.flush();
+                for (int i = 58 - str.length(); i > 0; --i)
+                    out << ' ';
+                out << "    // line: " << s->location.startLine << " column: " << s->location.startColumn;
+            }
 
-            if (s->location.isValid())
-                qout << "    // line: " << s->location.startLine << " column: " << s->location.startColumn << endl;
+            out.flush();
 
 #ifndef QV4_NO_LIVENESS
             for (int i = 60 - str.size(); i >= 0; --i)
@@ -2602,7 +2606,7 @@ void Optimizer::run()
 //        showMeTheCode(function);
 
 //        qout << "Running SSA optimization..." << endl;
-//        optimizeSSA(function, defUses);
+        optimizeSSA(function, defUses);
 //        showMeTheCode(function);
 
 //        qout << "Running type inference..." << endl;
@@ -2630,8 +2634,23 @@ void Optimizer::run()
 
 namespace {
 void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *source) {
-    if (target->type != source->type)
+    if (target->type != source->type) {
+        if (source->asConst()) {
+            const int idx = function->tempCount++;
+
+            Temp *tmp = function->New<Temp>();
+            tmp->init(Temp::VirtualRegister, idx, 0);
+
+            Move *s = function->New<Move>();
+            s->init(tmp, source, OpInvalid);
+            basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
+
+            tmp = function->New<Temp>();
+            tmp->init(Temp::VirtualRegister, idx, 0);
+            source = tmp;
+        }
         source = basicBlock->CONVERT(source, target->type);
+    }
 
     Move *s = function->New<Move>();
     s->init(target, source, OpInvalid);

@@ -843,7 +843,7 @@ void tst_qqmllanguage::bindJSValueToVar()
     QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
     QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
     QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Int);
+    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Double);
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -892,7 +892,7 @@ void tst_qqmllanguage::bindJSValueToVariant()
     QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
     QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
     QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Int);
+    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Double);
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));

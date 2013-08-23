@@ -158,7 +158,7 @@ void __qmljs_foreach_next_property_name(QV4::Value *result, const QV4::Value &fo
 
 // type conversion and testing
 QV4::Value __qmljs_to_primitive(const QV4::Value &value, int typeHint);
-QV4::Bool __qmljs_to_boolean(const QV4::Value &value);
+Q_QML_EXPORT QV4::Bool __qmljs_to_boolean(const QV4::Value &value);
 double __qmljs_to_number(const QV4::Value &value);
 QV4::Value __qmljs_to_string(const QV4::Value &value, QV4::ExecutionContext *ctx);
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
@@ -177,6 +177,11 @@ void __qmljs_compl(QV4::Value *result, const QV4::Value &value);
 void __qmljs_not(QV4::Value *result, const QV4::Value &value);
 void __qmljs_increment(QV4::Value *result, const QV4::Value &value);
 void __qmljs_decrement(QV4::Value *result, const QV4::Value &value);
+
+Q_QML_EXPORT int __qmljs_value_to_int32(const Value &value);
+Q_QML_EXPORT int __qmljs_double_to_int32(double d);
+Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const Value &value);
+Q_QML_EXPORT unsigned __qmljs_double_to_uint32(double d);
 
 void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, const QV4::Value &index);
 void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, QV4::String *name);

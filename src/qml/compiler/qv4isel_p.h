@@ -100,12 +100,12 @@ public: // visitor methods for StmtVisitor:
 
 public: // to implement by subclasses:
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result) = 0;
-    virtual void callBuiltinTypeofMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinTypeofSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofMember(V4IR::Expr *base, const QString &name, V4IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *result) = 0;
     virtual void callBuiltinTypeofName(const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinTypeofValue(V4IR::Temp *value, V4IR::Temp *result) = 0;
+    virtual void callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
+    virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(V4IR::Temp *result) = 0;
     virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result) = 0;
@@ -116,7 +116,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
     virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result) = 0;
-    virtual void callBuiltinThrow(V4IR::Temp *arg) = 0;
+    virtual void callBuiltinThrow(V4IR::Expr *arg) = 0;
     virtual void callBuiltinFinishTry() = 0;
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result) = 0;
@@ -124,13 +124,13 @@ public: // to implement by subclasses:
     virtual void callBuiltinPopScope() = 0;
     virtual void callBuiltinDeclareVar(bool deletable, const QString &name) = 0;
     virtual void callBuiltinDefineGetterSetter(V4IR::Temp *object, const QString &name, V4IR::Temp *getter, V4IR::Temp *setter) = 0;
-    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Temp *value) = 0;
+    virtual void callBuiltinDefineProperty(V4IR::Temp *object, const QString &name, V4IR::Expr *value) = 0;
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result) = 0;
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result) = 0;
-    virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
-    virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result) = 0;
+    virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
+    virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target) = 0;
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
@@ -140,13 +140,14 @@ public: // to implement by subclasses:
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp) = 0;
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp) = 0;
     virtual void getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp) = 0;
-    virtual void setActivationProperty(V4IR::Temp *source, const QString &targetName) = 0;
+    virtual void setActivationProperty(V4IR::Expr *source, const QString &targetName) = 0;
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target) = 0;
-    virtual void getProperty(V4IR::Temp *base, const QString &name, V4IR::Temp *target) = 0;
-    virtual void setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName) = 0;
-    virtual void getElement(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *target) = 0;
-    virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex) = 0;
+    virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target) = 0;
+    virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName) = 0;
+    virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target) = 0;
+    virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex) = 0;
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
+    virtual void swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
     virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target) = 0;
     virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName) = 0;

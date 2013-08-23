@@ -175,12 +175,12 @@ public:
 
 protected: // IRDecoder
     virtual void callBuiltinInvalid(V4IR::Name *, V4IR::ExprList *, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
+    virtual void callBuiltinTypeofMember(V4IR::Expr *, const QString &, V4IR::Temp *) {}
+    virtual void callBuiltinTypeofSubscript(V4IR::Expr *, V4IR::Expr *, V4IR::Temp *) {}
     virtual void callBuiltinTypeofName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinTypeofValue(V4IR::Temp *, V4IR::Temp *) {}
+    virtual void callBuiltinTypeofValue(V4IR::Expr *, V4IR::Temp *) {}
     virtual void callBuiltinDeleteMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinDeleteSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
+    virtual void callBuiltinDeleteSubscript(V4IR::Temp *, V4IR::Expr *, V4IR::Temp *) {}
     virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
     virtual void callBuiltinPostDecrementMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
@@ -191,7 +191,7 @@ protected: // IRDecoder
     virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinPostIncrementName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinPostIncrementValue(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinThrow(V4IR::Temp *) {}
+    virtual void callBuiltinThrow(V4IR::Expr *) {}
     virtual void callBuiltinFinishTry() {}
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(V4IR::Temp *, V4IR::Temp *) {}
@@ -200,7 +200,7 @@ protected: // IRDecoder
     virtual void callBuiltinPopScope() {}
     virtual void callBuiltinDeclareVar(bool , const QString &) {}
     virtual void callBuiltinDefineGetterSetter(V4IR::Temp *, const QString &, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinDefineProperty(V4IR::Temp *, const QString &, V4IR::Temp *) {}
+    virtual void callBuiltinDefineProperty(V4IR::Temp *, const QString &, V4IR::Expr *) {}
     virtual void callBuiltinDefineArray(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *) {}
@@ -213,19 +213,21 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void callProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
+                              V4IR::Temp *result)
     {
         addDef(result);
-        addUses(base, Use::CouldHaveRegister);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void callSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::ExprList *args, V4IR::Temp *result)
+    virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args,
+                               V4IR::Temp *result)
     {
         addDef(result);
-        addUses(base, Use::CouldHaveRegister);
-        addUses(index, Use::CouldHaveRegister);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
+        addUses(index->asTemp(), Use::CouldHaveRegister);
         addUses(args, Use::CouldHaveRegister);
         addCall();
     }
@@ -238,6 +240,7 @@ protected: // IRDecoder
         bool needsCall = true;
         Use::RegisterFlag sourceReg = Use::CouldHaveRegister;
 
+#if 0 // TODO: change masm to generate code
         // TODO: verify this method
         switch (target->type) {
         case DoubleType:
@@ -265,6 +268,7 @@ protected: // IRDecoder
         default:
             break;
         }
+#endif
 
         addUses(source, sourceReg);
 
@@ -325,9 +329,9 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void setActivationProperty(V4IR::Temp *source, const QString &)
+    virtual void setActivationProperty(V4IR::Expr *source, const QString &)
     {
-        addUses(source, Use::CouldHaveRegister);
+        addUses(source->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
@@ -337,33 +341,33 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void getProperty(V4IR::Temp *base, const QString &, V4IR::Temp *target)
+    virtual void getProperty(V4IR::Expr *base, const QString &, V4IR::Temp *target)
     {
         addDef(target);
-        addUses(base, Use::CouldHaveRegister);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setProperty(V4IR::Temp *source, V4IR::Temp *targetBase, const QString &)
+    virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &)
     {
-        addUses(source, Use::CouldHaveRegister);
-        addUses(targetBase, Use::CouldHaveRegister);
+        addUses(source->asTemp(), Use::CouldHaveRegister);
+        addUses(targetBase->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void getElement(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *target)
+    virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
     {
         addDef(target);
-        addUses(base, Use::CouldHaveRegister);
-        addUses(index, Use::CouldHaveRegister);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
+        addUses(index->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
-    virtual void setElement(V4IR::Temp *source, V4IR::Temp *targetBase, V4IR::Temp *targetIndex)
+    virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex)
     {
-        addUses(source, Use::CouldHaveRegister);
-        addUses(targetBase, Use::CouldHaveRegister);
-        addUses(targetIndex, Use::CouldHaveRegister);
+        addUses(source->asTemp(), Use::CouldHaveRegister);
+        addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addUses(targetIndex->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 
@@ -385,6 +389,7 @@ protected: // IRDecoder
         addDef(targetTemp);
 
         bool needsCall = true;
+#if 0 // TODO: change masm to generate code
         switch (oper) {
         case OpIfTrue:
         case OpNot:
@@ -399,8 +404,10 @@ protected: // IRDecoder
         default:
             Q_UNREACHABLE();
         }
+#endif
 
         if (needsCall) {
+            addUses(sourceTemp, Use::CouldHaveRegister);
             addCall();
         } else {
             addUses(sourceTemp, Use::MustHaveRegister);
@@ -411,6 +418,7 @@ protected: // IRDecoder
     {
         bool needsCall = true;
 
+#if 0 // TODO: change masm to generate code
         switch (leftSource->type) {
         case DoubleType:
         case SInt32Type:
@@ -427,6 +435,7 @@ protected: // IRDecoder
         default:
             break;
         }
+#endif
 
         addDef(target);
 
@@ -472,9 +481,18 @@ protected: // IRDecoder
     virtual void visitCJump(V4IR::CJump *s)
     {
         if (Temp *t = s->cond->asTemp()) {
+#if 0 // TODO: change masm to generate code
             addUses(t, Use::MustHaveRegister);
+#else
+            addUses(t, Use::CouldHaveRegister);
+            addCall();
+#endif
         } else if (Binop *b = s->cond->asBinop()) {
             binop(b->op, b->left, b->right, 0);
+        } else if (Const *c = s->cond->asConst()) {
+            // TODO: SSA optimization for constant condition evaluation should remove this.
+            // See also visitCJump() in masm.
+            addCall();
         } else {
             Q_UNREACHABLE();
         }
