@@ -49,6 +49,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
+#include <QtQml/qqmlpropertymap.h>
 #include <QtGui/qopengl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
@@ -75,9 +76,15 @@ class QTestRootObject : public QObject
     Q_OBJECT
     Q_PROPERTY(bool windowShown READ windowShown NOTIFY windowShownChanged)
     Q_PROPERTY(bool hasTestCase READ hasTestCase WRITE setHasTestCase NOTIFY hasTestCaseChanged)
+    Q_PROPERTY(QObject *defined READ defined)
 public:
     QTestRootObject(QObject *parent = 0)
-        : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {}
+        : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {
+        m_defined = new QQmlPropertyMap(this);
+#if defined(QT_OPENGL_ES_2_ANGLE)
+        m_defined->insert(QLatin1String("QT_OPENGL_ES_2_ANGLE"), QVariant(true));
+#endif
+    }
 
     static QTestRootObject *instance() {
         static QPointer<QTestRootObject> object = new QTestRootObject;
@@ -94,6 +101,7 @@ public:
 
     bool windowShown() const { return m_windowShown; }
     void setWindowShown(bool value) { m_windowShown = value; emit windowShownChanged(); }
+    QQmlPropertyMap *defined() const { return m_defined; }
 
     void init() { setWindowShown(false); setHasTestCase(false); hasQuit = false; }
 
@@ -107,6 +115,7 @@ private Q_SLOTS:
 private:
     bool m_windowShown : 1;
     bool m_hasTestCase :1;
+    QQmlPropertyMap *m_defined;
 };
 
 static QObject *testRootObject(QQmlEngine *engine, QJSEngine *jsEngine)
