@@ -8,6 +8,7 @@ SUBDIRS += \
     qmlbundle \
     v4
 qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += qmleasing
+qtHaveModule(quick): SUBDIRS += qmlimportscanner
 
 # qmlmin & qmlbundle are build tools.
 # qmlscene is needed by the autotests.
