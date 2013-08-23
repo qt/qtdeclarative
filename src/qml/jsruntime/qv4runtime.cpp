@@ -1242,7 +1242,7 @@ int __qmljs_value_to_int32(const Value &value)
     return value.toInt32();
 }
 
-int __qmljs_double_to_int32(double d)
+int __qmljs_double_to_int32(const double &d)
 {
     return Value::toInt32(d);
 }
@@ -1252,7 +1252,7 @@ unsigned __qmljs_value_to_uint32(const Value &value)
     return value.toUInt32();
 }
 
-unsigned __qmljs_double_to_uint32(double d)
+unsigned __qmljs_double_to_uint32(const double &d)
 {
     return Value::toUInt32(d);
 }

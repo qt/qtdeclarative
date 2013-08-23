@@ -234,13 +234,11 @@ protected: // IRDecoder
 
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target)
     {
-        // TODO: do not generate a call (meaning: block all registers), but annotate the conversion with registers that need to be saved and have masm take care of that.
         addDef(target);
 
         bool needsCall = true;
         Use::RegisterFlag sourceReg = Use::CouldHaveRegister;
 
-        // TODO: verify this method
         switch (target->type) {
         case DoubleType:
             if (source->type == UInt32Type) {
@@ -248,8 +246,12 @@ protected: // IRDecoder
                 needsCall = false;
                 break;
             }
-#if 0 // TODO: change masm to generate code
         case SInt32Type:
+            if (source->type == DoubleType || source->type == UInt32Type) {
+                // this might need a call
+                break;
+            }
+#if 0 // TODO: change masm to generate code
         case UInt32Type:
 #endif
         case BoolType:

@@ -180,9 +180,9 @@ void __qmljs_decrement(QV4::Value *result, const QV4::Value &value);
 
 Q_QML_EXPORT void __qmljs_value_to_double(double *result, const Value &value);
 Q_QML_EXPORT int __qmljs_value_to_int32(const Value &value);
-Q_QML_EXPORT int __qmljs_double_to_int32(double d);
+Q_QML_EXPORT int __qmljs_double_to_int32(const double &d);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const Value &value);
-Q_QML_EXPORT unsigned __qmljs_double_to_uint32(double d);
+Q_QML_EXPORT unsigned __qmljs_double_to_uint32(const double &d);
 
 void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, const QV4::Value &index);
 void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value &base, QV4::String *name);
@@ -304,9 +304,7 @@ inline double __qmljs_to_number(const QV4::Value &value)
 }
 
 Q_QML_EXPORT int __qmljs_value_to_int32(const QV4::Value &value);
-Q_QML_EXPORT int __qmljs_double_to_int32(double);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const QV4::Value &value);
-Q_QML_EXPORT unsigned __qmljs_double_to_uint32(double);
 
 inline QV4::Value __qmljs_to_string(const QV4::Value &value, QV4::ExecutionContext *ctx)
 {

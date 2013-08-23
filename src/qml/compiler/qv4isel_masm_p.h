@@ -1028,11 +1028,9 @@ public:
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
             move(reg, (RegisterID) target->index);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            Pointer addr = stackSlotPointer(target);
-            storeInt32(reg, addr);
         } else {
-            Q_UNIMPLEMENTED();
+            Pointer addr = loadTempAddress(ScratchRegister, target);
+            storeInt32(reg, addr);
         }
     }
 
@@ -1241,6 +1239,7 @@ private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToBool(V4IR::Temp *source, V4IR::Temp *target);
+    void convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *target);
 
     void convertIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
