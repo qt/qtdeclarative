@@ -252,21 +252,26 @@ void InstructionSelection::run(V4IR::Function *function)
         _addrs.insert(_block, _codeNext - _codeStart);
 
         foreach (V4IR::Stmt *s, _block->statements) {
+            _currentStatement = s;
+
             if (s->location.isValid())
                 lineNumberMappings << _codeNext - _codeStart << s->location.startLine;
 
             if (opt.isInSSA() && s->asTerminator()) {
                 foreach (const V4IR::Optimizer::SSADeconstructionMove &move,
                          opt.ssaDeconstructionMoves(_block)) {
-                    Q_ASSERT(move.source->asTemp()); // FIXME: support Const exprs in Phi nodes.
-                    if (move.needsConversion())
-                        convertType(move.source->asTemp(), move.target);
-                    else
-                        copyValue(move.source->asTemp(), move.target);
+                    if (V4IR::Const *c = move.source->asConst()) {
+                        loadConst(c, move.target);
+                    } else {
+                        Q_ASSERT(move.source->asTemp());
+                        if (move.needsConversion())
+                            convertType(move.source->asTemp(), move.target);
+                        else
+                            copyValue(move.source->asTemp(), move.target);
+                    }
                 }
             }
 
-            _currentStatement = s;
             s->accept(this);
         }
     }
@@ -340,7 +345,10 @@ void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
         _stackSlotAllocator->addHint(*source, *target);
 
     // FIXME: do something more useful with this info
-    copyValue(source, target);
+    if (target->type & V4IR::NumberType)
+        unop(V4IR::OpUPlus, source, target);
+    else
+        copyValue(source, target);
 }
 
 void InstructionSelection::constructActivationProperty(V4IR::Name *func,
