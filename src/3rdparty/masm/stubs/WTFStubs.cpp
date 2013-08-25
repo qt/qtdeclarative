@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <qdebug.h>
+#include <qbytearray.h> // qvsnprintf
 #include <FilePrintStream.h>
 
 namespace WTF {
@@ -85,7 +86,7 @@ FilePrintStream& dataFile()
 void dataLogFV(const char* format, va_list args)
 {
     char buffer[1024];
-    vsnprintf(buffer, sizeof(buffer), format, args);
+    qvsnprintf(buffer, sizeof(buffer), format, args);
     qDebug("%s", buffer);
 }
 
@@ -94,7 +95,7 @@ void dataLogF(const char* format, ...)
     char buffer[1024];
     va_list args;
     va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
+    qvsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     qDebug("%s", buffer);
 }
