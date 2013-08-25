@@ -36,10 +36,10 @@
 #define ASSERT(condition)      (assert(condition))
 #endif
 #ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED() (abort())
+#define UNIMPLEMENTED() (exit(-1))
 #endif
 #ifndef UNREACHABLE
-#define UNREACHABLE()   (abort())
+#define UNREACHABLE()   (exit(-1))
 #endif
 
 // Double operations detection based on target architecture.

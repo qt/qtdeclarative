@@ -222,7 +222,7 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         // nothing to do for Try statements
     }
 
-    virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); abort(); }
+    virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); }
 
     // expressions
     virtual void visitConst(Const *) {}
