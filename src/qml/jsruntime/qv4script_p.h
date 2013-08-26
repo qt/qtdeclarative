@@ -69,6 +69,7 @@ struct Q_QML_EXPORT Script {
     bool inheritContext;
     bool parsed;
     QV4::PersistentValue qml;
+    QV4::PersistentValue compilationUnitHolder;
     Function *vmFunction;
     bool parseAsBinding;
 

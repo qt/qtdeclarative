@@ -206,13 +206,11 @@ int main(int argc, char *argv[])
                     QV4::Script script(ctx, code, fn);
                     script.parseAsBinding = runAsQml;
                     script.parse();
-                    script.function()->compilationUnit->ref();
                     QV4::Value result = script.run();
                     if (!result.isUndefined()) {
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
                     }
-                    script.function()->compilationUnit->deref();
                 } catch (QV4::Exception& ex) {
                     ex.accept(ctx);
                     showException(ctx, ex);

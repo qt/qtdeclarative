@@ -61,6 +61,8 @@ using namespace QV4;
 
 struct QmlBindingWrapper : FunctionObject
 {
+    Q_MANAGED
+
     QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
         : FunctionObject(scope, scope->engine->id_eval)
         , qml(qml)
@@ -86,16 +88,38 @@ struct QmlBindingWrapper : FunctionObject
         wrapper->qmlContext->mark();
     }
 
-protected:
-    static const ManagedVTable static_vtbl;
-
 private:
     Object *qml;
     CallContext *qmlContext;
-
 };
 
 DEFINE_MANAGED_VTABLE(QmlBindingWrapper);
+
+struct CompilationUnitHolder : public QV4::Object
+{
+    Q_MANAGED
+
+    CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
+        : Object(engine)
+        , unit(unit)
+    {
+        unit->ref();
+        vtbl = &static_vtbl;
+    }
+    ~CompilationUnitHolder()
+    {
+        unit->deref();
+    }
+
+    static void destroy(Managed *that)
+    {
+        static_cast<CompilationUnitHolder*>(that)->~CompilationUnitHolder();
+    }
+
+    QV4::CompiledData::CompilationUnit *unit;
+};
+
+DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
 
 Value QmlBindingWrapper::call(Managed *that, const Value &, Value *, int)
 {
@@ -170,6 +194,7 @@ void Script::parse()
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
+        compilationUnitHolder = Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
     }
 
     if (!vmFunction)
