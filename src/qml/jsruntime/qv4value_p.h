@@ -63,6 +63,12 @@ double __qmljs_to_number(const QV4::Value &value);
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 
+inline Managed *Value::asManaged() const
+{
+    if (isManaged())
+        return managed();
+    return 0;
+}
 
 inline ExecutionEngine *Value::engine() const {
     Managed *m = asManaged();
@@ -270,13 +276,6 @@ inline String *Value::asString() const
 {
     if (isString())
         return stringValue();
-    return 0;
-}
-
-inline Managed *Value::asManaged() const
-{
-    if (isManaged())
-        return managed();
     return 0;
 }
 

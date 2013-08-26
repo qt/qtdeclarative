@@ -222,47 +222,10 @@ public:
 
     void setArrayLengthUnchecked(uint l);
 
-    Property *arrayInsert(uint index, PropertyAttributes attributes = Attr_Data) {
-        if (attributes.isAccessor())
-            hasAccessorProperty = 1;
+    Property *arrayInsert(uint index, PropertyAttributes attributes = Attr_Data);
 
-        Property *pd;
-        if (!sparseArray && (index < 0x1000 || index < arrayDataLen + (arrayDataLen >> 2))) {
-            if (index >= arrayAlloc)
-                arrayReserve(index + 1);
-            if (index >= arrayDataLen) {
-                ensureArrayAttributes();
-                for (uint i = arrayDataLen; i < index; ++i)
-                    arrayAttributes[i].clear();
-                arrayDataLen = index + 1;
-            }
-            pd = arrayData + index;
-        } else {
-            initSparse();
-            SparseArrayNode *n = sparseArray->insert(index);
-            if (n->value == UINT_MAX)
-                n->value = allocArrayValue();
-            pd = arrayData + n->value;
-        }
-        if (index >= arrayLength())
-            setArrayLengthUnchecked(index + 1);
-        if (arrayAttributes || attributes != Attr_Data) {
-            if (!arrayAttributes)
-                ensureArrayAttributes();
-            attributes.resolve();
-            arrayAttributes[pd - arrayData] = attributes;
-        }
-        return pd;
-    }
-
-    void arraySet(uint index, const Property *pd) {
-        *arrayInsert(index) = *pd;
-    }
-
-    void arraySet(uint index, Value value) {
-        Property *pd = arrayInsert(index);
-        pd->value = value;
-    }
+    void arraySet(uint index, const Property *pd);
+    void arraySet(uint index, Value value);
 
     uint propertyIndexFromArrayIndex(uint index) const
     {
@@ -295,19 +258,7 @@ public:
 
     void markArrayObjects() const;
 
-    void push_back(Value v) {
-        uint idx = arrayLength();
-        if (!sparseArray) {
-            if (idx >= arrayAlloc)
-                arrayReserve(idx + 1);
-            arrayData[idx].value = v;
-            arrayDataLen = idx + 1;
-        } else {
-            uint idx = allocArrayValue(v);
-            sparseArray->push_back(idx, arrayLength());
-        }
-        setArrayLengthUnchecked(idx + 1);
-    }
+    void push_back(Value v);
 
     SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
     SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
@@ -434,6 +385,65 @@ inline void Object::setArrayLengthUnchecked(uint l)
         Property &lengthProperty = memberData[ArrayObject::LengthPropertyIndex];
         lengthProperty.value = Value::fromUInt32(l);
     }
+}
+
+inline void Object::push_back(Value v)
+{
+    uint idx = arrayLength();
+    if (!sparseArray) {
+        if (idx >= arrayAlloc)
+            arrayReserve(idx + 1);
+        arrayData[idx].value = v;
+        arrayDataLen = idx + 1;
+    } else {
+        uint idx = allocArrayValue(v);
+        sparseArray->push_back(idx, arrayLength());
+    }
+    setArrayLengthUnchecked(idx + 1);
+}
+
+inline Property *Object::arrayInsert(uint index, PropertyAttributes attributes) {
+    if (attributes.isAccessor())
+        hasAccessorProperty = 1;
+
+    Property *pd;
+    if (!sparseArray && (index < 0x1000 || index < arrayDataLen + (arrayDataLen >> 2))) {
+        if (index >= arrayAlloc)
+            arrayReserve(index + 1);
+        if (index >= arrayDataLen) {
+            ensureArrayAttributes();
+            for (uint i = arrayDataLen; i < index; ++i)
+                arrayAttributes[i].clear();
+            arrayDataLen = index + 1;
+        }
+        pd = arrayData + index;
+    } else {
+        initSparse();
+        SparseArrayNode *n = sparseArray->insert(index);
+        if (n->value == UINT_MAX)
+            n->value = allocArrayValue();
+        pd = arrayData + n->value;
+    }
+    if (index >= arrayLength())
+        setArrayLengthUnchecked(index + 1);
+    if (arrayAttributes || attributes != Attr_Data) {
+        if (!arrayAttributes)
+            ensureArrayAttributes();
+        attributes.resolve();
+        arrayAttributes[pd - arrayData] = attributes;
+    }
+    return pd;
+}
+
+inline void Object::arraySet(uint index, Value value)
+{
+    Property *pd = arrayInsert(index);
+    pd->value = value;
+}
+
+inline void Object::arraySet(uint index, const Property *pd)
+{
+    *arrayInsert(index) = *pd;
 }
 
 }
