@@ -279,6 +279,26 @@ void QQuickWindow::update()
     d->windowManager->update(this);
 }
 
+void forcePolishHelper(QQuickItem *item)
+{
+    if (item->flags() & QQuickItem::ItemHasContents) {
+        item->polish();
+    }
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i=0; i<items.size(); ++i)
+        forcePolishHelper(items.at(i));
+}
+
+/*!
+    Schedules polish events on all items in the scene.
+*/
+void QQuickWindow::forcePolish()
+{
+    Q_D(QQuickWindow);
+    forcePolishHelper(d->contentItem);
+}
+
 void forceUpdate(QQuickItem *item)
 {
     if (item->flags() & QQuickItem::ItemHasContents)
@@ -389,6 +409,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 
     QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
+    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(forcePolish()));
 }
 
 /*!

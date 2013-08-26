@@ -141,6 +141,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void update();
+    void forcePolish();
     void releaseResources();
 
 protected:
