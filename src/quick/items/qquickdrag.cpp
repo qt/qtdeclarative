@@ -46,7 +46,9 @@
 #include <private/qquickitemchangelistener_p.h>
 #include <private/qv8engine_p.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>
 
 #ifndef QT_NO_DRAGANDDROP
@@ -72,6 +74,7 @@ public:
         , itemMoved(false)
         , eventQueued(false)
         , overrideActions(false)
+        , dragType(QQuickDrag::Internal)
     {
     }
 
@@ -83,8 +86,8 @@ public:
     void deliverMoveEvent();
     void deliverLeaveEvent();
     void deliverEvent(QQuickWindow *window, QEvent *event);
-    void start() { start(supportedActions); }
     void start(Qt::DropActions supportedActions);
+    Qt::DropAction startDrag(Qt::DropActions supportedActions);
     void setTarget(QQuickItem *item);
 
     QQuickDragGrabber dragGrabber;
@@ -105,6 +108,8 @@ public:
     bool overrideActions : 1;
     QPointF hotSpot;
     QStringList keys;
+    QVariantMap externalMimeData;
+    QQuickDrag::DragType dragType;
 };
 
 /*!
@@ -272,7 +277,10 @@ QQuickDragAttached::~QQuickDragAttached()
 
     This property holds whether a drag event sequence is currently active.
 
-    Setting this property to true will send a QDragEnter event to the scene
+    Binding this property to the active property of \l MouseArea::drag will
+    cause \l startDrag to be called when the user starts dragging.
+
+    Setting this property to true will also send a QDragEnter event to the scene
     with the item's current position.  Setting it to false will send a
     QDragLeave event.
 
@@ -292,8 +300,18 @@ void QQuickDragAttached::setActive(bool active)
     if (d->active != active) {
         if (d->inEvent)
             qmlInfo(this) << "active cannot be changed from within a drag event handler";
-        else if (active)
-            d->start(d->supportedActions);
+        else if (active) {
+            if (d->dragType == QQuickDrag::Internal) {
+                d->start(d->supportedActions);
+            }
+            else if (d->dragType == QQuickDrag::Automatic) {
+                // There are different semantics than start() since startDrag()
+                // may be called after an internal drag is already started.
+                active = true;
+                emit activeChanged();
+                d->startDrag(d->supportedActions);
+            }
+        }
         else
             cancel();
     }
@@ -411,6 +429,28 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
 }
 
 /*!
+    \qmlattachedproperty stringlist QtQuick2::Drag::mimeData
+    \since QtQuick 2.2
+
+    This property holds a map of mimeData that is used during startDrag.
+*/
+
+QVariantMap QQuickDragAttached::mimeData() const
+{
+    Q_D(const QQuickDragAttached);
+    return d->externalMimeData;
+}
+
+void QQuickDragAttached::setMimeData(const QVariantMap &mimeData)
+{
+    Q_D(QQuickDragAttached);
+    if (d->externalMimeData != mimeData) {
+        d->externalMimeData = mimeData;
+        emit mimeDataChanged();
+    }
+}
+
+/*!
     \qmlattachedproperty flags QtQuick2::Drag::supportedActions
 
     This property holds return values of Drag.drop() supported by the drag source.
@@ -465,6 +505,42 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
     }
 }
 
+/*!
+ \qmlattachedproperty enumeration QtQuick2::Drag::dragType
+ \since QtQuick 2.2
+
+ This property indicates whether to automatically start drags, do nothing, or
+ to use backwards compatible internal drags. The default is to use backwards
+ compatible internal drags.
+
+ A drag can also be started manually using \l startDrag.
+
+ \list
+ \li Drag.None - do not start drags automatically
+ \li Drag.Automatic - start drags automatically
+ \li Drag.Internal (default) - start backwards compatible drags automatically
+ \endlist
+
+ When using \l Drag.Automatic you should also define \l mimeData and bind the
+ \active property to the active property of \l MouseArea.drag.
+
+ */
+
+QQuickDrag::DragType QQuickDragAttached::dragType() const
+{
+    Q_D(const QQuickDragAttached);
+    return d->dragType;
+}
+
+void QQuickDragAttached::setDragType(QQuickDrag::DragType dragType)
+{
+    Q_D(QQuickDragAttached);
+    if (d->dragType != dragType) {
+        d->dragType = dragType;
+        emit dragTypeChanged();
+    }
+}
+
 void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
 {
     Q_Q(QQuickDragAttached);
@@ -496,7 +572,8 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
 /*!
     \qmlattachedmethod void QtQuick2::Drag::start(flags supportedActions)
 
-    Starts sending drag events.
+    Starts sending drag events. Used for starting old-style internal drags. \l startDrag is the
+    new-style, preferred method of starting drags.
 
     The optional \a supportedActions argument can be used to override the \l supportedActions
     property for the started sequence.
@@ -614,6 +691,223 @@ void QQuickDragAttached::cancel()
     }
 
     emit activeChanged();
+}
+
+/*!
+ \qmlsignal QtQuick2::DropArea::onDragStarted()
+
+ This handler is called when a drag is started with the \l startDrag method
+ or when it is started automatically using the \l dragType property.
+ */
+
+/*!
+ \qmlsignal QtQuick2::DropArea::onDragFinished(DropAction action)
+
+ This handler is called when a drag finishes and the drag was started with the
+ \l startDrag method or started automatically using the \l dragType property.
+ */
+
+Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)
+{
+    Q_Q(QQuickDragAttached);
+
+    QDrag *drag = new QDrag(q);
+    QMimeData *mimeData = new QMimeData();
+
+    Q_FOREACH (const QString &key, externalMimeData.keys()) {
+        mimeData->setData(key, externalMimeData[key].toString().toUtf8());
+    }
+
+    drag->setMimeData(mimeData);
+
+    // TODO: how to handle drag image?
+    // drag->setPixmap(iconPixmap);
+
+    emit q->dragStarted();
+
+    Qt::DropAction dropAction = drag->exec(supportedActions);
+
+    delete drag;
+
+    deliverLeaveEvent();
+
+    if (target) {
+        target = 0;
+        emit q->targetChanged();
+    }
+
+    emit q->dragFinished(dropAction);
+
+    active = false;
+    emit q->activeChanged();
+
+    return dropAction;
+}
+
+
+/*!
+    \qmlattachedmethod void QtQuick2::Drag::startDrag(flags supportedActions)
+
+    Starts sending drag events.
+
+    The optional \a supportedActions argument can be used to override the \l supportedActions
+    property for the started sequence.
+*/
+
+void QQuickDragAttached::startDrag(QQmlV4Function *args)
+{
+    Q_D(QQuickDragAttached);
+
+    if (d->inEvent) {
+        qmlInfo(this) << "startDrag() cannot be called from within a drag event handler";
+        return;
+    }
+
+    if (!d->active) {
+        qmlInfo(this) << "startDrag() drag must be active";
+        return;
+    }
+
+    Qt::DropActions supportedActions = d->supportedActions;
+
+    // check arguments for supportedActions
+    if (args->length() >= 1) {
+        QV4::Value v = (*args)[0];
+        if (v.isInt32()) {
+            supportedActions = Qt::DropActions(v.integerValue());
+        }
+    }
+
+    Qt::DropAction dropAction = d->startDrag(supportedActions);
+
+    args->setReturnValue(QV4::Value::fromInt32(dropAction));
+}
+
+QQuickDrag::QQuickDrag(QObject *parent)
+: QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
+_xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
+{
+}
+
+QQuickDrag::~QQuickDrag()
+{
+}
+
+QQuickItem *QQuickDrag::target() const
+{
+    return _target;
+}
+
+void QQuickDrag::setTarget(QQuickItem *t)
+{
+    if (_target == t)
+        return;
+    _target = t;
+    emit targetChanged();
+}
+
+void QQuickDrag::resetTarget()
+{
+    if (_target == 0)
+        return;
+    _target = 0;
+    emit targetChanged();
+}
+
+QQuickDrag::Axis QQuickDrag::axis() const
+{
+    return _axis;
+}
+
+void QQuickDrag::setAxis(QQuickDrag::Axis a)
+{
+    if (_axis == a)
+        return;
+    _axis = a;
+    emit axisChanged();
+}
+
+qreal QQuickDrag::xmin() const
+{
+    return _xmin;
+}
+
+void QQuickDrag::setXmin(qreal m)
+{
+    if (_xmin == m)
+        return;
+    _xmin = m;
+    emit minimumXChanged();
+}
+
+qreal QQuickDrag::xmax() const
+{
+    return _xmax;
+}
+
+void QQuickDrag::setXmax(qreal m)
+{
+    if (_xmax == m)
+        return;
+    _xmax = m;
+    emit maximumXChanged();
+}
+
+qreal QQuickDrag::ymin() const
+{
+    return _ymin;
+}
+
+void QQuickDrag::setYmin(qreal m)
+{
+    if (_ymin == m)
+        return;
+    _ymin = m;
+    emit minimumYChanged();
+}
+
+qreal QQuickDrag::ymax() const
+{
+    return _ymax;
+}
+
+void QQuickDrag::setYmax(qreal m)
+{
+    if (_ymax == m)
+        return;
+    _ymax = m;
+    emit maximumYChanged();
+}
+
+bool QQuickDrag::active() const
+{
+    return _active;
+}
+
+void QQuickDrag::setActive(bool drag)
+{
+    if (_active == drag)
+        return;
+    _active = drag;
+    emit activeChanged();
+}
+
+bool QQuickDrag::filterChildren() const
+{
+    return _filterChildren;
+}
+
+void QQuickDrag::setFilterChildren(bool filter)
+{
+    if (_filterChildren == filter)
+        return;
+    _filterChildren = filter;
+    emit filterChildrenChanged();
+}
+
+QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
+{
+    return new QQuickDragAttached(obj);
 }
 
 QT_END_NAMESPACE

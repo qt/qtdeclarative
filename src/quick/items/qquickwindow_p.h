@@ -57,7 +57,6 @@
 #include "qquickwindow.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qquickdrag_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -73,6 +72,7 @@ QT_BEGIN_NAMESPACE
 //Make it easy to identify and customize the root item if needed
 
 class QSGRenderLoop;
+class QQuickDragGrabber;
 
 class QQuickRootItem : public QQuickItem
 {
@@ -116,7 +116,7 @@ public:
     QQuickItem *cursorItem;
 #endif
 #ifndef QT_NO_DRAGANDDROP
-    QQuickDragGrabber dragGrabber;
+    QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
     bool checkIfDoubleClicked(ulong newPressEventTimestamp);

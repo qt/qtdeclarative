@@ -48,6 +48,7 @@
 
 
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>

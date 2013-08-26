@@ -41,6 +41,7 @@
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
+#include <QtQuick/private/qquickdrag_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qquickflickable_p.h>

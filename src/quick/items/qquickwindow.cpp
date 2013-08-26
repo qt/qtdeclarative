@@ -46,6 +46,8 @@
 #include "qquickitem_p.h"
 #include "qquickevents_p_p.h"
 
+#include <private/qquickdrag_p.h>
+
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgflashnode_p.h>
@@ -364,6 +366,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #ifndef QT_NO_CURSOR
     , cursorItem(0)
 #endif
+#ifndef QT_NO_DRAGANDDROP
+    , dragGrabber(0)
+#endif
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
     , dirtyItemList(0)
@@ -380,6 +385,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderTargetId(0)
     , incubationController(0)
 {
+#ifndef QT_NO_DRAGANDDROP
+    dragGrabber = new QQuickDragGrabber;
+#endif
 }
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
@@ -984,7 +992,9 @@ QQuickWindow::~QQuickWindow()
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
-
+#ifndef QT_NO_DRAGANDDROP
+    delete d->dragGrabber; d->dragGrabber = 0;
+#endif
     delete d->contentItem; d->contentItem = 0;
 }
 
@@ -1202,7 +1212,7 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::DragLeave:
     case QEvent::DragMove:
     case QEvent::Drop:
-        d->deliverDragEvent(&d->dragGrabber, e);
+        d->deliverDragEvent(d->dragGrabber, e);
         break;
 #endif
     case QEvent::WindowDeactivate:

@@ -49,78 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickMouseEvent;
-
-#ifndef QT_NO_DRAGANDDROP
-
-class QQuickDragAttached;
-class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
-{
-    Q_OBJECT
-
-    Q_ENUMS(Axis)
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget)
-    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged)
-    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
-    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
-    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
-    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
-    Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
-    //### consider drag and drop
-
-public:
-    QQuickDrag(QObject *parent=0);
-    ~QQuickDrag();
-
-    QQuickItem *target() const;
-    void setTarget(QQuickItem *target);
-    void resetTarget();
-
-    enum Axis { XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
-    Axis axis() const;
-    void setAxis(Axis);
-
-    qreal xmin() const;
-    void setXmin(qreal);
-    qreal xmax() const;
-    void setXmax(qreal);
-    qreal ymin() const;
-    void setYmin(qreal);
-    qreal ymax() const;
-    void setYmax(qreal);
-
-    bool active() const;
-    void setActive(bool);
-
-    bool filterChildren() const;
-    void setFilterChildren(bool);
-
-    static QQuickDragAttached *qmlAttachedProperties(QObject *obj);
-
-Q_SIGNALS:
-    void targetChanged();
-    void axisChanged();
-    void minimumXChanged();
-    void maximumXChanged();
-    void minimumYChanged();
-    void maximumYChanged();
-    void activeChanged();
-    void filterChildrenChanged();
-
-private:
-    QQuickItem *_target;
-    Axis _axis;
-    qreal _xmin;
-    qreal _xmax;
-    qreal _ymin;
-    qreal _ymax;
-    bool _active : 1;
-    bool _filterChildren: 1;
-    Q_DISABLE_COPY(QQuickDrag)
-};
-
-#endif // QT_NO_DRAGANDDROP
-
+class QQuickDrag;
 class QQuickMouseAreaPrivate;
 class QQuickWheelEvent;
 // used in Qt Location
@@ -244,10 +173,6 @@ private:
 
 QT_END_NAMESPACE
 
-#ifndef QT_NO_DRAGANDDROP
-QML_DECLARE_TYPE(QQuickDrag)
-QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
-#endif
 QML_DECLARE_TYPE(QQuickMouseArea)
 
 #endif // QQUICKMOUSEAREA_P_H
