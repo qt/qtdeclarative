@@ -1781,7 +1781,9 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
 
         if (d == 0 && notInRevision) {
             const QList<QQmlTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
-            const QQmlTypeData::TypeReference &type = resolvedTypes.at(obj->type);
+            QQmlTypeData::TypeReference type;
+            if (obj->type != -1)
+                type = resolvedTypes.at(obj->type);
             if (type.type) {
                 COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
             } else {
