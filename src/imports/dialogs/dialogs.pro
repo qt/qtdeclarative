@@ -6,6 +6,9 @@ IMPORT_VERSION = 1.1
 QMAKE_DOCS = $$PWD/doc/qtquickdialogs.qdocconf
 
 SOURCES += \
+    qquickabstractmessagedialog.cpp \
+    qquickplatformmessagedialog.cpp \
+    qquickmessagedialog.cpp \
     qquickabstractfiledialog.cpp \
     qquickplatformfiledialog.cpp \
     qquickfiledialog.cpp \
@@ -19,6 +22,10 @@ SOURCES += \
     plugin.cpp
 
 HEADERS += \
+    qquickabstractmessagedialog_p.h \
+    qquickplatformmessagedialog_p.h \
+    qquickmessagedialog_p.h \
+    qquickmessageattached_p.h \
     qquickabstractfiledialog_p.h \
     qquickplatformfiledialog_p.h \
     qquickfiledialog_p.h \
@@ -31,6 +38,8 @@ HEADERS += \
     qquickabstractdialog_p.h
 
 QML_FILES += \
+    DefaultMessageDialog.qml \
+    WidgetMessageDialog.qml \
     DefaultFileDialog.qml \
     WidgetFileDialog.qml \
     DefaultColorDialog.qml \
@@ -40,9 +49,14 @@ QML_FILES += \
     qml/Button.qml \
     qml/CheckBox.qml \
     qml/ColorSlider.qml \
+    qml/EdgeFade.qml \
     qml/DefaultWindowDecoration.qml \
     qml/TextField.qml \
     qml/qmldir \
+    images/critical.png \
+    images/information.png \
+    images/question.png \
+    images/warning.png \
     images/checkers.png \
     images/checkmark.png \
     images/copy.png \

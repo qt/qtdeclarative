@@ -41,6 +41,10 @@
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlextensionplugin.h>
+#include "qquickmessagedialog_p.h"
+#include "qquickabstractmessagedialog_p.h"
+#include "qquickmessageattached_p.h"
+#include "qquickplatformmessagedialog_p.h"
 #include "qquickfiledialog_p.h"
 #include "qquickabstractfiledialog_p.h"
 #include "qquickplatformfiledialog_p.h"
@@ -68,7 +72,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQuick.Dialogs 1.0
+    import QtQuick.Dialogs 1.1
     \endcode
 */
 
@@ -100,6 +104,15 @@ public:
         // Else if there is a QWidget-based implementation, check whether it's
         // possible to instantiate it from Qt Quick.
         // Otherwise fall back to a pure-QML implementation.
+
+        // MessageDialog
+        qmlRegisterUncreatableType<QQuickMessageAttached>(uri, 1, 1, "Message", QQuickMessageAttached::tr("Message can only be used via the attached property."));
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::MessageDialog))
+            qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickMessageDialog>(widgetsDir, qmlDir, "MessageDialog", uri, hasTopLevelWindows, 1, 1);
 
         // FileDialog
 #ifndef PURE_QML_ONLY

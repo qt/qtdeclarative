@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,51 +39,31 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqmessagebox_p.h"
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
-#include "qquickqfontdialog_p.h"
+#ifndef QQUICKMESSAGEATTACHED_H
+#define QQUICKMESSAGEATTACHED_H
+
+#include <private/qtquickglobal_p.h>
+#include <QtGui/qpa/qplatformdialoghelper.h>
+#include "qquickabstractmessagedialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in Qt Quick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.1
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class Q_DECL_EXPORT QQuickMessageAttached : public QObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_ENUMS(QQuickAbstractMessageDialog::Icon)
+    Q_ENUMS(QQuickAbstractMessageDialog::StandardButton)
 
 public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+    static QQuickMessageAttached *qmlAttachedProperties(QObject *obj) {
+        return new QQuickMessageAttached(obj); }
 
-        qmlRegisterType<QQuickQMessageBox>(uri, 1, 1, "QtMessageDialog");
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-        qmlRegisterType<QQuickQFontDialog>(uri, 1, 1, "QtFontDialog");
-    }
+    QQuickMessageAttached(QObject *parent = 0) : QObject(parent) { }
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+QML_DECLARE_TYPE(QQuickMessageAttached)
+QML_DECLARE_TYPEINFO(QQuickMessageAttached, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKMESSAGEATTACHED_H

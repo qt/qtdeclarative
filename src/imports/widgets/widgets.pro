@@ -4,6 +4,8 @@ TARGETPATH = QtQuick/PrivateWidgets
 IMPORT_VERSION = 1.1
 
 SOURCES += \
+    qquickqmessagebox.cpp \
+    ../dialogs/qquickabstractmessagedialog.cpp \
     qquickqfiledialog.cpp \
     ../dialogs/qquickabstractfiledialog.cpp \
     qquickqcolordialog.cpp \
@@ -14,6 +16,8 @@ SOURCES += \
     widgetsplugin.cpp
 
 HEADERS += \
+    qquickqmessagebox_p.h \
+    ../dialogs/qquickabstractmessagedialog_p.h \
     qquickqfiledialog_p.h \
     ../dialogs/qquickabstractfiledialog_p.h \
     qquickqcolordialog_p.h \

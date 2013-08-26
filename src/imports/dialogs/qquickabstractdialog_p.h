@@ -110,8 +110,8 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void decorationLoaded();
-    void accept();
-    void reject();
+    virtual void accept();
+    virtual void reject();
     void visibleChanged(bool v);
     void windowGeometryChanged();
 

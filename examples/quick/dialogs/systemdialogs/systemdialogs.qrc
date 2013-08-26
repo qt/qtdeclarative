@@ -4,5 +4,6 @@
         <file>FileDialogs.qml</file>
         <file>ColorDialogs.qml</file>
         <file>FontDialogs.qml</file>
+        <file>MessageDialogs.qml</file>
     </qresource>
 </RCC>

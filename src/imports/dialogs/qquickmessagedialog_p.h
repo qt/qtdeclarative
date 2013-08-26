@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,51 +39,48 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqmessagebox_p.h"
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
-#include "qquickqfontdialog_p.h"
+#ifndef QQUICKMESSAGEDIALOG_P_H
+#define QQUICKMESSAGEDIALOG_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qquickabstractmessagedialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in Qt Quick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.1
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class QQuickMessageDialog : public QQuickAbstractMessageDialog
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(QObject* implementation READ qmlImplementation WRITE setQmlImplementation DESIGNABLE false)
+    Q_CLASSINFO("DefaultProperty", "implementation")    // AbstractMessageDialog in QML can have only one child
 
 public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+    explicit QQuickMessageDialog(QObject *parent = 0);
+    ~QQuickMessageDialog();
 
-        qmlRegisterType<QQuickQMessageBox>(uri, 1, 1, "QtMessageDialog");
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-        qmlRegisterType<QQuickQFontDialog>(uri, 1, 1, "QtFontDialog");
-    }
+protected:
+    virtual QPlatformDialogHelper *helper() { return 0; }
+
+protected Q_SLOTS:
+    virtual void accept();
+    virtual void reject();
+    void clicked();
+
+private:
+    Q_DISABLE_COPY(QQuickMessageDialog)
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+QML_DECLARE_TYPE(QQuickMessageDialog *)
+
+#endif // QQUICKMESSAGEDIALOG_P_H

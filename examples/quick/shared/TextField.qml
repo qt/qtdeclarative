@@ -1,9 +1,9 @@
-/****************************************************************************
+/*****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -36,36 +36,45 @@
 **
 ** $QT_END_LICENSE$
 **
-****************************************************************************/
+*****************************************************************************/
 
-import QtQuick 2.2
-import "../../shared"
+import QtQuick 2.1
 
-TabSet {
-    width: 580
-    height: 440
+Item {
+    id: root
 
-    FileDialogs {
-        property string title: "File Dialog"
-        anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
+    property alias textInput: textInput
+    property alias text: textInput.text
+    signal accepted
+    signal downPressed
+    implicitWidth: textInput.implicitWidth + rect.radius * 2
+    implicitHeight: textInput.implicitHeight
+
+    function copyAll() {
+        textInput.selectAll()
+        textInput.copy()
     }
 
-    ColorDialogs {
-        property string title: "Color Dialog"
+    SystemPalette { id: palette }
+    height: textInput.implicitHeight + 8
+    clip: true
+
+    Rectangle {
+        id: rect
         anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
+        radius: height / 4
+        color: palette.button
+        border.color: Qt.darker(palette.button, 1.5)
     }
 
-    FontDialogs {
-        property string title: "Font Dialog"
+    TextInput {
+        id: textInput
+        color: palette.text
         anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
-    }
-
-    MessageDialogs {
-        property string title: "Message Dialog"
-        anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
+        anchors.leftMargin: rect.radius
+        anchors.rightMargin: rect.radius
+        verticalAlignment: Text.AlignVCenter
+        onAccepted: root.accepted()
+        Keys.onDownPressed: root.downPressed()
     }
 }
