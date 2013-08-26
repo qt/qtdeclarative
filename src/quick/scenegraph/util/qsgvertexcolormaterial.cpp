@@ -64,7 +64,7 @@ private:
 
 QSGMaterialType QSGVertexColorMaterialShader::type;
 
-void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
+void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial * /*newEffect*/, QSGMaterial *)
 {
     if (state.isOpacityDirty())
         program()->setUniformValue(m_opacity_id, state.opacity());
