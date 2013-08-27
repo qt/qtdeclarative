@@ -320,13 +320,19 @@ static void NO_INLINE zapSomeStack()
     memset(buf, 0, 4096);
 }
 
-static void gc(QQmlEngine &engine)
+static void gcWithoutDeferredObjectDeletion(QQmlEngine &engine)
 {
     zapSomeStack();
     engine.collectGarbage();
+}
+
+static void gc(QQmlEngine &engine)
+{
+    gcWithoutDeferredObjectDeletion(engine);
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
+
 
 void tst_qqmlecmascript::initTestCase()
 {
@@ -4753,6 +4759,8 @@ void tst_qqmlecmascript::propertyVarOwnership()
     QQmlComponent component(&engine, testFileUrl("propertyVarOwnership.5.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "createComponent");
+    gcWithoutDeferredObjectDeletion(engine);
     QMetaObject::invokeMethod(object, "runTest");
     QCOMPARE(object->property("test").toBool(), true);
     delete object;

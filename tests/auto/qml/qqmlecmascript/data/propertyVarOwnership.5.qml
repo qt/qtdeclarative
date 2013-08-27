@@ -21,8 +21,6 @@ Item {
     }
 
     function runTest() {
-        if (!createComponent()) return;
-        gc();  // collect object's v8object + varProperties, queues deleteLater.
         if (SingletonType.QObject.trackedObject() != null) return;        // v8object was previously collected.
         SingletonType.QObject.setTrackedObjectProperty("varprop");        // deferences varProperties of object.
         test = !(SingletonType.QObject.trackedObjectProperty("varprop")); // deferences varProperties of object.
