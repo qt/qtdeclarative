@@ -4396,12 +4396,12 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
             extra->keyHandler->keyReleased(e, true);
     }
 
-    if (e->isAccepted())
+    if (e->isAccepted() || !q->window())
         return;
 
     //only care about KeyPress now
-    if ((q == q->window()->contentItem() || q->activeFocusOnTab())
-            && e->type() == QEvent::KeyPress) {
+    if (e->type() == QEvent::KeyPress &&
+            (q == q->window()->contentItem() || q->activeFocusOnTab())) {
         bool res = false;
         if (!(e->modifiers() & (Qt::ControlModifier | Qt::AltModifier))) {  //### Add MetaModifier?
             if (e->key() == Qt::Key_Backtab
