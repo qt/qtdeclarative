@@ -1445,34 +1445,18 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
 }
 
 void RegisterAllocator::longestAvailableReg(const QVector<int> &nextUses, int &reg,
-                                            int &nextUsePos_reg, int lastUse) const
+                                            int &freeUntilPos_reg, int lastUse) const
 {
-    reg = 0;
-    nextUsePos_reg = nextUses[reg];
+    reg = LifeTimeInterval::Invalid;
+    freeUntilPos_reg = 0;
 
-    int bestReg = -1, nextUsePos_bestReg = INT_MAX;
-
-    for (int i = 1, ei = nextUses.size(); i != ei; ++i) {
-        int nextUsePos_i = nextUses[i];
-        if (nextUsePos_i > nextUsePos_reg) {
-            reg = i;
-            nextUsePos_reg = nextUsePos_i;
+    for (int candidate = 0, candidateEnd = nextUses.size(); candidate != candidateEnd; ++candidate) {
+        int fp = nextUses[candidate];
+        if ((freeUntilPos_reg < lastUse && fp > freeUntilPos_reg)
+                || (freeUntilPos_reg >= lastUse && fp >= lastUse && freeUntilPos_reg > fp)) {
+            reg = candidate;
+            freeUntilPos_reg = fp;
         }
-        if (lastUse != -1) {
-            // if multiple registers are available for the whole life-time of an interval, then
-            // bestReg contains the one that is blocked first another interval.
-            if (nextUsePos_i > lastUse && nextUsePos_i < nextUsePos_bestReg) {
-                bestReg = i;
-                nextUsePos_bestReg = nextUsePos_i;
-            }
-        }
-    }
-
-    // if the hinted register is available for the whole life-time, use that one, and if not, use
-    // the bestReg.
-    if (bestReg != -1) {
-        reg = bestReg;
-        nextUsePos_reg = nextUsePos_bestReg;
     }
 }
 
