@@ -275,7 +275,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     Object *arr = arg.asObject();
 
     if (!arr) {
-        if (!(arg.isUndefined() || arg.isNull())) {
+        if (!arg.isNullOrUndefined()) {
             ctx->throwTypeError();
             return Value::undefinedValue();
         }
@@ -404,7 +404,7 @@ Value ScriptFunction::call(Managed *that, const CallData &d)
     ExecutionContext *ctx = context->newCallContext(f, d);
 
     if (!f->strictMode && !d.thisObject.isObject()) {
-        if (d.thisObject.isUndefined() || d.thisObject.isNull()) {
+        if (d.thisObject.isNullOrUndefined()) {
             ctx->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
             ctx->thisObject = Value::fromObject(d.thisObject.toObject(context));
@@ -499,7 +499,7 @@ Value SimpleScriptFunction::call(Managed *that, const CallData &d)
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, d);
 
     if (!f->strictMode && !d.thisObject.isObject()) {
-        if (d.thisObject.isUndefined() || d.thisObject.isNull()) {
+        if (d.thisObject.isNullOrUndefined()) {
             ctx->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
             ctx->thisObject = Value::fromObject(d.thisObject.toObject(context));
