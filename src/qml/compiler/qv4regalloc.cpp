@@ -1312,7 +1312,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current, const int 
             if (it.isFP() == needsFPReg && it.reg() != LifeTimeInterval::Invalid) {
                 const int intersectionPos = nextIntersection(current, it, position);
                 if (!isPhiTarget && it.isFixedInterval() && current.end() == intersectionPos)
-                    freeUntilPos[it.reg()] = intersectionPos + 1;
+                    freeUntilPos[it.reg()] = qMin(freeUntilPos[it.reg()], intersectionPos + 1);
                 else if (intersectionPos != -1)
                     freeUntilPos[it.reg()] = qMin(freeUntilPos[it.reg()], intersectionPos);
             }
