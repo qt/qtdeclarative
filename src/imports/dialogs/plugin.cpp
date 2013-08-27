@@ -79,7 +79,7 @@ class QtQuick2DialogsPlugin : public QQmlExtensionPlugin
 public:
     QtQuick2DialogsPlugin() : QQmlExtensionPlugin() { }
 
-    virtual void initializeEngine(QQmlEngine *engine, const char *uri) {
+    virtual void initializeEngine(QQmlEngine *engine, const char * /*uri*/) {
         //qDebug() << Q_FUNC_INFO << uri << m_decorationComponentUrl;
         QQuickAbstractDialog::m_decorationComponent =
             new QQmlComponent(engine, m_decorationComponentUrl, QQmlComponent::Asynchronous);
