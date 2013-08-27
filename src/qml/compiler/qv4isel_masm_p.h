@@ -431,6 +431,38 @@ public:
         return Pointer(_stackLayout.stackSlotPointer(t->index));
     }
 
+    template <int argumentNumber>
+    void saveOutRegister(PointerToValue arg)
+    {
+        if (!arg.value)
+            return;
+        if (V4IR::Temp *t = arg.value->asTemp()) {
+            if (t->kind == V4IR::Temp::PhysicalRegister) {
+                Pointer addr(_stackLayout.savedRegPointer(argumentNumber));
+                switch (t->type) {
+                case V4IR::BoolType:
+                    storeBool((RegisterID) t->index, addr);
+                    break;
+                case V4IR::SInt32Type:
+                    storeInt32((RegisterID) t->index, addr);
+                    break;
+                case V4IR::UInt32Type:
+                    storeUInt32((RegisterID) t->index, addr);
+                    break;
+                case V4IR::DoubleType:
+                    storeDouble((FPRegisterID) t->index, addr);
+                    break;
+                default:
+                    Q_UNIMPLEMENTED();
+                }
+            }
+        }
+    }
+
+    template <int, typename ArgType>
+    void saveOutRegister(ArgType)
+    {}
+
     void loadArgumentInRegister(RegisterID source, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
@@ -747,6 +779,15 @@ public:
             sub32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
         }
 
+        // First save any arguments that reside in registers, because they could be overwritten
+        // if that register is also used to pass arguments.
+        saveOutRegister<5>(arg6);
+        saveOutRegister<4>(arg5);
+        saveOutRegister<3>(arg4);
+        saveOutRegister<2>(arg3);
+        saveOutRegister<1>(arg2);
+        saveOutRegister<0>(arg1);
+
         loadArgumentOnStackOrRegister<5>(arg6);
         loadArgumentOnStackOrRegister<4>(arg5);
         loadArgumentOnStackOrRegister<3>(arg4);
@@ -967,25 +1008,8 @@ public:
         if (t->kind != V4IR::Temp::PhysicalRegister)
             return loadTempAddress(tmpReg, t);
 
-        Pointer addr(_stackLayout.savedRegPointer(offset));
-        switch (t->type) {
-        case V4IR::BoolType:
-            storeBool((RegisterID) t->index, addr);
-            break;
-        case V4IR::SInt32Type:
-            storeInt32((RegisterID) t->index, addr);
-            break;
-        case V4IR::UInt32Type:
-            storeUInt32((RegisterID) t->index, addr);
-            break;
-        case V4IR::DoubleType:
-            storeDouble((FPRegisterID) t->index, addr);
-            break;
-        default:
-            Q_UNIMPLEMENTED();
-        }
 
-        return addr;
+        return Pointer(_stackLayout.savedRegPointer(offset));
     }
 
     void storeBool(RegisterID reg, Pointer addr)
