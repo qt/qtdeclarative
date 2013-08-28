@@ -1120,7 +1120,6 @@ bool Codegen::visit(BinaryExpression *ast)
     }
 
     V4IR::Expr* left = *expression(ast->left);
-    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
 
     switch (ast->op) {
     case QSOperator::Or:
@@ -1128,6 +1127,7 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign: {
+        throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
         V4IR::Expr* right = *expression(ast->right);
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
             throwReferenceError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
@@ -1154,6 +1154,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
+        throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
         V4IR::Expr* right = *expression(ast->right);
         if (!left->isLValue())
             throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
@@ -1281,9 +1282,10 @@ bool Codegen::visit(DeleteExpression *ast)
 {
     V4IR::Expr* expr = *expression(ast->expression);
     // Temporaries cannot be deleted
-    if (expr->asTemp() && expr->asTemp()->index < _env->members.size()) {
+    V4IR::Temp *t = expr->asTemp();
+    if (t && t->index < _env->members.size()) {
         // Trying to delete a function argument might throw.
-        if (_function->isStrict && expr->asTemp()->index < 0)
+        if (_function->isStrict)
             throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
         _expr.code = _block->CONST(V4IR::BoolType, 0);
         return false;
@@ -1346,22 +1348,30 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     V4IR::Function *f = _function;
 
     while (f && e->parent) {
-        if ((f->usesArgumentsObject && name == "arguments") || (!f->isStrict && f->hasDirectEval) || f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
-            break;
+        if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
+            return _block->NAME(name, line, col);
+
         int index = e->findMember(name);
         assert (index < e->members.size());
         if (index != -1) {
-            return _block->LOCAL(index, scope);
+            V4IR::Temp *t = _block->LOCAL(index, scope);
+            if (name == "arguments" || name == "eval")
+                t->isArgumentsOrEval = true;
+            return t;
         }
         const int argIdx = f->indexOfArgument(&name);
         if (argIdx != -1)
             return _block->ARG(argIdx, scope);
+
+        if (!f->isStrict && f->hasDirectEval)
+            return _block->NAME(name, line, col);
+
         ++scope;
         e = e->parent;
         f = f->outer;
     }
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && _mode != QmlBinding && (!f || f->name != name))
+    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && _mode != QmlBinding)
         return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
@@ -1836,7 +1846,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_function->usesArgumentsObject) {
-        move(_block->NAME("arguments", ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
+        move(identifier("arguments", ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
              _block->CALL(_block->NAME(V4IR::Name::builtin_setup_argument_object,
                      ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
@@ -2520,11 +2530,16 @@ void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
 {
     if (!_env->isStrict)
         return;
-    V4IR::Name *n = expr->asName();
-    if (!n)
+    if (V4IR::Name *n = expr->asName()) {
+        if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
+            return;
+    } else if (V4IR::Temp *t = expr->asTemp()) {
+        if (!t->isArgumentsOrEval)
+            return;
+    } else {
         return;
-    if (*n->id == QLatin1String("eval") || *n->id == QLatin1String("arguments"))
-        throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+    }
+    throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)

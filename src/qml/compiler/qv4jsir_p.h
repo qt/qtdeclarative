@@ -349,8 +349,9 @@ struct Temp: Expr {
     };
 
     unsigned index;
-    unsigned scope : 29; // how many scopes outside the current one?
+    unsigned scope : 28; // how many scopes outside the current one?
     unsigned kind  : 3;
+    unsigned isArgumentsOrEval : 1;
 
     void init(unsigned kind, unsigned index, unsigned scope)
     {
@@ -361,6 +362,7 @@ struct Temp: Expr {
         this->kind = kind;
         this->index = index;
         this->scope = scope;
+        this->isArgumentsOrEval = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
