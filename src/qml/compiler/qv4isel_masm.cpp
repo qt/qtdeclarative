@@ -167,6 +167,13 @@ protected:
     virtual void visitTry(V4IR::Try *s) { s->exceptionVar->accept(this); }
     virtual void visitPhi(V4IR::Phi *) { Q_UNREACHABLE(); }
 };
+
+inline bool isPregOrConst(V4IR::Expr *e)
+{
+    if (V4IR::Temp *t = e->asTemp())
+        return t->kind == V4IR::Temp::PhysicalRegister;
+    return e->asConst() != 0;
+}
 } // anonymous namespace
 
 /* Platform/Calling convention/Architecture specific section */
@@ -283,7 +290,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
         return stackSlotPointer(t);
     } break;
     default:
-        Q_UNIMPLEMENTED();
+        Q_UNREACHABLE();
     }
     return Pointer(reg, offset);
 }
@@ -312,26 +319,26 @@ void Assembler::copyValue(Result result, Source source)
 template <typename Result>
 void Assembler::copyValue(Result result, V4IR::Expr* source)
 {
-#ifdef VALUE_FITS_IN_REGISTER
-    if (source->type == V4IR::DoubleType) {
+    if (source->type == V4IR::BoolType) {
+        RegisterID reg = toInt32Register(source, ScratchRegister);
+        storeBool(reg, result);
+    } else if (source->type == V4IR::SInt32Type) {
+        RegisterID reg = toInt32Register(source, ScratchRegister);
+        storeInt32(reg, result);
+    } else if (source->type == V4IR::UInt32Type) {
+        RegisterID reg = toUInt32Register(source, ScratchRegister);
+        storeUInt32(reg, result);
+    } else if (source->type == V4IR::DoubleType) {
         storeDouble(toDoubleRegister(source), result);
-    } else {
-        // Use ReturnValueRegister as "scratch" register because loadArgument
-        // and storeArgument are functions that may need a scratch register themselves.
-        loadArgumentInRegister(source, ReturnValueRegister, 0);
-        storeReturnValue(result);
-    }
-#else
-    if (V4IR::Temp *temp = source->asTemp()) {
+    } else if (V4IR::Temp *temp = source->asTemp()) {
         loadDouble(temp, FPGpr0);
         storeDouble(FPGpr0, result);
     } else if (V4IR::Const *c = source->asConst()) {
         QV4::Value v = convertToValue(c);
         storeValue(v, result);
     } else {
-        assert(! "not implemented");
+        Q_UNREACHABLE();
     }
-#endif
 }
 
 
@@ -931,7 +938,8 @@ void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const Q
     Q_ASSERT(value->asTemp() || value->asConst());
 
     generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
-                         Assembler::ContextRegister, Assembler::Reference(object), Assembler::PointerToString(name),
+                         Assembler::ContextRegister, Assembler::Reference(object),
+                         Assembler::PointerToString(name),
                          Assembler::PointerToValue(value));
 }
 
@@ -1019,7 +1027,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
             _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32),
                       (Assembler::RegisterID) targetTemp->index);
         } else {
-            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
         }
     } else {
         _as->storeValue(convertToValue(sourceConst), targetTemp);
@@ -1028,7 +1036,18 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_value_from_string, Assembler::PointerToValue(targetTemp), Assembler::PointerToString(str));
+    Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
+    _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
+    Pointer destAddr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
+#if QT_POINTER_SIZE == 8
+    _as->or64(Assembler::TrustedImm64(quint64(QV4::Value::_String_Type) << QV4::Value::Tag_Shift),
+              Assembler::ReturnValueRegister);
+    _as->store64(Assembler::ReturnValueRegister, destAddr);
+#else
+    _as->store32(Assembler::ReturnValueRegister, destAddr);
+    destAddr.offset += 4;
+    _as->store32(Assembler::TrustedImm32(QV4::Value::String_Type), destAddr);
+#endif
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
@@ -1202,7 +1221,7 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
     }
 
     // FIXME: TODO!
-    Q_UNIMPLEMENTED();
+    Q_UNREACHABLE();
 }
 
 #define setOp(op, opName, operation) \
@@ -1233,8 +1252,107 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     }
 }
 
+static inline Assembler::FPRegisterID getFreeFPReg(V4IR::Expr *shouldNotOverlap, int hint)
+{
+    if (V4IR::Temp *t = shouldNotOverlap->asTemp())
+        if (t->type == V4IR::DoubleType)
+            if (t->kind == V4IR::Temp::PhysicalRegister)
+                if (t->index == hint)
+                    return Assembler::FPRegisterID(hint + 1);
+    return Assembler::FPRegisterID(hint);
+}
+
+Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+{
+    Assembler::Jump done;
+
+    // Try preventing a call for a few common binary operations. This is used in two cases:
+    // - no register allocation was performed (not available for the platform, or the IR was
+    //   not transformed into SSA)
+    // - type inference found that either or both operands can be of non-number type, and the
+    //   register allocator will have prepared for a call (meaning: all registers that do not
+    //   hold operands are spilled to the stack, which makes them available here)
+    // Note: FPGPr0 can still not be used, because uint32->double conversion uses it as a scratch
+    //       register.
+    switch (oper) {
+    case V4IR::OpAdd: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->addDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpMul: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->mulDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpSub: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->subDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpDiv: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->divDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    default:
+        break;
+    }
+
+    return done;
+}
+
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
+    if (oper != V4IR:: OpMod
+            && leftSource->type == V4IR::DoubleType && rightSource->type == V4IR::DoubleType
+            && isPregOrConst(leftSource) && isPregOrConst(rightSource)) {
+        doubleBinop(oper, leftSource, rightSource, target);
+        return;
+    }
+
+    Assembler::Jump done = genInlineBinop(oper, leftSource, rightSource, target);
+
     const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
     if (info.fallbackImplementation) {
         _as->generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation,
@@ -1252,6 +1370,9 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
     } else {
         assert(!"unreachable");
     }
+
+    if (done.isSet())
+        done.link(_as);
 }
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
@@ -1651,6 +1772,10 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         _as->jumpToBlock(_block, s->iffalse);
         return;
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
+        if (b->left->type == V4IR::DoubleType && b->right->type == V4IR::DoubleType
+                && visitCJumpDouble(b->op, b->left, b->right, s->iftrue, s->iffalse))
+            return;
+
         CmpOp op = 0;
         CmpOpContext opContext = 0;
         const char *opName = 0;
@@ -1689,8 +1814,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         _as->jumpToBlock(_block, s->iffalse);
         return;
     }
-    Q_UNIMPLEMENTED();
-    assert(!"TODO");
+    Q_UNREACHABLE();
 }
 
 void InstructionSelection::visitRet(V4IR::Ret *s)
@@ -1721,7 +1845,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
                     break;
                 default:
                     upper = QV4::Value::undefinedValue();
-                    Q_UNIMPLEMENTED();
+                    Q_UNREACHABLE();
                 }
                 _as->or64(Assembler::TrustedImm64(((int64_t) upper.tag) << 32),
                           Assembler::ReturnValueRegister);
@@ -1748,7 +1872,6 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         _as->storeValue(retVal, Assembler::Address(Assembler::ReturnValueRegister));
 #endif
     } else {
-        Q_UNIMPLEMENTED();
         Q_UNREACHABLE();
         Q_UNUSED(s);
     }
@@ -1855,4 +1978,191 @@ void Assembler::ConstantTable::finalize(JSC::LinkBuffer &linkBuffer, Instruction
 
     foreach (DataLabelPtr label, _toPatch)
         linkBuffer.patch(label, tablePtr);
+}
+
+// Try to load the source expression into the destination FP register. This assumes that two
+// general purpose (integer) registers are available: the ScratchRegister and the
+// ReturnValueRegister. It returns a Jump if no conversion can be performed.
+Assembler::Jump InstructionSelection::genTryDoubleConversion(V4IR::Expr *src,
+                                                             Assembler::FPRegisterID dest)
+{
+    switch (src->type) {
+    case V4IR::DoubleType:
+        _as->moveDouble(_as->toDoubleRegister(src, dest), dest);
+        return Assembler::Jump();
+    case V4IR::SInt32Type:
+        _as->convertInt32ToDouble(_as->toInt32Register(src, Assembler::ScratchRegister),
+                                  dest);
+        return Assembler::Jump();
+    case V4IR::UInt32Type:
+#if CPU(X86_64) || CPU(X86)
+        _as->convertUInt32ToDouble(_as->toUInt32Register(src, Assembler::ScratchRegister),
+                                   dest, Assembler::ReturnValueRegister);
+#else
+        Q_ASSERT(!"Not supported on this platform!");
+#endif
+        return Assembler::Jump();
+    case V4IR::BoolType:
+        // TODO?
+        return _as->jump();
+    default:
+        break;
+    }
+
+    V4IR::Temp *sourceTemp = src->asTemp();
+    Q_ASSERT(sourceTemp);
+
+    // It's not a number type, so it cannot be in a register.
+    Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister || sourceTemp->type == V4IR::BoolType);
+
+    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, sourceTemp);
+    tagAddr.offset += 4;
+    _as->load32(tagAddr, Assembler::ScratchRegister);
+
+    // check if it's an int32:
+    Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::_Integer_Type));
+    _as->convertInt32ToDouble(_as->toInt32Register(src, Assembler::ScratchRegister), dest);
+    Assembler::Jump intDone = _as->jump();
+
+    // not an int, check if it's a double:
+    isNoInt.link(_as);
+    _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = _as->branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::NotDouble_Mask));
+    _as->toDoubleRegister(src, dest);
+    intDone.link(_as);
+
+    return isNoDbl;
+}
+
+void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
+                                       V4IR::Expr *rightSource, V4IR::Temp *target)
+{
+    Q_ASSERT(leftSource->asConst() == 0 || rightSource->asConst() == 0);
+    Q_ASSERT(isPregOrConst(leftSource));
+    Q_ASSERT(isPregOrConst(rightSource));
+    Assembler::FPRegisterID targetReg;
+    if (target->kind == V4IR::Temp::PhysicalRegister)
+        targetReg = (Assembler::FPRegisterID) target->index;
+    else
+        targetReg = Assembler::FPGpr0;
+
+    switch (oper) {
+    case V4IR::OpAdd:
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->addDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->addDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpMul:
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->mulDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->mulDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpSub:
+#if CPU(X86) || CPU(X86_64)
+        if (V4IR::Temp *rightTemp = rightSource->asTemp()) {
+            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+                _as->moveDouble(targetReg, Assembler::FPGpr0);
+                _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+                _as->subDouble(Assembler::FPGpr0, targetReg);
+                break;
+            }
+        }
+#endif
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->subDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->subDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpDiv:
+#if CPU(X86) || CPU(X86_64)
+        if (V4IR::Temp *rightTemp = rightSource->asTemp()) {
+            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+                _as->moveDouble(targetReg, Assembler::FPGpr0);
+                _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+                _as->divDouble(Assembler::FPGpr0, targetReg);
+                break;
+            }
+        }
+#endif
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->divDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->divDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    default: {
+        Q_ASSERT(target->type == V4IR::BoolType);
+        Assembler::Jump trueCase = branchDouble(oper, leftSource, rightSource);
+        _as->storeBool(false, target);
+        Assembler::Jump done = _as->jump();
+        trueCase.link(_as);
+        _as->storeBool(true, target);
+        done.link(_as);
+    } return;
+    }
+
+    if (target->kind != V4IR::Temp::PhysicalRegister)
+        _as->storeDouble(Assembler::FPGpr0, target);
+}
+
+Assembler::Jump InstructionSelection::branchDouble(V4IR::AluOp op, V4IR::Expr *left,
+                                                   V4IR::Expr *right)
+{
+    Q_ASSERT(isPregOrConst(left));
+    Q_ASSERT(isPregOrConst(right));
+    Q_ASSERT(left->asConst() == 0 || right->asConst() == 0);
+
+    Assembler::DoubleCondition cond;
+    switch (op) {
+    case V4IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
+    case V4IR::OpLt: cond = Assembler::DoubleLessThan; break;
+    case V4IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
+    case V4IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
+    case V4IR::OpEqual:
+    case V4IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
+    case V4IR::OpNotEqual:
+    case V4IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
+    default:
+        Q_UNREACHABLE();
+    }
+    return _as->branchDouble(cond, _as->toDoubleRegister(left), _as->toDoubleRegister(right));
+}
+
+bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
+                                            V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+{
+    if (!isPregOrConst(left) || !isPregOrConst(right))
+        return false;
+
+    Assembler::Jump target = branchDouble(op, left, right);
+    _as->addPatch(iftrue, target);
+    _as->jumpToBlock(_block, iffalse);
+    return true;
 }

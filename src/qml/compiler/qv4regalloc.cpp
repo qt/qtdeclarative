@@ -420,6 +420,13 @@ protected: // IRDecoder
     {
         bool needsCall = true;
 
+        if (leftSource->type == DoubleType && rightSource->type == DoubleType) {
+            if (oper == OpMul || oper == OpAdd || oper == OpDiv || oper == OpSub
+                    || (oper >= OpGt && oper <= OpStrictNotEqual)) {
+                needsCall = false;
+            }
+        }
+
 #if 0 // TODO: change masm to generate code
         switch (leftSource->type) {
         case DoubleType:

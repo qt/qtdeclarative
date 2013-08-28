@@ -711,6 +711,13 @@ public:
     template <typename Result>
     void copyValue(Result result, V4IR::Expr* source);
 
+    void storeValue(QV4::Value value, RegisterID destination)
+    {
+        Q_UNUSED(value);
+        Q_UNUSED(destination);
+        Q_UNREACHABLE();
+    }
+
     void storeValue(QV4::Value value, Address destination)
     {
 #ifdef VALUE_FITS_IN_REGISTER
@@ -1027,15 +1034,18 @@ public:
         store32(TrustedImm32(QV4::Value::fromBoolean(0).tag), addr);
     }
 
+    void storeBool(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+    }
+
     void storeBool(RegisterID reg, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
             move(reg, (RegisterID) target->index);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            Pointer addr = stackSlotPointer(target);
-            storeBool(reg, addr);
         } else {
-            Q_UNIMPLEMENTED();
+            Pointer addr = loadTempAddress(ScratchRegister, target);
+            storeBool(reg, addr);
         }
     }
 
@@ -1047,6 +1057,11 @@ public:
             move(trustedValue, ScratchRegister);
             storeBool(ScratchRegister, target);
         }
+    }
+
+    void storeInt32(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
     }
 
     void storeInt32(RegisterID reg, Pointer addr)
@@ -1066,19 +1081,24 @@ public:
         }
     }
 
+    void storeUInt32(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+    }
+
     void storeUInt32(RegisterID reg, Pointer addr)
     {
+        // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
 #if CPU(X86_64) | CPU(X86)
-        Q_ASSERT(reg != ScratchRegister);
         Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
-        convertUInt32ToDouble(reg, FPGpr0, ScratchRegister);
+        convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
         storeDouble(FPGpr0, addr);
         Jump done = jump();
         intRange.link(this);
         storeInt32(reg, addr);
         done.link(this);
 #else
-        Q_ASSERT(!"Not supported on this platform!");
+        Q_ASSERT(!"Not tested on this platform!");
 #endif
     }
 
@@ -1094,8 +1114,7 @@ public:
         if (t->kind == V4IR::Temp::PhysicalRegister)
             return (FPRegisterID) t->index;
 
-        Q_ASSERT(t->kind == V4IR::Temp::StackSlot);
-        loadDouble(loadTempAddress(ScratchRegister, t), target);
+        loadDouble(t, target);
         return target;
     }
 
@@ -1137,7 +1156,26 @@ public:
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
     {
+        // The UInt32 representation in QV4::Value is really convoluted. See also storeUInt32.
+        Pointer tagAddr = addr;
+        tagAddr.offset += 4;
+        load32(tagAddr, scratchReg);
+        Jump inIntRange = branch32(Equal, scratchReg, TrustedImm32(QV4::Value::_Integer_Type));
+
+        // it's not in signed int range, so load it as a double, and truncate it down
+        loadDouble(addr, FPGpr0);
+        static const QV4::Value magic = QV4::Value::fromDouble(double(INT_MAX) + 1);
+        ImplicitAddress magicAddr = constantTable().loadValueAddress(magic, scratchReg);
+        subDouble(Address(magicAddr.base, magicAddr.offset), FPGpr0);
+        Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
+        canNeverHappen.link(this);
+        or32(TrustedImm32(1 << 31), scratchReg);
+        Jump done = jump();
+
+        inIntRange.link(this);
         load32(addr, scratchReg);
+
+        done.link(this);
         return scratchReg;
     }
 
@@ -1272,6 +1310,15 @@ protected:
     virtual void visitRet(V4IR::Ret *);
     virtual void visitTry(V4IR::Try *);
 
+    Assembler::Jump genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest);
+    Assembler::Jump genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
+                                   V4IR::Expr *rightSource, V4IR::Temp *target);
+    void doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
+                     V4IR::Temp *target);
+    Assembler::Jump branchDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
+    bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
+                          V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+
 private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
@@ -1283,12 +1330,10 @@ private:
         if (target->kind == V4IR::Temp::PhysicalRegister) {
             _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                       (Assembler::FPRegisterID) target->index);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
+        } else {
             _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                       Assembler::FPGpr0);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
-        } else {
-            Q_UNIMPLEMENTED();
         }
     }
 
