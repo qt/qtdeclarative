@@ -60,9 +60,11 @@
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
 #include <QtCore/qurl.h>
+#include <qglobal.h>
 
-#ifdef CONST
-#undef CONST
+#if defined(CONST) && defined(Q_OS_WIN)
+# pragma push_macro("CONST")
+# undef CONST // CONST conflicts with our own identifier
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -913,5 +915,9 @@ private:
 } // end of namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#if defined(Q_OS_WIN)
+# pragma pop_macro("CONST") // Restore peace
+#endif
 
 #endif // QV4IR_P_H

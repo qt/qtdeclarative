@@ -48,6 +48,10 @@
 #include <cmath>
 #include <cassert>
 
+#ifdef CONST
+#undef CONST
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
