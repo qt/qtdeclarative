@@ -79,17 +79,6 @@ Object::Object(ExecutionEngine *engine)
     memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
-Object::Object(ExecutionContext *context)
-    : Managed(context->engine->emptyClass)
-    , prototype(0)
-    , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
-    , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
-{
-    vtbl = &static_vtbl;
-    type = Type_Object;
-    memset(memberData, 0, sizeof(Property)*memberDataAlloc);
-}
-
 Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
     : Managed(internalClass)
     , prototype(0)
