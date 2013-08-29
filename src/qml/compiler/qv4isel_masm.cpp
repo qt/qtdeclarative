@@ -1866,13 +1866,16 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
             if (t->type == V4IR::DoubleType) {
                 _as->moveDoubleTo64((Assembler::FPRegisterID) t->index,
                                     Assembler::ReturnValueRegister);
+            } else if (t->type == V4IR::UInt32Type) {
+                Address tmp = addressForArgument(0);
+                _as->storeUInt32((Assembler::RegisterID) t->index, Pointer(tmp));
+                _as->load64(tmp, Assembler::ReturnValueRegister);
             } else {
                 _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index,
                                        Assembler::ReturnValueRegister);
                 QV4::Value upper;
                 switch (t->type) {
                 case V4IR::SInt32Type:
-                case V4IR::UInt32Type:
                     upper = QV4::Value::fromInt32(0);
                     break;
                 case V4IR::BoolType:
