@@ -37,28 +37,57 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-import QtQuick 2.0
-import QtQml.Models 2.1
-import "../shared" as Examples
+import QtQuick 2.3
 
 Item {
-    height: 480
-    width: 320
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("GridView", "A simple GridView", Qt.resolvedUrl("gridview/gridview-example.qml"))
-            addExample("Dynamic List", "A dynamically alterable list", Qt.resolvedUrl("listview/dynamiclist.qml"))
-            addExample("Expanding Delegates", "A ListView with delegates that expand", Qt.resolvedUrl("listview/expandingdelegates.qml"))
-            addExample("Highlight", "A ListView with a custom highlight", Qt.resolvedUrl("listview/highlight.qml"))
-            addExample("Highlight Ranges", "The three highlight ranges of ListView", Qt.resolvedUrl("listview/highlightranges.qml"))
-            addExample("Sections", "ListView section headers and footers", Qt.resolvedUrl("listview/sections.qml"))
-            addExample("Packages", "Transitions between a ListView and GridView", Qt.resolvedUrl("package/view.qml"))
-            addExample("PathView", "A simple PathView", Qt.resolvedUrl("pathview/pathview-example.qml"))
-            addExample("ObjectModel", "Using a ObjectModel", Qt.resolvedUrl("objectmodel/objectmodel.qml"))
-            addExample("Display Margins", "A ListView with display margins", Qt.resolvedUrl("listview/displaymargin.qml"))
+    width: 480; height: 320
+
+    ListView {
+        id: view
+        anchors.top: header.bottom
+        anchors.bottom: footer.top
+        width: parent.width
+
+        cacheBuffer: 0
+        displayMarginBeginning: 40
+        displayMarginEnd: 40
+
+        model: 100
+        delegate: Rectangle {
+            objectName: "delegate"
+            width: parent.width
+            height: 25
+            color: index % 2 ? "steelblue" : "lightsteelblue"
+            Text {
+                anchors.centerIn: parent
+                color: "white"
+                text: "Item " + (index + 1)
+            }
+        }
+    }
+
+    Rectangle {
+        id: header
+        width: parent.width; height: 40
+        color: "#AAFF0000"
+
+        Text {
+            anchors.centerIn: parent
+            font.pixelSize: 24
+            text: "Header"
+        }
+    }
+
+    Rectangle {
+        id: footer
+        anchors.bottom: parent.bottom
+        width: parent.width; height: 40
+        color: "#AAFF0000"
+
+        Text {
+            anchors.centerIn: parent
+            font.pixelSize: 24
+            text: "Footer"
         }
     }
 }

@@ -459,6 +459,41 @@ void QQuickItemView::setCacheBuffer(int b)
     }
 }
 
+int QQuickItemView::displayMarginBeginning() const
+{
+    Q_D(const QQuickItemView);
+    return d->displayMarginBeginning;
+}
+
+void QQuickItemView::setDisplayMarginBeginning(int margin)
+{
+    Q_D(QQuickItemView);
+    if (d->displayMarginBeginning != margin) {
+        d->displayMarginBeginning = margin;
+        if (isComponentComplete()) {
+            d->refillOrLayout();
+        }
+        emit displayMarginBeginningChanged();
+    }
+}
+
+int QQuickItemView::displayMarginEnd() const
+{
+    Q_D(const QQuickItemView);
+    return d->displayMarginEnd;
+}
+
+void QQuickItemView::setDisplayMarginEnd(int margin)
+{
+    Q_D(QQuickItemView);
+    if (d->displayMarginEnd != margin) {
+        d->displayMarginEnd = margin;
+        if (isComponentComplete()) {
+            d->refillOrLayout();
+        }
+        emit displayMarginEndChanged();
+    }
+}
 
 Qt::LayoutDirection QQuickItemView::layoutDirection() const
 {
@@ -1443,6 +1478,7 @@ void QQuickItemView::componentComplete()
 QQuickItemViewPrivate::QQuickItemViewPrivate()
     : itemCount(0)
     , buffer(QML_VIEW_DEFAULTCACHEBUFFER), bufferMode(BufferBefore | BufferAfter)
+    , displayMarginBeginning(0), displayMarginEnd(0)
     , layoutDirection(Qt::LeftToRight), verticalLayoutDirection(QQuickItemView::TopToBottom)
     , moveReason(Other)
     , visibleIndex(0)
@@ -1682,9 +1718,9 @@ void QQuickItemViewPrivate::refill()
 {
     qreal s = qMax(size(), qreal(0.));
     if (isContentFlowReversed())
-        refill(-position()-s, -position());
+        refill(-position()-displayMarginBeginning-s, -position()+displayMarginEnd);
     else
-        refill(position(), position()+s);
+        refill(position()-displayMarginBeginning, position()+displayMarginEnd+s);
 }
 
 void QQuickItemViewPrivate::refill(qreal from, qreal to)

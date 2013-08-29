@@ -63,6 +63,8 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
 
     Q_PROPERTY(bool keyNavigationWraps READ isWrapEnabled WRITE setWrapEnabled NOTIFY keyNavigationWrapsChanged)
     Q_PROPERTY(int cacheBuffer READ cacheBuffer WRITE setCacheBuffer NOTIFY cacheBufferChanged)
+    Q_PROPERTY(int displayMarginBeginning READ displayMarginBeginning WRITE setDisplayMarginBeginning NOTIFY displayMarginBeginningChanged REVISION 2)
+    Q_PROPERTY(int displayMarginEnd READ displayMarginEnd WRITE setDisplayMarginEnd NOTIFY displayMarginEndChanged REVISION 2)
 
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
@@ -132,6 +134,12 @@ public:
 
     int cacheBuffer() const;
     void setCacheBuffer(int);
+
+    int displayMarginBeginning() const;
+    void setDisplayMarginBeginning(int);
+
+    int displayMarginEnd() const;
+    void setDisplayMarginEnd(int);
 
     Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection);
@@ -218,6 +226,8 @@ Q_SIGNALS:
 
     void keyNavigationWrapsChanged();
     void cacheBufferChanged();
+    void displayMarginBeginningChanged();
+    void displayMarginEndChanged();
 
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();

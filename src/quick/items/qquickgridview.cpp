@@ -630,8 +630,8 @@ void QQuickGridViewPrivate::updateViewport()
 void QQuickGridViewPrivate::layoutVisibleItems(int fromModelIndex)
 {
     if (visibleItems.count()) {
-        const qreal from = isContentFlowReversed() ? -position() - size() : position();
-        const qreal to = isContentFlowReversed() ? -position() : position() + size();
+        const qreal from = isContentFlowReversed() ? -position()-displayMarginBeginning-size() : position()-displayMarginBeginning;
+        const qreal to = isContentFlowReversed() ? -position()+displayMarginEnd : position()+size()+displayMarginEnd;
 
         FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
         qreal rowPos = firstItem->rowPos();
@@ -1534,7 +1534,35 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     of additional memory usage.  It is not a substitute for creating efficient
     delegates; the fewer objects and bindings in a delegate, the faster a view may be
     scrolled.
+
+    The cacheBuffer operates outside of any display margins specified by
+    displayMarginBeginning or displayMarginEnd.
 */
+
+/*!
+    \qmlproperty int QtQuick::GridView::displayMarginBeginning
+    \qmlproperty int QtQuick::GridView::displayMarginEnd
+    \since QtQuick 2.3
+
+    This property allows delegates to be displayed outside of the view geometry.
+
+    If this value is non-zero, the view will create extra delegates before the
+    start of the view, or after the end. The view will create as many delegates
+    as it can fit into the pixel size specified.
+
+    For example, if in a vertical view the delegate is 20 pixels high,
+    there are 3 columns, and
+    \c displayMarginBeginning and \c displayMarginEnd are both set to 40,
+    then 6 delegates above and 6 delegates below will be created and shown.
+
+    The default value is 0.
+
+    This property is meant for allowing certain UI configurations,
+    and not as a performance optimization. If you wish to create delegates
+    outside of the view geometry for performance reasons, you probably
+    want to use the cacheBuffer property instead.
+*/
+
 void QQuickGridView::setHighlightMoveDuration(int duration)
 {
     Q_D(QQuickGridView);
@@ -2000,8 +2028,8 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
     d->refillOrLayout();
 
     // Set visibility of items to eliminate cost of items outside the visible area.
-    qreal from = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
-    qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
+    qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
+    qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
     for (int i = 0; i < d->visibleItems.count(); ++i) {
         FxGridItemSG *item = static_cast<FxGridItemSG*>(d->visibleItems.at(i));
         QQuickItemPrivate::get(item->item)->setCulled(item->rowPos() + d->rowSize() < from || item->rowPos() > to);
@@ -2350,7 +2378,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = count - 1;
-        int from = tempPos - buffer;
+        int from = tempPos - buffer - displayMarginBeginning;
 
         while (i >= 0) {
             if (rowPos > from && insertionIdx < visibleIndex) {
@@ -2387,7 +2415,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         }
     } else {
         int i = 0;
-        int to = buffer+tempPos+size()-1;
+        int to = buffer+displayMarginEnd+tempPos+size()-1;
         while (i < count && rowPos <= to + rowSize()*(columns - colNum)/qreal(columns+1)) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))

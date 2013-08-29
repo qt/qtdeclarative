@@ -207,6 +207,8 @@ private slots:
     void moved_topToBottom_RtL_BtT();
     void moved_topToBottom_RtL_BtT_data();
 
+    void displayMargin();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -6305,6 +6307,43 @@ void tst_QQuickGridView::matchItemLists(const QVariantList &itemLists, const QLi
         }
         QCOMPARE(current.count(), expectedItems.count());
     }
+}
+
+void tst_QQuickGridView::displayMargin()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("displayMargin.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickGridView *gridview = window->rootObject()->findChild<QQuickGridView*>();
+    QVERIFY(gridview != 0);
+
+    QQuickItem *content = gridview->contentItem();
+    QVERIFY(content != 0);
+
+    QQuickItem *item0;
+    QQuickItem *item97;
+
+    QVERIFY(item0 = findItem<QQuickItem>(content, "delegate", 0));
+    QCOMPARE(delegateVisible(item0), true);
+
+    // the 97th item should be within the end margin
+    QVERIFY(item97 = findItem<QQuickItem>(content, "delegate", 96));
+    QCOMPARE(delegateVisible(item97), true);
+
+    // GridView staggers item creation, so the 118th item should be outside the end margin.
+    QVERIFY(findItem<QQuickItem>(content, "delegate", 117) == 0);
+
+    // the first delegate should still be within the begin margin
+    gridview->positionViewAtIndex(20, QQuickGridView::Beginning);
+    QCOMPARE(delegateVisible(item0), true);
+
+    // the first delegate should now be outside the begin margin
+    gridview->positionViewAtIndex(36, QQuickGridView::Beginning);
+    QCOMPARE(delegateVisible(item0), false);
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickGridView)

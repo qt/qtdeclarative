@@ -774,8 +774,8 @@ void QQuickListViewPrivate::visibleItemsChanged()
 void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 {
     if (!visibleItems.isEmpty()) {
-        const qreal from = isContentFlowReversed() ? -position() - size() : position();
-        const qreal to = isContentFlowReversed() ? -position() : position() + size();
+        const qreal from = isContentFlowReversed() ? -position()-displayMarginBeginning-size() : position()-displayMarginBeginning;
+        const qreal to = isContentFlowReversed() ? -position()+displayMarginEnd : position()+size()+displayMarginEnd;
 
         FxViewItem *firstItem = *visibleItems.constBegin();
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
@@ -2126,8 +2126,33 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     of additional memory usage.  It is not a substitute for creating efficient
     delegates; the fewer objects and bindings in a delegate, the faster a view can be
     scrolled.
+
+    The cacheBuffer operates outside of any display margins specified by
+    displayMarginBeginning or displayMarginEnd.
 */
 
+/*!
+    \qmlproperty int QtQuick::ListView::displayMarginBeginning
+    \qmlproperty int QtQuick::ListView::displayMarginEnd
+    \since QtQuick 2.3
+
+    This property allows delegates to be displayed outside of the view geometry.
+
+    If this value is non-zero, the view will create extra delegates before the
+    start of the view, or after the end. The view will create as many delegates
+    as it can fit into the pixel size specified.
+
+    For example, if in a vertical view the delegate is 20 pixels high and
+    \c displayMarginBeginning and \c displayMarginEnd are both set to 40,
+    then 2 delegates above and 2 delegates below will be created and shown.
+
+    The default value is 0.
+
+    This property is meant for allowing certain UI configurations,
+    and not as a performance optimization. If you wish to create delegates
+    outside of the view geometry for performance reasons, you probably
+    want to use the cacheBuffer property instead.
+*/
 
 /*!
     \qmlproperty string QtQuick::ListView::section.property
@@ -2679,8 +2704,8 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
     d->refillOrLayout();
 
     // Set visibility of items to eliminate cost of items outside the visible area.
-    qreal from = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
-    qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
+    qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
+    qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
     for (int i = 0; i < d->visibleItems.count(); ++i) {
         FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
         QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
@@ -2886,7 +2911,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
             // there are no visible items except items marked for removal
             index = visibleItems.count();
         } else if (visibleItems.at(i)->index + 1 == modelIndex
-            && visibleItems.at(i)->endPosition() <= buffer+tempPos+size()) {
+            && visibleItems.at(i)->endPosition() <= buffer+displayMarginEnd+tempPos+size()) {
             // Special case of appending an item to the model.
             index = visibleItems.count();
         } else {
@@ -2915,7 +2940,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = 0;
-        int from = tempPos - buffer;
+        int from = tempPos - displayMarginBeginning - buffer;
 
         for (i = count-1; i >= 0; --i) {
             if (pos > from && insertionIdx < visibleIndex) {
@@ -2946,7 +2971,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Insert &ch
         }
     } else {
         int i = 0;
-        int to = buffer+tempPos+size();
+        int to = buffer+displayMarginEnd+tempPos+size();
         for (i = 0; i < count && pos <= to; ++i) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
