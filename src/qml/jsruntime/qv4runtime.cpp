@@ -67,6 +67,129 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+#ifdef QV4_COUNT_RUNTIME_FUNCTIONS
+struct RuntimeCounters::Data {
+    enum Type {
+        None = 0,
+        Undefined = 1,
+        Null = 2,
+        Boolean = 3,
+        Integer = 4,
+        String = 5,
+        Object = 6,
+        Double = 7
+    };
+
+    static const char *pretty(Type t) {
+        switch (t) {
+        case None: return "";
+        case Undefined: return "Undefined";
+        case Null: return "Null";
+        case Boolean: return "Boolean";
+        case Integer: return "Integer";
+        case String: return "String";
+        case Object: return "Object";
+        case Double: return "Double";
+        default: return "Unknown";
+        }
+    }
+
+    static unsigned mangle(unsigned tag) {
+        switch (tag) {
+        case Value::Undefined_Type: return Undefined;
+        case Value::Null_Type: return Null;
+        case Value::Boolean_Type: return Boolean;
+        case Value::Integer_Type: return Integer;
+        case Value::String_Type: return String;
+        case Value::Object_Type: return Object;
+        default: return Double;
+        }
+    }
+
+    static unsigned mangle(unsigned tag1, unsigned tag2) {
+        return (mangle(tag1) << 3) | mangle(tag2);
+    }
+
+    static void unmangle(unsigned signature, Type &tag1, Type &tag2) {
+        tag1 = Type((signature >> 3) & 7);
+        tag2 = Type(signature & 7);
+    }
+
+    typedef QVector<quint64> Counters;
+    QHash<const char *, Counters> counters;
+
+    inline void count(const char *func, unsigned tag) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[mangle(tag)] += 1;
+    }
+
+    inline void count(const char *func, unsigned tag1, unsigned tag2) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[mangle(tag1, tag2)] += 1;
+    }
+
+    struct Line {
+        const char *func;
+        Type tag1, tag2;
+        quint64 count;
+
+        static bool less(const Line &line1, const Line &line2) {
+            return line1.count > line2.count;
+        }
+    };
+
+    void dump() const {
+        QList<Line> lines;
+        foreach (const char *func, counters.keys()) {
+            const Counters &fCount = counters[func];
+            for (int i = 0, ei = fCount.size(); i != ei; ++i) {
+                quint64 count = fCount[i];
+                if (!count)
+                    continue;
+                Line line;
+                line.func = func;
+                unmangle(i, line.tag1, line.tag2);
+                line.count = count;
+                lines.append(line);
+            }
+        }
+        qSort(lines.begin(), lines.end(), Line::less);
+        qDebug() << "Counters:";
+        foreach (const Line &line, lines)
+            qDebug("%10ld | %s | %s | %s", line.count, line.func, pretty(line.tag1), pretty(line.tag2));
+    }
+};
+
+RuntimeCounters *RuntimeCounters::instance = 0;
+static RuntimeCounters runtimeCountersInstance;
+RuntimeCounters::RuntimeCounters()
+    : d(new Data)
+{
+    if (!instance)
+        instance = this;
+}
+
+RuntimeCounters::~RuntimeCounters()
+{
+    d->dump();
+}
+
+void RuntimeCounters::count(const char *func, uint tag)
+{
+    d->count(func, tag);
+}
+
+void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
+{
+    d->count(func, tag1, tag2);
+}
+
+#endif // QV4_COUNT_RUNTIME_FUNCTIONS
+
 void __qmljs_numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);

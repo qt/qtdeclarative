@@ -57,17 +57,35 @@
 
 //#include <wtf/MathExtras.h>
 
-#ifdef DO_TRACE_INSTR
-#  define TRACE1(x) fprintf(stderr, "    %s\n", __FUNCTION__);
-#  define TRACE2(x, y) fprintf(stderr, "    %s\n", __FUNCTION__);
+QT_BEGIN_NAMESPACE
+
+#undef QV4_COUNT_RUNTIME_FUNCTIONS
+
+namespace QV4 {
+
+#ifdef QV4_COUNT_RUNTIME_FUNCTIONS
+class RuntimeCounters
+{
+public:
+    RuntimeCounters();
+    ~RuntimeCounters();
+
+    static RuntimeCounters *instance;
+
+    void count(const char *func, uint tag);
+    void count(const char *func, uint tag1, uint tag2);
+
+private:
+    struct Data;
+    Data *d;
+};
+
+#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type());
+#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type(), y.type());
 #else
 #  define TRACE1(x)
 #  define TRACE2(x, y)
-#endif // TRACE1
-
-QT_BEGIN_NAMESPACE
-
-namespace QV4 {
+#endif // QV4_COUNT_RUNTIME_FUNCTIONS
 
 enum TypeHint {
     PREFERREDTYPE_HINT,
