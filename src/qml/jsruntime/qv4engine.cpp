@@ -714,6 +714,8 @@ void ExecutionEngine::markObjects()
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects();
 
+    emptyClass->markObjects();
+
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
          it != end; ++it)
         (*it)->markObjects();

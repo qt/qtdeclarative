@@ -108,8 +108,12 @@ inline PropertyHash::~PropertyHash()
 
 struct InternalClassTransition
 {
-    Identifier *id;
+    union {
+        Identifier *id;
+        Object *prototype;
+    };
     int flags;
+    enum { ProtoChange = 0x100 };
 
     bool operator==(const InternalClassTransition &other) const
     { return id == other.id && flags == other.flags; }
@@ -118,6 +122,7 @@ uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 
 struct InternalClass {
     ExecutionEngine *engine;
+    Object *prototype;
     PropertyHash propertyTable; // id to valueIndex
     QVector<String *> nameMap;
 
@@ -131,6 +136,7 @@ struct InternalClass {
 
     uint size;
 
+    InternalClass *changePrototype(Object *proto);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, Identifier *id);
@@ -140,10 +146,11 @@ struct InternalClass {
     InternalClass *frozen();
 
     void destroy();
+    void markObjects();
 
 private:
     friend struct ExecutionEngine;
-    InternalClass(ExecutionEngine *engine) : engine(engine), m_sealed(0), m_frozen(0), size(0) {}
+    InternalClass(ExecutionEngine *engine) : engine(engine), prototype(0), m_sealed(0), m_frozen(0), size(0) {}
     InternalClass(const InternalClass &other);
 };
 

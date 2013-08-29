@@ -126,6 +126,7 @@ uint PropertyHash::lookup(const Identifier *identifier) const
 
 InternalClass::InternalClass(const QV4::InternalClass &other)
     : engine(other.engine)
+    , prototype(other.prototype)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
@@ -161,6 +162,25 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     newClass->propertyData[idx] = data;
     return newClass;
 
+}
+
+InternalClass *InternalClass::changePrototype(Object *proto)
+{
+    if (prototype == proto)
+        return this;
+
+    Transition t;
+    t.prototype = proto;
+    t.flags = Transition::ProtoChange;
+
+    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
+    if (tit != transitions.constEnd())
+        return tit.value();
+
+    // create a new class and add it to the tree
+    InternalClass *newClass = engine->newClass(*this);
+    newClass->prototype = proto;
+    return newClass;
 }
 
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
@@ -291,6 +311,14 @@ void InternalClass::destroy()
         it.value()->destroy();
 
     transitions.clear();
+}
+
+void InternalClass::markObjects()
+{
+    prototype->mark();
+    for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
+         it != end; ++it)
+        it.value()->markObjects();
 }
 
 QT_END_NAMESPACE
