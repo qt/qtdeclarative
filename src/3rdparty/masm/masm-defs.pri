@@ -1,4 +1,5 @@
-!wince*:!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT
+!wince*:!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT ENABLE_YARR_JIT=1
+else: DEFINES += ENABLE_YARR_JIT=0
 
 # On Qt/Android/ARM release builds are thumb and debug builds arm,
 # but we'll force the JIT to always generate thumb2
@@ -15,7 +16,7 @@ DEFINES += ENABLE_DFG_JIT=0
 DEFINES += ENABLE_JIT_CONSTANT_BLINDING=0
 DEFINES += ENABLE_ASSEMBLER=1
 DEFINES += BUILDING_QT__
-DEFINES += ENABLE_YARR_JIT=1
+
 DEFINES += ENABLE_JIT=1
 
 INCLUDEPATH += $$PWD/jit

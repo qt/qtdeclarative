@@ -25,14 +25,14 @@
 
 #include "config.h"
 #include "YarrJIT.h"
-
 #include <wtf/ASCIICType.h>
-#include "LinkBuffer.h"
 #include "Options.h"
 #include "Yarr.h"
 #include "YarrCanonicalizeUCS2.h"
 
 #if ENABLE(YARR_JIT)
+
+#include "LinkBuffer.h"
 
 using namespace WTF;
 

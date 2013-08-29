@@ -60,7 +60,6 @@
 #include <private/qqmljsast_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
-#include <qv4isel_masm_p.h>
 
 #include <wtf/MathExtras.h>
 
