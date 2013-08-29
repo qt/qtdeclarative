@@ -800,7 +800,7 @@ private:
         void order()
         {
             QList<Move> todo = _moves;
-            QList<Move> output;
+            QList<Move> output, swaps;
             output.reserve(_moves.size());
             QList<Move> delayed;
             delayed.reserve(_moves.size());
@@ -808,22 +808,17 @@ private:
             while (!todo.isEmpty()) {
                 const Move m = todo.first();
                 todo.removeFirst();
-                schedule(m, todo, delayed, output);
+                schedule(m, todo, delayed, output, swaps);
             }
+
+            output += swaps;
 
             Q_ASSERT(todo.isEmpty());
             Q_ASSERT(delayed.isEmpty());
             qSwap(_moves, output);
-#if !defined(QT_NO_DEBUG)
-            int swapCount = 0;
-            foreach (const Move &m, _moves)
-                if (m.needsSwap)
-                    ++swapCount;
-            Q_ASSERT(output.size() == _moves.size() + swapCount);
-#endif
         }
 
-#ifdef DEBUG_REGALLOC
+#if defined(DEBUG_REGALLOC)
         void dump() const
         {
             QTextStream os(stdout, QIODevice::WriteOnly);
@@ -854,16 +849,17 @@ private:
 
     private:
         enum Action { NormalMove, NeedsSwap };
-        Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output) const
+        Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output,
+                        QList<Move> &swaps) const
         {
             int useIdx = isUsedAsSource(m.to);
             if (useIdx != -1) {
                 const Move &dependency = _moves[useIdx];
                 if (!output.contains(dependency)) {
                     if (delayed.contains(dependency)) {
-                        // we have a cycle! Break it by using the scratch register
+                        // We have a cycle! Break it by swapping instead of assigning.
+#if defined(DEBUG_REGALLOC)
                         delayed+=m;
-#ifdef DEBUG_REGALLOC
                         QTextStream out(stderr, QIODevice::WriteOnly);
                         out<<"we have a cycle! temps:" << endl;
                         foreach (const Move &m, delayed) {
@@ -873,17 +869,21 @@ private:
                             m.from->dump(out);
                             out<<endl;
                         }
-#endif
                         delayed.removeOne(m);
+#endif
                         return NeedsSwap;
                     } else {
                         delayed.append(m);
                         todo.removeOne(dependency);
-                        Action action = schedule(dependency, todo, delayed, output);
+                        Action action = schedule(dependency, todo, delayed, output, swaps);
                         delayed.removeOne(m);
                         Move mm(m);
-                        mm.needsSwap = action == NeedsSwap;
-                        output.append(mm);
+                        if (action == NeedsSwap) {
+                            mm.needsSwap = true;
+                            swaps.append(mm);
+                        } else {
+                            output.append(mm);
+                        }
                         return action;
                     }
                 }
