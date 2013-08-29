@@ -108,7 +108,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Function *function;
 
     FunctionObject(ExecutionContext *scope, String *name = 0);
-    FunctionObject(InternalClass *ic);
     ~FunctionObject();
 
     Value newInstance();
@@ -125,6 +124,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
 
 protected:
+    FunctionObject(InternalClass *ic);
+
     static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
     static bool hasInstance(Managed *that, const Value &value);

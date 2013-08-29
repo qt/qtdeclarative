@@ -126,9 +126,9 @@ static bool isLocaleObject(const QV4::Value &val)
 
 void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->datePrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), toLocaleString);
-    engine->datePrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleTimeString"), toLocaleTimeString);
-    engine->datePrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleDateString"), toLocaleDateString);
+    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), toLocaleString);
+    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleTimeString"), toLocaleTimeString);
+    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleDateString"), toLocaleDateString);
     engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleString"), fromLocaleString);
     engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleTimeString"), fromLocaleTimeString);
     engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleDateString"), fromLocaleDateString);
@@ -393,8 +393,8 @@ QV4::Value QQmlDateExtension::timeZoneUpdated(QV4::SimpleCallContext *ctx)
 
 void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->numberPrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), toLocaleString);
-    engine->numberPrototype->defineDefaultProperty(engine, QStringLiteral("toLocaleCurrencyString"), toLocaleCurrencyString);
+    engine->numberClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), toLocaleString);
+    engine->numberClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleCurrencyString"), toLocaleCurrencyString);
     engine->numberCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleString"), fromLocaleString);
 }
 
@@ -820,7 +820,7 @@ QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 {
-    engine->stringPrototype->defineDefaultProperty(engine, QStringLiteral("localeCompare"), localeCompare);
+    engine->stringClass->prototype->defineDefaultProperty(engine, QStringLiteral("localeCompare"), localeCompare);
 }
 
 QV4::Value QQmlLocale::localeCompare(QV4::SimpleCallContext *ctx)

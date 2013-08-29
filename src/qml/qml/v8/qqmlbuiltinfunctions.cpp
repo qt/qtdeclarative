@@ -1595,7 +1595,7 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(v4, QStringLiteral("Qt"), qt);
 
     // string prototype extension
-    QV4::Object *stringProto = v4->stringPrototype;
+    QV4::Object *stringProto = v4->stringClass->prototype;
     stringProto->defineDefaultProperty(v4, QStringLiteral("arg"), string_arg);
 }
 

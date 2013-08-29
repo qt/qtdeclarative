@@ -352,14 +352,16 @@ protected:
 
 struct BooleanObject: Object {
     Value value;
+    BooleanObject(ExecutionEngine *engine, const Value &value): Object(engine->booleanClass), value(value) { type = Type_BooleanObject; }
+protected:
     BooleanObject(InternalClass *ic): Object(ic), value(Value::fromBoolean(false)) { type = Type_BooleanObject; }
-    BooleanObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_BooleanObject; }
 };
 
 struct NumberObject: Object {
     Value value;
+    NumberObject(ExecutionEngine *engine, const Value &value): Object(engine->numberClass), value(value) { type = Type_NumberObject; }
+protected:
     NumberObject(InternalClass *ic): Object(ic), value(Value::fromInt32(0)) { type = Type_NumberObject; }
-    NumberObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_NumberObject; }
 };
 
 struct ArrayObject: Object {
@@ -367,12 +369,14 @@ struct ArrayObject: Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
-    ArrayObject(ExecutionEngine *engine) : Object(engine) { init(engine); }
+    ArrayObject(ExecutionEngine *engine) : Object(engine->arrayClass) { init(engine); }
     ArrayObject(ExecutionEngine *engine, const QStringList &list);
     void init(ExecutionEngine *engine);
 
     QStringList toQStringList() const;
+
+protected:
+    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
 };
 
 inline uint Object::arrayLength() const

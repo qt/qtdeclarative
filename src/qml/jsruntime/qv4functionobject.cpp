@@ -70,7 +70,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(FunctionObject);
 
 FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
-    : Object(scope->engine)
+    : Object(scope->engine->functionClass)
     , scope(scope)
     , name(name)
     , formalParameterList(0)
@@ -80,7 +80,6 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
     , function(0)
 {
     vtbl = &static_vtbl;
-    setPrototype(scope->engine->functionPrototype);
 
     type = Type_FunctionObject;
     needsActivation = true;

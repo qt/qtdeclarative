@@ -331,11 +331,16 @@ void InternalClass::destroy()
 
 void InternalClass::markObjects()
 {
-    if (prototype)
-        prototype->mark();
+    // all prototype changes are done on the empty class
+    Q_ASSERT(!prototype);
+
     for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
-         it != end; ++it)
-        it.value()->markObjects();
+         it != end; ++it) {
+        if (it.key().flags == Transition::ProtoChange) {
+            Q_ASSERT(it.value()->prototype);
+            it.value()->prototype->mark();
+        }
+    }
 }
 
 QT_END_NAMESPACE

@@ -640,7 +640,7 @@ static double getLocalTZA()
 }
 
 DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
-    : Object(engine)
+    : Object(engine->dateClass)
 {
     type = Type_DateObject;
     value = Value::fromDouble(date.toMSecsSinceEpoch());

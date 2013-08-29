@@ -79,7 +79,7 @@ RegExpObject::RegExpObject(InternalClass *ic)
 }
 
 RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
-    : Object(engine)
+    : Object(engine->regExpClass)
     , value(value)
     , global(global)
 {
@@ -90,7 +90,7 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
 RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
-    : Object(engine)
+    : Object(engine->regExpClass)
     , value(0)
     , global(false)
 {

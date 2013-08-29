@@ -82,7 +82,7 @@ ErrorObject::ErrorObject(InternalClass *ic)
 }
 
 ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t)
-    : Object(engine)
+    : Object(engine->errorClass)
     , stack(0)
 {
     type = Type_ErrorObject;
@@ -102,7 +102,7 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorTyp
 }
 
 ErrorObject::ErrorObject(ExecutionEngine *engine, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
-    : Object(engine)
+    : Object(engine->errorClass)
     , stack(0)
 {
     type = Type_ErrorObject;

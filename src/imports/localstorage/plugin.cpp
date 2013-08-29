@@ -99,7 +99,6 @@ public:
         : Object(QV8Engine::getV4(e)), type(Database), inTransaction(false), readonly(false), forwardOnly(false)
     {
         vtbl = &static_vtbl;
-        setPrototype(QV8Engine::getV4(e)->objectPrototype);
     }
 
     ~QQmlSqlDatabaseWrapper() {

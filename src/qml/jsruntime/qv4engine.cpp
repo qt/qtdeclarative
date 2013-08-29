@@ -149,20 +149,32 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     initRootContext();
 
-    stringPrototype = new (memoryManager) StringPrototype(objectClass);
-    numberPrototype = new (memoryManager) NumberPrototype(objectClass);
-    booleanPrototype = new (memoryManager) BooleanPrototype(objectClass);
-    datePrototype = new (memoryManager) DatePrototype(objectClass);
-    functionPrototype = new (memoryManager) FunctionPrototype(objectClass);
-    regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
-    errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
-    InternalClass *errorProtoClass = emptyClass->changePrototype(errorPrototype);
-    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorProtoClass);
-    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorProtoClass);
-    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorProtoClass);
-    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorProtoClass);
-    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorProtoClass);
-    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorProtoClass);
+    StringPrototype *stringPrototype = new (memoryManager) StringPrototype(objectClass);
+    stringClass = emptyClass->changePrototype(stringPrototype);
+
+    NumberPrototype *numberPrototype = new (memoryManager) NumberPrototype(objectClass);
+    numberClass = emptyClass->changePrototype(numberPrototype);
+
+    BooleanPrototype *booleanPrototype = new (memoryManager) BooleanPrototype(objectClass);
+    booleanClass = emptyClass->changePrototype(booleanPrototype);
+
+    DatePrototype *datePrototype = new (memoryManager) DatePrototype(objectClass);
+    dateClass = emptyClass->changePrototype(datePrototype);
+
+    FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(objectClass);
+    functionClass = emptyClass->changePrototype(functionPrototype);
+
+    RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
+    regExpClass = emptyClass->changePrototype(regExpPrototype);
+
+    ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
+    errorClass = emptyClass->changePrototype(errorPrototype);
+    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
+    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorClass);
+    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorClass);
+    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorClass);
+    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorClass);
+    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
 
     variantPrototype = new (memoryManager) VariantPrototype(objectClass);
     sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
@@ -182,22 +194,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     syntaxErrorCtor = Value::fromObject(new (memoryManager) SyntaxErrorCtor(rootContext));
     typeErrorCtor = Value::fromObject(new (memoryManager) TypeErrorCtor(rootContext));
     uRIErrorCtor = Value::fromObject(new (memoryManager) URIErrorCtor(rootContext));
-
-    objectCtor.objectValue()->setPrototype(functionPrototype);
-    stringCtor.objectValue()->setPrototype(functionPrototype);
-    numberCtor.objectValue()->setPrototype(functionPrototype);
-    booleanCtor.objectValue()->setPrototype(functionPrototype);
-    arrayCtor.objectValue()->setPrototype(functionPrototype);
-    functionCtor.objectValue()->setPrototype(functionPrototype);
-    dateCtor.objectValue()->setPrototype(functionPrototype);
-    regExpCtor.objectValue()->setPrototype(functionPrototype);
-    errorCtor.objectValue()->setPrototype(functionPrototype);
-    evalErrorCtor.objectValue()->setPrototype(functionPrototype);
-    rangeErrorCtor.objectValue()->setPrototype(functionPrototype);
-    referenceErrorCtor.objectValue()->setPrototype(functionPrototype);
-    syntaxErrorCtor.objectValue()->setPrototype(functionPrototype);
-    typeErrorCtor.objectValue()->setPrototype(functionPrototype);
-    uRIErrorCtor.objectValue()->setPrototype(functionPrototype);
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(this, stringCtor);
@@ -221,7 +217,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     //
     // set up the global object
     //
-    globalObject = newObject(/*rootContext*/);
+    globalObject = newObject();
     rootContext->global = globalObject;
     rootContext->thisObject = Value::fromObject(globalObject);
 
@@ -327,14 +323,12 @@ BoundFunction *ExecutionEngine::newBoundFunction(ExecutionContext *scope, Functi
 Object *ExecutionEngine::newObject()
 {
     Object *object = new (memoryManager) Object(this);
-    object->setPrototype(objectPrototype);
     return object;
 }
 
 Object *ExecutionEngine::newObject(InternalClass *internalClass)
 {
     Object *object = new (memoryManager) Object(internalClass);
-    object->setPrototype(objectPrototype);
     return object;
 }
 
@@ -351,21 +345,18 @@ String *ExecutionEngine::newIdentifier(const QString &text)
 Object *ExecutionEngine::newStringObject(const Value &value)
 {
     StringObject *object = new (memoryManager) StringObject(this, value);
-    object->setPrototype(stringPrototype);
     return object;
 }
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
 {
     NumberObject *object = new (memoryManager) NumberObject(this, value);
-    object->setPrototype(numberPrototype);
     return object;
 }
 
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
     Object *object = new (memoryManager) BooleanObject(this, value);
-    object->setPrototype(booleanPrototype);
     return object;
 }
 
@@ -390,14 +381,12 @@ ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
-    object->setPrototype(datePrototype);
     return object;
 }
 
 DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     DateObject *object = new (memoryManager) DateObject(this, dt);
-    object->setPrototype(datePrototype);
     return object;
 }
 
@@ -417,21 +406,18 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
 RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
-    object->setPrototype(regExpPrototype);
     return object;
 }
 
 RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re);
-    object->setPrototype(regExpPrototype);
     return object;
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     ErrorObject *object = new (memoryManager) ErrorObject(this, value);
-    object->setPrototype(errorPrototype);
     return object;
 }
 
@@ -616,9 +602,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     argumentsAccessors.resize(n);
     for (int i = oldSize; i < n; ++i) {
         FunctionObject *get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
-        get->setPrototype(functionPrototype);
         FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
-        set->setPrototype(functionPrototype);
         Property pd = Property::fromAccessor(get, set);
         argumentsAccessors[i] = pd;
     }
@@ -681,14 +665,7 @@ void ExecutionEngine::markObjects()
     uRIErrorCtor.mark();
 
     objectPrototype->mark();
-    stringPrototype->mark();
-    numberPrototype->mark();
-    booleanPrototype->mark();
     arrayPrototype->mark();
-    functionPrototype->mark();
-    datePrototype->mark();
-    regExpPrototype->mark();
-    errorPrototype->mark();
     evalErrorPrototype->mark();
     rangeErrorPrototype->mark();
     referenceErrorPrototype->mark();

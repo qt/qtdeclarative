@@ -53,11 +53,13 @@ namespace QV4 {
 
 struct DateObject: Object {
     Value value;
-    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) { type = Type_DateObject; }
-    DateObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_DateObject; }
+    DateObject(ExecutionEngine *engine, const Value &value): Object(engine->dateClass), value(value) { type = Type_DateObject; }
     DateObject(ExecutionEngine *engine, const QDateTime &value);
 
     QDateTime toQDateTime() const;
+
+protected:
+    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) { type = Type_DateObject; }
 };
 
 struct DateCtor: FunctionObject

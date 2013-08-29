@@ -190,10 +190,8 @@ int main(int argc, char *argv[])
 
         QV4::Object *globalObject = vm.globalObject;
         QV4::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
-        print->setPrototype(ctx->engine->objectPrototype);
         globalObject->put(vm.newIdentifier(QStringLiteral("print")), QV4::Value::fromObject(print));
         QV4::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
-        gc->setPrototype(ctx->engine->objectPrototype);
         globalObject->put(vm.newIdentifier(QStringLiteral("gc")), QV4::Value::fromObject(gc));
 
         foreach (const QString &fn, args) {

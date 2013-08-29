@@ -254,8 +254,8 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
-    engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("connect"), method_connect);
-    engine->functionPrototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
+    engine->functionClass->prototype->defineDefaultProperty(engine, QStringLiteral("connect"), method_connect);
+    engine->functionClass->prototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
@@ -340,8 +340,8 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
 
             QV4::String *connect = ctx->engine->newIdentifier(QStringLiteral("connect"));
             QV4::String *disconnect = ctx->engine->newIdentifier(QStringLiteral("disconnect"));
-            handler->put(connect, ctx->engine->functionPrototype->get(connect));
-            handler->put(disconnect, ctx->engine->functionPrototype->get(disconnect));
+            handler->put(connect, ctx->engine->functionClass->prototype->get(connect));
+            handler->put(disconnect, ctx->engine->functionClass->prototype->get(disconnect));
 
             return QV4::Value::fromObject(handler);
         } else {

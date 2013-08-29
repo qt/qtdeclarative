@@ -814,7 +814,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, cons
     if (thisObject.isObject())
         baseObject = thisObject.objectValue();
     else if (thisObject.isString())
-        baseObject = context->engine->stringPrototype;
+        baseObject = context->engine->stringClass->prototype;
     else
         baseObject = __qmljs_convert_to_object(context, thisObject);
 

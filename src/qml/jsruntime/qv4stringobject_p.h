@@ -54,7 +54,6 @@ struct StringObject: Object {
 
     Value value;
     mutable Property tmpProperty;
-    StringObject(InternalClass *ic);
     StringObject(ExecutionEngine *engine, const Value &value);
 
     Property *getIndex(uint index) const;
@@ -62,6 +61,7 @@ struct StringObject: Object {
     static bool deleteIndexedProperty(Managed *m, uint index);
 
 protected:
+    StringObject(InternalClass *ic);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);
     static void markObjects(Managed *that);
 };

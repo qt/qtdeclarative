@@ -69,7 +69,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
-    : Managed(engine->emptyClass)
+    : Managed(engine->objectClass)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
@@ -1422,7 +1422,7 @@ void Object::markArrayObjects() const
 }
 
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Object(engine)
+    : Object(engine->arrayClass)
 {
     init(engine);
 
@@ -1441,8 +1441,6 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 void ArrayObject::init(ExecutionEngine *engine)
 {
     type = Type_ArrayObject;
-    internalClass = engine->arrayClass;
-
     memberData[LengthPropertyIndex].value = Value::fromInt32(0);
 }
 

@@ -150,14 +150,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Value uRIErrorCtor;
 
     ObjectPrototype *objectPrototype;
-    StringPrototype *stringPrototype;
-    NumberPrototype *numberPrototype;
-    BooleanPrototype *booleanPrototype;
     ArrayPrototype *arrayPrototype;
-    FunctionPrototype *functionPrototype;
-    DatePrototype *datePrototype;
-    RegExpPrototype *regExpPrototype;
-    ErrorPrototype *errorPrototype;
     EvalErrorPrototype *evalErrorPrototype;
     RangeErrorPrototype *rangeErrorPrototype;
     ReferenceErrorPrototype *referenceErrorPrototype;
@@ -172,6 +165,13 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *emptyClass;
     InternalClass *objectClass;
     InternalClass *arrayClass;
+    InternalClass *stringClass;
+    InternalClass *booleanClass;
+    InternalClass *numberClass;
+    InternalClass *dateClass;
+    InternalClass *functionClass;
+    InternalClass *regExpClass;
+    InternalClass *errorClass;
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
 

@@ -88,7 +88,7 @@ StringObject::StringObject(InternalClass *ic)
 }
 
 StringObject::StringObject(ExecutionEngine *engine, const Value &value)
-    : Object(engine), value(value)
+    : Object(engine->stringClass), value(value)
 {
     vtbl = &static_vtbl;
     type = Type_StringObject;
@@ -364,7 +364,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = context->engine->regExpPrototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
     CALLDATA(1);
     d.thisObject = Value::fromObject(rx);

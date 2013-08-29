@@ -78,7 +78,6 @@ struct RegExpObject: Object {
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
 
-    RegExpObject(InternalClass *ic);
     RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
@@ -91,6 +90,7 @@ struct RegExpObject: Object {
     uint flags() const;
 
 protected:
+    RegExpObject(InternalClass *ic);
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
 };
