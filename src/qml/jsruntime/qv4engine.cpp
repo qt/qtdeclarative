@@ -343,7 +343,7 @@ Object *ExecutionEngine::newObject()
 
 Object *ExecutionEngine::newObject(InternalClass *internalClass)
 {
-    Object *object = new (memoryManager) Object(this, internalClass);
+    Object *object = new (memoryManager) Object(internalClass);
     object->prototype = objectPrototype;
     return object;
 }

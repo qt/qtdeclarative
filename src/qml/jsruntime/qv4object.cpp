@@ -79,7 +79,7 @@ Object::Object(ExecutionEngine *engine)
     memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
-Object::Object(ExecutionEngine *engine, InternalClass *internalClass)
+Object::Object(InternalClass *internalClass)
     : Managed(internalClass)
     , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)

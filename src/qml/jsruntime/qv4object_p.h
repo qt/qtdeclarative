@@ -125,7 +125,7 @@ struct Q_QML_EXPORT Object: Managed {
     Property inlineProperties[InlinePropertySize];
 
     Object(ExecutionEngine *engine);
-    Object(ExecutionEngine *engine, InternalClass *internalClass);
+    Object(InternalClass *internalClass);
     ~Object();
 
     Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);
