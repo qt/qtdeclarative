@@ -101,6 +101,13 @@ public:
     }
 
     QList<Use> uses(const Temp &t) const { return _uses[t]; }
+    bool useMustHaveReg(const Temp &t, int position) {
+        foreach (const Use &use, uses(t))
+            if (use.pos == position)
+                return use.mustHaveRegister();
+        return false;
+    }
+
     int def(const Temp &t) const {
         Q_ASSERT(_defs[t].isValid());
         return _defs[t].defStmt;
@@ -916,6 +923,7 @@ private:
         Q_ASSERT(successorStart > 0);
 
         foreach (const LifeTimeInterval &it, _liveAtStart[successor]) {
+            bool lifeTimeHole = false;
             if (it.end() < successorStart)
                 continue;
             Expr *moveFrom = 0;
@@ -960,15 +968,18 @@ private:
                                                   predIt.temp().type);
                         } else {
                             int spillSlot = _assignedSpillSlots.value(predIt.temp(), -1);
-                            Q_ASSERT(spillSlot != -1);
-                            moveFrom = createTemp(Temp::StackSlot, spillSlot, predIt.temp().type);
+                            if (spillSlot == -1)
+                                lifeTimeHole = true;
+                            else
+                                moveFrom = createTemp(Temp::StackSlot, spillSlot, predIt.temp().type);
                         }
                         break;
                     }
                 }
             }
             if (!moveFrom) {
-                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval());
+                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval() || lifeTimeHole);
+                Q_UNUSED(lifeTimeHole);
 #if !defined(QT_NO_DEBUG)
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
@@ -983,7 +994,8 @@ private:
             Temp *moveTo;
             if (it.reg() == LifeTimeInterval::Invalid || !it.covers(successorStart)) {
                 int spillSlot = _assignedSpillSlots.value(it.temp(), -1);
-                Q_ASSERT(spillSlot != -1); // TODO: check isStructurallyValidLanguageTag
+                if (spillSlot == -1)
+                    continue; // it has a life-time hole here.
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it.temp().type);
             } else {
                 moveTo = createTemp(Temp::PhysicalRegister, platformRegister(it), it.temp().type);
@@ -1426,6 +1438,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         QTextStream out(stderr, QIODevice::WriteOnly);
         out << "*** splitting current for range ";current.dump(out);out<<endl;
 #endif // DEBUG_REGALLOC
+        Q_ASSERT(!_info->useMustHaveReg(current.temp(), position));
         split(current, position + 1, true);
         _inactive.append(current);
     } else {
