@@ -1419,11 +1419,28 @@ protected:
             _ty.fullyTyped &= ty.fullyTyped;
         }
 
-        // TODO: check & double check the next condition!
-        if (_ty.type & ObjectType || _ty.type & UndefinedType || _ty.type & NullType)
-            _ty.type = ObjectType;
-        else if (_ty.type & NumberType)
-            _ty.type = DoubleType;
+        switch (_ty.type) {
+        case UndefinedType:
+        case NullType:
+        case BoolType:
+        case SInt32Type:
+        case UInt32Type:
+        case DoubleType:
+        case StringType:
+        case ObjectType:
+            // The type is not a combination of two or more types, so we're done.
+            break;
+
+        default:
+            // There are multiple types involved, so:
+            if ((_ty.type & NumberType) && !(_ty.type & ~NumberType))
+                // The type is any combination of double/int32/uint32, but nothing else. So we can
+                // type it as double.
+                _ty.type = DoubleType;
+            else
+                // There just is no single type that can hold this combination, so:
+                _ty.type = ObjectType;
+        }
 
         setType(s->targetTemp, _ty.type);
     }
