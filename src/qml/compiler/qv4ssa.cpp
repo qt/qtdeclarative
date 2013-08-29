@@ -1204,7 +1204,74 @@ public:
                 }
             }
         }
+
+        PropagateTempTypes(_tempTypes).run(function);
     }
+
+private:
+    class PropagateTempTypes: public StmtVisitor, ExprVisitor
+    {
+    public:
+        PropagateTempTypes(const QHash<Temp, int> &tempTypes)
+            : _tempTypes(tempTypes)
+        {}
+
+        void run(Function *function)
+        {
+            foreach (BasicBlock *bb, function->basicBlocks)
+                foreach (Stmt *s, bb->statements)
+                    s->accept(this);
+        }
+
+    protected:
+        virtual void visitConst(Const *e) {}
+        virtual void visitString(String *) {}
+        virtual void visitRegExp(RegExp *) {}
+        virtual void visitName(Name *) {}
+        virtual void visitTemp(Temp *e) { e->type = (Type) _tempTypes[*e]; }
+        virtual void visitClosure(Closure *) {}
+        virtual void visitConvert(Convert *e) { e->expr->accept(this); }
+        virtual void visitUnop(Unop *e) { e->expr->accept(this); }
+        virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
+
+        virtual void visitCall(Call *e) {
+            e->base->accept(this);
+            for (ExprList *it = e->args; it; it = it->next)
+                it->expr->accept(this);
+        }
+        virtual void visitNew(New *e) {
+            e->base->accept(this);
+            for (ExprList *it = e->args; it; it = it->next)
+                it->expr->accept(this);
+        }
+        virtual void visitSubscript(Subscript *e) {
+            e->base->accept(this);
+            e->index->accept(this);
+        }
+
+        virtual void visitMember(Member *e) {
+            e->base->accept(this);
+        }
+
+        virtual void visitExp(Exp *s) {s->expr->accept(this);}
+        virtual void visitMove(Move *s) {
+            s->source->accept(this);
+            s->target->accept(this);
+        }
+
+        virtual void visitJump(Jump *) {}
+        virtual void visitCJump(CJump *s) { s->cond->accept(this); }
+        virtual void visitRet(Ret *s) { s->expr->accept(this); }
+        virtual void visitTry(Try *s) { s->exceptionVar->accept(this); }
+        virtual void visitPhi(Phi *s) {
+            s->targetTemp->accept(this);
+            foreach (Expr *e, s->d->incoming)
+                e->accept(this);
+        }
+
+    private:
+        QHash<Temp, int> _tempTypes;
+    };
 
 private:
     bool run(Stmt *s) {
@@ -1244,24 +1311,20 @@ private:
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
-            if (isAlwaysAnObject(t)) {
-                e->type = ObjectType;
-            } else {
-                e->type = (Type) ty;
-
-                if (_tempTypes[*t] != ty) {
-                    _tempTypes[*t] = ty;
+            if (isAlwaysAnObject(t))
+                ty = ObjectType;
+            if (_tempTypes[*t] != ty) {
+                _tempTypes[*t] = ty;
 
 #if defined(SHOW_SSA)
-                    foreach (Stmt *s, _defUses.uses(*t)) {
-                        qout << "Pushing back dependent stmt: ";
-                        s->dump(qout);
-                        qout << endl;
-                    }
+                foreach (Stmt *s, _defUses.uses(*t)) {
+                    qout << "Pushing back dependent stmt: ";
+                    s->dump(qout);
+                    qout << endl;
+                }
 #endif
 
-                    _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
-                }
+                _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
             }
         } else {
             e->type = (Type) ty;
