@@ -58,6 +58,11 @@
 #include <cstdio>
 #include <cassert>
 
+#ifdef _WIN32_WCE
+#undef assert
+#define assert(x)
+#endif // _WIN32_WCE
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

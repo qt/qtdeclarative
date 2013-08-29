@@ -33,13 +33,17 @@
 
 #include <assert.h>
 #ifndef ASSERT
-#define ASSERT(condition)      (assert(condition))
+# if defined(WINCE) || defined(_WIN32_WCE)
+#  define ASSERT(condition)
+# else
+#  define ASSERT(condition)      (assert(condition))
+# endif
 #endif
 #ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED() (exit(-1))
+# define UNIMPLEMENTED() (exit(-1))
 #endif
 #ifndef UNREACHABLE
-#define UNREACHABLE()   (exit(-1))
+# define UNREACHABLE()   (exit(-1))
 #endif
 
 // Double operations detection based on target architecture.

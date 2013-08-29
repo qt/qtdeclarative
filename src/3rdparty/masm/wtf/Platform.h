@@ -490,7 +490,7 @@
 #define WTF_USE_QUERY_PERFORMANCE_COUNTER  1
 #endif
 
-#if OS(WINCE) && !PLATFORM(QT)
+#if OS(WINCE)
 #define NOSHLWAPI      /* shlwapi.h not available on WinCe */
 
 /* MSDN documentation says these functions are provided with uspce.lib.  But we cannot find this file. */
@@ -499,7 +499,7 @@
 #define _INC_ASSERT    /* disable "assert.h" */
 #define assert(x)
 
-#endif  /* OS(WINCE) && !PLATFORM(QT) */
+#endif  /* OS(WINCE) */
 
 #if OS(WINCE) && !PLATFORM(QT)
 #define WTF_USE_WCHAR_UNICODE 1
