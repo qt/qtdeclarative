@@ -429,7 +429,7 @@ public:
         }
         QV4::Object *proto = type->prototype.value().asObject();
         QV4::Object *o = new (proto->engine()->memoryManager) QQmlDelegateModelItemObject(proto->engine(), this);
-        o->prototype = proto;
+        o->setPrototype(proto);
         QV4::Value data = QV4::Value::fromObject(o);
         ++scriptRef;
         return data;
@@ -602,7 +602,7 @@ public:
     {
         QQmlAdaptorModelEngineData *data = engineData(v4->v8Engine);
         QV4::Object *o = new (v4->memoryManager) QQmlDelegateModelItemObject(v4, this);
-        o->prototype = data->listItemProto.value().asObject();
+        o->setPrototype(data->listItemProto.value().asObject());
         QV4::Value val = QV4::Value::fromObject(o);
         ++scriptRef;
         return val;

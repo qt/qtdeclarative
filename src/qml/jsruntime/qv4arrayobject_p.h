@@ -62,7 +62,7 @@ protected:
 
 struct ArrayPrototype: ArrayObject
 {
-    ArrayPrototype(ExecutionContext *context);
+    ArrayPrototype(InternalClass *ic);
 
     void init(ExecutionContext *ctx, const Value &ctor);
 

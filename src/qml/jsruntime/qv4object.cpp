@@ -70,7 +70,6 @@ DEFINE_MANAGED_VTABLE(Object);
 
 Object::Object(ExecutionEngine *engine)
     : Managed(engine->emptyClass)
-    , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
@@ -81,7 +80,6 @@ Object::Object(ExecutionEngine *engine)
 
 Object::Object(InternalClass *internalClass)
     : Managed(internalClass)
-    , prototype(0)
     , memberDataAlloc(InlinePropertySize), memberData(inlineProperties)
     , arrayOffset(0), arrayDataLen(0), arrayAlloc(0), arrayAttributes(0), arrayData(0), sparseArray(0)
 {
@@ -104,6 +102,18 @@ Object::~Object()
         delete [] (arrayAttributes - (sparseArray ? 0 : arrayOffset));
     delete sparseArray;
     _data = 0;
+}
+
+bool Object::setPrototype(Object *proto)
+{
+    Object *pp = proto;
+    while (pp) {
+        if (pp == this)
+            return false;
+        pp = pp->prototype();
+    }
+    internalClass = internalClass->changePrototype(proto);
+    return true;
 }
 
 void Object::destroy(Managed *that)
@@ -267,8 +277,6 @@ void Object::defineReadonlyProperty(String *name, Value value)
 void Object::markObjects(Managed *that)
 {
     Object *o = static_cast<Object *>(that);
-    if (o->prototype)
-        o->prototype->mark();
 
     for (int i = 0; i < o->internalClass->size; ++i) {
         const Property &pd = o->memberData[i];
@@ -373,7 +381,7 @@ Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *at
             return o->memberData + idx;
         }
 
-        o = o->prototype;
+        o = o->prototype();
     }
     if (attrs)
         *attrs = Attr_Invalid;
@@ -401,7 +409,7 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
                 return p;
             }
         }
-        o = o->prototype;
+        o = o->prototype();
     }
     if (attrs)
         *attrs = Attr_Invalid;
@@ -417,7 +425,7 @@ bool Object::__hasProperty__(String *name) const
     while (o) {
         if (!o->query(name).isEmpty())
             return true;
-        o = o->prototype;
+        o = o->prototype();
     }
 
     return false;
@@ -432,7 +440,7 @@ bool Object::__hasProperty__(uint index) const
     while (o) {
         if (!o->queryIndexed(index).isEmpty())
             return true;
-        o = o->prototype;
+        o = o->prototype();
     }
 
     return false;
@@ -565,19 +573,19 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
     l->classList[0] = c;
     l->classList[3] = o->internalClass;
     l->index = idx;
-    if (!o->prototype) {
+    if (!o->prototype()) {
         l->setter = Lookup::setterInsert0;
         return;
     }
-    o = o->prototype;
+    o = o->prototype();
     l->classList[1] = o->internalClass;
-    if (!o->prototype) {
+    if (!o->prototype()) {
         l->setter = Lookup::setterInsert1;
         return;
     }
-    o = o->prototype;
+    o = o->prototype();
     l->classList[2] = o->internalClass;
-    if (!o->prototype)
+    if (!o->prototype())
         l->setter = Lookup::setterInsert2;
 }
 
@@ -660,7 +668,7 @@ Value Object::internalGet(String *name, bool *hasProperty)
             return getValue(o->memberData + idx, o->internalClass->propertyData.at(idx));
         }
 
-        o = o->prototype;
+        o = o->prototype();
     }
 
     if (hasProperty)
@@ -690,7 +698,7 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
                 break;
             }
         }
-        o = o->prototype;
+        o = o->prototype();
     }
 
     if (pd) {
@@ -742,12 +750,12 @@ void Object::internalPut(String *name, const Value &value)
             pd->value = value;
         }
         return;
-    } else if (!prototype) {
+    } else if (!prototype()) {
         if (!extensible)
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype->__getPropertyDescriptor__(name, &attrs))) {
+        if ((pd = prototype()->__getPropertyDescriptor__(name, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
@@ -820,12 +828,12 @@ void Object::internalPutIndexed(uint index, const Value &value)
         else
             pd->value = value;
         return;
-    } else if (!prototype) {
+    } else if (!prototype()) {
         if (!extensible)
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype->__getPropertyDescriptor__(index, &attrs))) {
+        if ((pd = prototype()->__getPropertyDescriptor__(index, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;

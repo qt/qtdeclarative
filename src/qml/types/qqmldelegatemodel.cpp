@@ -2379,7 +2379,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
     QV4::Object *o = new (v4->memoryManager) QQmlDelegateModelItemObject(v4, cacheItem);
-    o->prototype = model->m_cacheMetaType->modelItemProto.value().asObject();
+    o->setPrototype(model->m_cacheMetaType->modelItemProto.value().asObject());
     ++cacheItem->scriptRef;
 
     return QQmlV4Handle(QV4::Value::fromObject(o));
@@ -3160,7 +3160,7 @@ public:
 
         QV4::Object *changeProto = engineData(v4->v8Engine)->changeProto.value().asObject();
         QQmlDelegateModelGroupChange *object = new (v4->memoryManager) QQmlDelegateModelGroupChange(v4);
-        object->prototype = changeProto;
+        object->setPrototype(changeProto);
         object->change = change;
 
         if (hasProperty)

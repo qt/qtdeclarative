@@ -172,7 +172,7 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
-        prototype = engine->sequencePrototype;
+        setPrototype(engine->sequencePrototype);
         init(engine);
     }
 
@@ -184,7 +184,7 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
-        prototype = engine->sequencePrototype;
+        setPrototype(engine->sequencePrototype);
         loadReference();
         init(engine);
     }
@@ -523,10 +523,9 @@ template<>
 DEFINE_MANAGED_VTABLE(QQmlRealList);
 
 #define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
-SequencePrototype::SequencePrototype(ExecutionEngine *engine)
-    : QV4::Object(engine)
+SequencePrototype::SequencePrototype(InternalClass *ic)
+    : QV4::Object(ic)
 {
-    prototype = engine->arrayPrototype;
     FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE

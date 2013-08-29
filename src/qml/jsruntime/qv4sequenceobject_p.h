@@ -65,7 +65,7 @@ namespace QV4 {
 
 struct SequencePrototype : public QV4::Object
 {
-    SequencePrototype(QV4::ExecutionEngine *engine);
+    SequencePrototype(QV4::InternalClass *ic);
 
     void init(QV4::ExecutionEngine *engine);
 

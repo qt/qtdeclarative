@@ -170,6 +170,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
+    InternalClass *objectClass;
     InternalClass *arrayClass;
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;

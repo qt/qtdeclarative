@@ -99,7 +99,7 @@ public:
         : Object(QV8Engine::getV4(e)), type(Database), inTransaction(false), readonly(false), forwardOnly(false)
     {
         vtbl = &static_vtbl;
-        prototype = QV8Engine::getV4(e)->objectPrototype;
+        setPrototype(QV8Engine::getV4(e)->objectPrototype);
     }
 
     ~QQmlSqlDatabaseWrapper() {
@@ -287,7 +287,7 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
         }
         if (query.exec()) {
             QQmlSqlDatabaseWrapper *rows = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-            rows->prototype = databaseData(engine)->rowsProto.value().asObject();
+            rows->setPrototype(databaseData(engine)->rowsProto.value().asObject());
             rows->type = QQmlSqlDatabaseWrapper::Rows;
             rows->database = db;
             rows->sqlQuery = query;
@@ -330,7 +330,7 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
 
     QQmlSqlDatabaseWrapper *w = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    w->prototype = databaseData(engine)->queryProto.value().asObject();
+    w->setPrototype(databaseData(engine)->queryProto.value().asObject());
     w->type = QQmlSqlDatabaseWrapper::Query;
     w->database = db;
     w->version = r->version;
@@ -386,7 +386,7 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
     QSqlDatabase db = r->database;
 
     QQmlSqlDatabaseWrapper *w = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    w->prototype = databaseData(engine)->queryProto.value().asObject();
+    w->setPrototype(databaseData(engine)->queryProto.value().asObject());
     w->type = QQmlSqlDatabaseWrapper::Query;
     w->database = db;
     w->version = r->version;
@@ -673,7 +673,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     }
 
     QQmlSqlDatabaseWrapper *db = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    db->prototype = databaseData(engine)->databaseProto.value().asObject();
+    db->setPrototype(databaseData(engine)->databaseProto.value().asObject());
     db->database = database;
     db->version = version;
 

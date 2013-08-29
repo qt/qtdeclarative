@@ -62,7 +62,7 @@ protected:
 
 struct NumberPrototype: NumberObject
 {
-    NumberPrototype(ExecutionEngine *engine): NumberObject(engine, Value::fromDouble(0)) {}
+    NumberPrototype(InternalClass *ic): NumberObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *ctx);

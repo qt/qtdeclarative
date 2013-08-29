@@ -579,7 +579,7 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance->prototype = Attr::prototype(v4).asObject();
+        instance->setPrototype(Attr::prototype(v4).asObject());
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -591,13 +591,13 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::ProcessingInstruction:
         return Value::undefinedValue();
     case NodeImpl::CDATA:
-        instance->prototype = CDATA::prototype(v4).asObject();
+        instance->setPrototype(CDATA::prototype(v4).asObject());
         break;
     case NodeImpl::Text:
-        instance->prototype = Text::prototype(v4).asObject();
+        instance->setPrototype(Text::prototype(v4).asObject());
         break;
     case NodeImpl::Element:
-        instance->prototype = Element::prototype(v4).asObject();
+        instance->setPrototype(Element::prototype(v4).asObject());
         break;
     }
 
@@ -609,7 +609,7 @@ Value Element::prototype(ExecutionEngine *engine)
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->elementPrototype.isEmpty()) {
         Object *p = engine->newObject();
-        p->prototype = NodePrototype::getProto(engine).asObject();
+        p->setPrototype(NodePrototype::getProto(engine).asObject());
         p->defineAccessorProperty(engine, QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
         d->elementPrototype = Value::fromObject(p);
         engine->v8Engine->freezeObject(d->elementPrototype.value());
@@ -622,7 +622,7 @@ Value Attr::prototype(ExecutionEngine *engine)
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->attrPrototype.isEmpty()) {
         Object *p = engine->newObject();
-        p->prototype = NodePrototype::getProto(engine).asObject();
+        p->setPrototype(NodePrototype::getProto(engine).asObject());
         p->defineAccessorProperty(engine, QStringLiteral("name"), name, 0);
         p->defineAccessorProperty(engine, QStringLiteral("value"), value, 0);
         p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), ownerElement, 0);
@@ -673,7 +673,7 @@ Value CharacterData::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->characterDataPrototype.isEmpty()) {
         Object *p = v4->newObject();
-        p->prototype = NodePrototype::getProto(v4).asObject();
+        p->setPrototype(NodePrototype::getProto(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(v4, QStringLiteral("length"), length, 0);
         d->characterDataPrototype = Value::fromObject(p);
@@ -704,7 +704,7 @@ Value Text::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->textPrototype.isEmpty()) {
         Object *p = v4->newObject();
-        p->prototype = CharacterData::prototype(v4).asObject();
+        p->setPrototype(CharacterData::prototype(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), isElementContentWhitespace, 0);
         p->defineAccessorProperty(v4, QStringLiteral("wholeText"), wholeText, 0);
         d->textPrototype = Value::fromObject(p);
@@ -719,7 +719,7 @@ Value CDATA::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->cdataPrototype.isEmpty()) {
         Object *p = v4->newObject();
-        p->prototype = Text::prototype(v4).asObject();
+        p->setPrototype(Text::prototype(v4).asObject());
         d->cdataPrototype = Value::fromObject(p);
         v4->v8Engine->freezeObject(d->cdataPrototype);
     }
@@ -731,7 +731,7 @@ Value Document::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->documentPrototype.isEmpty()) {
         Object *p = v4->newObject();
-        p->prototype = NodePrototype::getProto(v4).asObject();
+        p->setPrototype(NodePrototype::getProto(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), xmlVersion, 0);
         p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), xmlEncoding, 0);
         p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), xmlStandalone, 0);
@@ -826,7 +826,7 @@ Value Document::load(QV8Engine *engine, const QByteArray &data)
     }
 
     Object *instance = new (v4->memoryManager) Node(v4, document);
-    instance->prototype = Document::prototype(v4).asObject();
+    instance->setPrototype(Document::prototype(v4).asObject());
     return Value::fromObject(instance);
 }
 
@@ -893,7 +893,7 @@ Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeIm
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     NamedNodeMap *instance = new (v4->memoryManager) NamedNodeMap(v4, data, list);
-    instance->prototype = v4->objectPrototype;
+    instance->setPrototype(v4->objectPrototype);
     return Value::fromObject(instance);
 }
 
@@ -935,7 +935,7 @@ Value NodeList::create(QV8Engine *engine, NodeImpl *data)
     QQmlXMLHttpRequestData *d = xhrdata(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     NodeList *instance = new (v4->memoryManager) NodeList(v4, data);
-    instance->prototype = v4->objectPrototype;
+    instance->setPrototype(v4->objectPrototype);
     return Value::fromObject(instance);
 }
 
@@ -1574,7 +1574,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         QQmlXMLHttpRequestWrapper *w = new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r);
-        w->prototype = ctor->proto;
+        w->setPrototype(ctor->proto);
         return Value::fromObject(w);
     }
 

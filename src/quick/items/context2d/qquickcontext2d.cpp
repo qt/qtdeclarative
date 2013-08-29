@@ -544,7 +544,7 @@ public:
     QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        prototype = engine->objectPrototype;
+        setPrototype(engine->objectPrototype);
         defineDefaultProperty(engine, QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
         defineDefaultProperty(engine, QStringLiteral("restore"), method_restore, 0);
         defineDefaultProperty(engine, QStringLiteral("moveTo"), method_moveTo, 0);
@@ -916,7 +916,7 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
     QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QQuickJSContext2DPixelData *pixelData = new (v4->memoryManager) QQuickJSContext2DPixelData(v4);
-    pixelData->prototype = ed->pixelArrayProto.value().asObject();
+    pixelData->setPrototype(ed->pixelArrayProto.value().asObject());
 
     if (image.isNull()) {
         pixelData->image = QImage(w, h, QImage::Format_ARGB32);
@@ -1518,7 +1518,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createLinearGradient(QV4::SimpleCa
         QQuickContext2DEngineData *ed = engineData(engine);
 
         QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->setPrototype(ed->gradientProto.value().asObject());
         gradient->brush = QLinearGradient(x0, y0, x1, y1);
         return QV4::Value::fromObject(gradient);
     }
@@ -1571,7 +1571,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createRadialGradient(QV4::SimpleCa
         QQuickContext2DEngineData *ed = engineData(engine);
 
         QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->setPrototype(ed->gradientProto.value().asObject());
         gradient->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
         return QV4::Value::fromObject(gradient);
     }
@@ -1616,7 +1616,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createConicalGradient(QV4::SimpleC
         QQuickContext2DEngineData *ed = engineData(engine);
 
         QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->prototype = ed->gradientProto.value().asObject();
+        gradient->setPrototype(ed->gradientProto.value().asObject());
         gradient->brush = QConicalGradient(x, y, angle);
         return QV4::Value::fromObject(gradient);
     }
@@ -4134,7 +4134,7 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         QQuickContext2DEngineData *ed = engineData(engine);
         QV4::ExecutionEngine *v4Engine = QV8Engine::getV4(engine);
         QQuickJSContext2D *wrapper = new (v4Engine->memoryManager) QQuickJSContext2D(v4Engine);
-        wrapper->prototype = ed->contextPrototype.value().asObject();
+        wrapper->setPrototype(ed->contextPrototype.value().asObject());
         wrapper->context = this;
         m_v4value = QV4::Value::fromObject(wrapper);
     }

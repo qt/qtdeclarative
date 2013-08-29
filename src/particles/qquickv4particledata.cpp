@@ -503,7 +503,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     QV8ParticleDataDeletable *d = particleV8Data(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Object *o = new (v4->memoryManager) QV4ParticleData(v4, datum);
-    o->prototype = d->proto.value().asObject();
+    o->setPrototype(d->proto.value().asObject());
     m_v4Value = QV4::Value::fromObject(o);
 }
 

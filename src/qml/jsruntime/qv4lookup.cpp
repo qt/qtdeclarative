@@ -49,7 +49,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 {
     int i = 0;
     while (i < level && obj && obj->internalClass == classList[i]) {
-        obj = obj->prototype;
+        obj = obj->prototype();
         ++i;
     }
 
@@ -68,7 +68,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
             return obj->memberData + index;
         }
 
-        obj = obj->prototype;
+        obj = obj->prototype();
         ++i;
     }
     level = i;
@@ -80,7 +80,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
             return obj->memberData + index;
         }
 
-        obj = obj->prototype;
+        obj = obj->prototype();
     }
     return 0;
 }
@@ -122,9 +122,9 @@ void Lookup::getter1(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
-            l->classList[1] == o->prototype->internalClass) {
+            l->classList[1] == o->prototype()->internalClass) {
             if (result)
-                *result = o->prototype->memberData[l->index].value;
+                *result = o->prototype()->memberData[l->index].value;
             return;
         }
     }
@@ -136,9 +136,9 @@ void Lookup::getter2(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
-            o = o->prototype;
+            o = o->prototype();
             if (l->classList[1] == o->internalClass) {
-                o = o->prototype;
+                o = o->prototype();
                 if (l->classList[2] == o->internalClass) {
                     if (result)
                         *result = o->memberData[l->index].value;
@@ -177,9 +177,9 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
-            l->classList[1] == o->prototype->internalClass) {
+            l->classList[1] == o->prototype()->internalClass) {
             Value res;
-            FunctionObject *getter = o->prototype->memberData[l->index].getter();
+            FunctionObject *getter = o->prototype()->memberData[l->index].getter();
             if (!getter) {
                 res = Value::undefinedValue();
             } else {
@@ -200,9 +200,9 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
-            o = o->prototype;
+            o = o->prototype();
             if (l->classList[1] == o->internalClass) {
-                o = o->prototype;
+                o = o->prototype();
                 if (l->classList[2] == o->internalClass) {
                     Value res;
                     FunctionObject *getter = o->memberData[l->index].getter();
@@ -271,8 +271,8 @@ void Lookup::globalGetter1(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass &&
-        l->classList[1] == o->prototype->internalClass) {
-        *result = o->prototype->memberData[l->index].value;
+        l->classList[1] == o->prototype()->internalClass) {
+        *result = o->prototype()->memberData[l->index].value;
         return;
     }
     l->globalGetter = globalGetterGeneric;
@@ -283,11 +283,11 @@ void Lookup::globalGetter2(Lookup *l, ExecutionContext *ctx, Value *result)
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
-        o = o->prototype;
+        o = o->prototype();
         if (l->classList[1] == o->internalClass) {
-            o = o->prototype;
+            o = o->prototype();
             if (l->classList[2] == o->internalClass) {
-                *result = o->prototype->memberData[l->index].value;
+                *result = o->prototype()->memberData[l->index].value;
                 return;
             }
         }
@@ -318,8 +318,8 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass &&
-        l->classList[1] == o->prototype->internalClass) {
-        FunctionObject *getter = o->prototype->memberData[l->index].getter();
+        l->classList[1] == o->prototype()->internalClass) {
+        FunctionObject *getter = o->prototype()->memberData[l->index].getter();
         if (!getter) {
             *result = Value::undefinedValue();
         } else {
@@ -337,9 +337,9 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
-        o = o->prototype;
+        o = o->prototype();
         if (l->classList[1] == o->internalClass) {
-            o = o->prototype;
+            o = o->prototype();
             if (l->classList[2] == o->internalClass) {
                 FunctionObject *getter = o->memberData[l->index].getter();
                 if (!getter) {
@@ -384,7 +384,7 @@ void Lookup::setterInsert0(Lookup *l, const Value &object, const Value &value)
 {
     Object *o = object.asObject();
     if (o && o->internalClass == l->classList[0]) {
-        if (!o->prototype) {
+        if (!o->prototype()) {
             o->memberData[l->index].value = value;
             o->internalClass = l->classList[3];
             return;
@@ -399,7 +399,7 @@ void Lookup::setterInsert1(Lookup *l, const Value &object, const Value &value)
 {
     Object *o = object.asObject();
     if (o && o->internalClass == l->classList[0]) {
-        Object *p = o->prototype;
+        Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
             o->memberData[l->index].value = value;
             o->internalClass = l->classList[3];
@@ -415,9 +415,9 @@ void Lookup::setterInsert2(Lookup *l, const Value &object, const Value &value)
 {
     Object *o = object.asObject();
     if (o && o->internalClass == l->classList[0]) {
-        Object *p = o->prototype;
+        Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
-            p = p->prototype;
+            p = p->prototype();
             if (p && p->internalClass == l->classList[2]) {
                 o->ensureMemberIndex(l->index);
                 o->memberData[l->index].value = value;

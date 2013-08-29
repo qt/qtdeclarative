@@ -76,6 +76,17 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(StringObject);
 
+StringObject::StringObject(InternalClass *ic)
+    : Object(ic), value(Value::fromString(ic->engine, ""))
+{
+    vtbl = &static_vtbl;
+    type = Type_StringObject;
+
+    tmpProperty.value = Value::undefinedValue();
+
+    defineReadonlyProperty(ic->engine->id_length, Value::fromInt32(0));
+}
+
 StringObject::StringObject(ExecutionEngine *engine, const Value &value)
     : Object(engine), value(value)
 {

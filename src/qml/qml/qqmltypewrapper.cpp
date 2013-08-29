@@ -93,7 +93,7 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, TypeNameMod
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
-    w->prototype = v4->objectPrototype;
+    w->setPrototype(v4->objectPrototype);
     w->mode = mode; w->object = o; w->type = t;
     return Value::fromObject(w);
 }
@@ -107,7 +107,7 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, co
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
-    w->prototype = v4->objectPrototype;
+    w->setPrototype(v4->objectPrototype);
     w->mode = mode; w->object = o; w->typeNamespace = t; w->importNamespace = importNamespace;
     t->addref();
     return Value::fromObject(w);

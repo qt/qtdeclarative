@@ -70,6 +70,14 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(RegExpObject);
 
+RegExpObject::RegExpObject(InternalClass *ic)
+    : Object(ic)
+    , value(RegExp::create(ic->engine, QString(), false, false))
+    , global(false)
+{
+    init(ic->engine);
+}
+
 RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
     : Object(engine)
     , value(value)

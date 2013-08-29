@@ -51,13 +51,21 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(VariantObject);
 
+VariantObject::VariantObject(InternalClass *ic)
+    : Object(ic)
+    , ExecutionEngine::ScarceResourceData(QVariant())
+    , m_vmePropertyReferenceCount(0)
+{
+    vtbl = &static_vtbl;
+}
+
 VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
     : Object(engine)
     , ExecutionEngine::ScarceResourceData(value)
     , m_vmePropertyReferenceCount(0)
 {
     vtbl = &static_vtbl;
-    prototype = engine->variantPrototype;
+    setPrototype(engine->variantPrototype);
     if (isScarce())
         internalClass->engine->scarceResources.insert(this);
 }
@@ -132,10 +140,9 @@ void VariantObject::removeVmePropertyReference()
 }
 
 
-VariantPrototype::VariantPrototype(ExecutionEngine *engine)
-    : VariantObject(engine, QVariant())
+VariantPrototype::VariantPrototype(InternalClass *ic)
+    : VariantObject(ic)
 {
-    prototype = engine->objectPrototype;
 }
 
 void VariantPrototype::init(ExecutionEngine *engine)

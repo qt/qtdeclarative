@@ -825,7 +825,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
             return true;
         } else if (QV4::Object *o = value.asObject()) {
             // Look in the prototype chain.
-            QV4::Object *proto = o->prototype;
+            QV4::Object *proto = o->prototype();
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
@@ -845,7 +845,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
                         *reinterpret_cast<void* *>(data) = var.data();
                     return true;
                 }
-                proto = proto->prototype;
+                proto = proto->prototype();
             }
         }
     } else if (value.isNull() && name.endsWith('*')) {

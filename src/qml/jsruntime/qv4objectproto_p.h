@@ -62,7 +62,7 @@ protected:
 
 struct ObjectPrototype: Object
 {
-    ObjectPrototype(ExecutionEngine *engine) : Object(engine) {}
+    ObjectPrototype(InternalClass *ic) : Object(ic) {}
 
     void init(ExecutionContext *ctx, const Value &ctor);
 

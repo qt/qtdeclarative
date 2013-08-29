@@ -72,6 +72,15 @@
 
 using namespace QV4;
 
+ErrorObject::ErrorObject(InternalClass *ic)
+    : Object(ic)
+    , stack(0)
+{
+    type = Type_ErrorObject;
+    vtbl = &static_vtbl;
+    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
+}
+
 ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t)
     : Object(engine)
     , stack(0)
@@ -158,68 +167,68 @@ SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
     : ErrorObject(engine, msg, SyntaxError)
 {
     vtbl = &static_vtbl;
-    prototype = engine->syntaxErrorPrototype;
+    setPrototype(engine->syntaxErrorPrototype);
 }
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
     : ErrorObject(engine, msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
     vtbl = &static_vtbl;
-    prototype = engine->syntaxErrorPrototype;
+    setPrototype(engine->syntaxErrorPrototype);
 }
 
 EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const Value &message)
     : ErrorObject(engine, message, EvalError)
 {
-    prototype = engine->evalErrorPrototype;
+    setPrototype(engine->evalErrorPrototype);
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const Value &message)
     : ErrorObject(engine, message, RangeError)
 {
-    prototype = engine->rangeErrorPrototype;
+    setPrototype(engine->rangeErrorPrototype);
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString &message)
     : ErrorObject(engine, Value::fromString(engine, message), RangeError)
 {
-    prototype = engine->rangeErrorPrototype;
+    setPrototype(engine->rangeErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const Value &message)
     : ErrorObject(engine, message, ReferenceError)
 {
-    prototype = engine->referenceErrorPrototype;
+    setPrototype(engine->referenceErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &message)
     : ErrorObject(engine, Value::fromString(engine, message), ReferenceError)
 {
-    prototype = engine->referenceErrorPrototype;
+    setPrototype(engine->referenceErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
     : ErrorObject(engine, msg, fileName, lineNumber, columnNumber, ReferenceError)
 {
-    prototype = engine->referenceErrorPrototype;
+    setPrototype(engine->referenceErrorPrototype);
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const Value &message)
     : ErrorObject(engine, message, TypeError)
 {
-    prototype = engine->typeErrorPrototype;
+    setPrototype(engine->typeErrorPrototype);
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &message)
     : ErrorObject(engine, Value::fromString(engine, message), TypeError)
 {
-    prototype = engine->typeErrorPrototype;
+    setPrototype(engine->typeErrorPrototype);
 }
 
 URIErrorObject::URIErrorObject(ExecutionEngine *engine, const Value &message)
     : ErrorObject(engine, message, URIError)
 {
-    prototype = engine->uRIErrorPrototype;
+    setPrototype(engine->uRIErrorPrototype);
 }
 
 DEFINE_MANAGED_VTABLE(ErrorCtor);

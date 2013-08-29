@@ -50,6 +50,9 @@ QT_BEGIN_NAMESPACE
 
 uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
 {
+    if (t.flags == QV4::InternalClassTransition::ProtoChange)
+        // INT_MAX is prime, so this should give a decent distribution of keys
+        return (uint)((quintptr)t.prototype * INT_MAX);
     return t.id->hashValue ^ t.flags;
 }
 
@@ -160,6 +163,8 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
     newClass->propertyData[idx] = data;
+
+    transitions.insert(t, newClass);
     return newClass;
 
 }
@@ -178,8 +183,17 @@ InternalClass *InternalClass::changePrototype(Object *proto)
         return tit.value();
 
     // create a new class and add it to the tree
-    InternalClass *newClass = engine->newClass(*this);
-    newClass->prototype = proto;
+    InternalClass *newClass;
+    if (this == engine->emptyClass) {
+        newClass = engine->newClass(*this);
+        newClass->prototype = proto;
+    } else {
+        newClass = engine->emptyClass->changePrototype(proto);
+        for (int i = 0; i < nameMap.size(); ++i)
+            newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
+    }
+
+    transitions.insert(t, newClass);
     return newClass;
 }
 
@@ -231,7 +245,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     // create a new class and add it to the tree
-    object->internalClass = engine->emptyClass;
+    object->internalClass = engine->emptyClass->changePrototype(prototype);
     for (int i = 0; i < nameMap.size(); ++i) {
         if (i == propIdx)
             continue;
@@ -259,6 +273,7 @@ InternalClass *InternalClass::sealed()
         return m_sealed;
 
     m_sealed = engine->emptyClass;
+    m_sealed = m_sealed->changePrototype(prototype);
     for (int i = 0; i < nameMap.size(); ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         attrs.setConfigurable(false);
@@ -275,6 +290,7 @@ InternalClass *InternalClass::frozen()
         return m_frozen;
 
     m_frozen = engine->emptyClass;
+    m_frozen = m_frozen->changePrototype(prototype);
     for (int i = 0; i < nameMap.size(); ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         attrs.setWritable(false);
@@ -315,7 +331,8 @@ void InternalClass::destroy()
 
 void InternalClass::markObjects()
 {
-    prototype->mark();
+    if (prototype)
+        prototype->mark();
     for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
          it != end; ++it)
         it.value()->markObjects();

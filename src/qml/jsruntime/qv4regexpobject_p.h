@@ -77,6 +77,8 @@ struct RegExpObject: Object {
     RegExp* value;
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
+
+    RegExpObject(InternalClass *ic);
     RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
@@ -107,7 +109,7 @@ protected:
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(ExecutionEngine* engine): RegExpObject(engine, RegExp::create(engine, QString()), false) {}
+    RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_exec(SimpleCallContext *ctx);

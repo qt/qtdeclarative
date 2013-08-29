@@ -1342,7 +1342,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
     QmlIncubatorObject *r = new (v4->memoryManager) QmlIncubatorObject(args->engine(), mode);
-    r->prototype = e->incubationProto.value().asObject();
+    r->setPrototype(e->incubationProto.value().asObject());
 
     if (!valuemap.isEmpty()) {
         r->valuemap = valuemap;

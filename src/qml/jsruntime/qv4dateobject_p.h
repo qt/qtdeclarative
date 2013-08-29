@@ -53,6 +53,7 @@ namespace QV4 {
 
 struct DateObject: Object {
     Value value;
+    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) { type = Type_DateObject; }
     DateObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_DateObject; }
     DateObject(ExecutionEngine *engine, const QDateTime &value);
 
@@ -72,7 +73,7 @@ protected:
 
 struct DatePrototype: DateObject
 {
-    DatePrototype(ExecutionEngine *engine): DateObject(engine, Value::fromDouble(qSNaN())) {}
+    DatePrototype(InternalClass *ic): DateObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static double getThisDate(ExecutionContext *ctx);

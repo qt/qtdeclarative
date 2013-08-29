@@ -80,7 +80,7 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
     , function(0)
 {
     vtbl = &static_vtbl;
-    prototype = scope->engine->functionPrototype;
+    setPrototype(scope->engine->functionPrototype);
 
     type = Type_FunctionObject;
     needsActivation = true;
@@ -92,6 +92,21 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
 
      if (name)
          defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
+}
+
+FunctionObject::FunctionObject(InternalClass *ic)
+    : Object(ic)
+    , scope(ic->engine->rootContext)
+    , name(name)
+    , formalParameterList(0)
+    , varList(0)
+    , formalParameterCount(0)
+    , varCount(0)
+    , function(0)
+{
+    vtbl = &static_vtbl;
+
+    type = Type_FunctionObject;
 }
 
 FunctionObject::~FunctionObject()
@@ -120,7 +135,7 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
         ctx->throwTypeError();
 
     while (v) {
-        v = v->prototype;
+        v = v->prototype();
 
         if (! v)
             break;
@@ -139,7 +154,7 @@ Value FunctionObject::construct(Managed *that, const CallData &)
     Object *obj = v4->newObject();
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->prototype = proto.objectValue();
+        obj->setPrototype(proto.objectValue());
     return Value::fromObject(obj);
 }
 
@@ -235,8 +250,8 @@ Value FunctionCtor::call(Managed *that, const CallData &d)
     return construct(that, d);
 }
 
-FunctionPrototype::FunctionPrototype(ExecutionContext *ctx)
-    : FunctionObject(ctx)
+FunctionPrototype::FunctionPrototype(InternalClass *ic)
+    : FunctionObject(ic)
 {
 }
 
@@ -375,7 +390,7 @@ Value ScriptFunction::construct(Managed *that, const CallData &d)
     Object *obj = v4->newObject();
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->prototype = proto.objectValue();
+        obj->setPrototype(proto.objectValue());
 
     ExecutionContext *context = v4->current;
     CallData dd = d;
@@ -469,7 +484,7 @@ Value SimpleScriptFunction::construct(Managed *that, const CallData &d)
     Object *obj = v4->newObject();
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->prototype = proto.objectValue();
+        obj->setPrototype(proto.objectValue());
 
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));

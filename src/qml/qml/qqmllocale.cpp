@@ -814,7 +814,7 @@ QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
     QQmlLocaleData *wrapper = new (engine->memoryManager) QQmlLocaleData(engine);
     if (!locale.isEmpty())
         wrapper->locale = QLocale(locale);
-    wrapper->prototype = d->prototype.value().asObject();
+    wrapper->setPrototype(d->prototype.value().asObject());
     return QV4::Value::fromObject(wrapper);
 }
 

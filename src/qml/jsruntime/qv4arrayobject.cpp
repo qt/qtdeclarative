@@ -84,8 +84,8 @@ Value ArrayCtor::call(Managed *that, const CallData &d)
     return construct(that, d);
 }
 
-ArrayPrototype::ArrayPrototype(ExecutionContext *context)
-    : ArrayObject(context->engine)
+ArrayPrototype::ArrayPrototype(InternalClass *ic)
+    : ArrayObject(ic)
 {
 }
 

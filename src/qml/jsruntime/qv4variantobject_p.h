@@ -68,6 +68,7 @@ struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 {
     Q_MANAGED
 public:
+    VariantObject(InternalClass *ic);
     VariantObject(ExecutionEngine *engine, const QVariant &value);
 
     static QVariant toVariant(const QV4::Value &v);
@@ -84,7 +85,7 @@ public:
 struct VariantPrototype : VariantObject
 {
 public:
-    VariantPrototype(ExecutionEngine *engine);
+    VariantPrototype(InternalClass *ic);
 
     void init(ExecutionEngine *engine);
 

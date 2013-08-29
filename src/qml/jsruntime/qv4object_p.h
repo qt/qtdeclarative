@@ -105,7 +105,6 @@ typedef Value (*PropertyEnumeratorFunction)(Object *object);
 typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
-    Object *prototype;
     uint memberDataAlloc;
     Property *memberData;
 
@@ -127,6 +126,9 @@ struct Q_QML_EXPORT Object: Managed {
     Object(ExecutionEngine *engine);
     Object(InternalClass *internalClass);
     ~Object();
+
+    Object *prototype() const { return internalClass->prototype; }
+    bool setPrototype(Object *proto);
 
     Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);
     Property *__getOwnProperty__(uint index, PropertyAttributes *attrs = 0);
@@ -277,7 +279,7 @@ public:
     inline bool protoHasArray() {
         Object *p = this;
 
-        while ((p = p->prototype))
+        while ((p = p->prototype()))
             if (p->arrayDataLen)
                 return true;
 
@@ -350,11 +352,13 @@ protected:
 
 struct BooleanObject: Object {
     Value value;
+    BooleanObject(InternalClass *ic): Object(ic), value(Value::fromBoolean(false)) { type = Type_BooleanObject; }
     BooleanObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_BooleanObject; }
 };
 
 struct NumberObject: Object {
     Value value;
+    NumberObject(InternalClass *ic): Object(ic), value(Value::fromInt32(0)) { type = Type_NumberObject; }
     NumberObject(ExecutionEngine *engine, const Value &value): Object(engine), value(value) { type = Type_NumberObject; }
 };
 
@@ -363,6 +367,7 @@ struct ArrayObject: Object {
         LengthPropertyIndex = 0
     };
 
+    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
     ArrayObject(ExecutionEngine *engine) : Object(engine) { init(engine); }
     ArrayObject(ExecutionEngine *engine, const QStringList &list);
     void init(ExecutionEngine *engine);

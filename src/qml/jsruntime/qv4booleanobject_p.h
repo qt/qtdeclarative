@@ -62,7 +62,7 @@ protected:
 
 struct BooleanPrototype: BooleanObject
 {
-    BooleanPrototype(ExecutionEngine *engine): BooleanObject(engine, Value::fromBoolean(false)) {}
+    BooleanPrototype(InternalClass *ic): BooleanObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *ctx);

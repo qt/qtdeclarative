@@ -82,7 +82,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         }
 
         if (flags & WithProtoChain)
-            current = current->prototype;
+            current = current->prototype();
         else
             current = 0;
 

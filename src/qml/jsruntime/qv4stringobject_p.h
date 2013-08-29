@@ -54,6 +54,7 @@ struct StringObject: Object {
 
     Value value;
     mutable Property tmpProperty;
+    StringObject(InternalClass *ic);
     StringObject(ExecutionEngine *engine, const Value &value);
 
     Property *getIndex(uint index) const;
@@ -78,7 +79,7 @@ protected:
 
 struct StringPrototype: StringObject
 {
-    StringPrototype(ExecutionEngine *engine): StringObject(engine, Value::fromString(engine, QString())) {}
+    StringPrototype(InternalClass *ic): StringObject(ic) {}
     void init(ExecutionEngine *engine, const Value &ctor);
 
     static Value method_toString(SimpleCallContext *context);

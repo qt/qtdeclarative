@@ -145,7 +145,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, 
     initProto(v4);
 
     QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
-    r->prototype = v4->qmlExtensions()->valueTypeWrapperPrototype;
+    r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->object = object; r->property = property;
     return Value::fromObject(r);
 }
@@ -156,7 +156,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValu
     initProto(v4);
 
     QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
-    r->prototype = v4->qmlExtensions()->valueTypeWrapperPrototype;
+    r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->value = value;
     return Value::fromObject(r);
 }

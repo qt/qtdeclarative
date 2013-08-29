@@ -86,7 +86,7 @@ Value ObjectCtor::construct(Managed *that, const CallData &d)
         Object *obj = v4->newObject();
         Value proto = ctor->get(v4->id_prototype);
         if (proto.isObject())
-            obj->prototype = proto.objectValue();
+            obj->setPrototype(proto.objectValue());
         return Value::fromObject(obj);
     }
     return __qmljs_to_object(v4->current, d.args[0]);
@@ -139,7 +139,7 @@ Value ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
     if (! o.isObject())
         ctx->throwTypeError();
 
-    Object *p = o.objectValue()->prototype;
+    Object *p = o.objectValue()->prototype();
     return p ? Value::fromObject(p) : Value::nullValue();
 }
 
@@ -172,7 +172,7 @@ Value ObjectPrototype::method_create(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     Object *newObject = ctx->engine->newObject();
-    newObject->prototype = O.asObject();
+    newObject->setPrototype(O.asObject());
 
     Value objValue = Value::fromObject(newObject);
     if (ctx->argumentCount > 1 && !ctx->argument(1).isUndefined()) {
@@ -412,11 +412,11 @@ Value ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
         return Value::fromBoolean(false);
 
     Object *O = ctx->thisObject.toObject(ctx);
-    Object *proto = V.objectValue()->prototype;
+    Object *proto = V.objectValue()->prototype();
     while (proto) {
         if (O == proto)
             return Value::fromBoolean(true);
-        proto = proto->prototype;
+        proto = proto->prototype();
     }
     return Value::fromBoolean(false);
 }
@@ -481,7 +481,7 @@ Value ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    return Value::fromObject(o->prototype);
+    return Value::fromObject(o->prototype());
 }
 
 Value ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
@@ -493,22 +493,13 @@ Value ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
     Value proto = ctx->argument(0);
     bool ok = false;
     if (proto.isNull()) {
-        o->prototype = 0;
+        o->setPrototype(0);
         ok = true;
     } else if (Object *p = proto.asObject()) {
-        if (o->prototype == p) {
+        if (o->prototype() == p) {
             ok = true;
         } else if (o->extensible) {
-            Object *pp = p;
-            while (pp) {
-                if (pp == o)
-                    break;
-                pp = pp->prototype;
-            }
-            if (!pp) {
-                ok = true;
-                o->prototype = p;
-            }
+            ok = o->setPrototype(p);
         }
     }
     if (!ok)
