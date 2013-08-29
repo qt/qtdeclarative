@@ -74,6 +74,63 @@ using namespace WTF;
 
 static const std::size_t CHUNK_SIZE = 1024*32;
 
+#if OS(WINCE)
+void* g_stackBase = 0;
+
+inline bool isPageWritable(void* page)
+{
+    MEMORY_BASIC_INFORMATION memoryInformation;
+    DWORD result = VirtualQuery(page, &memoryInformation, sizeof(memoryInformation));
+
+    // return false on error, including ptr outside memory
+    if (result != sizeof(memoryInformation))
+        return false;
+
+    DWORD protect = memoryInformation.Protect & ~(PAGE_GUARD | PAGE_NOCACHE);
+    return protect == PAGE_READWRITE
+        || protect == PAGE_WRITECOPY
+        || protect == PAGE_EXECUTE_READWRITE
+        || protect == PAGE_EXECUTE_WRITECOPY;
+}
+
+static void* getStackBase(void* previousFrame)
+{
+    // find the address of this stack frame by taking the address of a local variable
+    bool isGrowingDownward;
+    void* thisFrame = (void*)(&isGrowingDownward);
+
+    isGrowingDownward = previousFrame < &thisFrame;
+    static DWORD pageSize = 0;
+    if (!pageSize) {
+        SYSTEM_INFO systemInfo;
+        GetSystemInfo(&systemInfo);
+        pageSize = systemInfo.dwPageSize;
+    }
+
+    // scan all of memory starting from this frame, and return the last writeable page found
+    register char* currentPage = (char*)((DWORD)thisFrame & ~(pageSize - 1));
+    if (isGrowingDownward) {
+        while (currentPage > 0) {
+            // check for underflow
+            if (currentPage >= (char*)pageSize)
+                currentPage -= pageSize;
+            else
+                currentPage = 0;
+            if (!isPageWritable(currentPage))
+                return currentPage + pageSize;
+        }
+        return 0;
+    } else {
+        while (true) {
+            // guaranteed to complete because isPageWritable returns false at end of memory
+            currentPage += pageSize;
+            if (!isPageWritable(currentPage))
+                return currentPage;
+        }
+    }
+}
+#endif
+
 struct MemoryManager::Data
 {
     bool enableGC;
@@ -172,6 +229,14 @@ MemoryManager::MemoryManager()
 
     m_d->stackTop = static_cast<quintptr *>(stackBottom) + stackSize/sizeof(quintptr);
 #  endif
+#elif OS(WINCE)
+    if (false && g_stackBase) {
+        // This code path is disabled as we have no way of initializing it yet
+        m_d->stackTop = static_cast<quintptr *>(g_stackBase);
+    } else {
+        int dummy;
+        m_d->stackTop = static_cast<quintptr *>(getStackBase(&dummy));
+    }
 #elif OS(WINDOWS)
     PNT_TIB tib = (PNT_TIB)NtCurrentTeb();
     m_d->stackTop = static_cast<quintptr*>(tib->StackBase);
