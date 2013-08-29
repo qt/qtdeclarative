@@ -54,9 +54,10 @@ class QQuickApplicationPrivate;
 class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged) // deprecated, use 'state' instead
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(bool supportsMultipleWindows READ supportsMultipleWindows CONSTANT)
+    Q_PROPERTY(Qt::ApplicationState state READ state NOTIFY stateChanged)
 
 public:
     explicit QQuickApplication(QObject *parent = 0);
@@ -64,10 +65,12 @@ public:
     bool active() const;
     Qt::LayoutDirection layoutDirection() const;
     bool supportsMultipleWindows() const;
+    Qt::ApplicationState state() const;
 
 Q_SIGNALS:
     void activeChanged();
     void layoutDirectionChanged();
+    void stateChanged(Qt::ApplicationState state);
 
 private:
     bool eventFilter(QObject *, QEvent *event);

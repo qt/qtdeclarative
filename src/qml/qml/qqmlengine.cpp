@@ -411,14 +411,50 @@ The following functions are also on the Qt object.
     \row
     \li \c application.active
     \li
-    This read-only property indicates whether the application is the top-most and focused
-    application, and the user is able to interact with the application. The property
-    is false when the application is in the background, the device keylock or screen
-    saver is active, the screen backlight is turned off, or the global system dialog
-    is being displayed on top of the application. It can be used for stopping and
-    pausing animations, timers and active processing of data in order to save device
-    battery power and free device memory and processor load when the application is not
-    active.
+    Deprecated, use Qt.application.state == Qt.ApplicationActive instead.
+
+    \row
+    \li \c application.state
+    \li
+    This read-only property indicates the current state of the application.
+
+    Possible values are:
+
+    \list
+    \li Qt.ApplicationActive - The application is the top-most and focused application, and the
+                               user is able to interact with the application.
+    \li Qt.ApplicationInactive - The application is visible or partially visible, but not selected
+                                 to be in front, the user cannot interact with the application.
+                                 On desktop platforms, this typically means that the user activated
+                                 another application. On mobile platforms, it is more common to
+                                 enter this state when the OS is interrupting the user with for
+                                 example incoming calls, SMS-messages or dialogs. This is usually a
+                                 transient state during which the application is paused. The user
+                                 may return focus to your application, but most of the time it will
+                                 be the first indication that the application is going to be suspended.
+                                 While in this state, consider pausing or stopping any activity that
+                                 should not continue when the user cannot interact with your
+                                 application, such as a video, a game, animations, or sensors.
+                                 You should also avoid performing CPU-intensive tasks which might
+                                 slow down the application in front.
+    \li Qt.ApplicationSuspended - The application is suspended and not visible to the user. On
+                                  mobile platforms, the application typically enters this state when
+                                  the user returns to the home screen or switches to another
+                                  application. While in this state, the application should ensure
+                                  that the user perceives it as always alive and does not lose his
+                                  progress, saving any persistent data. The application should cease
+                                  all activities and be prepared for code execution to stop. While
+                                  suspended, the application can be killed at any time without
+                                  further warnings (for example when low memory forces the OS to purge
+                                  suspended applications).
+    \li Qt.ApplicationHidden - The application is hidden and runs in the background. This is the
+                               normal state for applications that need to do background processing,
+                               like playing music, while the user interacts with other applications.
+                               The application should free up all graphical resources when entering
+                               this state. A Qt Quick application should not usually handle this state
+                               at the QML level. Instead, you should unload the entire UI and reload
+                               the QML files whenever the application becomes active again.
+    \endlist
 
     \row
     \li \c application.layoutDirection
@@ -469,6 +505,7 @@ The following functions are also on the Qt object.
     Note that when using QML without a QGuiApplication, the following properties will be undefined:
     \list
     \li application.active
+    \li application.state
     \li application.layoutDirection
     \endlist
 */

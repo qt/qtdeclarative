@@ -46,6 +46,8 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/qinputmethod.h>
 #include <qpa/qwindowsysteminterface.h>
+#include <qpa/qplatformintegration.h>
+#include <private/qguiapplication_p.h>
 
 class tst_qquickapplication : public QObject
 {
@@ -55,6 +57,7 @@ public:
 
 private slots:
     void active();
+    void state();
     void layoutDirection();
     void inputMethod();
 
@@ -101,6 +104,69 @@ void tst_qquickapplication::active()
     QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
+}
+
+void tst_qquickapplication::state()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; "
+                      "Item { "
+                      "    property int state: Qt.application.state; "
+                      "    property int state2: Qt.ApplicationInactive; "
+                      "    Connections { "
+                      "        target: Qt.application; "
+                      "        onStateChanged: state2 = Qt.application.state; "
+                      "    } "
+                      "}", QUrl::fromLocalFile(""));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickWindow window;
+    item->setParentItem(window.contentItem());
+
+    // initial state should be ApplicationInactive
+    QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
+    QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);
+
+    // If the platform plugin has the ApplicationState capability, state changes originate from it
+    // as a result of a system event. We therefore have to simulate these events here.
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
+
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
+        QTest::waitForEvents();
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
+
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
+        QTest::waitForEvents();
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);
+
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationSuspended);
+        QTest::waitForEvents();
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationSuspended);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationSuspended);
+
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationHidden);
+        QTest::waitForEvents();
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationHidden);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationHidden);
+
+    } else {
+        // Otherwise, the application can only be in two states, Active and Inactive. These are
+        // triggered by window activation.
+        window.show();
+        window.requestActivate();
+        QTest::qWaitForWindowActive(&window);
+        QVERIFY(QGuiApplication::focusWindow() == &window);
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
+
+        // not active again
+        QWindowSystemInterface::handleWindowActivated(0);
+        QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
+        QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
+        QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);
+    }
 }
 
 void tst_qquickapplication::layoutDirection()

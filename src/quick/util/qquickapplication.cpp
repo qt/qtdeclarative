@@ -75,6 +75,9 @@ QQuickApplication::QQuickApplication(QObject *parent)
 {
     if (qApp) {
         qApp->installEventFilter(this);
+
+        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+                this, SIGNAL(stateChanged(Qt::ApplicationState)));
     }
 }
 
@@ -97,6 +100,11 @@ Qt::LayoutDirection QQuickApplication::layoutDirection() const
 bool QQuickApplication::supportsMultipleWindows() const
 {
     return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows);
+}
+
+Qt::ApplicationState QQuickApplication::state() const
+{
+    return QGuiApplication::applicationState();
 }
 
 bool QQuickApplication::eventFilter(QObject *, QEvent *event)
