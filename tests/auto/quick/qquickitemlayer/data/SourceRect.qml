@@ -22,8 +22,8 @@ Item
             uniform lowp float qt_Opacity;
             varying highp vec2 qt_TexCoord0;
             void main() {
-                vec4 c = texture2D(source, qt_TexCoord0);
-                if (c.a == 0.)
+                mediump vec4 c = texture2D(source, qt_TexCoord0);
+                if (c.a == 0.0)
                     c = vec4(0, 0, 1, 1);
                 gl_FragColor = c * qt_Opacity;
             }
