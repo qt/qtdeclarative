@@ -1184,10 +1184,10 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    Q_ASSERT(sourceTemp->type == targetTemp->type);
-
     if (sourceTemp->kind == V4IR::Temp::PhysicalRegister) {
         if (targetTemp->kind == V4IR::Temp::PhysicalRegister) {
+            Q_ASSERT(sourceTemp->type == targetTemp->type);
+
             if (sourceTemp->type == V4IR::DoubleType) {
                 _as->moveDouble((Assembler::FPRegisterID) targetTemp->index, Assembler::FPGpr0);
                 _as->moveDouble((Assembler::FPRegisterID) sourceTemp->index,
@@ -1201,6 +1201,7 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         }
     } else if (sourceTemp->kind == V4IR::Temp::StackSlot) {
         if (targetTemp->kind == V4IR::Temp::StackSlot) {
+            // Note: a swap for two stack-slots can involve different types.
             Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
 #if CPU(X86_64)
             _as->load64(_as->stackSlotPointer(sourceTemp), Assembler::ScratchRegister);
@@ -1220,8 +1221,42 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         }
     }
 
-    // FIXME: TODO!
-    Q_UNREACHABLE();
+    Q_ASSERT(sourceTemp->type == targetTemp->type);
+
+    V4IR::Temp *stackTemp = sourceTemp->kind == V4IR::Temp::StackSlot ? sourceTemp : targetTemp;
+    V4IR::Temp *registerTemp = sourceTemp->kind == V4IR::Temp::PhysicalRegister ? sourceTemp
+                                                                                : targetTemp;
+    Assembler::Pointer addr = _as->stackSlotPointer(stackTemp);
+    if (registerTemp->type == V4IR::DoubleType) {
+        _as->loadDouble(addr, Assembler::FPGpr0);
+        _as->storeDouble((Assembler::FPRegisterID) registerTemp->index, addr);
+        _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) registerTemp->index);
+    } else if (registerTemp->type == V4IR::UInt32Type) {
+        Address tmp = addressForArgument(0);
+        _as->storeUInt32((Assembler::RegisterID) registerTemp->index, Pointer(tmp));
+        _as->move(_as->toUInt32Register(addr, Assembler::ScratchRegister),
+                  (Assembler::RegisterID) registerTemp->index);
+        _as->loadDouble(tmp, Assembler::FPGpr0);
+        _as->storeDouble(Assembler::FPGpr0, addr);
+    } else {
+        _as->load32(addr, Assembler::ScratchRegister);
+        _as->store32((Assembler::RegisterID) registerTemp->index, addr);
+        addr.offset += 4;
+        QV4::Value tag;
+        switch (registerTemp->type) {
+        case V4IR::BoolType:
+            tag = QV4::Value::fromBoolean(false);
+            break;
+        case V4IR::SInt32Type:
+            tag = QV4::Value::fromInt32(0);
+            break;
+        default:
+            tag = QV4::Value::undefinedValue();
+            Q_UNREACHABLE();
+        }
+        _as->store32(Assembler::TrustedImm32(tag.tag), addr);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
+    }
 }
 
 #define setOp(op, opName, operation) \
