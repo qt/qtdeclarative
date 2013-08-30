@@ -140,7 +140,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     objectClass = emptyClass->changePrototype(objectPrototype);
 
     arrayClass = objectClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
-    arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
+    ArrayPrototype *arrayPrototype = new (memoryManager) ArrayPrototype(arrayClass);
     arrayClass = arrayClass->changePrototype(arrayPrototype);
 
     InternalClass *argsClass = objectClass->addMember(id_length, Attr_NotEnumerable);
@@ -169,12 +169,18 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
     errorClass = emptyClass->changePrototype(errorPrototype);
-    evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
-    rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorClass);
-    referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorClass);
-    syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorClass);
-    typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorClass);
-    uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
+    EvalErrorPrototype *evalErrorPrototype = new (memoryManager) EvalErrorPrototype(errorClass);
+    evalErrorClass = emptyClass->changePrototype(evalErrorPrototype);
+    RangeErrorPrototype *rangeErrorPrototype = new (memoryManager) RangeErrorPrototype(errorClass);
+    rangeErrorClass = emptyClass->changePrototype(rangeErrorPrototype);
+    ReferenceErrorPrototype *referenceErrorPrototype = new (memoryManager) ReferenceErrorPrototype(errorClass);
+    referenceErrorClass = emptyClass->changePrototype(referenceErrorPrototype);
+    SyntaxErrorPrototype *syntaxErrorPrototype = new (memoryManager) SyntaxErrorPrototype(errorClass);
+    syntaxErrorClass = emptyClass->changePrototype(syntaxErrorPrototype);
+    TypeErrorPrototype *typeErrorPrototype = new (memoryManager) TypeErrorPrototype(errorClass);
+    typeErrorClass = emptyClass->changePrototype(typeErrorPrototype);
+    URIErrorPrototype *uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
+    uriErrorClass = emptyClass->changePrototype(uRIErrorPrototype);
 
     variantPrototype = new (memoryManager) VariantPrototype(objectClass);
     sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
@@ -417,7 +423,7 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    ErrorObject *object = new (memoryManager) ErrorObject(this, value);
+    ErrorObject *object = new (memoryManager) ErrorObject(errorClass, value);
     return object;
 }
 
@@ -665,13 +671,6 @@ void ExecutionEngine::markObjects()
     uRIErrorCtor.mark();
 
     objectPrototype->mark();
-    arrayPrototype->mark();
-    evalErrorPrototype->mark();
-    rangeErrorPrototype->mark();
-    referenceErrorPrototype->mark();
-    syntaxErrorPrototype->mark();
-    typeErrorPrototype->mark();
-    uRIErrorPrototype->mark();
 
     variantPrototype->mark();
     sequencePrototype->mark();

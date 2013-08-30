@@ -64,8 +64,8 @@ struct ErrorObject: Object {
     };
 
     ErrorObject(InternalClass *ic);
-    ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t = Error);
-    ErrorObject(ExecutionEngine *engine, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const Value &message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
 

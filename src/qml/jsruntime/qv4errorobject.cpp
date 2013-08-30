@@ -81,38 +81,38 @@ ErrorObject::ErrorObject(InternalClass *ic)
     defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
 }
 
-ErrorObject::ErrorObject(ExecutionEngine *engine, const Value &message, ErrorType t)
-    : Object(engine->errorClass)
+ErrorObject::ErrorObject(InternalClass *ic, const Value &message, ErrorType t)
+    : Object(ic)
     , stack(0)
 {
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
-    defineAccessorProperty(engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    defineAccessorProperty(ic->engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message.isUndefined())
-        defineDefaultProperty(engine->newString(QStringLiteral("message")), message);
-    defineDefaultProperty(engine, QStringLiteral("name"), Value::fromString(engine, className()));
+        defineDefaultProperty(ic->engine->newString(QStringLiteral("message")), message);
+    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
-    stackTrace = engine->stackTrace();
+    stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(engine, QStringLiteral("fileName"), Value::fromString(engine, stackTrace.at(0).source));
-        defineDefaultProperty(engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
+        defineDefaultProperty(ic->engine, QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(ic->engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
     }
 }
 
-ErrorObject::ErrorObject(ExecutionEngine *engine, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
-    : Object(engine->errorClass)
+ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
+    : Object(ic)
     , stack(0)
 {
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
-    defineAccessorProperty(engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    defineAccessorProperty(ic->engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
-    defineDefaultProperty(engine, QStringLiteral("name"), Value::fromString(engine, className()));
+    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
-    stackTrace = engine->stackTrace();
+    stackTrace = ic->engine->stackTrace();
     ExecutionEngine::StackFrame frame;
     frame.source = fileName;
     frame.line = line;
@@ -120,11 +120,11 @@ ErrorObject::ErrorObject(ExecutionEngine *engine, const QString &message, const 
     stackTrace.prepend(frame);
 
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(engine, QStringLiteral("fileName"), Value::fromString(engine, stackTrace.at(0).source));
-        defineDefaultProperty(engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
+        defineDefaultProperty(ic->engine, QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(ic->engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
     }
 
-    defineDefaultProperty(engine, QStringLiteral("message"), Value::fromString(engine->newString(message)));
+    defineDefaultProperty(ic->engine, QStringLiteral("message"), Value::fromString(ic->engine->newString(message)));
 }
 
 Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
@@ -164,71 +164,60 @@ DEFINE_MANAGED_VTABLE(ErrorObject);
 DEFINE_MANAGED_VTABLE(SyntaxErrorObject);
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
-    : ErrorObject(engine, msg, SyntaxError)
+    : ErrorObject(engine->syntaxErrorClass, msg, SyntaxError)
 {
     vtbl = &static_vtbl;
-    setPrototype(engine->syntaxErrorPrototype);
 }
 
 SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : ErrorObject(engine, msg, fileName, lineNumber, columnNumber, SyntaxError)
+    : ErrorObject(engine->syntaxErrorClass, msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
     vtbl = &static_vtbl;
-    setPrototype(engine->syntaxErrorPrototype);
 }
 
 EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const Value &message)
-    : ErrorObject(engine, message, EvalError)
+    : ErrorObject(engine->evalErrorClass, message, EvalError)
 {
-    setPrototype(engine->evalErrorPrototype);
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const Value &message)
-    : ErrorObject(engine, message, RangeError)
+    : ErrorObject(engine->rangeErrorClass, message, RangeError)
 {
-    setPrototype(engine->rangeErrorPrototype);
 }
 
 RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString &message)
-    : ErrorObject(engine, Value::fromString(engine, message), RangeError)
+    : ErrorObject(engine->rangeErrorClass, Value::fromString(engine, message), RangeError)
 {
-    setPrototype(engine->rangeErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const Value &message)
-    : ErrorObject(engine, message, ReferenceError)
+    : ErrorObject(engine->referenceErrorClass, message, ReferenceError)
 {
-    setPrototype(engine->referenceErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &message)
-    : ErrorObject(engine, Value::fromString(engine, message), ReferenceError)
+    : ErrorObject(engine->referenceErrorClass, Value::fromString(engine, message), ReferenceError)
 {
-    setPrototype(engine->referenceErrorPrototype);
 }
 
 ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : ErrorObject(engine, msg, fileName, lineNumber, columnNumber, ReferenceError)
+    : ErrorObject(engine->referenceErrorClass, msg, fileName, lineNumber, columnNumber, ReferenceError)
 {
-    setPrototype(engine->referenceErrorPrototype);
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const Value &message)
-    : ErrorObject(engine, message, TypeError)
+    : ErrorObject(engine->typeErrorClass, message, TypeError)
 {
-    setPrototype(engine->typeErrorPrototype);
 }
 
 TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &message)
-    : ErrorObject(engine, Value::fromString(engine, message), TypeError)
+    : ErrorObject(engine->typeErrorClass, Value::fromString(engine, message), TypeError)
 {
-    setPrototype(engine->typeErrorPrototype);
 }
 
 URIErrorObject::URIErrorObject(ExecutionEngine *engine, const Value &message)
-    : ErrorObject(engine, message, URIError)
+    : ErrorObject(engine->uriErrorClass, message, URIError)
 {
-    setPrototype(engine->uRIErrorPrototype);
 }
 
 DEFINE_MANAGED_VTABLE(ErrorCtor);
