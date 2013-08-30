@@ -597,10 +597,13 @@ void InstructionSelection::run(V4IR::Function *function)
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
 
+
     V4IR::Optimizer opt(_function);
     opt.run();
-    if (opt.isInSSA()) {
+
 #if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))
+    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
+    if (opt.isInSSA() && withRegisterAllocator) {
         static const QVector<int> intRegisters = QVector<int>()
                 << JSC::X86Registers::edi
                 << JSC::X86Registers::esi
@@ -618,12 +621,12 @@ void InstructionSelection::run(V4IR::Function *function)
                 << JSC::X86Registers::xmm6
                 << JSC::X86Registers::xmm7;
         RegisterAllocator(intRegisters, fpRegisters).run(_function, opt);
-#else
-        // No register allocator available for this platform, so:
-        opt.convertOutOfSSA();
-        ConvertTemps().toStackSlots(_function);
+    } else
 #endif
-    } else {
+    {
+        if (opt.isInSSA())
+            // No register allocator available for this platform, or env. var was set, so:
+            opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
     }
     V4IR::Optimizer::showMeTheCode(_function);
