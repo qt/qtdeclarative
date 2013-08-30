@@ -1112,6 +1112,12 @@ Param InstructionSelection::getParam(V4IR::Expr *e) {
 }
 
 
+CompilationUnit::~CompilationUnit()
+{
+    foreach (QV4::Function *f, runtimeFunctions)
+        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->codeData));
+}
+
 void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
 {
     runtimeFunctions.resize(data->functionTableSize);
@@ -1126,4 +1132,7 @@ void CompilationUnit::linkBackendToEngine(QV4::ExecutionEngine *engine)
         if (QV4::Debugging::Debugger *debugger = engine->debugger)
             debugger->setPendingBreakpoints(runtimeFunction);
     }
+
+    foreach (QV4::Function *f, runtimeFunctions)
+        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->codeData), f);
 }

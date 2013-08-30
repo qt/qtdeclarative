@@ -206,6 +206,7 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_name;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
+    QMap<quintptr, QV4::Function*> allFunctions;
 
     quint32 m_engineId;
 

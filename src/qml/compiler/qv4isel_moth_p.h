@@ -58,6 +58,7 @@ class StackSlotAllocator;
 
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
+    virtual ~CompilationUnit();
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine);
 
     QVector<QByteArray> codeRefs;

@@ -795,6 +795,9 @@ namespace {
 
 Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
 {
+    // ### Use this code path instead of the "else" when the number of compilation units went down to
+    // one per (qml) file.
+#if 0
     for (QSet<QV4::CompiledData::CompilationUnit*>::ConstIterator unitIt = compilationUnits.constBegin(), unitEnd = compilationUnits.constEnd();
          unitIt != unitEnd; ++unitIt) {
         const QVector<Function*> &functions = (*unitIt)->runtimeFunctionsSortedByAddress;
@@ -805,6 +808,17 @@ Function *ExecutionEngine::functionForProgramCounter(quintptr pc) const
             return *it;
     }
     return 0;
+#else
+    QMap<quintptr, Function*>::ConstIterator it = allFunctions.lowerBound(pc);
+    if (it != allFunctions.begin() && allFunctions.count() > 0)
+        --it;
+    if (it == allFunctions.end())
+        return 0;
+
+    if (pc < it.key() || pc >= it.key() + (*it)->codeSize)
+        return 0;
+    return *it;
+#endif
 }
 
 QmlExtensions *ExecutionEngine::qmlExtensions()

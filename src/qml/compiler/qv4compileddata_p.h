@@ -330,7 +330,7 @@ struct CompilationUnit
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
-    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;
+//    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
 

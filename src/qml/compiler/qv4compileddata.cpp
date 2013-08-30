@@ -133,9 +133,11 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     linkBackendToEngine(engine);
 
+#if 0
     runtimeFunctionsSortedByAddress.resize(runtimeFunctions.size());
     memcpy(runtimeFunctionsSortedByAddress.data(), runtimeFunctions.data(), runtimeFunctions.size() * sizeof(QV4::Function*));
     qSort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
+#endif
 
     return runtimeFunctions[data->indexOfRootFunction];
 }
