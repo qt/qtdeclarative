@@ -6,7 +6,7 @@
     "QtQmlDevTools" => "$basedir/src/qmldevtools",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
-    "QtQmlDevTools" => "../qml/qml/parser",
+    "QtQmlDevTools" => "../qml/parser",
 );
 %deprecatedheaders = (
 );
