@@ -73,7 +73,7 @@ static QMap<quintptr, Function*> allFunctions;
 static Function *lookupFunction(void *pc)
 {
     quintptr key = reinterpret_cast<quintptr>(pc);
-    QMap<quintptr, Function*>::ConstIterator it = allFunctions.lowerBound(key);
+    QMap<quintptr, Function*>::Iterator it = allFunctions.lowerBound(key);
     if (it != allFunctions.begin() && allFunctions.count() > 0)
         --it;
     if (it == allFunctions.end())
