@@ -3084,6 +3084,68 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 }
 
 /*!
+    \since 5.2
+
+    Call this function to reset the OpenGL context its default state.
+
+    The scene graph uses the OpenGL context and will both rely on and
+    clobber its state. When mixing raw OpenGL commands with scene
+    graph rendering, this function provides a convenient way of
+    resetting the OpenGL context state back to its default values.
+
+    This function does not touch state in the fixed-function pipeline.
+
+    This function does not clear the color, depth and stencil buffers. Use
+    QQuickWindow::setClearBeforeRendering to control clearing of the color
+    buffer. The depth and stencil buffer might be clobbered by the scene
+    graph renderer. Clear these manually on demand.
+
+    \sa QQuickWindow::beforeRendering()
+ */
+void QQuickWindow::resetOpenGLState()
+{
+    if (!openglContext())
+        return;
+
+    QOpenGLFunctions *gl = openglContext()->functions();
+
+    gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    int maxAttribs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+    for (int i=0; i<maxAttribs; ++i) {
+        gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        gl->glDisableVertexAttribArray(i);
+    }
+
+    gl->glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_SCISSOR_TEST);
+
+    glColorMask(true, true, true, true);
+    glClearColor(0, 0, 0, 0);
+
+    glDepthMask(true);
+    glDepthFunc(GL_LESS);
+    gl->glClearDepthf(1);
+
+    glStencilMask(0xff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+
+    gl->glUseProgram(0);
+
+    QOpenGLFramebufferObject::bindDefault();
+}
+
+/*!
     \qmlproperty string QtQuick.Window2::Window::title
 
     The window's title in the windowing system.

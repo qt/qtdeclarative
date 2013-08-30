@@ -100,6 +100,8 @@ public:
     uint renderTargetId() const;
     QSize renderTargetSize() const;
 
+    void resetOpenGLState();
+
     QQmlIncubationController *incubationController() const;
 
 #ifndef QT_NO_ACCESSIBILITY
