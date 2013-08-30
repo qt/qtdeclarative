@@ -1737,8 +1737,8 @@ static inline bool hasFraction(qreal o)
 void tst_QQuickPathView::cancelDrag()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
     window->setSource(testFileUrl("dragpath.qml"));
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
