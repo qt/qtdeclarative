@@ -57,7 +57,6 @@ QmlListWrapper::QmlListWrapper(QV8Engine *engine)
       v8(engine)
 {
     vtbl = &static_vtbl;
-    setPrototype(QV8Engine::getV4(engine)->objectPrototype);
 }
 
 QmlListWrapper::~QmlListWrapper()

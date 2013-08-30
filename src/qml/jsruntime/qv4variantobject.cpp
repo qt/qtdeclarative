@@ -60,12 +60,11 @@ VariantObject::VariantObject(InternalClass *ic)
 }
 
 VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
-    : Object(engine)
+    : Object(engine->variantClass)
     , ExecutionEngine::ScarceResourceData(value)
     , m_vmePropertyReferenceCount(0)
 {
     vtbl = &static_vtbl;
-    setPrototype(engine->variantPrototype);
     if (isScarce())
         internalClass->engine->scarceResources.insert(this);
 }

@@ -164,7 +164,7 @@ class QQmlSequence : public QV4::Object
     Q_MANAGED
 public:
     QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-        : QV4::Object(engine)
+        : QV4::Object(engine->sequenceClass)
         , m_container(container)
         , m_object(0)
         , m_propertyIndex(-1)
@@ -172,19 +172,17 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
-        setPrototype(engine->sequencePrototype);
         init(engine);
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-        : QV4::Object(engine)
+        : QV4::Object(engine->sequenceClass)
         , m_object(object)
         , m_propertyIndex(propertyIndex)
         , m_isReference(true)
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
-        setPrototype(engine->sequencePrototype);
         loadReference();
         init(engine);
     }

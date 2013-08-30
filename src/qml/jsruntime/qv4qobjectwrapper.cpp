@@ -246,7 +246,6 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     , m_object(object)
 {
     vtbl = &static_vtbl;
-    setPrototype(engine->objectPrototype);
 
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
     m_toString = engine->newIdentifier(QStringLiteral("toString"));
@@ -1759,7 +1758,6 @@ QmlSignalHandler::QmlSignalHandler(ExecutionEngine *engine, QObject *object, int
     , m_signalIndex(signalIndex)
 {
     vtbl = &static_vtbl;
-    setPrototype(engine->objectPrototype);
 }
 
 DEFINE_MANAGED_VTABLE(QmlSignalHandler);

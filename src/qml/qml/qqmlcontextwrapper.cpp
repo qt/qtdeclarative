@@ -78,7 +78,6 @@ QV4::Value QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QOb
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
-    w->setPrototype(v4->objectPrototype);
     return Value::fromObject(w);
 }
 
@@ -93,7 +92,6 @@ QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, context, 0);
     w->isNullWrapper = true;
-    w->setPrototype(v4->objectPrototype);
     return Value::fromObject(w);
 }
 

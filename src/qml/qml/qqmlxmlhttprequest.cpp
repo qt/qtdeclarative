@@ -893,7 +893,6 @@ Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeIm
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     NamedNodeMap *instance = new (v4->memoryManager) NamedNodeMap(v4, data, list);
-    instance->setPrototype(v4->objectPrototype);
     return Value::fromObject(instance);
 }
 
@@ -935,7 +934,6 @@ Value NodeList::create(QV8Engine *engine, NodeImpl *data)
     QQmlXMLHttpRequestData *d = xhrdata(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     NodeList *instance = new (v4->memoryManager) NodeList(v4, data);
-    instance->setPrototype(v4->objectPrototype);
     return Value::fromObject(instance);
 }
 

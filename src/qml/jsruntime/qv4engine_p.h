@@ -149,11 +149,6 @@ struct Q_QML_EXPORT ExecutionEngine
     Value typeErrorCtor;
     Value uRIErrorCtor;
 
-    ObjectPrototype *objectPrototype;
-
-    VariantPrototype *variantPrototype;
-    SequencePrototype *sequencePrototype;
-
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
     InternalClass *objectClass;
@@ -173,6 +168,9 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *uriErrorClass;
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
+
+    InternalClass *variantClass;
+    InternalClass *sequenceClass;
 
     EvalFunction *evalFunction;
 

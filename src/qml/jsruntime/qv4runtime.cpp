@@ -1242,7 +1242,6 @@ void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, Value *result
     assert(ctx->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
     ArgumentsObject *args = new (c->engine->memoryManager) ArgumentsObject(c);
-    args->setPrototype(c->engine->objectPrototype);
     *result = Value::fromObject(args);
 }
 

@@ -54,7 +54,6 @@ MathObject::MathObject(ExecutionContext *ctx)
     : Object(ctx->engine)
 {
     type = Type_MathObject;
-    setPrototype(ctx->engine->objectPrototype);
 
     defineReadonlyProperty(ctx->engine, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
     defineReadonlyProperty(ctx->engine, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));

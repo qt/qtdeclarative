@@ -544,7 +544,6 @@ public:
     QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
-        setPrototype(engine->objectPrototype);
         defineDefaultProperty(engine, QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
         defineDefaultProperty(engine, QStringLiteral("restore"), method_restore, 0);
         defineDefaultProperty(engine, QStringLiteral("moveTo"), method_moveTo, 0);

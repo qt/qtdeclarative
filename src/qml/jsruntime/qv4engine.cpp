@@ -136,7 +136,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_uintMax = newIdentifier(QStringLiteral("4294967295"));
     id_name = newIdentifier(QStringLiteral("name"));
 
-    objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
+    ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
     objectClass = emptyClass->changePrototype(objectPrototype);
 
     arrayClass = objectClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
@@ -182,8 +182,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     URIErrorPrototype *uRIErrorPrototype = new (memoryManager) URIErrorPrototype(errorClass);
     uriErrorClass = emptyClass->changePrototype(uRIErrorPrototype);
 
-    variantPrototype = new (memoryManager) VariantPrototype(objectClass);
-    sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
+    VariantPrototype *variantPrototype = new (memoryManager) VariantPrototype(objectClass);
+    variantClass = emptyClass->changePrototype(variantPrototype);
+
+    SequencePrototype *sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
+    sequenceClass = emptyClass->changePrototype(sequencePrototype);
 
     objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
     stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
@@ -669,11 +672,6 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark();
     typeErrorCtor.mark();
     uRIErrorCtor.mark();
-
-    objectPrototype->mark();
-
-    variantPrototype->mark();
-    sequencePrototype->mark();
 
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects();

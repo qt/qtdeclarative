@@ -150,10 +150,11 @@ Value FunctionObject::construct(Managed *that, const CallData &)
     FunctionObject *f = static_cast<FunctionObject *>(that);
     ExecutionEngine *v4 = f->engine();
 
-    Object *obj = v4->newObject();
+    InternalClass *ic = v4->objectClass;
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->setPrototype(proto.objectValue());
+        ic = v4->emptyClass->changePrototype(proto.objectValue());
+    Object *obj = v4->newObject(ic);
     return Value::fromObject(obj);
 }
 
@@ -386,10 +387,12 @@ Value ScriptFunction::construct(Managed *that, const CallData &d)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
-    Object *obj = v4->newObject();
+
+    InternalClass *ic = v4->objectClass;
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->setPrototype(proto.objectValue());
+        ic = v4->emptyClass->changePrototype(proto.objectValue());
+    Object *obj = v4->newObject(ic);
 
     ExecutionContext *context = v4->current;
     CallData dd = d;
@@ -480,10 +483,12 @@ Value SimpleScriptFunction::construct(Managed *that, const CallData &d)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
-    Object *obj = v4->newObject();
+
+    InternalClass *ic = v4->objectClass;
     Value proto = f->get(v4->id_prototype);
     if (proto.isObject())
-        obj->setPrototype(proto.objectValue());
+        ic = v4->emptyClass->changePrototype(proto.objectValue());
+    Object *obj = v4->newObject(ic);
 
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));

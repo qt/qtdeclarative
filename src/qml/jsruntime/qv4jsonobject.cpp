@@ -861,7 +861,6 @@ JsonObject::JsonObject(ExecutionContext *context)
     : Object(context->engine)
 {
     type = Type_JSONObject;
-    setPrototype(context->engine->objectPrototype);
 
     defineDefaultProperty(context, QStringLiteral("parse"), method_parse, 2);
     defineDefaultProperty(context, QStringLiteral("stringify"), method_stringify, 3);

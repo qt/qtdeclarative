@@ -1309,8 +1309,6 @@ Value QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 QV4::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
     : Object(v4)
 {
-    setPrototype(v4->objectPrototype);
-
     defineDefaultProperty(v4, QStringLiteral("debug"), method_log);
     defineDefaultProperty(v4, QStringLiteral("log"), method_log);
     defineDefaultProperty(v4, QStringLiteral("info"), method_log);
