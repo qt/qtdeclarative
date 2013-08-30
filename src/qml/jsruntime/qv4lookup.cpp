@@ -93,16 +93,58 @@ void Lookup::getterGeneric(QV4::Lookup *l, QV4::Value *result, const QV4::Value 
         return;
     }
 
-    Value res;
-    if (Managed *m = object.asManaged()) {
-        res = m->get(l->name);
-    } else {
-        ExecutionContext *ctx = l->name->engine()->current;
-        Object *o = __qmljs_convert_to_object(ctx, object);
-        res = o->get(l->name);
+    ExecutionEngine *engine = l->name->engine();
+    Object *proto;
+    switch (object.type()) {
+    case Value::Undefined_Type:
+    case Value::Null_Type:
+        engine->current->throwTypeError();
+    case Value::Boolean_Type:
+        proto = engine->booleanClass->prototype;
+        break;
+    case Value::String_Type:
+        proto = engine->stringClass->prototype;
+        if (l->name == engine->id_length) {
+            // special case, as the property is on the object itself
+            l->getter = stringLengthGetter;
+            stringLengthGetter(l, result, object);
+            return;
+        }
+        break;
+    case Value::Integer_Type:
+    default: // Number
+        proto = engine->numberClass->prototype;
     }
+
+    PropertyAttributes attrs;
+    Property *p = l->lookup(proto, &attrs);
+    if (p) {
+        l->type = object.type();
+        l->proto = proto;
+        if (attrs.isData()) {
+            if (l->level == 0)
+                l->getter = Lookup::primitiveGetter0;
+            else if (l->level == 1)
+                l->getter = Lookup::primitiveGetter1;
+            if (result)
+                *result = p->value;
+            return;
+        } else {
+            if (l->level == 0)
+                l->getter = Lookup::primitiveGetterAccessor0;
+            else if (l->level == 1)
+                l->getter = Lookup::primitiveGetterAccessor1;
+            if (result)
+                *result = p->value;
+            Value res = proto->getValue(object, p, attrs);
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+
     if (result)
-        *result = res;
+        *result = Value::undefinedValue();
 }
 
 void Lookup::getter0(Lookup *l, Value *result, const Value &object)
@@ -219,6 +261,94 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
                 }
             }
         }
+    }
+    l->getter = getterGeneric;
+    getterGeneric(l, result, object);
+}
+
+
+void Lookup::primitiveGetter0(Lookup *l, Value *result, const Value &object)
+{
+    if (object.type() == l->type) {
+        Object *o = l->proto;
+        if (l->classList[0] == o->internalClass) {
+            if (result)
+                *result = o->memberData[l->index].value;
+            return;
+        }
+    }
+    l->getter = getterGeneric;
+    getterGeneric(l, result, object);
+}
+
+void Lookup::primitiveGetter1(Lookup *l, Value *result, const Value &object)
+{
+    if (object.type() == l->type) {
+        Object *o = l->proto;
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype()->internalClass) {
+            if (result)
+                *result = o->prototype()->memberData[l->index].value;
+            return;
+        }
+    }
+    l->getter = getterGeneric;
+    getterGeneric(l, result, object);
+}
+
+void Lookup::primitiveGetterAccessor0(Lookup *l, Value *result, const Value &object)
+{
+    if (object.type() == l->type) {
+        Object *o = l->proto;
+        if (l->classList[0] == o->internalClass) {
+            Value res;
+            FunctionObject *getter = o->memberData[l->index].getter();
+            if (!getter) {
+                res = Value::undefinedValue();
+            } else {
+                CALLDATA(0);
+                d.thisObject = object;
+                res = getter->call(d);
+            }
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+    l->getter = getterGeneric;
+    getterGeneric(l, result, object);
+}
+
+void Lookup::primitiveGetterAccessor1(Lookup *l, Value *result, const Value &object)
+{
+    if (object.type() == l->type) {
+        Object *o = l->proto;
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype()->internalClass) {
+            Value res;
+            FunctionObject *getter = o->prototype()->memberData[l->index].getter();
+            if (!getter) {
+                res = Value::undefinedValue();
+            } else {
+                CALLDATA(0);
+                d.thisObject = object;
+                res = getter->call(d);
+            }
+            if (result)
+                *result = res;
+            return;
+        }
+    }
+    l->getter = getterGeneric;
+    getterGeneric(l, result, object);
+}
+
+void Lookup::stringLengthGetter(Lookup *l, Value *result, const Value &object)
+{
+    if (String *s = object.asString()) {
+        if (result)
+            *result = Value::fromUInt32(s->length());
+        return;
     }
     l->getter = getterGeneric;
     getterGeneric(l, result, object);

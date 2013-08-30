@@ -808,19 +808,12 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, const Value
 
 void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, const Value &thisObject, uint index, Value *args, int argc)
 {
-    Lookup *l = context->lookups + index;
-
-    Object *baseObject;
-    if (thisObject.isObject())
-        baseObject = thisObject.objectValue();
-    else if (thisObject.isString())
-        baseObject = context->engine->stringClass->prototype;
-    else
-        baseObject = __qmljs_convert_to_object(context, thisObject);
-
     Value func;
-    l->getter(l, &func, Value::fromObject(baseObject));
-    FunctionObject *o = func.asFunctionObject();
+
+    Lookup *l = context->lookups + index;
+    l->getter(l, &func, thisObject);
+
+    Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
 
@@ -869,21 +862,21 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *t
 
 void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc)
 {
-    Lookup *l = context->lookups + index;
     Value func;
+
+    Lookup *l = context->lookups + index;
     l->globalGetter(l, context, &func);
 
-    if (Object *f = func.asObject()) {
-        CallData d;
-        d.args = args;
-        d.argc = argc;
-        Value res = f->construct(d);
-        if (result)
-            *result = res;
-        return;
-    }
+    Object *f = func.asObject();
+    if (!f)
+        context->throwTypeError();
 
-    context->throwTypeError();
+    CallData d;
+    d.args = args;
+    d.argc = argc;
+    Value res = f->construct(d);
+    if (result)
+        *result = res;
 }
 
 

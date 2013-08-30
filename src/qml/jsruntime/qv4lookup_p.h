@@ -59,7 +59,15 @@ struct Lookup {
         void (*globalGetter)(Lookup *l, ExecutionContext *ctx, Value *result);
         void (*setter)(Lookup *l, const Value &object, const Value &v);
     };
-    InternalClass *classList[Size];
+    union {
+        InternalClass *classList[Size];
+        struct {
+            void *dummy0;
+            void *dummy1;
+            Object *proto;
+            unsigned type;
+        };
+    };
     int level;
     uint index;
     String *name;
@@ -71,6 +79,12 @@ struct Lookup {
     static void getterAccessor0(Lookup *l, Value *result, const Value &object);
     static void getterAccessor1(Lookup *l, Value *result, const Value &object);
     static void getterAccessor2(Lookup *l, Value *result, const Value &object);
+
+    static void primitiveGetter0(Lookup *l, Value *result, const Value &object);
+    static void primitiveGetter1(Lookup *l, Value *result, const Value &object);
+    static void primitiveGetterAccessor0(Lookup *l, Value *result, const Value &object);
+    static void primitiveGetterAccessor1(Lookup *l, Value *result, const Value &object);
+    static void stringLengthGetter(Lookup *l, Value *result, const Value &object);
 
     static void globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
     static void globalGetter0(Lookup *l, ExecutionContext *ctx, Value *result);
