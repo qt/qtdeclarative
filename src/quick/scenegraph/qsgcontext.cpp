@@ -118,6 +118,7 @@ public:
         , atlasManager(0)
         , flashMode(qmlFlashMode())
         , distanceFieldDisabled(qmlDisableDistanceField())
+        , msaa(false)
     {
         renderAlpha = qmlTranslucentMode() ? 0.5 : 1;
     }
@@ -141,6 +142,8 @@ public:
     bool flashMode;
     float renderAlpha;
     bool distanceFieldDisabled;
+
+    bool msaa;
 };
 
 class QSGTextureCleanupEvent : public QEvent
@@ -150,6 +153,20 @@ public:
     ~QSGTextureCleanupEvent() { delete texture; }
     QSGTexture *texture;
 };
+
+namespace QSGMultisampleAntialiasing {
+    class ImageNode : public QSGDefaultImageNode {
+    public:
+        void setAntialiasing(bool) { }
+    };
+
+
+    class RectangleNode : public QSGDefaultRectangleNode {
+    public:
+        void setAntialiasing(bool) { }
+    };
+}
+
 
 /*!
     \class QSGContext
@@ -275,6 +292,18 @@ void QSGContext::initialize(QOpenGLContext *context)
 {
     Q_D(QSGContext);
 
+    QByteArray aaType = qgetenv("QSG_ANTIALIASING_METHOD");
+    if (aaType == "msaa") {
+        d->msaa = true;
+    } else if (aaType == "vertex") {
+        d->msaa = false;
+    } else {
+        if (context->format().samples() > 0)
+            d->msaa = true;
+        else
+            d->msaa = false;
+    }
+
     // Sanity check the surface format, in case it was overridden by the application
     QSurfaceFormat requested = defaultSurfaceFormat();
     QSurfaceFormat actual = context->format();
@@ -345,7 +374,9 @@ void QSGContext::renderNextFrame(QSGRenderer *renderer, GLuint fboId)
  */
 QSGRectangleNode *QSGContext::createRectangleNode()
 {
-    return new QSGDefaultRectangleNode;
+    Q_D(QSGContext);
+    return d->msaa ? new QSGMultisampleAntialiasing::RectangleNode
+                   : new QSGDefaultRectangleNode;
 }
 
 /*!
@@ -353,7 +384,9 @@ QSGRectangleNode *QSGContext::createRectangleNode()
  */
 QSGImageNode *QSGContext::createImageNode()
 {
-    return new QSGDefaultImageNode;
+    Q_D(QSGContext);
+    return d->msaa ? new QSGMultisampleAntialiasing::ImageNode
+                   : new QSGDefaultImageNode;
 }
 
 /*!

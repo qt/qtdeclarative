@@ -607,6 +607,70 @@ with multiple windows.
   stream and \c dynamic. Changing this value is mostly useful for
   platform vendors.
 
+  \section1 Antialiasing
+
+  The scene graph supports two types of antialiasing. By default, primitives
+  such as rectangles and images will be antialiased by adding more
+  vertices along the edge of the primitives so that the edges fade
+  to transparent. We call this method \e {vertex antialiasing}. If the
+  user requests a multisampled OpenGL context, by setting a QSurfaceFormat
+  with samples greater than \c 0 using QQuickWindow::setFormat(), the
+  scene graph will prefer multisample based antialiasing (MSAA).
+  The two techniques will affect how the rendering happens internally
+  and have different limitations.
+
+  It is also possible to override the antialiasing method used by
+  setting the environment variable \c {QSG_ANTIALIASING_METHOD}
+  to either \c vertex or \c {msaa}.
+
+  Vertex antialiasing can produce seams between edges of adjacent
+  primitives, even when the two edges are mathmatically the same.
+  Multisample antialiasing does not.
+
+
+  \section2 Vertex Antialiasing
+
+  Vertex antialiasing can be enabled and disabled on a per-item basis
+  using the Item::antialiasing property. It will work regardless of
+  what the underlying hardware supports and produces higher quality
+  antialiasing, both for normally rendered primitives and also for
+  primitives captured into framebuffer objects, for instance using
+  the ShaderEffectSource type.
+
+  The downside to using vertex antialiasing is that each primitive
+  with antialiasing enabled will have to be blended. In terms of
+  batching, this means that the renderer needs to do more work to
+  figure out if the primitive can be batched or not and due to overlaps
+  with other elements in the scene, it may also result in less batching,
+  which could impact performance.
+
+  On low-end hardware blending can also be quite expensive so for an
+  image or rounded rectangle that covers most of the screen, the amount
+  of blending needed for the interior of these primitives can result
+  in significant performance loss as the entire primitive must be blended.
+
+  \section2 Multisample Antialiasing
+
+  Multisample antialiasing is a hardware feature where the hardware
+  calculates a coverage value per pixel in the primitive. Some hardware
+  can multisample at a very low cost, while other hardware may
+  need both more memory and more GPU cycles to render a frame.
+
+  Using multisample antialiasing, many primitives, such as rounded
+  rectangles and image elements can be antialiased and still be
+  \e opaque in the scene graph. This means the renderer has an easier
+  job when creating batches and can rely on early-z to avoid overdraw.
+
+  When multisample antialiasing is used, content rendered into
+  framebuffer objects, need additional extensions to support multisampling
+  of framebuffers. Typically \c GL_EXT_framebuffer_multisample and
+  \c GL_EXT_framebuffer_blit. Most desktop chips have these extensions
+  present, but they are less common in embedded chips. When framebuffer
+  multisampling is not available in the hardware, content rendered into
+  framebuffer objects will not be antialiased, including the content of
+  a ShaderEffectSource.
+
+
   \section1 Performance
 
   As stated in the beginning, understanding the finer details of the
