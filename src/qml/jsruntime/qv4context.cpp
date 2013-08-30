@@ -572,7 +572,8 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                 bool hasProperty = false;
                 Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty) {
-                    *base = c->activation;
+                    if (ctx->type == Type_QmlContext)
+                        *base = c->activation;
                     return v;
                 }
             }
