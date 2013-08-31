@@ -135,7 +135,7 @@ String *IdentifierTable::insertString(const QString &s)
 }
 
 
-Identifier *IdentifierTable::identifier(String *str)
+Identifier *IdentifierTable::identifierImpl(String *str)
 {
     if (str->identifier)
         return str->identifier;
