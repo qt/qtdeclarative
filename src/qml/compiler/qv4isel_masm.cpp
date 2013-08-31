@@ -189,7 +189,7 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 static const Assembler::RegisterID calleeSavedRegisters[] = {
     // ### FIXME: remove unused registers.
     // Keep these in reverse order and make sure to also edit the unwind program in
-    // qv4unwindhelper_p-arm.h when changing this list.
+    // qv4unwindhelper_arm_p.h when changing this list.
     JSC::ARMRegisters::r12,
     JSC::ARMRegisters::r10,
     JSC::ARMRegisters::r9,

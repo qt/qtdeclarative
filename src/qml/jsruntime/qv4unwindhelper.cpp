@@ -61,11 +61,11 @@
 #endif
 
 #ifdef USE_DW2_HELPER
-#  include <qv4unwindhelper_p-dw2.h>
+#  include <qv4unwindhelper_dw2_p.h>
 #endif // USE_DW2_HELPER
 
 #ifdef USE_ARM_HELPER
-#  include <qv4unwindhelper_p-arm.h>
+#  include <qv4unwindhelper_arm_p.h>
 #endif // USE_ARM_HELPER
 
 QT_BEGIN_NAMESPACE

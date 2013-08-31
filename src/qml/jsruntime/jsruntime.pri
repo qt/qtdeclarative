@@ -86,8 +86,8 @@ HEADERS += \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
     $$PWD/qv4unwindhelper_p.h \
-    $$PWD/qv4unwindhelper_p-dw2.h \
-    $$PWD/qv4unwindhelper_p-arm.h \
+    $$PWD/qv4unwindhelper_dw2_p.h \
+    $$PWD/qv4unwindhelper_arm_p.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4util_p.h \
