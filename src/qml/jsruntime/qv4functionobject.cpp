@@ -289,17 +289,29 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 
     Object *arr = arg.asObject();
 
+    quint32 len;
     if (!arr) {
+        len = 0;
         if (!arg.isNullOrUndefined()) {
             ctx->throwTypeError();
             return Value::undefinedValue();
         }
+    } else {
+        len = ArrayPrototype::getLength(ctx, arr);
     }
-    quint32 len = arr ? arr->get(ctx->engine->id_length).toUInt32() : 0;
 
     CALLDATA(len);
-    for (quint32 i = 0; i < len; ++i)
-        d.args[i] = arr->getIndexed(i);
+
+    if (len) {
+        if (arr->protoHasArray() || arr->hasAccessorProperty) {
+            for (quint32 i = 0; i < len; ++i)
+                d.args[i] = arr->getIndexed(i);
+        } else {
+            for (quint32 i = 0; i < len; ++i)
+                d.args[i] = arr->arrayData[i].value;
+        }
+    }
+
     d.thisObject = thisArg;
     return o->call(d);
 }
