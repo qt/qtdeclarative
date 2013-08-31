@@ -73,7 +73,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         arrayDataLen = context->argumentCount;
     } else {
         internalClass = engine()->argumentsObjectClass;
-        assert(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
+        Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         memberData[CalleePropertyIndex].value = Value::fromObject(context->function);
         isNonStrictArgumentsObject = true;
 
@@ -93,7 +93,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         }
         arrayDataLen = argCount;
     }
-    assert(LengthPropertyIndex == internalClass->find(context->engine->id_length));
+    Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
     lp->value = Value::fromInt32(context->realArgumentCount);
 }
