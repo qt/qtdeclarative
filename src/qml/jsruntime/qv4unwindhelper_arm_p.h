@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4UNWINDHELPER_PDW2_H
-#define QV4UNWINDHELPER_PDW2_H
+#ifndef QV4UNWINDHELPER_ARM_P_H
+#define QV4UNWINDHELPER_ARM_P_H
 
 #include "qv4unwindhelper_p.h"
 #include "qv4functionobject_p.h"
