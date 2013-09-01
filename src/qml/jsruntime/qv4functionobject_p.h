@@ -99,6 +99,11 @@ struct Q_QML_EXPORT FunctionObject: Object {
         WrappedQtMethod = 1
     };
 
+    enum {
+        Index_Prototype = 0,
+        Index_ProtoConstructor = 0
+    };
+
     ExecutionContext *scope;
     String *name;
     String * const *formalParameterList;
@@ -107,7 +112,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int varCount;
     Function *function;
 
-    FunctionObject(ExecutionContext *scope, String *name = 0);
+    FunctionObject(ExecutionContext *scope, String *name = 0, bool createProto = false);
     ~FunctionObject();
 
     Value newInstance();

@@ -157,7 +157,11 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *booleanClass;
     InternalClass *numberClass;
     InternalClass *dateClass;
+
     InternalClass *functionClass;
+    InternalClass *functionWithProtoClass;
+    InternalClass *protoClass;
+
     InternalClass *regExpClass;
     InternalClass *errorClass;
     InternalClass *evalErrorClass;

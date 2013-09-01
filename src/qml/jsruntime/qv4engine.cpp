@@ -163,6 +163,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     FunctionPrototype *functionPrototype = new (memoryManager) FunctionPrototype(objectClass);
     functionClass = emptyClass->changePrototype(functionPrototype);
+    uint index;
+    functionWithProtoClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    Q_ASSERT(index == FunctionObject::Index_Prototype);
+    protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
+    Q_ASSERT(index == FunctionObject::Index_ProtoConstructor);
 
     RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
     regExpClass = emptyClass->changePrototype(regExpPrototype);

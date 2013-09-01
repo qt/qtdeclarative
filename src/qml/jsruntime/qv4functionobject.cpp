@@ -69,8 +69,8 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(FunctionObject);
 
-FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
-    : Object(scope->engine->functionClass)
+FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool createProto)
+    : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
     , scope(scope)
     , name(name)
     , formalParameterList(0)
@@ -88,6 +88,12 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name)
 #ifndef QT_NO_DEBUG
      assert(scope->next != (ExecutionContext *)0x1);
 #endif
+
+     if (createProto) {
+         Object *proto = scope->engine->newObject(scope->engine->protoClass);
+         proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
+         memberData[Index_Prototype].value = Value::fromObject(proto);
+     }
 
      if (name)
          defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
@@ -358,7 +364,7 @@ static Value throwTypeError(SimpleCallContext *ctx)
 DEFINE_MANAGED_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name)
+    : FunctionObject(scope, function->name, true)
 {
     vtbl = &static_vtbl;
     this->function = function;
@@ -382,11 +388,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     varCount = function->locals.size();
     varList = function->locals.constData();
 
-    Object *proto = scope->engine->newObject();
-    proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
-    Property *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
-    pd->value = Value::fromObject(proto);
-
     if (scope->strictMode) {
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
         Property pd = Property::fromAccessor(thrower, thrower);
@@ -401,7 +402,7 @@ Value ScriptFunction::construct(Managed *that, const CallData &d)
     ExecutionEngine *v4 = f->engine();
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->get(v4->id_prototype);
+    Value proto = f->memberData[Index_Prototype].value;
     if (proto.isObject())
         ic = v4->emptyClass->changePrototype(proto.objectValue());
     Object *obj = v4->newObject(ic);
@@ -454,7 +455,7 @@ Value ScriptFunction::call(Managed *that, const CallData &d)
 DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
 
 SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *function)
-    : FunctionObject(scope, function->name)
+    : FunctionObject(scope, function->name, true)
 {
     vtbl = &static_vtbl;
     this->function = function;
@@ -478,11 +479,6 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     varCount = function->locals.size();
     varList = function->locals.constData();
 
-    Object *proto = scope->engine->newObject();
-    proto->defineDefaultProperty(scope->engine->id_constructor, Value::fromObject(this));
-    Property *pd = insertMember(scope->engine->id_prototype, Attr_NotEnumerable|Attr_NotConfigurable);
-    pd->value = Value::fromObject(proto);
-
     if (scope->strictMode) {
         FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
         Property pd = Property::fromAccessor(thrower, thrower);
@@ -497,7 +493,7 @@ Value SimpleScriptFunction::construct(Managed *that, const CallData &d)
     ExecutionEngine *v4 = f->engine();
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->get(v4->id_prototype);
+    Value proto = f->memberData[Index_Prototype].value;
     if (proto.isObject())
         ic = v4->emptyClass->changePrototype(proto.objectValue());
     Object *obj = v4->newObject(ic);
