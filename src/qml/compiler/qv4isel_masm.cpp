@@ -601,7 +601,6 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
 
-
     V4IR::Optimizer opt(_function);
     opt.run();
 
@@ -1164,8 +1163,6 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
             return;
         }
     }
-
-    Q_ASSERT(sourceTemp->type == targetTemp->type);
 
     V4IR::Temp *stackTemp = sourceTemp->kind == V4IR::Temp::StackSlot ? sourceTemp : targetTemp;
     V4IR::Temp *registerTemp = sourceTemp->kind == V4IR::Temp::PhysicalRegister ? sourceTemp

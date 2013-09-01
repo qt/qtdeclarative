@@ -258,6 +258,10 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         VALUE(instr.result) = VALUE(instr.source);
     MOTH_END_INSTR(MoveTemp)
 
+    MOTH_BEGIN_INSTR(SwapTemps)
+        qSwap(VALUE(instr.left),  VALUE(instr.right));
+    MOTH_END_INSTR(MoveTemp)
+
     MOTH_BEGIN_INSTR(LoadValue)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
         VALUE(instr.result) = VALUE(instr.value);
