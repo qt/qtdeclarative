@@ -58,11 +58,16 @@ QTextStream qout(stderr, QIODevice::WriteOnly);
 using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module)
-    : QV4::Compiler::JSUnitGenerator(module)
-    , useFastLookups(true)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    : useFastLookups(true)
     , executableAllocator(execAllocator)
+    , irModule(module)
 {
+    if (!jsGenerator) {
+        jsGenerator = new QV4::Compiler::JSUnitGenerator(module);
+        ownJSGenerator.reset(jsGenerator);
+    }
+    this->jsGenerator = jsGenerator;
     assert(execAllocator);
     assert(module);
 }

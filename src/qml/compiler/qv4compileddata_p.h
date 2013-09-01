@@ -310,6 +310,7 @@ struct CompilationUnit
         : refCount(0)
         , engine(0)
         , data(0)
+        , ownsData(false)
         , runtimeStrings(0)
         , runtimeLookups(0)
         , runtimeClasses(0)
@@ -322,6 +323,7 @@ struct CompilationUnit
     int refCount;
     ExecutionEngine *engine;
     Unit *data;
+    bool ownsData;
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 

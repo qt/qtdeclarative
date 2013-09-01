@@ -64,7 +64,8 @@ namespace {
 CompilationUnit::~CompilationUnit()
 {
     engine->compilationUnits.erase(engine->compilationUnits.find(this));
-    free(data);
+    if (ownsData)
+        free(data);
     free(runtimeStrings);
     delete [] runtimeLookups;
     delete [] runtimeRegularExpressions;

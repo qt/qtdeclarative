@@ -189,7 +189,8 @@ void Script::parse()
         RuntimeCodegen cg(scope, strictMode);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module,
                                parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module));
+        QV4::Compiler::JSUnitGenerator jsGenerator(&module);
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();

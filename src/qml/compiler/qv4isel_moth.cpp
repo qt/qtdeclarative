@@ -188,8 +188,8 @@ private:
     }
 };
 
-InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
-    : EvalInstructionSelection(execAllocator, module)
+InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _function(0)
     , _block(0)
     , _codeStart(0)
@@ -276,7 +276,7 @@ void InstructionSelection::run(V4IR::Function *function)
         }
     }
 
-    registerLineNumberMapping(_function, lineNumberMappings);
+    jsGenerator->registerLineNumberMapping(_function, lineNumberMappings);
 
     // TODO: patch stack size (the push instruction)
     patchJumpAddresses();
@@ -300,7 +300,8 @@ void InstructionSelection::run(V4IR::Function *function)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = generateUnit();
+    compilationUnit->data = jsGenerator->generateUnit();
+    compilationUnit->ownsData = true;
     compilationUnit->codeRefs.resize(irModule->functions.size());
     int i = 0;
     foreach (V4IR::Function *irFunction, irModule->functions)
