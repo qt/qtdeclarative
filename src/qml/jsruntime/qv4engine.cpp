@@ -135,6 +135,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_eval = newIdentifier(QStringLiteral("eval"));
     id_uintMax = newIdentifier(QStringLiteral("4294967295"));
     id_name = newIdentifier(QStringLiteral("name"));
+    id_index = newIdentifier(QStringLiteral("index"));
+    id_input = newIdentifier(QStringLiteral("input"));
 
     ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
     objectClass = emptyClass->changePrototype(objectPrototype);
@@ -171,6 +173,10 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     RegExpPrototype *regExpPrototype = new (memoryManager) RegExpPrototype(objectClass);
     regExpClass = emptyClass->changePrototype(regExpPrototype);
+    regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
+    Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
+    regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
+    Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
     ErrorPrototype *errorPrototype = new (memoryManager) ErrorPrototype(objectClass);
     errorClass = emptyClass->changePrototype(errorPrototype);
@@ -391,6 +397,13 @@ ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
     ArrayObject *object = new (memoryManager) ArrayObject(this, list);
     return object;
 }
+
+ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic)
+{
+    ArrayObject *object = new (memoryManager) ArrayObject(ic);
+    return object;
+}
+
 
 DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
@@ -661,6 +674,8 @@ void ExecutionEngine::markObjects()
     id_eval->mark();
     id_uintMax->mark();
     id_name->mark();
+    id_index->mark();
+    id_input->mark();
 
     objectCtor.mark();
     stringCtor.mark();

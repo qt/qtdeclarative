@@ -163,6 +163,8 @@ struct Q_QML_EXPORT ExecutionEngine
     InternalClass *protoClass;
 
     InternalClass *regExpClass;
+    InternalClass *regExpExecArrayClass;
+
     InternalClass *errorClass;
     InternalClass *evalErrorClass;
     InternalClass *rangeErrorClass;
@@ -206,6 +208,8 @@ struct Q_QML_EXPORT ExecutionEngine
     String *id_eval;
     String *id_uintMax;
     String *id_name;
+    String *id_index;
+    String *id_input;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
     QMap<quintptr, QV4::Function*> allFunctions;
@@ -257,6 +261,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     ArrayObject *newArrayObject(int count = 0);
     ArrayObject *newArrayObject(const QStringList &list);
+    ArrayObject *newArrayObject(InternalClass *ic);
 
     DateObject *newDateObject(const Value &value);
     DateObject *newDateObject(const QDateTime &dt);

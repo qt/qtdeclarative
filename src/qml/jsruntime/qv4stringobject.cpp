@@ -401,17 +401,16 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
 }
 
-static QString makeReplacementString(const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
+static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
 {
-    QString result;
-    result.reserve(replaceValue.length());
+    result->reserve(result->length() + replaceValue.length());
     for (int i = 0; i < replaceValue.length(); ++i) {
         if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.length() - 1) {
-            char ch = replaceValue.at(++i).toLatin1();
+            ushort ch = replaceValue.at(++i).unicode();
             uint substStart = JSC::Yarr::offsetNoMatch;
             uint substEnd = JSC::Yarr::offsetNoMatch;
             if (ch == '$') {
-                result += ch;
+                *result += ch;
                 continue;
             } else if (ch == '&') {
                 substStart = matchOffsets[0];
@@ -423,27 +422,28 @@ static QString makeReplacementString(const QString &input, const QString& replac
                 substStart = matchOffsets[1];
                 substEnd = input.length();
             } else if (ch >= '1' && ch <= '9') {
-                char capture = ch - '0';
+                uint capture = ch - '0';
                 if (capture > 0 && capture < captureCount) {
                     substStart = matchOffsets[capture * 2];
                     substEnd = matchOffsets[capture * 2 + 1];
                 }
             } else if (ch == '0' && i < replaceValue.length() - 1) {
                 int capture = (ch - '0') * 10;
-                ch = replaceValue.at(++i).toLatin1();
-                capture += ch - '0';
-                if (capture > 0 && capture < captureCount) {
-                    substStart = matchOffsets[capture * 2];
-                    substEnd = matchOffsets[capture * 2 + 1];
+                ch = replaceValue.at(++i).unicode();
+                if (ch >= '0' && ch <= '9') {
+                    capture += ch - '0';
+                    if (capture > 0 && capture < captureCount) {
+                        substStart = matchOffsets[capture * 2];
+                        substEnd = matchOffsets[capture * 2 + 1];
+                    }
                 }
             }
             if (substStart != JSC::Yarr::offsetNoMatch && substEnd != JSC::Yarr::offsetNoMatch)
-                result += input.midRef(substStart, substEnd - substStart);
+                *result += input.midRef(substStart, substEnd - substStart);
         } else {
-            result += replaceValue.at(i);
+            *result += replaceValue.at(i);
         }
     }
-    return result;
 }
 
 Value StringPrototype::method_replace(SimpleCallContext *ctx)
@@ -455,27 +455,39 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
         string = ctx->thisObject.toString(ctx)->toQString();
 
     int numCaptures = 0;
-    QVarLengthArray<uint, 16> matchOffsets;
     int numStringMatches = 0;
+
+    uint allocatedMatchOffsets = 32;
+    uint _matchOffsets[32];
+    uint *matchOffsets = _matchOffsets;
+    uint nMatchOffsets = 0;
 
     Value searchValue = ctx->argument(0);
     RegExpObject *regExp = searchValue.as<RegExpObject>();
     if (regExp) {
         uint offset = 0;
         while (true) {
-            int oldSize = matchOffsets.size();
-            matchOffsets.resize(matchOffsets.size() + regExp->value->captureCount() * 2);
-            if (regExp->value->match(string, offset, matchOffsets.data() + oldSize) == JSC::Yarr::offsetNoMatch) {
-                matchOffsets.resize(oldSize);
+            int oldSize = nMatchOffsets;
+            if (allocatedMatchOffsets < nMatchOffsets + regExp->value->captureCount() * 2) {
+                allocatedMatchOffsets = qMax(allocatedMatchOffsets * 2, nMatchOffsets + regExp->value->captureCount() * 2);
+                uint *newOffsets = (uint *)malloc(allocatedMatchOffsets*sizeof(uint));
+                memcpy(newOffsets, matchOffsets, nMatchOffsets*sizeof(uint));
+                if (matchOffsets != _matchOffsets)
+                    free(matchOffsets);
+                matchOffsets = newOffsets;
+            }
+            if (regExp->value->match(string, offset, matchOffsets + oldSize) == JSC::Yarr::offsetNoMatch) {
+                nMatchOffsets = oldSize;
                 break;
             }
+            nMatchOffsets += regExp->value->captureCount() * 2;
             if (!regExp->global)
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global)
             regExp->lastIndexProperty(ctx)->value = Value::fromUInt32(0);
-        numStringMatches = matchOffsets.size() / (regExp->value->captureCount() * 2);
+        numStringMatches = nMatchOffsets / (regExp->value->captureCount() * 2);
         numCaptures = regExp->value->captureCount();
     } else {
         numCaptures = 1;
@@ -483,18 +495,19 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
         int idx = string.indexOf(searchString);
         if (idx != -1) {
             numStringMatches = 1;
-            matchOffsets.resize(2);
+            nMatchOffsets = 2;
             matchOffsets[0] = idx;
             matchOffsets[1] = idx + searchString.length();
         }
     }
 
-    QString result = string;
+    QString result;
     Value replaceValue = ctx->argument(1);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
-        int replacementDelta = 0;
+        result.reserve(string.length() + 10*numStringMatches);
         CALLDATA(numCaptures + 2);
         d.thisObject = Value::undefinedValue();
+        int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
                 int idx = (i * numCaptures + k) * 2;
@@ -506,19 +519,22 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
                 d.args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
+            Q_ASSERT(matchStart >= lastEnd);
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             d.args[numCaptures] = Value::fromUInt32(matchStart);
             d.args[numCaptures + 1] = Value::fromString(ctx, string);
 
             Value replacement = searchCallback->call(d);
-            QString replacementString = replacement.toString(ctx)->toQString();
-            result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacementString);
-            replacementDelta += replacementString.length() - matchEnd + matchStart;
+            result += string.midRef(lastEnd, matchStart - lastEnd);
+            result += replacement.toString(ctx)->toQString();
+            lastEnd = matchEnd;
         }
+        result += string.midRef(lastEnd);
     } else {
         QString newString = replaceValue.toString(ctx)->toQString();
-        int replacementDelta = 0;
+        result.reserve(string.length() + numStringMatches*newString.size());
 
+        int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             int baseIndex = i * numCaptures * 2;
             uint matchStart = matchOffsets[baseIndex];
@@ -526,11 +542,15 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
             if (matchStart == JSC::Yarr::offsetNoMatch)
                 continue;
 
-            QString replacement = makeReplacementString(string, newString, matchOffsets.data() + baseIndex, numCaptures);
-            result.replace(replacementDelta + matchStart, matchEnd - matchStart, replacement);
-            replacementDelta += replacement.length() - matchEnd + matchStart;
+            result += string.midRef(lastEnd, matchStart - lastEnd);
+            appendReplacementString(&result, string, newString, matchOffsets + baseIndex, numCaptures);
+            lastEnd = matchEnd;
         }
+        result += string.midRef(lastEnd);
     }
+
+    if (matchOffsets != _matchOffsets)
+        free(matchOffsets);
 
     return Value::fromString(ctx, result);
 }

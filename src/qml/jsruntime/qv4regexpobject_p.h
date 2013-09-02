@@ -74,6 +74,11 @@ struct RegExpObject: Object {
         RegExp_Multiline  = 0x04
     };
 
+    enum {
+        Index_ArrayIndex = ArrayObject::LengthPropertyIndex + 1,
+        Index_ArrayInput = Index_ArrayIndex + 1
+    };
+
     RegExp* value;
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;

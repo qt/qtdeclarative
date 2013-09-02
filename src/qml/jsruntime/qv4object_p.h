@@ -371,12 +371,11 @@ struct ArrayObject: Object {
 
     ArrayObject(ExecutionEngine *engine) : Object(engine->arrayClass) { init(engine); }
     ArrayObject(ExecutionEngine *engine, const QStringList &list);
+    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
+
     void init(ExecutionEngine *engine);
 
     QStringList toQStringList() const;
-
-protected:
-    ArrayObject(InternalClass *ic) : Object(ic) { init(ic->engine); }
 };
 
 inline uint Object::arrayLength() const

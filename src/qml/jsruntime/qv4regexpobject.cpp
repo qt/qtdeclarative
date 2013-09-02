@@ -177,7 +177,7 @@ void RegExpObject::markObjects(Managed *that)
 
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
-    assert(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    Q_ASSERT(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return &memberData[0];
 }
 
@@ -317,18 +317,19 @@ Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
     }
 
     // fill in result data
-    ArrayObject *array = ctx->engine->newArrayObject();
-    for (int i = 0; i < r->value->captureCount(); ++i) {
+    ArrayObject *array = ctx->engine->newArrayObject(ctx->engine->regExpExecArrayClass);
+    int len = r->value->captureCount();
+    array->arrayReserve(len);
+    for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        Value entry = Value::undefinedValue();
-        if (start != -1 && end != -1)
-            entry = Value::fromString(ctx, s.mid(start, end - start));
-        array->push_back(entry);
+        array->arrayData[i].value = (start != -1 && end != -1) ? Value::fromString(ctx, s.mid(start, end - start)) : Value::undefinedValue();
     }
+    array->arrayDataLen = len;
+    array->setArrayLengthUnchecked(len);
 
-    array->put(ctx, QLatin1String("index"), Value::fromInt32(result));
-    array->put(ctx, QLatin1String("input"), arg);
+    array->memberData[Index_ArrayIndex].value = Value::fromInt32(result);
+    array->memberData[Index_ArrayInput].value = arg;
 
     if (r->global)
         r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);
