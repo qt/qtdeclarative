@@ -423,7 +423,7 @@ public:
     VariableCollector(Function *function)
         : variablesCanEscape(function->variablesCanEscape())
     {
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
         qout << "Variables collected:" << endl;
 #endif // SHOW_SSA
 
@@ -436,7 +436,7 @@ public:
             }
         }
 
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
         qout << "Non-locals:" << endl;
         foreach (const Temp &nonLocal, nonLocals) {
             qout << "\t";
@@ -499,7 +499,7 @@ protected:
 
         if (Temp *t = s->target->asTemp()) {
             if (isCollectable(t)) {
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
                 qout << '\t';
                 t->dump(qout);
                 qout << " -> L" << currentBB->index << endl;
@@ -511,6 +511,8 @@ protected:
                 // For semi-pruned SSA:
                 killed.insert(*t);
             }
+        } else {
+            s->target->accept(this);
         }
     }
 
@@ -1041,15 +1043,19 @@ public:
             _worklist.removeFirst();
 
             if (_defUses.useCount(v) == 0) {
-//                qDebug()<<"-"<<v<<"has no uses...";
+#if defined(SHOW_SSA)
+                qout<<"- ";v.dump(qout);qout<<" has no uses..."<<endl;
+#endif
                 Stmt *s = _defUses.defStmt(v);
                 if (!s) {
                     _defUses.removeDef(v);
                 } else if (!hasSideEffect(s)) {
-#ifdef SHOW_SSA
-                    qout<<"-- defining stmt for";
+#if defined(SHOW_SSA)
+                    qout<<"-- defining stmt for ";
                     v.dump(qout);
-                    qout<<"has no side effect"<<endl;
+                    qout<<" has no side effect: ";
+                    s->dump(qout);
+                    qout<<endl;
 #endif
                     QVector<Stmt *> &stmts = _defUses.defStmtBlock(v)->statements;
                     int idx = stmts.indexOf(s);
@@ -1063,11 +1069,6 @@ public:
                 }
             }
         }
-
-#ifdef SHOW_SSA
-        qout<<"******************* After dead-code elimination:";
-        _defUses.dump();
-#endif
     }
 
 private:
@@ -2770,7 +2771,7 @@ void Optimizer::run()
     // Number all basic blocks, so we have nice numbers in the dumps:
     for (int i = 0; i < function->basicBlocks.size(); ++i)
         function->basicBlocks[i]->index = i;
-    showMeTheCode(function);
+//    showMeTheCode(function);
 
     cleanupBasicBlocks(function);
 
@@ -2782,6 +2783,7 @@ void Optimizer::run()
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
     if (!function->hasTry && !function->hasWith && doSSA) {
+//        qout << "SSA for " << *function->name << endl;
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);
 //        showMeTheCode(function);
@@ -2826,7 +2828,7 @@ void Optimizer::run()
         checkCriticalEdges(function->basicBlocks);
 #endif
 
-//        qout << "Finished." << endl;
+//        qout << "Finished SSA." << endl;
         inSSA = true;
     } else {
         inSSA = false;
