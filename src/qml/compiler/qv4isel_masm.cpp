@@ -341,7 +341,7 @@ void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame(bool withLocals)
+void Assembler::enterStandardStackFrame()
 {
     platformEnterStandardStackFrame();
 
@@ -350,23 +350,22 @@ void Assembler::enterStandardStackFrame(bool withLocals)
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    int frameSize = _stackLayout.calculateStackFrameSize(withLocals);
+    int frameSize = _stackLayout.calculateStackFrameSize();
 
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     for (int i = 0; i < calleeSavedRegisterCount; ++i)
         storePtr(calleeSavedRegisters[i], Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
 
-    move(StackFrameRegister, LocalsRegister);
 }
 
-void Assembler::leaveStandardStackFrame(bool withLocals)
+void Assembler::leaveStandardStackFrame()
 {
     // restore the callee saved registers
     for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
         loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
 
-    int frameSize = _stackLayout.calculateStackFrameSize(withLocals);
+    int frameSize = _stackLayout.calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -625,7 +624,7 @@ void InstructionSelection::run(V4IR::Function *function)
     Assembler* oldAssembler = _as;
     _as = new Assembler(this, _function, executableAllocator, 6); // 6 == max argc for calls to built-ins with an argument array
 
-    _as->enterStandardStackFrame(/*withLocals*/true);
+    _as->enterStandardStackFrame();
 
     int contextPointer = 0;
 #if !defined(RETURN_VALUE_IN_REGISTER)
@@ -641,13 +640,19 @@ void InstructionSelection::run(V4IR::Function *function)
     _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
 #endif
 
+    const int locals = _as->stackLayout().calculateJSStackFrameSize();
+    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
+    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         V4IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _block = _function->basicBlocks[i];
         _as->registerBlock(_block, nextBlock);
 
         if (_reentryBlocks.contains(_block)) {
-            _as->enterStandardStackFrame(/*locals*/false);
+            _as->enterStandardStackFrame();
 #ifdef ARGUMENTS_IN_REGISTERS
             _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
             _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
@@ -830,9 +835,11 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
 {
     *exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
+    Value *jsStackTop = context->engine->jsStackTop;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {
+        context->engine->jsStackTop = jsStackTop;
         ex.accept(context);
         *exceptionVar = ex.value();
         try {
@@ -840,6 +847,7 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
+            context->engine->jsStackTop = jsStackTop;
             *exceptionVar = ex.value();
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
@@ -868,7 +876,7 @@ void InstructionSelection::callBuiltinFinishTry()
     // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
     // with the address that we'd like to continue at, which is right after the ret below.
     Assembler::DataLabelPtr continuation = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ReturnValueRegister);
-    _as->leaveStandardStackFrame(/*locals*/false);
+    _as->leaveStandardStackFrame();
     _as->ret();
     _as->addPatch(continuation, _as->label());
 }
@@ -1741,7 +1749,12 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         Q_UNUSED(s);
     }
 
-    _as->leaveStandardStackFrame(/*withLocals*/true);
+    const int locals = _as->stackLayout().calculateJSStackFrameSize();
+    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+
+    _as->leaveStandardStackFrame();
 #if !defined(ARGUMENTS_IN_REGISTERS) && !defined(RETURN_VALUE_IN_REGISTER)
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...

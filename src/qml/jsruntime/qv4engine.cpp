@@ -84,6 +84,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
+    , jsStack(new WTF::PageAllocation)
     , debugger(0)
     , globalObject(0)
     , globalCode(0)
@@ -109,6 +110,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     iselFactory.reset(factory);
 
     memoryManager->setExecutionEngine(this);
+
+    // reserve 8MB for the JS stack
+    *jsStack = WTF::PageAllocation::allocate(8*1024*1024, WTF::OSAllocator::JSVMStackPages, true);
+    jsStackBase = (Value *)jsStack->base();
+    jsStackTop = jsStackBase;
 
     identifierTable = new IdentifierTable(this);
 
@@ -296,6 +302,8 @@ ExecutionEngine::~ExecutionEngine()
     delete regExpCache;
     delete regExpAllocator;
     delete executableAllocator;
+    jsStack->deallocate();
+    delete jsStack;
 }
 
 void ExecutionEngine::enableDebugger()

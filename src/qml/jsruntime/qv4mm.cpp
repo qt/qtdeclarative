@@ -293,6 +293,7 @@ void MemoryManager::mark()
 #endif // COMPILER
 
     collectFromStack();
+    collectFromJSStack();
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -602,4 +603,16 @@ void MemoryManager::collectFromStack() const
     }
 }
 
+void MemoryManager::collectFromJSStack() const
+{
+    Value *v = engine()->jsStackBase;
+    Value *top = engine()->jsStackTop;
+    while (v < top) {
+        Managed *m = v->asManaged();
+        if (m && m->inUse)
+            // Skip pointers to already freed objects, they are bogus as well
+            m->mark();
+        ++v;
+    }
+}
 QT_END_NAMESPACE

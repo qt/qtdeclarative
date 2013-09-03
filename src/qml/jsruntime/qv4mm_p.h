@@ -129,6 +129,7 @@ protected:
 
 private:
     void collectFromStack() const;
+    void collectFromJSStack() const;
     void mark();
     std::size_t sweep(bool lastSweep = false);
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);

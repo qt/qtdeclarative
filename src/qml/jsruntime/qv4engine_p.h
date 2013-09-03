@@ -50,6 +50,7 @@
 
 namespace WTF {
 class BumpPointerAllocator;
+class PageAllocation;
 }
 
 QT_BEGIN_NAMESPACE
@@ -122,6 +123,20 @@ struct Q_QML_EXPORT ExecutionEngine
     GlobalContext *rootContext;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
+
+    WTF::PageAllocation *jsStack;
+    Value *jsStackBase;
+    Value *jsStackTop;
+
+    Value *stackPush(uint nValues) {
+        Value *ptr = jsStackTop;
+        jsStackTop = ptr + nValues;
+        return ptr;
+    }
+
+    void stackPop(uint nValues) {
+        jsStackTop -= nValues;
+    }
 
     IdentifierTable *identifierTable;
 

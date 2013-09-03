@@ -305,7 +305,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
-        stack = static_cast<QV4::Value *>(alloca(stackSize * sizeof(QV4::Value)));
+        stack = context->engine->stackPush(stackSize);
         memset(stack, 0, stackSize * sizeof(QV4::Value));
     MOTH_END_INSTR(Push)
 
@@ -554,6 +554,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(SubNumberParams)
 
     MOTH_BEGIN_INSTR(Ret)
+        context->engine->stackPop(stackSize);
         QV4::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return result;

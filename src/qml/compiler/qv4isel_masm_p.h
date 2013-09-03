@@ -289,19 +289,24 @@ public:
 #endif
         }
 
-        int calculateStackFrameSize(bool withLocals) const
+        int calculateStackFrameSize() const
         {
             const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
                                                      + RegisterSize; // saved StackFrameRegister
 
-            const int locals = withLocals ? (maxOutgoingArgumentCount + localCount + savedConstCount) : 0;
-
-            // space for the locals and the callee saved registers
-            int frameSize = locals * sizeof(QV4::Value) + RegisterSize * calleeSavedRegisterCount;
+            // space for the callee saved registers
+            int frameSize = RegisterSize * calleeSavedRegisterCount;
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
 
+            return frameSize;
+        }
+
+        int calculateJSStackFrameSize() const
+        {
+            const int locals = (maxOutgoingArgumentCount + localCount + savedConstCount) + 1;
+            int frameSize = locals * sizeof(QV4::Value);
             return frameSize;
         }
 
@@ -716,8 +721,8 @@ public:
 
     void storeValue(QV4::Value value, V4IR::Temp* temp);
 
-    void enterStandardStackFrame(bool withLocals);
-    void leaveStandardStackFrame(bool withLocals);
+    void enterStandardStackFrame();
+    void leaveStandardStackFrame();
 
     template <int argumentNumber, typename T>
     void loadArgumentOnStackOrRegister(const T &value)
