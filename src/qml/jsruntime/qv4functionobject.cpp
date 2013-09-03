@@ -313,8 +313,11 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 d.args[i] = arr->getIndexed(i);
         } else {
-            for (quint32 i = 0; i < len; ++i)
+            int alen = qMin(len, arr->arrayDataLen);
+            for (quint32 i = 0; i < alen; ++i)
                 d.args[i] = arr->arrayData[i].value;
+            for (quint32 i = alen; i < len; ++i)
+                d.args[i] = Value::undefinedValue();
         }
     }
 
