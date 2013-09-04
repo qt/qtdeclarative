@@ -51,6 +51,7 @@
 #include "qv4function_p.h"
 #include "qv4exception_p.h"
 #include "private/qlocale_tools_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -159,14 +160,16 @@ void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name)
 
 void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
 {
-    Value pleft = __qmljs_to_primitive(left, PREFERREDTYPE_HINT);
-    Value pright = __qmljs_to_primitive(right, PREFERREDTYPE_HINT);
-    if (pleft.isString() || pright.isString()) {
-        if (!pleft.isString())
+    ValueScope scope(ctx);
+
+    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
+    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
+    if (pleft->isString() || pright->isString()) {
+        if (!pleft->isString())
             pleft = __qmljs_to_string(pleft, ctx);
-        if (!pright.isString())
+        if (!pright->isString())
             pright = __qmljs_to_string(pright, ctx);
-        String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
+        String *string = __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue());
         *result = Value::fromString(string);
         return;
     }
