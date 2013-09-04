@@ -2235,6 +2235,8 @@ void QQuickTextInput::setPasswordCharacter(const QString &str)
    same value as the TextInput::text property. Otherwise,
    this property holds the text visible to the user, while
    the \l text property holds the actual entered text.
+
+   \readonly
 */
 QString QQuickTextInput::displayText() const
 {
