@@ -63,6 +63,7 @@
 #include <qglobal.h>
 
 #if defined(CONST) && defined(Q_OS_WIN)
+# define QT_POP_CONST
 # pragma push_macro("CONST")
 # undef CONST // CONST conflicts with our own identifier
 #endif
@@ -918,8 +919,9 @@ private:
 
 QT_END_NAMESPACE
 
-#if defined(Q_OS_WIN)
+#if defined(QT_POP_CONST)
 # pragma pop_macro("CONST") // Restore peace
+# undef QT_POP_CONST
 #endif
 
 #endif // QV4IR_P_H
