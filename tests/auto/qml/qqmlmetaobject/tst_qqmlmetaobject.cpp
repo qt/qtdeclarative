@@ -379,10 +379,7 @@ void tst_QQmlMetaObject::method()
     QMetaMethod method = mo->method(mo->methodOffset());
     QCOMPARE(method.methodType(), methodType);
     QCOMPARE(QString::fromUtf8(method.methodSignature().constData()), signature);
-    if (method.methodType() != QMetaMethod::Signal)
-        QCOMPARE(method.access(), QMetaMethod::Protected);
-    else
-        QCOMPARE(method.access(), QMetaMethod::Public);
+    QCOMPARE(method.access(), QMetaMethod::Public);
 
     QString computedName = signature.left(signature.indexOf('('));
     QCOMPARE(QString::fromUtf8(method.name()), computedName);

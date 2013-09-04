@@ -1553,7 +1553,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         } else {
             method = builder.addSlot(signature);
         }
-        method.setAccess(QMetaMethod::Protected);
+        method.setAccess(QMetaMethod::Public);
 
         if (arguments && arguments->names)
             method.setParameterNames(*arguments->names);
