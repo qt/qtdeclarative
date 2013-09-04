@@ -1271,7 +1271,7 @@ void Renderer::cleanupBatches(QDataBuffer<Batch *> *batches) {
         int count = 0;
         while (count < batches->size() && batches->at(count)->first)
             ++count;
-        for (int i=count+1; i<batches->size(); ++i)
+        for (int i=count; i<batches->size(); ++i)
             invalidateAndRecycleBatch(batches->at(i));
         batches->resize(count);
     }
