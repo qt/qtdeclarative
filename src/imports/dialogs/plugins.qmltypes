@@ -11,6 +11,11 @@ Module {
         prototype: "QQuickAbstractDialog"
         Property { name: "showAlphaChannel"; type: "bool" }
         Property { name: "color"; type: "QColor" }
+        Property { name: "currentColor"; type: "QColor" }
+        Property { name: "currentHue"; type: "double"; isReadonly: true }
+        Property { name: "currentSaturation"; type: "double"; isReadonly: true }
+        Property { name: "currentLightness"; type: "double"; isReadonly: true }
+        Property { name: "currentAlpha"; type: "double"; isReadonly: true }
         Signal { name: "selectionAccepted" }
         Method {
             name: "setVisible"
@@ -27,6 +32,10 @@ Module {
         Method {
             name: "setColor"
             Parameter { name: "arg"; type: "QColor" }
+        }
+        Method {
+            name: "setCurrentColor"
+            Parameter { name: "currentColor"; type: "QColor" }
         }
         Method {
             name: "setShowAlphaChannel"
@@ -50,6 +59,22 @@ Module {
         Signal { name: "rejected" }
         Method { name: "open" }
         Method { name: "close" }
+        Method {
+            name: "setX"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setY"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setWidth"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setHeight"
+            Parameter { name: "arg"; type: "int" }
+        }
     }
     Component {
         name: "QQuickAbstractFileDialog"
@@ -99,25 +124,15 @@ Module {
         }
     }
     Component {
-        name: "QQuickColorDialog"
-        defaultProperty: "implementation"
+        name: "QQuickPlatformColorDialog"
         prototype: "QQuickAbstractColorDialog"
-        exports: ["QtQuick.Dialogs/AbstractColorDialog 1.0"]
+        exports: ["QtQuick.Dialogs/ColorDialog 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "implementation"; type: "QObject"; isPointer: true }
     }
     Component {
-        name: "QQuickFileDialog"
-        defaultProperty: "implementation"
+        name: "QQuickPlatformFileDialog"
         prototype: "QQuickAbstractFileDialog"
-        exports: ["QtQuick.Dialogs/AbstractFileDialog 1.0"]
+        exports: ["QtQuick.Dialogs/FileDialog 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "implementation"; type: "QObject"; isPointer: true }
-        Method { name: "clearSelection" }
-        Method {
-            name: "addSelection"
-            type: "bool"
-            Parameter { name: "path"; type: "QUrl" }
-        }
     }
 }
