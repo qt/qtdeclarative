@@ -851,6 +851,7 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
 
     } else if (node->type() == QSGNode::ClipNodeType) {
         snode->data = new ClipBatchRootInfo;
+        m_rebuild |= FullRebuild;
 
     } else if (node->type() == QSGNode::RenderNodeType) {
         RenderNodeElement *e = new RenderNodeElement(static_cast<QSGRenderNode *>(node));
@@ -1037,7 +1038,7 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
                 if (!e->batch->isMaterialCompatible(e))
                     m_rebuild = Renderer::FullRebuild;
             } else {
-                m_rebuild = Renderer::BuildBatches;
+                m_rebuild |= Renderer::BuildBatches;
             }
         }
     }
@@ -1111,6 +1112,9 @@ void Renderer::buildRenderLists(QSGNode *node)
     } else if (node->type() == QSGNode::ClipNodeType || shadowNode->isBatchRoot) {
         Q_ASSERT(m_nodes.contains(node));
         BatchRootInfo *info = batchRootInfo(m_nodes.value(node));
+        Q_ASSERT(!m_explicitOrdering || info->firstOrder >= 0);
+        Q_ASSERT(!m_explicitOrdering || info->lastOrder >= 0);
+
         if (m_explicitOrdering)
             m_nextRenderOrder = info->firstOrder;
         int currentOrder = m_nextRenderOrder;
@@ -1152,7 +1156,7 @@ static void qsg_addOrphanedElements(QDataBuffer<Element *> &orphans, const QData
     orphans.reset();
     for (int i=0; i<renderList.size(); ++i) {
         Element *e = renderList.at(i);
-        if (e && !e->removed && e->batch == 0) {
+        if (e && !e->removed) {
             e->orphaned = true;
             orphans.add(e);
         }

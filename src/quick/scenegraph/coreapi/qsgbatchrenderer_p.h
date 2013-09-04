@@ -205,7 +205,7 @@ struct RenderNodeElement : public Element {
 };
 
 struct BatchRootInfo {
-    BatchRootInfo() : parentRoot(0), availableOrders(0) { }
+    BatchRootInfo() : parentRoot(0), lastOrder(-1), firstOrder(-1), availableOrders(0) { }
     QSet<Node *> subRoots;
     Node *parentRoot;
     int lastOrder;
