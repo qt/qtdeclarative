@@ -571,14 +571,6 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         node = d->sceneGraphContext()->createImageNode();
     }
 
-    if (d->pixmapChanged) {
-        // force update the texture in the node to trigger reconstruction of
-        // geometry and the likes when a atlas segment has changed.
-        node->setTexture(0);
-        node->setTexture(texture);
-        d->pixmapChanged = false;
-    }
-
     QRectF targetRect;
     QRectF sourceRect;
     QSGTexture::WrapMode hWrap = QSGTexture::ClampToEdge;
@@ -670,6 +662,17 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                   sourceRect.y() / d->pix.height(),
                   sourceRect.width() / d->pix.width(),
                   sourceRect.height() / d->pix.height());
+
+    if (d->pixmapChanged) {
+        // force update the texture in the node to trigger reconstruction of
+        // geometry and the likes when a atlas segment has changed.
+        node->setTexture(0);
+        if (texture->isAtlasTexture() && (hWrap == QSGTexture::Repeat || vWrap == QSGTexture::Repeat))
+            node->setTexture(texture->removedFromAtlas());
+        else
+            node->setTexture(texture);
+        d->pixmapChanged = false;
+    }
 
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
