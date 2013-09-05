@@ -2692,10 +2692,6 @@ void QQuickTextInput::q_updateAlignment()
     }
 }
 
-// ### these should come from QStyleHints
-const int textCursorWidth = 1;
-const bool fullWidthSelection = true;
-
 /*!
     \internal
 
