@@ -146,10 +146,16 @@ QV8DebugService *QV8DebugService::instance()
     return v8ServiceInstance();
 }
 
-void QV8DebugService::initialize(const QV8Engine *engine)
+void QV8DebugService::addEngine(const QV8Engine *engine)
 {
     // just make sure that the service is properly registered
     v8ServiceInstance()->setEngine(engine);
+}
+
+void QV8DebugService::removeEngine(const QV8Engine *engine)
+{
+    if (v8ServiceInstance()->d_func()->engine == engine)
+        v8ServiceInstance()->setEngine(0);
 }
 
 void QV8DebugService::setEngine(const QV8Engine *engine)

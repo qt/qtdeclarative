@@ -655,10 +655,13 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(true));
+    ctxt->setContextProperty("dynamicallyPopulate", QVariant(false));
+    ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl("transitions.qml"));
     window->show();
     QTest::qWaitForWindowExposed(window.data());
@@ -767,10 +770,13 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(false));
+    ctxt->setContextProperty("dynamicallyPopulate", QVariant(false));
+    ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl("transitions.qml"));
     window->show();
     QTest::qWaitForWindowExposed(window.data());

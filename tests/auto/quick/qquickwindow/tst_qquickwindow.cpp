@@ -911,15 +911,15 @@ void tst_qquickwindow::qmlCreation()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("window.qml"));
-    QObject* created = component.create();
+    QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
     QVERIFY(created);
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     QCOMPARE(window->color(), QColor(Qt::green));
 
-    QQuickItem* item = window->findChild<QQuickItem*>("item");
+    QQuickItem *item = window->findChild<QQuickItem*>("item");
     QVERIFY(item);
     QCOMPARE(item->window(), window);
 }
@@ -1000,10 +1000,10 @@ void tst_qquickwindow::animationsWhileHidden()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("AnimationsWhileHidden.qml"));
-    QObject* created = component.create();
+    QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     QVERIFY(window->isVisible());
 
@@ -1022,10 +1022,10 @@ void tst_qquickwindow::headless()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("Headless.qml"));
-    QObject* created = component.create();
+    QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     window->setPersistentOpenGLContext(false);
     window->setPersistentSceneGraph(false);
     QVERIFY(window);
@@ -1120,13 +1120,13 @@ void tst_qquickwindow::focusObject()
 
 void tst_qquickwindow::ignoreUnhandledMouseEvents()
 {
-    QQuickWindow* window = new QQuickWindow;
+    QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    QQuickItem* item = new QQuickItem;
+    QQuickItem *item = new QQuickItem;
     item->setSize(QSizeF(100, 100));
     item->setParentItem(window->contentItem());
 
@@ -1163,10 +1163,10 @@ void tst_qquickwindow::ownershipRootItem()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("ownershipRootItem.qml"));
-    QObject* created = component.create();
+    QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -1426,7 +1426,7 @@ void tst_qquickwindow::requestActivate()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("active.qml"));
-    QQuickWindow* window1 = qobject_cast<QQuickWindow *>(component.create());
+    QQuickWindow *window1 = qobject_cast<QQuickWindow *>(component.create());
     QVERIFY(window1);
 
     QWindowList windows = QGuiApplication::topLevelWindows();
@@ -1475,7 +1475,7 @@ void tst_qquickwindow::blockClosing()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("ucantclosethis.qml"));
-    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
     QVERIFY(window);
     window->show();
     QTest::qWaitForWindowExposed(window);
@@ -1495,15 +1495,14 @@ void tst_qquickwindow::crashWhenHoverItemDeleted()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("hoverCrash.qml"));
-    QQuickWindow* window = qobject_cast<QQuickWindow *>(component.create());
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
     QVERIFY(window);
     window->show();
     QTest::qWaitForWindowExposed(window);
 
     // Simulate a move from the first rectangle to the second. Crash will happen in here
     // Moving instantaneously from (0, 99) to (0, 102) does not cause the crash
-    for (int i = 99; i < 102; ++i)
-    {
+    for (int i = 99; i < 102; ++i) {
         QTest::mouseMove(window, QPoint(0, i));
     }
 }

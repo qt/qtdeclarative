@@ -168,6 +168,16 @@ int QQmlDebugProcess::debugPort() const
     return m_port;
 }
 
+bool QQmlDebugProcess::waitForFinished()
+{
+    return m_process.waitForFinished();
+}
+
+QProcess::ExitStatus QQmlDebugProcess::exitStatus() const
+{
+    return m_process.exitStatus();
+}
+
 void QQmlDebugProcess::setEnvironment(const QStringList &environment)
 {
     m_environment = environment;

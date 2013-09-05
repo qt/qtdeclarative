@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSCRIPTVALUEITERATOR_H
-#define QSCRIPTVALUEITERATOR_H
+#ifndef QJSVALUEITERATOR_H
+#define QJSVALUEITERATOR_H
 
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qtqmlglobal.h>
@@ -75,4 +75,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QSCRIPTVALUEITERATOR_H
+#endif // QJSVALUEITERATOR_H

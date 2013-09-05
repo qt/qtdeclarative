@@ -4253,6 +4253,7 @@ void tst_QQuickGridView::snapToRow()
 
     QQuickView *window = getView();
 
+    QQuickViewTestUtil::moveMouseAway(window);
     window->setSource(testFileUrl("snapToRow.qml"));
     window->show();
     qApp->processEvents();
@@ -4347,6 +4348,7 @@ void tst_QQuickGridView::snapOneRow()
     QFETCH(qreal, startExtent);
 
     QQuickView *window = getView();
+    QQuickViewTestUtil::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapOneRow.qml"));
     window->show();
