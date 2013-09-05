@@ -195,7 +195,7 @@ void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
     if (!i) {
         qDebug() << ind.constData() << "- no info";
     } else {
-        qDebug() << ind.constData() << "- parent:" << i->parentRoot;
+        qDebug() << ind.constData() << "- parent:" << i->parentRoot << "orders" << i->firstOrder << "->" << i->lastOrder << ", avail:" << i->availableOrders;
         for (QSet<Node *>::const_iterator it = i->subRoots.constBegin();
              it != i->subRoots.constEnd(); ++it) {
             qDebug() << ind.constData() << "-" << *it;
@@ -217,7 +217,10 @@ void qsg_dumpShadowRoots(Node *n)
         qDebug() << ind.constData() << "[X]" << n->sgNode << hex << uint(n->sgNode->flags());
         qsg_dumpShadowRoots(n->rootInfo(), indent);
     } else {
-        qDebug() << ind.constData() << "[ ]" << n->sgNode << hex << uint(n->sgNode->flags());
+        QDebug d = qDebug();
+        d << ind.constData() << "[ ]" << n->sgNode << hex << uint(n->sgNode->flags());
+        if (n->type() == QSGNode::GeometryNodeType)
+            d << "order" << dec << n->element()->order;
     }
 
     SHADOWNODE_TRAVERSE(n)
@@ -623,7 +626,8 @@ Renderer::Renderer(QSGContext *ctx)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)
     , m_nextRenderOrder(0)
-    , m_explicitOrdering(false)
+    , m_partialRebuild(false)
+    , m_partialRebuildRoot(0)
     , m_opaqueBatches(16)
     , m_alphaBatches(16)
     , m_batchPool(16)
@@ -1026,7 +1030,12 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
                 if (!e->batch->geometryWasChanged(gn)) {
                     m_rebuild |= Renderer::FullRebuild;
                 } else if (!b->isOpaque) {
-                    m_rebuild |= Renderer::BuildBatches;
+                    if (e->root) {
+                        m_taggedRoots << e->root;
+                        m_rebuild |= BuildRenderListsForTaggedRoots;
+                    } else {
+                        m_rebuild |= FullRebuild;
+                    }
                 } else {
                     b->needsUpload = true;
                 }
@@ -1034,8 +1043,7 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
         }
     }
 
-    if (state & QSGNode::DirtyMaterial) {
-        Q_ASSERT(node->type() == QSGNode::GeometryNodeType);
+    if (state & QSGNode::DirtyMaterial && node->type() == QSGNode::GeometryNodeType) {
         Element *e = shadowNode->element();
         if (e) {
             if (e->batch) {
@@ -1108,30 +1116,27 @@ void Renderer::buildRenderLists(QSGNode *node)
             m_alphaRenderList << e;
 
         e->order = ++m_nextRenderOrder;
-
         // Used while rebuilding partial roots.
-        if (m_explicitOrdering)
+        if (m_partialRebuild)
             e->orphaned = false;
 
     } else if (node->type() == QSGNode::ClipNodeType || shadowNode->isBatchRoot) {
         Q_ASSERT(m_nodes.contains(node));
         BatchRootInfo *info = batchRootInfo(m_nodes.value(node));
-        Q_ASSERT(!m_explicitOrdering || info->firstOrder >= 0);
-        Q_ASSERT(!m_explicitOrdering || info->lastOrder >= 0);
-
-        if (m_explicitOrdering)
+        if (node == m_partialRebuildRoot) {
             m_nextRenderOrder = info->firstOrder;
-        int currentOrder = m_nextRenderOrder;
-        QSGNODE_TRAVERSE(node)
-                buildRenderLists(child);
-        int padding = (m_nextRenderOrder - currentOrder) >> 2;
-        if (m_explicitOrdering) {
+            QSGNODE_TRAVERSE(node)
+                    buildRenderLists(child);
             m_nextRenderOrder = info->lastOrder + 1;
         } else {
+            int currentOrder = m_nextRenderOrder;
+            QSGNODE_TRAVERSE(node)
+                buildRenderLists(child);
+            int padding = (m_nextRenderOrder - currentOrder) >> 2;
             info->firstOrder = currentOrder;
             info->availableOrders = padding;
             info->lastOrder = m_nextRenderOrder + padding;
-            m_nextRenderOrder += padding;
+            m_nextRenderOrder = info->lastOrder;
         }
         return;
     } else if (node->type() == QSGNode::RenderNodeType) {
@@ -1226,7 +1231,7 @@ void Renderer::buildRenderListsForTaggedRoots()
     m_opaqueRenderList.reset();
     m_alphaRenderList.reset();
     int maxRenderOrder = m_nextRenderOrder;
-    m_explicitOrdering = true;
+    m_partialRebuild = true;
     // Traverse each root, assigning it
     for (QSet<Node *>::const_iterator it = m_taggedRoots.constBegin();
          it != m_taggedRoots.constEnd(); ++it) {
@@ -1235,11 +1240,13 @@ void Renderer::buildRenderListsForTaggedRoots()
         if ((!i->parentRoot || !m_taggedRoots.contains(i->parentRoot))
              && !nodeUpdater()->isNodeBlocked(root->sgNode, rootNode())) {
             m_nextRenderOrder = i->firstOrder;
+            m_partialRebuildRoot = root->sgNode;
             buildRenderLists(root->sgNode);
         }
     }
+    m_partialRebuild = false;
+    m_partialRebuildRoot = 0;
     m_taggedRoots.clear();
-    m_explicitOrdering = false;
     m_nextRenderOrder = qMax(m_nextRenderOrder, maxRenderOrder);
 
     // Add orphaned elements back into the list and then sort it..
@@ -1787,6 +1794,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
     if (Q_UNLIKELY(debug_render)) {
         QDebug debug = qDebug();
         debug << " -"
+              << batch
               << (batch->uploadedThisFrame ? "[  upload]" : "[retained]")
               << (e->node->clipList() ? "[  clip]" : "[noclip]")
               << (batch->isOpaque ? "[opaque]" : "[ alpha]")
@@ -1864,6 +1872,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
     if (Q_UNLIKELY(debug_render)) {
         qDebug() << " -"
+                 << batch
                  << (batch->uploadedThisFrame ? "[  upload]" : "[retained]")
                  << (e->node->clipList() ? "[  clip]" : "[noclip]")
                  << (batch->isOpaque ? "[opaque]" : "[ alpha]")
