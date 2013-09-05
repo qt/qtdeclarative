@@ -365,11 +365,13 @@ void QSGDefaultImageNode::preprocess()
         markDirty(DirtyMaterial);
 }
 
+#ifdef QT_OPENGL_ES_2
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
+#endif
 
 namespace {
     struct X { float x, tx; };
