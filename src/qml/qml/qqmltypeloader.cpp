@@ -1468,17 +1468,6 @@ QQmlImportDatabase *QQmlTypeLoader::importDatabase()
 }
 
 /*!
-\enum QQmlTypeLoader::Option
-
-This enum defines the options that control the way type data is handled.
-
-\value None             The default value, indicating that no other options
-                        are enabled.
-\value PreserveParser   The parser used to handle the type data is preserved
-                        after the data has been parsed.
-*/
-
-/*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
@@ -1492,7 +1481,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     QQmlTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
-        typeData = new QQmlTypeData(url, None, this);
+        typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         QQmlDataLoader::load(typeData, mode);
@@ -1506,14 +1495,12 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 /*!
 Returns a QQmlTypeData for the given \a data with the provided base \a url.  The 
 QQmlTypeData will not be cached.
-
-The specified \a options control how the loader handles type data.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Options options)
+QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlTypeData *typeData = new QQmlTypeData(url, options, this);
+    QQmlTypeData *typeData = new QQmlTypeData(url, this);
     QQmlDataLoader::loadWithStaticData(typeData, data);
 
     return typeData;
@@ -1909,9 +1896,8 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {
 }
 
-QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader::Options options, 
-                                           QQmlTypeLoader *manager)
-: QQmlTypeLoader::Blob(url, QmlFile, manager), m_options(options),
+QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
+: QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
 }
@@ -2005,8 +1991,7 @@ void QQmlTypeData::done()
     if (!isError()) 
         compile();
 
-    if (!(m_options & QQmlTypeLoader::PreserveParser))
-        scriptParser.clear();
+    scriptParser.clear();
 }
 
 void QQmlTypeData::completed()

@@ -323,16 +323,10 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
-    enum Option {
-        None,
-        PreserveParser
-    };
-    Q_DECLARE_FLAGS(Options, Option)
-
     QQmlImportDatabase *importDatabase();
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
-    QQmlTypeData *getType(const QByteArray &, const QUrl &url, Options = None);
+    QQmlTypeData *getType(const QByteArray &, const QUrl &url);
 
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
@@ -391,8 +385,6 @@ private:
     QmldirBundleIdCache m_qmldirBundleIdCache;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlTypeLoader::Options)
-
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 {
 public:
@@ -419,7 +411,7 @@ public:
 private:
     friend class QQmlTypeLoader;
 
-    QQmlTypeData(const QUrl &, QQmlTypeLoader::Options, QQmlTypeLoader *);
+    QQmlTypeData(const QUrl &, QQmlTypeLoader *);
 
 public:
     ~QQmlTypeData();
@@ -453,8 +445,6 @@ private:
     void compile();
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
-
-    QQmlTypeLoader::Options m_options;
 
     QQmlScript::Parser scriptParser;
 
