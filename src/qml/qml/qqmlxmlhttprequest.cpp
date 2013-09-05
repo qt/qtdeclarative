@@ -53,6 +53,7 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
@@ -1481,9 +1482,9 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
-            CALLDATA(0);
-            d.thisObject = activationObject;
-            callback->call(d);
+            QV4::ScopedCallData callData(v4, 0);
+            callData->thisObject = activationObject;
+            callback->call(callData);
         }
 
         // if the callingContext object is no longer valid, then it has been

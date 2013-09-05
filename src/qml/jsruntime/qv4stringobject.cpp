@@ -44,6 +44,7 @@
 #include "qv4regexpobject_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -352,9 +353,9 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.as<RegExpObject>();
     if (!rx) {
-        CALLDATA(1);
-        d.args[0] = regexp;
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(d).as<RegExpObject>();
+        ScopedCallData callData(context->engine, 1);
+        callData->args[0] = regexp;
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
     }
 
     if (!rx)
@@ -366,11 +367,11 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     // ### use the standard builtin function, not the one that might be redefined in the proto
     FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
-    CALLDATA(1);
-    d.thisObject = Value::fromObject(rx);
-    d.args[0] = Value::fromString(s);
+    ScopedCallData callData(context->engine, 1);
+    callData->thisObject = Value::fromObject(rx);
+    callData->args[0] = Value::fromString(s);
     if (!global)
-        return exec->call(d);
+        return exec->call(callData);
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
@@ -379,7 +380,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(d);
+        Value result = exec->call(callData);
         if (result.isNull())
             break;
         assert(result.isObject());
@@ -505,8 +506,8 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     Value replaceValue = ctx->argument(1);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         result.reserve(string.length() + 10*numStringMatches);
-        CALLDATA(numCaptures + 2);
-        d.thisObject = Value::undefinedValue();
+        ScopedCallData callData(ctx->engine, numCaptures + 2);
+        callData->thisObject = Value::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
@@ -516,15 +517,15 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
                 Value entry = Value::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = Value::fromString(ctx, string.mid(start, end - start));
-                d.args[k] = entry;
+                callData->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= lastEnd);
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            d.args[numCaptures] = Value::fromUInt32(matchStart);
-            d.args[numCaptures + 1] = Value::fromString(ctx, string);
+            callData->args[numCaptures] = Value::fromUInt32(matchStart);
+            callData->args[numCaptures + 1] = Value::fromString(ctx, string);
 
-            Value replacement = searchCallback->call(d);
+            Value replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement.toString(ctx)->toQString();
             lastEnd = matchEnd;
@@ -566,9 +567,9 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
     Value regExpValue = ctx->argument(0);
     RegExpObject *regExp = regExpValue.as<RegExpObject>();
     if (!regExp) {
-        CALLDATA(1);
-        d.args[0] = regExpValue;
-        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(d);
+        ScopedCallData callData(ctx->engine, 1);
+        callData->args[0] = regExpValue;
+        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
         regExp = regExpValue.as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));

@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include "qv4lookup_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4scopedvalue_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -202,9 +203,9 @@ void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
             if (!getter) {
                 res = Value::undefinedValue();
             } else {
-                CALLDATA(0);
-                d.thisObject = object;
-                res = getter->call(d);
+                ScopedCallData callData(o->engine(), 0);
+                callData->thisObject = object;
+                res = getter->call(callData);
             }
             if (result)
                 *result = res;
@@ -225,9 +226,9 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
             if (!getter) {
                 res = Value::undefinedValue();
             } else {
-                CALLDATA(0);
-                d.thisObject = object;
-                res = getter->call(d);
+                ScopedCallData callData(o->engine(), 0);
+                callData->thisObject = object;
+                res = getter->call(callData);
             }
             if (result)
                 *result = res;
@@ -251,9 +252,9 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
                     if (!getter) {
                         res = Value::undefinedValue();
                     } else {
-                        CALLDATA(0);
-                        d.thisObject = object;
-                        res = getter->call(d);
+                        ScopedCallData callData(o->engine(), 0);
+                        callData->thisObject = object;
+                        res = getter->call(callData);
                     }
                     if (result)
                         *result = res;
@@ -306,9 +307,9 @@ void Lookup::primitiveGetterAccessor0(Lookup *l, Value *result, const Value &obj
             if (!getter) {
                 res = Value::undefinedValue();
             } else {
-                CALLDATA(0);
-                d.thisObject = object;
-                res = getter->call(d);
+                ScopedCallData callData(o->engine(), 0);
+                callData->thisObject = object;
+                res = getter->call(callData);
             }
             if (result)
                 *result = res;
@@ -330,9 +331,9 @@ void Lookup::primitiveGetterAccessor1(Lookup *l, Value *result, const Value &obj
             if (!getter) {
                 res = Value::undefinedValue();
             } else {
-                CALLDATA(0);
-                d.thisObject = object;
-                res = getter->call(d);
+                ScopedCallData callData(o->engine(), 0);
+                callData->thisObject = object;
+                res = getter->call(callData);
             }
             if (result)
                 *result = res;
@@ -434,9 +435,9 @@ void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
         if (!getter) {
             *result = Value::undefinedValue();
         } else {
-            CALLDATA(0);
-            d.thisObject = Value::undefinedValue();
-            *result = getter->call(d);
+            ScopedCallData callData(ctx->engine, 0);
+            callData->thisObject = Value::undefinedValue();
+            *result = getter->call(callData);
         }
         return;
     }
@@ -453,9 +454,9 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
         if (!getter) {
             *result = Value::undefinedValue();
         } else {
-            CALLDATA(0);
-            d.thisObject = Value::undefinedValue();
-            *result = getter->call(d);
+            ScopedCallData callData(ctx->engine, 0);
+            callData->thisObject = Value::undefinedValue();
+            *result = getter->call(callData);
         }
         return;
     }
@@ -475,9 +476,9 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
                 if (!getter) {
                     *result = Value::undefinedValue();
                 } else {
-                    CALLDATA(0);
-                    d.thisObject = Value::undefinedValue();
-                    *result = getter->call(d);
+                    ScopedCallData callData(ctx->engine, 0);
+                    callData->thisObject = Value::undefinedValue();
+                    *result = getter->call(callData);
                 }
                 return;
             }

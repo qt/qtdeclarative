@@ -55,6 +55,7 @@
 #include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4exception_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
 {
@@ -505,20 +506,20 @@ QJSValue QJSValue::call(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    CALLDATA(args.length());
-    d.thisObject = Value::fromObject(engine->globalObject);
+    ScopedCallData callData(engine, args.length());
+    callData->thisObject = Value::fromObject(engine->globalObject);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        d.args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(d);
+        result = f->call(callData);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();
@@ -561,20 +562,20 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         return QJSValue();
     }
 
-    CALLDATA(args.size());
-    d.thisObject = instance.d->getValue(engine);
+    ScopedCallData callData(engine, args.size());
+    callData->thisObject = instance.d->getValue(engine);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        d.args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->call(d);
+        result = f->call(callData);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();
@@ -610,19 +611,19 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    CALLDATA(args.size());
+    ScopedCallData callData(engine, args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        d.args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = args.at(i).d->getValue(engine);
     }
 
     Value result;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        result = f->construct(d);
+        result = f->construct(callData);
     } catch (Exception &e) {
         e.accept(ctx);
         result = e.value();

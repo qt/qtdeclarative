@@ -47,6 +47,7 @@
 #include "qv4argumentsobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4lookup_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -134,19 +135,19 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    CALLDATA(0);
-    d.thisObject = thisObject;
-    return getter->call(d);
+    ScopedCallData callData(getter->engine(), 0);
+    callData->thisObject = thisObject;
+    return getter->call(callData);
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            CALLDATA(1);
-            d.args[0] = value;
-            d.thisObject = Value::fromObject(this);
-            pd->set->call(d);
+            ScopedCallData callData(pd->set->engine(), 1);
+            callData->args[0] = value;
+            callData->thisObject = Value::fromObject(this);
+            pd->set->call(callData);
             return;
         }
         goto reject;
@@ -773,10 +774,10 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        CALLDATA(1);
-        d.args[0] = value;
-        d.thisObject = Value::fromObject(this);
-        pd->setter()->call(d);
+        ScopedCallData callData(engine(), 1);
+        callData->args[0] = value;
+        callData->thisObject = Value::fromObject(this);
+        pd->setter()->call(callData);
         return;
     }
 
@@ -851,10 +852,10 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        CALLDATA(1);
-        d.args[0] = value;
-        d.thisObject = Value::fromObject(this);
-        pd->setter()->call(d);
+        ScopedCallData callData(engine(), 1);
+        callData->args[0] = value;
+        callData->thisObject = Value::fromObject(this);
+        pd->setter()->call(callData);
         return;
     }
 

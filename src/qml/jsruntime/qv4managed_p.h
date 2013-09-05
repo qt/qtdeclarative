@@ -76,23 +76,18 @@ struct GCDeletable
 
 struct CallData
 {
-    Value thisObject;
-    Value *args;
-    int argc;
-};
-
-#ifdef QT_NO_DEBUG
-#define CALLDATA(argc_) \
-    QV4::CallData d; \
-    d.argc = argc_; \
-    d.args = (QV4::Value *)alloca(qMax((int)(argc_), (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value))
-#else
-#define CALLDATA(argc_) \
-    QV4::CallData d; \
-    d.argc = argc_; \
-    d.args = (QV4::Value *)alloca(qMax((int)(argc_), (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value)); \
-    for (int iii = 0; iii < qMax((int)(argc_), (int)QV4::Global::ReservedArgumentCount); ++iii) d.args[iii] = QV4::Value::undefinedValue()
+    // below is to be compatible with Value. Initialize tag to 0
+#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
+    uint tag;
 #endif
+    int argc;
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    uint tag;
+#endif
+
+    Value thisObject;
+    Value args[1];
+};
 
 struct ManagedVTable
 {

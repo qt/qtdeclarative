@@ -46,6 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
+#define SAVE_JS_STACK(ctx) Value *__jsStack = ctx->engine->jsStackTop
+#define CHECK_JS_STACK(ctx) Q_ASSERT(__jsStack == ctx->engine->jsStackTop)
+
 namespace QV4 {
 
 struct ScopedValueArray {
@@ -100,17 +103,6 @@ struct ValueScope {
 
 struct ScopedValue
 {
-    ScopedValue(ExecutionEngine *engine)
-    {
-        ptr = engine->jsStackTop++;
-    }
-
-    ScopedValue(ExecutionEngine *engine, const Value &v)
-    {
-        ptr = engine->jsStackTop++;
-        *ptr = v;
-    }
-
     ScopedValue(const ValueScope &scope)
     {
         ptr = scope.engine->jsStackTop++;
@@ -141,6 +133,45 @@ struct ScopedValue
     }
 
     Value *ptr;
+};
+
+struct ScopedCallData {
+    ScopedCallData(ExecutionEngine *e, int argc)
+        : engine(e)
+        // ### this check currently won't work because of exceptions
+#if 0 //ndef QT_NO_DEBUG
+        , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + 2)
+#endif
+    {
+        Q_ASSERT(sizeof(CallData) == 3*sizeof(Value));
+        ptr = reinterpret_cast<CallData *>(e->stackPush(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + 2));
+        ptr->tag = 0;
+        ptr->argc = argc;
+    }
+
+    ~ScopedCallData() {
+#if 0 //ndef QT_NO_DEBUG
+        engine->stackPop(size);
+        Q_ASSERT((void *)engine->jsStackTop == (void *)ptr);
+#else
+        engine->jsStackTop = reinterpret_cast<Value *>(ptr);
+#endif
+    }
+
+    CallData *operator->() {
+        return ptr;
+    }
+
+    operator const CallData &() const {
+        return *ptr;
+    }
+
+
+    ExecutionEngine *engine;
+#if 0 //ndef QT_NO_DEBUG
+    int size;
+#endif
+    CallData *ptr;
 };
 
 }

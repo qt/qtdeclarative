@@ -135,7 +135,7 @@ private:
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
 
     QV4::Value method_toString(QV4::ExecutionContext *ctx);
-    QV4::Value method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc);
+    QV4::Value method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
 
     QPointer<QObject> m_object;
     int m_index;

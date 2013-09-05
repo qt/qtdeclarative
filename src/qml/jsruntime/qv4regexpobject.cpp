@@ -45,6 +45,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -358,10 +359,9 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    CallData d;
-    d.args = ctx->arguments;
-    d.argc = ctx->argumentCount;
-    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(d).as<RegExpObject>();
+    ScopedCallData callData(ctx->engine, ctx->argumentCount);
+    memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
+    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
 
     r->value = re->value;
     r->global = re->global;

@@ -136,13 +136,13 @@ private:
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(int length, QV4::Value *args,
+    QQmlV4Function(int length, const QV4::Value *args,
                            QV4::Value *rv, const QV4::Value &global,
                            QQmlContextData *c, QV8Engine *e)
     : argc(length), args(args), retVal(rv), global(global), ctx(c), e(e) {}
 
     int argc;
-    QV4::Value *args;
+    const QV4::Value *args;
     QV4::Value *retVal;
     QV4::Value global;
     QQmlContextData *ctx;

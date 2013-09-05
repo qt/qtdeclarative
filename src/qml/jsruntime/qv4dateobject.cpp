@@ -42,7 +42,7 @@
 
 #include "qv4dateobject_p.h"
 #include "qv4objectproto_p.h"
-#include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -55,11 +55,6 @@
 #include <time.h>
 
 #include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
 
 #include <wtf/MathExtras.h>
 
@@ -1306,9 +1301,9 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
     if (!toIso)
         ctx->throwTypeError();
 
-    CALLDATA(0);
-    d.thisObject = ctx->thisObject;
-    return toIso->call(d);
+    ScopedCallData callData(ctx->engine, 0);
+    callData->thisObject = ctx->thisObject;
+    return toIso->call(callData);
 }
 
 void DatePrototype::timezoneUpdated()

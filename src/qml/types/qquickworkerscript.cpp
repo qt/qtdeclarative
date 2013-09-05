@@ -65,6 +65,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -233,10 +234,10 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 
     QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
                                                           QQuickWorkerScriptEnginePrivate::sendMessage));
-    CALLDATA(1);
-    d.args[0] = function;
-    d.thisObject = global();
-    createsend = createsendconstructor->call(d);
+    QV4::ScopedCallData callData(m_v4Engine, 1);
+    callData->args[0] = function;
+    callData->thisObject = global();
+    createsend = createsendconstructor->call(callData);
 }
 
 // Requires handle and context scope
@@ -246,10 +247,10 @@ QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
     QV4::Value v = QV4::Value::undefinedValue();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
     try {
-        CALLDATA(1);
-        d.args[0] = QV4::Value::fromInt32(id);
-        d.thisObject = global();
-        v = f->call(d);
+        QV4::ScopedCallData callData(m_v4Engine, 1);
+        callData->args[0] = QV4::Value::fromInt32(id);
+        callData->thisObject = global();
+        v = f->call(callData);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         v = e.value();
@@ -351,11 +352,11 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
 
     try {
-        CALLDATA(2);
-        d.thisObject = workerEngine->global();
-        d.args[0] = script->object.value();
-        d.args[1] = value;
-        f->call(d);
+        QV4::ScopedCallData callData(ctx->engine, 2);
+        callData->thisObject = workerEngine->global();
+        callData->args[0] = script->object.value();
+        callData->args[1] = value;
+        f->call(callData);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
         QQmlError error;

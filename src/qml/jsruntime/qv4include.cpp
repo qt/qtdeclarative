@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv4include_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <QtQml/qjsengine.h>
 #include <QtNetwork/qnetworkrequest.h>
@@ -104,10 +105,10 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
 
     QV4::ExecutionContext *ctx = f->engine()->current;
     try {
-        CALLDATA(1);
-        d.thisObject = QV4::Value::fromObject(f->engine()->globalObject);
-        d.args[0] = status;
-        f->call(d);
+        QV4::ScopedCallData callData(ctx->engine, 1);
+        callData->thisObject = QV4::Value::fromObject(f->engine()->globalObject);
+        callData->args[0] = status;
+        f->call(callData);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }

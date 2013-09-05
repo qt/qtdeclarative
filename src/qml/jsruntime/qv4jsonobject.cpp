@@ -44,6 +44,7 @@
 #include <qv4stringobject_p.h>
 #include <qv4booleanobject_p.h>
 #include <qv4objectiterator_p.h>
+#include <qv4scopedvalue_p.h>
 #include <qjsondocument.h>
 #include <qstack.h>
 #include <qstringlist.h>
@@ -702,10 +703,10 @@ QString Stringify::Str(const QString &key, Value value)
     if (Object *o = value.asObject()) {
         FunctionObject *toJSON = o->get(ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
-            CALLDATA(1);
-            d.thisObject = value;
-            d.args[0] = Value::fromString(ctx, key);
-            value = toJSON->call(d);
+            ScopedCallData callData(ctx->engine, 1);
+            callData->thisObject = value;
+            callData->args[0] = Value::fromString(ctx, key);
+            value = toJSON->call(callData);
         }
     }
 
@@ -713,11 +714,11 @@ QString Stringify::Str(const QString &key, Value value)
         Object *holder = ctx->engine->newObject();
         Value holderValue = Value::fromObject(holder);
         holder->put(ctx, QString(), value);
-        CALLDATA(2);
-        d.args[0] = Value::fromString(ctx, key);
-        d.args[1] = value;
-        d.thisObject = holderValue;
-        value = replacerFunction->call(d);
+        ScopedCallData callData(ctx->engine, 2);
+        callData->args[0] = Value::fromString(ctx, key);
+        callData->args[1] = value;
+        callData->thisObject = holderValue;
+        value = replacerFunction->call(callData);
     }
 
     if (Object *o = value.asObject()) {

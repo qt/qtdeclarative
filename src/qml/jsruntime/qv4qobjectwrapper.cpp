@@ -62,6 +62,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -700,19 +701,19 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
 
-            CALLDATA(argCount);
-            d.thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
+            QV4::ScopedCallData callData(v4, argCount);
+            callData->thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    d.args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    callData->args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    d.args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    callData->args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
             try {
-                f->call(d);
+                f->call(callData);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 QQmlError error;
@@ -1009,13 +1010,13 @@ private:
 namespace {
 struct CallArgs
 {
-    CallArgs(int length, QV4::Value *args) : _length(length), _args(args) {}
+    CallArgs(int length, const QV4::Value *args) : _length(length), _args(args) {}
     int Length() const { return _length; }
     QV4::Value operator[](int idx) { return _args[idx]; }
 
 private:
     int _length;
-    QV4::Value *_args;
+    const QV4::Value *_args;
 };
 }
 
@@ -1667,7 +1668,7 @@ QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
     return QV4::Value::fromString(ctx, result);
 }
 
-QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc)
+QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
 {
     if (!m_object)
         return QV4::Value::undefinedValue();

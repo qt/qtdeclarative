@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
 #include <qv4alloca_p.h>
+#include <qv4scopedvalue_p.h>
 
 using namespace QV4;
 
@@ -129,10 +130,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
-            CALLDATA(1);
-            d.thisObject = Value::fromObject(this);
-            d.args[0] = desc.value;
-            map.setter()->call(d);
+            ScopedCallData callData(ctx->engine, 1);
+            callData->thisObject = Value::fromObject(this);
+            callData->args[0] = desc.value;
+            map.setter()->call(callData);
         }
         if (attrs.isWritable()) {
             *pd = map;

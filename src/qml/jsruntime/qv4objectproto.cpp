@@ -42,6 +42,7 @@
 
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -385,9 +386,9 @@ Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
         ctx->throwTypeError();
-    CALLDATA(0);
-    d.thisObject = Value::fromObject(o);
-    return f->call(d);
+    ScopedCallData callData(ctx->engine, 0);
+    callData->thisObject = Value::fromObject(o);
+    return f->call(callData);
 }
 
 Value ObjectPrototype::method_valueOf(SimpleCallContext *ctx)

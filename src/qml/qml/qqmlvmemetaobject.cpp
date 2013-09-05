@@ -55,6 +55,7 @@
 #include <private/qv4object_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -926,16 +927,16 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                CALLDATA(data->parameterCount);
-                d.thisObject = ep->v8engine()->global();
+                QV4::ScopedCallData callData(function->engine(), data->parameterCount);
+                callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    d.args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
+                    callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::Value result = QV4::Value::undefinedValue();
                 QV4::ExecutionContext *ctx = function->engine()->current;
                 try {
-                    result = function->call(d);
+                    result = function->call(callData);
                     if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 } catch (QV4::Exception &e) {
                     e.accept(ctx);

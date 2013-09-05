@@ -63,7 +63,8 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
     c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
-    c->arguments = d.args;
+    // ###
+    c->arguments = const_cast<Value *>(d.args);
     c->realArgumentCount = d.argc;
     c->argumentCount = d.argc;
     c->thisObject = d.thisObject;
@@ -109,9 +110,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Ca
     c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
-    c->arguments = d.args;
     c->realArgumentCount = d.argc;
-    c->argumentCount = d.argc;
     c->thisObject = d.thisObject;
 
     c->strictMode = function->strictMode;
@@ -138,7 +137,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Ca
     c->argumentCount = qMax((uint)d.argc, function->formalParameterCount);
     c->arguments = c->locals + function->varCount;
     if (d.argc)
-        ::memcpy(c->arguments, d.args, c->realArgumentCount * sizeof(Value));
+        ::memcpy(c->arguments, d.args, d.argc * sizeof(Value));
     if (d.argc < function->formalParameterCount)
         std::fill(c->arguments + d.argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
 

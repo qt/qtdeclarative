@@ -46,6 +46,7 @@
 #include "qv4context_p.h"
 #include "qv4debugging_p.h"
 #include "qv4exception_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -247,9 +248,9 @@ Value Script::run()
 
     } else {
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject());
-        CALLDATA(0);
-        d.thisObject = Value::undefinedValue();
-        return f->call(d);
+        ScopedCallData callData(scope->engine, 0);
+        callData->thisObject = Value::undefinedValue();
+        return f->call(callData);
     }
 }
 

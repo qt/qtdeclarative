@@ -46,6 +46,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -351,11 +352,11 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Managed *fun = this->m_compareFn.asManaged();
-            CALLDATA(2);
-            d.args[0] = convertElementToValue(this->m_ctx->engine, lhs);
-            d.args[1] = convertElementToValue(this->m_ctx->engine, rhs);
-            d.thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
-            QV4::Value result = fun->call(d);
+            ScopedCallData callData(fun->engine(), 2);
+            callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
+            callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);
+            callData->thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
+            QV4::Value result = fun->call(callData);
             return result.toNumber() < 0;
         }
 
