@@ -1247,6 +1247,9 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
         }
     }
 
+    if (!(comparefn.isUndefined() || comparefn.asObject()))
+        context->throwTypeError();
+
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 
     Property *begin = arrayData;

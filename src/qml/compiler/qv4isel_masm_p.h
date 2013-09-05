@@ -269,7 +269,7 @@ public:
     public:
         StackLayout(V4IR::Function *function, int maxArgCountForBuiltins)
             : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
-            , maxOutgoingArgumentCount(qMax(function->maxNumberOfArguments, maxArgCountForBuiltins))
+            , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedConstCount(maxArgCountForBuiltins)
         {
@@ -295,7 +295,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * calleeSavedRegisterCount;
+            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedConstCount);
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
@@ -305,7 +305,7 @@ public:
 
         int calculateJSStackFrameSize() const
         {
-            const int locals = (maxOutgoingArgumentCount + localCount + savedConstCount) + 1;
+            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
             int frameSize = locals * sizeof(QV4::Value);
             return frameSize;
         }
@@ -315,7 +315,7 @@ public:
             Q_ASSERT(idx >= 0);
             Q_ASSERT(idx < localCount);
 
-            Pointer addr = argumentAddressForCall(0);
+            Pointer addr = callDataAddress(0);
             addr.offset -= sizeof(QV4::Value) * (idx + 1);
             return addr;
         }
@@ -328,8 +328,11 @@ public:
             Q_ASSERT(argument < maxOutgoingArgumentCount);
 
             const int index = maxOutgoingArgumentCount - argument;
-            return Pointer(Assembler::LocalsRegister,
-                           sizeof(QV4::Value) * (-index) - calleeSavedRegisterSpace());
+            return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index));
+        }
+
+        Pointer callDataAddress(int offset = 0) const {
+            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)) + offset);
         }
 
         Address savedRegPointer(int offset) const
@@ -1255,6 +1258,11 @@ protected:
         return _as->stackLayout().argumentAddressForCall(0);
     }
 
+    Pointer baseAddressForCallData()
+    {
+        return _as->stackLayout().callDataAddress();
+    }
+
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
@@ -1329,6 +1337,7 @@ private:
         _as->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
     int prepareVariableArguments(V4IR::ExprList* args);
+    int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
     typedef void (*ActivationMethod)(QV4::ExecutionContext *, QV4::Value *result, QV4::String *name, QV4::Value *args, int argc);
     void callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args);

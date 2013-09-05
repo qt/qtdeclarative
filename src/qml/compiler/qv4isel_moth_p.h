@@ -161,11 +161,12 @@ private:
     }
 
     void simpleMove(V4IR::Move *);
-    void prepareCallArgs(V4IR::ExprList *, quint32 &, quint32 &);
+    void prepareCallArgs(V4IR::ExprList *, quint32 &, quint32 * = 0);
 
-    int outgoingArgumentTempStart() const { return _function->tempCount; }
-    int scratchTempIndex() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
-    int frameSize() const { return scratchTempIndex() + 1; }
+    int scratchTempIndex() const { return _function->tempCount; }
+    int callDataStart() const { return scratchTempIndex() + 1; }
+    int outgoingArgumentTempStart() const { return callDataStart() + offsetof(QV4::CallData, args)/sizeof(QV4::Value); }
+    int frameSize() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
 
     template <int Instr>
     inline ptrdiff_t addInstruction(const InstrData<Instr> &data);

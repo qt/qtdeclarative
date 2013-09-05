@@ -720,8 +720,10 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
 }
 
 
-void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc)
+void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
 {
+    Q_ASSERT(callData->thisObject.isUndefined());
+
     Lookup *l = context->lookups + index;
     Value v;
     l->globalGetter(l, context, &v);
@@ -729,28 +731,28 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
     if (!o)
         context->throwTypeError();
 
-    Value thisObject = Value::undefinedValue();
-
     if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(thisObject, args, argc, true);
+        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
         if (result)
             *result = res;
         return;
     }
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject;
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
 
-void __qmljs_call_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
+void __qmljs_call_activation_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
 {
+    Q_ASSERT(callData->thisObject.isUndefined());
+
     Object *base;
     Value func = context->getPropertyAndBase(name, &base);
+    if (base)
+        callData->thisObject = Value::fromObject(base);
+
     FunctionObject *o = func.asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
@@ -760,106 +762,88 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         context->throwTypeError(msg);
     }
 
-    Value thisObject = base ? Value::fromObject(base) : Value::undefinedValue();
-
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(thisObject, args, argc, true);
+        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
         if (result)
             *result = res;
         return;
     }
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject;
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
-void __qmljs_call_property(ExecutionContext *context, Value *result, const Value &thatObject, String *name, Value *args, int argc)
+void __qmljs_call_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
 {
-    Value thisObject = thatObject;
-    Managed *baseObject = thisObject.asManaged();
+    Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
-        if (thisObject.isNull() || thisObject.isUndefined()) {
-            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(thisObject.toQString());
+        if (callData->thisObject.isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQString());
             context->throwTypeError(message);
         }
 
-        baseObject = __qmljs_convert_to_object(context, thisObject);
-        thisObject = Value::fromObject(static_cast<Object *>(baseObject));
+        baseObject = __qmljs_convert_to_object(context, callData->thisObject);
+        callData->thisObject = Value::fromObject(static_cast<Object *>(baseObject));
     }
 
-    Value func = baseObject->get(name);
-    FunctionObject *o = func.asFunctionObject();
+    FunctionObject *o = baseObject->get(name).asFunctionObject();
     if (!o) {
-        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), thisObject.toQString());
+        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQString());
         context->throwTypeError(error);
     }
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject;
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
-void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, const Value &thisObject, uint index, Value *args, int argc)
+void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
 {
     Value func;
 
     Lookup *l = context->lookups + index;
-    l->getter(l, &func, thisObject);
+    l->getter(l, &func, callData->thisObject);
 
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject;
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
-void __qmljs_call_element(ExecutionContext *context, Value *result, const Value &that, const Value &index, Value *args, int argc)
+void __qmljs_call_element(ExecutionContext *context, Value *result, const Value &index, CallData *callData)
 {
-    Object *baseObject = that.toObject(context);
-    Value thisObject = Value::fromObject(baseObject);
+    Object *baseObject = callData->thisObject.toObject(context);
+    callData->thisObject = Value::fromObject(baseObject);
 
-    Value func = baseObject->get(index.toString(context));
-    Object *o = func.asObject();
+    Object *o = baseObject->get(index.toString(context)).asObject();
     if (!o)
         context->throwTypeError();
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject;
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
-void __qmljs_call_value(ExecutionContext *context, Value *result, const Value *thisObject, const Value &func, Value *args, int argc)
+void __qmljs_call_value(ExecutionContext *context, Value *result, const Value &func, CallData *callData)
 {
     Object *o = func.asObject();
     if (!o)
         context->throwTypeError();
 
-    ScopedCallData d(context->engine, argc);
-    d->thisObject = thisObject ? *thisObject : Value::undefinedValue();
-    memcpy(d->args, args, argc*sizeof(Value));
-    Value res = o->call(d);
+    Value res = o->call(*callData);
     if (result)
         *result = res;
 }
 
 
-void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, Value *args, int argc)
+void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
 {
+    Q_ASSERT(callData->thisObject.isUndefined());
+
     Value func;
 
     Lookup *l = context->lookups + index;
@@ -869,49 +853,47 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
     if (!f)
         context->throwTypeError();
 
-    ScopedCallData callData(context->engine, argc);
-    memcpy(callData->args, args, argc*sizeof(Value));
-    Value res = f->construct(callData);
+    Value res = f->construct(*callData);
     if (result)
         *result = res;
 }
 
 
-void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, Value *args, int argc)
+void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
 {
     Value func = context->getProperty(name);
-    __qmljs_construct_value(context, result, func, args, argc);
+    Object *f = func.asObject();
+    if (!f)
+        context->throwTypeError();
+
+    Value res = f->construct(*callData);
+    if (result)
+        *result = res;
 }
 
-void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, Value *args, int argc)
+void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, CallData *callData)
 {
-    if (Object *f = func.asObject()) {
-        ScopedCallData d(context->engine, argc);
-        memcpy(d->args, args, argc*sizeof(Value));
-        Value res = f->construct(d);
-        if (result)
-            *result = res;
-        return;
-    }
+    Object *f = func.asObject();
+    if (!f)
+        context->throwTypeError();
 
-    context->throwTypeError();
+    Value res = f->construct(*callData);
+    if (result)
+        *result = res;
 }
 
-void __qmljs_construct_property(ExecutionContext *context, Value *result, const Value &base, String *name, Value *args, int argc)
+void __qmljs_construct_property(ExecutionContext *context, Value *result, const Value &base, String *name, CallData *callData)
 {
     Object *thisObject = base.toObject(context);
 
     Value func = thisObject->get(name);
-    if (Object *f = func.asObject()) {
-        ScopedCallData d(context->engine, argc);
-        memcpy(d->args, args, argc*sizeof(Value));
-        Value res = f->construct(d);
-        if (result)
-            *result = res;
-        return;
-    }
+    Object *f = func.asObject();
+    if (!f)
+        context->throwTypeError();
 
-    context->throwTypeError();
+    Value res = f->construct(*callData);
+    if (result)
+        *result = res;
 }
 
 void __qmljs_throw(ExecutionContext *context, const Value &value)

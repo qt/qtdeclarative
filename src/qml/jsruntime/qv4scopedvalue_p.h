@@ -140,11 +140,10 @@ struct ScopedCallData {
         : engine(e)
         // ### this check currently won't work because of exceptions
 #if 0 //ndef QT_NO_DEBUG
-        , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + 2)
+        , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value))
 #endif
     {
-        Q_ASSERT(sizeof(CallData) == 3*sizeof(Value));
-        ptr = reinterpret_cast<CallData *>(e->stackPush(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + 2));
+        ptr = reinterpret_cast<CallData *>(e->stackPush(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value)));
         ptr->tag = 0;
         ptr->argc = argc;
     }

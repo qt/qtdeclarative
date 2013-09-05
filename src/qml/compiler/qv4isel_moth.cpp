@@ -311,7 +311,8 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallValue call;
-    prepareCallArgs(args, call.argc, call.args);
+    prepareCallArgs(args, call.argc);
+    call.callData = callDataStart();
     call.dest = getParam(value);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -324,7 +325,8 @@ void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V
     Instruction::CallProperty call;
     call.base = getParam(base);
     call.name = registerString(name);
-    prepareCallArgs(args, call.argc, call.args);
+    prepareCallArgs(args, call.argc);
+    call.callData = callDataStart();
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -336,7 +338,8 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
     Instruction::CallElement call;
     call.base = getParam(base);
     call.index = getParam(index);
-    prepareCallArgs(args, call.argc, call.args);
+    prepareCallArgs(args, call.argc);
+    call.callData = callDataStart();
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -359,7 +362,8 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
 {
     Instruction::CreateActivationProperty create;
     create.name = registerString(*func->id);
-    prepareCallArgs(args, create.argc, create.args);
+    prepareCallArgs(args, create.argc);
+    create.callData = callDataStart();
     create.result = getResultParam(result);
     addInstruction(create);
 }
@@ -369,7 +373,8 @@ void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &na
     Instruction::CreateProperty create;
     create.base = getParam(base);
     create.name = registerString(name);
-    prepareCallArgs(args, create.argc, create.args);
+    prepareCallArgs(args, create.argc);
+    create.callData = callDataStart();
     create.result = getResultParam(result);
     addInstruction(create);
 }
@@ -378,7 +383,8 @@ void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *arg
 {
     Instruction::CreateValue create;
     create.func = getParam(value);
-    prepareCallArgs(args, create.argc, create.args);
+    prepareCallArgs(args, create.argc);
+    create.callData = callDataStart();
     create.result = getResultParam(result);
     addInstruction(create);
 }
@@ -667,23 +673,15 @@ void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source,
     addInstruction(imo);
 }
 
-void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, quint32 &args)
+void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, quint32 *args)
 {
-    bool singleArgIsTemp = false;
-    if (e && e->next == 0 && e->expr->asTemp()) {
-        singleArgIsTemp = e->expr->asTemp()->kind == V4IR::Temp::VirtualRegister;
-    }
-
-    if (singleArgIsTemp) {
-        // We pass single arguments as references to the stack, but only if it's not a local or an argument.
-        argc = 1;
-        args = getParam(e->expr).index;
-    } else if (e) {
+    int argLocation = outgoingArgumentTempStart();
+    argc = 0;
+    if (args)
+        *args = argLocation;
+    if (e) {
         // We need to move all the temps into the function arg array
-        int argLocation = outgoingArgumentTempStart();
         assert(argLocation >= 0);
-        argc = 0;
-        args = argLocation;
         while (e) {
             Instruction::MoveTemp move;
             move.source = getParam(e->expr);
@@ -693,9 +691,6 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
             ++argc;
             e = e->next;
         }
-    } else {
-        argc = 0;
-        args = 0;
     }
 }
 
@@ -763,7 +758,8 @@ void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *
 {
     Instruction::CallActivationProperty call;
     call.name = registerString(*func->id);
-    prepareCallArgs(args, call.argc, call.args);
+    prepareCallArgs(args, call.argc);
+    call.callData = callDataStart();
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -980,7 +976,7 @@ void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const Q
 void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args)
 {
     Instruction::CallBuiltinDefineArray call;
-    prepareCallArgs(args, call.argc, call.args);
+    prepareCallArgs(args, call.argc, &call.args);
     call.result = getResultParam(result);
     addInstruction(call);
 }

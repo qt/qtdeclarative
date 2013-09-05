@@ -45,7 +45,7 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv4exception_p.h>
 #include <private/qv4math_p.h>
-
+#include <private/qv4scopedvalue_p.h>
 #include <iostream>
 
 #include "qv4alloca_p.h"
@@ -320,29 +320,41 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
             }
         }
 #endif // DO_TRACE_INSTR
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_call_value(context, VALUEPTR(instr.result), /*thisObject*/0, VALUE(instr.dest), args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Value::undefinedValue();
+        __qmljs_call_value(context, VALUEPTR(instr.result), VALUE(instr.dest), callData);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(instr.name->toQString()), instr.args, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_call_property(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.name], args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = VALUE(instr.base);
+        __qmljs_call_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index), args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = VALUE(instr.base);
+        __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.index), callData);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
         TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_call_activation_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Value::undefinedValue();
+        __qmljs_call_activation_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
@@ -485,22 +497,31 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Value::undefinedValue();
+        __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), callData);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.name], args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Value::undefinedValue();
+        __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
-        Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
-        __qmljs_construct_activation_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = 0;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Value::undefinedValue();
+        __qmljs_construct_activation_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(Jump)
