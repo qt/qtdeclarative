@@ -79,7 +79,7 @@ static Function *lookupFunction(void *pc)
     if (it == allFunctions.end())
         return 0;
 
-    quintptr codeStart = reinterpret_cast<quintptr>(removeThumbBit((void*)(*it)->code));
+    quintptr codeStart = reinterpret_cast<quintptr>(removeThumbBit((void*)(*it)->codePtr));
     if (key < codeStart || key >= codeStart + (*it)->codeSize)
         return 0;
     return *it;
@@ -137,27 +137,27 @@ static unsigned write_prel31(unsigned *addr, void *ptr)
 void UnwindHelper::deregisterFunction(Function *function)
 {
     QMutexLocker locker(&functionProtector);
-    allFunctions.remove(reinterpret_cast<quintptr>(function->code));
+    allFunctions.remove(reinterpret_cast<quintptr>(function->codePtr));
 }
 
 void UnwindHelper::deregisterFunctions(const QVector<Function *> &functions)
 {
     QMutexLocker locker(&functionProtector);
     foreach (Function *f, functions)
-        allFunctions.remove(reinterpret_cast<quintptr>(f->code));
+        allFunctions.remove(reinterpret_cast<quintptr>(f->codePtr));
 }
 
 void UnwindHelper::registerFunction(Function *function)
 {
     QMutexLocker locker(&functionProtector);
-    allFunctions.insert(reinterpret_cast<quintptr>(function->code), function);
+    allFunctions.insert(reinterpret_cast<quintptr>(function->codePtr), function);
 }
 
 void UnwindHelper::registerFunctions(const QVector<Function *> &functions)
 {
     QMutexLocker locker(&functionProtector);
     foreach (Function *f, functions)
-        allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
+        allFunctions.insert(reinterpret_cast<quintptr>(f->codePtr), f);
 }
 
 void UnwindHelper::prepareForUnwind(ExecutionContext *)
@@ -217,7 +217,7 @@ extern "C" Q_DECL_EXPORT void *__gnu_Unwind_Find_exidx(void *pc, int *entryCount
         QV4::Function *function = QT_PREPEND_NAMESPACE(QV4::lookupFunction(pc));
         if (function) {
             *entryCount = 1;
-            void * codeStart = QT_PREPEND_NAMESPACE(QV4::removeThumbBit((void*)function->code));
+            void * codeStart = QT_PREPEND_NAMESPACE(QV4::removeThumbBit((void*)function->codePtr));
             // At the end of the function we store our synthetic exception table entry.
             return (char *)codeStart + function->codeSize;
         }

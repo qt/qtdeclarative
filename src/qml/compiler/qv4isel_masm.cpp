@@ -68,7 +68,7 @@ using namespace QV4;
 CompilationUnit::~CompilationUnit()
 {
     foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->code));
+        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->codePtr));
     UnwindHelper::deregisterFunctions(runtimeFunctions);
 }
 
@@ -87,7 +87,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     UnwindHelper::registerFunctions(runtimeFunctions);
 
     foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
+        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->codePtr), f);
 }
 
 QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)

@@ -373,8 +373,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     vtbl = &static_vtbl;
     this->function = function;
     this->function->compilationUnit->ref();
-    assert(function);
-    assert(function->code);
+    Q_ASSERT(function);
+    Q_ASSERT(function->codePtr);
 
     // global function
     if (!scope)
@@ -467,8 +467,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     vtbl = &static_vtbl;
     this->function = function;
     this->function->compilationUnit->ref();
-    assert(function);
-    assert(function->code);
+    Q_ASSERT(function);
+    Q_ASSERT(function->codePtr);
 
     // global function
     if (!scope)

@@ -139,7 +139,7 @@ struct ScopedCallData {
     ScopedCallData(ExecutionEngine *e, int argc)
         : engine(e)
         // ### this check currently won't work because of exceptions
-#if 0 //ndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
         , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value))
 #endif
     {
@@ -149,7 +149,7 @@ struct ScopedCallData {
     }
 
     ~ScopedCallData() {
-#if 0 //ndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
         engine->stackPop(size);
         Q_ASSERT((void *)engine->jsStackTop == (void *)ptr);
 #else
@@ -167,7 +167,7 @@ struct ScopedCallData {
 
 
     ExecutionEngine *engine;
-#if 0 //ndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
     int size;
 #endif
     CallData *ptr;
