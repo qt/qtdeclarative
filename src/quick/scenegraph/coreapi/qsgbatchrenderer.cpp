@@ -46,6 +46,10 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 
+#ifndef GL_DOUBLE
+   #define GL_DOUBLE 0x140A
+#endif
+
 QT_BEGIN_NAMESPACE
 
 extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input);
