@@ -450,7 +450,7 @@ private:
     // --- old compiler
     QQmlScript::Parser scriptParser;
     // --- new compiler
-    QtQml::ParsedQML parsedQML;
+    QScopedPointer<QtQml::ParsedQML> parsedQML;
     // ---
 
     QList<ScriptReference> m_scripts;

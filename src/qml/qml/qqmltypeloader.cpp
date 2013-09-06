@@ -1993,6 +1993,7 @@ void QQmlTypeData::done()
         compile();
 
     scriptParser.clear();
+    parsedQML.reset();
 }
 
 void QQmlTypeData::completed()
@@ -2033,8 +2034,9 @@ void QQmlTypeData::dataReceived(const Data &data)
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
     if (m_useNewCompiler) {
+        parsedQML.reset(new QtQml::ParsedQML);
         QQmlCodeGenerator compiler;
-        if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), &parsedQML)) {
+        if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
             setError(compiler.errors);
             return;
         }
@@ -2075,11 +2077,11 @@ void QQmlTypeData::dataReceived(const Data &data)
     // ### convert to use new data structure once old compiler is gone.
     QList<QQmlScript::Import> imports;
     if (m_useNewCompiler) {
-        imports.reserve(parsedQML.imports.size());
-        foreach (QV4::CompiledData::Import *i, parsedQML.imports) {
+        imports.reserve(parsedQML->imports.size());
+        foreach (QV4::CompiledData::Import *i, parsedQML->imports) {
             QQmlScript::Import import;
-            import.uri = parsedQML.stringAt(i->uriIndex);
-            import.qualifier = parsedQML.stringAt(i->qualifierIndex);
+            import.uri = parsedQML->stringAt(i->uriIndex);
+            import.qualifier = parsedQML->stringAt(i->qualifierIndex);
             import.majorVersion = i->majorVersion;
             import.minorVersion = i->minorVersion;
             import.location.start.line = i->location.line;
@@ -2162,16 +2164,16 @@ void QQmlTypeData::compile()
 
     if (m_useNewCompiler) {
         JSCodeGen jsCodeGen;
-        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), &parsedQML);
+        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
-        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML.jsModule, &parsedQML.jsGenerator));
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
 
         QmlUnitGenerator qmlGenerator;
-        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(parsedQML);
+        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data());
 
         if (jsUnit) {
             Q_ASSERT(!jsUnit->data);
