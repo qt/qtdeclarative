@@ -1812,17 +1812,6 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
 }
 
 
-void InstructionSelection::callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args)
-{
-    V4IR::Name *baseName = base->asName();
-    assert(baseName != 0);
-
-    int argc = prepareVariableArguments(args);
-    _as->generateFunctionCallImp(Assembler::Void, name, method, Assembler::ContextRegister, Assembler::PointerToValue(result),
-                                 Assembler::PointerToString(*baseName->id), baseAddressForCallArguments(),
-                                 Assembler::TrustedImm32(argc));
-}
-
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 bool operator==(const Value &v1, const Value &v2)

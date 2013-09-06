@@ -1339,11 +1339,6 @@ private:
     int prepareVariableArguments(V4IR::ExprList* args);
     int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
-    typedef void (*ActivationMethod)(QV4::ExecutionContext *, QV4::Value *result, QV4::String *name, QV4::Value *args, int argc);
-    void callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args);
-#define callRuntimeMethod(result, function, ...) \
-    callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
-
     template <typename Arg1, typename Arg2>
     void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
