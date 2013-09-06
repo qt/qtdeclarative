@@ -183,7 +183,7 @@ protected:
 };
 
 #ifdef QSG_RUNTIME_DESCRIPTION
-void qsgnode_set_description(QSGNode *node, const QString &description);
+void Q_QUICK_EXPORT qsgnode_set_description(QSGNode *node, const QString &description);
 #endif
 
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
