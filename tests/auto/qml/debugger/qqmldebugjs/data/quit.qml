@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,69 +39,15 @@
 **
 ****************************************************************************/
 
-#ifndef QV8DEBUGSERVICE_P_H
-#define QV8DEBUGSERVICE_P_H
+import QtQuick 2.0
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+//DO NOT CHANGE
 
-#include "qqmldebugservice_p.h"
-#ifdef Q_OS_WINCE
-#  ifdef DebugBreak
-#    undef DebugBreak
-#  endif
-#endif
-#include <private/qv8debug_p.h>
+Item {
+    Timer {
+        running: true
+        triggeredOnStart: true
+        onTriggered: Qt.quit();
+    }
+}
 
-QT_BEGIN_NAMESPACE
-
-
-class QV8Engine;
-class QV8DebugServicePrivate;
-
-class QV8DebugService : public QQmlDebugService
-{
-    Q_OBJECT
-public:
-    QV8DebugService(QObject *parent = 0);
-    ~QV8DebugService();
-
-    static QV8DebugService *instance();
-    static void addEngine(const QV8Engine *engine);
-    static void removeEngine(const QV8Engine *engine);
-
-    void debugMessageHandler(const QString &message);
-
-    void signalEmitted(const QString &signal);
-
-public slots:
-    void processDebugMessages();
-
-private slots:
-    void scheduledDebugBreak(bool schedule);
-    void sendDebugMessage(const QString &message);
-    void init();
-
-protected:
-    void stateChanged(State newState);
-    void messageReceived(const QByteArray &);
-
-private:
-    void setEngine(const QV8Engine *engine);
-
-private:
-    Q_DISABLE_COPY(QV8DebugService)
-    Q_DECLARE_PRIVATE(QV8DebugService)
-};
-
-QT_END_NAMESPACE
-
-#endif // QV8DEBUGSERVICE_P_H

@@ -230,7 +230,7 @@ protected:
     };
 
     virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;
-    virtual void storeGlyphs(const QHash<glyph_t, QImage> &glyphs) = 0;
+    virtual void storeGlyphs(const QList<QDistanceField> &glyphs) = 0;
     virtual void referenceGlyphs(const QSet<glyph_t> &glyphs) = 0;
     virtual void releaseGlyphs(const QSet<glyph_t> &glyphs) = 0;
 

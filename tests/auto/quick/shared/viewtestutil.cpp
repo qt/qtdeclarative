@@ -42,15 +42,39 @@
 #include "viewtestutil.h"
 
 #include <QtQuick/QQuickView>
+#include <QtQuick/QQuickView>
+#include <QtGui/QScreen>
 
 #include <QtTest/QTest>
 
 QQuickView *QQuickViewTestUtil::createView()
 {
     QQuickView *window = new QQuickView(0);
-    window->setGeometry(0,0,240,320);
-
+    const QSize size(240, 320);
+    window->resize(size);
+    QQuickViewTestUtil::centerOnScreen(window, size);
     return window;
+}
+
+void QQuickViewTestUtil::centerOnScreen(QQuickView *window, const QSize &size)
+{
+    const QRect screenGeometry = window->screen()->availableGeometry();
+    const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
+    window->setFramePosition(screenGeometry.center() - offset);
+}
+
+void QQuickViewTestUtil::centerOnScreen(QQuickView *window)
+{
+    QQuickViewTestUtil::centerOnScreen(window, window->size());
+}
+
+void QQuickViewTestUtil::moveMouseAway(QQuickView *window)
+{
+#ifndef QT_NO_CURSOR // Get the cursor out of the way.
+    QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
+#else
+    Q_UNUSED(window)
+#endif
 }
 
 void QQuickViewTestUtil::flick(QQuickView *window, const QPoint &from, const QPoint &to, int duration)

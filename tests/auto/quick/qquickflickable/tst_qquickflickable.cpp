@@ -236,6 +236,10 @@ void tst_qquickflickable::rebound()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("rebound.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -375,6 +379,9 @@ void tst_qquickflickable::pressDelay()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("pressDelay.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -414,6 +421,9 @@ void tst_qquickflickable::nestedPressDelay()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedPressDelay.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -636,6 +646,9 @@ void tst_qquickflickable::movingAndFlicking()
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -796,6 +809,9 @@ void tst_qquickflickable::movingAndDragging()
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -999,6 +1015,9 @@ void tst_qquickflickable::pressWhileFlicking()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -1077,6 +1096,9 @@ void tst_qquickflickable::flickVelocity()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -1177,6 +1199,9 @@ void tst_qquickflickable::cancelOnMouseGrab()
 {
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("cancel.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != 0);
@@ -1212,6 +1237,9 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
 {
     QScopedPointer<QQuickView> view(new QQuickView);
     view->setSource(testFileUrl("transformedFlickable.qml"));
+    QTRY_COMPARE(view->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(view.data());
+    QQuickViewTestUtil::moveMouseAway(view.data());
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view.data()));
     QVERIFY(view->rootObject() != 0);
@@ -1260,8 +1288,11 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     touchDevice->setCapabilities(QTouchDevice::Position);
     QWindowSystemInterface::registerTouchDevice(touchDevice);
 
-    QQuickView *window = new QQuickView;
+    QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("longList.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != 0);
 
@@ -1269,20 +1300,18 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 0.0f);
-    flickWithTouch(window, touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
 
     qreal contentYAfterFirstFlick = flickable->contentY();
     qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
     QVERIFY(contentYAfterFirstFlick > 50.0f);
 
-    flickWithTouch(window, touchDevice, QPoint(100, 400), QPoint(100, 240));
+    flickWithTouch(window.data(), touchDevice, QPoint(100, 400), QPoint(100, 240));
 
     // In the original bug, that second flick would cause Flickable to halt immediately
     qreal contentYAfterSecondFlick = flickable->contentY();
     qDebug() << "contentYAfterSecondFlick " << contentYAfterSecondFlick;
     QVERIFY(contentYAfterSecondFlick > (contentYAfterFirstFlick + 80.0f));
-
-    delete window;
 }
 
 void tst_qquickflickable::flickWithTouch(QWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to)
@@ -1319,6 +1348,9 @@ void tst_qquickflickable::nestedStopAtBounds()
 
     QQuickView view;
     view.setSource(testFileUrl("nestedStopAtBounds.qml"));
+    QTRY_COMPARE(view.status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(&view);
+    QQuickViewTestUtil::moveMouseAway(&view);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -1378,8 +1410,11 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     touchDevice->setCapabilities(QTouchDevice::Position);
     QWindowSystemInterface::registerTouchDevice(touchDevice);
 
-    QQuickView *window = new QQuickView;
+    QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedmousearea.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != 0);
 
@@ -1387,7 +1422,7 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QVERIFY(flickable != 0);
 
     QCOMPARE(flickable->contentY(), 50.0f);
-    flickWithTouch(window, touchDevice, QPoint(100, 300), QPoint(100, 200));
+    flickWithTouch(window.data(), touchDevice, QPoint(100, 300), QPoint(100, 200));
 
     // flickable should not have moved
     QCOMPARE(flickable->contentY(), 50.0);
@@ -1395,8 +1430,6 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     // draggable item should have moved up
     QQuickItem *nested = window->rootObject()->findChild<QQuickItem*>("nested");
     QVERIFY(nested->y() < 100.0);
-
-    delete window;
 }
 
 QTEST_MAIN(tst_qquickflickable)

@@ -168,13 +168,11 @@ void QSGDistanceFieldGlyphCache::update()
         qsg_render_timer.start();
 #endif
 
-    QHash<glyph_t, QImage> distanceFields;
-
+    QList<QDistanceField> distanceFields;
     for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
-        glyph_t glyphIndex = m_pendingGlyphs.at(i);
-
-        QImage distanceField = qt_renderDistanceFieldGlyph(m_referenceFont, glyphIndex, m_doubleGlyphResolution);
-        distanceFields.insert(glyphIndex, distanceField);
+        distanceFields.append(QDistanceField(m_referenceFont,
+                                             m_pendingGlyphs.at(i),
+                                             m_doubleGlyphResolution));
     }
 
 #ifndef QSG_NO_RENDER_TIMING
