@@ -63,8 +63,9 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlEngine *engine, QQmlContextData *contextData, QQmlCompiledData *runtimeData)
+QmlObjectCreator::QmlObjectCreator(QQmlEngine *engine, const QUrl &url, QQmlContextData *contextData, QQmlCompiledData *runtimeData)
     : engine(engine)
+    , url(url)
     , unit(runtimeData->qmlUnit)
     , jsUnit(runtimeData->compilationUnit)
     , context(contextData)
@@ -263,8 +264,11 @@ bool QmlObjectCreator::needsCustomMetaObject(const QV4::CompiledData::Object *ob
     return obj->nProperties > 0 || obj->nSignals > 0 || obj->nFunctions > 0;
 }
 
-// ###
-#define COMPILE_EXCEPTION(token, desc) {}
+#define COMPILE_EXCEPTION(token, desc) \
+    { \
+        recordError((token)->location, desc); \
+        return false; \
+    }
 
 static QAtomicInt classIndexCounter(0);
 
@@ -423,9 +427,10 @@ bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledDa
                 } else {
                     // lazily resolved type
                     Q_ASSERT(param->type == QV4::CompiledData::Property::Custom);
+                    const QString customTypeName = stringAt(param->customTypeNameIndex);
                     QQmlType *qmltype = 0;
-                    if (!imports.resolveType(stringAt(param->customTypeNameIndex), &qmltype, 0, 0, 0))
-                        COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(s->parameterTypeNames.at(i).toString()));
+                    if (!imports.resolveType(customTypeName, &qmltype, 0, 0, 0))
+                        COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype->isComposite()) {
                         QQmlTypeData *tdata = QQmlEnginePrivate::get(engine)->typeLoader.getType(qmltype->sourceUrl());
@@ -520,8 +525,9 @@ bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledDa
                      p->type == QV4::CompiledData::Property::Custom);
 
             QQmlType *qmltype = 0;
-            if (!imports.resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0))
-                COMPILE_EXCEPTION(p, tr("Invalid property type"));
+            if (!imports.resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
+             //   COMPILE_EXCEPTION(p, tr("Invalid property type"));
+            }
 
             Q_ASSERT(qmltype);
             if (qmltype->isComposite()) {
@@ -688,5 +694,15 @@ bool QmlObjectCreator::valueAsBoolean(const QV4::CompiledData::Value *value)
     if (value->type == QV4::CompiledData::Value::Type_Boolean)
         return value->b;
     return false;
+}
+
+void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
+{
+    QQmlError error;
+    error.setUrl(url);
+    error.setLine(location.line);
+    error.setColumn(location.column);
+    error.setDescription(description);
+    errors << error;
 }
 

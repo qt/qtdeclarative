@@ -223,6 +223,12 @@ struct Function
 
 // Qml data structures
 
+struct Location
+{
+    int line;
+    int column;
+};
+
 struct Value
 {
     enum ValueType {
@@ -262,6 +268,7 @@ struct Signal
 {
     quint32 nameIndex;
     quint32 nParameters;
+    Location location;
     // Parameter parameters[1];
 
     const Parameter *parameterAt(int idx) const {
@@ -342,12 +349,6 @@ struct Object
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const Signal*>(reinterpret_cast<const char*>(this) + offset);
     }
-};
-
-struct Location
-{
-    int line;
-    int column;
 };
 
 struct Import

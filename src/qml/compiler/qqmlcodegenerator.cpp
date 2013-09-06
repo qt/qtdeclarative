@@ -340,6 +340,11 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
     if (node->type == AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
         signal->nameIndex = registerString(node->name.toString());
+
+        AST::SourceLocation loc = node->firstSourceLocation();
+        signal->location.line = loc.startLine;
+        signal->location.column = loc.startColumn;
+
         signal->parameters = New<PoolList<SignalParameter> >();
 
         AST::UiParameterList *p = node->parameters;
@@ -721,6 +726,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
             QV4::CompiledData::Signal *signalToWrite = reinterpret_cast<QV4::CompiledData::Signal*>(signalPtr);
 
             signalToWrite->nameIndex = s->nameIndex;
+            signalToWrite->location = s->location;
             signalToWrite->nParameters = s->parameters->count;
 
             QV4::CompiledData::Parameter *parameterToWrite = reinterpret_cast<QV4::CompiledData::Parameter*>(signalPtr + sizeof(*signalToWrite));

@@ -51,9 +51,12 @@ class QQmlAbstractBinding;
 
 namespace QtQml {
 
-struct Q_QML_EXPORT QmlObjectCreator
+class Q_QML_EXPORT QmlObjectCreator
 {
-    QmlObjectCreator(QQmlEngine *engine,
+    Q_DECLARE_TR_FUNCTIONS(QQmlCompiler)
+public:
+
+    QmlObjectCreator(QQmlEngine *engine, const QUrl &url,
                      // extra data/output stored in these two
                      QQmlContextData *contextData,
                      QQmlCompiledData *runtimeData);
@@ -80,7 +83,10 @@ private:
     static double valueAsNumber(const QV4::CompiledData::Value *value);
     static bool valueAsBoolean(const QV4::CompiledData::Value *value);
 
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
     QQmlEngine *engine;
+    QUrl url;
     const QV4::CompiledData::QmlUnit *unit;
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *context;

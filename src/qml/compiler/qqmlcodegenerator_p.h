@@ -111,6 +111,7 @@ struct SignalParameter : public QV4::CompiledData::Parameter
 struct Signal
 {
     int nameIndex;
+    QV4::CompiledData::Location location;
     PoolList<SignalParameter> *parameters;
     Signal *next;
 };

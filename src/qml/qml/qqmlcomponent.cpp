@@ -895,7 +895,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
     if (enginePriv->useNewCompiler) {
-        state.creator = new QtQml::QmlObjectCreator(engine, context, cc);
+        state.creator = new QtQml::QmlObjectCreator(engine, url, context, cc);
         rv = state.creator->create();
         if (!rv)
             state.errors = state.creator->errors;
