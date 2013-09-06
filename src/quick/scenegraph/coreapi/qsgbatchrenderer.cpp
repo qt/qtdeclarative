@@ -826,14 +826,16 @@ void Renderer::nodeWasTransformed(Node *node, int *vertexCount)
             e->boundsComputed = false;
             if (e->batch) {
                 if (!e->batch->isOpaque) {
-                    e->batch->invalidate();
-                    m_rebuild |= BuildBatches;
+                    if (e->root) {
+                        m_taggedRoots << e->root;
+                        m_rebuild |= BuildRenderListsForTaggedRoots;
+                    } else {
+                        m_rebuild |= FullRebuild;
+                    }
                 } else if (e->batch->merged) {
                     e->batch->needsUpload = true;
                 }
             }
-            if (e->batch && e->batch->merged)
-                e->batch->needsUpload = true;
         }
     }
 
