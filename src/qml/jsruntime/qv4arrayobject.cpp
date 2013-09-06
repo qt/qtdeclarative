@@ -54,25 +54,25 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ArrayCtor::construct(Managed *m, const CallData &d)
+Value ArrayCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     ArrayObject *a = v4->newArrayObject();
     uint len;
-    if (d.argc == 1 && d.args[0].isNumber()) {
+    if (callData->argc == 1 && callData->args[0].isNumber()) {
         bool ok;
-        len = d.args[0].asArrayLength(&ok);
+        len = callData->args[0].asArrayLength(&ok);
 
         if (!ok)
-            v4->current->throwRangeError(d.args[0]);
+            v4->current->throwRangeError(callData->args[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
     } else {
-        len = d.argc;
+        len = callData->argc;
         a->arrayReserve(len);
         for (unsigned int i = 0; i < len; ++i)
-            a->arrayData[i].value = d.args[i];
+            a->arrayData[i].value = callData->args[i];
         a->arrayDataLen = len;
     }
     a->setArrayLengthUnchecked(len);
@@ -80,9 +80,9 @@ Value ArrayCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(a);
 }
 
-Value ArrayCtor::call(Managed *that, const CallData &d)
+Value ArrayCtor::call(Managed *that, CallData *callData)
 {
-    return construct(that, d);
+    return construct(that, callData);
 }
 
 ArrayPrototype::ArrayPrototype(InternalClass *ic)

@@ -79,25 +79,25 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(Managed *that, const CallData &d)
+Value ObjectCtor::construct(Managed *that, CallData *callData)
 {
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     ExecutionEngine *v4 = that->engine();
-    if (!d.argc || d.args[0].isUndefined() || d.args[0].isNull()) {
+    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         Object *obj = v4->newObject();
         Value proto = ctor->get(v4->id_prototype);
         if (proto.isObject())
             obj->setPrototype(proto.objectValue());
         return Value::fromObject(obj);
     }
-    return __qmljs_to_object(v4->current, d.args[0]);
+    return __qmljs_to_object(v4->current, callData->args[0]);
 }
 
-Value ObjectCtor::call(Managed *m, const CallData &d)
+Value ObjectCtor::call(Managed *m, CallData *callData)
 {
-    if (!d.argc || d.args[0].isUndefined() || d.args[0].isNull())
+    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return Value::fromObject(m->engine()->newObject());
-    return __qmljs_to_object(m->engine()->current, d.args[0]);
+    return __qmljs_to_object(m->engine()->current, callData->args[0]);
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)

@@ -1564,7 +1564,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (c->proto)
             c->proto->mark();
     }
-    static Value construct(Managed *that, const QV4::CallData &)
+    static Value construct(Managed *that, QV4::CallData *)
     {
         QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
         if (!ctor)
@@ -1577,7 +1577,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return Value::fromObject(w);
     }
 
-    static Value call(Managed *, const QV4::CallData &) {
+    static Value call(Managed *, QV4::CallData *) {
         return Value::undefinedValue();
     }
 

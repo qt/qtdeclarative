@@ -161,8 +161,8 @@ struct ScopedCallData {
         return ptr;
     }
 
-    operator const CallData &() const {
-        return *ptr;
+    operator CallData *() const {
+        return ptr;
     }
 
 

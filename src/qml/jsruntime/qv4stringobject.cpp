@@ -160,21 +160,21 @@ StringCtor::StringCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(Managed *m, const CallData &d)
+Value StringCtor::construct(Managed *m, CallData *callData)
 {
     Value value;
-    if (d.argc)
-        value = Value::fromString(d.args[0].toString(m->engine()->current));
+    if (callData->argc)
+        value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return Value::fromObject(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *m, const CallData &d)
+Value StringCtor::call(Managed *m, CallData *callData)
 {
     Value value;
-    if (d.argc)
-        value = Value::fromString(d.args[0].toString(m->engine()->current));
+    if (callData->argc)
+        value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return value;

@@ -79,7 +79,7 @@ struct QmlBindingWrapper : FunctionObject
         scope->engine->popContext();
     }
 
-    static Value call(Managed *that, const CallData &);
+    static Value call(Managed *that, CallData *);
     static void markObjects(Managed *m)
     {
         QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
@@ -122,7 +122,7 @@ struct CompilationUnitHolder : public QV4::Object
 
 DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
 
-Value QmlBindingWrapper::call(Managed *that, const CallData &)
+Value QmlBindingWrapper::call(Managed *that, CallData *)
 {
     ExecutionEngine *engine = that->engine();
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);

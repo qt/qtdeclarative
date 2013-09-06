@@ -320,10 +320,10 @@ inline ErrorObject *Value::asErrorObject() const
 }
 
 // ###
-inline Value Managed::construct(const CallData &d) {
+inline Value Managed::construct(CallData *d) {
     return vtbl->construct(this, d);
 }
-inline Value Managed::call(const CallData &d) {
+inline Value Managed::call(CallData *d) {
     return vtbl->call(this, d);
 }
 

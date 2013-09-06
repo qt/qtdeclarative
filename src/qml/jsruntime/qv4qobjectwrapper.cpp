@@ -1687,17 +1687,17 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value
     return QV4::Value::undefinedValue();
 }
 
-Value QObjectMethod::call(Managed *m, const CallData &d)
+Value QObjectMethod::call(Managed *m, CallData *callData)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
-    return This->callInternal(d);
+    return This->callInternal(callData);
 }
 
-Value QObjectMethod::callInternal(const CallData &d)
+Value QObjectMethod::callInternal(CallData *callData)
 {
     ExecutionContext *context = engine()->current;
     if (m_index == DestroyMethod)
-        return method_destroy(context, d.args, d.argc);
+        return method_destroy(context, callData->args, callData->argc);
     else if (m_index == ToStringMethod)
         return method_toString(context);
 
@@ -1732,7 +1732,7 @@ Value QObjectMethod::callInternal(const CallData &d)
     if (method.isV4Function()) {
         QV4::Value rv = QV4::Value::undefinedValue();
 
-        QQmlV4Function func(d.argc, d.args, &rv, m_qmlGlobal.value(),
+        QQmlV4Function func(callData->argc, callData->args, &rv, m_qmlGlobal.value(),
                             QmlContextWrapper::getContext(m_qmlGlobal.value()),
                             v8Engine);
         QQmlV4Function *funcptr = &func;
@@ -1743,7 +1743,7 @@ Value QObjectMethod::callInternal(const CallData &d)
         return rv;
     }
 
-    CallArgs callArgs(d.argc, d.args);
+    CallArgs callArgs(callData->argc, callData->args);
     if (!method.isOverload()) {
         return CallPrecise(object, method, v8Engine, callArgs);
     } else {

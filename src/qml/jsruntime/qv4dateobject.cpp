@@ -654,15 +654,15 @@ DateCtor::DateCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(Managed *m, const CallData &d)
+Value DateCtor::construct(Managed *m, CallData *callData)
 {
     double t = 0;
 
-    if (d.argc == 0)
+    if (callData->argc == 0)
         t = currentTime();
 
-    else if (d.argc == 1) {
-        Value arg = d.args[0];
+    else if (callData->argc == 1) {
+        Value arg = callData->args[0];
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
         else
@@ -675,13 +675,13 @@ Value DateCtor::construct(Managed *m, const CallData &d)
     }
 
     else { // d.argc > 1
-        double year  = d.args[0].toNumber();
-        double month = d.args[1].toNumber();
-        double day  = d.argc >= 3 ? d.args[2].toNumber() : 1;
-        double hours = d.argc >= 4 ? d.args[3].toNumber() : 0;
-        double mins = d.argc >= 5 ? d.args[4].toNumber() : 0;
-        double secs = d.argc >= 6 ? d.args[5].toNumber() : 0;
-        double ms    = d.argc >= 7 ? d.args[6].toNumber() : 0;
+        double year  = callData->args[0].toNumber();
+        double month = callData->args[1].toNumber();
+        double day  = callData->argc >= 3 ? callData->args[2].toNumber() : 1;
+        double hours = callData->argc >= 4 ? callData->args[3].toNumber() : 0;
+        double mins = callData->argc >= 5 ? callData->args[4].toNumber() : 0;
+        double secs = callData->argc >= 6 ? callData->args[5].toNumber() : 0;
+        double ms    = callData->argc >= 7 ? callData->args[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
@@ -692,7 +692,7 @@ Value DateCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(o);
 }
 
-Value DateCtor::call(Managed *m, const CallData &)
+Value DateCtor::call(Managed *m, CallData *)
 {
     double t = currentTime();
     return Value::fromString(m->engine()->current, ToString(t));

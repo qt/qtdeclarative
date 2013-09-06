@@ -53,8 +53,8 @@ struct ArrayCtor: FunctionObject
 {
     ArrayCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, const CallData &d);
-    static Value call(Managed *that, const CallData &d);
+    static Value construct(Managed *m, CallData *callData);
+    static Value call(Managed *that, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

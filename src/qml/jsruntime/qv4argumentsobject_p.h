@@ -55,7 +55,7 @@ struct ArgumentsGetterFunction: FunctionObject
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
 
-    static Value call(Managed *that, const CallData &d);
+    static Value call(Managed *that, CallData *d);
 
 protected:
     static const ManagedVTable static_vtbl;
@@ -68,7 +68,7 @@ struct ArgumentsSetterFunction: FunctionObject
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
 
-    static Value call(Managed *that, const CallData &d);
+    static Value call(Managed *that, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

@@ -738,7 +738,7 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
         return;
     }
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -769,7 +769,7 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         return;
     }
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -793,7 +793,7 @@ void __qmljs_call_property(ExecutionContext *context, Value *result, String *nam
         context->throwTypeError(error);
     }
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -809,7 +809,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, uint
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -823,7 +823,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -834,7 +834,7 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value &f
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(*callData);
+    Value res = o->call(callData);
     if (result)
         *result = res;
 }
@@ -853,7 +853,7 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(*callData);
+    Value res = f->construct(callData);
     if (result)
         *result = res;
 }
@@ -866,7 +866,7 @@ void __qmljs_construct_activation_property(ExecutionContext *context, Value *res
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(*callData);
+    Value res = f->construct(callData);
     if (result)
         *result = res;
 }
@@ -877,7 +877,7 @@ void __qmljs_construct_value(ExecutionContext *context, Value *result, const Val
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(*callData);
+    Value res = f->construct(callData);
     if (result)
         *result = res;
 }
@@ -891,7 +891,7 @@ void __qmljs_construct_property(ExecutionContext *context, Value *result, const 
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(*callData);
+    Value res = f->construct(callData);
     if (result)
         *result = res;
 }

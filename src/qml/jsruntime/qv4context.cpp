@@ -51,7 +51,7 @@
 
 using namespace QV4;
 
-CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *function, const CallData &d)
+CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *function, CallData *callData)
 {
     CallContext *c = (CallContext *)stackSpace;
 #ifndef QT_NO_DEBUG
@@ -64,10 +64,10 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
 
     c->function = function;
     // ###
-    c->arguments = const_cast<Value *>(d.args);
-    c->realArgumentCount = d.argc;
-    c->argumentCount = d.argc;
-    c->thisObject = d.thisObject;
+    c->arguments = const_cast<Value *>(callData->args);
+    c->realArgumentCount = callData->argc;
+    c->argumentCount = callData->argc;
+    c->thisObject = callData->thisObject;
 
     c->strictMode = function->strictMode;
     c->marked = false;
@@ -90,28 +90,28 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
-    if (d.argc < function->formalParameterCount) {
+    if (callData->argc < function->formalParameterCount) {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
 #endif
-        std::fill(c->arguments + d.argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
+        std::fill(c->arguments + callData->argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
         c->argumentCount = function->formalParameterCount;
     }
 
     return c;
 }
 
-CallContext *ExecutionContext::newCallContext(FunctionObject *function, const CallData &d)
+CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
-    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, d.argc)));
+    CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, callData->argc)));
 
     engine->current = c;
 
     c->initBaseContext(Type_CallContext, engine, this);
 
     c->function = function;
-    c->realArgumentCount = d.argc;
-    c->thisObject = d.thisObject;
+    c->realArgumentCount = callData->argc;
+    c->thisObject = callData->thisObject;
 
     c->strictMode = function->strictMode;
     c->marked = false;
@@ -134,12 +134,12 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, const Ca
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
-    c->argumentCount = qMax((uint)d.argc, function->formalParameterCount);
+    c->argumentCount = qMax((uint)callData->argc, function->formalParameterCount);
     c->arguments = c->locals + function->varCount;
-    if (d.argc)
-        ::memcpy(c->arguments, d.args, d.argc * sizeof(Value));
-    if (d.argc < function->formalParameterCount)
-        std::fill(c->arguments + d.argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
+    if (callData->argc)
+        ::memcpy(c->arguments, callData->args, callData->argc * sizeof(Value));
+    if (callData->argc < function->formalParameterCount)
+        std::fill(c->arguments + callData->argc, c->arguments + function->formalParameterCount, Value::undefinedValue());
 
     return c;
 }

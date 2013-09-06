@@ -439,11 +439,11 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 }
 
 
-Value EvalFunction::call(Managed *that, const CallData &d)
+Value EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
     // ### const_cast
-    return static_cast<EvalFunction *>(that)->evalCall(d.thisObject, const_cast<Value *>(d.args), d.argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(callData->thisObject, const_cast<Value *>(callData->args), callData->argc, false);
 }
 
 

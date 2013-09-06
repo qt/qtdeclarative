@@ -229,10 +229,10 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RegExpCtor::construct(Managed *m, const CallData &d)
+Value RegExpCtor::construct(Managed *m, CallData *callData)
 {
-    Value r = d.argc > 0 ? d.args[0] : Value::undefinedValue();
-    Value f = d.argc > 1 ? d.args[1] : Value::undefinedValue();
+    Value r = callData->argc > 0 ? callData->args[0] : Value::undefinedValue();
+    Value f = callData->argc > 1 ? callData->args[1] : Value::undefinedValue();
     ExecutionContext *ctx = m->engine()->current;
     if (RegExpObject *re = r.as<RegExpObject>()) {
         if (!f.isUndefined())
@@ -273,14 +273,14 @@ Value RegExpCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(Managed *that, const CallData &d)
+Value RegExpCtor::call(Managed *that, CallData *callData)
 {
-    if (d.argc > 0 && d.args[0].as<RegExpObject>()) {
-        if (d.argc == 1 || d.args[1].isUndefined())
-            return d.args[0];
+    if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
+        if (callData->argc == 1 || callData->args[1].isUndefined())
+            return callData->args[0];
     }
 
-    return construct(that, d);
+    return construct(that, callData);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
