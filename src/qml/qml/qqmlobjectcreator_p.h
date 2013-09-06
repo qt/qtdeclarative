@@ -64,7 +64,10 @@ struct Q_QML_EXPORT QmlObjectCreator
 
     QList<QQmlError> errors;
 
-    bool createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData) const;
+    static bool needsCustomMetaObject(const QV4::CompiledData::Object *obj);
+    bool createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache,
+                                             // out parameters
+                                             QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
 private:
     QString stringAt(int idx) const { return unit->header.stringAt(idx); }
 
@@ -87,7 +90,7 @@ private:
 
     QObject *_object;
     QQmlData *_ddata;
-    QQmlPropertyCache *_propertyCache;
+    QQmlRefPointer<QQmlPropertyCache> _propertyCache;
 };
 
 } // end namespace QtQml

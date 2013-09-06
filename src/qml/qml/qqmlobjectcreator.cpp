@@ -204,20 +204,26 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     context->addObject(_object);
 
     // ### avoid _object->metaObject
-    QQmlPropertyCache *baseTypeCache = QQmlEnginePrivate::get(engine)->cache(_object->metaObject());
-    baseTypeCache->addref();
+    QQmlRefPointer<QQmlPropertyCache> baseTypeCache = QQmlEnginePrivate::get(engine)->cache(_object->metaObject());
 
-    QQmlPropertyCache *cache = 0;
+    QQmlRefPointer<QQmlPropertyCache> cache;
     QByteArray vmeMetaData;
-    bool needCustomMetaObject = createVMEMetaObjectAndPropertyCache(obj, baseTypeCache, &cache, &vmeMetaData);
-    cache->addref();
 
-    baseTypeCache->release();
+    const bool customMO = needsCustomMetaObject(obj);
+    if (customMO) {
+        QQmlPropertyCache *newCache = 0;
+        if (!createVMEMetaObjectAndPropertyCache(obj, baseTypeCache, &newCache, &vmeMetaData))
+            return 0;
+        cache = newCache;
+    } else {
+        cache = baseTypeCache;
+    }
+
     baseTypeCache = 0;
 
     qSwap(_propertyCache, cache);
 
-    if (needCustomMetaObject) {
+    if (customMO) {
         runtimeData->datas.append(vmeMetaData);
         // install on _object
         (void)new QQmlVMEMetaObject(_object, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(runtimeData->datas.last().constData()));
@@ -249,9 +255,12 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     qSwap(_ddata, declarativeData);
     qSwap(_object, result);
 
-    cache->release();
-
     return result;
+}
+
+bool QmlObjectCreator::needsCustomMetaObject(const QV4::CompiledData::Object *obj)
+{
+    return obj->nProperties > 0 || obj->nSignals > 0 || obj->nFunctions > 0;
 }
 
 // ###
@@ -259,12 +268,9 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
 
 static QAtomicInt classIndexCounter(0);
 
-bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache, QQmlPropertyCache **outputCache, QByteArray *vmeMetaObjectData) const
+bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache, QQmlPropertyCache **outputCache, QByteArray *vmeMetaObjectData)
 {
-    if (!obj->nProperties) {
-        *outputCache = baseTypeCache;
-        return false;
-    }
+    Q_ASSERT(needsCustomMetaObject(obj));
 
     QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(engine, obj->nProperties, /*methodCount*/0, /*signalCount*/0);
     *outputCache = cache;
