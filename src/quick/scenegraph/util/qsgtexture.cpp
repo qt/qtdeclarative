@@ -493,6 +493,8 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
 void QSGTexture::updateBindOptions(bool force)
 {
     Q_D(QSGTexture);
+    force |= isAtlasTexture();
+
     if (force || d->filteringChanged) {
         bool linear = d->filterMode == Linear;
         GLint minFilter = linear ? GL_LINEAR : GL_NEAREST;
