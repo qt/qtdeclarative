@@ -2163,6 +2163,10 @@ void QQmlTypeData::compile()
     QQmlCompilingProfiler prof(m_compiledData->name);
 
     if (m_useNewCompiler) {
+        m_compiledData->importCache = new QQmlTypeNameCache;
+        m_imports.populateCache(m_compiledData->importCache);
+        m_compiledData->importCache->addref();
+
         JSCodeGen jsCodeGen;
         jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 

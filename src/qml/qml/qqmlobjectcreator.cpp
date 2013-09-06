@@ -69,32 +69,13 @@ QmlObjectCreator::QmlObjectCreator(QQmlEngine *engine, const QUrl &url, QQmlCont
     , unit(runtimeData->qmlUnit)
     , jsUnit(runtimeData->compilationUnit)
     , context(contextData)
-    , typeNameCache(0)
+    , typeNameCache(runtimeData->importCache)
     , runtimeData(runtimeData)
     , imports(&QQmlEnginePrivate::get(engine)->typeLoader)
     , _object(0)
     , _ddata(0)
     , _propertyCache(0)
 {
-    typeNameCache = new QQmlTypeNameCache;
-
-    QQmlImportDatabase *idb = &QQmlEnginePrivate::get(engine)->importDatabase;
-
-    for (uint i = 0; i < unit->nImports; ++i) {
-        const QV4::CompiledData::Import *import = unit->importAt(i);
-        if (import->type == QV4::CompiledData::Import::ImportLibrary) {
-            imports.addLibraryImport(idb, stringAt(import->uriIndex), stringAt(import->qualifierIndex),
-                                     import->majorVersion, import->minorVersion, /*qmldir identifier*/ QString(),
-                                     /*qmldir url*/ QString(), /*incomplete*/ false, &errors);
-        } else {
-            // ###
-        }
-    }
-
-    imports.populateCache(typeNameCache);
-    context->imports = typeNameCache;
-    context->imports->addref();
-
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     if (runtimeData->compilationUnit && !runtimeData->compilationUnit->engine)
         runtimeData->compilationUnit->linkToEngine(v4);
