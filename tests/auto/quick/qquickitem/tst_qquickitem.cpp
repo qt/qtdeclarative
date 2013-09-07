@@ -1162,6 +1162,9 @@ static inline QByteArray msgItem(const QQuickItem *item)
 
 void tst_qquickitem::mouseGrab()
 {
+#if defined(Q_OS_WIN) && defined(QT_OPENGL_ES_2)
+    QSKIP("Fails in the CI for ANGLE builds on Windows, QTBUG-32664");
+#endif
     QQuickWindow window;
     window.setFramePosition(QPoint(100, 100));
     window.resize(200, 200);

@@ -46,11 +46,13 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_OPENGL_ES_2
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
+#endif
 
 const char qt_scenegraph_texture_material_vertex_code[] =
     "uniform highp mat4 qt_Matrix;                      \n"

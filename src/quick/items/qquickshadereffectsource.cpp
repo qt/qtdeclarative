@@ -96,6 +96,10 @@ class QQuickShaderEffectSourceTextureProvider : public QSGTextureProvider
 public:
     QQuickShaderEffectSourceTextureProvider()
         : sourceTexture(0)
+        , mipmapFiltering(QSGTexture::None)
+        , filtering(QSGTexture::Nearest)
+        , horizontalWrap(QSGTexture::ClampToEdge)
+        , verticalWrap(QSGTexture::ClampToEdge)
     {
     }
 

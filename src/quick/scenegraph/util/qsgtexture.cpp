@@ -81,11 +81,13 @@ static QElapsedTimer qsg_renderer_timer;
 
 QT_BEGIN_NAMESPACE
 
+#if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
+#endif
 
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)

@@ -65,7 +65,7 @@ public:
 
     void requestGlyphs(const QSet<glyph_t> &glyphs);
     void referenceGlyphs(const QSet<glyph_t> &glyphs);
-    void storeGlyphs(const QHash<glyph_t, QImage> &glyphs);
+    void storeGlyphs(const QList<QDistanceField> &glyphs);
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
 Q_SIGNALS:

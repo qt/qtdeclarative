@@ -95,6 +95,9 @@ public:
     bool waitForSessionStart();
     int debugPort() const;
 
+    bool waitForFinished();
+    QProcess::ExitStatus exitStatus() const;
+
     QString output() const;
     void stop();
 

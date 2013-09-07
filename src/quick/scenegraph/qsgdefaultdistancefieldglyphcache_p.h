@@ -58,7 +58,7 @@ public:
     virtual ~QSGDefaultDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs);
-    void storeGlyphs(const QHash<glyph_t, QImage> &glyphs);
+    void storeGlyphs(const QList<QDistanceField> &glyphs);
     void referenceGlyphs(const QSet<glyph_t> &glyphs);
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
@@ -73,7 +73,7 @@ private:
         GLuint texture;
         QSize size;
         QRect allocatedArea;
-        QImage image;
+        QDistanceField image;
 
         TextureInfo() : texture(0)
         { }

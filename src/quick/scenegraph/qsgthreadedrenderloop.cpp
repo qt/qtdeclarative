@@ -161,7 +161,7 @@ const QEvent::Type WM_Expose            = QEvent::Type(QEvent::User + 1);
 const QEvent::Type WM_Obscure           = QEvent::Type(QEvent::User + 2);
 
 // Passed from the RL to itself to initiate a polishAndSync() call.
-const QEvent::Type WM_LockAndSync       = QEvent::Type(QEvent::User + 3);
+//const QEvent::Type WM_LockAndSync       = QEvent::Type(QEvent::User + 3); // not used for now
 
 // Passed from the RL to RT when GUI has been locked, waiting for sync
 // (updatePaintNode())
@@ -178,7 +178,7 @@ const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 7);
 // Passed by the RL to the RL when maybeUpdate is called on the RT to
 // just replay the maybeUpdate later. This typically happens when
 // updatePaintNode() results in a call to QQuickItem::update().
-const QEvent::Type WM_UpdateLater       = QEvent::Type(QEvent::User + 8);
+//const QEvent::Type WM_UpdateLater       = QEvent::Type(QEvent::User + 8); // not used for now
 
 // Passed by the RL to the RT when a QQuickWindow::grabWindow() is
 // called.

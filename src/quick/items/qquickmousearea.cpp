@@ -547,6 +547,12 @@ QQuickMouseArea::QQuickMouseArea(QQuickItem *parent)
 {
     Q_D(QQuickMouseArea);
     d->init();
+#ifndef QT_NO_CURSOR
+    // Explcitly call setCursor on QQuickItem since
+    // it internally keeps a boolean hasCursor that doesn't
+    // get set to true unless you call setCursor
+    setCursor(Qt::ArrowCursor);
+#endif
 }
 
 QQuickMouseArea::~QQuickMouseArea()

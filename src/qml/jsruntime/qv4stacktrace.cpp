@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !(defined(WINCE) || defined(_WIN32_WCE))
 #include <windows.h>
 #include <DbgHelp.h>
 #endif
@@ -67,7 +67,7 @@ NativeStackTrace::NativeStackTrace(ExecutionContext *context)
     UnwindHelper::prepareForUnwind(context);
 
     nativeFrameCount = backtrace(&trace[0], sizeof(trace) / sizeof(trace[0]));
-#elif defined(Q_OS_WIN)
+#elif defined(Q_OS_WIN) && !defined(Q_OS_WINCE)
 
     int machineType = 0;
 
