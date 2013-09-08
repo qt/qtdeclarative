@@ -138,6 +138,8 @@ struct QmlObject
     int idIndex;
     int indexOfDefaultProperty;
 
+    QV4::CompiledData::Location location;
+
     PoolList<QmlProperty> *properties;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;

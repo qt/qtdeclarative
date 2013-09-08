@@ -52,199 +52,6 @@
 
 QT_USE_NAMESPACE
 
-using namespace QtQml;
-
-static void removeBindingOnProperty(QObject *o, int index)
-{
-    int coreIndex = index & 0x0000FFFF;
-    int valueTypeIndex = (index & 0xFFFF0000 ? index >> 16 : -1);
-
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
-    if (binding) binding->destroy();
-}
-
-QmlObjectCreator::QmlObjectCreator(QQmlEngine *engine, const QUrl &url, QQmlContextData *contextData, QQmlCompiledData *runtimeData)
-    : engine(engine)
-    , url(url)
-    , unit(runtimeData->qmlUnit)
-    , jsUnit(runtimeData->compilationUnit)
-    , context(contextData)
-    , typeNameCache(runtimeData->importCache)
-    , runtimeData(runtimeData)
-    , imports(&QQmlEnginePrivate::get(engine)->typeLoader)
-    , _object(0)
-    , _ddata(0)
-    , _propertyCache(0)
-{
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    if (runtimeData->compilationUnit && !runtimeData->compilationUnit->engine)
-        runtimeData->compilationUnit->linkToEngine(v4);
-}
-
-QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal)
-{
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
-                                                               QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
-    int propertyWriteStatus = -1;
-    QVariant fallbackVariantValue;
-
-    QVector<QQmlAbstractBinding*> createdDynamicBindings(obj->nBindings, 0);
-
-    const QV4::CompiledData::Binding *binding = obj->bindingTable();
-    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
-        QString name = stringAt(binding->propertyNameIndex);
-
-        if (name.isEmpty() && binding->value.type == QV4::CompiledData::Value::Type_Object) {
-            create(binding->value.objectIndex, _object);
-            continue;
-        }
-
-        QQmlPropertyData *property = _propertyCache->property(name, _object, context);
-
-        if (_ddata->hasBindingBit(property->coreIndex))
-            removeBindingOnProperty(_object, property->coreIndex);
-
-        if (binding->value.type == QV4::CompiledData::Value::Type_Script) {
-            QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-            QV4::FunctionObject *function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, runtimeFunction, qmlGlobal);
-            QQmlBinding *binding = new QQmlBinding(QV4::Value::fromObject(function), _object, context,
-                                                   QString(), 0, 0); // ###
-
-            binding->setTarget(_object, *property, context);
-            binding->addToObject();
-
-            createdDynamicBindings[i] = binding;
-            binding->m_mePtr = &createdDynamicBindings[i];
-            continue;
-        }
-
-        void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
-
-        // shortcuts
-#if 0
-        if (property->propType == QMetaType::Double && binding->value.type == QV4::CompiledData::Value::Type_Number) {
-            argv[0] = const_cast<double*>(&binding->value.d);
-        } else if (property->propType == QMetaType::Bool && binding->value.type == QV4::CompiledData::Value::Type_Boolean) {
-            argv[0] = const_cast<bool*>(&binding->value.b);
-        } else
-#endif
-        {
-            // fallback
-            fallbackVariantValue = variantForBinding(property->propType, binding);
-
-            if (property->propType == QMetaType::QVariant)
-                argv[0] = &fallbackVariantValue;
-            else
-                argv[0] = fallbackVariantValue.data();
-        }
-
-        QMetaObject::metacall(_object, QMetaObject::WriteProperty, property->coreIndex, argv);
-    }
-
-    return createdDynamicBindings;
-}
-
-void QmlObjectCreator::setupFunctions(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal)
-{
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_object);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    const quint32 *functionIdx = obj->functionOffsetTable();
-    for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIdx) {
-        QV4::Function *function = jsUnit->runtimeFunctions[*functionIdx];
-        const QString name = function->name->toQString();
-
-        QQmlPropertyData *property = _propertyCache->property(name, _object, context);
-        if (!property->isVMEFunction())
-            continue;
-
-        QV4::FunctionObject *v4Function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, function, qmlGlobal);
-        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(v4Function));
-    }
-}
-
-QObject *QmlObjectCreator::create(int index, QObject *parent)
-{
-    const QV4::CompiledData::Object *obj = unit->objectAt(index);
-
-    QQmlTypeNameCache::Result res = typeNameCache->query(stringAt(obj->inheritedTypeNameIndex));
-    if (!res.isValid())
-        return 0;
-
-    QObject *result = res.type->create();
-    // ### use no-event variant
-    if (parent)
-        result->setParent(parent);
-
-    QQmlData *declarativeData = QQmlData::get(result, /*create*/true);
-
-    qSwap(_object, result);
-    qSwap(_ddata, declarativeData);
-
-    context->addObject(_object);
-
-    // ### avoid _object->metaObject
-    QQmlRefPointer<QQmlPropertyCache> baseTypeCache = QQmlEnginePrivate::get(engine)->cache(_object->metaObject());
-
-    QQmlRefPointer<QQmlPropertyCache> cache;
-    QByteArray vmeMetaData;
-
-    const bool customMO = needsCustomMetaObject(obj);
-    if (customMO) {
-        QQmlPropertyCache *newCache = 0;
-        if (!createVMEMetaObjectAndPropertyCache(obj, baseTypeCache, &newCache, &vmeMetaData))
-            return 0;
-        cache = newCache;
-    } else {
-        cache = baseTypeCache;
-    }
-
-    baseTypeCache = 0;
-
-    qSwap(_propertyCache, cache);
-
-    if (customMO) {
-        runtimeData->datas.append(vmeMetaData);
-        // install on _object
-        (void)new QQmlVMEMetaObject(_object, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(runtimeData->datas.last().constData()));
-        if (_ddata->propertyCache)
-            _ddata->propertyCache->release();
-        _ddata->propertyCache = _propertyCache;
-        _ddata->propertyCache->addref();
-    }
-
-    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _object);
-
-    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(obj, scopeObject.asObject());
-    setupFunctions(obj, scopeObject.asObject());
-
-    // ### do this later when requested
-    for (int i = 0; i < dynamicBindings.count(); ++i) {
-        QQmlAbstractBinding *b = dynamicBindings.at(i);
-        if (!b)
-            continue;
-        b->m_mePtr = 0;
-        QQmlData *data = QQmlData::get(b->object());
-        Q_ASSERT(data);
-        data->clearPendingBindingBit(b->propertyIndex());
-        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                            QQmlPropertyPrivate::DontRemoveBinding);
-    }
-
-    qSwap(_propertyCache, cache);
-    qSwap(_ddata, declarativeData);
-    qSwap(_object, result);
-
-    return result;
-}
-
-bool QmlObjectCreator::needsCustomMetaObject(const QV4::CompiledData::Object *obj)
-{
-    return obj->nProperties > 0 || obj->nSignals > 0 || obj->nFunctions > 0;
-}
-
 #define COMPILE_EXCEPTION(token, desc) \
     { \
         recordError((token)->location, desc); \
@@ -253,12 +60,29 @@ bool QmlObjectCreator::needsCustomMetaObject(const QV4::CompiledData::Object *ob
 
 static QAtomicInt classIndexCounter(0);
 
-bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache, QQmlPropertyCache **outputCache, QByteArray *vmeMetaObjectData)
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit, const QUrl &url, QQmlTypeNameCache *typeNameCache, const QQmlImports *imports)
+    : enginePrivate(enginePrivate)
+    , unit(unit)
+    , url(url)
+    , typeNameCache(typeNameCache)
+    , imports(imports)
 {
-    Q_ASSERT(needsCustomMetaObject(obj));
+}
 
-    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(engine, obj->nProperties, /*methodCount*/0, /*signalCount*/0);
-    *outputCache = cache;
+bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
+{
+    QQmlTypeNameCache::Result res = typeNameCache->query(stringAt(obj->inheritedTypeNameIndex));
+    Q_ASSERT(res.isValid()); // types resolved earlier in resolveTypes()
+
+    QQmlPropertyCache *baseTypeCache = enginePrivate->cache(res.type->metaObject());
+    if (obj->nProperties == 0 && obj->nSignals == 0 && obj->nFunctions == 0) {
+        *resultCache = baseTypeCache;
+        vmeMetaObjectData->clear();
+        return true;
+    }
+
+    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate), obj->nProperties, obj->nFunctions, obj->nSignals);
+    *resultCache = cache;
 
     vmeMetaObjectData->clear();
 
@@ -410,11 +234,11 @@ bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledDa
                     Q_ASSERT(param->type == QV4::CompiledData::Property::Custom);
                     const QString customTypeName = stringAt(param->customTypeNameIndex);
                     QQmlType *qmltype = 0;
-                    if (!imports.resolveType(customTypeName, &qmltype, 0, 0, 0))
+                    if (!imports->resolveType(customTypeName, &qmltype, 0, 0, 0))
                         COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype->isComposite()) {
-                        QQmlTypeData *tdata = QQmlEnginePrivate::get(engine)->typeLoader.getType(qmltype->sourceUrl());
+                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
@@ -506,13 +330,13 @@ bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledDa
                      p->type == QV4::CompiledData::Property::Custom);
 
             QQmlType *qmltype = 0;
-            if (!imports.resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
+            if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
              //   COMPILE_EXCEPTION(p, tr("Invalid property type"));
             }
 
             Q_ASSERT(qmltype);
             if (qmltype->isComposite()) {
-                QQmlTypeData *tdata = QQmlEnginePrivate::get(engine)->typeLoader.getType(qmltype->sourceUrl());
+                QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
                 Q_ASSERT(tdata);
                 Q_ASSERT(tdata->isComplete());
 
@@ -605,6 +429,188 @@ bool QmlObjectCreator::createVMEMetaObjectAndPropertyCache(const QV4::CompiledDa
     return true;
 }
 
+void QQmlPropertyCacheCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
+{
+    QQmlError error;
+    error.setUrl(url);
+    error.setLine(location.line);
+    error.setColumn(location.column);
+    error.setDescription(description);
+    errors << error;
+}
+
+static void removeBindingOnProperty(QObject *o, int index)
+{
+    int coreIndex = index & 0x0000FFFF;
+    int valueTypeIndex = (index & 0xFFFF0000 ? index >> 16 : -1);
+
+    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
+    if (binding) binding->destroy();
+}
+
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit,
+                                   const QV4::CompiledData::CompilationUnit *jsUnit, QQmlTypeNameCache *typeNameCache,
+                                   const QList<QQmlPropertyCache*> &propertyCaches,
+                                   const QList<QByteArray> &vmeMetaObjectData)
+    : engine(contextData->engine)
+    , unit(qmlUnit)
+    , jsUnit(jsUnit)
+    , context(contextData)
+    , typeNameCache(typeNameCache)
+    , propertyCaches(propertyCaches)
+    , vmeMetaObjectData(vmeMetaObjectData)
+    , _qobject(0)
+    , _compiledObject(0)
+    , _ddata(0)
+    , _propertyCache(0)
+{
+}
+
+QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGlobal)
+{
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
+    QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
+                                                               QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+    int propertyWriteStatus = -1;
+    QVariant fallbackVariantValue;
+
+    QVector<QQmlAbstractBinding*> createdDynamicBindings(_compiledObject->nBindings, 0);
+
+    const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
+    for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
+        QString name = stringAt(binding->propertyNameIndex);
+
+        if (name.isEmpty() && binding->value.type == QV4::CompiledData::Value::Type_Object) {
+            create(binding->value.objectIndex, _qobject);
+            continue;
+        }
+
+        QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
+
+        if (_ddata->hasBindingBit(property->coreIndex))
+            removeBindingOnProperty(_qobject, property->coreIndex);
+
+        if (binding->value.type == QV4::CompiledData::Value::Type_Script) {
+            QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+            QV4::FunctionObject *function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, runtimeFunction, qmlGlobal);
+            QQmlBinding *binding = new QQmlBinding(QV4::Value::fromObject(function), _qobject, context,
+                                                   QString(), 0, 0); // ###
+
+            binding->setTarget(_qobject, *property, context);
+            binding->addToObject();
+
+            createdDynamicBindings[i] = binding;
+            binding->m_mePtr = &createdDynamicBindings[i];
+            continue;
+        }
+
+        void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
+
+        // shortcuts
+#if 0
+        if (property->propType == QMetaType::Double && binding->value.type == QV4::CompiledData::Value::Type_Number) {
+            argv[0] = const_cast<double*>(&binding->value.d);
+        } else if (property->propType == QMetaType::Bool && binding->value.type == QV4::CompiledData::Value::Type_Boolean) {
+            argv[0] = const_cast<bool*>(&binding->value.b);
+        } else
+#endif
+        {
+            // fallback
+            fallbackVariantValue = variantForBinding(property->propType, binding);
+
+            if (property->propType == QMetaType::QVariant)
+                argv[0] = &fallbackVariantValue;
+            else
+                argv[0] = fallbackVariantValue.data();
+        }
+
+        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+    }
+
+    return createdDynamicBindings;
+}
+
+void QmlObjectCreator::setupFunctions(QV4::Object *qmlGlobal)
+{
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+
+    const quint32 *functionIdx = _compiledObject->functionOffsetTable();
+    for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
+        QV4::Function *function = jsUnit->runtimeFunctions[*functionIdx];
+        const QString name = function->name->toQString();
+
+        QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
+        if (!property->isVMEFunction())
+            continue;
+
+        QV4::FunctionObject *v4Function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, function, qmlGlobal);
+        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(v4Function));
+    }
+}
+
+QObject *QmlObjectCreator::create(int index, QObject *parent)
+{
+    const QV4::CompiledData::Object *obj = unit->objectAt(index);
+
+    QQmlTypeNameCache::Result res = typeNameCache->query(stringAt(obj->inheritedTypeNameIndex));
+    if (!res.isValid())
+        return 0;
+
+    QObject *result = res.type->create();
+    // ### use no-event variant
+    if (parent)
+        result->setParent(parent);
+
+    QQmlData *declarativeData = QQmlData::get(result, /*create*/true);
+
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
+    Q_ASSERT(!cache.isNull());
+
+    qSwap(_propertyCache, cache);
+    qSwap(_qobject, result);
+    qSwap(_compiledObject, obj);
+    qSwap(_ddata, declarativeData);
+
+    context->addObject(_qobject);
+
+    const QByteArray data = vmeMetaObjectData.value(index);
+    if (!data.isEmpty()) {
+        // install on _object
+        (void)new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
+        if (_ddata->propertyCache)
+            _ddata->propertyCache->release();
+        _ddata->propertyCache = _propertyCache;
+        _ddata->propertyCache->addref();
+    }
+
+    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject);
+
+    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(scopeObject.asObject());
+    setupFunctions(scopeObject.asObject());
+
+    // ### do this later when requested
+    for (int i = 0; i < dynamicBindings.count(); ++i) {
+        QQmlAbstractBinding *b = dynamicBindings.at(i);
+        if (!b)
+            continue;
+        b->m_mePtr = 0;
+        QQmlData *data = QQmlData::get(b->object());
+        Q_ASSERT(data);
+        data->clearPendingBindingBit(b->propertyIndex());
+        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
+                            QQmlPropertyPrivate::DontRemoveBinding);
+    }
+
+    qSwap(_propertyCache, cache);
+    qSwap(_ddata, declarativeData);
+    qSwap(_compiledObject, obj);
+    qSwap(_qobject, result);
+
+    return result;
+}
+
 QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const
 {
     QVariant result;
@@ -686,4 +692,3 @@ void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, 
     error.setDescription(description);
     errors << error;
 }
-

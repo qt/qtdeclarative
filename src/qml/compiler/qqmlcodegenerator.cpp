@@ -201,6 +201,11 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     qSwap(_object, obj);
 
     _object->inheritedTypeNameIndex = registerString(asString(qualifiedTypeNameId));
+
+    AST::SourceLocation loc = qualifiedTypeNameId->firstSourceLocation();
+    _object->location.line = loc.startLine;
+    _object->location.column = loc.startColumn;
+
     _object->idIndex = registerString(QString());
     _object->indexOfDefaultProperty = -1;
     _object->properties = New<PoolList<QmlProperty> >();
@@ -681,6 +686,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
         objectToWrite->inheritedTypeNameIndex = o->inheritedTypeNameIndex;
         objectToWrite->indexOfDefaultProperty = o->indexOfDefaultProperty;
         objectToWrite->idIndex = o->idIndex;
+        objectToWrite->location = o->location;
 
         quint32 nextOffset = sizeof(QV4::CompiledData::Object);
 

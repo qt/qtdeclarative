@@ -49,17 +49,34 @@ QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
 
-namespace QtQml {
+class QQmlPropertyCacheCreator
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
+public:
+    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit,
+                             const QUrl &url, QQmlTypeNameCache *typeNameCache, const QQmlImports *imports);
 
-class Q_QML_EXPORT QmlObjectCreator
+    QList<QQmlError> errors;
+
+    bool create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
+
+protected:
+    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
+    QQmlEnginePrivate *enginePrivate;
+    const QV4::CompiledData::QmlUnit *unit;
+    QUrl url;
+    QQmlTypeNameCache *typeNameCache;
+    const QQmlImports *imports;
+};
+
+class QmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCompiler)
 public:
-
-    QmlObjectCreator(QQmlEngine *engine, const QUrl &url,
-                     // extra data/output stored in these two
-                     QQmlContextData *contextData,
-                     QQmlCompiledData *runtimeData);
+    QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::CompilationUnit *jsUnit,
+                     QQmlTypeNameCache *typeNameCache, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData);
 
     QObject *create(QObject *parent = 0)
     { return create(unit->indexOfRootObject, parent); }
@@ -67,15 +84,9 @@ public:
 
     QList<QQmlError> errors;
 
-    static bool needsCustomMetaObject(const QV4::CompiledData::Object *obj);
-    bool createVMEMetaObjectAndPropertyCache(const QV4::CompiledData::Object *obj, QQmlPropertyCache *baseTypeCache,
-                                             // out parameters
-                                             QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
 private:
-    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
-
-    QVector<QQmlAbstractBinding *> setupBindings(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal);
-    void setupFunctions(const QV4::CompiledData::Object *obj, QV4::Object *qmlGlobal);
+    QVector<QQmlAbstractBinding *> setupBindings(QV4::Object *qmlGlobal);
+    void setupFunctions(QV4::Object *qmlGlobal);
 
     QVariant variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const;
 
@@ -83,6 +94,7 @@ private:
     static double valueAsNumber(const QV4::CompiledData::Value *value);
     static bool valueAsBoolean(const QV4::CompiledData::Value *value);
 
+    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
     QQmlEngine *engine;
@@ -91,15 +103,14 @@ private:
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *context;
     QQmlTypeNameCache *typeNameCache;
-    QQmlCompiledData *runtimeData;
-    QQmlImports imports;
+    const QList<QQmlPropertyCache *> propertyCaches;
+    const QList<QByteArray> vmeMetaObjectData;
 
-    QObject *_object;
+    QObject *_qobject;
+    const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
 };
-
-} // end namespace QtQml
 
 QT_END_NAMESPACE
 

@@ -2189,6 +2189,39 @@ void QQmlTypeData::compile()
         if (m_compiledData->compilationUnit)
             m_compiledData->compilationUnit->ref();
         m_compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
+
+        QList<QQmlError> errors;
+
+        m_compiledData->datas.reserve(qmlUnit->nObjects);
+        m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
+
+        QQmlPropertyCacheCreator propertyCacheBuilder(QQmlEnginePrivate::get(m_typeLoader->engine()),
+                                                      qmlUnit, m_compiledData->url, m_compiledData->importCache,
+                                                      &m_imports);
+
+        for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
+            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+
+            QByteArray vmeMetaObjectData;
+            QQmlPropertyCache *propertyCache = 0;
+
+            if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
+                errors << propertyCacheBuilder.errors;
+                break;
+            }
+
+            Q_ASSERT(propertyCache);
+
+            m_compiledData->datas << vmeMetaObjectData;
+            propertyCache->addref();
+            m_compiledData->propertyCaches << propertyCache;
+        }
+
+        if (!errors.isEmpty()) {
+            setError(errors);
+            m_compiledData->release();
+            m_compiledData = 0;
+        }
     } else {
         QQmlCompiler compiler(&scriptParser._pool);
         if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {

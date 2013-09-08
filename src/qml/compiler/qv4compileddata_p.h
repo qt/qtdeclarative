@@ -312,6 +312,7 @@ struct Object
     quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32 nBindings;
     quint32 offsetToBindings;
+    Location location;
 //    Function[]
 //    Property[]
 //    Signal[]
