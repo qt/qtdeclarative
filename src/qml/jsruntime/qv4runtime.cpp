@@ -158,12 +158,12 @@ void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name)
         *result = res;
 }
 
-void __qmljs_add_helper(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
+void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
 {
     ValueScope scope(ctx);
 
-    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
-    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
+    ScopedValue pleft(scope, __qmljs_to_primitive(*left, PREFERREDTYPE_HINT));
+    ScopedValue pright(scope, __qmljs_to_primitive(*right, PREFERREDTYPE_HINT));
     if (pleft->isString() || pright->isString()) {
         if (!pleft->isString())
             pleft = __qmljs_to_string(pleft, ctx);
@@ -774,7 +774,7 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         *result = res;
 }
 
-void __qmljs_call_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
+void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *name, CallData *callData)
 {
     Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
@@ -1215,26 +1215,26 @@ void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, Value *result
     *result = Value::fromObject(args);
 }
 
-void __qmljs_increment(Value *result, const Value &value)
+void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value.isInteger())
-        *result = Value::fromInt32(value.integerValue() + 1);
+    if (value->isInteger())
+        *result = Value::fromInt32(value->integerValue() + 1);
     else {
-        double d = __qmljs_to_number(value);
+        double d = __qmljs_to_number(*value);
         *result = Value::fromDouble(d + 1);
     }
 }
 
-void __qmljs_decrement(Value *result, const Value &value)
+void __qmljs_decrement(QV4::ValueRef result, const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value.isInteger())
-        *result = Value::fromInt32(value.integerValue() - 1);
+    if (value->isInteger())
+        *result = Value::fromInt32(value->integerValue() - 1);
     else {
-        double d = __qmljs_to_number(value);
+        double d = __qmljs_to_number(*value);
         *result = Value::fromDouble(d - 1);
     }
 }

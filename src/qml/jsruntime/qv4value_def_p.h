@@ -277,6 +277,8 @@ struct Q_QML_EXPORT Value
     inline void mark() const;
 };
 
+typedef void (*BinOp)(QV4::Value *result, const QV4::Value &left, const QV4::Value &right);
+
 }
 
 QT_END_NAMESPACE

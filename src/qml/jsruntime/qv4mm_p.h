@@ -44,6 +44,7 @@
 
 #include "qv4global_p.h"
 #include "qv4context_p.h"
+#include "qv4value_p.h"
 
 #include <QScopedPointer>
 

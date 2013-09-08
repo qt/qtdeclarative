@@ -42,7 +42,8 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global_p.h"
-#include "qv4runtime_p.h"
+#include "qv4value_def_p.h"
+#include "qv4managed_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +53,7 @@ struct Object;
 struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
+struct Function;
 
 namespace CompiledData {
 struct CompilationUnit;

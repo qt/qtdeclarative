@@ -173,6 +173,46 @@ struct ScopedCallData {
     CallData *ptr;
 };
 
+struct ValueRef {
+    ValueRef(const ScopedValue &v)
+        : ptr(v.ptr) {}
+    // Important: Do NOT add a copy constructor to this class
+    // adding a copy constructor actually changes the calling convention, ie.
+    // is not even binary compatible. Adding it would break assumptions made
+    // in the jit'ed code.
+    ValueRef &operator=(const ScopedValue &o)
+    { *ptr = *o.ptr; return *this; }
+    ValueRef &operator=(const ValueRef &o)
+    { *ptr = *o.ptr; return *this; }
+    ValueRef &operator=(const Value &v)
+    { *ptr = v; return *this; }
+
+    operator const Value *() const {
+        return ptr;
+    }
+    const Value *operator->() const {
+        return ptr;
+    }
+
+    operator Value *() {
+        return ptr;
+    }
+    Value *operator->() {
+        return ptr;
+    }
+
+    static ValueRef fromRawValue(Value *v) {
+        return ValueRef(v);
+    }
+    static const ValueRef fromRawValue(const Value *v) {
+        return ValueRef(const_cast<Value *>(v));
+    }
+private:
+    ValueRef(Value *v) { ptr = v; }
+    Value *ptr;
+};
+
+
 }
 
 QT_END_NAMESPACE

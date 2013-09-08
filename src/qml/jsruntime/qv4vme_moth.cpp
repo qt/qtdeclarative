@@ -335,7 +335,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        __qmljs_call_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], callData);
+        __qmljs_call_property(context, QV4::ValueRef::fromRawValue(VALUEPTR(instr.result)), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
@@ -536,7 +536,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CJump)
 
     MOTH_BEGIN_INSTR(Unop)
-        instr.alu(VALUEPTR(instr.result), VALUE(instr.source));
+        instr.alu(QV4::ValueRef::fromRawValue(VALUEPTR(instr.result)), QV4::ValueRef::fromRawValue(VALUEPTR(instr.source)));
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
