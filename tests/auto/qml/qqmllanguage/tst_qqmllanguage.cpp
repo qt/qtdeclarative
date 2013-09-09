@@ -198,6 +198,18 @@ private:
     QStringList defaultImportPathList;
 
     void testType(const QString& qml, const QString& type, const QString& error, bool partialMatch = false);
+
+    // When calling into JavaScript, the specific type of the return value can differ if that return
+    // value is a number. This is not only the case for non-integral numbers, or numbers that do not
+    // fit into the (signed) integer range, but it also depends on which optimizations are run. So,
+    // to check if the return value is of a number type, use this method instead of checking against
+    // a specific userType.
+    static bool isJSNumberType(int userType)
+    {
+        return userType == (int) QVariant::Int
+                || userType == (int) QVariant::UInt
+                || userType == (int) QVariant::Double;
+    }
 };
 
 #define DETERMINE_ERRORS(errorfile,expected,actual)\
@@ -841,8 +853,8 @@ void tst_qqmllanguage::bindJSValueToVar()
     QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
     QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
     QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Double);
+    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test20Bound").userType()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -890,8 +902,8 @@ void tst_qqmllanguage::bindJSValueToVariant()
     QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
     QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
     QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Double);
+    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test20Bound").userType()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
