@@ -178,13 +178,13 @@ QV4::Bool __qmljs_equal_helper(const ValueRef x, const ValueRef y);
 Q_QML_EXPORT QV4::Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y);
 
 // unary operators
-typedef void (*UnaryOpName)(QV4::ValueRef, const QV4::ValueRef);
-void __qmljs_uplus(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_uminus(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_compl(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_not(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_decrement(QV4::ValueRef result, const QV4::ValueRef value);
+typedef QV4::ReturnedValue (*UnaryOpName)(const QV4::ValueRef);
+QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value);
 
 Q_QML_EXPORT void __qmljs_value_to_double(double *result, const ValueRef value);
 Q_QML_EXPORT int __qmljs_value_to_int32(const ValueRef value);
@@ -192,9 +192,9 @@ Q_QML_EXPORT int __qmljs_double_to_int32(const double &d);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const ValueRef value);
 Q_QML_EXPORT unsigned __qmljs_double_to_uint32(const double &d);
 
-void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::ValueRef result, QV4::String *name);
+QV4::ReturnedValue __qmljs_delete_subscript(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index);
+ReturnedValue __qmljs_delete_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, QV4::String *name);
+ReturnedValue __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::String *name);
 
 void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::ValueRef value);
 
@@ -309,32 +309,32 @@ inline QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV
 }
 
 
-inline void __qmljs_uplus(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    result = value;
-    if (result->tryIntegerConversion())
-        return;
+    Value result = *value;
+    if (result.tryIntegerConversion())
+        return result;
 
     double n = __qmljs_to_number(value);
-    *result = QV4::Value::fromDouble(n);
+    return QV4::Value::fromDouble(n);
 }
 
-inline void __qmljs_uminus(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     // +0 != -0, so we need to convert to double when negating 0
     if (value->isInteger() && value->integerValue())
-        *result = QV4::Value::fromInt32(-value->integerValue());
+        return QV4::Value::fromInt32(-value->integerValue());
     else {
         double n = __qmljs_to_number(value);
-        *result = QV4::Value::fromDouble(-n);
+        return QV4::Value::fromDouble(-n);
     }
 }
 
-inline void __qmljs_compl(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value)
 {
     TRACE1(value);
 
@@ -344,15 +344,15 @@ inline void __qmljs_compl(QV4::ValueRef result, const QV4::ValueRef value)
     else
         n = QV4::Value::toInt32(__qmljs_to_number(value));
 
-    *result = QV4::Value::fromInt32(~n);
+    return QV4::Value::fromInt32(~n);
 }
 
-inline void __qmljs_not(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     bool b = value->toBoolean();
-    *result = QV4::Value::fromBoolean(!b);
+    return QV4::Value::fromBoolean(!b);
 }
 
 // binary operators

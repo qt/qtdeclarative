@@ -755,23 +755,21 @@ void InstructionSelection::callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp 
 
 void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index,
                                                       V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_subscript, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::PointerToValue(index));
+    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_delete_name, Assembler::ContextRegister,
+                         Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
@@ -1226,8 +1224,7 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     } // switch
 
     if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op,
-                                     Assembler::PointerToValue(targetTemp),
+        _as->generateFunctionCallImp(targetTemp, opName, op,
                                      Assembler::PointerToValue(sourceTemp));
         storeTarget(0, targetTemp);
     }

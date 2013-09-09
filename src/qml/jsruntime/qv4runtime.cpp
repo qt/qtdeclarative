@@ -250,35 +250,28 @@ void __qmljs_init_closure(ExecutionContext *ctx, ValueRef result, int functionId
     *result = Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
 }
 
-void __qmljs_delete_subscript(ExecutionContext *ctx, ValueRef result, const ValueRef base, const ValueRef index)
+ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef base, const ValueRef index)
 {
     if (Object *o = base->asObject()) {
         uint n = index->asArrayIndex();
         if (n < UINT_MAX) {
-            Value res = Value::fromBoolean(o->deleteIndexedProperty(n));
-            if (result)
-                *result = res;
-            return;
+            return Value::fromBoolean(o->deleteIndexedProperty(n));
         }
     }
 
     String *name = index->toString(ctx);
-    __qmljs_delete_member(ctx, result, base, name);
+    return __qmljs_delete_member(ctx, base, name);
 }
 
-void __qmljs_delete_member(ExecutionContext *ctx, ValueRef result, const ValueRef base, String *name)
+ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, String *name)
 {
     Object *obj = base->toObject(ctx);
-    Value res = Value::fromBoolean(obj->deleteProperty(name));
-    if (result)
-        *result = res;
+    return Value::fromBoolean(obj->deleteProperty(name));
 }
 
-void __qmljs_delete_name(ExecutionContext *ctx, ValueRef result, String *name)
+ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
 {
-    Value res = Value::fromBoolean(ctx->deleteProperty(name));
-    if (result)
-        *result = res;
+    return Value::fromBoolean(ctx->deleteProperty(name));
 }
 
 void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
@@ -1233,27 +1226,27 @@ QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx)
     return Value::fromObject(args);
 }
 
-void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value)
+QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     if (value->isInteger())
-        *result = Value::fromInt32(value->integerValue() + 1);
+        return Value::fromInt32(value->integerValue() + 1);
     else {
         double d = value->toNumber();
-        *result = Value::fromDouble(d + 1);
+        return Value::fromDouble(d + 1);
     }
 }
 
-void __qmljs_decrement(QV4::ValueRef result, const QV4::ValueRef value)
+QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     if (value->isInteger())
-        *result = Value::fromInt32(value->integerValue() - 1);
+        return Value::fromInt32(value->integerValue() - 1);
     else {
         double d = value->toNumber();
-        *result = Value::fromDouble(d - 1);
+        return Value::fromDouble(d - 1);
     }
 }
 

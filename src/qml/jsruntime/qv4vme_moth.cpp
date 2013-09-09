@@ -406,19 +406,19 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-            VALUE(instr.result) = __qmljs_foreach_next_property_name(VALUEPTR(instr.arg)).get();
+        VALUE(instr.result) = __qmljs_foreach_next_property_name(VALUEPTR(instr.arg)).get();
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-        __qmljs_delete_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
+        VALUE(instr.result) = __qmljs_delete_member(context, VALUEPTR(instr.base), runtimeStrings[instr.member]).get();
     MOTH_END_INSTR(CallBuiltinDeleteMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-        __qmljs_delete_subscript(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
+        VALUE(instr.result) = __qmljs_delete_subscript(context, VALUEPTR(instr.base), VALUEPTR(instr.index)).get();
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        __qmljs_delete_name(context, VALUEPTR(instr.result), runtimeStrings[instr.name]);
+        VALUE(instr.result) = __qmljs_delete_name(context, runtimeStrings[instr.name]).get();
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
@@ -504,7 +504,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CJump)
 
     MOTH_BEGIN_INSTR(Unop)
-        instr.alu(QV4::ValueRef::fromRawValue(VALUEPTR(instr.result)), QV4::ValueRef::fromRawValue(VALUEPTR(instr.source)));
+        VALUE(instr.result) = instr.alu(VALUEPTR(instr.source)).get();
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
