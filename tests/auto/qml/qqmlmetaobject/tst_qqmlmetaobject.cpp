@@ -246,7 +246,7 @@ void tst_QQmlMetaObject::property()
     QCOMPARE(signal.methodType(), QMetaMethod::Signal);
     QCOMPARE(signal.name(), QByteArray("testChanged"));
     QCOMPARE(signal.methodSignature(), QByteArray("testChanged()"));
-    //QCOMPARE(signal.access(), QMetaMethod::Protected); Disabled temporarily. Change in qtbase to make the QMetaMethod signals access Public
+    QCOMPARE(signal.access(), QMetaMethod::Public);
     QCOMPARE(signal.parameterCount(), 0);
     QCOMPARE(signal.parameterTypes(), QList<QByteArray>());
     QCOMPARE(signal.parameterNames(), QList<QByteArray>());
@@ -379,8 +379,10 @@ void tst_QQmlMetaObject::method()
     QMetaMethod method = mo->method(mo->methodOffset());
     QCOMPARE(method.methodType(), methodType);
     QCOMPARE(QString::fromUtf8(method.methodSignature().constData()), signature);
-    if (method.methodType() != QMetaMethod::Signal) // Disabled temporarily - Change in qtbase to make the QMetaMethod signals access Public
+    if (method.methodType() != QMetaMethod::Signal)
         QCOMPARE(method.access(), QMetaMethod::Protected);
+    else
+        QCOMPARE(method.access(), QMetaMethod::Public);
 
     QString computedName = signature.left(signature.indexOf('('));
     QCOMPARE(QString::fromUtf8(method.name()), computedName);
