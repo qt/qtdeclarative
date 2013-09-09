@@ -130,13 +130,13 @@ QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(QV4::String *exceptionVa
 QV4::ExecutionContext *__qmljs_builtin_pop_scope(QV4::ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, QV4::String *name);
 void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, QV4::ValueRef val);
-void __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::ValueRef array, QV4::Value *values, uint length);
+QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::Value *values, uint length);
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, const QV4::ValueRef getter, const QV4::ValueRef setter);
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::Value *args, int classId);
-void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, QV4::ValueRef result);
+QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId);
+QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx);
 
-void __qmljs_value_from_string(QV4::ValueRef result, QV4::String *string);
-void __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, QV4::ValueRef result, int id);
+QV4::ReturnedValue __qmljs_value_from_string(QV4::String *string);
+QV4::ReturnedValue __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, int id);
 
 // constructors
 void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::ValueRef result, int functionId);
@@ -150,19 +150,19 @@ QV4::String *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *firs
 Q_QML_EXPORT ReturnedValue __qmljs_object_default_value(QV4::Object *object, int typeHint);
 void __qmljs_set_activation_property(QV4::ExecutionContext *ctx, QV4::String *name, const QV4::ValueRef value);
 void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, const QV4::ValueRef value);
-void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef object, QV4::String *name);
-void __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, QV4::String *name);
+QV4::ReturnedValue __qmljs_get_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name);
+QV4::ReturnedValue __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::String *name);
 
 ReturnedValue __qmljs_call_global_lookup(QV4::ExecutionContext *context, uint index, CallDataRef callData);
-void __qmljs_construct_global_lookup(QV4::ExecutionContext *context, QV4::ValueRef result, uint index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_global_lookup(QV4::ExecutionContext *context, uint index, CallDataRef callData);
 
 
-void __qmljs_get_element(QV4::ExecutionContext *ctx, QV4::ValueRef retval, const QV4::ValueRef object, const QV4::ValueRef index);
+QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index);
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
 // For each
-void __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef in);
-void __qmljs_foreach_next_property_name(QV4::ValueRef result, const ValueRef foreach_iterator);
+QV4::ReturnedValue __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, const QV4::ValueRef in);
+QV4::ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator);
 
 // type conversion and testing
 QV4::ReturnedValue __qmljs_to_primitive(const ValueRef value, int typeHint);

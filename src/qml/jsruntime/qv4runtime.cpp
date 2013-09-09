@@ -661,7 +661,7 @@ void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, String *
     o->put(name, *value);
 }
 
-void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef object, const ValueRef index)
+ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index)
 {
     uint idx = index->asArrayIndex();
 
@@ -670,14 +670,10 @@ void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef 
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
                 if (idx >= (uint)str->toQString().length()) {
-                    if (result)
-                        *result = Value::undefinedValue();
-                    return;
+                    return Value::undefinedValue();
                 }
                 const QString s = str->toQString().mid(idx, 1);
-                if (result)
-                    *result = Value::fromString(ctx, s);
-                return;
+                return Value::fromString(ctx, s);
             }
         }
 
@@ -693,22 +689,15 @@ void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef 
         uint pidx = o->propertyIndexFromArrayIndex(idx);
         if (pidx < UINT_MAX) {
             if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
-                if (result)
-                    *result = o->arrayData[pidx].value;
-                return;
+                return o->arrayData[pidx].value;
             }
         }
 
-        Value res = o->getIndexed(idx);
-        if (result)
-            *result = res;
-        return;
+        return o->getIndexed(idx);
     }
 
     String *name = index->toString(ctx);
-    Value res = o->get(name);
-    if (result)
-        *result = res;
+    return o->get(name);
 }
 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
@@ -754,23 +743,23 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
     o->put(name, *value);
 }
 
-void __qmljs_foreach_iterator_object(ExecutionContext *ctx, ValueRef result, const ValueRef in)
+ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const ValueRef in)
 {
     Object *o = 0;
     if (!in->isNullOrUndefined())
         o = in->toObject(ctx);
     Object *it = ctx->engine->newForEachIteratorObject(ctx, o);
-    *result = Value::fromObject(it);
+    return Value::fromObject(it);
 }
 
-void __qmljs_foreach_next_property_name(ValueRef result, const ValueRef foreach_iterator)
+ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator)
 {
-    assert(foreach_iterator->isObject());
+    Q_ASSERT(foreach_iterator->isObject());
 
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator->objectValue());
-    assert(it->as<ForEachIteratorObject>());
+    Q_ASSERT(it->as<ForEachIteratorObject>());
 
-    *result = it->nextPropertyName();
+    return it->nextPropertyName();
 }
 
 
@@ -779,28 +768,25 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
     ctx->setProperty(name, *value);
 }
 
-void __qmljs_get_property(ExecutionContext *ctx, ValueRef result, const ValueRef object, String *name)
+ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *name)
 {
     Value res;
     Managed *m = object->asManaged();
-    if (m) {
-        res = m->get(name);
-    } else {
-        if (object->isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
-            ctx->throwTypeError(message);
-        }
+    if (m)
+        return m->get(name);
 
-        m = __qmljs_convert_to_object(ctx, object);
-        res = m->get(name);
+    if (object->isNullOrUndefined()) {
+        QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
+        ctx->throwTypeError(message);
     }
-    if (result)
-        *result = res;
+
+    m = __qmljs_convert_to_object(ctx, object);
+    return m->get(name);
 }
 
-void __qmljs_get_activation_property(ExecutionContext *ctx, ValueRef result, String *name)
+ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 {
-    *result = ctx->getProperty(name);
+    return ctx->getProperty(name);
 }
 
 uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
@@ -1047,7 +1033,7 @@ ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func,
 }
 
 
-void __qmljs_construct_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -1060,9 +1046,7 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, ValueRef result,
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
 
@@ -1186,7 +1170,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
     pd->value = val ? *val : Value::undefinedValue();
 }
 
-void __qmljs_builtin_define_array(ExecutionContext *ctx, ValueRef array, Value *values, uint length)
+ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
     ArrayObject *a = ctx->engine->newArrayObject();
 
@@ -1208,7 +1192,7 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, ValueRef array, Value *
         }
         a->setArrayLengthUnchecked(length);
     }
-    *array = Value::fromObject(a);
+    return Value::fromObject(a);
 }
 
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef getter, const ValueRef setter)
@@ -1222,7 +1206,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, ValueRef result, const QV4::Value *args, int classId)
+ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)
 {
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
@@ -1238,15 +1222,15 @@ void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, ValueRef 
         }
     }
 
-    *result = Value::fromObject(o);
+    return Value::fromObject(o);
 }
 
-void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, ValueRef result)
+QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx)
 {
     assert(ctx->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
     ArgumentsObject *args = new (c->engine->memoryManager) ArgumentsObject(c);
-    *result = Value::fromObject(args);
+    return Value::fromObject(args);
 }
 
 void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value)
@@ -1298,14 +1282,14 @@ unsigned __qmljs_double_to_uint32(const double &d)
     return Value::toUInt32(d);
 }
 
-void __qmljs_value_from_string(ValueRef result, String *string)
+ReturnedValue __qmljs_value_from_string(String *string)
 {
-    *result = Value::fromString(string);
+    return Value::fromString(string);
 }
 
-void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, ValueRef result, int id)
+ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
 {
-    *result = ctx->compilationUnit->runtimeRegularExpressions[id];
+    return ctx->compilationUnit->runtimeRegularExpressions[id];
 }
 
 } // namespace QV4
