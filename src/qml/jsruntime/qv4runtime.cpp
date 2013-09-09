@@ -946,7 +946,7 @@ QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
 }
 
 
-void __qmljs_call_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -957,20 +957,14 @@ void __qmljs_call_global_lookup(ExecutionContext *context, ValueRef result, uint
     if (!o)
         context->throwTypeError();
 
-    if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
-        if (result)
-            *result = res;
-        return;
-    }
+    if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
+        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
 
-void __qmljs_call_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -989,18 +983,13 @@ void __qmljs_call_activation_property(ExecutionContext *context, ValueRef result
     }
 
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
-        if (result)
-            *result = res;
-        return;
+        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
     }
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
@@ -1019,12 +1008,10 @@ void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *n
         context->throwTypeError(error);
     }
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
     Value func;
 
@@ -1035,12 +1022,10 @@ void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, ui
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_element(ExecutionContext *context, ValueRef result, const ValueRef index, CallDataRef callData)
+ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
@@ -1049,20 +1034,16 @@ void __qmljs_call_element(ExecutionContext *context, ValueRef result, const Valu
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
+ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
     Object *o = func->asObject();
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
 

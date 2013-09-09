@@ -714,13 +714,13 @@ void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateFunctionCall(Assembler::Void, __qmljs_call_global_lookup,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_global_lookup,
+                             Assembler::ContextRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateFunctionCall(Assembler::Void, __qmljs_call_activation_property,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_activation_property,
+                             Assembler::ContextRegister,
                              Assembler::PointerToString(*func->id),
                              baseAddressForCallData());
     }
@@ -997,8 +997,8 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
     Q_ASSERT(value);
 
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(value),
+    generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister,
+                         Assembler::Reference(value),
                          baseAddressForCallData());
 }
 
@@ -1504,14 +1504,14 @@ void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateFunctionCall(Assembler::Void, __qmljs_call_property_lookup,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_property_lookup,
+                             Assembler::ContextRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else
     {
-        generateFunctionCall(Assembler::Void, __qmljs_call_property, Assembler::ContextRegister,
-                             Assembler::PointerToValue(result), Assembler::PointerToString(name),
+        generateFunctionCall(result, __qmljs_call_property, Assembler::ContextRegister,
+                             Assembler::PointerToString(name),
                              baseAddressForCallData());
     }
 }
@@ -1522,8 +1522,8 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
     assert(base != 0);
 
     int argc = prepareCallData(args, base);
-    generateFunctionCall(Assembler::Void, __qmljs_call_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(index),
+    generateFunctionCall(result, __qmljs_call_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(index),
                          baseAddressForCallData());
 }
 

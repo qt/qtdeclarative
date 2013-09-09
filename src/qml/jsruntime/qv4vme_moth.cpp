@@ -325,7 +325,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
-        __qmljs_call_value(context, VALUEPTR(instr.result), VALUEPTR(instr.dest), callData);
+        VALUE(instr.result) = __qmljs_call_value(context, VALUEPTR(instr.dest), callData).get();
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
@@ -335,7 +335,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        __qmljs_call_property(context, QV4::ValueRef::fromRawValue(VALUEPTR(instr.result)), runtimeStrings[instr.name], callData);
+        VALUE(instr.result) = __qmljs_call_property(context, runtimeStrings[instr.name], callData).get();
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
@@ -344,7 +344,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        __qmljs_call_element(context, VALUEPTR(instr.result), VALUEPTR(instr.index), callData);
+        VALUE(instr.result) = __qmljs_call_element(context, VALUEPTR(instr.index), callData).get();
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
@@ -354,7 +354,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
-        __qmljs_call_activation_property(context, VALUEPTR(instr.result), runtimeStrings[instr.name], callData);
+        VALUE(instr.result) = __qmljs_call_activation_property(context, runtimeStrings[instr.name], callData).get();
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)

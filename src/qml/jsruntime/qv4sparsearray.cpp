@@ -61,13 +61,15 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
     if (p2.value.isUndefined())
         return true;
     if (Object *o = m_comparefn.asObject()) {
+        ValueScope scope(o->engine());
+        ScopedValue result(scope);
         ScopedCallData callData(o->engine(), 2);
         callData->thisObject = Value::undefinedValue();
         callData->args[0] = p1.value;
         callData->args[1] = p2.value;
-        Value result = Value::undefinedValue();
-        __qmljs_call_value(m_context, &result, QV4::ValueRef::fromRawValue(&m_comparefn), callData);
-        return result.toNumber() <= 0;
+        result = __qmljs_call_value(m_context, QV4::ValueRef::fromRawValue(&m_comparefn), callData);
+
+        return result->toNumber() <= 0;
     }
     return p1.value.toString(m_context)->toQString() < p2.value.toString(m_context)->toQString();
 }

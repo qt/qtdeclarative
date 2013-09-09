@@ -109,11 +109,11 @@ struct ExecutionEngine;
 struct InternalClass;
 
 // context
-void __qmljs_call_activation_property(QV4::ExecutionContext *, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
-void __qmljs_call_property(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
-void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData);
-void __qmljs_call_element(ExecutionContext *context, ValueRef result, const ValueRef index, CallDataRef callData);
-void __qmljs_call_value(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef func, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_activation_property(QV4::ExecutionContext *, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_property(QV4::ExecutionContext *context, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_value(QV4::ExecutionContext *context, const QV4::ValueRef func, CallDataRef callData);
 
 void __qmljs_construct_activation_property(QV4::ExecutionContext *, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
 void __qmljs_construct_property(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name, CallDataRef callData);
@@ -163,7 +163,7 @@ void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object
 void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef object, QV4::String *name);
 void __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, QV4::String *name);
 
-void __qmljs_call_global_lookup(QV4::ExecutionContext *context, QV4::ValueRef result, uint index, CallDataRef callData);
+ReturnedValue __qmljs_call_global_lookup(QV4::ExecutionContext *context, uint index, CallDataRef callData);
 void __qmljs_construct_global_lookup(QV4::ExecutionContext *context, QV4::ValueRef result, uint index, CallDataRef callData);
 
 
