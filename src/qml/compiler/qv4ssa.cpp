@@ -1315,7 +1315,7 @@ private:
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
             if (isAlwaysAnObject(t))
-                ty = ObjectType;
+                ty = VarType;
             if (_tempTypes[*t] != ty) {
                 _tempTypes[*t] = ty;
 
@@ -1347,16 +1347,16 @@ protected:
             _ty = TypingResult(e->type);
     }
     virtual void visitString(String *) { _ty = TypingResult(StringType); }
-    virtual void visitRegExp(RegExp *) { _ty = TypingResult(ObjectType); }
-    virtual void visitName(Name *) { _ty = TypingResult(ObjectType); }
+    virtual void visitRegExp(RegExp *) { _ty = TypingResult(VarType); }
+    virtual void visitName(Name *) { _ty = TypingResult(VarType); }
     virtual void visitTemp(Temp *e) {
         if (isAlwaysAnObject(e))
-            _ty = TypingResult(ObjectType);
+            _ty = TypingResult(VarType);
         else
             _ty = TypingResult(_tempTypes.value(*e, UnknownType));
         setType(e, _ty.type);
     }
-    virtual void visitClosure(Closure *) { _ty = TypingResult(ObjectType); } // TODO: VERIFY THIS!
+    virtual void visitClosure(Closure *) { _ty = TypingResult(VarType); }
     virtual void visitConvert(Convert *e) {
         _ty = TypingResult(e->type);
     }
@@ -1385,8 +1385,8 @@ protected:
 
         switch (e->op) {
         case OpAdd:
-            if (leftTy.type & ObjectType || rightTy.type & ObjectType)
-                _ty.type = ObjectType;
+            if (leftTy.type & VarType || rightTy.type & VarType)
+                _ty.type = VarType;
             else if (leftTy.type & StringType || rightTy.type & StringType)
                 _ty.type = StringType;
             else if (leftTy.type != UnknownType && rightTy.type != UnknownType)
@@ -1440,23 +1440,23 @@ protected:
         _ty = run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             _ty.fullyTyped &= run(it->expr).fullyTyped;
-        _ty.type = ObjectType;
+        _ty.type = VarType;
     }
     virtual void visitNew(New *e) {
         _ty = run(e->base);
         for (ExprList *it = e->args; it; it = it->next)
             _ty.fullyTyped &= run(it->expr).fullyTyped;
-        _ty.type = ObjectType;
+        _ty.type = VarType;
     }
     virtual void visitSubscript(Subscript *e) {
         _ty.fullyTyped = run(e->base).fullyTyped && run(e->index).fullyTyped;
-        _ty.type = ObjectType;
+        _ty.type = VarType;
     }
 
     virtual void visitMember(Member *e) {
         // TODO: for QML, try to do a static lookup
         _ty = run(e->base);
-        _ty.type = ObjectType;
+        _ty.type = VarType;
     }
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
@@ -1476,7 +1476,7 @@ protected:
     virtual void visitJump(Jump *) { _ty = TypingResult(MissingType); }
     virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
-    virtual void visitTry(Try *s) { setType(s->exceptionVar, ObjectType); _ty = TypingResult(MissingType); }
+    virtual void visitTry(Try *s) { setType(s->exceptionVar, VarType); _ty = TypingResult(MissingType); }
     virtual void visitPhi(Phi *s) {
         _ty = run(s->d->incoming[0]);
         for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
@@ -1493,7 +1493,7 @@ protected:
         case UInt32Type:
         case DoubleType:
         case StringType:
-        case ObjectType:
+        case VarType:
             // The type is not a combination of two or more types, so we're done.
             break;
 
@@ -1505,7 +1505,7 @@ protected:
                 _ty.type = DoubleType;
             else
                 // There just is no single type that can hold this combination, so:
-                _ty.type = ObjectType;
+                _ty.type = VarType;
         }
 
         setType(s->targetTemp, _ty.type);
@@ -2173,10 +2173,10 @@ bool tryOptimizingComparison(Expr *&expr)
     if (!b)
         return false;
     Const *leftConst = b->left->asConst();
-    if (!leftConst || leftConst->type == StringType || leftConst->type == ObjectType)
+    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
         return false;
     Const *rightConst = b->right->asConst();
-    if (!rightConst || rightConst->type == StringType || rightConst->type == ObjectType)
+    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
         return false;
 
     QV4::Value l = convertToValue(leftConst);
@@ -2310,8 +2310,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
 
-                // Constant unary expression evaluation:
                 if (Unop *u = m->source->asUnop()) {
+                    // Constant unary expression evaluation:
                     if (Const *c = u->expr->asConst()) {
                         if (c->type & NumberType || c->type == BoolType) {
                             // TODO: implement unop propagation for other constant types
@@ -2369,6 +2369,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                             }
                         }
                     }
+                    // TODO: if the result of a unary not operation is only used in a cjump,
+                    //       then inline it.
 
                     continue;
                 }
@@ -2378,10 +2380,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     // TODO: If the result of the move is only used in one single cjump, then
                     //       inline the binop into the cjump.
                     Const *leftConst = b->left->asConst();
-                    if (!leftConst || leftConst->type == StringType || leftConst->type == ObjectType)
+                    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
                         continue;
                     Const *rightConst = b->right->asConst();
-                    if (!rightConst || rightConst->type == StringType || rightConst->type == ObjectType)
+                    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
                         continue;
 
                     QV4::Value lc = convertToValue(leftConst);
@@ -2451,6 +2453,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 continue;
             }
             // TODO: Constant unary expression evaluation
+            // TODO: if the expression is an unary not operation, lift the expression, and switch
+            //       the then/else blocks.
         }
     }
 

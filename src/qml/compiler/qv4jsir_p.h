@@ -181,7 +181,7 @@ enum Type {
     NumberType    = SInt32Type | UInt32Type | DoubleType,
 
     StringType    = 1 << 7,
-    ObjectType    = 1 << 8
+    VarType       = 1 << 8
 };
 
 inline bool strictlyEqualTypes(Type t1, Type t2)

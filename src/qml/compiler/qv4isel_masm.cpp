@@ -1500,7 +1500,7 @@ void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *t
         break;
     case V4IR::UndefinedType:
     case V4IR::StringType:
-    case V4IR::ObjectType: {
+    case V4IR::VarType: {
         // load the tag:
         Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
         tagAddr.offset += 4;
@@ -1585,7 +1585,7 @@ void InstructionSelection::convertTypeToBool(V4IR::Temp *source, V4IR::Temp *tar
         _as->storeBool(false, target);
         break;
     case V4IR::StringType:
-    case V4IR::ObjectType:
+    case V4IR::VarType:
     default:
         generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean,
                              Assembler::PointerToValue(source));
@@ -1597,7 +1597,7 @@ void InstructionSelection::convertTypeToBool(V4IR::Temp *source, V4IR::Temp *tar
 void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *target)
 {
     switch (source->type) {
-    case V4IR::ObjectType: {
+    case V4IR::VarType: {
         // load the tag:
         Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
         tagAddr.offset += 4;

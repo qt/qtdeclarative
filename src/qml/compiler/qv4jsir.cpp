@@ -70,7 +70,7 @@ QString typeName(Type t)
     case DoubleType: return QStringLiteral("double");
     case NumberType: return QStringLiteral("number");
     case StringType: return QStringLiteral("string");
-    case ObjectType: return QStringLiteral("object");
+    case VarType: return QStringLiteral("var");
     default: return QStringLiteral("multiple");
     }
 }
