@@ -1387,6 +1387,8 @@ protected:
     Assembler::Jump branchDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
     bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
                           V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
+                    V4IR::Temp *target);
 
 private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);

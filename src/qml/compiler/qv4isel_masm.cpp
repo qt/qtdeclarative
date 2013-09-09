@@ -1322,6 +1322,11 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         doubleBinop(oper, leftSource, rightSource, target);
         return;
     }
+    if (leftSource->type == V4IR::SInt32Type &&
+            (rightSource->type == V4IR::SInt32Type || rightSource->type == V4IR::UInt32Type)) {
+        if (int32Binop(oper, leftSource, rightSource, target))
+            return;
+    }
 
     Assembler::Jump done = genInlineBinop(oper, leftSource, rightSource, target);
 
@@ -2141,4 +2146,44 @@ bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4
     _as->addPatch(iftrue, target);
     _as->jumpToBlock(_block, iffalse);
     return true;
+}
+
+bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
+                                      V4IR::Expr *rightSource, V4IR::Temp *target)
+{
+    Q_ASSERT(leftSource->type == V4IR::SInt32Type);
+
+    switch (oper) {
+    case V4IR::OpBitAnd:
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+        _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                  Assembler::ReturnValueRegister);
+        _as->move(_as->toInt32Register(rightSource, Assembler::ScratchRegister),
+                  Assembler::ScratchRegister);
+        _as->and32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        return true;
+    case V4IR::OpLShift:
+        Q_ASSERT(rightSource->type == V4IR::UInt32Type);
+        _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                  Assembler::ReturnValueRegister);
+        _as->move(_as->toUInt32Register(rightSource, Assembler::ScratchRegister),
+                  Assembler::ScratchRegister);
+        _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
+        _as->lshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        return true;
+    case V4IR::OpRShift:
+        Q_ASSERT(rightSource->type == V4IR::UInt32Type);
+        _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                  Assembler::ReturnValueRegister);
+        _as->move(_as->toUInt32Register(rightSource, Assembler::ScratchRegister),
+                  Assembler::ScratchRegister);
+        _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
+        _as->rshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->storeInt32(Assembler::ReturnValueRegister, target);
+        return true;
+    default:
+        return false;
+    }
 }
