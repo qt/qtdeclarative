@@ -729,29 +729,28 @@ void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *
 void InstructionSelection::callBuiltinTypeofMember(V4IR::Expr *base, const QString &name,
                                                    V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base),
-                         Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_builtin_typeof_member, Assembler::ContextRegister,
+                         Assembler::PointerToValue(base), Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Expr *base, V4IR::Expr *index,
                                                       V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_element,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_builtin_typeof_element,
+                         Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_builtin_typeof_name, Assembler::ContextRegister,
+                         Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
+    generateFunctionCall(result, __qmljs_builtin_typeof, Assembler::ContextRegister,
+                         Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
@@ -1736,8 +1735,8 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
         return;
     }
 
-    generateFunctionCall(Assembler::Void, __qmljs_construct_activation_property,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_construct_activation_property,
+                         Assembler::ContextRegister,
                          Assembler::PointerToString(*func->id),
                          baseAddressForCallData());
 }
@@ -1746,8 +1745,8 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name),
+    generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToString(name),
                          baseAddressForCallData());
 }
 
@@ -1756,8 +1755,8 @@ void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *arg
     assert(value != 0);
 
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_value,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_construct_value,
+                         Assembler::ContextRegister,
                          Assembler::Reference(value),
                          baseAddressForCallData());
 }

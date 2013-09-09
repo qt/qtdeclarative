@@ -1066,30 +1066,26 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, ValueRef result,
 }
 
 
-void __qmljs_construct_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Value func = context->getProperty(name);
     Object *f = func.asObject();
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
-void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
+ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
     Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
-void __qmljs_construct_property(ExecutionContext *context, ValueRef result, const ValueRef base, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *name, CallDataRef callData)
 {
     Object *thisObject = base->toObject(context);
 
@@ -1098,9 +1094,7 @@ void __qmljs_construct_property(ExecutionContext *context, ValueRef result, cons
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
@@ -1108,10 +1102,8 @@ void __qmljs_throw(ExecutionContext *context, const ValueRef value)
     Exception::throwException(context, *value);
 }
 
-void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueRef value)
+ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
 {
-    if (!result)
-        return;
     String *res = 0;
     switch (value->type()) {
     case Value::Undefined_Type:
@@ -1136,41 +1128,31 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueR
         res = ctx->engine->id_number;
         break;
     }
-    *result = Value::fromString(res);
+    return Value::fromString(res);
 }
 
-void __qmljs_builtin_typeof_name(ExecutionContext *context, ValueRef result, String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, String *name)
 {
     ValueScope scope(context);
-    ScopedValue res(scope);
     ScopedValue prop(scope, context->getPropertyNoThrow(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
+    return __qmljs_builtin_typeof(context, prop);
 }
 
-void __qmljs_builtin_typeof_member(ExecutionContext *context, ValueRef result, const ValueRef base,
-                                   String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *name)
 {
     ValueScope scope(context);
     Object *obj = base->toObject(context);
-    ScopedValue res(scope);
     ScopedValue prop(scope, obj->get(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
+    return __qmljs_builtin_typeof(context, prop);
 }
 
-void __qmljs_builtin_typeof_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
+QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, const ValueRef base, const ValueRef index)
 {
     ValueScope scope(context);
     String *name = index->toString(context);
     Object *obj = base->toObject(context);
-    ScopedValue res(scope);
     ScopedValue prop(scope, obj->get(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
+    return __qmljs_builtin_typeof(context, prop);
 }
 
 void __qmljs_builtin_post_increment(ValueRef result, ValueRef val)
