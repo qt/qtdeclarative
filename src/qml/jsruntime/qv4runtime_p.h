@@ -139,7 +139,7 @@ QV4::ReturnedValue __qmljs_value_from_string(QV4::String *string);
 QV4::ReturnedValue __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, int id);
 
 // constructors
-void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::ValueRef result, int functionId);
+QV4::ReturnedValue __qmljs_init_closure(QV4::ExecutionContext *ctx, int functionId);
 
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);

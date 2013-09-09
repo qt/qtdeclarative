@@ -273,7 +273,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        __qmljs_init_closure(context, VALUEPTR(instr.result), instr.value);
+        VALUE(instr.result) = __qmljs_init_closure(context, instr.value).get();
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)

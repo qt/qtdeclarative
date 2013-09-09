@@ -243,11 +243,11 @@ void __qmljs_numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-void __qmljs_init_closure(ExecutionContext *ctx, ValueRef result, int functionId)
+ReturnedValue __qmljs_init_closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
-    assert(clos);
-    *result = Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
+    Q_ASSERT(clos);
+    return Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
 }
 
 ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef base, const ValueRef index)
