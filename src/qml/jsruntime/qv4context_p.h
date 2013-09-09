@@ -145,7 +145,6 @@ struct Q_QML_EXPORT ExecutionContext
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
     Value getPropertyAndBase(String *name, Object **base);
-    void inplaceBitOp(String *name, const QV4::Value &value, BinOp op);
     bool deleteProperty(String *name);
 
     inline Value argument(unsigned int index = 0);

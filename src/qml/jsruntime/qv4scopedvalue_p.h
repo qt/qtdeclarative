@@ -101,6 +101,22 @@ struct ValueScope {
     Value *mark;
 };
 
+struct ScopedValue;
+struct ValueRef;
+
+struct ReturnedValue
+{
+    ReturnedValue(const Value &v)
+        : v(v) {}
+    // no destructor
+
+
+private:
+    friend struct ValueRef;
+    friend struct ScopedValue;
+    QV4::Value v;
+};
+
 struct ScopedValue
 {
     ScopedValue(const ValueScope &scope)
@@ -114,8 +130,19 @@ struct ScopedValue
         *ptr = v;
     }
 
+    ScopedValue(const ValueScope &scope, const ReturnedValue &v)
+    {
+        ptr = scope.engine->jsStackTop++;
+        *ptr = v.v;
+    }
+
     ScopedValue &operator=(const Value &v) {
         *ptr = v;
+        return *this;
+    }
+
+    ScopedValue &operator=(const ReturnedValue &v) {
+        *ptr = v.v;
         return *this;
     }
 
@@ -186,6 +213,10 @@ struct ValueRef {
     { *ptr = *o.ptr; return *this; }
     ValueRef &operator=(const Value &v)
     { *ptr = v; return *this; }
+    ValueRef &operator=(const ReturnedValue &v) {
+        *ptr = v.v;
+        return *this;
+    }
 
     operator const Value *() const {
         return ptr;
@@ -207,11 +238,43 @@ struct ValueRef {
     static const ValueRef fromRawValue(const Value *v) {
         return ValueRef(const_cast<Value *>(v));
     }
-private:
+    // ### get rid of this one!
     ValueRef(Value *v) { ptr = v; }
+private:
     Value *ptr;
 };
 
+
+struct CallDataRef {
+    CallDataRef(const ScopedCallData &c)
+        : ptr(c.ptr) {}
+    CallDataRef(CallData *v) { ptr = v; }
+    // Important: Do NOT add a copy constructor to this class
+    // adding a copy constructor actually changes the calling convention, ie.
+    // is not even binary compatible. Adding it would break assumptions made
+    // in the jit'ed code.
+    CallDataRef &operator=(const ScopedCallData &c)
+    { *ptr = *c.ptr; return *this; }
+    CallDataRef &operator=(const CallDataRef &o)
+    { *ptr = *o.ptr; return *this; }
+
+    operator const CallData *() const {
+        return ptr;
+    }
+    const CallData *operator->() const {
+        return ptr;
+    }
+
+    operator CallData *() {
+        return ptr;
+    }
+    CallData *operator->() {
+        return ptr;
+    }
+
+private:
+    CallData *ptr;
+};
 
 }
 

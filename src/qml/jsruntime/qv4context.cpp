@@ -594,15 +594,6 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
 }
 
 
-
-void ExecutionContext::inplaceBitOp(String *name, const Value &value, BinOp op)
-{
-    Value lhs = getProperty(name);
-    Value result;
-    op(&result, lhs, value);
-    setProperty(name, result);
-}
-
 void ExecutionContext::throwError(const Value &value)
 {
     __qmljs_throw(this, value);

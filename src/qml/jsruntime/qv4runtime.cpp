@@ -120,14 +120,14 @@ void __qmljs_numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-void __qmljs_init_closure(ExecutionContext *ctx, Value *result, int functionId)
+void __qmljs_init_closure(ExecutionContext *ctx, ValueRef result, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     assert(clos);
     *result = Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
 }
 
-void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value &base, const Value &index)
+void __qmljs_delete_subscript(ExecutionContext *ctx, ValueRef result, const Value &base, const Value &index)
 {
     if (Object *o = base.asObject()) {
         uint n = index.asArrayIndex();
@@ -143,7 +143,7 @@ void __qmljs_delete_subscript(ExecutionContext *ctx, Value *result, const Value 
     __qmljs_delete_member(ctx, result, base, name);
 }
 
-void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &base, String *name)
+void __qmljs_delete_member(ExecutionContext *ctx, ValueRef result, const Value &base, String *name)
 {
     Object *obj = base.toObject(ctx);
     Value res = Value::fromBoolean(obj->deleteProperty(name));
@@ -151,7 +151,7 @@ void __qmljs_delete_member(ExecutionContext *ctx, Value *result, const Value &ba
         *result = res;
 }
 
-void __qmljs_delete_name(ExecutionContext *ctx, Value *result, String *name)
+void __qmljs_delete_name(ExecutionContext *ctx, ValueRef result, String *name)
 {
     Value res = Value::fromBoolean(ctx->deleteProperty(name));
     if (result)
@@ -178,7 +178,7 @@ void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef l
     *result = Value::fromDouble(x + y);
 }
 
-void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
+void __qmljs_instanceof(ExecutionContext *ctx, ValueRef result, const Value &left, const Value &right)
 {
     Object *o = right.asObject();
     if (!o)
@@ -188,7 +188,7 @@ void __qmljs_instanceof(ExecutionContext *ctx, Value *result, const Value &left,
     *result = Value::fromBoolean(r);
 }
 
-void __qmljs_in(ExecutionContext *ctx, Value *result, const Value &left, const Value &right)
+void __qmljs_in(ExecutionContext *ctx, ValueRef result, const Value &left, const Value &right)
 {
     if (!right.isObject())
         ctx->throwTypeError();
@@ -197,19 +197,28 @@ void __qmljs_in(ExecutionContext *ctx, Value *result, const Value &left, const V
     *result = Value::fromBoolean(r);
 }
 
+void inplaceBitOp(ExecutionContext *ctx, String *name, const Value &value, BinOp op)
+{
+    Value lhs = ctx->getProperty(name);
+    Value result;
+    op(&result, lhs, value);
+    ctx->setProperty(name, result);
+}
+
+
 void __qmljs_inplace_bit_and_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_bit_and);
+    inplaceBitOp(ctx, name, value, __qmljs_bit_and);
 }
 
 void __qmljs_inplace_bit_or_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_bit_or);
+    inplaceBitOp(ctx, name, value, __qmljs_bit_or);
 }
 
 void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_bit_xor);
+    inplaceBitOp(ctx, name, value, __qmljs_bit_xor);
 }
 
 void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const Value &value)
@@ -222,37 +231,37 @@ void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const Value &
 
 void __qmljs_inplace_sub_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_sub);
+    inplaceBitOp(ctx, name, value, __qmljs_sub);
 }
 
 void __qmljs_inplace_mul_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_mul);
+    inplaceBitOp(ctx, name, value, __qmljs_mul);
 }
 
 void __qmljs_inplace_div_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_div);
+    inplaceBitOp(ctx, name, value, __qmljs_div);
 }
 
 void __qmljs_inplace_mod_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_mod);
+    inplaceBitOp(ctx, name, value, __qmljs_mod);
 }
 
 void __qmljs_inplace_shl_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_shl);
+    inplaceBitOp(ctx, name, value, __qmljs_shl);
 }
 
 void __qmljs_inplace_shr_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_shr);
+    inplaceBitOp(ctx, name, value, __qmljs_shr);
 }
 
 void __qmljs_inplace_ushr_name(ExecutionContext *ctx, String *name, const Value &value)
 {
-    ctx->inplaceBitOp(name, value, __qmljs_ushr);
+    inplaceBitOp(ctx, name, value, __qmljs_ushr);
 }
 
 void __qmljs_inplace_bit_and_element(ExecutionContext *ctx, const Value &base, const Value &index, const Value &rhs)
@@ -529,7 +538,7 @@ void __qmljs_set_property(ExecutionContext *ctx, const Value &object, String *na
     o->put(name, value);
 }
 
-void __qmljs_get_element(ExecutionContext *ctx, Value *result, const Value &object, const Value &index)
+void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const Value &object, const Value &index)
 {
     uint idx = index.asArrayIndex();
 
@@ -622,7 +631,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const Value &object, const Value
     o->put(name, value);
 }
 
-void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const Value &in)
+void __qmljs_foreach_iterator_object(ExecutionContext *ctx, ValueRef result, const Value &in)
 {
     Object *o = 0;
     if (!in.isNull() && !in.isUndefined())
@@ -631,7 +640,7 @@ void __qmljs_foreach_iterator_object(ExecutionContext *ctx, Value *result, const
     *result = Value::fromObject(it);
 }
 
-void __qmljs_foreach_next_property_name(Value *result, const Value &foreach_iterator)
+void __qmljs_foreach_next_property_name(ValueRef result, const Value &foreach_iterator)
 {
     assert(foreach_iterator.isObject());
 
@@ -647,7 +656,7 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
     ctx->setProperty(name, value);
 }
 
-void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &object, String *name)
+void __qmljs_get_property(ExecutionContext *ctx, ValueRef result, const Value &object, String *name)
 {
     Value res;
     Managed *m = object.asManaged();
@@ -666,7 +675,7 @@ void __qmljs_get_property(ExecutionContext *ctx, Value *result, const Value &obj
         *result = res;
 }
 
-void __qmljs_get_activation_property(ExecutionContext *ctx, Value *result, String *name)
+void __qmljs_get_activation_property(ExecutionContext *ctx, ValueRef result, String *name)
 {
     *result = ctx->getProperty(name);
 }
@@ -720,7 +729,7 @@ Bool __qmljs_strict_equal(const Value &x, const Value &y)
 }
 
 
-void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
+void __qmljs_call_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -744,7 +753,7 @@ void __qmljs_call_global_lookup(ExecutionContext *context, Value *result, uint i
 }
 
 
-void __qmljs_call_activation_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
+void __qmljs_call_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -774,7 +783,7 @@ void __qmljs_call_activation_property(ExecutionContext *context, Value *result, 
         *result = res;
 }
 
-void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *name, CallData *callData)
+void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
 {
     Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
@@ -798,7 +807,7 @@ void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *n
         *result = res;
 }
 
-void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
+void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
 {
     Value func;
 
@@ -814,7 +823,7 @@ void __qmljs_call_property_lookup(ExecutionContext *context, Value *result, uint
         *result = res;
 }
 
-void __qmljs_call_element(ExecutionContext *context, Value *result, const Value &index, CallData *callData)
+void __qmljs_call_element(ExecutionContext *context, ValueRef result, const Value &index, CallDataRef callData)
 {
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
@@ -828,7 +837,7 @@ void __qmljs_call_element(ExecutionContext *context, Value *result, const Value 
         *result = res;
 }
 
-void __qmljs_call_value(ExecutionContext *context, Value *result, const Value &func, CallData *callData)
+void __qmljs_call_value(ExecutionContext *context, ValueRef result, const Value &func, CallDataRef callData)
 {
     Object *o = func.asObject();
     if (!o)
@@ -840,7 +849,7 @@ void __qmljs_call_value(ExecutionContext *context, Value *result, const Value &f
 }
 
 
-void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, uint index, CallData *callData)
+void __qmljs_construct_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
 
@@ -859,7 +868,7 @@ void __qmljs_construct_global_lookup(ExecutionContext *context, Value *result, u
 }
 
 
-void __qmljs_construct_activation_property(ExecutionContext *context, Value *result, String *name, CallData *callData)
+void __qmljs_construct_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
 {
     Value func = context->getProperty(name);
     Object *f = func.asObject();
@@ -871,7 +880,7 @@ void __qmljs_construct_activation_property(ExecutionContext *context, Value *res
         *result = res;
 }
 
-void __qmljs_construct_value(ExecutionContext *context, Value *result, const Value &func, CallData *callData)
+void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const Value &func, CallDataRef callData)
 {
     Object *f = func.asObject();
     if (!f)
@@ -882,7 +891,7 @@ void __qmljs_construct_value(ExecutionContext *context, Value *result, const Val
         *result = res;
 }
 
-void __qmljs_construct_property(ExecutionContext *context, Value *result, const Value &base, String *name, CallData *callData)
+void __qmljs_construct_property(ExecutionContext *context, ValueRef result, const Value &base, String *name, CallDataRef callData)
 {
     Object *thisObject = base.toObject(context);
 
@@ -901,7 +910,7 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
     Exception::throwException(context, value);
 }
 
-void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &value)
+void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const Value &value)
 {
     if (!result)
         return;
@@ -932,7 +941,7 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, Value *result, const Value &v
     *result = Value::fromString(res);
 }
 
-void __qmljs_builtin_typeof_name(ExecutionContext *context, Value *result, String *name)
+void __qmljs_builtin_typeof_name(ExecutionContext *context, ValueRef result, String *name)
 {
     Value res;
     __qmljs_builtin_typeof(context, &res, context->getPropertyNoThrow(name));
@@ -940,7 +949,7 @@ void __qmljs_builtin_typeof_name(ExecutionContext *context, Value *result, Strin
         *result = res;
 }
 
-void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, const Value &base,
+void __qmljs_builtin_typeof_member(ExecutionContext *context, ValueRef result, const Value &base,
                                    String *name)
 {
     Object *obj = base.toObject(context);
@@ -950,7 +959,7 @@ void __qmljs_builtin_typeof_member(ExecutionContext *context, Value *result, con
         *result = res;
 }
 
-void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, const Value &base,
+void __qmljs_builtin_typeof_element(ExecutionContext *context, ValueRef result, const Value &base,
                                     const Value &index)
 {
     String *name = index.toString(context);
@@ -961,7 +970,7 @@ void __qmljs_builtin_typeof_element(ExecutionContext *context, Value *result, co
         *result = res;
 }
 
-void __qmljs_builtin_post_increment(Value *result, Value *val)
+void __qmljs_builtin_post_increment(ValueRef result, ValueRef val)
 {
     if (val->isInteger() && val->integerValue() < INT_MAX) {
         if (result)
@@ -976,7 +985,7 @@ void __qmljs_builtin_post_increment(Value *result, Value *val)
         *result = Value::fromDouble(d);
 }
 
-void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *result, String *name)
+void __qmljs_builtin_post_increment_name(ExecutionContext *context, ValueRef result, String *name)
 {
     Value v = context->getProperty(name);
 
@@ -994,7 +1003,7 @@ void __qmljs_builtin_post_increment_name(ExecutionContext *context, Value *resul
     context->setProperty(name, v);
 }
 
-void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *result, const Value &base, String *name)
+void __qmljs_builtin_post_increment_member(ExecutionContext *context, ValueRef result, const Value &base, String *name)
 {
     Object *o = base.toObject(context);
 
@@ -1014,7 +1023,7 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, Value *res
     o->put(name, v);
 }
 
-void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *result, const Value &base, const Value *index)
+void __qmljs_builtin_post_increment_element(ExecutionContext *context, ValueRef result, const Value &base, const Value *index)
 {
     Object *o = base.toObject(context);
 
@@ -1041,7 +1050,7 @@ void __qmljs_builtin_post_increment_element(ExecutionContext *context, Value *re
     o->putIndexed(idx, v);
 }
 
-void __qmljs_builtin_post_decrement(Value *result, Value *val)
+void __qmljs_builtin_post_decrement(ValueRef result, ValueRef val)
 {
     if (val->isInteger() && val->integerValue() > INT_MIN) {
         if (result)
@@ -1056,7 +1065,7 @@ void __qmljs_builtin_post_decrement(Value *result, Value *val)
         *result = Value::fromDouble(d);
 }
 
-void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *result, String *name)
+void __qmljs_builtin_post_decrement_name(ExecutionContext *context, ValueRef result, String *name)
 {
     Value v = context->getProperty(name);
 
@@ -1074,7 +1083,7 @@ void __qmljs_builtin_post_decrement_name(ExecutionContext *context, Value *resul
     context->setProperty(name, v);
 }
 
-void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *result, const Value &base, String *name)
+void __qmljs_builtin_post_decrement_member(ExecutionContext *context, ValueRef result, const Value &base, String *name)
 {
     Object *o = base.toObject(context);
 
@@ -1094,7 +1103,7 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, Value *res
     o->put(name, v);
 }
 
-void __qmljs_builtin_post_decrement_element(ExecutionContext *context, Value *result, const Value &base, const Value &index)
+void __qmljs_builtin_post_decrement_element(ExecutionContext *context, ValueRef result, const Value &base, const Value &index)
 {
     Object *o = base.toObject(context);
 
@@ -1152,7 +1161,7 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const Value &object,
     pd->value = val ? *val : Value::undefinedValue();
 }
 
-void __qmljs_builtin_define_array(ExecutionContext *ctx, Value *array, Value *values, uint length)
+void __qmljs_builtin_define_array(ExecutionContext *ctx, ValueRef array, Value *values, uint length)
 {
     ArrayObject *a = ctx->engine->newArrayObject();
 
@@ -1188,7 +1197,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const Value &ob
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Value *result, const QV4::Value *args, int classId)
+void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, ValueRef result, const QV4::Value *args, int classId)
 {
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
@@ -1207,7 +1216,7 @@ void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::Valu
     *result = Value::fromObject(o);
 }
 
-void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, Value *result)
+void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, ValueRef result)
 {
     assert(ctx->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
@@ -1264,12 +1273,12 @@ unsigned __qmljs_double_to_uint32(const double &d)
     return Value::toUInt32(d);
 }
 
-void __qmljs_value_from_string(Value *result, String *string)
+void __qmljs_value_from_string(ValueRef result, String *string)
 {
     *result = Value::fromString(string);
 }
 
-void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, Value *result, int id)
+void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, ValueRef result, int id)
 {
     *result = ctx->compilationUnit->runtimeRegularExpressions[id];
 }
