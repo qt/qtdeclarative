@@ -68,13 +68,13 @@ public:
 protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
 
-signals:
+Q_SIGNALS:
 
     void goalStateChanged(QString arg);
 
     void jumpChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
 
     void setGoalState(QString arg);
 
@@ -82,7 +82,7 @@ public slots:
     {
         if (m_jump != arg) {
             m_jump = arg;
-            emit jumpChanged(arg);
+            Q_EMIT jumpChanged(arg);
         }
     }
 

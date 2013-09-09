@@ -188,7 +188,7 @@ public:
     Iterator erase(Iterator it);
     void remove(QObject *key);
 
-private slots:
+private Q_SLOTS:
     void removeDestroyedObject(QObject*);
 };
 

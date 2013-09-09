@@ -331,7 +331,7 @@ public:
     qreal value() const;
     void setValue(qreal value);
 
-signals:
+Q_SIGNALS:
     void valueChanged();
 
 private:

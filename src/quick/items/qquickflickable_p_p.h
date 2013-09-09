@@ -278,7 +278,7 @@ public:
 
     void updateVisible();
 
-signals:
+Q_SIGNALS:
     void xPositionChanged(qreal xPosition);
     void yPositionChanged(qreal yPosition);
     void widthRatioChanged(qreal widthRatio);

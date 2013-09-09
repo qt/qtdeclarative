@@ -84,7 +84,7 @@ public:
 
     bool interleaveIncubation() const;
 
-public slots:
+public Q_SLOTS:
     void started();
     void stopped();
 

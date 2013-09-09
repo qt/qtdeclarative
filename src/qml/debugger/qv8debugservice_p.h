@@ -82,10 +82,10 @@ public:
 
     void signalEmitted(const QString &signal);
 
-public slots:
+public Q_SLOTS:
     void processDebugMessages();
 
-private slots:
+private Q_SLOTS:
     void scheduledDebugBreak(bool schedule);
     void sendDebugMessage(const QString &message);
     void init();

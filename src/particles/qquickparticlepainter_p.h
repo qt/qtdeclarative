@@ -76,13 +76,13 @@ public:
 
     void itemChange(ItemChange, const ItemChangeData &);
 
-signals:
+Q_SIGNALS:
     void countChanged();
     void systemChanged(QQuickParticleSystem* arg);
 
     void groupsChanged(QStringList arg);
 
-public slots:
+public Q_SLOTS:
     void setSystem(QQuickParticleSystem* arg);
 
     void setGroups(QStringList arg)
@@ -90,13 +90,13 @@ public slots:
         if (m_groups != arg) {
             m_groups = arg;
             //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
-            emit groupsChanged(arg);
+            Q_EMIT groupsChanged(arg);
         }
     }
 
     void calcSystemOffset(bool resetPending = false);
 
-private slots:
+private Q_SLOTS:
     virtual void sceneGraphInvalidated() {}
 
 protected:

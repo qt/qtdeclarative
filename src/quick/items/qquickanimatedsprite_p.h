@@ -160,7 +160,7 @@ public:
         return m_curFrame;
     }
 
-signals:
+Q_SIGNALS:
 
     void pausedChanged(bool arg);
     void runningChanged(bool arg);
@@ -190,7 +190,7 @@ signals:
 
     void currentFrameChanged(int arg);
 
-public slots:
+public Q_SLOTS:
     void start();
     void stop();
     void restart() {stop(); start();}
@@ -222,7 +222,7 @@ public slots:
     {
         if (m_interpolate != arg) {
             m_interpolate = arg;
-            emit interpolateChanged(arg);
+            Q_EMIT interpolateChanged(arg);
         }
     }
 
@@ -230,7 +230,7 @@ public slots:
     {
         if (m_sprite->m_source != arg) {
             m_sprite->setSource(arg);
-            emit sourceChanged(arg);
+            Q_EMIT sourceChanged(arg);
             reloadImage();
         }
     }
@@ -239,7 +239,7 @@ public slots:
     {
         if (m_sprite->m_reverse != arg) {
             m_sprite->setReverse(arg);
-            emit reverseChanged(arg);
+            Q_EMIT reverseChanged(arg);
         }
     }
 
@@ -247,7 +247,7 @@ public slots:
     {
         if (m_sprite->m_frameSync != arg) {
             m_sprite->setFrameSync(arg);
-            emit frameSyncChanged(arg);
+            Q_EMIT frameSyncChanged(arg);
             if (m_running)
                 restart();
         }
@@ -257,7 +257,7 @@ public slots:
     {
         if (m_sprite->m_frames != arg) {
             m_sprite->setFrameCount(arg);
-            emit frameCountChanged(arg);
+            Q_EMIT frameCountChanged(arg);
             reloadImage();
         }
     }
@@ -266,7 +266,7 @@ public slots:
     {
         if (m_sprite->m_frameHeight != arg) {
             m_sprite->setFrameHeight(arg);
-            emit frameHeightChanged(arg);
+            Q_EMIT frameHeightChanged(arg);
             reloadImage();
         }
     }
@@ -275,7 +275,7 @@ public slots:
     {
         if (m_sprite->m_frameWidth != arg) {
             m_sprite->setFrameWidth(arg);
-            emit frameWidthChanged(arg);
+            Q_EMIT frameWidthChanged(arg);
             reloadImage();
         }
     }
@@ -284,7 +284,7 @@ public slots:
     {
         if (m_sprite->m_frameX != arg) {
             m_sprite->setFrameX(arg);
-            emit frameXChanged(arg);
+            Q_EMIT frameXChanged(arg);
             reloadImage();
         }
     }
@@ -293,7 +293,7 @@ public slots:
     {
         if (m_sprite->m_frameY != arg) {
             m_sprite->setFrameY(arg);
-            emit frameYChanged(arg);
+            Q_EMIT frameYChanged(arg);
             reloadImage();
         }
     }
@@ -302,7 +302,7 @@ public slots:
     {
         if (m_sprite->m_frameRate != arg) {
             m_sprite->setFrameRate(arg);
-            emit frameRateChanged(arg);
+            Q_EMIT frameRateChanged(arg);
             if (m_running)
                 restart();
         }
@@ -312,7 +312,7 @@ public slots:
     {
         if (m_sprite->m_frameDuration != arg) {
             m_sprite->setFrameDuration(arg);
-            emit frameDurationChanged(arg);
+            Q_EMIT frameDurationChanged(arg);
             if (m_running)
                 restart();
         }
@@ -332,7 +332,7 @@ public slots:
     {
         if (m_loops != arg) {
             m_loops = arg;
-            emit loopsChanged(arg);
+            Q_EMIT loopsChanged(arg);
         }
     }
 
@@ -340,12 +340,12 @@ public slots:
     {
         if (m_curFrame != arg) {
             m_curFrame = arg;
-            emit currentFrameChanged(arg); //TODO-C Only emitted on manual advance!
+            Q_EMIT currentFrameChanged(arg); //TODO-C Only emitted on manual advance!
         }
     }
 
 
-private slots:
+private Q_SLOTS:
     void createEngine();
     void sizeVertices();
 

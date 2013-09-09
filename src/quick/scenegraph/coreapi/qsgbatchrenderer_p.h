@@ -373,7 +373,7 @@ public:
         qDeleteAll(stockShaders.values());
     }
 
-public slots:
+public Q_SLOTS:
     void invalidated();
 
 public:

@@ -191,7 +191,7 @@ public:
     void updateEffectiveOpacityRoot(QQuickItem *, qreal);
     void updateDirtyNode(QQuickItem *);
 
-    void fireFrameSwapped() { emit q_func()->frameSwapped(); }
+    void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
 
     QSGContext *context;
     QSGRenderer *renderer;

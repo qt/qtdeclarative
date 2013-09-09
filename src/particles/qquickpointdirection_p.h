@@ -75,7 +75,7 @@ public:
         return m_yVariation;
     }
 
-signals:
+Q_SIGNALS:
 
     void xChanged(qreal arg);
 
@@ -85,12 +85,12 @@ signals:
 
     void yVariationChanged(qreal arg);
 
-public slots:
+public Q_SLOTS:
     void setX(qreal arg)
     {
         if (m_x != arg) {
             m_x = arg;
-            emit xChanged(arg);
+            Q_EMIT xChanged(arg);
         }
     }
 
@@ -98,7 +98,7 @@ public slots:
     {
         if (m_y != arg) {
             m_y = arg;
-            emit yChanged(arg);
+            Q_EMIT yChanged(arg);
         }
     }
 
@@ -106,7 +106,7 @@ public slots:
     {
         if (m_xVariation != arg) {
             m_xVariation = arg;
-            emit xVariationChanged(arg);
+            Q_EMIT xVariationChanged(arg);
         }
     }
 
@@ -114,7 +114,7 @@ public slots:
     {
         if (m_yVariation != arg) {
             m_yVariation = arg;
-            emit yVariationChanged(arg);
+            Q_EMIT yVariationChanged(arg);
         }
     }
 

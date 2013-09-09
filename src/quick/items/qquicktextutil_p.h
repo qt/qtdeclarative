@@ -101,7 +101,7 @@ void QQuickTextUtil::setCursorDelegate(Private *d, QQmlComponent *delegate)
     if (parent->isCursorVisible() && parent->isComponentComplete())
         createCursor(d);
 
-    emit parent->cursorDelegateChanged();
+    Q_EMIT parent->cursorDelegateChanged();
 }
 
 template <typename Private>

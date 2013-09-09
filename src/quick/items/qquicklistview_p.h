@@ -183,7 +183,7 @@ public:
     void setView(QQuickListView *view) {
         if (view != m_view) {
             m_view = view;
-            emit viewChanged();
+            Q_EMIT viewChanged();
         }
     }
 

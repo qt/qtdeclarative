@@ -153,7 +153,7 @@ public:
         return m_frameSync;
     }
 
-signals:
+Q_SIGNALS:
 
     void sourceChanged(QUrl arg);
 
@@ -179,13 +179,13 @@ signals:
 
     void frameSyncChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
 
     void setSource(QUrl arg)
     {
         if (m_source != arg) {
             m_source = arg;
-            emit sourceChanged(arg);
+            Q_EMIT sourceChanged(arg);
             startImageLoading();
         }
     }
@@ -194,7 +194,7 @@ public slots:
     {
         if (m_frameHeight != arg) {
             m_frameHeight = arg;
-            emit frameHeightChanged(arg);
+            Q_EMIT frameHeightChanged(arg);
         }
     }
 
@@ -202,7 +202,7 @@ public slots:
     {
         if (m_frameWidth != arg) {
             m_frameWidth = arg;
-            emit frameWidthChanged(arg);
+            Q_EMIT frameWidthChanged(arg);
         }
     }
 
@@ -210,7 +210,7 @@ public slots:
     {
         if (m_reverse != arg) {
             m_reverse = arg;
-            emit reverseChanged(arg);
+            Q_EMIT reverseChanged(arg);
         }
     }
 
@@ -224,7 +224,7 @@ public slots:
     {
         if (m_frames != arg) {
             m_frames = arg;
-            emit frameCountChanged(arg);
+            Q_EMIT frameCountChanged(arg);
         }
     }
 
@@ -232,7 +232,7 @@ public slots:
     {
         if (m_frameX != arg) {
             m_frameX = arg;
-            emit frameXChanged(arg);
+            Q_EMIT frameXChanged(arg);
         }
     }
 
@@ -240,7 +240,7 @@ public slots:
     {
         if (m_frameY != arg) {
             m_frameY = arg;
-            emit frameYChanged(arg);
+            Q_EMIT frameYChanged(arg);
         }
     }
 
@@ -248,7 +248,7 @@ public slots:
     {
         if (m_frameRate != arg) {
             m_frameRate = arg;
-            emit frameRateChanged(arg);
+            Q_EMIT frameRateChanged(arg);
         }
     }
 
@@ -256,7 +256,7 @@ public slots:
     {
         if (m_frameRateVariation != arg) {
             m_frameRateVariation = arg;
-            emit frameRateVariationChanged(arg);
+            Q_EMIT frameRateVariationChanged(arg);
         }
     }
 
@@ -264,7 +264,7 @@ public slots:
     {
         if (m_frameDuration != arg) {
             m_frameDuration = arg;
-            emit frameDurationChanged(arg);
+            Q_EMIT frameDurationChanged(arg);
         }
     }
 
@@ -272,7 +272,7 @@ public slots:
     {
         if (m_frameDurationVariation != arg) {
             m_frameDurationVariation = arg;
-            emit frameDurationVariationChanged(arg);
+            Q_EMIT frameDurationVariationChanged(arg);
         }
     }
 
@@ -280,11 +280,11 @@ public slots:
     {
         if (m_frameSync != arg) {
             m_frameSync = arg;
-            emit frameSyncChanged(arg);
+            Q_EMIT frameSyncChanged(arg);
         }
     }
 
-private slots:
+private Q_SLOTS:
     void startImageLoading();
 
 private:

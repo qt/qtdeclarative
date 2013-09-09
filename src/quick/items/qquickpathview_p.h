@@ -245,7 +245,7 @@ public:
     void setIsCurrentItem(bool c) {
         if (m_isCurrent != c) {
             m_isCurrent = c;
-            emit currentItemChanged();
+            Q_EMIT currentItemChanged();
         }
     }
 
@@ -256,7 +256,7 @@ public:
     void setOnPath(bool on) {
         if (on != m_onPath) {
             m_onPath = on;
-            emit pathChanged();
+            Q_EMIT pathChanged();
         }
     }
     qreal m_percent;

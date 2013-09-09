@@ -67,19 +67,19 @@ class QQuickTurbulenceAffector : public QQuickParticleAffector
     {
         return m_noiseSource;
     }
-signals:
+Q_SIGNALS:
 
     void strengthChanged(qreal arg);
 
     void noiseSourceChanged(QUrl arg);
 
-public slots:
+public Q_SLOTS:
 
     void setStrength(qreal arg)
     {
         if (m_strength != arg) {
             m_strength = arg;
-            emit strengthChanged(arg);
+            Q_EMIT strengthChanged(arg);
         }
     }
 
@@ -87,7 +87,7 @@ public slots:
     {
         if (m_noiseSource != arg) {
             m_noiseSource = arg;
-            emit noiseSourceChanged(arg);
+            Q_EMIT noiseSourceChanged(arg);
             initializeGrid();
         }
     }

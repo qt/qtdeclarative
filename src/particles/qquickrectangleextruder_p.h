@@ -60,17 +60,17 @@ public:
         return m_fill;
     }
 
-signals:
+Q_SIGNALS:
 
     void fillChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
 
     void setFill(bool arg)
     {
         if (m_fill != arg) {
             m_fill = arg;
-            emit fillChanged(arg);
+            Q_EMIT fillChanged(arg);
         }
     }
 protected:

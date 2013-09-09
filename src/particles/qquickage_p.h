@@ -66,16 +66,16 @@ public:
 
 protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
-signals:
+Q_SIGNALS:
     void lifeLeftChanged(int arg);
     void advancePositionChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
     void setLifeLeft(int arg)
     {
         if (m_lifeLeft != arg) {
             m_lifeLeft = arg;
-            emit lifeLeftChanged(arg);
+            Q_EMIT lifeLeftChanged(arg);
         }
     }
 
@@ -83,7 +83,7 @@ public slots:
     {
         if (m_advancePosition != arg) {
             m_advancePosition = arg;
-            emit advancePositionChanged(arg);
+            Q_EMIT advancePositionChanged(arg);
         }
     }
 

@@ -88,14 +88,14 @@ public:
         return m_curState;
     }
 
-signals:
+Q_SIGNALS:
 
     void runningChanged(bool arg);
     void interpolateChanged(bool arg);
     void goalSpriteChanged(QString arg);
     void currentSpriteChanged(QString arg);
 
-public slots:
+public Q_SLOTS:
 
     void jumpTo(const QString &sprite);
     void setGoalSprite(const QString &sprite);
@@ -104,7 +104,7 @@ public slots:
     {
         if (m_running != arg) {
             m_running = arg;
-            emit runningChanged(arg);
+            Q_EMIT runningChanged(arg);
         }
     }
 
@@ -112,11 +112,11 @@ public slots:
     {
         if (m_interpolate != arg) {
             m_interpolate = arg;
-            emit interpolateChanged(arg);
+            Q_EMIT interpolateChanged(arg);
         }
     }
 
-private slots:
+private Q_SLOTS:
     void createEngine();
     void sizeVertices();
 

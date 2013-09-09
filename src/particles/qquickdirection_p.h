@@ -54,9 +54,9 @@ public:
     explicit QQuickDirection(QObject *parent = 0);
 
     virtual const QPointF sample(const QPointF &from);
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 
 protected:
 };

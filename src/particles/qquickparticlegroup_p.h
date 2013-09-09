@@ -74,13 +74,13 @@ public:
         return m_system;
     }
 
-public slots:
+public Q_SLOTS:
 
     void setMaximumAlive(int arg)
     {
         if (m_maximumAlive != arg) {
             m_maximumAlive = arg;
-            emit maximumAliveChanged(arg);
+            Q_EMIT maximumAliveChanged(arg);
         }
     }
 
@@ -88,7 +88,7 @@ public slots:
 
     void delayRedirect(QObject* obj);
 
-signals:
+Q_SIGNALS:
 
     void maximumAliveChanged(int arg);
 

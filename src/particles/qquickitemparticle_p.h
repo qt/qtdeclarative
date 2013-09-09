@@ -69,24 +69,24 @@ public:
         return m_delegate;
     }
 
-signals:
+Q_SIGNALS:
     void fadeChanged();
 
     void delegateChanged(QQmlComponent* arg);
 
-public slots:
+public Q_SLOTS:
     //TODO: Add a follow mode, where moving the delegate causes the logical particle to go with it?
     void freeze(QQuickItem* item);
     void unfreeze(QQuickItem* item);
     void take(QQuickItem* item,bool prioritize=false);//take by modelparticle
     void give(QQuickItem* item);//give from modelparticle
 
-    void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; emit fadeChanged();}
+    void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; Q_EMIT fadeChanged();}
     void setDelegate(QQmlComponent* arg)
     {
         if (m_delegate != arg) {
             m_delegate = arg;
-            emit delegateChanged(arg);
+            Q_EMIT delegateChanged(arg);
         }
     }
 
@@ -121,8 +121,8 @@ public:
         : QObject(parent), m_mp(0)
     {;}
     QQuickItemParticle* particle() {return m_mp;}
-    void detach(){emit detached();}
-    void attach(){emit attached();}
+    void detach(){Q_EMIT detached();}
+    void attach(){Q_EMIT attached();}
 private:
     QQuickItemParticle* m_mp;
     friend class QQuickItemParticle;

@@ -90,7 +90,7 @@ public:
     bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) Q_DECL_OVERRIDE;
     void hide() Q_DECL_OVERRIDE { m_dialog.hide(); }
 
-private slots:
+private Q_SLOTS:
     void currentChanged(const QString& path);
     void directoryEntered(const QString& path);
     void fileSelected(const QString& path);

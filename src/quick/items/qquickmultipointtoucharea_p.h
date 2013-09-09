@@ -251,7 +251,7 @@ protected:
     void grabGesture();
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
-protected slots:
+protected Q_SLOTS:
     void setTouchEventsEnabledForWindow(QWindow *window);
 
 private:

@@ -210,7 +210,7 @@ public:
 
     void emitChanges();
 
-    void emitUnresolvedChanged() { emit unresolvedChanged(); }
+    void emitUnresolvedChanged() { Q_EMIT unresolvedChanged(); }
 
 Q_SIGNALS:
     void groupsChanged();

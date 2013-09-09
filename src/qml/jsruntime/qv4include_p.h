@@ -80,7 +80,7 @@ public:
 
     static QV4::Value include(QV4::SimpleCallContext *ctx);
 
-private slots:
+private Q_SLOTS:
     void finished();
 
 private:

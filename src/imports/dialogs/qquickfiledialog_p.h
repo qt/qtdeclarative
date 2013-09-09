@@ -68,7 +68,7 @@ public:
     ~QQuickFileDialog();
     virtual QList<QUrl> fileUrls();
 
-signals:
+Q_SIGNALS:
 
 public Q_SLOTS:
     void clearSelection();

@@ -263,7 +263,7 @@ public:
     void resetRotation();
     void resetDeformation();
 
-signals:
+Q_SIGNALS:
 
     void imageChanged();
     void colortableChanged();
@@ -305,7 +305,7 @@ signals:
 
     void statusChanged(Status arg);
 
-public slots:
+public Q_SLOTS:
     void reloadColor(const Color4ub &c, QQuickParticleData* d);
     void setAlphaVariation(qreal arg);
 
@@ -348,7 +348,7 @@ protected:
 
     void sceneGraphInvalidated();
 
-private slots:
+private Q_SLOTS:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
     void spriteAdvance(int spriteIndex);
