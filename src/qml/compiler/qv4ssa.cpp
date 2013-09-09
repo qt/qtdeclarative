@@ -2599,7 +2599,7 @@ void Optimizer::run()
 
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
-    if (!function->hasTry && !function->hasWith && doOpt) {
+    if (!function->hasTry && !function->hasWith && doOpt && false) {
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);
 //        showMeTheCode(function);
