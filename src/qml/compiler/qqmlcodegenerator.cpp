@@ -474,6 +474,10 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
 
         property->nameIndex = registerString(name.toString());
 
+        AST::SourceLocation loc = node->firstSourceLocation();
+        property->location.line = loc.startLine;
+        property->location.column = loc.startColumn;
+
         if (node->statement)
             appendBinding(property->nameIndex, node->statement);
 

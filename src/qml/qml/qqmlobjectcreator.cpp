@@ -262,12 +262,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
             flags |= QQmlPropertyData::HasArguments;
 
         QString signalName = stringAt(s->nameIndex);
-        if (seenSignals.contains(signalName)) {
-#if 0 // ###
-            const QQmlScript::Object::DynamicSignal &currSig = *s;
-            COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
-#endif
-        }
+        if (seenSignals.contains(signalName))
+            COMPILE_EXCEPTION(s, tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
         seenSignals.insert(signalName);
 
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
@@ -287,12 +283,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
             flags |= QQmlPropertyData::HasArguments;
 
         QString slotName = stringAt(s->nameIndex);
-        if (seenSignals.contains(slotName)) {
-#if 0 // ###
-            const QQmlScript::Object::DynamicSlot &currSlot = *s;
-            COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
-#endif
-        }
+        if (seenSignals.contains(slotName))
+            COMPILE_EXCEPTION(s, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
         // Note: we don't append slotName to the seenSignals list, since we don't
         // protect against overriding change signals or methods with properties.
 
@@ -331,7 +323,7 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
 
             QQmlType *qmltype = 0;
             if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
-             //   COMPILE_EXCEPTION(p, tr("Invalid property type"));
+                COMPILE_EXCEPTION(p, tr("Invalid property type"));
             }
 
             Q_ASSERT(qmltype);

@@ -716,6 +716,10 @@ struct Function {
     uint hasWith: 1;
     uint unused : 26;
 
+    // Location of declaration in source code (-1 if not specified)
+    int line;
+    int column;
+
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
     Function(Module *module, Function *outer, const QString &name)
@@ -732,6 +736,8 @@ struct Function {
         , hasTry(false)
         , hasWith(false)
         , unused(0)
+        , line(-1)
+        , column(-1)
     { this->name = newString(name); }
 
     ~Function();

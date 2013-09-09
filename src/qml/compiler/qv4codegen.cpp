@@ -1770,6 +1770,10 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
 
+    AST::SourceLocation loc = ast->firstSourceLocation();
+    function->line = loc.startLine;
+    function->column = loc.startColumn;
+
     if (function->usesArgumentsObject)
         _env->enter("arguments", Environment::VariableDeclaration);
 

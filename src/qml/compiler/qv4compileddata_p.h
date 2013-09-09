@@ -67,6 +67,12 @@ struct Function;
 struct Lookup;
 struct RegExp;
 
+struct Location
+{
+    int line;
+    int column;
+};
+
 struct RegExp
 {
     enum Flags {
@@ -207,6 +213,7 @@ struct Function
     quint32 lineNumberMappingOffset; // Array of uint pairs (offset and line number)
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
+    Location location;
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
@@ -222,12 +229,6 @@ struct Function
 };
 
 // Qml data structures
-
-struct Location
-{
-    int line;
-    int column;
-};
 
 struct Value
 {
@@ -297,6 +298,7 @@ struct Property
     quint32 type;
     quint32 customTypeNameIndex;
     quint32 flags; // readonly
+    Location location;
 };
 
 struct Object

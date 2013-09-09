@@ -293,6 +293,9 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
     function->nInnerFunctions = irFunction->nestedFunctions.size();
     function->innerFunctionsOffset = function->lineNumberMappingOffset + function->nLineNumberMappingEntries * 2 * sizeof(quint32);
 
+    function->location.line = irFunction->line;
+    function->location.column = irFunction->column;
+
     // write formals
     quint32 *formals = (quint32 *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->formals.size(); ++i)
