@@ -826,7 +826,7 @@ Value QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
-    QUrl url(method_resolvedUrl(ctx).toQString());
+    QUrl url(method_resolvedUrl(ctx).toQStringNoThrow());
     return v8engine->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
@@ -875,7 +875,7 @@ Value QtObject::method_md5(SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("Qt.md5(): Invalid arguments");
 
-    QByteArray data = ctx->arguments[0].toQString().toUtf8();
+    QByteArray data = ctx->arguments[0].toQStringNoThrow().toUtf8();
     QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
     return Value::fromString(ctx, QLatin1String(result.toHex()));
 }
@@ -889,7 +889,7 @@ Value QtObject::method_btoa(SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("Qt.btoa(): Invalid arguments");
 
-    QByteArray data = ctx->arguments[0].toQString().toUtf8();
+    QByteArray data = ctx->arguments[0].toQStringNoThrow().toUtf8();
 
     return Value::fromString(ctx, QLatin1String(data.toBase64()));
 }
@@ -903,7 +903,7 @@ Value QtObject::method_atob(SimpleCallContext *ctx)
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("Qt.atob(): Invalid arguments");
 
-    QByteArray data = ctx->arguments[0].toQString().toLatin1();
+    QByteArray data = ctx->arguments[0].toQStringNoThrow().toLatin1();
 
     return Value::fromString(ctx, QString::fromUtf8(QByteArray::fromBase64(data)));
 }
@@ -986,13 +986,13 @@ Value QtObject::method_createQmlObject(SimpleCallContext *ctx)
         effectiveContext = context->asQQmlContext();
     Q_ASSERT(context && effectiveContext);
 
-    QString qml = ctx->arguments[0].toQString();
+    QString qml = ctx->arguments[0].toQStringNoThrow();
     if (qml.isEmpty())
         return QV4::Value::nullValue();
 
     QUrl url;
     if (ctx->argumentCount > 2)
-        url = QUrl(ctx->arguments[2].toQString());
+        url = QUrl(ctx->arguments[2].toQStringNoThrow());
     else
         url = QUrl(QLatin1String("inline"));
 
@@ -1089,7 +1089,7 @@ Value QtObject::method_createComponent(SimpleCallContext *ctx)
         effectiveContext = 0;
     Q_ASSERT(context);
 
-    QString arg = ctx->arguments[0].toQString();
+    QString arg = ctx->arguments[0].toQStringNoThrow();
     if (arg.isEmpty())
         return QV4::Value::nullValue();
 
@@ -1166,7 +1166,7 @@ Value QtObject::method_locale(SimpleCallContext *ctx)
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
     if (ctx->argumentCount == 1)
-        code = ctx->arguments[0].toQString();
+        code = ctx->arguments[0].toQStringNoThrow();
 
     return QQmlLocale::locale(v8engine, code);
 }
@@ -1370,9 +1370,9 @@ static QV4::Value writeToConsole(ConsoleLogTypes logType, SimpleCallContext *ctx
 
         QV4::Value value = ctx->arguments[i];
         if (value.asArrayObject())
-            result.append(QStringLiteral("[") + value.toQString() + QStringLiteral("]"));
+            result.append(QStringLiteral("[") + value.toQStringNoThrow() + QStringLiteral("]"));
         else
-            result.append(value.toQString());
+            result.append(value.toQStringNoThrow());
     }
 
     if (printStack) {
@@ -1467,7 +1467,7 @@ QV4::Value ConsoleObject::method_time(SimpleCallContext *ctx)
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
-    QString name = ctx->arguments[0].toQString();
+    QString name = ctx->arguments[0].toQStringNoThrow();
     v8engine->startTimer(name);
     return QV4::Value::undefinedValue();
 }
@@ -1479,7 +1479,7 @@ QV4::Value ConsoleObject::method_timeEnd(SimpleCallContext *ctx)
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
-    QString name = ctx->arguments[0].toQString();
+    QString name = ctx->arguments[0].toQStringNoThrow();
     bool wasRunning;
     qint64 elapsed = v8engine->stopTimer(name, &wasRunning);
     if (wasRunning) {
@@ -1493,7 +1493,7 @@ QV4::Value ConsoleObject::method_count(SimpleCallContext *ctx)
     // first argument: name to print. Ignore any additional arguments
     QString name;
     if (ctx->argumentCount > 0)
-        name = ctx->arguments[0].toQString();
+        name = ctx->arguments[0].toQStringNoThrow();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
     QV8Engine *v8engine = ctx->engine->v8Engine;
@@ -1545,7 +1545,7 @@ QV4::Value ConsoleObject::method_assert(SimpleCallContext *ctx)
             if (i != 1)
                 message.append(QLatin1Char(' '));
 
-            message.append(ctx->arguments[i].toQString());
+            message.append(ctx->arguments[i].toQStringNoThrow());
         }
 
         QString stack = jsStack(v4);
@@ -1627,10 +1627,10 @@ Value GlobalExtensions::method_qsTranslate(SimpleCallContext *ctx)
     if ((ctx->argumentCount > 2) && !ctx->arguments[2].isString())
         V4THROW_ERROR("qsTranslate(): third argument (disambiguation) must be a string");
 
-    QString context = ctx->arguments[0].toQString();
-    QString text = ctx->arguments[1].toQString();
+    QString context = ctx->arguments[0].toQStringNoThrow();
+    QString text = ctx->arguments[1].toQStringNoThrow();
     QString comment;
-    if (ctx->argumentCount > 2) comment = ctx->arguments[2].toQString();
+    if (ctx->argumentCount > 2) comment = ctx->arguments[2].toQStringNoThrow();
 
     int i = 3;
     if (ctx->argumentCount > i && ctx->arguments[i].isString()) {
@@ -1714,10 +1714,10 @@ Value GlobalExtensions::method_qsTr(SimpleCallContext *ctx)
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) : QString();
 
-    QString text = ctx->arguments[0].toQString();
+    QString text = ctx->arguments[0].toQStringNoThrow();
     QString comment;
     if (ctx->argumentCount > 1)
-        comment = ctx->arguments[1].toQString();
+        comment = ctx->arguments[1].toQStringNoThrow();
     int n = -1;
     if (ctx->argumentCount > 2)
         n = ctx->arguments[2].toInt32();
@@ -1800,7 +1800,7 @@ Value GlobalExtensions::method_qsTrId(SimpleCallContext *ctx)
     if (ctx->argumentCount > 1)
         n = ctx->arguments[1].toInt32();
 
-    return Value::fromString(ctx, qtTrId(ctx->arguments[0].toQString().toUtf8().constData(), n));
+    return Value::fromString(ctx, qtTrId(ctx->arguments[0].toQStringNoThrow().toUtf8().constData(), n));
 }
 
 /*!
@@ -1839,7 +1839,7 @@ QV4::Value GlobalExtensions::method_gc(SimpleCallContext *ctx)
 
 Value GlobalExtensions::string_arg(SimpleCallContext *ctx)
 {
-    QString value = ctx->thisObject.toQString();
+    QString value = ctx->thisObject.toQStringNoThrow();
     if (ctx->argumentCount != 1)
         V4THROW_ERROR("String.arg(): Invalid arguments");
 
@@ -1851,7 +1851,7 @@ Value GlobalExtensions::string_arg(SimpleCallContext *ctx)
     else if (arg.isBoolean())
         return Value::fromString(ctx, value.arg(arg.booleanValue()));
 
-    return Value::fromString(ctx, value.arg(arg.toQString()));
+    return Value::fromString(ctx, value.arg(arg.toQStringNoThrow()));
 }
 
 

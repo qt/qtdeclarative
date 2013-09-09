@@ -196,7 +196,7 @@ Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     else if (v < 1.e21)
         str = QString::number(v, 'f', int (fdigits));
     else
-        return __qmljs_string_from_number(ctx, v);
+        return __qmljs_string_from_number(ctx, v).get();
     return Value::fromString(ctx, str);
 }
 
@@ -231,7 +231,7 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     Value prec = ctx->argument(0);
     if (prec.isUndefined())
-        return __qmljs_to_string(v, ctx);
+        return __qmljs_to_string(v, ctx).get();
 
     double precision = prec.toInt32();
     if (precision < 1 || precision > 21) {

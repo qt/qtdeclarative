@@ -233,7 +233,7 @@ public:
     inline quint16 *utf16Data() const { return (quint16 *)strData->data(); }
 
     inline bool equals(const QV4::Value &string) const {
-        QString s = string.toQString();
+        QString s = string.toQStringNoThrow();
         if (isQString()) {
             QStringDataPtr dd;
             dd.ptr = strData;

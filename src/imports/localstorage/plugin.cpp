@@ -248,7 +248,7 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
 
     QSqlDatabase db = r->database;
 
-    QString sql = ctx->argument(0).toQString();
+    QString sql = ctx->argument(0).toQStringNoThrow();
 
     if (r->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
         V4THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
@@ -322,8 +322,8 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     QV8Engine *engine = ctx->engine->v8Engine;
 
     QSqlDatabase db = r->database;
-    QString from_version = ctx->arguments[0].toQString();
-    QString to_version = ctx->arguments[1].toQString();
+    QString from_version = ctx->arguments[0].toQStringNoThrow();
+    QString to_version = ctx->arguments[1].toQStringNoThrow();
     Value callback = ctx->argument(2);
 
     if (from_version != r->version)
@@ -626,9 +626,9 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 
     QSqlDatabase database;
 
-    QString dbname = (*args)[0].toQString();
-    QString dbversion = (*args)[1].toQString();
-    QString dbdescription = (*args)[2].toQString();
+    QString dbname = (*args)[0].toQStringNoThrow();
+    QString dbversion = (*args)[1].toQStringNoThrow();
+    QString dbdescription = (*args)[2].toQStringNoThrow();
     int dbestimatedsize = (*args)[3].toInt32();
     FunctionObject *dbcreationCallback = (*args)[4].asFunctionObject();
 

@@ -503,7 +503,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        QString tmp = value.toQString();
+        QString tmp = value.toQStringNoThrow();
         if (value.asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else

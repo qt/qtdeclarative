@@ -80,7 +80,7 @@ struct Print: FunctionObject
     static Value call(Managed *, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
-            QString s = callData->args[i].toQString();
+            QString s = callData->args[i].toQStringNoThrow();
             if (i)
                 std::cout << ' ';
             std::cout << qPrintable(s);

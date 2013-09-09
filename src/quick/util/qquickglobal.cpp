@@ -348,7 +348,7 @@ public:
             if (ok) *ok = true;
         }
         if (vfam.isString()) {
-            retn.setFamily(vfam.toQString());
+            retn.setFamily(vfam.toQStringNoThrow());
             if (ok) *ok = true;
         }
         if (vital.isBoolean()) {

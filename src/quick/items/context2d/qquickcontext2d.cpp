@@ -128,7 +128,7 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
 QColor qt_color_from_string(const QV4::Value &name)
 {
-    QByteArray str = name.toQString().toUtf8();
+    QByteArray str = name.toQStringNoThrow().toUtf8();
 
     char *p = str.data();
     int len = str.length();
@@ -1278,7 +1278,7 @@ QV4::Value QQuickJSContext2D::method_set_globalCompositeOperation(QV4::SimpleCal
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString mode = ctx->argument(0).toQString();
+    QString mode = ctx->argument(0).toQStringNoThrow();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
     if (cm == QPainter::CompositionMode_SourceOver && mode != QStringLiteral("source-over"))
         return QV4::Value::undefinedValue();
@@ -1395,10 +1395,10 @@ QV4::Value QQuickJSContext2D::method_set_fillRule(QV4::SimpleCallContext *ctx)
 
     QV4::Value value = ctx->argument(0);
 
-    if ((value.isString() && value.toQString() == QStringLiteral("WindingFill"))
+    if ((value.isString() && value.toQStringNoThrow() == QStringLiteral("WindingFill"))
         || (value.isInt32() && value.integerValue() == Qt::WindingFill)) {
         r->context->state.fillRule = Qt::WindingFill;
-    } else if ((value.isString() && value.toQString() == QStringLiteral("OddEvenFill"))
+    } else if ((value.isString() && value.toQStringNoThrow() == QStringLiteral("OddEvenFill"))
                || (value.isInt32() && value.integerValue() == Qt::OddEvenFill)) {
         r->context->state.fillRule = Qt::OddEvenFill;
     } else {
@@ -1694,13 +1694,13 @@ QV4::Value QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleCallConte
                     patternTexture = pixelData->image;
                 }
             } else {
-                patternTexture = r->context->createPixmap(QUrl(ctx->arguments[0].toQString()))->image();
+                patternTexture = r->context->createPixmap(QUrl(ctx->arguments[0].toQStringNoThrow()))->image();
             }
 
             if (!patternTexture.isNull()) {
                 pattern->brush.setTextureImage(patternTexture);
 
-                QString repetition = ctx->arguments[1].toQString();
+                QString repetition = ctx->arguments[1].toQStringNoThrow();
                 if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
                     pattern->patternRepeatX = true;
                     pattern->patternRepeatY = true;
@@ -1758,7 +1758,7 @@ QV4::Value QQuickJSContext2D::method_set_lineCap(QV4::SimpleCallContext *ctx)
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString lineCap = ctx->argument(0).toQString();
+    QString lineCap = ctx->argument(0).toQStringNoThrow();
     Qt::PenCapStyle cap;
     if (lineCap == QStringLiteral("round"))
         cap = Qt::RoundCap;
@@ -1812,7 +1812,7 @@ QV4::Value QQuickJSContext2D::method_set_lineJoin(QV4::SimpleCallContext *ctx)
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString lineJoin = ctx->argument(0).toQString();
+    QString lineJoin = ctx->argument(0).toQStringNoThrow();
     Qt::PenJoinStyle join;
     if (lineJoin == QStringLiteral("round"))
         join = Qt::RoundJoin;
@@ -2009,7 +2009,7 @@ QV4::Value QQuickJSContext2D::method_set_path(QV4::SimpleCallContext *ctx)
         if (QQuickPath *path = qobject_cast<QQuickPath*>(qobjectWrapper->object()))
             r->context->m_path = path->path();
     } else {
-        QString path = value.toQString();
+        QString path = value.toQStringNoThrow();
         QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
     }
     r->context->m_v4path = value;
@@ -2435,7 +2435,7 @@ QV4::Value QQuickJSContext2DPrototype::method_text(QV4::SimpleCallContext *ctx)
 
         if (!qIsFinite(x) || !qIsFinite(y))
             return ctx->thisObject;
-        r->context->text(ctx->arguments[0].toQString(), x, y);
+        r->context->text(ctx->arguments[0].toQStringNoThrow(), x, y);
     }
     return ctx->thisObject;
 }
@@ -2533,7 +2533,7 @@ QV4::Value QQuickJSContext2D::method_set_font(QV4::SimpleCallContext *ctx)
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString fs = ctx->argument(0).toQString();
+    QString fs = ctx->argument(0).toQStringNoThrow();
     QFont font = qt_font_from_string(fs, r->context->state.font);
     if (font != r->context->state.font) {
         r->context->state.font = font;
@@ -2581,7 +2581,7 @@ QV4::Value QQuickJSContext2D::method_set_textAlign(QV4::SimpleCallContext *ctx)
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
 
-    QString textAlign = ctx->argument(0).toQString();
+    QString textAlign = ctx->argument(0).toQStringNoThrow();
 
     QQuickContext2D::TextAlignType ta;
     if (textAlign == QStringLiteral("start"))
@@ -2643,7 +2643,7 @@ QV4::Value QQuickJSContext2D::method_set_textBaseline(QV4::SimpleCallContext *ct
 {
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT_SETTER(r)
-    QString textBaseline = ctx->argument(0).toQString();
+    QString textBaseline = ctx->argument(0).toQStringNoThrow();
 
     QQuickContext2D::TextBaseLineType tb;
     if (textBaseline == QStringLiteral("alphabetic"))
@@ -2683,7 +2683,7 @@ QV4::Value QQuickJSContext2DPrototype::method_fillText(QV4::SimpleCallContext *c
         qreal y = ctx->arguments[2].toNumber();
         if (!qIsFinite(x) || !qIsFinite(y))
             return ctx->thisObject;
-        QPainterPath textPath = r->context->createTextGlyphs(x, y, ctx->arguments[0].toQString());
+        QPainterPath textPath = r->context->createTextGlyphs(x, y, ctx->arguments[0].toQStringNoThrow());
         r->context->buffer()->fill(textPath);
     }
     return ctx->thisObject;
@@ -2702,7 +2702,7 @@ QV4::Value QQuickJSContext2DPrototype::method_strokeText(QV4::SimpleCallContext 
     CHECK_CONTEXT(r)
 
     if (ctx->argumentCount == 3)
-        r->context->drawText(ctx->arguments[0].toQString(), ctx->arguments[1].toNumber(), ctx->arguments[2].toNumber(), false);
+        r->context->drawText(ctx->arguments[0].toQStringNoThrow(), ctx->arguments[1].toNumber(), ctx->arguments[2].toNumber(), false);
     return ctx->thisObject;
 }
 
@@ -2737,7 +2737,7 @@ QV4::Value QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCallContext
 
     if (ctx->argumentCount == 1) {
         QFontMetrics fm(r->context->state.font);
-        uint width = fm.width(ctx->arguments[0].toQString());
+        uint width = fm.width(ctx->arguments[0].toQStringNoThrow());
         QV4::Object *tm = ctx->engine->newObject();
         tm->put(ctx->engine->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
         return QV4::Value::fromObject(tm);
@@ -2821,7 +2821,7 @@ QV4::Value QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallContext *
     QQmlRefPointer<QQuickCanvasPixmap> pixmap;
 
     if (ctx->arguments[0].isString()) {
-        QUrl url(ctx->arguments[0].toQString());
+        QUrl url(ctx->arguments[0].toQStringNoThrow());
         if (!url.isValid())
             V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
 
@@ -2845,7 +2845,7 @@ QV4::Value QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallContext *
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
         } else {
-            QUrl url(ctx->arguments[0].toQString());
+            QUrl url(ctx->arguments[0].toQStringNoThrow());
             if (url.isValid())
                 pixmap = r->context->createPixmap(url);
             else
@@ -3100,7 +3100,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createImageData(QV4::SimpleCallCon
                 return qt_create_image_data(w, h, engine, QImage());
             }
         } else if (ctx->arguments[0].isString()) {
-            QImage image = r->context->createPixmap(QUrl(ctx->arguments[0].toQString()))->image();
+            QImage image = r->context->createPixmap(QUrl(ctx->arguments[0].toQStringNoThrow()))->image();
             return qt_create_image_data(image.width(), image.height(), engine, image);
         }
     } else if (ctx->argumentCount == 2) {

@@ -183,7 +183,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQString()));
+    QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQStringNoThrow()));
 
     QV4::Value callbackFunction = QV4::Value::undefinedValue();
     if (ctx->argumentCount >= 2 && ctx->arguments[1].asFunctionObject())

@@ -320,10 +320,8 @@ Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
     const QString value = getThisString(context, context->thisObject);
 
     QString searchString;
-    if (context->argumentCount) {
-        Value v = __qmljs_to_string(ValueRef(&context->arguments[0]), context);
-        searchString = v.stringValue()->toQString();
-    }
+    if (context->argumentCount)
+        searchString = context->arguments[0].toQString();
 
     ScopedValue posArg(scope, context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue());
     double position = __qmljs_to_number(posArg);
@@ -789,7 +787,7 @@ Value StringPrototype::method_trim(SimpleCallContext *ctx)
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
         ctx->throwTypeError();
 
-    QString s = __qmljs_to_string(ValueRef(&ctx->thisObject), ctx).stringValue()->toQString();
+    QString s = ctx->thisObject.toQString();
     const QChar *chars = s.constData();
     int start, end;
     for (start = 0; start < s.length(); ++start) {

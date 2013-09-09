@@ -1556,7 +1556,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
         QV4::Value propertyName = it.nextPropertyNameAsString(&value);
         if (propertyName.isNull())
             break;
-        cacheItem->setValue(propertyName.toQString(), m_cacheMetaType->v8Engine->toVariant(value, QVariant::Invalid));
+        cacheItem->setValue(propertyName.toQStringNoThrow(), m_cacheMetaType->v8Engine->toVariant(value, QVariant::Invalid));
     }
 
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;
@@ -1678,7 +1678,7 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
     } else if (QV4::ArrayObject *array = groups.asArrayObject()) {
         uint arrayLength = array->arrayLength();
         for (uint i = 0; i < arrayLength; ++i) {
-            const QString groupName = array->getIndexed(i).toQString();
+            const QString groupName = array->getIndexed(i).toQStringNoThrow();
             int index = groupNames.indexOf(groupName);
             if (index != -1)
                 groupFlags |= 2 << index;

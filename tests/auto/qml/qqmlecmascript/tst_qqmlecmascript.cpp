@@ -2445,7 +2445,7 @@ void tst_qqmlecmascript::callQtInvokables()
     {
     QV4::Value ret = EVALUATE("object.method_NoArgs_QScriptValue()");
     QVERIFY(ret.isString());
-    QCOMPARE(ret.toQString(), QString("Hello world"));
+    QCOMPARE(ret.toQStringNoThrow(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);

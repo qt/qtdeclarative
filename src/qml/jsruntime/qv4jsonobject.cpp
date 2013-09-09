@@ -786,7 +786,7 @@ QString Stringify::JO(Object *o)
             Value name = it.nextPropertyNameAsString(&v);
             if (name.isNull())
                 break;
-            QString key = name.toQString();
+            QString key = name.toQStringNoThrow();
             QString member = makeMember(key, v);
             if (!member.isEmpty())
                 partial += member;
@@ -997,7 +997,7 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
         if (name.isNull())
             break;
 
-        QString key = name.toQString();
+        QString key = name.toQStringNoThrow();
         if (!v.asFunctionObject())
             result.insert(key, toJsonValue(v, visitedObjects));
     }

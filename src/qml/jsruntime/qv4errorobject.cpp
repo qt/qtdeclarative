@@ -338,12 +338,12 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
     if (name->isUndefined())
         qname = QString::fromLatin1("Error");
     else
-        qname = __qmljs_to_string(name, ctx).stringValue()->toQString();
+        qname = name->toQString();
 
     ScopedValue message(scope, o->get(ctx->engine->newString(QString::fromLatin1("message"))));
     QString qmessage;
     if (!message->isUndefined())
-        qmessage = __qmljs_to_string(message, ctx).stringValue()->toQString();
+        qmessage = message->toQString();
 
     QString str;
     if (qname.isEmpty()) {

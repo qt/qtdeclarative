@@ -587,7 +587,7 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
         if (name.isNull())
             break;
 
-        QString key = name.toQString();
+        QString key = name.toQStringNoThrow();
         result.insert(key, variantFromJS(v, visitedObjects));
     }
 

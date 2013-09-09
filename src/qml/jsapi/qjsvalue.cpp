@@ -360,7 +360,7 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    return d->value.toQString();
+    return d->value.toQStringNoThrow();
 }
 
 /*!

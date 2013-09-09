@@ -280,7 +280,7 @@ QV4::Value QQmlDateExtension::fromLocaleString(QV4::SimpleCallContext *ctx)
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDateTime dt;
-    QString dateString = ctx->arguments[1].toQString();
+    QString dateString = ctx->arguments[1].toQStringNoThrow();
     if (ctx->argumentCount == 3) {
         if (ctx->arguments[2].isString()) {
             QString format = ctx->arguments[2].stringValue()->toQString();
@@ -319,7 +319,7 @@ QV4::Value QQmlDateExtension::fromLocaleTimeString(QV4::SimpleCallContext *ctx)
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QTime tm;
-    QString dateString = ctx->arguments[1].toQString();
+    QString dateString = ctx->arguments[1].toQStringNoThrow();
     if (ctx->argumentCount == 3) {
         if (ctx->arguments[2].isString()) {
             QString format = ctx->arguments[2].stringValue()->toQString();
@@ -359,7 +359,7 @@ QV4::Value QQmlDateExtension::fromLocaleDateString(QV4::SimpleCallContext *ctx)
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDate dt;
-    QString dateString = ctx->arguments[1].toQString();
+    QString dateString = ctx->arguments[1].toQStringNoThrow();
     if (ctx->argumentCount == 3) {
         if (ctx->arguments[2].isString()) {
             QString format = ctx->arguments[2].stringValue()->toQString();
@@ -456,7 +456,7 @@ QV4::Value QQmlNumberExtension::toLocaleCurrencyString(QV4::SimpleCallContext *c
     if (ctx->argumentCount > 1) {
         if (!ctx->arguments[1].isString())
             V4THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
-        symbol = ctx->arguments[1].toQString();
+        symbol = ctx->arguments[1].toQStringNoThrow();
     }
 
     return QV4::Value::fromString(ctx, r->locale.toCurrencyString(number, symbol));
@@ -831,8 +831,8 @@ QV4::Value QQmlLocale::localeCompare(QV4::SimpleCallContext *ctx)
     if (!ctx->thisObject.isString() && !ctx->thisObject.asStringObject())
         return QV4::StringPrototype::method_localeCompare(ctx);
 
-    QString thisString = ctx->thisObject.toQString();
-    QString thatString = ctx->arguments[0].toQString();
+    QString thisString = ctx->thisObject.toQStringNoThrow();
+    QString thatString = ctx->arguments[0].toQStringNoThrow();
 
     return QV4::Value::fromInt32(QString::localeAwareCompare(thisString, thatString));
 }

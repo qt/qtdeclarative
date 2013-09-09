@@ -153,11 +153,11 @@ void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::ValueRef result, int 
 
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);
-QV4::Value __qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
+QV4::ReturnedValue __qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
 QV4::String *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
 
 // objects
-Q_QML_EXPORT QV4::Value __qmljs_object_default_value(QV4::Object *object, int typeHint);
+Q_QML_EXPORT ReturnedValue __qmljs_object_default_value(QV4::Object *object, int typeHint);
 void __qmljs_set_activation_property(QV4::ExecutionContext *ctx, QV4::String *name, const QV4::ValueRef value);
 void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, const QV4::ValueRef value);
 void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef object, QV4::String *name);
@@ -175,13 +175,13 @@ void __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, QV4::ValueRef r
 void __qmljs_foreach_next_property_name(QV4::ValueRef result, const ValueRef foreach_iterator);
 
 // type conversion and testing
-QV4::Value __qmljs_to_primitive(const ValueRef value, int typeHint);
+QV4::ReturnedValue __qmljs_to_primitive(const ValueRef value, int typeHint);
 Q_QML_EXPORT QV4::Bool __qmljs_to_boolean(const QV4::ValueRef value);
 double __qmljs_to_number(const QV4::ValueRef value);
-QV4::Value __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
+QV4::ReturnedValue __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 void __qmljs_numberToString(QString *result, double num, int radix = 10);
-QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
+ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
 
 QV4::Bool __qmljs_equal_helper(const ValueRef x, const ValueRef y);
@@ -277,10 +277,10 @@ void __qmljs_inplace_shr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef 
 void __qmljs_inplace_ushr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, QV4::String *name, const QV4::ValueRef rhs);
 
 typedef QV4::Bool (*CmpOp)(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_le(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r);
 QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::Bool __qmljs_cmp_ne(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::Bool __qmljs_cmp_se(const QV4::ValueRef left, const QV4::ValueRef right);
@@ -291,11 +291,11 @@ QV4::Bool __qmljs_cmp_instanceof(QV4::ExecutionContext *ctx, const QV4::ValueRef
 QV4::Bool __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 
 // type conversion and testing
-inline QV4::Value __qmljs_to_primitive(const QV4::ValueRef value, int typeHint)
+inline ReturnedValue __qmljs_to_primitive(const QV4::ValueRef value, int typeHint)
 {
     QV4::Object *o = value->asObject();
     if (!o)
-        return *value;
+        return value;
     return __qmljs_object_default_value(o, typeHint);
 }
 
@@ -304,14 +304,14 @@ inline double __qmljs_to_number(const ValueRef value)
     return value->toNumber();
 }
 
-inline QV4::Value __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
+inline QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
 {
     if (value->isString())
         return *value;
     return QV4::Value::fromString(__qmljs_convert_to_string(ctx, value));
 }
 
-inline QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
 {
     if (value->isObject())
         return *value;
@@ -582,87 +582,6 @@ inline void __qmljs_sne(ValueRef result, const QV4::ValueRef left, const QV4::Va
 
     bool r = ! __qmljs_strict_equal(left, right);
     *result = QV4::Value::fromBoolean(r);
-}
-
-inline QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() > right->integerValue();
-
-    // Safe, as l & r are primitive values
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() > r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return r.stringValue()->compare(l.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl > dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() < right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() < r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return l.stringValue()->compare(r.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl < dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() >= right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() >= r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return !l.stringValue()->compare(r.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl >= dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_le(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() <= right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() <= r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return !r.stringValue()->compare(l.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl <= dr;
-    }
 }
 
 inline QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef right)

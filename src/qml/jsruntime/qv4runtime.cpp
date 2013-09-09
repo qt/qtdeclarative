@@ -542,7 +542,7 @@ double __qmljs_string_to_number(const QString &string)
     return d;
 }
 
-Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
+ReturnedValue __qmljs_string_from_number(ExecutionContext *ctx, double number)
 {
     QString qstr;
     __qmljs_numberToString(&qstr, number, 10);
@@ -563,7 +563,7 @@ String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *seco
     return ctx->engine->newString(newStr);
 }
 
-Value __qmljs_object_default_value(Object *object, int typeHint)
+ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
         if (object->asDateObject())
@@ -644,16 +644,14 @@ String *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
     case Value::String_Type:
         return value->stringValue();
     case Value::Object_Type: {
-        Value prim = __qmljs_to_primitive(value, STRING_HINT);
-        if (prim.isPrimitive())
-            return __qmljs_convert_to_string(ctx, ValueRef(&prim));
-        else
-            ctx->throwTypeError();
+        ValueScope scope(ctx);
+        ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
+        return __qmljs_convert_to_string(ctx, prim);
     }
     case Value::Integer_Type:
-        return __qmljs_string_from_number(ctx, value->int_32).stringValue();
+        return __qmljs_string_from_number(ctx, value->int_32).get().stringValue();
     default: // double
-        return __qmljs_string_from_number(ctx, value->doubleValue()).stringValue();
+        return __qmljs_string_from_number(ctx, value->doubleValue()).get().stringValue();
     } // switch
 }
 
@@ -684,7 +682,7 @@ void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef 
         }
 
         if (object->isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQString()).arg(object->toQString());
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
             ctx->throwTypeError(message);
         }
 
@@ -789,7 +787,7 @@ void __qmljs_get_property(ExecutionContext *ctx, ValueRef result, const ValueRef
         res = m->get(name);
     } else {
         if (object->isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQString());
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
             ctx->throwTypeError(message);
         }
 
@@ -828,11 +826,13 @@ uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
         Value ny = Value::fromDouble((double) y->booleanValue());
         return __qmljs_cmp_eq(x, ValueRef(&ny));
     } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-        Value py = __qmljs_to_primitive(y, PREFERREDTYPE_HINT);
-        return __qmljs_cmp_eq(x, ValueRef(&py));
+        ValueScope scope(y->objectValue()->engine());
+        ScopedValue py(scope, __qmljs_to_primitive(y, PREFERREDTYPE_HINT));
+        return __qmljs_cmp_eq(x, py);
     } else if (x->isObject() && (y->isNumber() || y->isString())) {
-        Value px = __qmljs_to_primitive(x, PREFERREDTYPE_HINT);
-        return __qmljs_cmp_eq(ValueRef(&px), y);
+        ValueScope scope(x->objectValue()->engine());
+        ScopedValue px(scope, __qmljs_to_primitive(x, PREFERREDTYPE_HINT));
+        return __qmljs_cmp_eq(px, y);
     }
 
     return false;
@@ -851,6 +851,98 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
     if (x->isString())
         return y->isString() && x->stringValue()->isEqualTo(y->stringValue());
     return false;
+}
+
+QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() > r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() > r->doubleValue();
+    if (l->isString() && r->isString())
+        return r->stringValue()->compare(l->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::ValueScope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_gt(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl > dr;
+}
+
+QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() < r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() < r->doubleValue();
+    if (l->isString() && r->isString())
+        return l->stringValue()->compare(r->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::ValueScope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_lt(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl < dr;
+}
+
+QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() >= r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() >= r->doubleValue();
+    if (l->isString() && r->isString())
+        return !l->stringValue()->compare(r->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::ValueScope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_ge(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl >= dr;
+}
+
+QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() <= r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() <= r->doubleValue();
+    if (l->isString() && r->isString())
+        return !r->stringValue()->compare(l->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::ValueScope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_le(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl <= dr;
 }
 
 
@@ -891,7 +983,7 @@ void __qmljs_call_activation_property(ExecutionContext *context, ValueRef result
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
         if (base)
-            objectAsString = Value::fromObject(base).toQString();
+            objectAsString = Value::fromObject(base).toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         context->throwTypeError(msg);
     }
@@ -913,7 +1005,7 @@ void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *n
     Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
         if (callData->thisObject.isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQString());
+            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
             context->throwTypeError(message);
         }
 
@@ -923,7 +1015,7 @@ void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *n
 
     FunctionObject *o = baseObject->get(name).asFunctionObject();
     if (!o) {
-        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQString());
+        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         context->throwTypeError(error);
     }
 

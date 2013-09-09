@@ -136,7 +136,7 @@ template <typename ElementType> ElementType convertValueToElement(const QV4::Val
 
 template <> QString convertValueToElement(const QV4::Value &value)
 {
-    return value.toQString();
+    return value.toQStringNoThrow();
 }
 
 template <> int convertValueToElement(const QV4::Value &value)
@@ -146,7 +146,7 @@ template <> int convertValueToElement(const QV4::Value &value)
 
 template <> QUrl convertValueToElement(const QV4::Value &value)
 {
-    return QUrl(value.toQString());
+    return QUrl(value.toQStringNoThrow());
 }
 
 template <> qreal convertValueToElement(const QV4::Value &value)

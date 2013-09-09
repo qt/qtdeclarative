@@ -115,7 +115,7 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        return m_v8function.value().toQString();
+        return m_v8function.value().toQStringNoThrow();
     } else {
         return m_expression;
     }

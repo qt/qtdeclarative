@@ -3871,7 +3871,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         }
 
         if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQString()
+            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
@@ -3945,7 +3945,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         }
 
         if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapToItem() given argument \"" << item.toQString()
+            qmlInfo(this) << "mapToItem() given argument \"" << item.toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }

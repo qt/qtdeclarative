@@ -507,7 +507,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     } else if (result->propType == QMetaType::Double && value.isNumber()) {
         PROPERTY_STORE(double, double(value.asDouble()));
     } else if (result->propType == QMetaType::QString && value.isString()) {
-        PROPERTY_STORE(QString, value.toQString());
+        PROPERTY_STORE(QString, value.toQStringNoThrow());
     } else if (result->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
@@ -1503,7 +1503,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
         if (value.isNull() || value.isUndefined())
             qstringPtr = new (&allocData) QString();
         else
-            qstringPtr = new (&allocData) QString(value.toQString());
+            qstringPtr = new (&allocData) QString(value.toQStringNoThrow());
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = 0;

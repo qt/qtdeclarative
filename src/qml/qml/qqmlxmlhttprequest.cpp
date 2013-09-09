@@ -1645,7 +1645,7 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     QV8Engine *engine = ctx->engine->v8Engine;
 
     // Argument 0 - Method
-    QString method = ctx->arguments[0].toQString().toUpper();
+    QString method = ctx->arguments[0].toQStringNoThrow().toUpper();
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
@@ -1654,7 +1654,7 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl(ctx->arguments[1].toQString());
+    QUrl url = QUrl(ctx->arguments[1].toQStringNoThrow());
 
     if (url.isRelative()) 
         url = engine->callingContext()->resolvedUrl(url);
@@ -1666,9 +1666,9 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     // Argument 3/4 - user/pass (optional)
     QString username, password;
     if (ctx->argumentCount > 3)
-        username = ctx->arguments[3].toQString();
+        username = ctx->arguments[3].toQStringNoThrow();
     if (ctx->argumentCount > 4)
-        password = ctx->arguments[4].toQString();
+        password = ctx->arguments[4].toQStringNoThrow();
 
     // Clear the fragment (if any)
     url.setFragment(QString());
@@ -1693,8 +1693,8 @@ Value QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
     if (r->readyState() != QQmlXMLHttpRequest::Opened || r->sendFlag())
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    QString name = ctx->arguments[0].toQString();
-    QString value = ctx->arguments[1].toQString();
+    QString name = ctx->arguments[0].toQStringNoThrow();
+    QString value = ctx->arguments[1].toQStringNoThrow();
 
     // ### Check that name and value are well formed
 
@@ -1741,7 +1741,7 @@ Value QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 
     QByteArray data;
     if (ctx->argumentCount > 0)
-        data = ctx->arguments[0].toQString().toUtf8();
+        data = ctx->arguments[0].toQStringNoThrow().toUtf8();
 
     return r->send(constructMeObject(ctx->thisObject, engine), data);
 }
@@ -1773,7 +1773,7 @@ Value QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->header(ctx->arguments[0].toQString()));
+    return engine->toString(r->header(ctx->arguments[0].toQStringNoThrow()));
 }
 
 Value QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)

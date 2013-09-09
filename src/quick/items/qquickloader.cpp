@@ -922,7 +922,7 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
 
 QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 {
-    QString arg = (*args)[0].toQString();
+    QString arg = (*args)[0].toQStringNoThrow();
     if (arg.isEmpty())
         return QUrl();
 
