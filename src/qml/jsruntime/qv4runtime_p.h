@@ -124,16 +124,6 @@ QV4::ReturnedValue __qmljs_builtin_typeof_name(QV4::ExecutionContext *context, Q
 QV4::ReturnedValue __qmljs_builtin_typeof_member(QV4::ExecutionContext* context, const QV4::ValueRef base, QV4::String *name);
 QV4::ReturnedValue __qmljs_builtin_typeof_element(QV4::ExecutionContext* context, const QV4::ValueRef base, const QV4::ValueRef index);
 
-void __qmljs_builtin_post_increment(QV4::ValueRef result, QV4::ValueRef val);
-void __qmljs_builtin_post_increment_name(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name);
-void __qmljs_builtin_post_increment_member(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_builtin_post_increment_element(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-
-void __qmljs_builtin_post_decrement(QV4::ValueRef result, QV4::ValueRef val);
-void __qmljs_builtin_post_decrement_name(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name);
-void __qmljs_builtin_post_decrement_member(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_builtin_post_decrement_element(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-
 void Q_NORETURN __qmljs_builtin_rethrow(QV4::ExecutionContext *context);
 QV4::ExecutionContext *__qmljs_builtin_push_with_scope(const QV4::ValueRef o, QV4::ExecutionContext *ctx);
 QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(QV4::String *exceptionVarName, const QV4::ValueRef exceptionValue, QV4::ExecutionContext *ctx);

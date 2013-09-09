@@ -437,38 +437,6 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         VALUE(instr.result) = __qmljs_builtin_typeof(context, VALUEPTR(instr.value)).get();
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
-    MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
-        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
-    MOTH_END_INSTR(CallBuiltinTypeofMember)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
-        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
-    MOTH_END_INSTR(CallBuiltinTypeofSubscript)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
-        __qmljs_builtin_post_increment_name(context, VALUEPTR(instr.result), runtimeStrings[instr.name]);
-    MOTH_END_INSTR(CallBuiltinTypeofName)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostIncValue)
-        __qmljs_builtin_post_increment(VALUEPTR(instr.result), VALUEPTR(instr.value));
-    MOTH_END_INSTR(CallBuiltinTypeofValue)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
-        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
-    MOTH_END_INSTR(CallBuiltinTypeofMember)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
-        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
-    MOTH_END_INSTR(CallBuiltinTypeofSubscript)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
-        __qmljs_builtin_post_decrement_name(context, VALUEPTR(instr.result), runtimeStrings[instr.name]);
-    MOTH_END_INSTR(CallBuiltinTypeofName)
-
-    MOTH_BEGIN_INSTR(CallBuiltinPostDecValue)
-        __qmljs_builtin_post_decrement(VALUEPTR(instr.result), VALUEPTR(instr.value));
-    MOTH_END_INSTR(CallBuiltinTypeofValue)
-
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
         __qmljs_builtin_declare_var(context, instr.isDeletable, runtimeStrings[instr.varName]);
     MOTH_END_INSTR(CallBuiltinDeclareVar)

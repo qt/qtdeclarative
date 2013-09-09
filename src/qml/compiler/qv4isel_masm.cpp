@@ -779,57 +779,6 @@ void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
     _as->storeValue(Value::fromBoolean(false), result);
 }
 
-void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_member,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
-                         Assembler::PointerToValue(base), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_element,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
-                         Assembler::Reference(base), Assembler::PointerToValue(index));
-}
-
-void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
-}
-
-void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::Reference(index));
-}
-
-void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
-}
-
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 {
     generateFunctionCall(Assembler::Void, __qmljs_throw, Assembler::ContextRegister,

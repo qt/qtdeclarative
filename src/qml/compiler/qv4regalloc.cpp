@@ -190,14 +190,6 @@ protected: // IRDecoder
     virtual void callBuiltinDeleteSubscript(V4IR::Temp *, V4IR::Expr *, V4IR::Temp *) {}
     virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementValue(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementValue(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinThrow(V4IR::Expr *) {}
     virtual void callBuiltinFinishTry() {}
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
