@@ -274,7 +274,7 @@ ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
     return Value::fromBoolean(ctx->deleteProperty(name));
 }
 
-void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     ValueScope scope(ctx);
 
@@ -286,39 +286,37 @@ void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef l
         if (!pright->isString())
             pright = __qmljs_to_string(pright, ctx);
         String *string = __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue());
-        *result = Value::fromString(string);
-        return;
+        return Value::fromString(string);
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
-    *result = Value::fromDouble(x + y);
+    return Value::fromDouble(x + y);
 }
 
-void __qmljs_instanceof(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     Object *o = right->asObject();
     if (!o)
         ctx->throwTypeError();
 
     bool r = o->hasInstance(*left);
-    *result = Value::fromBoolean(r);
+    return Value::fromBoolean(r);
 }
 
-void __qmljs_in(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     if (!right->isObject())
         ctx->throwTypeError();
     String *s = left->toString(ctx);
     bool r = right->objectValue()->__hasProperty__(s);
-    *result = Value::fromBoolean(r);
+    return Value::fromBoolean(r);
 }
 
 static void inplaceBitOp(ExecutionContext *ctx, String *name, const ValueRef value, BinOp op)
 {
     ValueScope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope);
-    op(result, lhs, value);
+    ScopedValue result(scope, op(lhs, value));
     ctx->setProperty(name, result);
 }
 
@@ -342,8 +340,7 @@ void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const ValueRe
 {
     ValueScope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope);
-    __qmljs_add(ctx, result, lhs, value);
+    ScopedValue result(scope, __qmljs_add(ctx, lhs, value));
     ctx->setProperty(name, result);
 }
 

@@ -508,11 +508,11 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Unop)
 
     MOTH_BEGIN_INSTR(Binop)
-        instr.alu(VALUEPTR(instr.result), VALUEPTR(instr.lhs), VALUEPTR(instr.rhs));
+        VALUE(instr.result) = instr.alu(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)).get();
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(BinopContext)
-        instr.alu(context, VALUEPTR(instr.result), VALUEPTR(instr.lhs), VALUEPTR(instr.rhs));
+        VALUE(instr.result) = instr.alu(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)).get();
     MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(AddNumberParams)

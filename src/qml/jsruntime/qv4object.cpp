@@ -169,8 +169,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const V
 {
     ValueScope scope(ctx);
     ScopedValue v(scope, get(name));
-    ScopedValue result(scope);
-    op(result, v, rhs);
+    ScopedValue result(scope, op(v, rhs));
     put(name, result);
 }
 
@@ -181,8 +180,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index,
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope);
-        op(result, v, rhs);
+        ScopedValue result(scope, op(v, rhs));
         putIndexed(idx, result);
         return;
     }
@@ -195,8 +193,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, 
 {
     ValueScope scope(ctx);
     ScopedValue v(scope, get(name));
-    ScopedValue result(scope);
-    op(ctx, result, v, rhs);
+    ScopedValue result(scope, op(ctx, v, rhs));
     put(name, result);
 }
 
@@ -207,8 +204,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope);
-        op(ctx, result, v, rhs);
+        ScopedValue result(scope, op(ctx, v, rhs));
         putIndexed(idx, result);
         return;
     }

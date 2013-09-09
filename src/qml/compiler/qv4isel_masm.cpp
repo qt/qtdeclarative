@@ -1333,15 +1333,13 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
 
     const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
     if (info.fallbackImplementation) {
-        _as->generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation,
-                                     Assembler::PointerToValue(target),
+        _as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
         storeTarget(0, target);
     } else if (info.contextImplementation) {
-        _as->generateFunctionCallImp(Assembler::Void, info.name, info.contextImplementation,
+        _as->generateFunctionCallImp(target, info.name, info.contextImplementation,
                                      Assembler::ContextRegister,
-                                     Assembler::PointerToValue(target),
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
         storeTarget(1, target);
