@@ -740,14 +740,15 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 return;
             }
 
-            QV4::Value function = *reinterpret_cast<QV4::Value*>(metaArgs[1]);
-            QV4::Value thisObject = *reinterpret_cast<QV4::Value*>(metaArgs[2]);
+            QV4::ValueScope scope(v4);
+            QV4::ScopedValue function(scope, *reinterpret_cast<QV4::Value*>(metaArgs[1]));
+            QV4::ScopedValue thisObject(scope, *reinterpret_cast<QV4::Value*>(metaArgs[2]));
             QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);
             int slotIndexToDisconnect = *reinterpret_cast<int*>(metaArgs[4]);
 
             if (slotIndexToDisconnect != -1) {
                 // This is a QObject function wrapper
-                if (connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                if (connection->thisObject.isEmpty() == thisObject->isEmpty() &&
                         (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
 
                     QPair<QObject *, int> connectedFunctionData = extractQtMethod(connection->function.value().asFunctionObject());
@@ -760,7 +761,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             } else {
                 // This is a normal JS function
                 if (__qmljs_strict_equal(connection->function, function) &&
-                        connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        connection->thisObject.isEmpty() == thisObject->isEmpty() &&
                         (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
                     *ret = true;
                     return;

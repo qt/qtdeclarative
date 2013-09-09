@@ -90,14 +90,14 @@ Value ObjectCtor::construct(Managed *that, CallData *callData)
             obj->setPrototype(proto.objectValue());
         return Value::fromObject(obj);
     }
-    return __qmljs_to_object(v4->current, callData->args[0]);
+    return __qmljs_to_object(v4->current, ValueRef(&callData->args[0]));
 }
 
 Value ObjectCtor::call(Managed *m, CallData *callData)
 {
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return Value::fromObject(m->engine()->newObject());
-    return __qmljs_to_object(m->engine()->current, callData->args[0]);
+    return __qmljs_to_object(m->engine()->current, ValueRef(&callData->args[0]));
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -373,7 +373,7 @@ Value ObjectPrototype::method_toString(SimpleCallContext *ctx)
     } else if (ctx->thisObject.isNull()) {
         return Value::fromString(ctx, QStringLiteral("[object Null]"));
     } else {
-        Value obj = __qmljs_to_object(ctx, ctx->thisObject);
+        Value obj = __qmljs_to_object(ctx, ValueRef(&ctx->thisObject));
         QString className = obj.objectValue()->className();
         return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className));
     }

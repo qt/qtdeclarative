@@ -59,8 +59,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-double __qmljs_to_number(const QV4::Value &value);
-Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const QV4::Value &value);
 QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
 
 inline Managed *Value::asManaged() const
@@ -191,48 +189,6 @@ inline bool Value::toBoolean() const
     default: // double
         return doubleValue() && !std::isnan(doubleValue());
     }
-}
-
-inline Object *Value::toObject(ExecutionContext *ctx) const
-{
-    if (isObject())
-        return objectValue();
-    return __qmljs_convert_to_object(ctx, *this);
-}
-
-inline int Value::toInt32() const
-{
-    if (isConvertibleToInt())
-        return int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = __qmljs_to_number(*this);
-
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
-
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Value::toInt32(d);
-}
-
-inline unsigned int Value::toUInt32() const
-{
-    if (isConvertibleToInt())
-        return (unsigned) int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = __qmljs_to_number(*this);
-
-    const double D32 = 4294967296.0;
-    if (d >= 0 && d < D32)
-        return static_cast<uint>(d);
-    return toUInt32(d);
 }
 
 inline uint Value::asArrayIndex() const
@@ -380,6 +336,7 @@ public:
     }
 
 private:
+    friend struct ValueRef;
     PersistentValuePrivate *d;
 };
 
@@ -414,6 +371,7 @@ public:
     void markOnce();
 
 private:
+    friend struct ValueRef;
     PersistentValuePrivate *d;
 };
 

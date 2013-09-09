@@ -327,20 +327,22 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
 
 Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Object *o = ctx->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
 
-    Value name = o->get(ctx->engine->newString(QString::fromLatin1("name")));
+    ScopedValue name(scope, o->get(ctx->engine->newString(QString::fromLatin1("name"))));
     QString qname;
-    if (name.isUndefined())
+    if (name->isUndefined())
         qname = QString::fromLatin1("Error");
     else
         qname = __qmljs_to_string(name, ctx).stringValue()->toQString();
 
-    Value message = o->get(ctx->engine->newString(QString::fromLatin1("message")));
+    ScopedValue message(scope, o->get(ctx->engine->newString(QString::fromLatin1("message"))));
     QString qmessage;
-    if (!message.isUndefined())
+    if (!message->isUndefined())
         qmessage = __qmljs_to_string(message, ctx).stringValue()->toQString();
 
     QString str;

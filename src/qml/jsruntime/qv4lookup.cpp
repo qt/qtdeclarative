@@ -492,7 +492,7 @@ void Lookup::setterGeneric(Lookup *l, const Value &object, const Value &value)
 {
     Object *o = object.asObject();
     if (!o) {
-        o = __qmljs_convert_to_object(l->name->engine()->current, object);
+        o = __qmljs_convert_to_object(l->name->engine()->current, ValueRef::fromRawValue(&object));
         o->put(l->name, value);
         return;
     }

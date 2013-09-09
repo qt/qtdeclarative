@@ -203,6 +203,10 @@ struct ScopedCallData {
 struct ValueRef {
     ValueRef(const ScopedValue &v)
         : ptr(v.ptr) {}
+    ValueRef(const PersistentValue &v)
+        : ptr(&v.d->value) {}
+    ValueRef(PersistentValuePrivate *p)
+        : ptr(&p->value) {}
     // Important: Do NOT add a copy constructor to this class
     // adding a copy constructor actually changes the calling convention, ie.
     // is not even binary compatible. Adding it would break assumptions made

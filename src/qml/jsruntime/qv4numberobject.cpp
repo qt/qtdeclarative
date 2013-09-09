@@ -225,7 +225,9 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
-    Value v = thisNumberValue(ctx);
+    ValueScope scope(ctx);
+
+    ScopedValue v(scope, thisNumberValue(ctx));
 
     Value prec = ctx->argument(0);
     if (prec.isUndefined())
@@ -239,7 +241,7 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     char str[100];
     double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v.asDouble(), precision, &builder);
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
     return Value::fromString(ctx, result);

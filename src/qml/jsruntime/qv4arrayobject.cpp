@@ -546,12 +546,14 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
 
-    Value searchValue;
+    ScopedValue searchValue(scope);
     uint fromIndex = 0;
 
     if (ctx->argumentCount >= 1)
@@ -569,9 +571,10 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     }
 
     if (instance->isStringObject()) {
+        ScopedValue v(scope);
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
-            Value v = instance->getIndexed(k, &exists);
+            v = instance->getIndexed(k, &exists);
             if (exists && __qmljs_strict_equal(v, searchValue))
                 return Value::fromDouble(k);
         }
@@ -583,12 +586,14 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
 
-    Value searchValue;
+    ScopedValue searchValue(scope);
     uint fromIndex = len;
 
     if (ctx->argumentCount >= 1)
@@ -608,10 +613,11 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         fromIndex = (uint) f + 1;
     }
 
+    ScopedValue v(scope);
     for (uint k = fromIndex; k > 0;) {
         --k;
         bool exists;
-        Value v = instance->getIndexed(k, &exists);
+        v = instance->getIndexed(k, &exists);
         if (exists && __qmljs_strict_equal(v, searchValue))
             return Value::fromDouble(k);
     }

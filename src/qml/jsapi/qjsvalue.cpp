@@ -743,7 +743,7 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
-    return __qmljs_cmp_eq(d->value, other.d->value);
+    return __qmljs_cmp_eq(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
 /*!
@@ -770,7 +770,7 @@ bool QJSValue::equals(const QJSValue& other) const
 */
 bool QJSValue::strictlyEquals(const QJSValue& other) const
 {
-    return __qmljs_strict_equal(d->value, other.d->value);
+    return __qmljs_strict_equal(QV4::ValueRef(d), QV4::ValueRef(other.d));
 }
 
 /*!

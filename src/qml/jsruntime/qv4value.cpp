@@ -48,12 +48,47 @@
 
 using namespace QV4;
 
+int Value::toInt32() const
+{
+    if (isConvertibleToInt())
+        return int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = toNumber();
+
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((d >= -D31 && d < D31))
+        return static_cast<int>(d);
+
+    return Value::toInt32(d);
+}
+
+unsigned int Value::toUInt32() const
+{
+    if (isConvertibleToInt())
+        return (unsigned) int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = toNumber();
+
+    const double D32 = 4294967296.0;
+    if (d >= 0 && d < D32)
+        return static_cast<uint>(d);
+    return toUInt32(d);
+}
+
 int Value::toUInt16() const
 {
     if (isConvertibleToInt())
         return (ushort)(uint)integerValue();
 
-    double number = __qmljs_to_number(*this);
+    double number = toNumber();
 
     double D16 = 65536.0;
     if ((number >= 0 && number < D16))
@@ -79,12 +114,32 @@ double Value::toInteger() const
     if (isConvertibleToInt())
         return int_32;
 
-    return Value::toInteger(__qmljs_to_number(*this));
+    return Value::toInteger(toNumber());
 }
 
 double Value::toNumber() const
 {
-    return __qmljs_to_number(*this);
+    QV4::Value v = *this;
+
+  redo:
+    switch (v.type()) {
+    case QV4::Value::Undefined_Type:
+        return std::numeric_limits<double>::quiet_NaN();
+    case QV4::Value::Null_Type:
+        return 0;
+    case QV4::Value::Boolean_Type:
+        return (v.booleanValue() ? 1. : 0.);
+    case QV4::Value::Integer_Type:
+        return v.int_32;
+    case QV4::Value::String_Type:
+        return __qmljs_string_to_number(v.toQString());
+    case QV4::Value::Object_Type: {
+        v = __qmljs_to_primitive(ValueRef::fromRawValue(this), QV4::NUMBER_HINT);
+        goto redo;
+    }
+    default: // double
+        return v.doubleValue();
+    }
 }
 
 QString Value::toQString() const
@@ -103,16 +158,18 @@ QString Value::toQString() const
         return stringValue()->toQString();
     case Value::Object_Type: {
         ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+        ValueScope scope(ctx);
         try {
-            Value prim = __qmljs_to_primitive(*this, STRING_HINT);
-            if (prim.isPrimitive())
-                return prim.toQString();
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            if (prim->isPrimitive())
+                return prim->toQString();
         } catch (Exception &e) {
             e.accept(ctx);
             try {
-                Value prim = __qmljs_to_primitive(e.value(), STRING_HINT);
-                if (prim.isPrimitive())
-                    return prim.toQString();
+                ScopedValue ex(scope, e.value());
+                ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                if (prim->isPrimitive())
+                    return prim->toQString();
             } catch(Exception &e) {
                 e.accept(ctx);
             }
@@ -216,8 +273,16 @@ String *Value::toString(ExecutionContext *ctx) const
 {
     if (isString())
         return stringValue();
-    return __qmljs_convert_to_string(ctx, *this);
+    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this));
 }
+
+Object *Value::toObject(ExecutionContext *ctx) const
+{
+    if (isObject())
+        return objectValue();
+    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this));
+}
+
 
 Value Value::property(ExecutionContext *ctx, String *name) const
 {

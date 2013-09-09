@@ -886,6 +886,8 @@ Value JsonObject::method_parse(SimpleCallContext *ctx)
 
 Value JsonObject::method_stringify(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Stringify stringify(ctx);
 
     Object *o = ctx->argument(1).asObject();
@@ -893,12 +895,13 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
             uint arrayLen = o->arrayLength();
+            ScopedValue v(scope);
             for (uint i = 0; i < arrayLen; ++i) {
-                Value v = o->getIndexed(i);
-                if (v.asNumberObject() || v.asStringObject() || v.isNumber())
+                v = o->getIndexed(i);
+                if (v->asNumberObject() || v->asStringObject() || v->isNumber())
                     v = __qmljs_to_string(v, ctx);
-                if (v.isString()) {
-                    String *s = v.stringValue();
+                if (v->isString()) {
+                    String *s = v->stringValue();
                     if (!stringify.propertyList.contains(s))
                     stringify.propertyList.append(s);
                 }

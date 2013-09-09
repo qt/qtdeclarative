@@ -231,11 +231,13 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 
 Value RegExpCtor::construct(Managed *m, CallData *callData)
 {
-    Value r = callData->argc > 0 ? callData->args[0] : Value::undefinedValue();
-    Value f = callData->argc > 1 ? callData->args[1] : Value::undefinedValue();
     ExecutionContext *ctx = m->engine()->current;
-    if (RegExpObject *re = r.as<RegExpObject>()) {
-        if (!f.isUndefined())
+    ValueScope scope(ctx);
+
+    ScopedValue r(scope, callData->argc > 0 ? callData->args[0] : Value::undefinedValue());
+    ScopedValue f(scope, callData->argc > 1 ? callData->args[1] : Value::undefinedValue());
+    if (RegExpObject *re = r->as<RegExpObject>()) {
+        if (!f->isUndefined())
             ctx->throwTypeError();
 
         RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
@@ -243,15 +245,15 @@ Value RegExpCtor::construct(Managed *m, CallData *callData)
     }
 
     QString pattern;
-    if (!r.isUndefined())
-        pattern = r.toString(ctx)->toQString();
+    if (!r->isUndefined())
+        pattern = r->toString(ctx)->toQString();
 
     bool global = false;
     bool ignoreCase = false;
     bool multiLine = false;
-    if (!f.isUndefined()) {
+    if (!f->isUndefined()) {
         f = __qmljs_to_string(f, ctx);
-        QString str = f.stringValue()->toQString();
+        QString str = f->stringValue()->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QChar('g') && !global) {
                 global = true;
@@ -296,13 +298,15 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
-    Value arg = ctx->argument(0);
+    ScopedValue arg(scope, ctx->argument(0));
     arg = __qmljs_to_string(arg, ctx);
-    QString s = arg.stringValue()->toQString();
+    QString s = arg->stringValue()->toQString();
 
     int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;
     if (offset < 0 || offset > s.length()) {

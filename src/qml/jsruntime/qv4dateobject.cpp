@@ -662,16 +662,17 @@ Value DateCtor::construct(Managed *m, CallData *callData)
         t = currentTime();
 
     else if (callData->argc == 1) {
-        Value arg = callData->args[0];
-        if (DateObject *d = arg.asDateObject())
+        ValueScope scope(m->engine());
+        ScopedValue arg(scope, callData->args[0]);
+        if (DateObject *d = arg->asDateObject())
             arg = d->value;
         else
             arg = __qmljs_to_primitive(arg, PREFERREDTYPE_HINT);
 
-        if (arg.isString())
-            t = ParseString(arg.stringValue()->toQString());
+        if (arg->isString())
+            t = ParseString(arg->stringValue()->toQString());
         else
-            t = TimeClip(arg.toNumber());
+            t = TimeClip(arg->toNumber());
     }
 
     else { // d.argc > 1
@@ -1290,13 +1291,14 @@ Value DatePrototype::method_toISOString(SimpleCallContext *ctx)
 
 Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 {
-    Value O = __qmljs_to_object(ctx, ctx->thisObject);
-    Value tv = __qmljs_to_primitive(O, NUMBER_HINT);
+    ValueScope scope(ctx);
+    ScopedValue O(scope, __qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
+    ScopedValue tv(scope, __qmljs_to_primitive(O, NUMBER_HINT));
 
-    if (tv.isNumber() && !std::isfinite(tv.toNumber()))
+    if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Value::nullValue();
 
-    FunctionObject *toIso = O.objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
+    FunctionObject *toIso = O->objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
 
     if (!toIso)
         ctx->throwTypeError();

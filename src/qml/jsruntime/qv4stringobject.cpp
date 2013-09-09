@@ -280,12 +280,15 @@ Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 
 Value StringPrototype::method_concat(SimpleCallContext *context)
 {
+    ValueScope scope(context);
+
     QString value = getThisString(context, context->thisObject);
 
+    ScopedValue v(scope);
     for (int i = 0; i < context->argumentCount; ++i) {
-        Value v = __qmljs_to_string(context->arguments[i], context);
-        assert(v.isString());
-        value += v.stringValue()->toQString();
+        v = __qmljs_to_string(ValueRef(&context->arguments[i]), context);
+        assert(v->isString());
+        value += v->stringValue()->toQString();
     }
 
     return Value::fromString(context, value);
@@ -312,15 +315,17 @@ Value StringPrototype::method_indexOf(SimpleCallContext *context)
 
 Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 {
+    ValueScope scope(context);
+
     const QString value = getThisString(context, context->thisObject);
 
     QString searchString;
     if (context->argumentCount) {
-        Value v = __qmljs_to_string(context->arguments[0], context);
+        Value v = __qmljs_to_string(ValueRef(&context->arguments[0]), context);
         searchString = v.stringValue()->toQString();
     }
 
-    Value posArg = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
+    ScopedValue posArg(scope, context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue());
     double position = __qmljs_to_number(posArg);
     if (std::isnan(position))
         position = +qInf();
@@ -784,7 +789,7 @@ Value StringPrototype::method_trim(SimpleCallContext *ctx)
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
         ctx->throwTypeError();
 
-    QString s = __qmljs_to_string(ctx->thisObject, ctx).stringValue()->toQString();
+    QString s = __qmljs_to_string(ValueRef(&ctx->thisObject), ctx).stringValue()->toQString();
     const QChar *chars = s.constData();
     int start, end;
     for (start = 0; start < s.length(); ++start) {

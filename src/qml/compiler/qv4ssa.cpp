@@ -2118,22 +2118,22 @@ bool tryOptimizingComparison(Expr *&expr)
 
     switch (b->op) {
     case OpGt:
-        leftConst->value = __qmljs_cmp_gt(l, r);
+        leftConst->value = __qmljs_cmp_gt(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLt:
-        leftConst->value = __qmljs_cmp_lt(l, r);
+        leftConst->value = __qmljs_cmp_lt(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpGe:
-        leftConst->value = __qmljs_cmp_ge(l, r);
+        leftConst->value = __qmljs_cmp_ge(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLe:
-        leftConst->value = __qmljs_cmp_le(l, r);
+        leftConst->value = __qmljs_cmp_le(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -2142,7 +2142,7 @@ bool tryOptimizingComparison(Expr *&expr)
             return false;
         // intentional fall-through
     case OpEqual:
-        leftConst->value = __qmljs_cmp_eq(l, r);
+        leftConst->value = __qmljs_cmp_eq(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -2151,7 +2151,7 @@ bool tryOptimizingComparison(Expr *&expr)
             return false;
         // intentional fall-through
     case OpNotEqual:
-        leftConst->value = __qmljs_cmp_ne(l, r);
+        leftConst->value = __qmljs_cmp_ne(&l, &r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
@@ -2318,8 +2318,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     if (!rightConst || rightConst->type == StringType || rightConst->type == ObjectType)
                         continue;
 
-                    double l = __qmljs_to_number(convertToValue(leftConst));
-                    double r = __qmljs_to_number(convertToValue(rightConst));
+                    QV4::Value lc = convertToValue(leftConst);
+                    QV4::Value rc = convertToValue(rightConst);
+                    double l = __qmljs_to_number(&lc);
+                    double r = __qmljs_to_number(&rc);
 
                     switch (b->op) {
                     case OpMul:

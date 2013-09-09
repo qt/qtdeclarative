@@ -165,50 +165,54 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *, BinOp op, String *name, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
 {
-    Value v = get(name);
-    Value result;
-    op(&result, v, rhs);
+    ValueScope scope(ctx);
+    ScopedValue v(scope, get(name));
+    ScopedValue result(scope);
+    op(result, v, rhs);
     put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
 {
-    uint idx = index.asArrayIndex();
+    ValueScope scope(ctx);
+    uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = getIndexed(idx, &hasProperty);
-        Value result;
-        op(&result, v, rhs);
+        ScopedValue v(scope, getIndexed(idx, &hasProperty));
+        ScopedValue result(scope);
+        op(result, v, rhs);
         putIndexed(idx, result);
         return;
     }
-    String *name = index.toString(ctx);
+    String *name = index->toString(ctx);
     assert(name);
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
 {
-    Value v = get(name);
-    Value result;
-    op(ctx, &result, v, rhs);
+    ValueScope scope(ctx);
+    ScopedValue v(scope, get(name));
+    ScopedValue result(scope);
+    op(ctx, result, v, rhs);
     put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const Value &index, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
 {
-    uint idx = index.asArrayIndex();
+    ValueScope scope(ctx);
+    uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = getIndexed(idx, &hasProperty);
-        Value result;
-        op(ctx, &result, v, rhs);
+        ScopedValue v(scope, getIndexed(idx, &hasProperty));
+        ScopedValue result(scope);
+        op(ctx, result, v, rhs);
         putIndexed(idx, result);
         return;
     }
-    String *name = index.toString(ctx);
+    String *name = index->toString(ctx);
     assert(name);
     inplaceBinOp(ctx, op, name, rhs);
 }
@@ -1133,18 +1137,21 @@ void Object::copyArrayData(Object *other)
 
 Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
+    ValueScope scope(engine());
+    ScopedValue value(scope);
+
     if (o->protoHasArray() || o->arrayAttributes) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
-            Value value = o->getIndexed(i, &exists);
-            if (exists && __qmljs_strict_equal(value, v))
+            value = o->getIndexed(i, &exists);
+            if (exists && __qmljs_strict_equal(value, ValueRef(&v)))
                 return Value::fromDouble(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
-            Value value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
-            if (__qmljs_strict_equal(value, v))
+            value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
+            if (__qmljs_strict_equal(value, ValueRef(&v)))
                 return Value::fromDouble(n->key());
         }
     } else {
@@ -1155,8 +1162,8 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         pd += fromIndex;
         while (pd < end) {
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
-                Value value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
-                if (__qmljs_strict_equal(value, v))
+                value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
+                if (__qmljs_strict_equal(value, ValueRef(&v)))
                     return Value::fromDouble(pd - arrayData);
             }
             ++pd;
