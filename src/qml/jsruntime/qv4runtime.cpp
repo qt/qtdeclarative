@@ -823,12 +823,12 @@ void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, ui
         *result = res;
 }
 
-void __qmljs_call_element(ExecutionContext *context, ValueRef result, const Value &index, CallDataRef callData)
+void __qmljs_call_element(ExecutionContext *context, ValueRef result, const ValueRef index, CallDataRef callData)
 {
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
 
-    Object *o = baseObject->get(index.toString(context)).asObject();
+    Object *o = baseObject->get(index->toString(context)).asObject();
     if (!o)
         context->throwTypeError();
 
@@ -837,9 +837,9 @@ void __qmljs_call_element(ExecutionContext *context, ValueRef result, const Valu
         *result = res;
 }
 
-void __qmljs_call_value(ExecutionContext *context, ValueRef result, const Value &func, CallDataRef callData)
+void __qmljs_call_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
 {
-    Object *o = func.asObject();
+    Object *o = func->asObject();
     if (!o)
         context->throwTypeError();
 
@@ -880,9 +880,9 @@ void __qmljs_construct_activation_property(ExecutionContext *context, ValueRef r
         *result = res;
 }
 
-void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const Value &func, CallDataRef callData)
+void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
 {
-    Object *f = func.asObject();
+    Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
 
@@ -891,9 +891,9 @@ void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const V
         *result = res;
 }
 
-void __qmljs_construct_property(ExecutionContext *context, ValueRef result, const Value &base, String *name, CallDataRef callData)
+void __qmljs_construct_property(ExecutionContext *context, ValueRef result, const ValueRef base, String *name, CallDataRef callData)
 {
-    Object *thisObject = base.toObject(context);
+    Object *thisObject = base->toObject(context);
 
     Value func = thisObject->get(name);
     Object *f = func.asObject();
@@ -910,12 +910,12 @@ void __qmljs_throw(ExecutionContext *context, const Value &value)
     Exception::throwException(context, value);
 }
 
-void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const Value &value)
+void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueRef value)
 {
     if (!result)
         return;
     String *res = 0;
-    switch (value.type()) {
+    switch (value->type()) {
     case Value::Undefined_Type:
         res = ctx->engine->id_undefined;
         break;
@@ -929,7 +929,7 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const Value 
         res = ctx->engine->id_string;
         break;
     case Value::Object_Type:
-        if (value.objectValue()->asFunctionObject())
+        if (value->objectValue()->asFunctionObject())
             res = ctx->engine->id_function;
         else
             res = ctx->engine->id_object; // ### implementation-defined
@@ -943,29 +943,34 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const Value 
 
 void __qmljs_builtin_typeof_name(ExecutionContext *context, ValueRef result, String *name)
 {
-    Value res;
-    __qmljs_builtin_typeof(context, &res, context->getPropertyNoThrow(name));
+    ValueScope scope(context);
+    ScopedValue res(scope);
+    ScopedValue prop(scope, context->getPropertyNoThrow(name));
+    __qmljs_builtin_typeof(context, res, prop);
     if (result)
         *result = res;
 }
 
-void __qmljs_builtin_typeof_member(ExecutionContext *context, ValueRef result, const Value &base,
+void __qmljs_builtin_typeof_member(ExecutionContext *context, ValueRef result, const ValueRef base,
                                    String *name)
 {
-    Object *obj = base.toObject(context);
-    Value res;
-    __qmljs_builtin_typeof(context, &res, obj->get(name));
+    ValueScope scope(context);
+    Object *obj = base->toObject(context);
+    ScopedValue res(scope);
+    ScopedValue prop(scope, obj->get(name));
+    __qmljs_builtin_typeof(context, res, prop);
     if (result)
         *result = res;
 }
 
-void __qmljs_builtin_typeof_element(ExecutionContext *context, ValueRef result, const Value &base,
-                                    const Value &index)
+void __qmljs_builtin_typeof_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
 {
-    String *name = index.toString(context);
-    Object *obj = base.toObject(context);
-    Value res;
-    __qmljs_builtin_typeof(context, &res, obj->get(name));
+    ValueScope scope(context);
+    String *name = index->toString(context);
+    Object *obj = base->toObject(context);
+    ScopedValue res(scope);
+    ScopedValue prop(scope, obj->get(name));
+    __qmljs_builtin_typeof(context, res, prop);
     if (result)
         *result = res;
 }
@@ -1003,9 +1008,9 @@ void __qmljs_builtin_post_increment_name(ExecutionContext *context, ValueRef res
     context->setProperty(name, v);
 }
 
-void __qmljs_builtin_post_increment_member(ExecutionContext *context, ValueRef result, const Value &base, String *name)
+void __qmljs_builtin_post_increment_member(ExecutionContext *context, ValueRef result, const ValueRef base, String *name)
 {
-    Object *o = base.toObject(context);
+    Object *o = base->toObject(context);
 
     Value v = o->get(name);
 
@@ -1023,9 +1028,9 @@ void __qmljs_builtin_post_increment_member(ExecutionContext *context, ValueRef r
     o->put(name, v);
 }
 
-void __qmljs_builtin_post_increment_element(ExecutionContext *context, ValueRef result, const Value &base, const Value *index)
+void __qmljs_builtin_post_increment_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
 {
-    Object *o = base.toObject(context);
+    Object *o = base->toObject(context);
 
     uint idx = index->asArrayIndex();
 
@@ -1083,9 +1088,9 @@ void __qmljs_builtin_post_decrement_name(ExecutionContext *context, ValueRef res
     context->setProperty(name, v);
 }
 
-void __qmljs_builtin_post_decrement_member(ExecutionContext *context, ValueRef result, const Value &base, String *name)
+void __qmljs_builtin_post_decrement_member(ExecutionContext *context, ValueRef result, const ValueRef base, String *name)
 {
-    Object *o = base.toObject(context);
+    Object *o = base->toObject(context);
 
     Value v = o->get(name);
 
@@ -1103,14 +1108,14 @@ void __qmljs_builtin_post_decrement_member(ExecutionContext *context, ValueRef r
     o->put(name, v);
 }
 
-void __qmljs_builtin_post_decrement_element(ExecutionContext *context, ValueRef result, const Value &base, const Value &index)
+void __qmljs_builtin_post_decrement_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
 {
-    Object *o = base.toObject(context);
+    Object *o = base->toObject(context);
 
-    uint idx = index.asArrayIndex();
+    uint idx = index->asArrayIndex();
 
     if (idx == UINT_MAX) {
-        String *s = index.toString(context);
+        String *s = index->toString(context);
         return __qmljs_builtin_post_decrement_member(context, result, base, s);
     }
 

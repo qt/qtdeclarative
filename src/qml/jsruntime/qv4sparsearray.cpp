@@ -66,7 +66,7 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
         callData->args[0] = p1.value;
         callData->args[1] = p2.value;
         Value result = Value::undefinedValue();
-        __qmljs_call_value(m_context, &result, m_comparefn, callData.ptr);
+        __qmljs_call_value(m_context, &result, QV4::ValueRef::fromRawValue(&m_comparefn), callData);
         return result.toNumber() <= 0;
     }
     return p1.value.toString(m_context)->toQString() < p2.value.toString(m_context)->toQString();

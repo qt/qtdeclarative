@@ -325,7 +325,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
-        __qmljs_call_value(context, VALUEPTR(instr.result), VALUE(instr.dest), callData);
+        __qmljs_call_value(context, VALUEPTR(instr.result), VALUEPTR(instr.dest), callData);
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
@@ -344,7 +344,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
-        __qmljs_call_element(context, VALUEPTR(instr.result), VALUE(instr.index), callData);
+        __qmljs_call_element(context, VALUEPTR(instr.result), VALUEPTR(instr.index), callData);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
@@ -422,11 +422,11 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
-        __qmljs_builtin_typeof_member(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.member]);
+        __qmljs_builtin_typeof_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
-        __qmljs_builtin_typeof_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
+        __qmljs_builtin_typeof_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
@@ -434,15 +434,15 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinTypeofName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
-        __qmljs_builtin_typeof(context, VALUEPTR(instr.result), VALUE(instr.value));
+        __qmljs_builtin_typeof(context, VALUEPTR(instr.result), VALUEPTR(instr.value));
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncMember)
-        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.member]);
+        __qmljs_builtin_post_increment_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncSubscript)
-        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUEPTR(instr.index));
+        __qmljs_builtin_post_increment_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostIncName)
@@ -454,11 +454,11 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecMember)
-        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.member]);
+        __qmljs_builtin_post_decrement_member(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.member]);
     MOTH_END_INSTR(CallBuiltinTypeofMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecSubscript)
-        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUE(instr.base), VALUE(instr.index));
+        __qmljs_builtin_post_decrement_element(context, VALUEPTR(instr.result), VALUEPTR(instr.base), VALUEPTR(instr.index));
     MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinPostDecName)
@@ -502,7 +502,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
-        __qmljs_construct_value(context, VALUEPTR(instr.result), VALUE(instr.func), callData);
+        __qmljs_construct_value(context, VALUEPTR(instr.result), VALUEPTR(instr.func), callData);
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
@@ -511,7 +511,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         callData->tag = 0;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
-        __qmljs_construct_property(context, VALUEPTR(instr.result), VALUE(instr.base), runtimeStrings[instr.name], callData);
+        __qmljs_construct_property(context, VALUEPTR(instr.result), VALUEPTR(instr.base), runtimeStrings[instr.name], callData);
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
