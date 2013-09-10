@@ -812,8 +812,8 @@ private:
             foreach (const Move &m, _moves)
                 if (m.needsSwap)
                     ++swapCount;
-#endif
             Q_ASSERT(output.size() == _moves.size() + swapCount);
+#endif
         }
 
 #ifdef DEBUG_REGALLOC

@@ -183,7 +183,9 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
         return c->locals + index;
     } else if (param.isTemp()) {
         VMSTATS(paramIsTemp);
+#if !defined(QT_NO_DEBUG)
         Q_ASSERT(param.index < stackSize);
+#endif
         return stack + param.index;
     } else if (param.isScopedLocal()) {
         VMSTATS(paramIsScopedLocal);
