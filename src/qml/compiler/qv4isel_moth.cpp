@@ -159,6 +159,8 @@ public:
     }
 
     int stackSlotFor(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
+        Q_ASSERT(t->kind == V4IR::Temp::VirtualRegister);
+        Q_ASSERT(t->scope == 0);
         int idx = _slotForTemp.value(*t, -1);
         if (idx == -1)
             idx = allocateSlot(t, currentStmt);
@@ -172,7 +174,7 @@ private:
 
         const V4IR::LifeTimeInterval &interval = _intervals[*t];
         int idx = _hints.value(*t, -1);
-        if (idx != -1 && _activeSlots[idx] <= currentStmt->id) {
+        if (idx != -1 && _activeSlots[idx] == currentStmt->id) {
             _slotForTemp[*t] = idx;
             _activeSlots[idx] = interval.end();
             return idx;
@@ -497,6 +499,9 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
+    if (_stackSlotAllocator)
+        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
+
     QV4::UnaryOpName op = 0;
     switch (oper) {
     case V4IR::OpIfTrue: assert(!"unreachable"); break;
@@ -559,6 +564,9 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
 #else // !USE_TYPE_INFO
     //Q_ASSERT(leftSource->asTemp() && rightSource->asTemp());
 #endif // USE_TYPE_INFO
+
+    if (_stackSlotAllocator && target && leftSource->asTemp())
+        _stackSlotAllocator->addHint(*leftSource->asTemp(), *target);
 
     if (oper == V4IR::OpInstanceof || oper == V4IR::OpIn || oper == V4IR::OpAdd) {
         Instruction::BinopContext binop;
