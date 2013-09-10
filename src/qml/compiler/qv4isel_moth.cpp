@@ -121,6 +121,19 @@ inline QV4::BinOp aluOpFunction(V4IR::AluOp op)
         return 0;
     }
 };
+
+inline bool isNumberType(V4IR::Expr *e)
+{
+    switch (e->type) {
+    case V4IR::SInt32Type:
+    case V4IR::UInt32Type:
+    case V4IR::DoubleType:
+        return true;
+    default:
+        return false;
+    }
+}
+
 } // anonymous namespace
 
 // TODO: extend to optimize out temp-to-temp moves, where the lifetime of one temp ends at that statement.
@@ -532,9 +545,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
 
 Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
-#ifdef USE_TYPE_INFO
-    if (leftSource->type & V4IR::NumberType && rightSource->type & V4IR::NumberType) {
-        // TODO: add Temp+Const variation on the topic.
+    if (isNumberType(leftSource) && isNumberType(rightSource)) {
         switch (oper) {
         case V4IR::OpAdd: {
             Instruction::AddNumberParams instr;
@@ -542,28 +553,28 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return instr.result;
+            return instr.result;
+        }
         case V4IR::OpMul: {
             Instruction::MulNumberParams instr;
             instr.lhs = getParam(leftSource);
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return instr.result;
+            return instr.result;
+        }
         case V4IR::OpSub: {
             Instruction::SubNumberParams instr;
             instr.lhs = getParam(leftSource);
             instr.rhs = getParam(rightSource);
             instr.result = getResultParam(target);
             addInstruction(instr);
-        } return instr.result;
+            return instr.result;
+        }
         default:
             break;
         }
     }
-#else // !USE_TYPE_INFO
-    //Q_ASSERT(leftSource->asTemp() && rightSource->asTemp());
-#endif // USE_TYPE_INFO
 
     if (_stackSlotAllocator && target && leftSource->asTemp())
         _stackSlotAllocator->addHint(*leftSource->asTemp(), *target);

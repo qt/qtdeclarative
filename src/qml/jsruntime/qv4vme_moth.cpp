@@ -523,28 +523,19 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(AddNumberParams)
         QV4::Value lhs = VALUE(instr.lhs);
         QV4::Value rhs = VALUE(instr.rhs);
-        if (lhs.isInteger() && rhs.isInteger())
-            VALUE(instr.result) = QV4::add_int32(lhs.integerValue(), rhs.integerValue());
-        else
-            VALUEPTR(instr.result)->setDouble(lhs.asDouble() + rhs.asDouble());
+        VALUEPTR(instr.result)->setDouble(lhs.asDouble() + rhs.asDouble());
     MOTH_END_INSTR(AddNumberParams)
 
     MOTH_BEGIN_INSTR(MulNumberParams)
         QV4::Value lhs = VALUE(instr.lhs);
         QV4::Value rhs = VALUE(instr.rhs);
-        if (lhs.isInteger() && rhs.isInteger())
-            VALUE(instr.result) = QV4::mul_int32(lhs.integerValue(), rhs.integerValue());
-        else
-            VALUEPTR(instr.result)->setDouble(lhs.asDouble() * rhs.asDouble());
+        VALUEPTR(instr.result)->setDouble(lhs.asDouble() * rhs.asDouble());
     MOTH_END_INSTR(MulNumberParams)
 
     MOTH_BEGIN_INSTR(SubNumberParams)
         QV4::Value lhs = VALUE(instr.lhs);
         QV4::Value rhs = VALUE(instr.rhs);
-        if (lhs.isInteger() && rhs.isInteger())
-            VALUE(instr.result) = QV4::sub_int32(lhs.integerValue(), rhs.integerValue());
-        else
-            VALUEPTR(instr.result)->setDouble(lhs.asDouble() - rhs.asDouble());
+        VALUEPTR(instr.result)->setDouble(lhs.asDouble() - rhs.asDouble());
     MOTH_END_INSTR(SubNumberParams)
 
     MOTH_BEGIN_INSTR(Ret)
