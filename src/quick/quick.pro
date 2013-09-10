@@ -18,8 +18,8 @@ ANDROID_LIB_DEPENDENCIES = \
     lib/libQt5QuickParticles.so
 ANDROID_LIB_DEPENDENCY_REPLACEMENTS = \
     "plugins/platforms/android/libqtforandroid.so:plugins/platforms/android/libqtforandroidGL.so"
-MODULE_PLUGIN_TYPES = \
-    accessible
+MODULE_PLUGIN_TYPES += \
+    accessible/libqtaccessiblequick.so
 ANDROID_BUNDLED_FILES += \
     qml \
     lib/libQt5QuickParticles.so
