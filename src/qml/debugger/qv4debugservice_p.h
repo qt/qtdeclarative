@@ -69,17 +69,19 @@ public:
     ~QV4DebugService();
 
     static QV4DebugService *instance();
-    static void addEngine(const QQmlEngine *engine);
-    static void removeEngine(const QQmlEngine *engine);
-
-    void addEngine(const QV4::ExecutionEngine *engine);
-    void removeEngine(const QV4::ExecutionEngine *engine);
+    void addEngine(const QQmlEngine *engine);
+    void removeEngine(const QQmlEngine *engine);
 
     void signalEmitted(const QString &signal);
 
 protected:
     void stateChanged(State newState);
     void messageReceived(const QByteArray &);
+
+private slots:
+    void pause(int debuggerId, int querySequence);
+    void addBreakpoint(const QByteArray &data, int querySequence);
+    void removeBreakpoint(const QByteArray &data, int querySequence);
 
 private:
     Q_DISABLE_COPY(QV4DebugService)
