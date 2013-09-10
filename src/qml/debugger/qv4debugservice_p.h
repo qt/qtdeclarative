@@ -75,6 +75,8 @@ public:
     void addEngine(const QV4::ExecutionEngine *engine);
     void removeEngine(const QV4::ExecutionEngine *engine);
 
+    void signalEmitted(const QString &signal);
+
 protected:
     void stateChanged(State newState);
     void messageReceived(const QByteArray &);

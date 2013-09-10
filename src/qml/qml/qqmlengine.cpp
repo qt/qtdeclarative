@@ -63,7 +63,7 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include <private/qqmlprofilerservice_p.h>
-#include <private/qv8debugservice_p.h>
+#include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
@@ -794,7 +794,7 @@ void QQmlEnginePrivate::init()
         QQmlEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
         QQmlEngineDebugService::instance()->addEngine(q);
-        QV8DebugService::addEngine(v8engine());
+        QV4DebugService::addEngine(q);
         QV8ProfilerService::initialize();
         QQmlProfilerService::initialize();
         QDebugMessageService::instance();
@@ -883,7 +883,7 @@ QQmlEngine::~QQmlEngine()
     Q_D(QQmlEngine);
     if (d->isDebugging) {
         QQmlEngineDebugService::instance()->remEngine(this);
-        QV8DebugService::removeEngine(handle());
+        QV4DebugService::removeEngine(this);
     }
 
     // Emit onDestruction signals for the root context before

@@ -47,7 +47,8 @@
 
 #include <private/qv8engine_p.h>
 
-const char *V4_DEBUGGER_KEY_CONNECT = "connect";
+const char *V4_CONNECT = "connect";
+const char *V4_BREAK_ON_SIGNAL = "breakonsignal";
 
 QT_BEGIN_NAMESPACE
 
@@ -64,9 +65,20 @@ class QV4DebugServicePrivate : public QQmlDebugServicePrivate
     Q_DECLARE_PUBLIC(QV4DebugService)
 
 public:
+    static QByteArray packMessage(const QString &type, const QString &message = QString())
+    {
+        QByteArray reply;
+        QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
+        QByteArray cmd("V4DEBUG");
+        rs << cmd << type.toUtf8() << message.toUtf8();
+        return reply;
+    }
+
     QMutex initializeMutex;
     QWaitCondition initializeCondition;
     QV4DebuggerAgent debuggerAgent;
+
+    QStringList breakOnSignals;
 };
 
 QV4DebugService::QV4DebugService(QObject *parent)
@@ -122,6 +134,25 @@ void QV4DebugService::removeEngine(const QV4::ExecutionEngine *engine)
         d->debuggerAgent.removeDebugger(engine->debugger);
 }
 
+void QV4DebugService::signalEmitted(const QString &signal)
+{
+    //This function is only called by QQmlBoundSignal
+    //only if there is a slot connected to the signal. Hence, there
+    //is no need for additional check.
+    Q_D(QV4DebugService);
+
+    //Parse just the name and remove the class info
+    //Normalize to Lower case.
+    QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
+
+    foreach (const QString &signal, d->breakOnSignals) {
+        if (signal == signalName) {
+            // TODO: pause debugger
+            break;
+        }
+    }
+}
+
 void QV4DebugService::stateChanged(QQmlDebugService::State newState)
 {
     Q_D(QV4DebugService);
@@ -148,9 +179,21 @@ void QV4DebugService::messageReceived(const QByteArray &message)
         QByteArray data;
         ds >> command >> data;
 
-        if (command == V4_DEBUGGER_KEY_CONNECT) {
+        if (command == V4_CONNECT) {
             // wake up constructor in blocking mode
             d->initializeCondition.wakeAll();
+        } else if (command == V4_BREAK_ON_SIGNAL) {
+            QQmlDebugStream rs(data);
+            QByteArray signal;
+            bool enabled;
+            rs >> signal >> enabled;
+             //Normalize to lower case.
+            QString signalName(QString::fromUtf8(signal).toLower());
+            if (enabled)
+                d->breakOnSignals.append(signalName);
+            else
+                d->breakOnSignals.removeOne(signalName);
+            sendMessage(QV4DebugServicePrivate::packMessage(QLatin1String(V4_BREAK_ON_SIGNAL)));
         }
     }
 }
