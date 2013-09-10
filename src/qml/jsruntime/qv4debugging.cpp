@@ -298,19 +298,27 @@ void DebuggerAgent::removeDebugger(Debugger *debugger)
     debugger->detachFromAgent();
 }
 
-void DebuggerAgent::pause(Debugger *debugger)
+void DebuggerAgent::pause(Debugger *debugger) const
 {
     debugger->pause();
 }
 
-void DebuggerAgent::addBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber)
+void DebuggerAgent::pauseAll() const
 {
-    debugger->addBreakPoint(fileName, lineNumber);
+    foreach (Debugger *debugger, m_debuggers)
+        pause(debugger);
 }
 
-void DebuggerAgent::removeBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber)
+void DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber) const
 {
-    debugger->removeBreakPoint(fileName, lineNumber);
+    foreach (Debugger *debugger, m_debuggers)
+        debugger->addBreakPoint(fileName, lineNumber);
+}
+
+void DebuggerAgent::removeBreakPoint(const QString &fileName, int lineNumber) const
+{
+    foreach (Debugger *debugger, m_debuggers)
+        debugger->removeBreakPoint(fileName, lineNumber);
 }
 
 DebuggerAgent::~DebuggerAgent()
