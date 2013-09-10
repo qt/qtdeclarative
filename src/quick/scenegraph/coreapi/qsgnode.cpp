@@ -1053,6 +1053,7 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
 QSGClipNode::QSGClipNode()
     : QSGBasicGeometryNode(ClipNodeType)
 {
+    Q_UNUSED(m_reserved);
 }
 
 
