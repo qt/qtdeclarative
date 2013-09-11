@@ -88,13 +88,6 @@ public:
 #undef VALUE_FITS_IN_REGISTER
 #undef ARGUMENTS_IN_REGISTERS
 
-#if OS(WINDOWS)
-    // Returned in EAX:EDX pair
-#define RETURN_VALUE_IN_REGISTER
-#else
-#undef RETURN_VALUE_IN_REGISTER
-#endif
-
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
@@ -125,7 +118,6 @@ public:
 
 #define VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
-#define RETURN_VALUE_IN_REGISTER
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
@@ -179,7 +171,6 @@ public:
 
 #undef VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
-#undef RETURN_VALUE_IN_REGISTER
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;

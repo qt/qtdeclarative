@@ -362,6 +362,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     ExecutionContext *parentContext = engine()->current;
     ExecutionEngine *engine = parentContext->engine;
     ExecutionContext *ctx = parentContext;
+    ValueScope scope(ctx);
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
@@ -412,7 +413,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     ctx->compiledFunction = function->compiledFunction;
     ctx->runtimeStrings = function->compilationUnit->runtimeStrings;
 
-    Value result = Value::undefinedValue();
+    ScopedValue result(scope);
     try {
         result = function->code(ctx, function->codeData);
     } catch (Exception &ex) {

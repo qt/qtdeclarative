@@ -125,12 +125,13 @@ DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
 Value QmlBindingWrapper::call(Managed *that, CallData *)
 {
     ExecutionEngine *engine = that->engine();
+    ValueScope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
 
     CallContext *ctx = This->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
     engine->pushContext(ctx);
-    Value result = This->function->code(ctx, This->function->codeData);
+    ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
     engine->popContext();
 
     return result;
@@ -211,6 +212,7 @@ Value Script::run()
         return Value::undefinedValue();
 
     QV4::ExecutionEngine *engine = scope->engine;
+    QV4::ValueScope valueScope(engine);
 
     if (qml.isEmpty()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
@@ -227,7 +229,7 @@ Value Script::run()
         scope->compiledFunction = vmFunction->compiledFunction;
         scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
-        QV4::Value result;
+        QV4::ScopedValue result(valueScope);
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
         } catch (Exception &e) {

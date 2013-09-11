@@ -79,7 +79,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
+                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
                                                            codeSizes[i]);
         runtimeFunctions[i] = runtimeFunction;
     }
@@ -639,18 +639,10 @@ void InstructionSelection::run(int functionIndex)
 
     _as->enterStandardStackFrame();
 
-    int contextPointer = 0;
-#if !defined(RETURN_VALUE_IN_REGISTER)
-    // When the return VM value doesn't fit into a register, then
-    // the caller provides a pointer for storage as first argument.
-    // That shifts the index the context pointer argument by one.
-    contextPointer++;
-#endif
-
 #ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(_as->registerForArgument(contextPointer), Assembler::ContextRegister);
+    _as->move(_as->registerForArgument(0), Assembler::ContextRegister);
 #else
-    _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
+    _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
@@ -1792,12 +1784,16 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
 void InstructionSelection::visitRet(V4IR::Ret *s)
 {
     if (V4IR::Temp *t = s->expr->asTemp()) {
-#if defined(RETURN_VALUE_IN_REGISTER)
 #if CPU(X86)
        Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
        _as->load32(addr, JSC::X86Registers::eax);
        addr.offset += 4;
        _as->load32(addr, JSC::X86Registers::edx);
+#elif CPU(ARM)
+        Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+        _as->load32(addr, JSC::ARMRegisters::r0);
+        addr.offset += 4;
+        _as->load32(addr, JSC::ARMRegisters::r1);
 #else
         if (t->kind == V4IR::Temp::PhysicalRegister) {
             if (t->type == V4IR::DoubleType) {
@@ -1829,22 +1825,16 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
             _as->copyValue(Assembler::ReturnValueRegister, t);
         }
 #endif
-#else
-        _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
-        _as->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
-#endif
     } else if (V4IR::Const *c = s->expr->asConst()) {
         QV4::Value retVal = convertToValue(c);
-#if defined(RETURN_VALUE_IN_REGISTER)
 #if CPU(X86)
         _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
         _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
+#elif CPU(ARM)
+        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
+        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
 #else
         _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
-#endif
-#else // !RETURN_VALUE_IN_REGISTER
-        _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
-        _as->storeValue(retVal, Assembler::Address(Assembler::ReturnValueRegister));
 #endif
     } else {
         Q_UNREACHABLE();
@@ -1857,14 +1847,6 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
 
     _as->leaveStandardStackFrame();
-#if !defined(ARGUMENTS_IN_REGISTERS) && !defined(RETURN_VALUE_IN_REGISTER)
-    // Emulate ret(n) instruction
-    // Pop off return address into scratch register ...
-    _as->pop(Assembler::ScratchRegister);
-    // ... and overwrite the invisible argument with
-    // the return address.
-    _as->poke(Assembler::ScratchRegister);
-#endif
     _as->ret();
 }
 

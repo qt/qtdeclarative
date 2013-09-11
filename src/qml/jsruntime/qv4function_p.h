@@ -86,7 +86,7 @@ struct Function {
 
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
-    inline Value code(ExecutionContext *ctx, const uchar *data) {
+    inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
         Value *stack = ctx->engine->jsStackTop;
         try {
             return codePtr(ctx, data);
@@ -96,7 +96,7 @@ struct Function {
         }
     }
 
-    Value (*codePtr)(ExecutionContext *, const uchar *);
+    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     quint32 codeSize;
 
@@ -104,7 +104,7 @@ struct Function {
     QVector<String *> locals;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
+             ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize);
     ~Function();
 
     inline QString sourceFile() const { return compilationUnit->fileName(); }

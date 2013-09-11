@@ -219,8 +219,8 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 #endif
 #define STOREVALUE(param, value) VALUE(param) = QV4::Value::fromReturnedValue((value))
 
-QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
-        QV4::Value *stack, unsigned stackSize
+QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
+                            QV4::Value *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -238,7 +238,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         };
 #undef MOTH_INSTR_ADDR
         *storeJumpTable = jumpTable;
-        return QV4::Value::undefinedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     }
 #endif
 
@@ -395,7 +395,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(EnterTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinFinishTry)
-        return QV4::Value();
+         return QV4::ReturnedValue(0);
     MOTH_END_INSTR(CallBuiltinFinishTry)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
@@ -551,7 +551,7 @@ QV4::Value VME::run(QV4::ExecutionContext *context, const uchar *&code,
         context->engine->stackPop(stackSize);
         QV4::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
-        return result;
+        return result.asReturnedValue();
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
@@ -601,7 +601,7 @@ void **VME::instructionJumpTable()
 }
 #endif
 
-QV4::Value VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
+QV4::ReturnedValue VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
     return vme.run(ctxt, code);

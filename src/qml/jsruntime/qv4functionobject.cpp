@@ -405,8 +405,8 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 Value ScriptFunction::construct(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     ExecutionEngine *v4 = f->engine();
+    ValueScope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -418,17 +418,18 @@ Value ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = Value::fromObject(obj);
     ExecutionContext *ctx = context->newCallContext(f, callData);
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
+    CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
 
-    CHECK_JS_STACK(f->scope);
-    if (result.isObject())
+    if (result->isObject())
         return result;
     return Value::fromObject(obj);
 }
@@ -436,9 +437,9 @@ Value ScriptFunction::construct(Managed *that, CallData *callData)
 Value ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     void *stackSpace;
     ExecutionContext *context = f->engine()->current;
+    ValueScope scope(context);
     CallContext *ctx = context->newCallContext(f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -449,15 +450,16 @@ Value ScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
-    ctx->engine->popContext();
     CHECK_JS_STACK(f->scope);
+    ctx->engine->popContext();
     return result;
 }
 
@@ -499,8 +501,8 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     ExecutionEngine *v4 = f->engine();
+    ValueScope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -513,17 +515,18 @@ Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = Value::fromObject(obj);
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
+    CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
 
-    CHECK_JS_STACK(f->scope);
-    if (result.isObject())
+    if (result->isObject())
         return result;
     return Value::fromObject(obj);
 }
@@ -531,9 +534,9 @@ Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
 Value SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = f->engine()->current;
+    ValueScope scope(context);
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -544,15 +547,16 @@ Value SimpleScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
-    ctx->engine->popContext();
     CHECK_JS_STACK(f->scope);
+    ctx->engine->popContext();
     return result;
 }
 
