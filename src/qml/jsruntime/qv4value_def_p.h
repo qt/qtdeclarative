@@ -272,6 +272,9 @@ struct Q_QML_EXPORT Value
 
     inline ExecutionEngine *engine() const;
 
+    ReturnedValue asReturnedValue() const { return val; }
+    static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
+
     // Section 9.12
     bool sameValue(Value other) const;
 

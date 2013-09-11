@@ -177,6 +177,8 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 
+    ReturnedValue asReturnedValue() { return Value::fromObject(this).asReturnedValue(); }
+
     // Array handling
 
     uint allocArrayValue() {

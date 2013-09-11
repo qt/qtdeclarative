@@ -103,22 +103,6 @@ struct ValueScope {
 
 struct ScopedValue;
 struct ValueRef;
-struct ReturnedValue;
-
-struct ReturnedValue
-{
-    inline ReturnedValue(const Value &v);
-    inline ReturnedValue(const ValueRef &v);
-    inline ReturnedValue(const ScopedValue &v);
-    // no destructor or copy constructor!
-
-    // ### remove me!
-    Value get() const { Value v; v.val = rawValue; return v; }
-private:
-    friend struct ValueRef;
-    friend struct ScopedValue;
-    quint64 rawValue;
-};
 
 struct ScopedValue
 {
@@ -136,7 +120,7 @@ struct ScopedValue
     ScopedValue(const ValueScope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = v.rawValue;
+        ptr->val = v;
     }
 
     ScopedValue &operator=(const Value &v) {
@@ -145,7 +129,7 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(const ReturnedValue &v) {
-        ptr->val = v.rawValue;
+        ptr->val = v;
         return *this;
     }
 
@@ -165,6 +149,8 @@ struct ScopedValue
     operator const Value &() const {
         return *ptr;
     }
+
+    ReturnedValue asReturnedValue() const { return ptr->val; }
 
     Value *ptr;
 };
@@ -225,7 +211,7 @@ struct ValueRef {
     ValueRef &operator=(const Value &v)
     { *ptr = v; return *this; }
     ValueRef &operator=(const ReturnedValue &v) {
-        ptr->val = v.rawValue;
+        ptr->val = v;
         return *this;
     }
 
@@ -249,10 +235,12 @@ struct ValueRef {
     static const ValueRef fromRawValue(const Value *v) {
         return ValueRef(const_cast<Value *>(v));
     }
+
+    ReturnedValue asReturnedValue() const { return ptr->val; }
+
     // ### get rid of this one!
     ValueRef(Value *v) { ptr = v; }
 private:
-    friend class ReturnedValue;
     Value *ptr;
 };
 
@@ -287,21 +275,6 @@ struct CallDataRef {
 private:
     CallData *ptr;
 };
-
-inline ReturnedValue::ReturnedValue(const Value &v)
-    : rawValue(v.val)
-{
-}
-
-inline ReturnedValue::ReturnedValue(const ValueRef &v)
-    : rawValue(v.ptr->val)
-{
-}
-
-inline ReturnedValue::ReturnedValue(const ScopedValue &v)
-    : rawValue(v.ptr->val)
-{
-}
 
 }
 

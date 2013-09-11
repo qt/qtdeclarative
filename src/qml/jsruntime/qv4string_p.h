@@ -119,6 +119,8 @@ struct Q_QML_EXPORT String : public Managed {
         return _text.length();
     }
 
+    ReturnedValue asReturnedValue() { return Value::fromString(this).asReturnedValue(); }
+
     QString _text;
     mutable Identifier *identifier;
     mutable uint stringHash;
