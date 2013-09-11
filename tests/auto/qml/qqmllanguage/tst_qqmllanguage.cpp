@@ -659,8 +659,8 @@ void tst_qqmllanguage::assignLiteralToVariant()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(object->property("test1").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QVERIFY(isJSNumberType(object->property("test1").userType()));
+    QVERIFY(isJSNumberType(object->property("test2").userType()));
     QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test4").userType(), (int)QVariant::Color);
     QCOMPARE(object->property("test5").userType(), (int)QVariant::RectF);
@@ -698,7 +698,7 @@ void tst_qqmllanguage::assignLiteralToVar()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
+    QVERIFY(isJSNumberType(object->property("test1").userType()));
     QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
     QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
@@ -714,8 +714,8 @@ void tst_qqmllanguage::assignLiteralToVar()
     QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
     QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
     QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QCOMPARE(object->property("variantTest1Bound").userType(), (int)QMetaType::Int);
-    QCOMPARE(object->property("test1Bound").userType(), (int)QMetaType::Int);
+    QVERIFY(isJSNumberType(object->property("variantTest1Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -837,8 +837,8 @@ void tst_qqmllanguage::bindJSValueToVar()
 
     QObject *object = root->findChild<QObject *>("varProperties");
 
-    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
-    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QVERIFY(isJSNumberType(object->property("test1").userType()));
+    QVERIFY(isJSNumberType(object->property("test2").userType()));
     QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
@@ -886,8 +886,8 @@ void tst_qqmllanguage::bindJSValueToVariant()
 
     QObject *object = root->findChild<QObject *>("variantProperties");
 
-    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
-    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QVERIFY(isJSNumberType(object->property("test1").userType()));
+    QVERIFY(isJSNumberType(object->property("test2").userType()));
     QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test5").userType(), (int)QVariant::String);

@@ -310,6 +310,18 @@ private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
+
+    // When calling into JavaScript, the specific type of the return value can differ if that return
+    // value is a number. This is not only the case for non-integral numbers, or numbers that do not
+    // fit into the (signed) integer range, but it also depends on which optimizations are run. So,
+    // to check if the return value is of a number type, use this method instead of checking against
+    // a specific userType.
+    static bool isJSNumberType(int userType)
+    {
+        return userType == (int) QVariant::Int
+                || userType == (int) QVariant::UInt
+                || userType == (int) QVariant::Double;
+    }
 };
 
 // The JavaScriptCore GC marks the C stack. To try to ensure that there is
@@ -4687,8 +4699,8 @@ void tst_qqmlecmascript::propertyVarCpp()
     QVERIFY(object->setProperty("varProperty", QVariant::fromValue(10)));
     QCOMPARE(object->property("varBound"), QVariant(15));
     QCOMPARE(object->property("intBound"), QVariant(15));
-    QCOMPARE(object->property("varProperty").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("varBound").userType(), (int)QVariant::Int);
+    QVERIFY(isJSNumberType(object->property("varProperty").userType()));
+    QVERIFY(isJSNumberType(object->property("varBound").userType()));
     // assign string to property var that current has bool assigned
     QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::Bool);
     QVERIFY(object->setProperty("varProperty2", QVariant(QLatin1String("randomString"))));
