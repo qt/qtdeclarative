@@ -403,12 +403,12 @@ void ExecutionContext::setProperty(String *name, const Value& value)
     engine->globalObject->put(name, value);
 }
 
-Value ExecutionContext::getProperty(String *name)
+ReturnedValue ExecutionContext::getProperty(String *name)
 {
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -419,7 +419,7 @@ Value ExecutionContext::getProperty(String *name)
             bool hasProperty = false;
             Value v = w->get(name, &hasProperty);
             if (hasProperty) {
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -428,7 +428,7 @@ Value ExecutionContext::getProperty(String *name)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -437,20 +437,20 @@ Value ExecutionContext::getProperty(String *name)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
                 Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
-                    return v;
+                    return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
@@ -458,19 +458,19 @@ Value ExecutionContext::getProperty(String *name)
             bool hasProperty = false;
             Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
     throwReferenceError(Value::fromString(name));
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value ExecutionContext::getPropertyNoThrow(String *name)
+ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
 {
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -481,7 +481,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             bool hasProperty = false;
             Value v = w->get(name, &hasProperty);
             if (hasProperty) {
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -490,7 +490,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -499,20 +499,20 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
                 Value v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
-                    return v;
+                    return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
@@ -520,19 +520,19 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             bool hasProperty = false;
             Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
+ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
 {
     *base = 0;
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -544,7 +544,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             Value v = w->get(name, &hasProperty);
             if (hasProperty) {
                 *base = w;
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -553,7 +553,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -562,10 +562,10 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
@@ -573,12 +573,12 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
                 if (hasProperty) {
                     if (ctx->type == Type_QmlContext)
                         *base = c->activation;
-                    return v;
+                    return v.asReturnedValue();
                 }
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
@@ -586,11 +586,11 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             bool hasProperty = false;
             Value v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
     throwReferenceError(Value::fromString(name));
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 

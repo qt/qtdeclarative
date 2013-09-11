@@ -782,7 +782,7 @@ ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object,
 
 ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 {
-    return ctx->getProperty(name).asReturnedValue();
+    return ctx->getProperty(name);
 }
 
 uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
@@ -949,13 +949,14 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
 ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
+    ValueScope scope(context);
 
     Object *base;
-    Value func = context->getPropertyAndBase(name, &base);
+    ScopedValue func(scope, context->getPropertyAndBase(name, &base));
     if (base)
         callData->thisObject = Value::fromObject(base);
 
-    FunctionObject *o = func.asFunctionObject();
+    FunctionObject *o = func->asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
         if (base)
@@ -1048,8 +1049,9 @@ ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint in
 
 ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
-    Value func = context->getProperty(name);
-    Object *f = func.asObject();
+    ValueScope scope(context);
+    ScopedValue func(scope, context->getProperty(name));
+    Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
 
