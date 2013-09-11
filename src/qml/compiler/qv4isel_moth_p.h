@@ -74,7 +74,7 @@ public:
     InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(V4IR::Function *function);
+    virtual void run(int functionIndex);
 
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();

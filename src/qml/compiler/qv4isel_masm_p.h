@@ -73,6 +73,8 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
     QList<QVector<QV4::Value> > constantValues;
+    QVector<int> codeSizes; // corresponding to the endOfCode labels. MacroAssemblerCodeRef's size may
+                            // be larger, as for example on ARM we append the exception handling table.
 };
 
 class Assembler : public JSC::MacroAssembler
@@ -1195,7 +1197,7 @@ public:
         return scratchReg;
     }
 
-    JSC::MacroAssemblerCodeRef link();
+    JSC::MacroAssemblerCodeRef link(int *codeSize);
 
     void recordLineNumber(int lineNumber);
 
@@ -1238,7 +1240,7 @@ public:
     InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
     ~InstructionSelection();
 
-    virtual void run(V4IR::Function *function);
+    virtual void run(int functionIndex);
 
     void *addConstantTable(QVector<QV4::Value> *values);
 protected:
@@ -1448,7 +1450,6 @@ private:
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 
     CompilationUnit *compilationUnit;
-    QHash<V4IR::Function*, JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

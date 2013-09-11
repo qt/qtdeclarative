@@ -205,8 +205,9 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::run(V4IR::Function *function)
+void InstructionSelection::run(int functionIndex)
 {
+    V4IR::Function *function = irModule->functions[functionIndex];
     V4IR::BasicBlock *block = 0, *nextBlock = 0;
 
     QHash<V4IR::BasicBlock *, QVector<ptrdiff_t> > patches;

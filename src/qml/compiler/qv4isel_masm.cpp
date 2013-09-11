@@ -80,7 +80,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
                                                            (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
-                                                           codeRefs[i].size());
+                                                           codeSizes[i]);
         runtimeFunctions[i] = runtimeFunction;
     }
 
@@ -465,10 +465,10 @@ void Assembler::recordLineNumber(int lineNumber)
 }
 
 
-JSC::MacroAssemblerCodeRef Assembler::link()
+JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
-#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     Label endOfCode = label();
+#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     // Let the ARM exception table follow right after that
     for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
         nop();
@@ -519,8 +519,9 @@ JSC::MacroAssemblerCodeRef Assembler::link()
     }
     _constTable.finalize(linkBuffer, _isel);
 
+    *codeSize = linkBuffer.offsetOf(endOfCode);
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
-    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), linkBuffer.offsetOf(endOfCode));
+    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), *codeSize);
 #endif
 
     JSC::MacroAssemblerCodeRef codeRef;
@@ -583,6 +584,8 @@ InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocat
     , _as(0)
 {
     compilationUnit = new CompilationUnit;
+    compilationUnit->codeRefs.resize(module->functions.size());
+    compilationUnit->codeSizes.resize(module->functions.size());
 }
 
 InstructionSelection::~InstructionSelection()
@@ -590,8 +593,9 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
-void InstructionSelection::run(V4IR::Function *function)
+void InstructionSelection::run(int functionIndex)
 {
+    V4IR::Function *function = irModule->functions[functionIndex];
     QVector<Lookup> lookups;
     QSet<V4IR::BasicBlock*> reentryBlocks;
     qSwap(_function, function);
@@ -679,8 +683,8 @@ void InstructionSelection::run(V4IR::Function *function)
         }
     }
 
-    JSC::MacroAssemblerCodeRef codeRef =_as->link();
-    codeRefs[_function] = codeRef;
+    JSC::MacroAssemblerCodeRef codeRef =_as->link(&compilationUnit->codeSizes[functionIndex]);
+    compilationUnit->codeRefs[functionIndex] = codeRef;
 
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
@@ -701,10 +705,6 @@ void *InstructionSelection::addConstantTable(QVector<Value> *values)
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
     compilationUnit->data = generateUnit();
-    compilationUnit->codeRefs.resize(irModule->functions.size());
-    int i = 0;
-    foreach (V4IR::Function *irFunction, irModule->functions)
-        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     return compilationUnit;
 }
 

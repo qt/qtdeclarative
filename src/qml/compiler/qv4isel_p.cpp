@@ -78,8 +78,8 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
     Function *rootFunction = irModule->rootFunction;
     if (!rootFunction)
         return 0;
-    foreach (V4IR::Function *f, irModule->functions)
-        run(f);
+    for (int i = 0; i < irModule->functions.size(); ++i)
+        run(i);
 
     return backendCompileStep();
 }

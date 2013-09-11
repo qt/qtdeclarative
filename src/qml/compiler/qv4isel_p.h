@@ -70,7 +70,7 @@ public:
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
 protected:
-    virtual void run(V4IR::Function *function) = 0;
+    virtual void run(int functionIndex) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
 protected:
