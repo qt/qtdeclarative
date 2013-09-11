@@ -57,10 +57,10 @@ Value BooleanCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(Managed *, CallData *callData)
+ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
 {
     bool value = callData->argc ? callData->args[0].toBoolean() : 0;
-    return Value::fromBoolean(value);
+    return Value::fromBoolean(value).asReturnedValue();
 }
 
 void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)

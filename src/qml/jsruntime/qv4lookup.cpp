@@ -205,7 +205,7 @@ void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
             } else {
                 ScopedCallData callData(o->engine(), 0);
                 callData->thisObject = object;
-                res = getter->call(callData);
+                res = Value::fromReturnedValue(getter->call(callData));
             }
             if (result)
                 *result = res;
@@ -228,7 +228,7 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
             } else {
                 ScopedCallData callData(o->engine(), 0);
                 callData->thisObject = object;
-                res = getter->call(callData);
+                res = Value::fromReturnedValue(getter->call(callData));
             }
             if (result)
                 *result = res;
@@ -254,7 +254,7 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
                     } else {
                         ScopedCallData callData(o->engine(), 0);
                         callData->thisObject = object;
-                        res = getter->call(callData);
+                        res = Value::fromReturnedValue(getter->call(callData));
                     }
                     if (result)
                         *result = res;
@@ -309,7 +309,7 @@ void Lookup::primitiveGetterAccessor0(Lookup *l, Value *result, const Value &obj
             } else {
                 ScopedCallData callData(o->engine(), 0);
                 callData->thisObject = object;
-                res = getter->call(callData);
+                res = Value::fromReturnedValue(getter->call(callData));
             }
             if (result)
                 *result = res;
@@ -333,7 +333,7 @@ void Lookup::primitiveGetterAccessor1(Lookup *l, Value *result, const Value &obj
             } else {
                 ScopedCallData callData(o->engine(), 0);
                 callData->thisObject = object;
-                res = getter->call(callData);
+                res = Value::fromReturnedValue(getter->call(callData));
             }
             if (result)
                 *result = res;
@@ -437,7 +437,7 @@ void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
         } else {
             ScopedCallData callData(ctx->engine, 0);
             callData->thisObject = Value::undefinedValue();
-            *result = getter->call(callData);
+            *result = Value::fromReturnedValue(getter->call(callData));
         }
         return;
     }
@@ -456,7 +456,7 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
         } else {
             ScopedCallData callData(ctx->engine, 0);
             callData->thisObject = Value::undefinedValue();
-            *result = getter->call(callData);
+            *result = Value::fromReturnedValue(getter->call(callData));
         }
         return;
     }
@@ -478,7 +478,7 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
                 } else {
                     ScopedCallData callData(ctx->engine, 0);
                     callData->thisObject = Value::undefinedValue();
-                    *result = getter->call(callData);
+                    *result = Value::fromReturnedValue(getter->call(callData));
                 }
                 return;
             }

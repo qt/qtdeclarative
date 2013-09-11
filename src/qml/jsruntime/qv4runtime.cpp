@@ -575,7 +575,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     if (FunctionObject *o = conv.asFunctionObject()) {
         ScopedCallData callData(engine, 0);
         callData->thisObject = Value::fromObject(object);
-        Value r = o->call(callData);
+        Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
             return r.asReturnedValue();
     }
@@ -584,7 +584,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     if (FunctionObject *o = conv.asFunctionObject()) {
         ScopedCallData callData(engine, 0);
         callData->thisObject = Value::fromObject(object);
-        Value r = o->call(callData);
+        Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
             return r.asReturnedValue();
     }
@@ -940,9 +940,9 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
         context->throwTypeError();
 
     if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
-        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true).asReturnedValue();
+        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 
@@ -966,10 +966,10 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String
     }
 
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true).asReturnedValue();
+        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
     }
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
@@ -991,7 +991,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, Cal
         context->throwTypeError(error);
     }
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
@@ -1005,7 +1005,7 @@ ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index
     if (!o)
         context->throwTypeError();
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
@@ -1017,7 +1017,7 @@ ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef ind
     if (!o)
         context->throwTypeError();
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
@@ -1026,7 +1026,7 @@ ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func,
     if (!o)
         context->throwTypeError();
 
-    return o->call(callData).asReturnedValue();
+    return o->call(callData);
 }
 
 

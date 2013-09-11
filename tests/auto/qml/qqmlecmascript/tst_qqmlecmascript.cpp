@@ -2325,10 +2325,11 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return QV4::Value::emptyValue();
+        QV4::ValueScope scope(ctx);
         QV4::ScopedCallData d(ctx->engine, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
-        QV4::Value value = function->call(d);
+        QV4::ScopedValue value(scope, function->call(d));
         return value;
     } catch (QV4::Exception &e) {
         e.accept(ctx);

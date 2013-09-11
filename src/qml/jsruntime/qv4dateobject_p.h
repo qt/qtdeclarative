@@ -67,7 +67,7 @@ struct DateCtor: FunctionObject
     DateCtor(ExecutionContext *scope);
 
     static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *);
+    static ReturnedValue call(Managed *that, CallData *);
 
 protected:
     static const ManagedVTable static_vtbl;

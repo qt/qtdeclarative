@@ -54,7 +54,7 @@ struct NumberCtor: FunctionObject
     NumberCtor(ExecutionContext *scope);
 
     static Value construct(Managed *that, CallData *callData);
-    static Value call(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

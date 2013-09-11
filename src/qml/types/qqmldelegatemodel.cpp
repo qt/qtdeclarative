@@ -81,7 +81,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         return QV4::Value::undefinedValue();
     }
 
-    static QV4::Value call(QV4::Managed *that, QV4::CallData *callData)
+    static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
     {
         DelegateModelGroupFunction *f = static_cast<DelegateModelGroupFunction *>(that);
         QQmlDelegateModelItemObject *o = callData->thisObject.as<QQmlDelegateModelItemObject>();
@@ -89,7 +89,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
             that->engine()->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::Value v = callData->argc ? callData->args[0] : QV4::Value::undefinedValue();
-        return f->code(o->item, f->flag, v);
+        return f->code(o->item, f->flag, v).asReturnedValue();
     }
 };
 

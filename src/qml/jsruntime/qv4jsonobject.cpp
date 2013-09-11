@@ -706,7 +706,7 @@ QString Stringify::Str(const QString &key, Value value)
             ScopedCallData callData(ctx->engine, 1);
             callData->thisObject = value;
             callData->args[0] = Value::fromString(ctx, key);
-            value = toJSON->call(callData);
+            value = Value::fromReturnedValue(toJSON->call(callData));
         }
     }
 
@@ -718,7 +718,7 @@ QString Stringify::Str(const QString &key, Value value)
         callData->args[0] = Value::fromString(ctx, key);
         callData->args[1] = value;
         callData->thisObject = holderValue;
-        value = replacerFunction->call(callData);
+        value = Value::fromReturnedValue(replacerFunction->call(callData));
     }
 
     if (Object *o = value.asObject()) {

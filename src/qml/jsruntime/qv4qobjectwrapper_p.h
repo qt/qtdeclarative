@@ -141,7 +141,7 @@ private:
     int m_index;
     QV4::PersistentValue m_qmlGlobal;
 
-    static Value call(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *, CallData *callData);
 
     Value callInternal(CallData *callData);
 

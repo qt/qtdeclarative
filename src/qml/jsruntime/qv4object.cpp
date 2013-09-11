@@ -137,7 +137,7 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
 
     ScopedCallData callData(getter->engine(), 0);
     callData->thisObject = thisObject;
-    return getter->call(callData);
+    return Value::fromReturnedValue(getter->call(callData));
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)

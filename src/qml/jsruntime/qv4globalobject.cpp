@@ -354,10 +354,10 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
-Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
+ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
 
     ExecutionContext *parentContext = engine()->current;
     ExecutionEngine *engine = parentContext->engine;
@@ -371,7 +371,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     }
 
     if (!args[0].isString())
-        return args[0];
+        return args[0].asReturnedValue();
 
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
@@ -383,7 +383,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     Function *function = script.function();
     if (!function)
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
 
     strictMode = function->isStrict() || (ctx->strictMode);
 
@@ -436,11 +436,11 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     while (engine->current != parentContext)
         engine->popContext();
 
-    return result;
+    return result.asReturnedValue();
 }
 
 
-Value EvalFunction::call(Managed *that, CallData *callData)
+ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
     // ### const_cast

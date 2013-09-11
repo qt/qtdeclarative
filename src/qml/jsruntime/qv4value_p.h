@@ -279,7 +279,7 @@ inline ErrorObject *Value::asErrorObject() const
 inline Value Managed::construct(CallData *d) {
     return vtbl->construct(this, d);
 }
-inline Value Managed::call(CallData *d) {
+inline ReturnedValue Managed::call(CallData *d) {
     return vtbl->call(this, d);
 }
 
@@ -311,10 +311,13 @@ class Q_QML_EXPORT PersistentValue
 {
 public:
     PersistentValue() : d(0) {}
+
     PersistentValue(const Value &val);
+    PersistentValue(ReturnedValue val);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const Value &other);
+    PersistentValue &operator =(const ReturnedValue &other);
     ~PersistentValue();
 
     Value value() const {

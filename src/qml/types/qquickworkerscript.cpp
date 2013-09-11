@@ -244,8 +244,10 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
     QV4::FunctionObject *f = createsend.value().asFunctionObject();
-    QV4::Value v = QV4::Value::undefinedValue();
-    QV4::ExecutionContext *ctx = f->internalClass->engine->current;
+    QV4::ExecutionContext *ctx = f->engine()->current;
+    QV4::ValueScope scope(ctx->engine);
+
+    QV4::ScopedValue v(scope);
     try {
         QV4::ScopedCallData callData(m_v4Engine, 1);
         callData->args[0] = QV4::Value::fromInt32(id);
@@ -346,10 +348,11 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::Value value = QV4::Serialize::deserialize(data, workerEngine);
-
     QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
+    QV4::ValueScope scope(ctx);
+
+    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
     try {
         QV4::ScopedCallData callData(ctx->engine, 2);

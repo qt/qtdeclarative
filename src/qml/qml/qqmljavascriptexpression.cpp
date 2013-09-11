@@ -162,8 +162,9 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     // incase we have been deleted.
     DeleteWatcher watcher(this);
 
-    QV4::Value result = QV4::Value::undefinedValue();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ValueScope scope(v4);
+    QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
     try {
         QV4::Value This = ep->v8engine()->global();
@@ -179,7 +180,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
         result = function.asFunctionObject()->call(callData);
 
         if (isUndefined)
-            *isUndefined = result.isUndefined();
+            *isUndefined = result->isUndefined();
 
         if (!watcher.wasDeleted() && hasDelayedError())
             delayedError()->clearError();

@@ -181,7 +181,7 @@ Value Managed::construct(Managed *m, CallData *)
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::call(Managed *m, CallData *)
+ReturnedValue Managed::call(Managed *m, CallData *)
 {
     m->engine()->current->throwTypeError();
 }

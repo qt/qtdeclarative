@@ -77,7 +77,7 @@ struct Print: FunctionObject
         name = scope->engine->newString("print");
     }
 
-    static Value call(Managed *, CallData *callData)
+    static ReturnedValue call(Managed *, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
             QString s = callData->args[i].toQStringNoThrow();
@@ -86,7 +86,7 @@ struct Print: FunctionObject
             std::cout << qPrintable(s);
         }
         std::cout << std::endl;
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
 
     static const ManagedVTable static_vtbl;
@@ -102,10 +102,10 @@ struct GC: public FunctionObject
         vtbl = &static_vtbl;
         name = scope->engine->newString("gc");
     }
-    static Value call(Managed *m, CallData *)
+    static ReturnedValue call(Managed *m, CallData *)
     {
         m->engine()->memoryManager->runGC();
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
 
     static const ManagedVTable static_vtbl;

@@ -927,13 +927,14 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
+                QV4::ValueScope scope(function->engine());
                 QV4::ScopedCallData callData(function->engine(), data->parameterCount);
                 callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
                     callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
-                QV4::Value result = QV4::Value::undefinedValue();
+                QV4::ScopedValue result(scope);
                 QV4::ExecutionContext *ctx = function->engine()->current;
                 try {
                     result = function->call(callData);

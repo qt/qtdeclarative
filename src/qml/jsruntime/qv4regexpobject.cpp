@@ -275,14 +275,14 @@ Value RegExpCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(Managed *that, CallData *callData)
+ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
 {
     if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
         if (callData->argc == 1 || callData->args[1].isUndefined())
-            return callData->args[0];
+            return callData->args[0].asReturnedValue();
     }
 
-    return construct(that, callData);
+    return construct(that, callData).asReturnedValue();
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)

@@ -693,10 +693,10 @@ Value DateCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(o);
 }
 
-Value DateCtor::call(Managed *m, CallData *)
+ReturnedValue DateCtor::call(Managed *m, CallData *)
 {
     double t = currentTime();
-    return Value::fromString(m->engine()->current, ToString(t));
+    return Value::fromString(m->engine()->current, ToString(t)).asReturnedValue();
 }
 
 void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -1305,7 +1305,7 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 
     ScopedCallData callData(ctx->engine, 0);
     callData->thisObject = ctx->thisObject;
-    return toIso->call(callData);
+    return Value::fromReturnedValue(toIso->call(callData));
 }
 
 void DatePrototype::timezoneUpdated()

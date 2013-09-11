@@ -115,7 +115,7 @@ struct ErrorCtor: FunctionObject
     ErrorCtor(ExecutionContext *scope, String *name);
 
     static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

@@ -1577,8 +1577,8 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return Value::fromObject(w);
     }
 
-    static Value call(Managed *, QV4::CallData *) {
-        return Value::undefinedValue();
+    static ReturnedValue call(Managed *, QV4::CallData *) {
+        return Value::undefinedValue().asReturnedValue();
     }
 
     void setupProto();

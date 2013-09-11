@@ -166,9 +166,9 @@ Value FunctionObject::construct(Managed *that, CallData *)
     return Value::fromObject(obj);
 }
 
-Value FunctionObject::call(Managed *, CallData *)
+ReturnedValue FunctionObject::call(Managed *, CallData *)
 {
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void FunctionObject::markObjects(Managed *that)
@@ -253,9 +253,9 @@ Value FunctionCtor::construct(Managed *that, CallData *callData)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::call(Managed *that, CallData *callData)
 {
-    return construct(that, callData);
+    return construct(that, callData).asReturnedValue();
 }
 
 FunctionPrototype::FunctionPrototype(InternalClass *ic)
@@ -324,7 +324,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     }
 
     callData->thisObject = thisArg;
-    return o->call(callData);
+    return Value::fromReturnedValue(o->call(callData));
 }
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
@@ -341,7 +341,7 @@ Value FunctionPrototype::method_call(SimpleCallContext *ctx)
                   ctx->arguments + ctx->argumentCount, callData->args);
     }
     callData->thisObject = thisArg;
-    return o->call(callData);
+    return Value::fromReturnedValue(o->call(callData));
 }
 
 Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
@@ -434,7 +434,7 @@ Value ScriptFunction::construct(Managed *that, CallData *callData)
     return Value::fromObject(obj);
 }
 
-Value ScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     void *stackSpace;
@@ -460,7 +460,7 @@ Value ScriptFunction::call(Managed *that, CallData *callData)
     }
     CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
@@ -531,7 +531,7 @@ Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
     return Value::fromObject(obj);
 }
 
-Value SimpleScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
@@ -557,7 +557,7 @@ Value SimpleScriptFunction::call(Managed *that, CallData *callData)
     }
     CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
 
@@ -579,7 +579,7 @@ Value BuiltinFunctionOld::construct(Managed *f, CallData *)
     return Value::undefinedValue();
 }
 
-Value BuiltinFunctionOld::call(Managed *that, CallData *callData)
+ReturnedValue BuiltinFunctionOld::call(Managed *that, CallData *callData)
 {
     BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -603,10 +603,10 @@ Value BuiltinFunctionOld::call(Managed *that, CallData *callData)
     }
 
     context->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
-Value IndexedBuiltinFunction::call(Managed *that, CallData *callData)
+ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
@@ -630,7 +630,7 @@ Value IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     }
 
     context->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
@@ -661,7 +661,7 @@ void BoundFunction::destroy(Managed *that)
     static_cast<BoundFunction *>(that)->~BoundFunction();
 }
 
-Value BoundFunction::call(Managed *that, CallData *dd)
+ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
 

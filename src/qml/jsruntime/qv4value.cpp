@@ -327,6 +327,11 @@ PersistentValue::PersistentValue(const Value &val)
 {
 }
 
+PersistentValue::PersistentValue(ReturnedValue val)
+    : d(new PersistentValuePrivate(Value::fromReturnedValue(val)))
+{
+}
+
 PersistentValue::PersistentValue(const PersistentValue &other)
     : d(other.d)
 {
@@ -357,6 +362,16 @@ PersistentValue &PersistentValue::operator =(const Value &other)
         return *this;
     }
     d = d->detach(other);
+    return *this;
+}
+
+PersistentValue &PersistentValue::operator =(const ReturnedValue &other)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(Value::fromReturnedValue(other));
+        return *this;
+    }
+    d = d->detach(Value::fromReturnedValue(other));
     return *this;
 }
 

@@ -245,9 +245,9 @@ Value ErrorCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(m->engine()->newErrorObject(callData->argc ? callData->args[0] : Value::undefinedValue()));
 }
 
-Value ErrorCtor::call(Managed *that, CallData *callData)
+ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
 {
-    return that->construct(callData);
+    return that->construct(callData).asReturnedValue();
 }
 
 EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)

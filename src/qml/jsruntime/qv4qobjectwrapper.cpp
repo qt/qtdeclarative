@@ -1688,10 +1688,10 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value
     return QV4::Value::undefinedValue();
 }
 
-Value QObjectMethod::call(Managed *m, CallData *callData)
+ReturnedValue QObjectMethod::call(Managed *m, CallData *callData)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
-    return This->callInternal(callData);
+    return This->callInternal(callData).asReturnedValue();
 }
 
 Value QObjectMethod::callInternal(CallData *callData)

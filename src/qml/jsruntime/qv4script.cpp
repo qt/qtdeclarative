@@ -79,7 +79,7 @@ struct QmlBindingWrapper : FunctionObject
         scope->engine->popContext();
     }
 
-    static Value call(Managed *that, CallData *);
+    static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m)
     {
         QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
@@ -122,7 +122,7 @@ struct CompilationUnitHolder : public QV4::Object
 
 DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
 
-Value QmlBindingWrapper::call(Managed *that, CallData *)
+ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 {
     ExecutionEngine *engine = that->engine();
     ValueScope scope(engine);
@@ -134,7 +134,7 @@ Value QmlBindingWrapper::call(Managed *that, CallData *)
     ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
     engine->popContext();
 
-    return result;
+    return result.asReturnedValue();
 
 }
 
@@ -252,7 +252,7 @@ Value Script::run()
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject());
         ScopedCallData callData(scope->engine, 0);
         callData->thisObject = Value::undefinedValue();
-        return f->call(callData);
+        return Value::fromReturnedValue(f->call(callData));
     }
 }
 

@@ -1184,7 +1184,7 @@ struct BindingFunction : public QV4::FunctionObject
         bindingKeyFlag = true;
     }
 
-    static Value call(Managed *that, CallData *callData)
+    static ReturnedValue call(Managed *that, CallData *callData)
     {
         BindingFunction *This = static_cast<BindingFunction*>(that);
         return This->originalFunction->call(callData);

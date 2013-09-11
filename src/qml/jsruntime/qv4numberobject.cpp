@@ -62,10 +62,10 @@ Value NumberCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl)));
 }
 
-Value NumberCtor::call(Managed *, CallData *callData)
+ReturnedValue NumberCtor::call(Managed *, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromDouble(dbl);
+    return Value::fromDouble(dbl).asReturnedValue();
 }
 
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)

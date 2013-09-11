@@ -170,14 +170,14 @@ Value StringCtor::construct(Managed *m, CallData *callData)
     return Value::fromObject(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *m, CallData *callData)
+ReturnedValue StringCtor::call(Managed *m, CallData *callData)
 {
     Value value;
     if (callData->argc)
         value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
-    return value;
+    return value.asReturnedValue();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
@@ -351,6 +351,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     if (context->thisObject.isUndefined() || context->thisObject.isNull())
         context->throwTypeError();
 
+    ValueScope scope(context);
     String *s = context->thisObject.toString(context);
 
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
@@ -374,7 +375,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     callData->thisObject = Value::fromObject(rx);
     callData->args[0] = Value::fromString(s);
     if (!global)
-        return exec->call(callData);
+        return Value::fromReturnedValue(exec->call(callData));
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
@@ -382,11 +383,13 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
     double previousLastIndex = 0;
     uint n = 0;
+    ScopedValue result(scope);
+    ScopedValue matchStr(scope);
     while (1) {
-        Value result = exec->call(callData);
-        if (result.isNull())
+        result = exec->call(callData);
+        if (result->isNull())
             break;
-        assert(result.isObject());
+        assert(result->isObject());
         double thisIndex = rx->get(lastIndex, 0).toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
@@ -394,7 +397,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->getIndexed(0);
+        matchStr = result->objectValue()->getIndexed(0);
         a->arraySet(n, matchStr);
         ++n;
     }
@@ -452,6 +455,7 @@ static void appendReplacementString(QString *result, const QString &input, const
 
 Value StringPrototype::method_replace(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();
@@ -507,6 +511,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
 
     QString result;
     Value replaceValue = ctx->argument(1);
+    ScopedValue replacement(scope);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedCallData callData(ctx->engine, numCaptures + 2);
@@ -528,9 +533,9 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
             callData->args[numCaptures] = Value::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = Value::fromString(ctx, string);
 
-            Value replacement = searchCallback->call(callData);
+            replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
-            result += replacement.toString(ctx)->toQString();
+            result += replacement->toString(ctx)->toQString();
             lastEnd = matchEnd;
         }
         result += string.midRef(lastEnd);
