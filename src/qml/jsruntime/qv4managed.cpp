@@ -186,9 +186,10 @@ ReturnedValue Managed::call(Managed *m, CallData *)
     m->engine()->current->throwTypeError();
 }
 
-void Managed::getLookup(Managed *m, Lookup *, Value *)
+ReturnedValue Managed::getLookup(Managed *m, Lookup *)
 {
     m->engine()->current->throwTypeError();
+    return 0;
 }
 
 void Managed::setLookup(Managed *m, Lookup *, const Value &)

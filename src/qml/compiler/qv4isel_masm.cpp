@@ -997,7 +997,7 @@ void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::T
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::PointerToValue(temp));
+        generateLookupCall(temp, index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
         return;
     }
     generateFunctionCall(temp, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToString(*name->id));
@@ -1005,6 +1005,7 @@ void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::T
 
 void InstructionSelection::setActivationProperty(V4IR::Expr *source, const QString &targetName)
 {
+    // ### should use a lookup call here
     generateFunctionCall(Assembler::Void, __qmljs_set_activation_property,
                          Assembler::ContextRegister, Assembler::PointerToString(targetName), Assembler::PointerToValue(source));
 }
@@ -1019,8 +1020,7 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(target),
-                           Assembler::PointerToValue(base));
+        generateLookupCall(target, index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(base), Assembler::Void);
     } else {
         generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister,
                              Assembler::PointerToValue(base), Assembler::PointerToString(name));
@@ -1032,7 +1032,7 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
 {
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
-        generateLookupCall(index, offsetof(QV4::Lookup, setter),
+        generateLookupCall(Assembler::Void, index, offsetof(QV4::Lookup, setter),
                            Assembler::PointerToValue(targetBase),
                            Assembler::PointerToValue(source));
     } else {

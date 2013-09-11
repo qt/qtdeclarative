@@ -1401,8 +1401,8 @@ private:
     int prepareVariableArguments(V4IR::ExprList* args);
     int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
-    template <typename Arg1, typename Arg2>
-    void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
+    template <typename Retval, typename Arg1, typename Arg2>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
         _as->loadPtr(Assembler::Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, lookups)),
                      Assembler::ReturnValueRegister);
@@ -1412,7 +1412,7 @@ private:
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
 
-         _as->generateFunctionCallImp(Assembler::Void, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
+         _as->generateFunctionCallImp(retval, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
     }
 
     template <typename Arg1>

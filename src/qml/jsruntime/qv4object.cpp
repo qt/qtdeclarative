@@ -510,7 +510,7 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-void Object::getLookup(Managed *m, Lookup *l, Value *result)
+ReturnedValue Object::getLookup(Managed *m, Lookup *l)
 {
     Object *o = static_cast<Object *>(m);
     PropertyAttributes attrs;
@@ -523,9 +523,7 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)
                 l->getter = Lookup::getter2;
-            if (result)
-                *result = p->value;
-            return;
+            return p->value.asReturnedValue();
         } else {
             if (l->level == 0)
                 l->getter = Lookup::getterAccessor0;
@@ -533,16 +531,10 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getterAccessor1;
             else if (l->level == 2)
                 l->getter = Lookup::getterAccessor2;
-            if (result)
-                *result = p->value;
-            Value res = Value::fromReturnedValue(o->getValue(p, attrs));
-            if (result)
-                *result = res;
-            return;
+            return o->getValue(p, attrs);
         }
-    } else if (result) {
-        *result = Value::undefinedValue();
     }
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void Object::setLookup(Managed *m, Lookup *l, const Value &value)

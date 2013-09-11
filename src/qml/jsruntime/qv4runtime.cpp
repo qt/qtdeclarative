@@ -930,17 +930,16 @@ QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
 
 ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
+    Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
 
     Lookup *l = context->lookups + index;
-    Value v;
-    l->globalGetter(l, context, &v);
-    FunctionObject *o = v.asFunctionObject();
+    Scoped<FunctionObject> o(scope, l->globalGetter(l, context));
     if (!o)
         context->throwTypeError();
 
-    if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
-        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
+    if (o.getPointer() == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
+        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData->thisObject, callData->args, callData->argc, true);
 
     return o->call(callData);
 }
@@ -997,12 +996,10 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, Cal
 
 ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
-    Value func;
+    Scope scope(context);
 
     Lookup *l = context->lookups + index;
-    l->getter(l, &func, callData->thisObject);
-
-    Object *o = func.asObject();
+    Scoped<Object> o(scope, l->getter(l, callData->thisObject));
     if (!o)
         context->throwTypeError();
 
@@ -1034,14 +1031,11 @@ ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func,
 
 ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
+    Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
 
-    Value func;
-
     Lookup *l = context->lookups + index;
-    l->globalGetter(l, context, &func);
-
-    Object *f = func.asObject();
+    Scoped<Object> f(scope, l->globalGetter(l, context));
     if (!f)
         context->throwTypeError();
 
