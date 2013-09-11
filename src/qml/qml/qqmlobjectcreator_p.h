@@ -73,7 +73,7 @@ protected:
 
 class QmlObjectCreator
 {
-    Q_DECLARE_TR_FUNCTIONS(QQmlCompiler)
+    Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
     QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::CompilationUnit *jsUnit,
                      QQmlTypeNameCache *typeNameCache, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData);

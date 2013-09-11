@@ -51,6 +51,7 @@
 #include <private/qv4codegen_p.h>
 #include <private/qv4compiler_p.h>
 #include <QTextStream>
+#include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -168,6 +169,8 @@ struct ParsedQML
 // Doesn't really generate code per-se, but more the data structure
 struct Q_QML_EXPORT QQmlCodeGenerator : public AST::Visitor
 {
+    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
+public:
     QQmlCodeGenerator();
     bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output);
 
@@ -210,8 +213,12 @@ struct Q_QML_EXPORT QQmlCodeGenerator : public AST::Visitor
 
     void setBindingValue(QV4::CompiledData::Binding *binding, AST::Statement *statement);
 
-    void appendBinding(int propertyNameIndex, AST::Statement *value);
-    void appendBinding(int propertyNameIndex, int objectIndex);
+    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
+    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex);
+
+    bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex);
+
+    void recordError(const AST::SourceLocation &location, const QString &description);
 
     static QQmlScript::LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
 
@@ -225,10 +232,14 @@ struct Q_QML_EXPORT QQmlCodeGenerator : public AST::Visitor
     QList<AST::Node*> _functions;
 
     QmlObject *_object;
+    QSet<QString> _propertyNames;
+    QSet<QString> _signalNames;
 
     QQmlJS::MemoryPool *pool;
     QString sourceCode;
+    QUrl url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
+    bool sanityCheckFunctionNames();
 };
 
 struct Q_QML_EXPORT QmlUnitGenerator

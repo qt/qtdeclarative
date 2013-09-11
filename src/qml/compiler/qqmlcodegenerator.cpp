@@ -50,6 +50,12 @@ QT_USE_NAMESPACE
 
 using namespace QtQml;
 
+#define COMPILE_EXCEPTION(location, desc) \
+    { \
+        recordError(location, desc); \
+        return false; \
+    }
+
 void QmlObject::dump(DebugStream &out)
 {
     out << inheritedTypeNameIndex << " {" << endl;
@@ -67,6 +73,7 @@ QQmlCodeGenerator::QQmlCodeGenerator()
 
 bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output)
 {
+    this->url = url;
     AST::UiProgram *program = 0;
     {
         QQmlJS::Lexer lexer(&output->jsParserEngine);
@@ -141,20 +148,20 @@ bool QQmlCodeGenerator::visit(AST::UiProgram *)
 bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
 {
     int idx = defineQMLObject(node);
-    appendBinding(registerString(QString()), idx);
+    appendBinding(AST::SourceLocation(), registerString(QString()), idx);
     return false;
 }
 
 bool QQmlCodeGenerator::visit(AST::UiObjectBinding *node)
 {
     int idx = defineQMLObject(node->qualifiedTypeNameId, node->initializer);
-    appendBinding(registerString(asString(node->qualifiedId)), idx);
+    appendBinding(node->qualifiedId->identifierToken, registerString(asString(node->qualifiedId)), idx);
     return false;
 }
 
 bool QQmlCodeGenerator::visit(AST::UiScriptBinding *node)
 {
-    appendBinding(registerString(asString(node->qualifiedId)), node->statement);
+    appendBinding(node->qualifiedId->identifierToken, registerString(asString(node->qualifiedId)), node->statement);
     return false;
 }
 
@@ -193,6 +200,29 @@ void QQmlCodeGenerator::accept(AST::Node *node)
     AST::Node::acceptChild(node, this);
 }
 
+bool QQmlCodeGenerator::sanityCheckFunctionNames()
+{
+    QSet<QString> functionNames;
+    for (Function *f = _object->functions->first; f; f = f->next) {
+        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(_functions.at(f->index));
+        Q_ASSERT(function);
+        QString name = function->name.toString();
+        if (functionNames.contains(name))
+            COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
+        functionNames.insert(name);
+        if (_signalNames.contains(name))
+            COMPILE_EXCEPTION(function->identifierToken, tr("Duplicate method name"));
+
+        if (name.at(0).isUpper())
+            COMPILE_EXCEPTION(function->identifierToken, tr("Method names cannot begin with an upper case letter"));
+#if 0 // ###
+        if (enginePrivate->v8engine()->illegalNames().contains(currSlot.name.toString()))
+            COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
+#endif
+    }
+    return true;
+}
+
 int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, AST::UiObjectInitializer *initializer)
 {
     QmlObject *obj = New<QmlObject>();
@@ -213,8 +243,17 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     _object->bindings = New<PoolList<Binding> >();
     _object->functions = New<PoolList<Function> >();
 
+    QSet<QString> propertyNames;
+    qSwap(_propertyNames, propertyNames);
+    QSet<QString> signalNames;
+    qSwap(_signalNames, signalNames);
+
     accept(initializer);
 
+    sanityCheckFunctionNames();
+
+    qSwap(_propertyNames, propertyNames);
+    qSwap(_signalNames, signalNames);
     qSwap(_object, obj);
     return objectIndex;
 }
@@ -344,7 +383,8 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
 
     if (node->type == AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
-        signal->nameIndex = registerString(node->name.toString());
+        QString signalName = node->name.toString();
+        signal->nameIndex = registerString(signalName);
 
         AST::SourceLocation loc = node->firstSourceLocation();
         signal->location.line = loc.startLine;
@@ -403,6 +443,18 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             signal->parameters->append(param);
             p = p->next;
         }
+
+        if (_signalNames.contains(signalName))
+            COMPILE_EXCEPTION(node->identifierToken, tr("Duplicate signal name"));
+        _signalNames.insert(signalName);
+
+        if (signalName.at(0).isUpper())
+            COMPILE_EXCEPTION(node->identifierToken, tr("Signal names cannot begin with an upper case letter"));
+
+#if 0 // ### cannot access identifier table from separate thread
+        if (enginePrivate->v8engine()->illegalNames().contains(currSig.name.toString()))
+            COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
+#endif
 
         _object->qmlSignals->append(signal);
     } else {
@@ -479,7 +531,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         property->location.column = loc.startColumn;
 
         if (node->statement)
-            appendBinding(property->nameIndex, node->statement);
+            appendBinding(node->identifierToken, property->nameIndex, node->statement);
 
         _object->properties->append(property);
 
@@ -605,21 +657,57 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST
     }
 }
 
-void QQmlCodeGenerator::appendBinding(int propertyNameIndex, AST::Statement *value)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value)
 {
+    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
+        return;
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     setBindingValue(binding, value);
     _object->bindings->append(binding);
 }
 
-void QQmlCodeGenerator::appendBinding(int propertyNameIndex, int objectIndex)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex)
 {
+    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
+        return;
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->value.type = QV4::CompiledData::Value::Type_Object;
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
+}
+
+bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex)
+{
+    QString name = jsGenerator->strings.at(nameIndex);
+    if (_propertyNames.contains(name))
+        COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
+
+    _propertyNames.insert(name);
+
+    if (name.at(0).isUpper())
+        COMPILE_EXCEPTION(nameLocation, tr("Property names cannot begin with an upper case letter"));
+
+#if 0 // ### how to check against illegalNames when in separate thread?
+    if (enginePrivate->v8engine()->illegalNames().contains(prop.name.toString())) {
+        COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                   prop.nameLocation.column,
+                                   tr("Illegal property name"));
+    }
+#endif
+
+    return true;
+}
+
+void QQmlCodeGenerator::recordError(const AST::SourceLocation &location, const QString &description)
+{
+    QQmlError error;
+    error.setUrl(url);
+    error.setLine(location.startLine);
+    error.setColumn(location.startColumn);
+    error.setDescription(description);
+    errors << error;
 }
 
 QQmlScript::LocationSpan QQmlCodeGenerator::location(AST::SourceLocation start, AST::SourceLocation end)
