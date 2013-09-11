@@ -62,7 +62,7 @@ public:
                      QQmlCompiledData *runtimeData);
 
     QObject *create(QObject *parent = 0)
-    { return create(unit->indexOfRootObject); }
+    { return create(unit->indexOfRootObject, parent); }
     QObject *create(int index, QObject *parent = 0);
 
     QList<QQmlError> errors;
