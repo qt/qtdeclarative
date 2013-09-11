@@ -825,6 +825,8 @@ QString Stringify::JA(ArrayObject *a)
     if (stack.contains(a))
         ctx->throwTypeError();
 
+    Scope scope(a->engine());
+
     QString result;
     stack.push(a);
     QString stepback = indent;
@@ -832,9 +834,10 @@ QString Stringify::JA(ArrayObject *a)
 
     QStringList partial;
     uint len = a->arrayLength();
+    ScopedValue v(scope);
     for (uint i = 0; i < len; ++i) {
         bool exists;
-        Value v = a->getIndexed(i, &exists);
+        v = a->getIndexed(i, &exists);
         if (!exists) {
             partial += QStringLiteral("null");
             continue;
@@ -1028,6 +1031,8 @@ QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
     if (!a)
         return result;
 
+    Scope scope(a->engine());
+
     if (visitedObjects.contains(a)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
@@ -1037,10 +1042,11 @@ QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
 
     visitedObjects.insert(a);
 
+    ScopedValue v(scope);
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
-        Value v = a->getIndexed(i);
-        result.append(toJsonValue(v.asFunctionObject() ? QV4::Value::nullValue() : v, visitedObjects));
+        v = a->getIndexed(i);
+        result.append(toJsonValue(v->asFunctionObject() ? QV4::Value::nullValue() : v, visitedObjects));
     }
 
     visitedObjects.remove(a);

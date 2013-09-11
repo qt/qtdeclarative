@@ -992,7 +992,7 @@ QV4::Value QQmlVMEMetaObject::readVarProperty(int id)
     Q_ASSERT(id >= firstVarPropertyIndex);
 
     if (ensureVarPropertiesAllocated())
-        return varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
+        return QV4::Value::fromReturnedValue(varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
     return QV4::Value::emptyValue();
 }
 
@@ -1001,7 +1001,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
     if (id >= firstVarPropertyIndex) {
         if (ensureVarPropertiesAllocated())
             return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(
-                        varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex), -1);
+                        QV4::Value::fromReturnedValue(varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex)), -1);
         return QVariant();
     } else {
         if (data[id].dataType() == QMetaType::QObjectStar) {
@@ -1018,11 +1018,12 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     if (!ensureVarPropertiesAllocated())
         return;
 
+    QV4::Scope scope(varProperties.engine());
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-    if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
-        v->removeVmePropertyReference();
+    QV4::Scoped<QV4::VariantObject> oldv(scope, varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
+    if (!!oldv)
+        oldv->removeVmePropertyReference();
 
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
@@ -1059,11 +1060,13 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         if (!ensureVarPropertiesAllocated())
             return;
 
+        QV4::Scope scope(varProperties.engine());
+
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        QV4::Value oldv = varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-        if (QV4::VariantObject *v = oldv.as<QV4::VariantObject>())
-            v->removeVmePropertyReference();
+        QV4::Scoped<QV4::VariantObject> oldv(scope, varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
+        if (!!oldv)
+            oldv->removeVmePropertyReference();
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.

@@ -873,7 +873,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static void destroy(QV4::Managed *that) {
         static_cast<QQuickJSContext2DPixelData *>(that)->~QQuickJSContext2DPixelData();
     }
-    static QV4::Value getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
+    static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
     static void putIndexed(QV4::Managed *m, uint index, const QV4::Value &value);
 
     static QV4::Value proto_get_length(QV4::SimpleCallContext *ctx);
@@ -3005,7 +3005,7 @@ QV4::Value QQuickJSContext2DPixelData::proto_get_length(QV4::SimpleCallContext *
     return QV4::Value::fromInt32(r->image.width() * r->image.height() * 4);
 }
 
-QV4::Value QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
+QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
 {
     QQuickJSContext2DPixelData *r = m->as<QQuickJSContext2DPixelData>();
     if (!m)
@@ -3021,18 +3021,18 @@ QV4::Value QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint index, b
         pixel += col;
         switch (index % 4) {
         case 0:
-            return QV4::Value::fromInt32(qRed(*pixel));
+            return QV4::Value::fromInt32(qRed(*pixel)).asReturnedValue();
         case 1:
-            return QV4::Value::fromInt32(qGreen(*pixel));
+            return QV4::Value::fromInt32(qGreen(*pixel)).asReturnedValue();
         case 2:
-            return QV4::Value::fromInt32(qBlue(*pixel));
+            return QV4::Value::fromInt32(qBlue(*pixel)).asReturnedValue();
         case 3:
-            return QV4::Value::fromInt32(qAlpha(*pixel));
+            return QV4::Value::fromInt32(qAlpha(*pixel)).asReturnedValue();
         }
     }
     if (hasProperty)
         *hasProperty = false;
-    return QV4::Value::undefinedValue();
+    return QV4::Value::undefinedValue().asReturnedValue();
 }
 
 void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const QV4::Value &value)

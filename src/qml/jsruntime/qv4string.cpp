@@ -150,25 +150,25 @@ ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
     return v4->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
 }
 
-Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
     ExecutionEngine *engine = that->engine();
     if (index < that->_text.length()) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromString(engine->newString(that->toQString().mid(index, 1)));
+        return Value::fromString(engine->newString(that->toQString().mid(index, 1))).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = engine->stringClass->prototype->__getPropertyDescriptor__(index, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = true;
-    return Value::fromReturnedValue(engine->stringClass->prototype->getValue(Value::fromString(that), pd, attrs));
+    return engine->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
 }
 
 void String::put(Managed *m, String *name, const Value &value)

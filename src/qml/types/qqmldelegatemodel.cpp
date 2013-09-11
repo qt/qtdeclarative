@@ -1676,9 +1676,12 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
         if (index != -1)
             groupFlags |= 2 << index;
     } else if (QV4::ArrayObject *array = groups.asArrayObject()) {
+        QV4::Scope scope(array->engine());
+        QV4::ScopedValue v(scope);
         uint arrayLength = array->arrayLength();
         for (uint i = 0; i < arrayLength; ++i) {
-            const QString groupName = array->getIndexed(i).toQStringNoThrow();
+            v = array->getIndexed(i);
+            const QString groupName = v->toQStringNoThrow();
             int index = groupNames.indexOf(groupName);
             if (index != -1)
                 groupFlags |= 2 << index;
@@ -3143,7 +3146,7 @@ public:
     virtual quint32 count() const = 0;
     virtual const QQmlChangeSet::Change &at(int index) const = 0;
 
-    static QV4::Value getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
+    static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
     {
         QV4::ExecutionEngine *v4 = m->engine();
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
@@ -3153,7 +3156,7 @@ public:
         if (index >= array->count()) {
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Value::undefinedValue();
+            return QV4::Value::undefinedValue().asReturnedValue();
         }
 
         const QQmlChangeSet::Change &change = array->at(index);
@@ -3165,7 +3168,7 @@ public:
 
         if (hasProperty)
             *hasProperty = true;
-        return QV4::Value::fromObject(object);
+        return QV4::Value::fromObject(object).asReturnedValue();
     }
 
     static QV4::ReturnedValue get(QV4::Managed *m, QV4::String *name, bool *hasProperty)

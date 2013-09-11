@@ -153,12 +153,14 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
     }
 
     if (QV4::ArrayObject *a = value.asArrayObject()) {
+        QV4::Scope scope(a->engine());
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
             uint32_t length = a->arrayLength();
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
             for (uint32_t ii = 0; ii < length; ++ii) {
-                QV4::Value arrayItem = a->getIndexed(ii);
-                if (QV4::QObjectWrapper *qobjectWrapper = arrayItem.as<QV4::QObjectWrapper>()) {
+                qobjectWrapper = a->getIndexed(ii);
+                if (!!qobjectWrapper) {
                     list << qobjectWrapper->object();
                 } else {
                     list << 0;
@@ -381,11 +383,15 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
     if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
         return re->toQRegExp();
     if (QV4::ArrayObject *a = value.asArrayObject()) {
+        QV4::Scope scope(a->engine());
+        QV4::ScopedValue v(scope);
         QVariantList rv;
 
         int length = a->arrayLength();
-        for (int ii = 0; ii < length; ++ii)
-            rv << toVariant(a->getIndexed(ii), -1);
+        for (int ii = 0; ii < length; ++ii) {
+            v = a->getIndexed(ii);
+            rv << toVariant(v, -1);
+        }
         return rv;
     }
     if (!value.asFunctionObject())
@@ -534,9 +540,12 @@ QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
 
     visitedObjects.insert(a);
 
+    QV4::Scope scope(a->engine());
+    QV4::ScopedValue v(scope);
+
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
-        QV4::Value v = a->getIndexed(i);
+        v = a->getIndexed(i);
         result.append(variantFromJS(v, visitedObjects));
     }
 

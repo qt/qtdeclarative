@@ -458,7 +458,7 @@ public:
         Container result;
         quint32 length = array->arrayLength();
         for (quint32 i = 0; i < length; ++i)
-            result << convertValueToElement<typename Container::value_type>(array->getIndexed(i));
+            result << convertValueToElement<typename Container::value_type>(QV4::Value::fromReturnedValue(array->getIndexed(i)));
         return QVariant::fromValue(result);
     }
 
@@ -486,8 +486,8 @@ private:
     int m_propertyIndex;
     bool m_isReference;
 
-    static QV4::Value getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
+    static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty).asReturnedValue(); }
     static void putIndexed(Managed *that, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)

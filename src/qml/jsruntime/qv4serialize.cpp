@@ -189,7 +189,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         reserve(data, sizeof(quint32) + length * sizeof(quint32));
         push(data, valueheader(WorkerArray, length));
         for (uint32_t ii = 0; ii < length; ++ii)
-            serialize(data, array->getIndexed(ii), engine);
+            serialize(data, QV4::Value::fromReturnedValue(array->getIndexed(ii)), engine);
     } else if (v.isInteger()) {
         reserve(data, 2 * sizeof(quint32));
         push(data, valueheader(WorkerInt32));
@@ -252,7 +252,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
             push(data, valueheader(WorkerSequence, length));
             serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             for (uint32_t ii = 0; ii < seqLength; ++ii)
-                serialize(data, o->getIndexed(ii), engine); // sequence elements
+                serialize(data, QV4::Value::fromReturnedValue(o->getIndexed(ii)), engine); // sequence elements
 
             return;
         }
@@ -267,14 +267,14 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         push(data, valueheader(WorkerObject, length));
 
         QV4::ScopedValue val(scope);
+        QV4::ScopedValue s(scope);
         for (quint32 ii = 0; ii < length; ++ii) {
-            QV4::String *s = properties->getIndexed(ii).asString();
-            serialize(data, QV4::Value::fromString(s), engine);
+            s = properties->getIndexed(ii);
+            serialize(data, s, engine);
 
-            bool hasCaught = false;
             QV4::ExecutionContext *ctx = v4->current;
             try {
-                val = o->get(s);
+                val = o->get(s->asString());
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
             }

@@ -1517,10 +1517,14 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
         if (QV4::ArrayObject *array = value.asArrayObject()) {
+            QV4::Scope scope(array->engine());
+            Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
+
             uint32_t length = array->arrayLength();
             for (uint32_t ii = 0; ii < length; ++ii)  {
                 QObject *o = 0;
-                if (QV4::QObjectWrapper *qobjectWrapper = array->getIndexed(ii).as<QV4::QObjectWrapper>())
+                qobjectWrapper = array->getIndexed(ii);
+                if (!!qobjectWrapper)
                     o = qobjectWrapper->object();
                 qlistPtr->append(o);
             }

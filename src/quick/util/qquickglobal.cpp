@@ -394,15 +394,18 @@ public:
         if (!array)
             return QMatrix4x4();
 
+        QV4::Scope scope(array->engine());
+
         if (array->arrayLength() != 16)
             return QMatrix4x4();
 
         float matVals[16];
+        QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < 16; ++i) {
-            QV4::Value v = array->getIndexed(i);
-            if (!v.isNumber())
+            v = array->getIndexed(i);
+            if (!v->isNumber())
                 return QMatrix4x4();
-            matVals[i] = v.asDouble();
+            matVals[i] = v->asDouble();
         }
 
         if (ok) *ok = true;

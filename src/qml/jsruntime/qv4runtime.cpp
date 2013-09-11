@@ -688,7 +688,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
             }
         }
 
-        return o->getIndexed(idx).asReturnedValue();
+        return o->getIndexed(idx);
     }
 
     String *name = index->toString(ctx);

@@ -112,12 +112,12 @@ ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(m, idx, hasProperty).asReturnedValue();
+        return getIndexed(m, idx, hasProperty);
 
     return Object::get(m, name, hasProperty);
 }
 
-Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
@@ -126,9 +126,9 @@ Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;
     if (index < count && w->property.at)
-        return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
+        return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index)).asReturnedValue();
 
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void QmlListWrapper::put(Managed *m, String *name, const Value &value)

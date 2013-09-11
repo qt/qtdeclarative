@@ -105,7 +105,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void destroy(Managed *that) {
         static_cast<QQmlSqlDatabaseWrapper *>(that)->~QQmlSqlDatabaseWrapper();
     }
@@ -217,13 +217,13 @@ static Value qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngin
     }
 }
 
-Value QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QQmlSqlDatabaseWrapper *r = m->as<QQmlSqlDatabaseWrapper>();
     if (!r || r->type != QQmlSqlDatabaseWrapper::Rows)
         return Object::getIndexed(m, index, hasProperty);
 
-    return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty);
+    return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty).asReturnedValue();
 }
 
 static Value qmlsqldatabase_rows_item(SimpleCallContext *ctx)
@@ -265,7 +265,7 @@ static Value qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             if (ArrayObject *array = values.asArrayObject()) {
                 quint32 size = array->arrayLength();
                 for (quint32 ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, engine->toVariant(array->getIndexed(ii), -1));
+                    query.bindValue(ii, engine->toVariant(QV4::Value::fromReturnedValue(array->getIndexed(ii)), -1));
             } else if (Object *object = values.asObject()) {
                 ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 while (1) {

@@ -454,7 +454,7 @@ ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
     return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
 
-Value Object::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
@@ -658,7 +658,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(idx, hasProperty).asReturnedValue();
+        return getIndexed(idx, hasProperty);
 
     name->makeIdentifier();
 
@@ -679,7 +679,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
     return Value::undefinedValue().asReturnedValue();
 }
 
-Value Object::internalGetIndexed(uint index, bool *hasProperty)
+ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 {
     Property *pd = 0;
     PropertyAttributes attrs = Attr_Data;
@@ -707,12 +707,12 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromReturnedValue(getValue(pd, attrs));
+        return getValue(pd, attrs);
     }
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 
@@ -1116,7 +1116,7 @@ void Object::copyArrayData(Object *other)
         Q_ASSERT(len);
 
         for (uint i = 0; i < len; ++i) {
-            arraySet(i, other->getIndexed(i));
+            arraySet(i, Value::fromReturnedValue(other->getIndexed(i)));
         }
     } else {
         arrayReserve(other->arrayDataLen);
@@ -1204,7 +1204,7 @@ void Object::arrayConcat(const ArrayObject *other)
         if (other->arrayAttributes) {
             for (int i = 0; i < arrayDataLen; ++i) {
                 bool exists;
-                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(i, &exists);
+                arrayData[oldSize + i].value = Value::fromReturnedValue(const_cast<ArrayObject *>(other)->getIndexed(i, &exists));
                 if (arrayAttributes)
                     arrayAttributes[oldSize + i] = Attr_Data;
                 if (!exists) {
@@ -1460,10 +1460,14 @@ QStringList ArrayObject::toQStringList() const
     QStringList result;
 
     QV4::ExecutionEngine *engine = internalClass->engine;
+    Scope scope(engine);
+    ScopedValue v(scope);
 
     uint32_t length = arrayLength();
-    for (uint32_t i = 0; i < length; ++i)
-        result.append(const_cast<ArrayObject *>(this)->getIndexed(i).toString(engine->current)->toQString());
+    for (uint32_t i = 0; i < length; ++i) {
+        v = const_cast<ArrayObject *>(this)->getIndexed(i);
+        result.append(v->toString(engine->current)->toQString());
+    }
     return result;
 }
 

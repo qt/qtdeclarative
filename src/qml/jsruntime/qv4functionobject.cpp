@@ -318,7 +318,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (len) {
         if (arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = arr->getIndexed(i);
+                callData->args[i] = Value::fromReturnedValue(arr->getIndexed(i));
         } else {
             int alen = qMin(len, arr->arrayDataLen);
             for (quint32 i = 0; i < alen; ++i)

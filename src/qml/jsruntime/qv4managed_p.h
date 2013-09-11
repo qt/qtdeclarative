@@ -98,7 +98,7 @@ struct ManagedVTable
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, const Value &value);
     ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
-    Value (*getIndexed)(Managed *, uint index, bool *hasProperty);
+    ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
@@ -263,7 +263,7 @@ public:
     ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
     ReturnedValue get(String *name, bool *hasProperty = 0);
-    Value getIndexed(uint index, bool *hasProperty = 0);
+    ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
     void put(String *name, const Value &value)
     { vtbl->put(this, name, value); }
     void putIndexed(uint index, const Value &value)

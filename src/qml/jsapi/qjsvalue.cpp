@@ -841,7 +841,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::ScopedValue v(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex).asReturnedValue());
+        QV4::ScopedValue v(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex));
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);

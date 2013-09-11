@@ -295,7 +295,7 @@ public:
 
     inline ReturnedValue get(String *name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }
-    inline Value getIndexed(uint idx, bool *hasProperty = 0)
+    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
     inline void put(String *name, const Value &v)
     { vtbl->put(this, name, v); }
@@ -317,7 +317,7 @@ protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
@@ -331,7 +331,7 @@ protected:
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty);
-    Value internalGetIndexed(uint index, bool *hasProperty);
+    ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(String *name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);

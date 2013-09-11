@@ -205,7 +205,7 @@ public:
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
     NodeImpl *d;
@@ -236,7 +236,7 @@ public:
         that->as<NodeList>()->~NodeList();
     }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
     static Value create(QV8Engine *, NodeImpl *);
@@ -843,7 +843,7 @@ bool Node::isNull() const
     return d == 0;
 }
 
-Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
@@ -855,11 +855,11 @@ Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
     if ((int)index < r->list.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->list.at(index));
+        return Node::create(engine, r->list.at(index)).asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
@@ -897,7 +897,7 @@ Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeIm
     return Value::fromObject(instance);
 }
 
-Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -909,11 +909,11 @@ Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     if ((int)index < r->d->children.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->d->children.at(index));
+        return Node::create(engine, r->d->children.at(index)).asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
