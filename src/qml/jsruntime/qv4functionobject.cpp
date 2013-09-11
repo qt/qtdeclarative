@@ -124,7 +124,8 @@ FunctionObject::~FunctionObject()
 
 Value FunctionObject::newInstance()
 {
-    ScopedCallData callData(engine(), 0);
+    ValueScope scope(engine());
+    ScopedCallData callData(scope, 0);
     return construct(callData);
 }
 
@@ -288,6 +289,7 @@ Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
 
 Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
@@ -308,7 +310,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
         len = ArrayPrototype::getLength(ctx, arr);
     }
 
-    ScopedCallData callData(ctx->engine, len);
+    ScopedCallData callData(scope, len);
 
     if (len) {
         if (arr->protoHasArray() || arr->hasAccessorProperty) {
@@ -329,13 +331,14 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
     Value thisArg = ctx->argument(0);
 
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    ScopedCallData callData(ctx->engine, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
+    ScopedCallData callData(scope, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
     if (ctx->argumentCount) {
         std::copy(ctx->arguments + 1,
                   ctx->arguments + ctx->argumentCount, callData->args);
@@ -664,8 +667,9 @@ void BoundFunction::destroy(Managed *that)
 ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
+    ValueScope scope(f->scope->engine);
 
-    ScopedCallData callData(f->scope->engine, f->boundArgs.size() + dd->argc);
+    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
@@ -675,7 +679,8 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 Value BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    ScopedCallData callData(f->scope->engine, f->boundArgs.size() + dd->argc);
+    ValueScope scope(f->scope->engine);
+    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->construct(callData);

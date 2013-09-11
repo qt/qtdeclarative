@@ -443,7 +443,8 @@ void QV8Engine::initializeGlobal()
 
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
-    QV4::ScopedCallData callData(m_v4Engine, 1);
+    QV4::ValueScope scope(m_v4Engine);
+    QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = value;
     callData->thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
     m_freezeObject.value().asFunctionObject()->call(callData);

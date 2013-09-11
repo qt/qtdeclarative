@@ -701,7 +701,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
 
-            QV4::ScopedCallData callData(v4, argCount);
+            ValueScope scope(v4);
+            QV4::ScopedCallData callData(scope, argCount);
             callData->thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];

@@ -507,7 +507,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     assert(engine);
 
     ValueScope scope(engine);
-    ScopedCallData callData(engine, args.length());
+    ScopedCallData callData(scope, args.length());
     callData->thisObject = Value::fromObject(engine->globalObject);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
@@ -564,7 +564,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         return QJSValue();
     }
 
-    ScopedCallData callData(engine, args.size());
+    ScopedCallData callData(scope, args.size());
     callData->thisObject = instance.d->getValue(engine);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
@@ -613,7 +613,8 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    ScopedCallData callData(engine, args.size());
+    ValueScope scope(engine);
+    ScopedCallData callData(scope, args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");

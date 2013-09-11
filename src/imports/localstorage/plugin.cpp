@@ -315,6 +315,8 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     if (ctx->argumentCount < 2)
         return Value::undefinedValue();
 
+    ValueScope scope(ctx);
+
     QQmlSqlDatabaseWrapper *r = ctx->thisObject.as<QQmlSqlDatabaseWrapper>();
     if (!r || r->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
@@ -341,7 +343,7 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         ok = false;
         db.transaction();
 
-        ScopedCallData callData(ctx->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->thisObject = engine->global();
         callData->args[0] = Value::fromObject(w);
         try {
@@ -377,6 +379,7 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
     if (!r || r->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
+    ValueScope scope(ctx);
     QV8Engine *engine = ctx->engine->v8Engine;
 
     FunctionObject *callback = ctx->argumentCount ? ctx->arguments[0].asFunctionObject() : 0;
@@ -395,7 +398,7 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
 
     db.transaction();
     if (callback) {
-        ScopedCallData callData(ctx->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->thisObject = engine->global();
         callData->args[0] = Value::fromObject(w);
         try {
@@ -678,7 +681,8 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     db->version = version;
 
     if (created && dbcreationCallback) {
-        ScopedCallData callData(ctx->engine, 1);
+        ValueScope scope(ctx);
+        ScopedCallData callData(scope, 1);
         callData->thisObject = engine->global();
         callData->args[0] = Value::fromObject(db);
         dbcreationCallback->call(callData);

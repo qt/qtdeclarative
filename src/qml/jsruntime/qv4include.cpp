@@ -104,8 +104,9 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
         return;
 
     QV4::ExecutionContext *ctx = f->engine()->current;
+    QV4::ValueScope scope(ctx);
     try {
-        QV4::ScopedCallData callData(ctx->engine, 1);
+        QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = QV4::Value::fromObject(f->engine()->globalObject);
         callData->args[0] = status;
         f->call(callData);

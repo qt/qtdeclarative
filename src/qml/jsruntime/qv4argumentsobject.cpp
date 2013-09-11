@@ -106,6 +106,7 @@ void ArgumentsObject::destroy(Managed *that)
 
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)
 {
+    ValueScope scope(ctx);
     uint pidx = propertyIndexFromArrayIndex(index);
     Property *pd = arrayData + pidx;
     Property map;
@@ -130,7 +131,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
-            ScopedCallData callData(ctx->engine, 1);
+            ScopedCallData callData(scope, 1);
             callData->thisObject = Value::fromObject(this);
             callData->args[0] = desc.value;
             map.setter()->call(callData);

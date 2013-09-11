@@ -63,7 +63,7 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
     if (Object *o = m_comparefn.asObject()) {
         ValueScope scope(o->engine());
         ScopedValue result(scope);
-        ScopedCallData callData(o->engine(), 2);
+        ScopedCallData callData(scope, 2);
         callData->thisObject = Value::undefinedValue();
         callData->args[0] = p1.value;
         callData->args[1] = p2.value;

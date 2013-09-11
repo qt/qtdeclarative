@@ -1461,6 +1461,7 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 {
     ExecutionContext *ctx = v4->current;
+    QV4::ValueScope scope(v4);
     try {
         Object *o = me.asObject();
         if (!o)
@@ -1482,7 +1483,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
-            QV4::ScopedCallData callData(v4, 0);
+            QV4::ScopedCallData callData(scope, 0);
             callData->thisObject = activationObject;
             callback->call(callData);
         }

@@ -357,7 +357,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.as<RegExpObject>();
     if (!rx) {
-        ScopedCallData callData(context->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
         rx = context->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
     }
@@ -371,7 +371,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     // ### use the standard builtin function, not the one that might be redefined in the proto
     FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
-    ScopedCallData callData(context->engine, 1);
+    ScopedCallData callData(scope, 1);
     callData->thisObject = Value::fromObject(rx);
     callData->args[0] = Value::fromString(s);
     if (!global)
@@ -514,7 +514,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     ScopedValue replacement(scope);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         result.reserve(string.length() + 10*numStringMatches);
-        ScopedCallData callData(ctx->engine, numCaptures + 2);
+        ScopedCallData callData(scope, numCaptures + 2);
         callData->thisObject = Value::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
@@ -566,6 +566,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
 
 Value StringPrototype::method_search(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();
@@ -575,7 +576,7 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
     Value regExpValue = ctx->argument(0);
     RegExpObject *regExp = regExpValue.as<RegExpObject>();
     if (!regExp) {
-        ScopedCallData callData(ctx->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->args[0] = regExpValue;
         regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
         regExp = regExpValue.as<RegExpObject>();

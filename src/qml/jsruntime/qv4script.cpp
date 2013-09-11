@@ -250,7 +250,7 @@ Value Script::run()
 
     } else {
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject());
-        ScopedCallData callData(scope->engine, 0);
+        ScopedCallData callData(valueScope, 0);
         callData->thisObject = Value::undefinedValue();
         return Value::fromReturnedValue(f->call(callData));
     }

@@ -698,12 +698,13 @@ static QString quote(const QString &str)
 
 QString Stringify::Str(const QString &key, Value value)
 {
+    ValueScope scope(ctx);
     QString result;
 
     if (Object *o = value.asObject()) {
         FunctionObject *toJSON = o->get(ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
         if (toJSON) {
-            ScopedCallData callData(ctx->engine, 1);
+            ScopedCallData callData(scope, 1);
             callData->thisObject = value;
             callData->args[0] = Value::fromString(ctx, key);
             value = Value::fromReturnedValue(toJSON->call(callData));
@@ -714,7 +715,7 @@ QString Stringify::Str(const QString &key, Value value)
         Object *holder = ctx->engine->newObject();
         Value holderValue = Value::fromObject(holder);
         holder->put(ctx, QString(), value);
-        ScopedCallData callData(ctx->engine, 2);
+        ScopedCallData callData(scope, 2);
         callData->args[0] = Value::fromString(ctx, key);
         callData->args[1] = value;
         callData->thisObject = holderValue;

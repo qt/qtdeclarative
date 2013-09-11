@@ -174,7 +174,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 This = value;
         }
 
-        QV4::ScopedCallData callData(v4, argc);
+        QV4::ScopedCallData callData(scope, argc);
         callData->thisObject = This;
         memcpy(callData->args, args, argc*sizeof(QV4::Value));
         result = function.asFunctionObject()->call(callData);

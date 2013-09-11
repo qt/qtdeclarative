@@ -392,7 +392,7 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
 
     if (strictMode) {
         FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
-        ScopedCallData callData(ctx->engine, 0);
+        ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->thisObject;
         return e->call(callData);
     }

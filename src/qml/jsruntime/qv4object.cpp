@@ -135,7 +135,8 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    ScopedCallData callData(getter->engine(), 0);
+    ValueScope scope(getter->engine());
+    ScopedCallData callData(scope, 0);
     callData->thisObject = thisObject;
     return Value::fromReturnedValue(getter->call(callData));
 }
@@ -144,7 +145,8 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            ScopedCallData callData(pd->set->engine(), 1);
+            ValueScope scope(pd->set->engine());
+            ScopedCallData callData(scope, 1);
             callData->args[0] = value;
             callData->thisObject = Value::fromObject(this);
             pd->set->call(callData);
@@ -774,7 +776,8 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ScopedCallData callData(engine(), 1);
+        ValueScope scope(engine());
+        ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);
@@ -852,7 +855,8 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ScopedCallData callData(engine(), 1);
+        ValueScope scope(engine());
+        ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);

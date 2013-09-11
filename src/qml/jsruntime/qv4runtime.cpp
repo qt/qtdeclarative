@@ -570,20 +570,19 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
         qSwap(meth1, meth2);
 
     ExecutionContext *ctx = engine->current;
+    ValueScope scope(ctx);
+    ScopedCallData callData(scope, 0);
+    callData->thisObject = Value::fromObject(object);
 
-    Value conv = object->get(meth1);
-    if (FunctionObject *o = conv.asFunctionObject()) {
-        ScopedCallData callData(engine, 0);
-        callData->thisObject = Value::fromObject(object);
+    ScopedValue conv(scope, object->get(meth1));
+    if (FunctionObject *o = conv->asFunctionObject()) {
         Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
             return r.asReturnedValue();
     }
 
     conv = object->get(meth2);
-    if (FunctionObject *o = conv.asFunctionObject()) {
-        ScopedCallData callData(engine, 0);
-        callData->thisObject = Value::fromObject(object);
+    if (FunctionObject *o = conv->asFunctionObject()) {
         Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
             return r.asReturnedValue();
@@ -698,6 +697,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
 {
+    ValueScope scope(ctx);
     Object *o = object->toObject(ctx);
 
     uint idx = index->asArrayIndex();
@@ -724,7 +724,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
                     return;
                 }
 
-                ScopedCallData callData(ctx->engine, 1);
+                ScopedCallData callData(scope, 1);
                 callData->thisObject = Value::fromObject(o);
                 callData->args[0] = *value;
                 setter->call(callData);

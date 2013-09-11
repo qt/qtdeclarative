@@ -359,11 +359,12 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
 
 Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
-    ScopedCallData callData(ctx->engine, ctx->argumentCount);
+    ScopedCallData callData(scope, ctx->argumentCount);
     memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
     RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
 

@@ -82,6 +82,9 @@ struct ScopedValue;
 struct ValueScope {
     ValueScope(ExecutionContext *ctx)
         : engine(ctx->engine)
+#ifndef QT_NO_DEBUG
+        , size(0)
+#endif
     {
         mark = ctx->engine->jsStackTop;
     }
@@ -99,6 +102,9 @@ struct ValueScope {
 
     ExecutionEngine *engine;
     Value *mark;
+#ifndef QT_NO_DEBUG
+    mutable int size;
+#endif
 };
 
 struct ScopedValue;
@@ -109,18 +115,27 @@ struct ScopedValue
     ScopedValue(const ValueScope &scope)
     {
         ptr = scope.engine->jsStackTop++;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
     ScopedValue(const ValueScope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
         *ptr = v;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
     ScopedValue(const ValueScope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->val = v;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
     ScopedValue &operator=(const Value &v) {
@@ -156,24 +171,14 @@ struct ScopedValue
 };
 
 struct ScopedCallData {
-    ScopedCallData(ExecutionEngine *e, int argc)
-        : engine(e)
-        // ### this check currently won't work because of exceptions
-#ifndef QT_NO_DEBUG
-        , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value))
-#endif
+    ScopedCallData(ValueScope &scope, int argc)
     {
-        ptr = reinterpret_cast<CallData *>(e->stackPush(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value)));
+        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+        ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));
         ptr->tag = 0;
         ptr->argc = argc;
-    }
-
-    ~ScopedCallData() {
 #ifndef QT_NO_DEBUG
-        engine->stackPop(size);
-        Q_ASSERT((void *)engine->jsStackTop == (void *)ptr);
-#else
-        engine->jsStackTop = reinterpret_cast<Value *>(ptr);
+        scope.size += size;
 #endif
     }
 
@@ -185,11 +190,6 @@ struct ScopedCallData {
         return ptr;
     }
 
-
-    ExecutionEngine *engine;
-#ifndef QT_NO_DEBUG
-    int size;
-#endif
     CallData *ptr;
 };
 

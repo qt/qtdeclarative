@@ -1303,7 +1303,7 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
     if (!toIso)
         ctx->throwTypeError();
 
-    ScopedCallData callData(ctx->engine, 0);
+    ScopedCallData callData(scope, 0);
     callData->thisObject = ctx->thisObject;
     return Value::fromReturnedValue(toIso->call(callData));
 }
