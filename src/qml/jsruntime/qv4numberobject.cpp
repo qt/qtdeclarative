@@ -225,7 +225,7 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     ScopedValue v(scope, thisNumberValue(ctx));
 

@@ -698,7 +698,7 @@ static QString quote(const QString &str)
 
 QString Stringify::Str(const QString &key, Value value)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     QString result;
 
     if (Object *o = value.asObject()) {
@@ -887,7 +887,7 @@ Value JsonObject::method_parse(SimpleCallContext *ctx)
 
 Value JsonObject::method_stringify(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     Stringify stringify(ctx);
 

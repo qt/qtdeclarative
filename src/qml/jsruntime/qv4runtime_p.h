@@ -596,7 +596,7 @@ inline QV4::Bool __qmljs_cmp_instanceof(QV4::ExecutionContext *ctx, const QV4::V
 {
     TRACE2(left, right);
 
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     QV4::ScopedValue v(scope, __qmljs_instanceof(ctx, left, right));
     return v->booleanValue();
 }
@@ -605,7 +605,7 @@ inline uint __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left,
 {
     TRACE2(left, right);
 
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     QV4::ScopedValue v(scope, __qmljs_in(ctx, left, right));
     return v->booleanValue();
 }

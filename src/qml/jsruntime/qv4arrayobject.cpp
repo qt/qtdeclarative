@@ -138,7 +138,7 @@ Value ArrayPrototype::method_toString(SimpleCallContext *ctx)
     QV4::Object *o = ctx->thisObject.toObject(ctx);
     FunctionObject *f = o->get(ctx->engine->newString("join")).asFunctionObject();
     if (f) {
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedCallData d(scope, 0);
         d->thisObject = ctx->thisObject;
         return Value::fromReturnedValue(f->call(d));
@@ -547,7 +547,7 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -587,7 +587,7 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
@@ -627,7 +627,7 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_every(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -660,7 +660,7 @@ Value ArrayPrototype::method_every(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_some(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -690,7 +690,7 @@ Value ArrayPrototype::method_some(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_forEach(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -718,7 +718,7 @@ Value ArrayPrototype::method_forEach(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_map(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -754,7 +754,7 @@ Value ArrayPrototype::method_map(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -793,7 +793,7 @@ Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);
@@ -839,7 +839,7 @@ Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *instance = ctx->thisObject.toObject(ctx);
 
     uint len = getLength(ctx, instance);

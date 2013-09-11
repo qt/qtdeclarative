@@ -1207,7 +1207,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     QV8Engine *v8engine = args->engine();
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
-    QV4::ValueScope scope(v4engine);
+    QV4::Scope scope(v4engine);
 
     QQmlContext *ctxt = creationContext();
     if (!ctxt) ctxt = d->engine->rootContext();
@@ -1367,7 +1367,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
-    QV4::ValueScope scope(v4engine);
+    QV4::Scope scope(v4engine);
 
     QV4::Value object = QV4::QObjectWrapper::wrap(v4engine, toCreate);
     Q_ASSERT(object.asObject());
@@ -1472,7 +1472,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QQmlComponentExtension *e = componentExtension(v8);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
-        QV4::ValueScope scope(v4);
+        QV4::Scope scope(v4);
 
         QV4::Value f = QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
         QV4::ScopedCallData callData(scope, 2);
@@ -1511,7 +1511,7 @@ void QmlIncubatorObject::statusChanged(Status s)
 
     if (QV4::FunctionObject *f = callback.asFunctionObject()) {
         QV4::ExecutionContext *ctx = f->engine()->current;
-        QV4::ValueScope scope(ctx);
+        QV4::Scope scope(ctx);
         try {
             QV4::ScopedCallData callData(scope, 1);
             callData->thisObject = QV4::Value::fromObject(this);

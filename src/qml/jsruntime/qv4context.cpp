@@ -596,7 +596,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
 
 void ExecutionContext::throwError(const Value &value)
 {
-    ValueScope scope(this);
+    Scope scope(this);
     ScopedValue v(scope, value);
     __qmljs_throw(this, v);
 }

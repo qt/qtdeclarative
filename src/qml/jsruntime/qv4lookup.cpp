@@ -198,7 +198,7 @@ void Lookup::getterAccessor0(Lookup *l, Value *result, const Value &object)
 {
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass) {
-            ValueScope scope(o->engine());
+            Scope scope(o->engine());
             Value res;
             FunctionObject *getter = o->memberData[l->index].getter();
             if (!getter) {
@@ -222,7 +222,7 @@ void Lookup::getterAccessor1(Lookup *l, Value *result, const Value &object)
     if (Object *o = object.asObject()) {
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass) {
-            ValueScope scope(o->engine());
+            Scope scope(o->engine());
             Value res;
             FunctionObject *getter = o->prototype()->memberData[l->index].getter();
             if (!getter) {
@@ -249,7 +249,7 @@ void Lookup::getterAccessor2(Lookup *l, Value *result, const Value &object)
             if (l->classList[1] == o->internalClass) {
                 o = o->prototype();
                 if (l->classList[2] == o->internalClass) {
-                    ValueScope scope(o->engine());
+                    Scope scope(o->engine());
                     Value res;
                     FunctionObject *getter = o->memberData[l->index].getter();
                     if (!getter) {
@@ -305,7 +305,7 @@ void Lookup::primitiveGetterAccessor0(Lookup *l, Value *result, const Value &obj
     if (object.type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass) {
-            ValueScope scope(o->engine());
+            Scope scope(o->engine());
             Value res;
             FunctionObject *getter = o->memberData[l->index].getter();
             if (!getter) {
@@ -330,7 +330,7 @@ void Lookup::primitiveGetterAccessor1(Lookup *l, Value *result, const Value &obj
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass) {
-            ValueScope scope(o->engine());
+            Scope scope(o->engine());
             Value res;
             FunctionObject *getter = o->prototype()->memberData[l->index].getter();
             if (!getter) {
@@ -436,7 +436,7 @@ void Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *resu
 {
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass) {
-        ValueScope scope(o->engine());
+        Scope scope(o->engine());
         FunctionObject *getter = o->memberData[l->index].getter();
         if (!getter) {
             *result = Value::undefinedValue();
@@ -456,7 +456,7 @@ void Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *resu
     Object *o = ctx->engine->globalObject;
     if (l->classList[0] == o->internalClass &&
         l->classList[1] == o->prototype()->internalClass) {
-        ValueScope scope(o->engine());
+        Scope scope(o->engine());
         FunctionObject *getter = o->prototype()->memberData[l->index].getter();
         if (!getter) {
             *result = Value::undefinedValue();
@@ -479,7 +479,7 @@ void Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *resu
         if (l->classList[1] == o->internalClass) {
             o = o->prototype();
             if (l->classList[2] == o->internalClass) {
-                ValueScope scope(o->engine());
+                Scope scope(o->engine());
                 FunctionObject *getter = o->memberData[l->index].getter();
                 if (!getter) {
                     *result = Value::undefinedValue();

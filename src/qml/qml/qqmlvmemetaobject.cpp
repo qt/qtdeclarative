@@ -927,7 +927,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                QV4::ValueScope scope(function->engine());
+                QV4::Scope scope(function->engine());
                 QV4::ScopedCallData callData(scope, data->parameterCount);
                 callData->thisObject = ep->v8engine()->global();
 

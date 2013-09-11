@@ -280,7 +280,7 @@ Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 
 Value StringPrototype::method_concat(SimpleCallContext *context)
 {
-    ValueScope scope(context);
+    Scope scope(context);
 
     QString value = getThisString(context, context->thisObject);
 
@@ -315,7 +315,7 @@ Value StringPrototype::method_indexOf(SimpleCallContext *context)
 
 Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 {
-    ValueScope scope(context);
+    Scope scope(context);
 
     const QString value = getThisString(context, context->thisObject);
 
@@ -351,7 +351,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     if (context->thisObject.isUndefined() || context->thisObject.isNull())
         context->throwTypeError();
 
-    ValueScope scope(context);
+    Scope scope(context);
     String *s = context->thisObject.toString(context);
 
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
@@ -455,7 +455,7 @@ static void appendReplacementString(QString *result, const QString &input, const
 
 Value StringPrototype::method_replace(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();
@@ -566,7 +566,7 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
 
 Value StringPrototype::method_search(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();

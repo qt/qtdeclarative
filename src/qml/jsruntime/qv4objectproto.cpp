@@ -381,7 +381,7 @@ Value ObjectPrototype::method_toString(SimpleCallContext *ctx)
 
 Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *o = ctx->thisObject.toObject(ctx);
     Value ts = o->get(ctx->engine->newString(QStringLiteral("toString")));
     FunctionObject *f = ts.asFunctionObject();

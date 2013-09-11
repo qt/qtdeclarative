@@ -701,7 +701,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
 
-            ValueScope scope(v4);
+            Scope scope(v4);
             QV4::ScopedCallData callData(scope, argCount);
             callData->thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
@@ -741,7 +741,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 return;
             }
 
-            QV4::ValueScope scope(v4);
+            QV4::Scope scope(v4);
             QV4::ScopedValue function(scope, *reinterpret_cast<QV4::Value*>(metaArgs[1]));
             QV4::ScopedValue thisObject(scope, *reinterpret_cast<QV4::Value*>(metaArgs[2]));
             QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);

@@ -327,7 +327,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
 
 Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     Object *o = ctx->thisObject.asObject();
     if (!o)

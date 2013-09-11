@@ -79,8 +79,8 @@ struct ScopedValueArray {
 
 struct ScopedValue;
 
-struct ValueScope {
-    ValueScope(ExecutionContext *ctx)
+struct Scope {
+    Scope(ExecutionContext *ctx)
         : engine(ctx->engine)
 #ifndef QT_NO_DEBUG
         , size(0)
@@ -89,13 +89,13 @@ struct ValueScope {
         mark = ctx->engine->jsStackTop;
     }
 
-    ValueScope(ExecutionEngine *e)
+    Scope(ExecutionEngine *e)
         : engine(e)
     {
         mark = e->jsStackTop;
     }
 
-    ~ValueScope() {
+    ~Scope() {
         Q_ASSERT(engine->jsStackTop >= mark);
         engine->jsStackTop = mark;
     }
@@ -112,7 +112,7 @@ struct ValueRef;
 
 struct ScopedValue
 {
-    ScopedValue(const ValueScope &scope)
+    ScopedValue(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
 #ifndef QT_NO_DEBUG
@@ -120,7 +120,7 @@ struct ScopedValue
 #endif
     }
 
-    ScopedValue(const ValueScope &scope, const Value &v)
+    ScopedValue(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
         *ptr = v;
@@ -129,7 +129,7 @@ struct ScopedValue
 #endif
     }
 
-    ScopedValue(const ValueScope &scope, const ReturnedValue &v)
+    ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->val = v;
@@ -171,7 +171,7 @@ struct ScopedValue
 };
 
 struct ScopedCallData {
-    ScopedCallData(ValueScope &scope, int argc)
+    ScopedCallData(Scope &scope, int argc)
     {
         int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value);
         ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));

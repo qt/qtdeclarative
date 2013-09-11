@@ -788,7 +788,7 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
         ex.accept(context);
         *exceptionVar = ex.value();
         try {
-            QV4::ValueScope scope(context);
+            QV4::Scope scope(context);
             QV4::ScopedValue exception(scope, ex.value());
             ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exception, context);
             addressToContinueAt = catchBody(catchContext, localsPtr);

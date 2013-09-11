@@ -132,7 +132,7 @@ double Value::toNumber() const
         return __qmljs_string_to_number(stringValue()->toQString());
     case QV4::Value::Object_Type: {
         ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
         return prim->toNumber();
     }
@@ -157,7 +157,7 @@ QString Value::toQStringNoThrow() const
         return stringValue()->toQString();
     case Value::Object_Type: {
         ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         try {
             ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
             if (prim->isPrimitive())
@@ -204,7 +204,7 @@ QString Value::toQString() const
         return stringValue()->toQString();
     case Value::Object_Type: {
         ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
         return prim->toQString();
     }

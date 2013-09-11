@@ -354,7 +354,7 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Managed *fun = this->m_compareFn.asManaged();
-            ValueScope scope(fun->engine());
+            Scope scope(fun->engine());
             ScopedCallData callData(scope, 2);
             callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);

@@ -232,7 +232,7 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
 Value RegExpCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionContext *ctx = m->engine()->current;
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     ScopedValue r(scope, callData->argc > 0 ? callData->args[0] : Value::undefinedValue());
     ScopedValue f(scope, callData->argc > 1 ? callData->args[1] : Value::undefinedValue());
@@ -298,7 +298,7 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
@@ -359,7 +359,7 @@ Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
 
 Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();

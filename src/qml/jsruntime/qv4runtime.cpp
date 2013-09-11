@@ -276,7 +276,7 @@ ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
 
 QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
     ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
@@ -314,7 +314,7 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
 
 static void inplaceBitOp(ExecutionContext *ctx, String *name, const ValueRef value, BinOp op)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
     ScopedValue result(scope, op(lhs, value));
     ctx->setProperty(name, result);
@@ -338,7 +338,7 @@ void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const Val
 
 void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const ValueRef value)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
     ScopedValue result(scope, __qmljs_add(ctx, lhs, value));
     ctx->setProperty(name, result);
@@ -570,7 +570,7 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
         qSwap(meth1, meth2);
 
     ExecutionContext *ctx = engine->current;
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedCallData callData(scope, 0);
     callData->thisObject = Value::fromObject(object);
 
@@ -633,17 +633,17 @@ String *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
     case Value::String_Type:
         return value->stringValue();
     case Value::Object_Type: {
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
         return __qmljs_convert_to_string(ctx, prim);
     }
     case Value::Integer_Type: {
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedValue dbl(scope, __qmljs_string_from_number(ctx, value->int_32));
         return dbl->stringValue();
     }
     default: { // double
-        ValueScope scope(ctx);
+        Scope scope(ctx);
         ScopedValue dbl(scope, __qmljs_string_from_number(ctx, value->doubleValue()));
         return dbl->stringValue();
     }
@@ -697,7 +697,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Object *o = object->toObject(ctx);
 
     uint idx = index->asArrayIndex();
@@ -808,11 +808,11 @@ uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
         Value ny = Value::fromDouble((double) y->booleanValue());
         return __qmljs_cmp_eq(x, ValueRef(&ny));
     } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-        ValueScope scope(y->objectValue()->engine());
+        Scope scope(y->objectValue()->engine());
         ScopedValue py(scope, __qmljs_to_primitive(y, PREFERREDTYPE_HINT));
         return __qmljs_cmp_eq(x, py);
     } else if (x->isObject() && (y->isNumber() || y->isString())) {
-        ValueScope scope(x->objectValue()->engine());
+        Scope scope(x->objectValue()->engine());
         ScopedValue px(scope, __qmljs_to_primitive(x, PREFERREDTYPE_HINT));
         return __qmljs_cmp_eq(px, y);
     }
@@ -847,7 +847,7 @@ QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 
     if (l->isObject() || r->isObject()) {
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
-        QV4::ValueScope scope(e);
+        QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
         return __qmljs_cmp_gt(pl, pr);
@@ -870,7 +870,7 @@ QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
 
     if (l->isObject() || r->isObject()) {
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
-        QV4::ValueScope scope(e);
+        QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
         return __qmljs_cmp_lt(pl, pr);
@@ -893,7 +893,7 @@ QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
 
     if (l->isObject() || r->isObject()) {
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
-        QV4::ValueScope scope(e);
+        QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
         return __qmljs_cmp_ge(pl, pr);
@@ -916,7 +916,7 @@ QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
 
     if (l->isObject() || r->isObject()) {
         QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
-        QV4::ValueScope scope(e);
+        QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
         return __qmljs_cmp_le(pl, pr);
@@ -949,7 +949,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
 ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
-    ValueScope scope(context);
+    Scope scope(context);
 
     Object *base;
     ScopedValue func(scope, context->getPropertyAndBase(name, &base));
@@ -1049,7 +1049,7 @@ ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint in
 
 ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
     Object *f = func->asObject();
     if (!f)
@@ -1115,14 +1115,14 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
 
 QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, String *name)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     ScopedValue prop(scope, context->getPropertyNoThrow(name));
     return __qmljs_builtin_typeof(context, prop);
 }
 
 QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *name)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     Object *obj = base->toObject(context);
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
@@ -1130,7 +1130,7 @@ QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, cons
 
 QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, const ValueRef base, const ValueRef index)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     String *name = index->toString(context);
     Object *obj = base->toObject(context);
     ScopedValue prop(scope, obj->get(name));

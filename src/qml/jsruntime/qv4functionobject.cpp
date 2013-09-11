@@ -124,7 +124,7 @@ FunctionObject::~FunctionObject()
 
 Value FunctionObject::newInstance()
 {
-    ValueScope scope(engine());
+    Scope scope(engine());
     ScopedCallData callData(scope, 0);
     return construct(callData);
 }
@@ -289,7 +289,7 @@ Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
 
 Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
@@ -331,7 +331,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
 
 Value FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     Value thisArg = ctx->argument(0);
 
     FunctionObject *o = ctx->thisObject.asFunctionObject();
@@ -409,7 +409,7 @@ Value ScriptFunction::construct(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
-    ValueScope scope(v4);
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -442,7 +442,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
     void *stackSpace;
     ExecutionContext *context = f->engine()->current;
-    ValueScope scope(context);
+    Scope scope(context);
     CallContext *ctx = context->newCallContext(f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -505,7 +505,7 @@ Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     ExecutionEngine *v4 = f->engine();
-    ValueScope scope(v4);
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -539,7 +539,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = f->engine()->current;
-    ValueScope scope(context);
+    Scope scope(context);
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -667,7 +667,7 @@ void BoundFunction::destroy(Managed *that)
 ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    ValueScope scope(f->scope->engine);
+    Scope scope(f->scope->engine);
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
@@ -679,7 +679,7 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 Value BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    ValueScope scope(f->scope->engine);
+    Scope scope(f->scope->engine);
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));

@@ -106,7 +106,7 @@ void ArgumentsObject::destroy(Managed *that)
 
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     uint pidx = propertyIndexFromArrayIndex(index);
     Property *pd = arrayData + pidx;
     Property map;

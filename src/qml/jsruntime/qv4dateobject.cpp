@@ -662,7 +662,7 @@ Value DateCtor::construct(Managed *m, CallData *callData)
         t = currentTime();
 
     else if (callData->argc == 1) {
-        ValueScope scope(m->engine());
+        Scope scope(m->engine());
         ScopedValue arg(scope, callData->args[0]);
         if (DateObject *d = arg->asDateObject())
             arg = d->value;
@@ -1291,7 +1291,7 @@ Value DatePrototype::method_toISOString(SimpleCallContext *ctx)
 
 Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue O(scope, __qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
     ScopedValue tv(scope, __qmljs_to_primitive(O, NUMBER_HINT));
 

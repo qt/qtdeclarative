@@ -163,7 +163,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     DeleteWatcher watcher(this);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
-    QV4::ValueScope scope(v4);
+    QV4::Scope scope(v4);
     QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
     try {

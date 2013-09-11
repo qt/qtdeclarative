@@ -135,7 +135,7 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    ValueScope scope(getter->engine());
+    Scope scope(getter->engine());
     ScopedCallData callData(scope, 0);
     callData->thisObject = thisObject;
     return Value::fromReturnedValue(getter->call(callData));
@@ -145,7 +145,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            ValueScope scope(pd->set->engine());
+            Scope scope(pd->set->engine());
             ScopedCallData callData(scope, 1);
             callData->args[0] = value;
             callData->thisObject = Value::fromObject(this);
@@ -169,7 +169,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue v(scope, get(name));
     ScopedValue result(scope, op(v, rhs));
     put(name, result);
@@ -177,7 +177,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const V
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
@@ -193,7 +193,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index,
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue v(scope, get(name));
     ScopedValue result(scope, op(ctx, v, rhs));
     put(name, result);
@@ -201,7 +201,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, 
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
@@ -776,7 +776,7 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ValueScope scope(engine());
+        Scope scope(engine());
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
@@ -855,7 +855,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ValueScope scope(engine());
+        Scope scope(engine());
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
@@ -1137,7 +1137,7 @@ void Object::copyArrayData(Object *other)
 
 Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
-    ValueScope scope(engine());
+    Scope scope(engine());
     ScopedValue value(scope);
 
     if (o->protoHasArray() || o->arrayAttributes) {

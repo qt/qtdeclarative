@@ -362,7 +362,7 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
     ExecutionContext *parentContext = engine()->current;
     ExecutionEngine *engine = parentContext->engine;
     ExecutionContext *ctx = parentContext;
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root

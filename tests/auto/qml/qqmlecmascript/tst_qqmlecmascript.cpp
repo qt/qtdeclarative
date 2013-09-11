@@ -2273,7 +2273,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        QV4::ValueScope scope(ctx);
+        QV4::Scope scope(ctx);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
@@ -2299,7 +2299,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        QV4::ValueScope scope(ctx);
+        QV4::Scope scope(ctx);
         QV4::ScopedValue value(scope);
         QV4::ScopedValue res(scope, result);
         QV4::ScopedCallData d(scope, 1);
@@ -2326,7 +2326,7 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return QV4::Value::emptyValue();
-        QV4::ValueScope scope(ctx);
+        QV4::Scope scope(ctx);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();

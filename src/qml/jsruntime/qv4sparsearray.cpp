@@ -61,7 +61,7 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
     if (p2.value.isUndefined())
         return true;
     if (Object *o = m_comparefn.asObject()) {
-        ValueScope scope(o->engine());
+        Scope scope(o->engine());
         ScopedValue result(scope);
         ScopedCallData callData(scope, 2);
         callData->thisObject = Value::undefinedValue();
