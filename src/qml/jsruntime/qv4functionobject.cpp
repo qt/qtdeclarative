@@ -267,7 +267,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     if (!fe)
         v4->current->throwSyntaxError(0);
 
-    QQmlJS::V4IR::Module module;
+    QQmlJS::V4IR::Module module(v4->debugger != 0);
 
     QQmlJS::RuntimeCodegen cg(v4->current, f->strictMode);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);

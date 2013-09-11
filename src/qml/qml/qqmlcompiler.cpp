@@ -810,7 +810,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->unit = unit;
     this->unitRoot = root;
     this->output = out;
-    this->jsModule.reset(new QQmlJS::V4IR::Module);
+    this->jsModule.reset(new QQmlJS::V4IR::Module(enginePrivate->v4engine()->debugger));
     this->jsModule->isQmlModule = true;
 
     // Compile types

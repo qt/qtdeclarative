@@ -166,8 +166,9 @@ struct Pragma
 
 struct ParsedQML
 {
-    ParsedQML()
-        : jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
+    ParsedQML(bool debugMode)
+        : jsModule(debugMode)
+        , jsGenerator(&jsModule, sizeof(QV4::CompiledData::QmlUnit))
     {}
     QString code;
     QQmlJS::Engine jsParserEngine;

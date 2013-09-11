@@ -64,12 +64,35 @@ class DebuggerAgent;
 class Q_QML_EXPORT Debugger
 {
 public:
+    struct VarInfo {
+        enum Type {
+            Invalid = 0,
+            Undefined = 1,
+            Null,
+            Number,
+            String,
+            Bool,
+            Object
+        };
+
+        QString name;
+        QVariant value;
+        Type type;
+
+        VarInfo(): type(Invalid) {}
+        VarInfo(const QString &name, const QVariant &value, Type type)
+            : name(name), value(value), type(type)
+        {}
+
+        bool isValid() const { return type != Invalid; }
+    };
+
     enum State {
         Running,
         Paused
     };
 
-    Debugger(ExecutionEngine *_engine);
+    Debugger(ExecutionEngine *engine);
     ~Debugger();
 
     void attachToAgent(DebuggerAgent *agent);
@@ -98,6 +121,10 @@ public:
     }
     void setPendingBreakpoints(Function *function);
 
+    QVector<StackFrame> stackTrace(int frameLimit = -1) const;
+    QList<VarInfo> retrieveArgumentsFromContext(const QStringList &path, int frame = 0);
+    QList<VarInfo> retrieveLocalsFromContext(const QStringList &path, int frame = 0);
+
 public: // compile-time interface
     void maybeBreakAtInstruction(const uchar *code, bool breakPointHit);
 
@@ -110,6 +137,9 @@ private:
 
     void applyPendingBreakPoints();
 
+    QList<Debugger::VarInfo> retrieveFromValue(const ObjectRef o, const QStringList &path) const;
+    void convert(ValueRef v, QVariant *varValue, VarInfo::Type *type) const;
+
     struct BreakPoints : public QHash<QString, QList<int> >
     {
         void add(const QString &fileName, int lineNumber);
@@ -118,7 +148,7 @@ private:
         void applyToFunction(Function *function, bool removeBreakPoints);
     };
 
-    QV4::ExecutionEngine *_engine;
+    QV4::ExecutionEngine *m_engine;
     DebuggerAgent *m_agent;
     QMutex m_lock;
     QWaitCondition m_runningCondition;
@@ -142,6 +172,7 @@ public:
 
     void pause(Debugger *debugger) const;
     void pauseAll() const;
+    void resumeAll() const;
     void addBreakPoint(const QString &fileName, int lineNumber) const;
     void removeBreakPoint(const QString &fileName, int lineNumber) const;
 

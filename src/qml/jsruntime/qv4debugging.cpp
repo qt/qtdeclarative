@@ -44,6 +44,7 @@
 #include "qv4functionobject_p.h"
 #include "qv4function_p.h"
 #include "qv4instr_moth_p.h"
+#include "qv4runtime_p.h"
 #include <iostream>
 
 #include <algorithm>
@@ -52,7 +53,7 @@ using namespace QV4;
 using namespace QV4::Debugging;
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
-    : _engine(engine)
+    : m_engine(engine)
     , m_agent(0)
     , m_state(Running)
     , m_pauseRequested(false)
@@ -122,7 +123,7 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
     // ### Locking
     ExecutionState state;
 
-    QV4::ExecutionContext *context = _engine->current;
+    QV4::ExecutionContext *context = m_engine->current;
     QV4::Function *function = 0;
     if (CallContext *callCtx = context->asCallContext())
         function = callCtx->function->function;
@@ -143,6 +144,187 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
 void Debugger::setPendingBreakpoints(Function *function)
 {
     m_pendingBreakPointsToAddToFutureCode.applyToFunction(function, /*removeBreakPoints*/ false);
+}
+
+QVector<StackFrame> Debugger::stackTrace(int frameLimit) const
+{
+    return m_engine->stackTrace(frameLimit);
+}
+
+QList<Debugger::VarInfo> Debugger::retrieveFromValue(const ObjectRef o, const QStringList &path) const
+{
+    QList<Debugger::VarInfo> props;
+    if (!o)
+        return props;
+
+    Scope scope(m_engine);
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
+    ScopedValue name(scope);
+    ScopedValue val(scope);
+    while (true) {
+        Value v;
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
+            break;
+        QString key = name->toQStringNoThrow();
+        if (path.isEmpty()) {
+            val = v;
+            QVariant varValue;
+            VarInfo::Type type;
+            convert(val, &varValue, &type);
+            props.append(VarInfo(key, varValue, type));
+        } else if (path.first() == key) {
+            QStringList pathTail = path;
+            pathTail.pop_front();
+            return retrieveFromValue(ScopedObject(scope, v), pathTail);
+        }
+    }
+
+    return props;
+}
+
+void Debugger::convert(ValueRef v, QVariant *varValue, VarInfo::Type *type) const
+{
+    Q_ASSERT(varValue);
+    Q_ASSERT(type);
+
+    switch (v->type()) {
+    case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+        break;
+    case Value::Undefined_Type:
+        *type = VarInfo::Undefined;
+        varValue->setValue<int>(0);
+        break;
+    case Value::Null_Type:
+        *type = VarInfo::Null;
+        varValue->setValue<int>(0);
+        break;
+    case Value::Boolean_Type:
+        *type = VarInfo::Bool;
+        varValue->setValue<bool>(v->booleanValue());
+        break;
+    case Value::Managed_Type:
+        if (v->isString()) {
+            *type = VarInfo::String;
+            varValue->setValue<QString>(v->stringValue()->toQString());
+        } else {
+            *type = VarInfo::Object;
+            ExecutionContext *ctx = v->objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(v, STRING_HINT));
+            varValue->setValue<QString>(prim->toQString());
+        }
+        break;
+    case Value::Integer_Type:
+        *type = VarInfo::Number;
+        varValue->setValue<double>((double)v->int_32);
+        break;
+    default: // double
+        *type = VarInfo::Number;
+        varValue->setValue<double>(v->doubleValue());
+        break;
+    }
+}
+
+static CallContext *findContext(ExecutionContext *ctxt, int frame)
+{
+    while (ctxt) {
+        if (CallContext *cCtxt = ctxt->asCallContext()) {
+            if (frame < 1)
+                return cCtxt;
+            --frame;
+        }
+        ctxt = ctxt->parent;
+    }
+
+    return 0;
+}
+
+/// Retrieves all arguments from a context, or all properties in an object passed in an argument.
+///
+/// \arg frame specifies the frame number: 0 is top of stack, 1 is the parent of the current frame, etc.
+/// \arg path when empty, retrieve all arguments in the specified frame. When not empty, find the
+///      argument with the same name as the first element in the path (in the specified frame, of
+///      course), and then use the rest of the path to walk nested objects. When the path is empty,
+///      retrieve all properties in that object. If an intermediate non-object is specified by the
+///      path, or non of the property names match, an empty list is returned.
+QList<Debugger::VarInfo> Debugger::retrieveArgumentsFromContext(const QStringList &path, int frame)
+{
+    QList<VarInfo> args;
+
+    if (state() != Paused)
+        return args;
+
+    if (frame < 0)
+        return args;
+
+    CallContext *ctxt = findContext(m_engine->current, frame);
+    if (!ctxt)
+        return args;
+
+    Scope scope(m_engine);
+    ScopedValue v(scope);
+    for (unsigned i = 0, ei = ctxt->formalCount(); i != ei; ++i) {
+        // value = ctxt->argument(i);
+        String *name = ctxt->formals()[i];
+        QString qName;
+        if (name)
+            qName = name->toQString();
+        if (path.isEmpty()) {
+            v = ctxt->argument(i);
+            QVariant value;
+            VarInfo::Type type;
+            convert(v, &value, &type);
+            args.append(VarInfo(qName, value, type));
+        } else if (path.first() == qName) {
+            ScopedObject o(scope, ctxt->argument(i));
+            QStringList pathTail = path;
+            pathTail.pop_front();
+            return retrieveFromValue(o, pathTail);
+        }
+    }
+
+    return args;
+}
+
+/// Same as \c retrieveArgumentsFromContext, but now for locals.
+QList<Debugger::VarInfo> Debugger::retrieveLocalsFromContext(const QStringList &path, int frame)
+{
+    QList<VarInfo> args;
+
+    if (state() != Paused)
+        return args;
+
+    if (frame < 0)
+        return args;
+
+    CallContext *ctxt = findContext(m_engine->current, frame);
+    if (!ctxt)
+        return args;
+
+    Scope scope(m_engine);
+    ScopedValue v(scope);
+    for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
+        String *name = ctxt->variables()[i];
+        QString qName;
+        if (name)
+            qName = name->toQString();
+        if (path.isEmpty()) {
+            v = ctxt->locals[i];
+            QVariant value;
+            VarInfo::Type type;
+            convert(v, &value, &type);
+            args.append(VarInfo(qName, value, type));
+        } else if (path.first() == qName) {
+            ScopedObject o(scope, ctxt->locals[i]);
+            QStringList pathTail = path;
+            pathTail.pop_front();
+            return retrieveFromValue(o, pathTail);
+        }
+    }
+
+    return args;
 }
 
 void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
@@ -187,7 +369,7 @@ void Debugger::pauseAndWait()
 
 void Debugger::applyPendingBreakPoints()
 {
-    foreach (QV4::CompiledData::CompilationUnit *unit, _engine->compilationUnits) {
+    foreach (QV4::CompiledData::CompilationUnit *unit, m_engine->compilationUnits) {
         foreach (Function *function, unit->runtimeFunctions) {
             m_pendingBreakPointsToAdd.applyToFunction(function, /*removeBreakPoints*/false);
             m_pendingBreakPointsToRemove.applyToFunction(function, /*removeBreakPoints*/true);
@@ -204,92 +386,6 @@ void Debugger::applyPendingBreakPoints()
     m_pendingBreakPointsToRemove.clear();
     m_havePendingBreakPoints = false;
 }
-
-static void realDumpValue(const QV4::ValueRef v, QV4::ExecutionContext *ctx, std::string prefix)
-{
-    using namespace QV4;
-    using namespace std;
-
-    Scope scope(ctx);
-
-    cout << prefix << "tag: " << hex << v->tag << dec << endl << prefix << "\t-> ";
-    switch (v->type()) {
-    case Value::Undefined_Type: cout << "Undefined"; return;
-    case Value::Null_Type: cout << "Null"; return;
-    case Value::Boolean_Type: cout << "Boolean"; break;
-    case Value::Integer_Type: cout << "Integer"; break;
-    case Value::Managed_Type: cout << v->managed()->className().toUtf8().data(); break;
-    default: cout << "UNKNOWN" << endl; return;
-    }
-    cout << endl;
-
-    if (v->isBoolean()) {
-        cout << prefix << "\t-> " << (v->booleanValue() ? "TRUE" : "FALSE") << endl;
-        return;
-    }
-
-    if (v->isInteger()) {
-        cout << prefix << "\t-> " << v->integerValue() << endl;
-        return;
-    }
-
-    if (v->isDouble()) {
-        cout << prefix << "\t-> " << v->doubleValue() << endl;
-        return;
-    }
-
-    if (v->isString()) {
-        // maybe check something on the Managed object?
-        cout << prefix << "\t-> @" << hex << v->stringValue() << endl;
-        cout << prefix << "\t-> \"" << qPrintable(v->stringValue()->toQString()) << "\"" << endl;
-        return;
-    }
-
-    ScopedObject o(scope, v);
-    if (!o)
-        return;
-
-    cout << prefix << "\t-> @" << hex << o << endl;
-    cout << prefix << "object type: " << o->internalType() << endl << prefix << "\t-> ";
-    switch (o->internalType()) {
-    case QV4::Managed::Type_Invalid: cout << "Invalid"; break;
-    case QV4::Managed::Type_String: cout << "String"; break;
-    case QV4::Managed::Type_Object: cout << "Object"; break;
-    case QV4::Managed::Type_ArrayObject: cout << "ArrayObject"; break;
-    case QV4::Managed::Type_FunctionObject: cout << "FunctionObject"; break;
-    case QV4::Managed::Type_BooleanObject: cout << "BooleanObject"; break;
-    case QV4::Managed::Type_NumberObject: cout << "NumberObject"; break;
-    case QV4::Managed::Type_StringObject: cout << "StringObject"; break;
-    case QV4::Managed::Type_DateObject: cout << "DateObject"; break;
-    case QV4::Managed::Type_RegExpObject: cout << "RegExpObject"; break;
-    case QV4::Managed::Type_ErrorObject: cout << "ErrorObject"; break;
-    case QV4::Managed::Type_ArgumentsObject: cout << "ArgumentsObject"; break;
-    case QV4::Managed::Type_JSONObject: cout << "JSONObject"; break;
-    case QV4::Managed::Type_MathObject: cout << "MathObject"; break;
-    case QV4::Managed::Type_ForeachIteratorObject: cout << "ForeachIteratorObject"; break;
-    default: cout << "UNKNOWN" << endl; return;
-    }
-    cout << endl;
-
-    cout << prefix << "properties:" << endl;
-    ForEachIteratorObject it(ctx, o);
-    ScopedValue name(scope);
-    ScopedValue pval(scope);
-    for (name = it.nextPropertyName(); !name->isNull(); name = it.nextPropertyName()) {
-        cout << prefix << "\t\"" << qPrintable(name->stringValue()->toQString()) << "\"" << endl;
-        PropertyAttributes attrs;
-        Property *d = o->__getOwnProperty__(ScopedString(scope, name), &attrs);
-        pval = o->getValue(d, attrs);
-        cout << prefix << "\tvalue:" << endl;
-        realDumpValue(pval, ctx, prefix + "\t");
-    }
-}
-
-void dumpValue(const QV4::ValueRef v, QV4::ExecutionContext *ctx)
-{
-    realDumpValue(v, ctx, std::string(""));
-}
-
 
 void DebuggerAgent::addDebugger(Debugger *debugger)
 {
@@ -313,6 +409,13 @@ void DebuggerAgent::pauseAll() const
 {
     foreach (Debugger *debugger, m_debuggers)
         pause(debugger);
+}
+
+void DebuggerAgent::resumeAll() const
+{
+    foreach (Debugger *debugger, m_debuggers)
+        if (debugger->state() == Debugger::Paused)
+            debugger->resume();
 }
 
 void DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber) const

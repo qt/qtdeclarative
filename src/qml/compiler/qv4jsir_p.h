@@ -683,12 +683,14 @@ struct Q_QML_EXPORT Module {
     Function *rootFunction;
     QString fileName;
     bool isQmlModule; // implies rootFunction is always 0
+    bool debugMode;
 
     Function *newFunction(const QString &name, Function *outer);
 
-    Module()
+    Module(bool debugMode)
         : rootFunction(0)
         , isQmlModule(false)
+        , debugMode(debugMode)
     {}
     ~Module();
 
@@ -764,7 +766,7 @@ struct Function {
     int indexOfArgument(const QStringRef &string) const;
 
     bool variablesCanEscape() const
-    { return hasDirectEval || !nestedFunctions.isEmpty(); }
+    { return hasDirectEval || !nestedFunctions.isEmpty() || module->debugMode; }
 };
 
 struct BasicBlock {

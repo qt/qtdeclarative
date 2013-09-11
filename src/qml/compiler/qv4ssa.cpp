@@ -2858,7 +2858,7 @@ void Optimizer::run()
     static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
-    if (!function->hasTry && !function->hasWith && doSSA) {
+    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
 //        qout << "SSA for " << *function->name << endl;
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);

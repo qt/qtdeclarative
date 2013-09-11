@@ -99,12 +99,15 @@ class TestAgent : public QV4::Debugging::DebuggerAgent
 {
     Q_OBJECT
 public:
+    typedef QV4::Debugging::Debugger Debugger;
+
     TestAgent()
         : m_wasPaused(false)
+        , m_captureContextInfo(false)
     {
     }
 
-    virtual void debuggerPaused(QV4::Debugging::Debugger *debugger)
+    virtual void debuggerPaused(Debugger *debugger)
     {
         Q_ASSERT(m_debuggers.count() == 1 && m_debuggers.first() == debugger);
         m_wasPaused = true;
@@ -113,6 +116,9 @@ public:
         foreach (const TestBreakPoint &bp, m_breakPointsToAddWhenPaused)
             debugger->addBreakPoint(bp.fileName, bp.lineNumber);
         m_breakPointsToAddWhenPaused.clear();
+
+        if (m_captureContextInfo)
+            captureContextInfo(debugger);
 
         debugger->resume();
     }
@@ -128,24 +134,61 @@ public:
         int lineNumber;
     };
 
+    void captureContextInfo(Debugger *debugger)
+    {
+        m_stackTrace = debugger->stackTrace();
+        for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
+            m_capturedArguments.append(debugger->retrieveArgumentsFromContext(QStringList(), i));
+            m_capturedLocals.append(debugger->retrieveLocalsFromContext(QStringList(), i));
+        }
+
+        foreach (const QStringList &path, m_localPathsToRead)
+            m_localPathResults += debugger->retrieveLocalsFromContext(path);
+    }
+
     bool m_wasPaused;
+    bool m_captureContextInfo;
     QList<QV4::Debugging::Debugger::ExecutionState> m_statesWhenPaused;
     QList<TestBreakPoint> m_breakPointsToAddWhenPaused;
+    QVector<QV4::StackFrame> m_stackTrace;
+    QList<QList<Debugger::VarInfo> > m_capturedArguments;
+    QList<QList<Debugger::VarInfo> > m_capturedLocals;
+    QList<QStringList> m_localPathsToRead;
+    QList<QList<Debugger::VarInfo> > m_localPathResults;
+
+    // Utility methods:
+    void dumpStackTrace() const
+    {
+        qDebug() << "Stack depth:" << m_stackTrace.size();
+        foreach (const QV4::StackFrame &frame, m_stackTrace)
+            qDebug("\t%s (%s:%d:%d)", qPrintable(frame.function), qPrintable(frame.source),
+                   frame.line, frame.column);
+    }
 };
 
 class tst_qv4debugger : public QObject
 {
     Q_OBJECT
+
+    typedef QV4::Debugging::Debugger::VarInfo VarInfo;
+
 private slots:
     void init();
     void cleanup();
 
+    // breakpoints:
     void breakAnywhere();
     void pendingBreakpoint();
     void liveBreakPoint();
     void removePendingBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
+
+    // context access:
+    void readArguments();
+    void readLocals();
+    void readObject();
+    void readContextInAllFrames();
 
 private:
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
@@ -281,6 +324,128 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
 
     evaluateJavaScript(script, "removeBreakPointForNextInstruction");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
+}
+
+void tst_qv4debugger::readArguments()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a, b, c, d) {\n"
+            "  return a === b\n"
+            "}\n"
+            "var four;\n"
+            "f(1, 'two', null, four);\n";
+    m_debuggerAgent->addBreakPoint("readArguments", 2);
+    evaluateJavaScript(script, "readArguments");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0].size(), 4);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][0].name, QString("a"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][0].type, VarInfo::Number);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][0].value.toDouble(), 1.0);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][1].name, QString("b"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][1].type, VarInfo::String);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][1].value.toString(), QLatin1String("two"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][2].name, QString("c"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][2].type, VarInfo::Null);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][3].name, QString("d"));
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[0][3].type, VarInfo::Undefined);
+}
+
+void tst_qv4debugger::readLocals()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a, b) {\n"
+            "  var c = a + b\n"
+            "  var d = a - b\n" // breakpoint, c should be set, d should be undefined
+            "  return c === d\n"
+            "}\n"
+            "f(1, 2, 3);\n";
+    m_debuggerAgent->addBreakPoint("readLocals", 3);
+    evaluateJavaScript(script, "readLocals");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 2);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][0].name, QString("c"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][0].type, VarInfo::Number);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][0].value.toDouble(), 3.0);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][1].name, QString("d"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][1].type, VarInfo::Undefined);
+}
+
+void tst_qv4debugger::readObject()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function f(a) {\n"
+            "  var b = a\n"
+            "  return b\n"
+            "}\n"
+            "f({head: 1, tail: { head: 'asdf', tail: null }});\n";
+    m_debuggerAgent->addBreakPoint("readObject", 3);
+    m_debuggerAgent->m_localPathsToRead.append(QStringList() << QLatin1String("b"));
+    m_debuggerAgent->m_localPathsToRead.append(QStringList() << QLatin1String("b") << QLatin1String("tail"));
+    evaluateJavaScript(script, "readObject");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 1);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][0].name, QString("b"));
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[0][0].type, VarInfo::Object);
+
+    QCOMPARE(m_debuggerAgent->m_localPathResults.size(), 2);
+
+    QList<VarInfo> b = m_debuggerAgent->m_localPathResults[0];
+    QCOMPARE(b.size(), 2);
+    QCOMPARE(b[0].name, QLatin1String("head"));
+    QCOMPARE(b[0].type, VarInfo::Number);
+    QCOMPARE(b[0].value.toDouble(), 1.0);
+    QCOMPARE(b[1].name, QLatin1String("tail"));
+    QCOMPARE(b[1].type, VarInfo::Object);
+
+    QList<VarInfo> b_tail = m_debuggerAgent->m_localPathResults[1];
+    QCOMPARE(b_tail.size(), 2);
+    QCOMPARE(b_tail[0].name, QLatin1String("head"));
+    QCOMPARE(b_tail[0].type, VarInfo::String);
+    QCOMPARE(b_tail[0].value.toString(), QLatin1String("asdf"));
+    QCOMPARE(b_tail[1].name, QLatin1String("tail"));
+    QCOMPARE(b_tail[1].type, VarInfo::Null);
+}
+
+void tst_qv4debugger::readContextInAllFrames()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "function fact(n) {\n"
+            "  if (n > 1) {\n"
+            "    var n_1 = n - 1;\n"
+            "    n_1 = fact(n_1);\n"
+            "    return n * n_1;\n"
+            "  } else\n"
+            "    return 1;\n" // breakpoint
+            "}\n"
+            "fact(12);\n";
+    m_debuggerAgent->addBreakPoint("readFormalsInAllFrames", 7);
+    evaluateJavaScript(script, "readFormalsInAllFrames");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 13);
+    QCOMPARE(m_debuggerAgent->m_capturedArguments.size(), 13);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals.size(), 13);
+
+    for (int i = 0; i < 12; ++i) {
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i].size(), 1);
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i][0].name, QString("n"));
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i][0].type, VarInfo::Number);
+        QCOMPARE(m_debuggerAgent->m_capturedArguments[i][0].value.toInt(), i + 1);
+
+        QCOMPARE(m_debuggerAgent->m_capturedLocals[i].size(), 1);
+        QCOMPARE(m_debuggerAgent->m_capturedLocals[i][0].name, QString("n_1"));
+        if (i == 0) {
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i][0].type, VarInfo::Undefined);
+        } else {
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i][0].type, VarInfo::Number);
+            QCOMPARE(m_debuggerAgent->m_capturedLocals[i][0].value.toInt(), i);
+        }
+    }
+    QCOMPARE(m_debuggerAgent->m_capturedArguments[12].size(), 0);
+    QCOMPARE(m_debuggerAgent->m_capturedLocals[12].size(), 0);
 }
 
 QTEST_MAIN(tst_qv4debugger)
