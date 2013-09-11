@@ -81,13 +81,14 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
 {
-    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     ExecutionEngine *v4 = that->engine();
+    Scope scope(v4);
+    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         Object *obj = v4->newObject();
-        Value proto = ctor->get(v4->id_prototype);
-        if (proto.isObject())
-            obj->setPrototype(proto.objectValue());
+        Scoped<Object> proto(scope, ctor->get(v4->id_prototype));
+        if (!!proto)
+            obj->setPrototype(proto.getPointer());
         return Value::fromObject(obj).asReturnedValue();
     }
     return Value::fromReturnedValue(__qmljs_to_object(v4->current, ValueRef(&callData->args[0]))).asReturnedValue();
@@ -221,7 +222,7 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
             break;
         Property n;
         PropertyAttributes nattrs;
-        toPropertyDescriptor(ctx, o->getValue(pd, attrs), &n, &nattrs);
+        toPropertyDescriptor(ctx, Value::fromReturnedValue(o->getValue(pd, attrs)), &n, &nattrs);
         bool ok;
         if (name)
             ok = O.objectValue()->__defineOwnProperty__(ctx, name, n, nattrs);
@@ -383,8 +384,7 @@ Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     Object *o = ctx->thisObject.toObject(ctx);
-    Value ts = o->get(ctx->engine->newString(QStringLiteral("toString")));
-    FunctionObject *f = ts.asFunctionObject();
+    Scoped<FunctionObject> f(scope, o->get(ctx->engine->newString(QStringLiteral("toString"))));
     if (!f)
         ctx->throwTypeError();
     ScopedCallData callData(scope, 0);
@@ -514,6 +514,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (!v.isObject())
         ctx->throwTypeError();
 
+    Scope scope(ctx);
     Object *o = v.objectValue();
 
     attrs->clear();
@@ -521,17 +522,17 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     desc->setSetter(0);
 
     if (o->__hasProperty__(ctx->engine->id_enumerable))
-        attrs->setEnumerable(o->get(ctx->engine->id_enumerable).toBoolean());
+        attrs->setEnumerable(Value::fromReturnedValue(o->get(ctx->engine->id_enumerable)).toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_configurable))
-        attrs->setConfigurable(o->get(ctx->engine->id_configurable).toBoolean());
+        attrs->setConfigurable(Value::fromReturnedValue(o->get(ctx->engine->id_configurable)).toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_get)) {
-        Value get = o->get(ctx->engine->id_get);
-        FunctionObject *f = get.asFunctionObject();
+        ScopedValue get(scope, o->get(ctx->engine->id_get));
+        FunctionObject *f = get->asFunctionObject();
         if (f) {
             desc->setGetter(f);
-        } else if (get.isUndefined()) {
+        } else if (get->isUndefined()) {
             desc->setGetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
@@ -540,11 +541,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     }
 
     if (o->__hasProperty__(ctx->engine->id_set)) {
-        Value set = o->get(ctx->engine->id_set);
-        FunctionObject *f = set.asFunctionObject();
+        ScopedValue set(scope, o->get(ctx->engine->id_set));
+        FunctionObject *f = set->asFunctionObject();
         if (f) {
             desc->setSetter(f);
-        } else if (set.isUndefined()) {
+        } else if (set->isUndefined()) {
             desc->setSetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
@@ -555,7 +556,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_writable)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        attrs->setWritable(o->get(ctx->engine->id_writable).toBoolean());
+        attrs->setWritable(Value::fromReturnedValue(o->get(ctx->engine->id_writable)).toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
     }
@@ -563,7 +564,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_value)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        desc->value = o->get(ctx->engine->id_value);
+        desc->value = Value::fromReturnedValue(o->get(ctx->engine->id_value));
         attrs->setType(PropertyAttributes::Data);
     }
 

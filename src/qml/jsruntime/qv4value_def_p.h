@@ -268,8 +268,6 @@ struct Q_QML_EXPORT Value
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
 
-    Value property(ExecutionContext *ctx, String *name) const;
-
     inline ExecutionEngine *engine() const;
 
     ReturnedValue asReturnedValue() const { return val; }

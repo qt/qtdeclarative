@@ -312,7 +312,7 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
     }
     QV4::ErrorObject *errorObj = e.value().asErrorObject();
     if (errorObj && errorObj->asSyntaxError())
-        error.setDescription(errorObj->get(errorObj->engine()->newString("message")).toQStringNoThrow());
+        error.setDescription(QV4::Value::fromReturnedValue(errorObj->get(errorObj->engine()->newString("message"))).toQStringNoThrow());
     else
         error.setDescription(e.value().toQStringNoThrow());
 }

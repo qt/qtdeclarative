@@ -311,7 +311,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
                 }
             }
         }
-        return QV4::Object::get(this, name, hasProperty);
+        return QV4::Value::fromReturnedValue(QV4::Object::get(this, name, hasProperty));
     }
 
     QQmlData::flushPendingBinding(m_object, result->coreIndex);
@@ -340,8 +340,8 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
 
             QV4::String *connect = ctx->engine->newIdentifier(QStringLiteral("connect"));
             QV4::String *disconnect = ctx->engine->newIdentifier(QStringLiteral("disconnect"));
-            handler->put(connect, ctx->engine->functionClass->prototype->get(connect));
-            handler->put(disconnect, ctx->engine->functionClass->prototype->get(disconnect));
+            handler->put(connect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(connect)));
+            handler->put(disconnect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(disconnect)));
 
             return QV4::Value::fromObject(handler);
         } else {
@@ -601,12 +601,12 @@ QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObj
     return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object));
 }
 
-QV4::Value QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true).asReturnedValue();
 }
 
 void QObjectWrapper::put(Managed *m, String *name, const Value &value)
@@ -655,7 +655,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(*name);
+        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(*name));
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
@@ -664,7 +664,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(*name);
+        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(*name));
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attributes);

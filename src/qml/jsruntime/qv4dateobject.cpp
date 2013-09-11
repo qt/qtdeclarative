@@ -1298,7 +1298,8 @@ Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Value::nullValue();
 
-    FunctionObject *toIso = O->objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
+    ScopedValue v(scope, O->objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))));
+    FunctionObject *toIso = v->asFunctionObject();
 
     if (!toIso)
         ctx->throwTypeError();

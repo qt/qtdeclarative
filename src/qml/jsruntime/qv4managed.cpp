@@ -201,7 +201,7 @@ bool Managed::isEqualTo(Managed *, Managed *)
     return false;
 }
 
-Value Managed::get(String *name, bool *hasProperty)
+ReturnedValue Managed::get(String *name, bool *hasProperty)
 {
     return vtbl->get(this, name, hasProperty);
 }

@@ -263,7 +263,7 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     }
 }
 
-Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -275,7 +275,7 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
 
         if (!reference->object || !readReferenceValue(reference))
-            return Value::undefinedValue();
+            return Value::undefinedValue().asReturnedValue();
 
     } else {
         Q_ASSERT(r->objectType == QmlValueTypeWrapper::Copy);
@@ -301,7 +301,7 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision);
+        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision).asReturnedValue();
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
@@ -309,7 +309,7 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
         cpptype v; \
         void *args[] = { &v, 0 }; \
         r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args); \
-        return constructor(v); \
+        return constructor(v).asReturnedValue(); \
     }
 
     // These four types are the most common used by the value type wrappers
@@ -321,7 +321,7 @@ Value QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
     r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args);
-    return r->v8->fromVariant(v);
+    return r->v8->fromVariant(v).asReturnedValue();
 #undef VALUE_TYPE_ACCESSOR
 }
 

@@ -127,18 +127,18 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
     put(ctx->engine->newString(name), value);
 }
 
-Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
+ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
-        return p->value;
+        return p->value.asReturnedValue();
     FunctionObject *getter = p->getter();
     if (!getter)
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
 
     Scope scope(getter->engine());
     ScopedCallData callData(scope, 0);
     callData->thisObject = thisObject;
-    return Value::fromReturnedValue(getter->call(callData));
+    return getter->call(callData);
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
@@ -449,7 +449,7 @@ bool Object::__hasProperty__(uint index) const
     return false;
 }
 
-Value Object::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
@@ -535,7 +535,7 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getterAccessor2;
             if (result)
                 *result = p->value;
-            Value res = o->getValue(p, attrs);
+            Value res = Value::fromReturnedValue(o->getValue(p, attrs));
             if (result)
                 *result = res;
             return;
@@ -654,11 +654,11 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
 }
 
 // Section 8.12.3
-Value Object::internalGet(String *name, bool *hasProperty)
+ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(idx, hasProperty);
+        return getIndexed(idx, hasProperty).asReturnedValue();
 
     name->makeIdentifier();
 
@@ -676,7 +676,7 @@ Value Object::internalGet(String *name, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 Value Object::internalGetIndexed(uint index, bool *hasProperty)
@@ -707,7 +707,7 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(pd, attrs);
+        return Value::fromReturnedValue(getValue(pd, attrs));
     }
 
     if (hasProperty)
@@ -1244,11 +1244,11 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
                 while (--len > i)
                     if (!arrayAttributes[len].isGeneric())
                         break;
-                arrayData[i].value = getValue(arrayData + len, arrayAttributes[len]);
+                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + len, arrayAttributes[len]));
                 arrayAttributes[i] = Attr_Data;
                 arrayAttributes[len].clear();
             } else if (arrayAttributes[i].isAccessor()) {
-                arrayData[i].value = getValue(arrayData + i, arrayAttributes[i]);
+                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + i, arrayAttributes[i]));
                 arrayAttributes[i] = Attr_Data;
             }
         }

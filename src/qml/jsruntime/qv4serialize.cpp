@@ -150,6 +150,8 @@ static inline void *popPtr(const char *&data)
 void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
+
     if (v.isEmpty()) {
     } else if (v.isUndefined()) {
         push(data, valueheader(WorkerUndefined));
@@ -240,7 +242,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
 
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-            uint32_t seqLength = o->get(v4->id_length).toUInt32();
+            uint32_t seqLength = ScopedValue(scope, o->get(v4->id_length))->toUInt32();
             uint32_t length = seqLength + 1;
             if (length > 0xFFFFFF) {
                 push(data, valueheader(WorkerUndefined));
@@ -264,14 +266,13 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         }
         push(data, valueheader(WorkerObject, length));
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QV4::ScopedValue val(scope);
         for (quint32 ii = 0; ii < length; ++ii) {
             QV4::String *s = properties->getIndexed(ii).asString();
             serialize(data, QV4::Value::fromString(s), engine);
 
             bool hasCaught = false;
             QV4::ExecutionContext *ctx = v4->current;
-            QV4::Value val = QV4::Value::undefinedValue();
             try {
                 val = o->get(s);
             } catch (QV4::Exception &e) {

@@ -3168,7 +3168,7 @@ public:
         return QV4::Value::fromObject(object);
     }
 
-    static QV4::Value get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
+    static QV4::ReturnedValue get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
     {
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)
@@ -3177,7 +3177,7 @@ public:
         if (name == m->engine()->id_length) {
             if (hasProperty)
                 *hasProperty = true;
-            return QV4::Value::fromInt32(array->count());
+            return QV4::Value::fromInt32(array->count()).asReturnedValue();
         }
 
         return Object::get(m, name, hasProperty);

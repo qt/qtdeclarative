@@ -97,7 +97,7 @@ struct ManagedVTable
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, const Value &value);
-    Value (*get)(Managed *, String *name, bool *hasProperty);
+    ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
     Value (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
@@ -223,6 +223,14 @@ public:
         return vtbl == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
 
+    template<typename T>
+    static T *cast(const Value &v) {
+        return v.as<T>();
+    }
+    static Managed *cast(const Value &v) {
+        return v.asManaged();
+    }
+
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
     FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
@@ -254,7 +262,7 @@ public:
     }
     ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
-    Value get(String *name, bool *hasProperty = 0);
+    ReturnedValue get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
     void put(String *name, const Value &value)
     { vtbl->put(this, name, value); }

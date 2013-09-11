@@ -275,7 +275,7 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
         cout << prefix << "\t\"" << qPrintable(name.stringValue()->toQString()) << "\"" << endl;
         PropertyAttributes attrs;
         Property *d = o->__getOwnProperty__(name.stringValue(), &attrs);
-        Value pval = o->getValue(d, attrs);
+        Value pval = Value::fromReturnedValue(o->getValue(d, attrs));
         cout << prefix << "\tvalue:" << endl;
         realDumpValue(pval, ctx, prefix + "\t");
     }

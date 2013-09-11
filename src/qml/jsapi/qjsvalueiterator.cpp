@@ -174,9 +174,11 @@ QJSValue QJSValueIterator::value() const
 
     QV4::Object *o = d_ptr->iterator.object;
     QV4::ExecutionEngine *engine = o->internalClass->engine;
+    QV4::Scope scope(engine);
+
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v;
+        QV4::ScopedValue v(scope);
         if (d_ptr->currentName)
             v = o->get(d_ptr->currentName);
         else if (d_ptr->currentIndex != UINT_MAX)

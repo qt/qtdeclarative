@@ -149,8 +149,8 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionContext *ctx, const QString &name, const Value &value);
 
-    static Value getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
-    Value getValue(const Property *p, PropertyAttributes attrs) const {
+    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
+    ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
         return getValue(Value::fromObject(const_cast<Object *>(this)), p, attrs);
     }
 
@@ -178,6 +178,10 @@ struct Q_QML_EXPORT Object: Managed {
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 
     ReturnedValue asReturnedValue() { return Value::fromObject(this).asReturnedValue(); }
+
+    static Object *cast(const Value &v) {
+        return v.asObject();
+    }
 
     // Array handling
 
@@ -289,7 +293,7 @@ public:
     }
     void ensureMemberIndex(uint idx);
 
-    inline Value get(String *name, bool *hasProperty = 0)
+    inline ReturnedValue get(String *name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }
     inline Value getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
@@ -312,7 +316,7 @@ protected:
     static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
@@ -326,7 +330,7 @@ protected:
 
 
 private:
-    Value internalGet(String *name, bool *hasProperty);
+    ReturnedValue internalGet(String *name, bool *hasProperty);
     Value internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(String *name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);

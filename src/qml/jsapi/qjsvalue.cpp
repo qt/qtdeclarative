@@ -791,11 +791,15 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
 */
 QJSValue QJSValue::property(const QString& name) const
 {
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+    QV4::Scope scope(engine);
+
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX)
@@ -804,7 +808,7 @@ QJSValue QJSValue::property(const QString& name) const
     s->makeIdentifier();
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = o->get(s);
+        QV4::ScopedValue v(scope, o->get(s));
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -826,14 +830,18 @@ QJSValue QJSValue::property(const QString& name) const
 */
 QJSValue QJSValue::property(quint32 arrayIndex) const
 {
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+
+    QV4::Scope scope(engine);
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
     try {
-        QV4::Value v = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
+        QV4::ScopedValue v(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex).asReturnedValue());
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);

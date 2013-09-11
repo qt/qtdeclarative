@@ -316,12 +316,6 @@ Object *Value::toObject(ExecutionContext *ctx) const
 }
 
 
-Value Value::property(ExecutionContext *ctx, String *name) const
-{
-    return isObject() ? objectValue()->get(name) : undefinedValue();
-}
-
-
 PersistentValue::PersistentValue(const Value &val)
     : d(new PersistentValuePrivate(val))
 {

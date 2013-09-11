@@ -692,7 +692,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
     }
 
     String *name = index->toString(ctx);
-    return o->get(name).asReturnedValue();
+    return o->get(name);
 }
 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
@@ -769,7 +769,7 @@ ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object,
     Value res;
     Managed *m = object->asManaged();
     if (m)
-        return m->get(name).asReturnedValue();
+        return m->get(name);
 
     if (object->isNullOrUndefined()) {
         QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
@@ -777,7 +777,7 @@ ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object,
     }
 
     m = __qmljs_convert_to_object(ctx, object);
-    return m->get(name).asReturnedValue();
+    return m->get(name);
 }
 
 ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
@@ -974,6 +974,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String
 
 ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
+    Scope scope(context);
     Managed *baseObject = callData->thisObject.asManaged();
     if (!baseObject) {
         if (callData->thisObject.isNullOrUndefined()) {
@@ -985,7 +986,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, Cal
         callData->thisObject = Value::fromObject(static_cast<Object *>(baseObject));
     }
 
-    FunctionObject *o = baseObject->get(name).asFunctionObject();
+    Scoped<FunctionObject> o(scope, baseObject->get(name));
     if (!o) {
         QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         context->throwTypeError(error);
@@ -1010,10 +1011,11 @@ ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index
 
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
+    Scope scope(context);
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
 
-    Object *o = baseObject->get(index->toString(context)).asObject();
+    Scoped<Object> o(scope, baseObject->get(index->toString(context)));
     if (!o)
         context->throwTypeError();
 
@@ -1069,10 +1071,10 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
 
 ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *name, CallDataRef callData)
 {
+    Scope scope(context);
     Object *thisObject = base->toObject(context);
 
-    Value func = thisObject->get(name);
-    Object *f = func.asObject();
+    Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
         context->throwTypeError();
 

@@ -68,6 +68,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
@@ -1673,6 +1674,7 @@ QV4::Value QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleCallConte
 
     QV8Engine *engine = ctx->engine->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
 
     if (ctx->argumentCount == 2) {
         QQuickContext2DStyle *pattern = new (v4->memoryManager) QQuickContext2DStyle(v4);
@@ -1689,8 +1691,8 @@ QV4::Value QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleCallConte
             QImage patternTexture;
 
             if (QV4::Object *o = ctx->arguments[0].asObject()) {
-                QQuickJSContext2DPixelData *pixelData = o->get(ctx->engine->newString(QStringLiteral("data"))).as<QQuickJSContext2DPixelData>();
-                if (pixelData) {
+                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(ctx->engine->newString(QStringLiteral("data"))));
+                if (!!pixelData) {
                     patternTexture = pixelData->image;
                 }
             } else {

@@ -405,6 +405,8 @@ void ExecutionContext::setProperty(String *name, const Value& value)
 
 ReturnedValue ExecutionContext::getProperty(String *name)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
@@ -417,7 +419,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
                 return v.asReturnedValue();
             }
@@ -444,7 +446,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v.asReturnedValue();
             }
@@ -456,7 +458,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }
@@ -467,6 +469,8 @@ ReturnedValue ExecutionContext::getProperty(String *name)
 
 ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
@@ -479,7 +483,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
                 return v.asReturnedValue();
             }
@@ -506,7 +510,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v.asReturnedValue();
             }
@@ -518,7 +522,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }
@@ -528,6 +532,8 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
 
 ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     *base = 0;
     name->makeIdentifier();
 
@@ -541,7 +547,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
                 *base = w;
                 return v.asReturnedValue();
@@ -569,7 +575,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty) {
                     if (ctx->type == Type_QmlContext)
                         *base = c->activation;
@@ -584,7 +590,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
                 return v.asReturnedValue();
         }

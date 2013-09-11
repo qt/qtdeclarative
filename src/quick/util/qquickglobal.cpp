@@ -326,17 +326,17 @@ public:
 
         QV4::ExecutionEngine *v4 = obj->engine();
 
-        QV4::Value vbold = obj->get(v4->newString(QStringLiteral("bold")));
-        QV4::Value vcap = obj->get(v4->newString(QStringLiteral("capitalization")));
-        QV4::Value vfam = obj->get(v4->newString(QStringLiteral("family")));
-        QV4::Value vital = obj->get(v4->newString(QStringLiteral("italic")));
-        QV4::Value vlspac = obj->get(v4->newString(QStringLiteral("letterSpacing")));
-        QV4::Value vpixsz = obj->get(v4->newString(QStringLiteral("pixelSize")));
-        QV4::Value vpntsz = obj->get(v4->newString(QStringLiteral("pointSize")));
-        QV4::Value vstrk = obj->get(v4->newString(QStringLiteral("strikeout")));
-        QV4::Value vundl = obj->get(v4->newString(QStringLiteral("underline")));
-        QV4::Value vweight = obj->get(v4->newString(QStringLiteral("weight")));
-        QV4::Value vwspac = obj->get(v4->newString(QStringLiteral("wordSpacing")));
+        QV4::Value vbold = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("bold"))));
+        QV4::Value vcap = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("capitalization"))));
+        QV4::Value vfam = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("family"))));
+        QV4::Value vital = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("italic"))));
+        QV4::Value vlspac = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("letterSpacing"))));
+        QV4::Value vpixsz = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("pixelSize"))));
+        QV4::Value vpntsz = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("pointSize"))));
+        QV4::Value vstrk = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("strikeout"))));
+        QV4::Value vundl = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("underline"))));
+        QV4::Value vweight = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("weight"))));
+        QV4::Value vwspac = QV4::Value::fromReturnedValue(obj->get(v4->newString(QStringLiteral("wordSpacing"))));
 
         // pull out the values, set ok to true if at least one valid field is given.
         if (vbold.isBoolean()) {

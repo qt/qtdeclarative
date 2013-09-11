@@ -119,6 +119,10 @@ struct Q_QML_EXPORT String : public Managed {
         return _text.length();
     }
 
+    static String *cast(const Value &v) {
+        return v.asString();
+    }
+
     ReturnedValue asReturnedValue() { return Value::fromString(this).asReturnedValue(); }
 
     QString _text;
@@ -128,7 +132,7 @@ struct Q_QML_EXPORT String : public Managed {
 
 protected:
     static void destroy(Managed *);
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);

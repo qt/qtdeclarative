@@ -138,7 +138,9 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
         return false;
 
     ExecutionContext *ctx = f->engine()->current;
-    Object *o = f->get(ctx->engine->id_prototype).asObject();
+    QV4::Scope scope(ctx);
+
+    Scoped<Object> o(scope, f->get(ctx->engine->id_prototype));
     if (!o)
         ctx->throwTypeError();
 
@@ -147,7 +149,7 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
 
         if (! v)
             break;
-        else if (o == v)
+        else if (o.getPointer() == v)
             return true;
     }
 
@@ -158,11 +160,12 @@ ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->get(v4->id_prototype);
-    if (proto.isObject())
-        ic = v4->emptyClass->changePrototype(proto.objectValue());
+    Scoped<Object> proto(scope, f->get(v4->id_prototype));
+    if (!!proto)
+        ic = v4->emptyClass->changePrototype(proto.getPointer());
     Object *obj = v4->newObject(ic);
     return Value::fromObject(obj).asReturnedValue();
 }
@@ -647,7 +650,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
-    int len = target->get(scope->engine->id_length).toUInt32();
+    int len = Value::fromReturnedValue(target->get(scope->engine->id_length)).toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;

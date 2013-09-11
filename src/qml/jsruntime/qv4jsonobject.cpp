@@ -702,8 +702,8 @@ QString Stringify::Str(const QString &key, Value value)
     QString result;
 
     if (Object *o = value.asObject()) {
-        FunctionObject *toJSON = o->get(ctx->engine->newString(QStringLiteral("toJSON"))).asFunctionObject();
-        if (toJSON) {
+        Scoped<FunctionObject> toJSON(scope, o->get(ctx->engine->newString(QStringLiteral("toJSON"))));
+        if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
             callData->args[0] = Value::fromString(ctx, key);
@@ -773,6 +773,8 @@ QString Stringify::JO(Object *o)
     if (stack.contains(o))
         ctx->throwTypeError();
 
+    Scope scope(o->engine());
+
     QString result;
     stack.push(o);
     QString stepback = indent;
@@ -795,7 +797,7 @@ QString Stringify::JO(Object *o)
     } else {
         for (int i = 0; i < propertyList.size(); ++i) {
             bool exists;
-            Value v = o->get(propertyList.at(i), &exists);
+            ScopedValue v(scope, o->get(propertyList.at(i), &exists));
             if (!exists)
                 continue;
             QString member = makeMember(propertyList.at(i)->toQString(), v);

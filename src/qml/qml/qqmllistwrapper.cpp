@@ -98,7 +98,7 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
@@ -107,12 +107,12 @@ Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     if (name == v4->id_length && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
-        return Value::fromUInt32(count);
+        return Value::fromUInt32(count).asReturnedValue();
     }
 
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return getIndexed(m, idx, hasProperty);
+        return getIndexed(m, idx, hasProperty).asReturnedValue();
 
     return Object::get(m, name, hasProperty);
 }

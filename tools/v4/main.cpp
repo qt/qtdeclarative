@@ -121,7 +121,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exce
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(exception.value().toString(ctx)->toQString()) << std::endl;
     } else {
-        std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(QV4::Value::fromReturnedValue(e->get(ctx->engine->newString(QStringLiteral("message")), 0)).toString(ctx)->toQString()) << std::endl;
     }
 
     foreach (const QV4::ExecutionEngine::StackFrame &frame, exception.stackTrace()) {

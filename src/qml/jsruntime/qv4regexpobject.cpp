@@ -206,7 +206,8 @@ QString RegExpObject::toString() const
 
 QString RegExpObject::source() const
 {
-    return const_cast<RegExpObject *>(this)->get(internalClass->engine->newIdentifier(QStringLiteral("source"))).stringValue()->toQString();
+    Value s = Value::fromReturnedValue(const_cast<RegExpObject *>(this)->get(internalClass->engine->newIdentifier(QStringLiteral("source"))));
+    return s.stringValue()->toQString();
 }
 
 uint RegExpObject::flags() const

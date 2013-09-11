@@ -123,7 +123,9 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 {
     if (o->isArrayObject())
         return o->arrayLength();
-    return o->get(ctx->engine->id_length).toUInt32();
+    Scope scope(ctx);
+    ScopedValue v(scope, o->get(ctx->engine->id_length));
+    return v->toUInt32();
 }
 
 Value ArrayPrototype::method_isArray(SimpleCallContext *ctx)
@@ -135,10 +137,11 @@ Value ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_toString(SimpleCallContext *ctx)
 {
+    QV4::Scope scope(ctx);
     QV4::Object *o = ctx->thisObject.toObject(ctx);
-    FunctionObject *f = o->get(ctx->engine->newString("join")).asFunctionObject();
+    ScopedValue v(scope, o->get(ctx->engine->newString("join")));
+    FunctionObject *f = v->asFunctionObject();
     if (f) {
-        Scope scope(ctx);
         ScopedCallData d(scope, 0);
         d->thisObject = ctx->thisObject;
         return Value::fromReturnedValue(f->call(d));
@@ -183,6 +186,7 @@ Value ArrayPrototype::method_concat(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_join(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     Value arg = ctx->argument(0);
 
     QString r4;
@@ -191,22 +195,22 @@ Value ArrayPrototype::method_join(SimpleCallContext *ctx)
     else
         r4 = arg.toString(ctx)->toQString();
 
-    Value self = ctx->thisObject;
-    const Value length = self.property(ctx, ctx->engine->id_length);
-    const quint32 r2 = Value::toUInt32(length.isUndefined() ? 0 : length.toNumber());
+    Scoped<Object> self(scope, ctx->thisObject);
+    ScopedValue length(scope, self->get(ctx->engine->id_length));
+    const quint32 r2 = Value::toUInt32(length->isUndefined() ? 0 : length->toNumber());
 
     static QSet<Object *> visitedArrayElements;
 
-    if (! r2 || visitedArrayElements.contains(self.objectValue()))
+    if (! r2 || visitedArrayElements.contains(self.getPointer()))
         return Value::fromString(ctx, QString());
 
     // avoid infinite recursion
-    visitedArrayElements.insert(self.objectValue());
+    visitedArrayElements.insert(self.getPointer());
 
     QString R;
 
     // ### FIXME
-    if (ArrayObject *a = self.asArrayObject()) {
+    if (ArrayObject *a = self->asArrayObject()) {
         for (uint i = 0; i < a->arrayLength(); ++i) {
             if (i)
                 R += r4;
@@ -219,22 +223,23 @@ Value ArrayPrototype::method_join(SimpleCallContext *ctx)
         //
         // crazy!
         //
-        Value r6 = self.property(ctx, ctx->engine->newString(QStringLiteral("0")));
-        if (!(r6.isUndefined() || r6.isNull()))
-            R = r6.toString(ctx)->toQString();
+        ScopedValue r6(scope, self->get(ctx->engine->newString(QStringLiteral("0"))));
+        if (!r6->isNullOrUndefined())
+            R = r6->toString(ctx)->toQString();
 
+        ScopedValue r12(scope);
         for (quint32 k = 1; k < r2; ++k) {
             R += r4;
 
             String *name = Value::fromDouble(k).toString(ctx);
-            Value r12 = self.property(ctx, name);
+            r12 = self->get(name);
 
-            if (! (r12.isUndefined() || r12.isNull()))
-                R += r12.toString(ctx)->toQString();
+            if (!r12->isNullOrUndefined())
+                R += r12->toString(ctx)->toQString();
         }
     }
 
-    visitedArrayElements.remove(self.objectValue());
+    visitedArrayElements.remove(self.getPointer());
     return Value::fromString(ctx, R);
 }
 
@@ -351,7 +356,7 @@ Value ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (pidx < UINT_MAX && (!instance->arrayAttributes || !instance->arrayAttributes[0].isGeneric()))
             front = instance->arrayData + pidx;
 
-    Value result = front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Value::undefinedValue();
+    Value result = front ? Value::fromReturnedValue(instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data)) : Value::undefinedValue();
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         if (!instance->sparseArray) {
@@ -392,7 +397,7 @@ Value ArrayPrototype::method_slice(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.toObject(ctx);
 
     ArrayObject *result = ctx->engine->newArrayObject();
-    uint len = o->get(ctx->engine->id_length).toUInt32();
+    uint len = ArrayPrototype::getLength(ctx, o);
     double s = ctx->argument(0).toInteger();
     uint start;
     if (s < 0)

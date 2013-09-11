@@ -137,7 +137,7 @@ void Lookup::getterGeneric(QV4::Lookup *l, QV4::Value *result, const QV4::Value 
                 l->getter = Lookup::primitiveGetterAccessor1;
             if (result)
                 *result = p->value;
-            Value res = proto->getValue(object, p, attrs);
+            Value res = Value::fromReturnedValue(proto->getValue(object, p, attrs));
             if (result)
                 *result = res;
             return;
@@ -383,7 +383,7 @@ void Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result
                 l->globalGetter = globalGetterAccessor1;
             else if (l->level == 2)
                 l->globalGetter = globalGetterAccessor2;
-            Value res = o->getValue(p, attrs);
+            Value res = Value::fromReturnedValue(o->getValue(p, attrs));
             if (result)
                 *result = res;
             return;

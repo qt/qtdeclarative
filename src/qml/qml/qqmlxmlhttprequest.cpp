@@ -204,7 +204,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
@@ -235,7 +235,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NodeList>()->~NodeList();
     }
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static Value getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
@@ -862,7 +862,7 @@ Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -871,7 +871,7 @@ Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 
     name->makeIdentifier();
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->list.count());
+        return Value::fromInt32(r->list.count()).asReturnedValue();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -880,13 +880,13 @@ Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
         if (r->list.at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
-            return Node::create(engine, r->list.at(ii));
+            return Node::create(engine, r->list.at(ii)).asReturnedValue();
         }
     }
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
@@ -916,7 +916,7 @@ Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue();
 }
 
-Value NodeList::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -926,7 +926,7 @@ Value NodeList::get(Managed *m, String *name, bool *hasProperty)
     name->makeIdentifier();
 
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->d->children.count());
+        return Value::fromInt32(r->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }
 
@@ -1467,24 +1467,24 @@ void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
         if (!o)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        Object *thisObj = o->get(v4->newString(QStringLiteral("ThisObject"))).asObject();
+        Scoped<Object> thisObj(scope, o->get(v4->newString(QStringLiteral("ThisObject"))));
         if (!thisObj)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        FunctionObject *callback = thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))).asFunctionObject();
+        Scoped<FunctionObject> callback(scope, thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))));
         if (!callback) {
             // not an error, but no onreadystatechange function to call.
             return;
         }
 
-        Value activationObject = o->get(v4->newString(QStringLiteral("ActivationObject")));
-        if (!activationObject.asObject())
+        Scoped<Object> activationObject(scope, o->get(v4->newString(QStringLiteral("ActivationObject"))));
+        if (!activationObject)
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
 
-        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
+        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject.asValue());
         if (callingContext) {
             QV4::ScopedCallData callData(scope, 0);
-            callData->thisObject = activationObject;
+            callData->thisObject = activationObject.asValue();
             callback->call(callData);
         }
 

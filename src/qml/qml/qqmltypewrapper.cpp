@@ -112,7 +112,7 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, co
 }
 
 
-Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -149,13 +149,13 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
                             bool ok;
                             int value = e.keyToValue(enumName.constData(), &ok);
                             if (ok)
-                                return QV4::Value::fromInt32(value);
+                                return QV4::Value::fromInt32(value).asReturnedValue();
                         }
                     }
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty).asReturnedValue();
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -172,14 +172,14 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
                 bool ok = false;
                 int value = type->enumValue(name, &ok);
                 if (ok)
-                    return QV4::Value::fromInt32(value);
+                    return QV4::Value::fromInt32(value).asReturnedValue();
 
                 // Fall through to base implementation
 
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty).asReturnedValue();
 
                 // Fall through to base implementation
             }
@@ -196,16 +196,16 @@ Value QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
         if (r.isValid()) {
             QQmlContextData *context = v8engine->callingContext();
             if (r.type) {
-                return create(w->v8, object, r.type, w->mode);
+                return create(w->v8, object, r.type, w->mode).asReturnedValue();
             } else if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value();
+                    return context->importedScripts.at(index).value().asReturnedValue();
             } else if (r.importNamespace) {
-                return create(w->v8, object, context->imports, r.importNamespace);
+                return create(w->v8, object, context->imports, r.importNamespace).asReturnedValue();
             }
 
-            return QV4::Value::undefinedValue();
+            return QV4::Value::undefinedValue().asReturnedValue();
 
         }
 

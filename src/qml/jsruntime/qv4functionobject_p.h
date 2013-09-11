@@ -126,6 +126,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return vtbl->call(this, callData);
     }
 
+    static FunctionObject *cast(const Value &v) {
+        return v.asFunctionObject();
+    }
+
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
 
 protected:

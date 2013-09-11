@@ -369,7 +369,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    Scoped<FunctionObject> exec(scope, context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = Value::fromObject(rx);
@@ -385,12 +385,14 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     uint n = 0;
     ScopedValue result(scope);
     ScopedValue matchStr(scope);
+    ScopedValue index(scope);
     while (1) {
         result = exec->call(callData);
         if (result->isNull())
             break;
         assert(result->isObject());
-        double thisIndex = rx->get(lastIndex, 0).toInteger();
+        index = rx->get(lastIndex, 0);
+        double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
             rx->put(lastIndex, Value::fromDouble(previousLastIndex));
