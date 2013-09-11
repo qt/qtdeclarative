@@ -3,5 +3,6 @@
         <file>systemdialogs.qml</file>
         <file>FileDialogs.qml</file>
         <file>ColorDialogs.qml</file>
+        <file>FontDialogs.qml</file>
     </qresource>
 </RCC>

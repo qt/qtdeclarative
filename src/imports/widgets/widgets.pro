@@ -1,13 +1,15 @@
 CXX_MODULE = qml
 TARGET  = widgetsplugin
 TARGETPATH = QtQuick/PrivateWidgets
-IMPORT_VERSION = 1.0
+IMPORT_VERSION = 1.1
 
 SOURCES += \
     qquickqfiledialog.cpp \
     ../dialogs/qquickabstractfiledialog.cpp \
     qquickqcolordialog.cpp \
     ../dialogs/qquickabstractcolordialog.cpp \
+    qquickqfontdialog.cpp \
+    ../dialogs/qquickabstractfontdialog.cpp \
     ../dialogs/qquickabstractdialog.cpp \
     widgetsplugin.cpp
 
@@ -16,6 +18,8 @@ HEADERS += \
     ../dialogs/qquickabstractfiledialog_p.h \
     qquickqcolordialog_p.h \
     ../dialogs/qquickabstractcolordialog_p.h \
+    qquickqfontdialog_p.h \
+    ../dialogs/qquickabstractfontdialog_p.h \
     ../dialogs/qquickabstractdialog_p.h
 
 QT += quick-private gui-private core-private qml-private  widgets

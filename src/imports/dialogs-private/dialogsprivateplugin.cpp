@@ -41,32 +41,12 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
-#include "qquickqfontdialog_p.h"
+#include "qquickwritingsystemlistmodel_p.h"
+#include "qquickfontlistmodel_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
-
-    This QML module contains types which should not be depended upon in Qt Quick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
-
-    \code
-    import QtQuick.PrivateWidgets 1.0
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class QtQuick2DialogsPrivatePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -74,14 +54,13 @@ class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
 public:
     virtual void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Dialogs.Private"));
 
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-        qmlRegisterType<QQuickQFontDialog>(uri, 1, 1, "QtFontDialog");
+        qmlRegisterType<QQuickWritingSystemListModel>(uri, 1, 1, "WritingSystemListModel");
+        qmlRegisterType<QQuickFontListModel>(uri, 1, 1, "FontListModel");
     }
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+#include "dialogsprivateplugin.moc"

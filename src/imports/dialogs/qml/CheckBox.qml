@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,28 +38,59 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import "../../shared"
+import QtQuick 2.1
 
-TabSet {
-    width: 580
-    height: 440
+Item {
+    id: root
+    implicitHeight: frame.height
+    implicitWidth: row.implicitWidth
+    width: implicitWidth
+    height: implicitHeight
+    property alias text: label.text
+    property bool checked
+    property alias pressed: mouseArea.pressed
+    signal clicked
 
-    FileDialogs {
-        property string title: "File Dialog"
-        anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
+    SystemPalette { id: palette }
+
+    Row {
+        id: row
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 6
+        Rectangle {
+            id: frame
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+                GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
+            }
+            height: label.implicitHeight * 1.5
+            width: height
+            anchors.margins: 1
+            radius: 3
+            antialiasing: true
+            border.color: Qt.darker(palette.button, 1.5)
+            Image {
+                id: theX
+                source: "../images/checkmark.png"
+                anchors.fill: frame
+                anchors.margins: frame.width / 5
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                visible: checked
+            }
+        }
+        Text {
+            id: label
+            color: palette.text
+            anchors.verticalCenter: frame.verticalCenter
+        }
     }
-
-    ColorDialogs {
-        property string title: "Color Dialog"
+    MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
-    }
-
-    FontDialogs {
-        property string title: "Font Dialog"
-        anchors.fill: parent
-        color: "#e3e3e3" // to match tab.png
+        onClicked: {
+            parent.checked = !parent.checked
+            parent.clicked()
+        }
     }
 }

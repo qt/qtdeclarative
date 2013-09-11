@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,49 +39,62 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include "qquickqfiledialog_p.h"
-#include "qquickqcolordialog_p.h"
-#include "qquickqfontdialog_p.h"
+#ifndef QQUICKWRITINGSYSTEMLISTMODEL_P_H
+#define QQUICKWRITINGSYSTEMLISTMODEL_P_H
+
+#include <QtCore/qstringlist.h>
+#include <QtCore/QAbstractListModel>
+#include <QtQml/qqmlparserstatus.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQuick.PrivateWidgets 1
-    \title QWidget QML Types
-    \ingroup qmlmodules
-    \brief Provides QML types for certain QWidgets
-    \internal
+class QModelIndex;
 
-    This QML module contains types which should not be depended upon in Qt Quick
-    applications, but are available if the Widgets module is linked. It is
-    recommended to load components from this module conditionally, if at all,
-    and to provide fallback implementations in case they fail to load.
+class QQuickWritingSystemListModelPrivate;
 
-    \code
-    import QtQuick.PrivateWidgets 1.0
-    \endcode
-
-    \since 5.1
-*/
-
-class QtQuick2PrivateWidgetsPlugin : public QQmlExtensionPlugin
+class QQuickWritingSystemListModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_INTERFACES(QQmlParserStatus)
+    Q_PROPERTY(QStringList writingSystems READ writingSystems NOTIFY writingSystemsChanged)
+
+    Q_PROPERTY(int count READ count NOTIFY rowCountChanged)
 
 public:
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
+    QQuickWritingSystemListModel(QObject *parent = 0);
+    ~QQuickWritingSystemListModel();
 
-        qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
-        qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
-        qmlRegisterType<QQuickQFontDialog>(uri, 1, 1, "QtFontDialog");
-    }
+    enum Roles {
+        WritingSystemNameRole = Qt::UserRole + 1,
+        WritingSystemSampleRole = Qt::UserRole + 2
+    };
+
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    virtual QHash<int, QByteArray> roleNames() const;
+
+    int count() const { return rowCount(QModelIndex()); }
+
+    QStringList writingSystems() const;
+
+    Q_INVOKABLE QJSValue get(int index) const;
+
+    virtual void classBegin();
+    virtual void componentComplete();
+
+Q_SIGNALS:
+    void writingSystemsChanged();
+    void rowCountChanged() const;
+
+private:
+    Q_DISABLE_COPY(QQuickWritingSystemListModel)
+    Q_DECLARE_PRIVATE(QQuickWritingSystemListModel)
+    QScopedPointer<QQuickWritingSystemListModelPrivate> d_ptr;
+
 };
 
 QT_END_NAMESPACE
 
-#include "widgetsplugin.moc"
+#endif // QQUICKWRITINGSYSTEMLISTMODEL_P_H

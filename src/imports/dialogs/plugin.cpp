@@ -47,6 +47,9 @@
 #include "qquickcolordialog_p.h"
 #include "qquickabstractcolordialog_p.h"
 #include "qquickplatformcolordialog_p.h"
+#include "qquickfontdialog_p.h"
+#include "qquickabstractfontdialog_p.h"
+#include "qquickplatformfontdialog_p.h"
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
@@ -113,6 +116,14 @@ public:
         else
 #endif
             registerWidgetOrQmlImplementation<QQuickColorDialog>(widgetsDir, qmlDir, "ColorDialog", uri, hasTopLevelWindows, 1, 0);
+
+        // FontDialog
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FontDialog))
+            qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 1, "FontDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickFontDialog>(widgetsDir, qmlDir, "FontDialog", uri, hasTopLevelWindows, 1, 1);
     }
 
 protected:
