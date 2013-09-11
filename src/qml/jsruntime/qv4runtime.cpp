@@ -1043,7 +1043,7 @@ ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint in
     if (!f)
         context->throwTypeError();
 
-    return f->construct(callData).asReturnedValue();
+    return f->construct(callData);
 }
 
 
@@ -1055,7 +1055,7 @@ ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, S
     if (!f)
         context->throwTypeError();
 
-    return f->construct(callData).asReturnedValue();
+    return f->construct(callData);
 }
 
 ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
@@ -1064,7 +1064,7 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
     if (!f)
         context->throwTypeError();
 
-    return f->construct(callData).asReturnedValue();
+    return f->construct(callData);
 }
 
 ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *name, CallDataRef callData)
@@ -1076,7 +1076,7 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueR
     if (!f)
         context->throwTypeError();
 
-    return f->construct(callData).asReturnedValue();
+    return f->construct(callData);
 }
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)

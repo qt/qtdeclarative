@@ -56,10 +56,10 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value NumberCtor::construct(Managed *m, CallData *callData)
+ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl)));
+    return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl))).asReturnedValue();
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)

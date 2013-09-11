@@ -79,7 +79,7 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(Managed *that, CallData *callData)
+ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
 {
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     ExecutionEngine *v4 = that->engine();
@@ -88,9 +88,9 @@ Value ObjectCtor::construct(Managed *that, CallData *callData)
         Value proto = ctor->get(v4->id_prototype);
         if (proto.isObject())
             obj->setPrototype(proto.objectValue());
-        return Value::fromObject(obj);
+        return Value::fromObject(obj).asReturnedValue();
     }
-    return Value::fromReturnedValue(__qmljs_to_object(v4->current, ValueRef(&callData->args[0])));
+    return Value::fromReturnedValue(__qmljs_to_object(v4->current, ValueRef(&callData->args[0]))).asReturnedValue();
 }
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)

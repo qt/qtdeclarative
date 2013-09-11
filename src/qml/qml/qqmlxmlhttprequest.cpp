@@ -1565,7 +1565,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (c->proto)
             c->proto->mark();
     }
-    static Value construct(Managed *that, QV4::CallData *)
+    static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
         QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
         if (!ctor)
@@ -1575,7 +1575,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         QQmlXMLHttpRequestWrapper *w = new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r);
         w->setPrototype(ctor->proto);
-        return Value::fromObject(w);
+        return Value::fromObject(w).asReturnedValue();
     }
 
     static ReturnedValue call(Managed *, QV4::CallData *) {

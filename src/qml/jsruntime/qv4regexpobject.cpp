@@ -229,7 +229,7 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RegExpCtor::construct(Managed *m, CallData *callData)
+ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionContext *ctx = m->engine()->current;
     Scope scope(ctx);
@@ -241,7 +241,7 @@ Value RegExpCtor::construct(Managed *m, CallData *callData)
             ctx->throwTypeError();
 
         RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
-        return Value::fromObject(o);
+        return Value::fromObject(o).asReturnedValue();
     }
 
     QString pattern;
@@ -272,7 +272,7 @@ Value RegExpCtor::construct(Managed *m, CallData *callData)
         ctx->throwSyntaxError(0);
 
     RegExpObject *o = ctx->engine->newRegExpObject(re, global);
-    return Value::fromObject(o);
+    return Value::fromObject(o).asReturnedValue();
 }
 
 ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
@@ -282,7 +282,7 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
             return callData->args[0].asReturnedValue();
     }
 
-    return construct(that, callData).asReturnedValue();
+    return construct(that, callData);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -366,7 +366,7 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
 
     ScopedCallData callData(scope, ctx->argumentCount);
     memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
-    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
+    RegExpObject *re = Value::fromReturnedValue(ctx->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
 
     r->value = re->value;
     r->global = re->global;

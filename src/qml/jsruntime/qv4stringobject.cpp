@@ -160,14 +160,14 @@ StringCtor::StringCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(Managed *m, CallData *callData)
+ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
 {
     Value value;
     if (callData->argc)
         value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
-    return Value::fromObject(m->engine()->newStringObject(value));
+    return Value::fromObject(m->engine()->newStringObject(value)).asReturnedValue();
 }
 
 ReturnedValue StringCtor::call(Managed *m, CallData *callData)
@@ -359,7 +359,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
+        rx = Value::fromReturnedValue(context->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
     }
 
     if (!rx)
@@ -573,13 +573,13 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
     else
         string = ctx->thisObject.toString(ctx)->toQString();
 
-    Value regExpValue = ctx->argument(0);
-    RegExpObject *regExp = regExpValue.as<RegExpObject>();
+    ScopedValue regExpValue(scope, ctx->argument(0));
+    RegExpObject *regExp = regExpValue->as<RegExpObject>();
     if (!regExp) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regExpValue;
         regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
-        regExp = regExpValue.as<RegExpObject>();
+        regExp = regExpValue->as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
     uint result = regExp->value->match(string, /*offset*/0, matchOffsets);

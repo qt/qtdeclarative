@@ -53,7 +53,7 @@ struct NumberCtor: FunctionObject
 {
     NumberCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, CallData *callData);
+    static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *, CallData *callData);
 
 protected:

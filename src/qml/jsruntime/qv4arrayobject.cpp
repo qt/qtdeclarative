@@ -54,7 +54,7 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ArrayCtor::construct(Managed *m, CallData *callData)
+ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     ArrayObject *a = v4->newArrayObject();
@@ -77,12 +77,12 @@ Value ArrayCtor::construct(Managed *m, CallData *callData)
     }
     a->setArrayLengthUnchecked(len);
 
-    return Value::fromObject(a);
+    return Value::fromObject(a).asReturnedValue();
 }
 
 ReturnedValue ArrayCtor::call(Managed *that, CallData *callData)
 {
-    return construct(that, callData).asReturnedValue();
+    return construct(that, callData);
 }
 
 ArrayPrototype::ArrayPrototype(InternalClass *ic)

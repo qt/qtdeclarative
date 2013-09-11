@@ -66,7 +66,7 @@ struct DateCtor: FunctionObject
 {
     DateCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *, CallData *callData);
+    static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *);
 
 protected:

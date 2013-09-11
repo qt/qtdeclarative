@@ -654,7 +654,7 @@ DateCtor::DateCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(Managed *m, CallData *callData)
+ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
 {
     double t = 0;
 
@@ -690,7 +690,7 @@ Value DateCtor::construct(Managed *m, CallData *callData)
     }
 
     Object *o = m->engine()->newDateObject(Value::fromDouble(t));
-    return Value::fromObject(o);
+    return Value::fromObject(o).asReturnedValue();
 }
 
 ReturnedValue DateCtor::call(Managed *m, CallData *)

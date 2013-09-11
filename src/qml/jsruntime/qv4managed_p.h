@@ -92,7 +92,7 @@ struct CallData
 struct ManagedVTable
 {
     ReturnedValue (*call)(Managed *, CallData *data);
-    Value (*construct)(Managed *, CallData *data);
+    ReturnedValue (*construct)(Managed *, CallData *data);
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
@@ -252,7 +252,7 @@ public:
     inline bool hasInstance(const Value &v) {
         return vtbl->hasInstance(this, v);
     }
-    Value construct(CallData *d);
+    ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
     Value get(String *name, bool *hasProperty = 0);
     Value getIndexed(uint index, bool *hasProperty = 0);
@@ -281,7 +281,7 @@ public:
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const Value &value);
-    static Value construct(Managed *m, CallData *d);
+    static ReturnedValue construct(Managed *m, CallData *d);
     static ReturnedValue call(Managed *m, CallData *);
     static void getLookup(Managed *m, Lookup *, Value *);
     static void setLookup(Managed *m, Lookup *l, const Value &v);

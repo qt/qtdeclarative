@@ -105,7 +105,7 @@ struct RegExpCtor: FunctionObject
 {
     RegExpCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
+    static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
 
 protected:

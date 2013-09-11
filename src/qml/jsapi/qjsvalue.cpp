@@ -623,7 +623,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         callData->args[i] = args.at(i).d->getValue(engine);
     }
 
-    Value result;
+    ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
     try {
         result = f->construct(callData);

@@ -75,10 +75,10 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         isBuiltinFunction = true;
     }
 
-    static QV4::Value construct(QV4::Managed *m, QV4::CallData *)
+    static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
     {
         m->engine()->current->throwTypeError();
-        return QV4::Value::undefinedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     }
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)

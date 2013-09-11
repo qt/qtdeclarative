@@ -276,7 +276,7 @@ inline ErrorObject *Value::asErrorObject() const
 }
 
 // ###
-inline Value Managed::construct(CallData *d) {
+inline ReturnedValue Managed::construct(CallData *d) {
     return vtbl->construct(this, d);
 }
 inline ReturnedValue Managed::call(CallData *d) {

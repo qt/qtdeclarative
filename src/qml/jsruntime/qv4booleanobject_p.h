@@ -53,7 +53,7 @@ struct BooleanCtor: FunctionObject
 {
     BooleanCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *, CallData *callData);
+    static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
 
 protected:
