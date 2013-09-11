@@ -614,6 +614,23 @@ public:
     {
         store64(ReturnValueRegister, dest);
     }
+#elif defined(Q_PROCESSOR_X86)
+    void storeReturnValue(const Pointer &dest)
+    {
+        Pointer destination = dest;
+        store32(JSC::X86Registers::eax, destination);
+        destination.offset += 4;
+        store32(JSC::X86Registers::edx, destination);
+    }
+#elif defined(Q_PROCESSOR_ARM)
+    void storeReturnValue(const Pointer &dest)
+    {
+        Pointer destination = dest;
+        store32(JSC::ARMRegisters::r0, destination);
+        destination.offset += 4;
+        store32(JSC::ARMRegisters::r1, destination);
+    }
+#endif
 
     void storeReturnValue(V4IR::Temp *temp)
     {
@@ -622,7 +639,6 @@ public:
         Pointer addr = loadTempAddress(ScratchRegister, temp);
         storeReturnValue(addr);
     }
-#endif
 
     void storeReturnValue(VoidType)
     {
