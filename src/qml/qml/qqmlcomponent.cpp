@@ -1542,10 +1542,8 @@ void QmlIncubatorObject::statusChanged(Status s)
             callData->thisObject = this;
             callData->args[0] = QV4::Primitive::fromUInt32(s);
             f->call(callData);
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
-            QQmlError error;
-            QQmlJavaScriptExpression::exceptionToError(e, error);
+        } catch (...) {
+            QQmlError error = QQmlError::catchJavaScriptException(ctx);
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v8->engine()), error);
         }
     }

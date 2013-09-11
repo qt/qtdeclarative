@@ -91,7 +91,7 @@ struct Function {
             return codePtr(ctx, data);
         } catch (...) {
             ctx->engine->jsStackTop = stack;
-            throw;
+            ctx->rethrowException();
         }
     }
 

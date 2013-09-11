@@ -252,11 +252,11 @@ ReturnedValue Script::run()
         QV4::ScopedValue result(valueScope);
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
-        } catch (Exception &e) {
+        } catch (...) {
             scope->strictMode = strict;
             scope->lookups = oldLookups;
             scope->compilationUnit = oldCompilationUnit;
-            throw;
+            scope->rethrowException();
         }
 
         scope->lookups = oldLookups;
@@ -379,8 +379,8 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
     try {
         qmlScript.parse();
         return qmlScript.run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return Encode::undefined();
 }

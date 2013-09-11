@@ -63,7 +63,7 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::ExecutionEngine::StackFrame frame = ctx->engine->currentStackFrame();
+    QV4::StackFrame frame = ctx->engine->currentStackFrame();
 
     retn.setLine(frame.line);
     retn.setUrl(QUrl(frame.source));

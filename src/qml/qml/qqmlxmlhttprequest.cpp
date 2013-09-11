@@ -1105,7 +1105,6 @@ private:
     PersistentValue m_me;
 
     void dispatchCallback(const ValueRef me);
-    void printError(const Exception &e);
 
     int m_status;
     QString m_statusText;
@@ -1568,18 +1567,10 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         // deleted explicitly (e.g., by a Loader deleting the itemContext when
         // the source is changed).  We do nothing in this case, as the evaluation
         // cannot succeed.
-    } catch(Exception &e) {
-        e.accept(ctx);
-        printError(e);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }
-}
-
-// Must have a handle scope
-void QQmlXMLHttpRequest::printError(const Exception &e)
-{
-    QQmlError error;
-    QQmlExpressionPrivate::exceptionToError(e, error);
-    QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
 }
 
 void QQmlXMLHttpRequest::destroyNetwork()

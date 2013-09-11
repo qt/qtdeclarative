@@ -58,6 +58,17 @@ using namespace QV4;
 
 void Exception::throwException(ExecutionContext *context, const ValueRef value)
 {
+    ExecutionEngine *engine = context->engine;
+    Q_ASSERT(!engine->hasException);
+    engine->hasException = true;
+    engine->exceptionValue = value;
+    QV4::Scope scope(engine);
+    QV4::Scoped<ErrorObject> error(scope, value);
+    if (!!error)
+        engine->exceptionStackTrace = error->stackTrace;
+    else
+        engine->exceptionStackTrace = engine->stackTrace();
+
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
 
@@ -83,48 +94,16 @@ void Exception::throwException(ExecutionContext *context, const ValueRef value)
     printf("stack walked. throwing exception now...\n");
 #endif
 
-    throwInternal(context, value);
-}
-
-Exception::Exception(ExecutionContext *throwingContext, const ValueRef exceptionValue)
-    : e(throwingContext->engine)
-{
-    e->exceptionValue = exceptionValue;
-    this->throwingContext = throwingContext->engine->current;
-    accepted = false;
-    if (ErrorObject *error = exceptionValue->asErrorObject())
-        m_stackTrace = error->stackTrace;
-    else
-        m_stackTrace = throwingContext->engine->stackTrace();
-}
-
-Exception::~Exception()
-{
-    assert(accepted);
-    e->exceptionValue = Primitive::undefinedValue();
-}
-
-void Exception::accept(ExecutionContext *catchingContext)
-{
-    assert(!accepted);
-    accepted = true;
-    partiallyUnwindContext(catchingContext);
-}
-
-void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
-{
-    if (!throwingContext)
-        return;
-    ExecutionContext *context = throwingContext;
-    while (context != catchingContext)
-        context = context->engine->popContext();
-    throwingContext = context;
+    throwInternal();
 }
 
 #if !defined(V4_CXX_ABI_EXCEPTION)
-void Exception::throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue)
+struct DummyException
+{};
+
+void Exception::throwInternal()
 {
-    throw Exception(throwingContext, exceptionValue);
+    throw DummyException();
 }
 #endif
 

@@ -283,8 +283,8 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             try {
                 str = s->asString();
                 val = o->get(str);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
+            } catch (...) {
+                ctx->catchException();
             }
 
             serialize(data, val, engine);

@@ -368,14 +368,17 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(EnterTry)
         VALUE(instr.exceptionVar) = QV4::Primitive::undefinedValue();
+        bool caughtException = false;
         try {
             const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
             context->interpreterInstructionPointer = &code;
-        } catch (QV4::Exception &ex) {
-            ex.accept(context);
-            STOREVALUE(instr.exceptionVar, ex.value());
+        } catch (...) {
+            STOREVALUE(instr.exceptionVar, context->catchException());
+            caughtException = true;
+        }
+        if (caughtException) {
             try {
                 QV4::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(runtimeStrings[instr.exceptionVarName], VALUEPTR(instr.exceptionVar), context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
@@ -383,9 +386,8 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
                 code = catchCode;
                 context->interpreterInstructionPointer = &code;
                 context = __qmljs_builtin_pop_scope(catchContext);
-            } catch (QV4::Exception &ex) {
-                ex.accept(context);
-                STOREVALUE(instr.exceptionVar, ex.value());
+            } catch (...) {
+                STOREVALUE(instr.exceptionVar, context->catchException());
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;

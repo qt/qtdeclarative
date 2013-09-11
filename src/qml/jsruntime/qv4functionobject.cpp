@@ -450,9 +450,8 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
     CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
@@ -482,9 +481,8 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
     CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
@@ -553,9 +551,8 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
         if (!result)
             return obj.asReturnedValue();
         return result.asReturnedValue();
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
 }
 
@@ -581,9 +578,8 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
     CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
@@ -625,9 +621,8 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ScopedValue result(scope);
     try {
         result = f->code(&ctx);
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
 
     context->engine->popContext();
@@ -650,9 +645,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ScopedValue result(scope);
     try {
         result = f->code(&ctx, f->index);
-    } catch (Exception &ex) {
-        ex.partiallyUnwindContext(context);
-        throw;
+    } catch (...) {
+        context->rethrowException();
     }
 
     context->engine->popContext();

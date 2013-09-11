@@ -211,8 +211,8 @@ QJSValue QJSValueIterator::value() const
             return QJSValue();
         }
         return new QJSValuePrivate(engine, v);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
         return QJSValue();
     }
 }

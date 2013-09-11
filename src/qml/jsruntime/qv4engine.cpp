@@ -67,6 +67,7 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
 #include "qv4stacktrace_p.h"
+#include "qv4exception_p.h"
 
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
@@ -103,6 +104,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     exceptionValue = Encode::undefined();
+    hasException = false;
 
     if (!factory) {
 
@@ -572,7 +574,7 @@ namespace {
         {
         }
 
-        void resolve(ExecutionEngine::StackFrame *frame, ExecutionContext *context, Function *function)
+        void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
         {
             if (context->interpreterInstructionPointer) {
                 qptrdiff offset = *context->interpreterInstructionPointer - 1 - function->codeData;
@@ -589,7 +591,7 @@ namespace {
     };
 }
 
-QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
+QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
     LineNumberResolver lineNumbers(this);
 
@@ -628,7 +630,7 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
     return stack;
 }
 
-ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
+StackFrame ExecutionEngine::currentStackFrame() const
 {
     StackFrame frame;
     frame.line = -1;

@@ -113,10 +113,10 @@ DEFINE_MANAGED_VTABLE(GC);
 
 } // builtins
 
-static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exception)
+static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef exception, const QV4::StackTrace &trace)
 {
     QV4::Scope scope(ctx);
-    QV4::ScopedValue ex(scope, exception.value());
+    QV4::ScopedValue ex(scope, *exception);
     QV4::ErrorObject *e = ex->asErrorObject();
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(ex->toString(ctx)->toQString()) << std::endl;
@@ -126,7 +126,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exce
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
 
-    foreach (const QV4::ExecutionEngine::StackFrame &frame, exception.stackTrace()) {
+    foreach (const QV4::StackFrame &frame, trace) {
         std::cerr << "    at " << qPrintable(frame.function) << " (" << qPrintable(frame.source);
         if (frame.line >= 0)
             std::cerr << ":" << frame.line;
@@ -212,9 +212,10 @@ int main(int argc, char *argv[])
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
                             std::cout << "exit value: " << qPrintable(result->toString(ctx)->toQString()) << std::endl;
                     }
-                } catch (QV4::Exception& ex) {
-                    ex.accept(ctx);
-                    showException(ctx, ex);
+                } catch (...) {
+                    QV4::StackTrace trace;
+                    QV4::ScopedValue ex(scope, ctx->catchException(&trace));
+                    showException(ctx, ex, trace);
                     return EXIT_FAILURE;
                 }
 

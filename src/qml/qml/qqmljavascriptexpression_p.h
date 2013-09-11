@@ -61,6 +61,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+struct ExecutionContext;
+}
+
 class QQmlDelayedError
 {
 public:
@@ -85,7 +89,8 @@ public:
     void setErrorDescription(const QString &description);
     void setErrorObject(QObject *object);
 
-    void setError(const QV4::Exception &e);
+    // Call only from catch(...) -- will re-throw if no JS exception
+    void catchJavaScriptException(QV4::ExecutionContext *context);
 
 private:
 
@@ -142,7 +147,6 @@ public:
     void clearGuards();
     QQmlDelayedError *delayedError();
 
-    static void exceptionToError(const QV4::Exception &e, QQmlError &);
     static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
                                                      quint16 line,

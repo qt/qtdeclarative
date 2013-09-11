@@ -84,18 +84,9 @@ void QQmlDelayedError::setErrorObject(QObject *object)
     m_error.setObject(object);
 }
 
-void QQmlDelayedError::setError(const QV4::Exception &e)
+void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionContext *context)
 {
-    m_error.setDescription(QV4::Value::fromReturnedValue(e.value()).toQStringNoThrow());
-    QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
-    if (!trace.isEmpty()) {
-        QV4::ExecutionEngine::StackFrame frame = trace.first();
-        m_error.setUrl(QUrl(frame.source));
-        m_error.setLine(frame.line);
-        m_error.setColumn(frame.column);
-    }
-
-    m_error.setColumn(-1);
+    m_error = QQmlError::catchJavaScriptException(context);
 }
 
 
@@ -183,19 +174,13 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
         if (!watcher.wasDeleted() && hasDelayedError())
             delayedError()->clearError();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QV4::ScopedValue ex(scope, e.value());
+    } catch (...) {
+        if (watcher.wasDeleted())
+            ctx->catchException(); // ignore exception
+        else
+            delayedError()->catchJavaScriptException(ctx);
         if (isUndefined)
             *isUndefined = true;
-        if (!watcher.wasDeleted()) {
-            if (!ex->isUndefined()) {
-                delayedError()->setError(e);
-            } else {
-                if (hasDelayedError())
-                    delayedError()->clearError();
-            }
-        }
     }
 
     if (capture.errorString) {
@@ -302,27 +287,6 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
     return &m_vtable.value();
 }
 
-void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlError &error)
-{
-    QV4::Scope scope(e.engine());
-    QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
-    if (!trace.isEmpty()) {
-        QV4::ExecutionEngine::StackFrame frame = trace.first();
-        error.setUrl(QUrl(frame.source));
-        error.setLine(frame.line);
-        error.setColumn(frame.column);
-    }
-    QV4::Scoped<QV4::ErrorObject> errorObj(scope, e.value());
-    if (!!errorObj && errorObj->asSyntaxError()) {
-        QV4::ScopedString m(scope, errorObj->engine()->newString("message"));
-        QV4::ScopedValue v(scope, errorObj->get(m));
-        error.setDescription(v->toQStringNoThrow());
-    } else {
-        QV4::ScopedValue v(scope, e.value());
-        error.setDescription(v->toQStringNoThrow());
-    }
-}
-
 QV4::ReturnedValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObject,
                                        const QString &code, const QString &filename, quint16 line,
@@ -341,10 +305,8 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     try {
         script.parse();
         result = script.run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)
@@ -377,10 +339,8 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
     try {
         script.parse();
         result = script.qmlBinding();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)

@@ -372,7 +372,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             cacheData.valueTypeCoreIndex = index;
             cacheData.valueTypePropType = p.userType();
 
-            QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+            QV4::StackFrame frame = v4->currentStackFrame();
 
             newBinding = new QQmlBinding(value, reference->object, context,
                                          frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));

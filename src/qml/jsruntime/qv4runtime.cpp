@@ -49,7 +49,6 @@
 #include "qv4argumentsobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
-#include "qv4exception_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 
@@ -878,7 +877,7 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueR
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 {
-    Exception::throwException(context, value);
+    context->throwError(value);
 }
 
 ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)

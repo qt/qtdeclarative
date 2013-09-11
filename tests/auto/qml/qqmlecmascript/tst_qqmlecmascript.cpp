@@ -2280,8 +2280,8 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
         d->args[0] = o;
         d->thisObject = engine->global();
         function->call(d);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
         return true;
     }
     return false;
@@ -2310,8 +2310,8 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
         d->thisObject = engine->global();
         value = function->call(d);
         return __qmljs_strict_equal(value, result);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return false;
 }
@@ -2335,8 +2335,8 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
         d->args[0] = o;
         d->thisObject = engine->global();
         return function->call(d);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return QV4::Encode::undefined();
 }

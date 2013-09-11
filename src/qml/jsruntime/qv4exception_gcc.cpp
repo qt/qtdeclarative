@@ -100,25 +100,30 @@ static void exception_cleanup(_Unwind_Reason_Code, _Unwind_Exception *ex)
     }
 }
 
+struct DummyException
+{
+    virtual ~DummyException() {}
+};
+
 static void exception_destructor(void *ex)
 {
-    reinterpret_cast<QV4::Exception *>(ex)->~Exception();
+    reinterpret_cast<DummyException *>(ex)->~DummyException();
 }
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Exception::throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue)
+void Exception::throwInternal()
 {
     void *rawException = abi::__cxa_allocate_exception(sizeof(QV4::Exception));
     gcc_refcounted_compatible_exception *refCountedException = reinterpret_cast<gcc_refcounted_compatible_exception *>(rawException) - 1;
     cxa_exception *exception = &refCountedException->x;
 
-    (void)new (rawException) Exception(throwingContext, exceptionValue);
+    (void)new (rawException) DummyException();
 
     refCountedException->refCount = 1;
-    exception->typeInfo = const_cast<std::type_info*>(&typeid(Exception));
+    exception->typeInfo = const_cast<std::type_info*>(&typeid(DummyException));
     exception->exceptionDestructor = &exception_destructor;
     exception->unexpectedHandler = std::unexpected;
     exception->terminateHandler = std::terminate;

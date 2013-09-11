@@ -1333,10 +1333,10 @@ enum ConsoleLogTypes {
 static QString jsStack(QV4::ExecutionEngine *engine) {
     QString stack;
 
-    QVector<QV4::ExecutionEngine::StackFrame> stackTrace = engine->stackTrace(10);
+    QVector<QV4::StackFrame> stackTrace = engine->stackTrace(10);
 
     for (int i = 0; i < stackTrace.count(); i++) {
-        const QV4::ExecutionEngine::StackFrame &frame = stackTrace.at(i);
+        const QV4::StackFrame &frame = stackTrace.at(i);
 
         QString stackFrame;
         if (frame.column >= 0)
@@ -1377,7 +1377,7 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallCont
         result.append(jsStack(v4));
     }
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
     QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
     switch (logType) {
     case Log:
@@ -1418,7 +1418,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(SimpleCallContext *ctx)
     QString title;
     QV4::ExecutionEngine *v4 = ctx->engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
     QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
     if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
@@ -1440,7 +1440,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(SimpleCallContext *ctx)
 
     QV4::ExecutionEngine *v4 = ctx->engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
     QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
 
     if (QQmlProfilerService::stopProfiling()) {
@@ -1495,7 +1495,7 @@ QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
     QV4::ExecutionEngine *v4 = ctx->engine;
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
 
     QString scriptName = frame.source;
 
@@ -1517,7 +1517,7 @@ QV4::ReturnedValue ConsoleObject::method_trace(SimpleCallContext *ctx)
 
     QString stack = jsStack(v4);
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
     QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
 
     logger.debug("%s", qPrintable(stack));
@@ -1547,7 +1547,7 @@ QV4::ReturnedValue ConsoleObject::method_assert(SimpleCallContext *ctx)
 
         QString stack = jsStack(v4);
 
-        QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+        QV4::StackFrame frame = v4->currentStackFrame();
         QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
         logger.critical("%s\n%s", qPrintable(message), qPrintable(stack));
 

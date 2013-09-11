@@ -453,7 +453,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
             // binding assignment.
             QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
 
-            QV4::ExecutionEngine::StackFrame frame = ctx->engine->currentStackFrame();
+            QV4::StackFrame frame = ctx->engine->currentStackFrame();
 
             newBinding = new QQmlBinding(value, object, callingQmlContext, frame.source,
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
@@ -723,10 +723,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
             try {
                 f->call(callData);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
-                QQmlError error;
-                QQmlExpressionPrivate::exceptionToError(e, error);
+            } catch (...) {
+                QQmlError error = QQmlError::catchJavaScriptException(ctx);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);

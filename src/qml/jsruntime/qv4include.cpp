@@ -115,8 +115,8 @@ void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef stat
         callData->thisObject = v4->globalObject->asReturnedValue();
         callData->args[0] = status;
         f->call(callData);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
 }
 
@@ -162,10 +162,9 @@ void QV4Include::finished()
             script.parse();
             script.run();
             resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Ok)));
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
+        } catch (...) {
+            QV4::ScopedValue ex(scope, ctx->catchException());
             resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Exception)));
-            QV4::ScopedValue ex(scope, e.value());
             resultObj->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
         }
     } else {
@@ -228,10 +227,9 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
                 script.parse();
                 script.run();
                 result = resultValue(v4, Ok);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
+            } catch (...) {
+                QV4::ScopedValue ex(scope, ctx->catchException());
                 result = resultValue(v4, Exception);
-                QV4::ScopedValue ex(scope, e.value());
                 result->asObject()->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
             }
         } else {

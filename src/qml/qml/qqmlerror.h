@@ -49,6 +49,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+struct ExecutionContext;
+}
+
 class QDebug;
 class QQmlErrorPrivate;
 class Q_QML_EXPORT QQmlError
@@ -58,6 +62,9 @@ public:
     QQmlError(const QQmlError &);
     QQmlError &operator=(const QQmlError &);
     ~QQmlError();
+
+    // Use only inside catch(...) -- will re-throw if no JS exception
+    static QQmlError catchJavaScriptException(QV4::ExecutionContext *context);
 
     bool isValid() const;
 

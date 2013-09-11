@@ -362,9 +362,9 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         callData->args[0] = w;
         try {
             callback->call(callData);
-        } catch (Exception &) {
+        } catch (...) {
             db.rollback();
-            throw;
+            ctx->rethrowException();
         }
         if (!db.commit()) {
             db.rollback();
@@ -418,10 +418,10 @@ static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, b
         callData->args[0] = w;
         try {
             callback->call(callData);
-        } catch (Exception &) {
+        } catch (...) {
             w->inTransaction = false;
             db.rollback();
-            throw;
+            ctx->rethrowException();
         }
 
         w->inTransaction = false;

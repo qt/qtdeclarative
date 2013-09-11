@@ -111,6 +111,7 @@ class MultiplyWrappedQObjectMap;
 class RegExp;
 class RegExpCache;
 struct QmlExtensions;
+struct Exception;
 
 struct Q_QML_EXPORT ExecutionEngine
 {
@@ -237,6 +238,8 @@ struct Q_QML_EXPORT ExecutionEngine
     RegExpCache *regExpCache;
 
     SafeValue exceptionValue;
+    bool hasException;
+    StackTrace exceptionStackTrace;
 
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
     // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
@@ -305,13 +308,6 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Returned<Object> *qmlContextObject() const;
 
-    struct StackFrame {
-        QString source;
-        QString function;
-        int line;
-        int column;
-    };
-    typedef QVector<StackFrame> StackTrace;
     StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;
     QUrl resolvedUrl(const QString &file);

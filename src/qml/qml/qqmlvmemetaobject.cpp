@@ -944,10 +944,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 try {
                     result = function->call(callData);
                     if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
-                } catch (QV4::Exception &e) {
-                    e.accept(ctx);
-                    QQmlError error;
-                    QQmlExpressionPrivate::exceptionToError(e, error);
+                } catch (...) {
+                    QQmlError error = QQmlError::catchJavaScriptException(ctx);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();

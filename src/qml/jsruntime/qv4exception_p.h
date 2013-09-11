@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4EXCEPTION_GNU_P
-#define QV4EXCEPTION_GNU_P
+#ifndef QV4EXCEPTION_P
+#define QV4EXCEPTION_P
 
 #include <qglobal.h>
 #include "qv4value_p.h"
@@ -52,31 +52,12 @@ namespace QV4 {
 struct Q_QML_EXPORT Exception {
     static void Q_NORETURN throwException(ExecutionContext *throwingContext, const ValueRef exceptionValue);
 
-    ~Exception();
-
-    void accept(ExecutionContext *catchingContext);
-
-    void partiallyUnwindContext(ExecutionContext *catchingContext);
-
-    ReturnedValue value() const { return e->exceptionValue.asReturnedValue(); }
-
-    ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
-    ExecutionEngine *engine() const { return e; }
-
 private:
-    void *operator new(size_t, void *p) { return p; }
-
-    explicit Exception(ExecutionContext *throwingContext, const ValueRef exceptionValue);
-
-    ExecutionEngine *e;
-    ExecutionContext *throwingContext;
-    bool accepted;
-    ExecutionEngine::StackTrace m_stackTrace;
-    static void Q_NORETURN throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue);
+    static void Q_NORETURN throwInternal();
 };
 
 } // namespace QV4
 
 QT_END_NAMESPACE
 
-#endif // QV4EXCEPTION_GNU_P
+#endif // QV4EXCEPTION_P

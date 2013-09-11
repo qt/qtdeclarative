@@ -796,22 +796,24 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
     exceptionVar = Primitive::undefinedValue();
     void *addressToContinueAt = 0;
     SafeValue *jsStackTop = context->engine->jsStackTop;
+    bool caughtException = false;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
-    } catch (Exception& ex) {
+    } catch (...) {
         context->engine->jsStackTop = jsStackTop;
-        ex.accept(context);
-        exceptionVar = ex.value();
+        exceptionVar = context->catchException();
+        caughtException = true;
+    }
+    // Can't nest try { ... } catch (...) {} due to inability of nesting foreign exceptions
+    // with common CXX ABI.
+    if (caughtException) {
         try {
-            QV4::Scope scope(context);
-            QV4::ScopedValue exception(scope, ex.value());
-            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exception, context);
+            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exceptionVar, context);
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
-        } catch (Exception& ex) {
+        } catch (...) {
             context->engine->jsStackTop = jsStackTop;
-            exceptionVar = ex.value();
-            ex.accept(context);
+            exceptionVar = context->catchException();
             addressToContinueAt = catchBody(context, localsPtr);
         }
     }

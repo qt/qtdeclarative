@@ -412,13 +412,11 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ScopedValue result(scope);
     try {
         result = function->code(ctx, function->codeData);
-    } catch (Exception &ex) {
+    } catch (...) {
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;
         ctx->compilationUnit = oldCompilationUnit;
-        if (strictMode)
-            ex.partiallyUnwindContext(parentContext);
-        throw;
+        ctx->rethrowException();
     }
 
     ctx->strictMode = cstrict;

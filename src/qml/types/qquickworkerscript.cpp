@@ -258,9 +258,8 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
         callData->args[0] = QV4::Primitive::fromInt32(id);
         callData->thisObject = global();
         v = f->call(callData);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        v = e.value();
+    } catch (...) {
+        v = ctx->catchException();
     }
     return v.asReturnedValue();
 }
@@ -367,10 +366,8 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
         callData->args[0] = script->object.value();
         callData->args[1] = value;
         f->call(callData);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
         reportScriptException(script, error);
     }
 }
@@ -406,10 +403,8 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         try {
             program.parse();
             program.run();
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
-            QQmlError error;
-            QQmlExpressionPrivate::exceptionToError(e, error);
+        } catch (...) {
+            QQmlError error = QQmlError::catchJavaScriptException(ctx);
             reportScriptException(script, error);
         }
     } else {
