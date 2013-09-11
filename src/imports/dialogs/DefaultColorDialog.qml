@@ -296,7 +296,7 @@ AbstractColorDialog {
                 spacing: content.spacing
                 TextField {
                     id: colorField
-                    text: root.color
+                    text: root.color.toString()
                     anchors.verticalCenter: parent.verticalCenter
                     onAccepted:  root.color = text
                     Component.onCompleted: width = implicitWidth + 10
