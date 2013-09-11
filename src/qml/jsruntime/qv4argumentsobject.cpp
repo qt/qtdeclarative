@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
 #include <qv4alloca_p.h>
+#include <qv4scopedvalue_p.h>
 
 using namespace QV4;
 
@@ -129,10 +130,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
-            CALLDATA(1);
-            d.thisObject = Value::fromObject(this);
-            d.args[0] = desc.value;
-            map.setter()->call(d);
+            ScopedCallData callData(ctx->engine, 1);
+            callData->thisObject = Value::fromObject(this);
+            callData->args[0] = desc.value;
+            map.setter()->call(callData);
         }
         if (attrs.isWritable()) {
             *pd = map;
@@ -147,10 +148,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
 DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
 
-Value ArgumentsGetterFunction::call(Managed *getter, const CallData &d)
+Value ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
     ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
-    Object *that = d.thisObject.asObject();
+    Object *that = callData->thisObject.asObject();
     if (!that)
         getter->engine()->current->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
@@ -163,10 +164,10 @@ Value ArgumentsGetterFunction::call(Managed *getter, const CallData &d)
 
 DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
 
-Value ArgumentsSetterFunction::call(Managed *setter, const CallData &d)
+Value ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {
     ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
-    Object *that = d.thisObject.asObject();
+    Object *that = callData->thisObject.asObject();
     if (!that)
         setter->engine()->current->throwTypeError();
     ArgumentsObject *o = that->asArgumentsObject();
@@ -174,7 +175,7 @@ Value ArgumentsSetterFunction::call(Managed *setter, const CallData &d)
         setter->engine()->current->throwTypeError();
 
     assert(s->index < o->context->argumentCount);
-    o->context->arguments[s->index] = d.argc ? d.args[0] : Value::undefinedValue();
+    o->context->arguments[s->index] = callData->argc ? callData->args[0] : Value::undefinedValue();
     return Value::undefinedValue();
 }
 

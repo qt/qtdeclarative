@@ -124,7 +124,7 @@ static QQmlPropertyData::Flags flagsForPropertyType(int propType, QQmlEngine *en
             engine ? QQmlEnginePrivate::get(engine)->typeCategory(propType)
                    : QQmlMetaType::typeCategory(propType);
 
-        if (cat == QQmlMetaType::Object)
+        if (cat == QQmlMetaType::Object || QMetaType::typeFlags(propType) & QMetaType::PointerToQObject)
             flags |= QQmlPropertyData::IsQObjectDerived;
         else if (cat == QQmlMetaType::List)
             flags |= QQmlPropertyData::IsQList;
@@ -1553,7 +1553,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         } else {
             method = builder.addSlot(signature);
         }
-        method.setAccess(QMetaMethod::Protected);
+        method.setAccess(QMetaMethod::Public);
 
         if (arguments && arguments->names)
             method.setParameterNames(*arguments->names);

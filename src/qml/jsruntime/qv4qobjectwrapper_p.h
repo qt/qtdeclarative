@@ -135,15 +135,15 @@ private:
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
 
     QV4::Value method_toString(QV4::ExecutionContext *ctx);
-    QV4::Value method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc);
+    QV4::Value method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
 
     QPointer<QObject> m_object;
     int m_index;
     QV4::PersistentValue m_qmlGlobal;
 
-    static Value call(Managed *, const CallData &d);
+    static Value call(Managed *, CallData *callData);
 
-    Value callInternal(const CallData &d);
+    Value callInternal(CallData *callData);
 
     static void destroy(Managed *that)
     {

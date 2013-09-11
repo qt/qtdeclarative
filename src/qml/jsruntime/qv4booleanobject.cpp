@@ -51,15 +51,15 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value BooleanCtor::construct(Managed *m, const CallData &d)
+Value BooleanCtor::construct(Managed *m, CallData *callData)
 {
-    bool n = d.argc ? d.args[0].toBoolean() : false;
+    bool n = callData->argc ? callData->args[0].toBoolean() : false;
     return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(Managed *, const CallData &d)
+Value BooleanCtor::call(Managed *, CallData *callData)
 {
-    bool value = d.argc ? d.args[0].toBoolean() : 0;
+    bool value = callData->argc ? callData->args[0].toBoolean() : 0;
     return Value::fromBoolean(value);
 }
 

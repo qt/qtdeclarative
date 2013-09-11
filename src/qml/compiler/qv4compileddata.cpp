@@ -57,7 +57,7 @@ namespace CompiledData {
 namespace {
     bool functionSortHelper(QV4::Function *lhs, QV4::Function *rhs)
     {
-        return reinterpret_cast<quintptr>(lhs->code) < reinterpret_cast<quintptr>(rhs->code);
+        return reinterpret_cast<quintptr>(lhs->codePtr) < reinterpret_cast<quintptr>(rhs->codePtr);
     }
 }
 

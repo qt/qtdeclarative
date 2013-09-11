@@ -91,6 +91,8 @@ inline QV4::Value convertToValue(V4IR::Const *c)
     default:
         Q_UNREACHABLE();
     }
+    // unreachable, but the function must return something
+    return QV4::Value::undefinedValue();
 }
 
 } // namespace QQmlJS

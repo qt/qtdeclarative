@@ -60,6 +60,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4exception_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 using namespace QV4;
 
@@ -340,11 +341,11 @@ static Value qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         ok = false;
         db.transaction();
 
-        CALLDATA(1);
-        d.thisObject = engine->global();
-        d.args[0] = Value::fromObject(w);
+        ScopedCallData callData(ctx->engine, 1);
+        callData->thisObject = engine->global();
+        callData->args[0] = Value::fromObject(w);
         try {
-            f->call(d);
+            f->call(callData);
         } catch (Exception &) {
             db.rollback();
             throw;
@@ -394,11 +395,11 @@ static Value qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool read
 
     db.transaction();
     if (callback) {
-        CALLDATA(1);
-        d.thisObject = engine->global();
-        d.args[0] = Value::fromObject(w);
+        ScopedCallData callData(ctx->engine, 1);
+        callData->thisObject = engine->global();
+        callData->args[0] = Value::fromObject(w);
         try {
-            callback->call(d);
+            callback->call(callData);
         } catch (Exception &) {
             w->inTransaction = false;
             db.rollback();
@@ -677,10 +678,10 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     db->version = version;
 
     if (created && dbcreationCallback) {
-        CALLDATA(1);
-        d.thisObject = engine->global();
-        d.args[0] = Value::fromObject(db);
-        dbcreationCallback->call(d);
+        ScopedCallData callData(ctx->engine, 1);
+        callData->thisObject = engine->global();
+        callData->args[0] = Value::fromObject(db);
+        dbcreationCallback->call(callData);
     }
 
     args->setReturnValue(Value::fromObject(db));

@@ -166,6 +166,7 @@ static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
  */
 QSGMaterialShader::QSGMaterialShader()
 {
+    Q_UNUSED(m_reserved);
 }
 
 /*!
@@ -544,6 +545,7 @@ static void qt_print_material_count()
 QSGMaterial::QSGMaterial()
     : m_flags(0)
 {
+    Q_UNUSED(m_reserved);
 #ifndef QT_NO_DEBUG
     if (qsg_leak_check) {
         ++qt_material_count;

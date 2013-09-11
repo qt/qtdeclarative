@@ -44,6 +44,7 @@
 #include "qv4regexpobject_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -159,21 +160,21 @@ StringCtor::StringCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(Managed *m, const CallData &d)
+Value StringCtor::construct(Managed *m, CallData *callData)
 {
     Value value;
-    if (d.argc)
-        value = Value::fromString(d.args[0].toString(m->engine()->current));
+    if (callData->argc)
+        value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return Value::fromObject(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *m, const CallData &d)
+Value StringCtor::call(Managed *m, CallData *callData)
 {
     Value value;
-    if (d.argc)
-        value = Value::fromString(d.args[0].toString(m->engine()->current));
+    if (callData->argc)
+        value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
     return value;
@@ -279,12 +280,15 @@ Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 
 Value StringPrototype::method_concat(SimpleCallContext *context)
 {
+    ValueScope scope(context);
+
     QString value = getThisString(context, context->thisObject);
 
+    ScopedValue v(scope);
     for (int i = 0; i < context->argumentCount; ++i) {
-        Value v = __qmljs_to_string(context->arguments[i], context);
-        assert(v.isString());
-        value += v.stringValue()->toQString();
+        v = __qmljs_to_string(ValueRef(&context->arguments[i]), context);
+        assert(v->isString());
+        value += v->stringValue()->toQString();
     }
 
     return Value::fromString(context, value);
@@ -311,15 +315,17 @@ Value StringPrototype::method_indexOf(SimpleCallContext *context)
 
 Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 {
+    ValueScope scope(context);
+
     const QString value = getThisString(context, context->thisObject);
 
     QString searchString;
     if (context->argumentCount) {
-        Value v = __qmljs_to_string(context->arguments[0], context);
+        Value v = __qmljs_to_string(ValueRef(&context->arguments[0]), context);
         searchString = v.stringValue()->toQString();
     }
 
-    Value posArg = context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue();
+    ScopedValue posArg(scope, context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue());
     double position = __qmljs_to_number(posArg);
     if (std::isnan(position))
         position = +qInf();
@@ -352,9 +358,9 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.as<RegExpObject>();
     if (!rx) {
-        CALLDATA(1);
-        d.args[0] = regexp;
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(d).as<RegExpObject>();
+        ScopedCallData callData(context->engine, 1);
+        callData->args[0] = regexp;
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
     }
 
     if (!rx)
@@ -366,11 +372,11 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     // ### use the standard builtin function, not the one that might be redefined in the proto
     FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
 
-    CALLDATA(1);
-    d.thisObject = Value::fromObject(rx);
-    d.args[0] = Value::fromString(s);
+    ScopedCallData callData(context->engine, 1);
+    callData->thisObject = Value::fromObject(rx);
+    callData->args[0] = Value::fromString(s);
     if (!global)
-        return exec->call(d);
+        return exec->call(callData);
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
@@ -379,7 +385,7 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     double previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = exec->call(d);
+        Value result = exec->call(callData);
         if (result.isNull())
             break;
         assert(result.isObject());
@@ -505,8 +511,8 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     Value replaceValue = ctx->argument(1);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         result.reserve(string.length() + 10*numStringMatches);
-        CALLDATA(numCaptures + 2);
-        d.thisObject = Value::undefinedValue();
+        ScopedCallData callData(ctx->engine, numCaptures + 2);
+        callData->thisObject = Value::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
@@ -516,15 +522,15 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
                 Value entry = Value::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = Value::fromString(ctx, string.mid(start, end - start));
-                d.args[k] = entry;
+                callData->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= lastEnd);
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            d.args[numCaptures] = Value::fromUInt32(matchStart);
-            d.args[numCaptures + 1] = Value::fromString(ctx, string);
+            callData->args[numCaptures] = Value::fromUInt32(matchStart);
+            callData->args[numCaptures + 1] = Value::fromString(ctx, string);
 
-            Value replacement = searchCallback->call(d);
+            Value replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement.toString(ctx)->toQString();
             lastEnd = matchEnd;
@@ -566,9 +572,9 @@ Value StringPrototype::method_search(SimpleCallContext *ctx)
     Value regExpValue = ctx->argument(0);
     RegExpObject *regExp = regExpValue.as<RegExpObject>();
     if (!regExp) {
-        CALLDATA(1);
-        d.args[0] = regExpValue;
-        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(d);
+        ScopedCallData callData(ctx->engine, 1);
+        callData->args[0] = regExpValue;
+        regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
         regExp = regExpValue.as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
@@ -783,7 +789,7 @@ Value StringPrototype::method_trim(SimpleCallContext *ctx)
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
         ctx->throwTypeError();
 
-    QString s = __qmljs_to_string(ctx->thisObject, ctx).stringValue()->toQString();
+    QString s = __qmljs_to_string(ValueRef(&ctx->thisObject), ctx).stringValue()->toQString();
     const QChar *chars = s.constData();
     int start, end;
     for (start = 0; start < s.length(); ++start) {

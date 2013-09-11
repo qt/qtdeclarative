@@ -90,6 +90,7 @@ HEADERS += \
     $$PWD/qv4unwindhelper_arm_p.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
+    $$PWD/qv4scopedvalue_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h \

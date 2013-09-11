@@ -307,7 +307,6 @@ protected: // IRDecoder
     virtual void loadThisObject(V4IR::Temp *temp)
     {
         addDef(temp);
-        addCall(); // FIXME: propagate this
     }
 
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
@@ -813,8 +812,8 @@ private:
             foreach (const Move &m, _moves)
                 if (m.needsSwap)
                     ++swapCount;
-#endif
             Q_ASSERT(output.size() == _moves.size() + swapCount);
+#endif
         }
 
 #ifdef DEBUG_REGALLOC

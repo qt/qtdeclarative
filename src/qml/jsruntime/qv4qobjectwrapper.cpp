@@ -62,6 +62,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -700,19 +701,19 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ExecutionEngine *v4 = f->internalClass->engine;
             QV4::ExecutionContext *ctx = v4->current;
 
-            CALLDATA(argCount);
-            d.thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
+            QV4::ScopedCallData callData(v4, argCount);
+            callData->thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    d.args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    callData->args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    d.args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    callData->args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
             try {
-                f->call(d);
+                f->call(callData);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 QQmlError error;
@@ -739,14 +740,15 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 return;
             }
 
-            QV4::Value function = *reinterpret_cast<QV4::Value*>(metaArgs[1]);
-            QV4::Value thisObject = *reinterpret_cast<QV4::Value*>(metaArgs[2]);
+            QV4::ValueScope scope(v4);
+            QV4::ScopedValue function(scope, *reinterpret_cast<QV4::Value*>(metaArgs[1]));
+            QV4::ScopedValue thisObject(scope, *reinterpret_cast<QV4::Value*>(metaArgs[2]));
             QObject *receiverToDisconnect = reinterpret_cast<QObject*>(metaArgs[3]);
             int slotIndexToDisconnect = *reinterpret_cast<int*>(metaArgs[4]);
 
             if (slotIndexToDisconnect != -1) {
                 // This is a QObject function wrapper
-                if (connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                if (connection->thisObject.isEmpty() == thisObject->isEmpty() &&
                         (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
 
                     QPair<QObject *, int> connectedFunctionData = extractQtMethod(connection->function.value().asFunctionObject());
@@ -759,7 +761,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             } else {
                 // This is a normal JS function
                 if (__qmljs_strict_equal(connection->function, function) &&
-                        connection->thisObject.isEmpty() == thisObject.isEmpty() &&
+                        connection->thisObject.isEmpty() == thisObject->isEmpty() &&
                         (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
                     *ret = true;
                     return;
@@ -1009,13 +1011,13 @@ private:
 namespace {
 struct CallArgs
 {
-    CallArgs(int length, QV4::Value *args) : _length(length), _args(args) {}
+    CallArgs(int length, const QV4::Value *args) : _length(length), _args(args) {}
     int Length() const { return _length; }
     QV4::Value operator[](int idx) { return _args[idx]; }
 
 private:
     int _length;
-    QV4::Value *_args;
+    const QV4::Value *_args;
 };
 }
 
@@ -1667,7 +1669,7 @@ QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
     return QV4::Value::fromString(ctx, result);
 }
 
-QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args, int argc)
+QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
 {
     if (!m_object)
         return QV4::Value::undefinedValue();
@@ -1686,17 +1688,17 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, Value *args
     return QV4::Value::undefinedValue();
 }
 
-Value QObjectMethod::call(Managed *m, const CallData &d)
+Value QObjectMethod::call(Managed *m, CallData *callData)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
-    return This->callInternal(d);
+    return This->callInternal(callData);
 }
 
-Value QObjectMethod::callInternal(const CallData &d)
+Value QObjectMethod::callInternal(CallData *callData)
 {
     ExecutionContext *context = engine()->current;
     if (m_index == DestroyMethod)
-        return method_destroy(context, d.args, d.argc);
+        return method_destroy(context, callData->args, callData->argc);
     else if (m_index == ToStringMethod)
         return method_toString(context);
 
@@ -1731,7 +1733,7 @@ Value QObjectMethod::callInternal(const CallData &d)
     if (method.isV4Function()) {
         QV4::Value rv = QV4::Value::undefinedValue();
 
-        QQmlV4Function func(d.argc, d.args, &rv, m_qmlGlobal.value(),
+        QQmlV4Function func(callData->argc, callData->args, &rv, m_qmlGlobal.value(),
                             QmlContextWrapper::getContext(m_qmlGlobal.value()),
                             v8Engine);
         QQmlV4Function *funcptr = &func;
@@ -1742,7 +1744,7 @@ Value QObjectMethod::callInternal(const CallData &d)
         return rv;
     }
 
-    CallArgs callArgs(d.argc, d.args);
+    CallArgs callArgs(callData->argc, callData->args);
     if (!method.isOverload()) {
         return CallPrecise(object, method, v8Engine, callArgs);
     } else {

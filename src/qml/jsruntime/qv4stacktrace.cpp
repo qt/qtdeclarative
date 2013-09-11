@@ -137,7 +137,7 @@ NativeFrame NativeStackTrace::nextFrame() {
             continue;
 
         frame.function = f;
-        frame.line = f->lineNumberForProgramCounter(pc - reinterpret_cast<quintptr>(f->code));
+        frame.line = f->lineNumberForProgramCounter(pc - reinterpret_cast<quintptr>(f->codePtr));
     }
 
     return frame;

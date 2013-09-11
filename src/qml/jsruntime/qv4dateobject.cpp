@@ -42,7 +42,7 @@
 
 #include "qv4dateobject_p.h"
 #include "qv4objectproto_p.h"
-#include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -55,11 +55,6 @@
 #include <time.h>
 
 #include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
 
 #include <wtf/MathExtras.h>
 
@@ -659,34 +654,35 @@ DateCtor::DateCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value DateCtor::construct(Managed *m, const CallData &d)
+Value DateCtor::construct(Managed *m, CallData *callData)
 {
     double t = 0;
 
-    if (d.argc == 0)
+    if (callData->argc == 0)
         t = currentTime();
 
-    else if (d.argc == 1) {
-        Value arg = d.args[0];
-        if (DateObject *d = arg.asDateObject())
+    else if (callData->argc == 1) {
+        ValueScope scope(m->engine());
+        ScopedValue arg(scope, callData->args[0]);
+        if (DateObject *d = arg->asDateObject())
             arg = d->value;
         else
             arg = __qmljs_to_primitive(arg, PREFERREDTYPE_HINT);
 
-        if (arg.isString())
-            t = ParseString(arg.stringValue()->toQString());
+        if (arg->isString())
+            t = ParseString(arg->stringValue()->toQString());
         else
-            t = TimeClip(arg.toNumber());
+            t = TimeClip(arg->toNumber());
     }
 
     else { // d.argc > 1
-        double year  = d.args[0].toNumber();
-        double month = d.args[1].toNumber();
-        double day  = d.argc >= 3 ? d.args[2].toNumber() : 1;
-        double hours = d.argc >= 4 ? d.args[3].toNumber() : 0;
-        double mins = d.argc >= 5 ? d.args[4].toNumber() : 0;
-        double secs = d.argc >= 6 ? d.args[5].toNumber() : 0;
-        double ms    = d.argc >= 7 ? d.args[6].toNumber() : 0;
+        double year  = callData->args[0].toNumber();
+        double month = callData->args[1].toNumber();
+        double day  = callData->argc >= 3 ? callData->args[2].toNumber() : 1;
+        double hours = callData->argc >= 4 ? callData->args[3].toNumber() : 0;
+        double mins = callData->argc >= 5 ? callData->args[4].toNumber() : 0;
+        double secs = callData->argc >= 6 ? callData->args[5].toNumber() : 0;
+        double ms    = callData->argc >= 7 ? callData->args[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
@@ -697,7 +693,7 @@ Value DateCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(o);
 }
 
-Value DateCtor::call(Managed *m, const CallData &)
+Value DateCtor::call(Managed *m, CallData *)
 {
     double t = currentTime();
     return Value::fromString(m->engine()->current, ToString(t));
@@ -1295,20 +1291,21 @@ Value DatePrototype::method_toISOString(SimpleCallContext *ctx)
 
 Value DatePrototype::method_toJSON(SimpleCallContext *ctx)
 {
-    Value O = __qmljs_to_object(ctx, ctx->thisObject);
-    Value tv = __qmljs_to_primitive(O, NUMBER_HINT);
+    ValueScope scope(ctx);
+    ScopedValue O(scope, __qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
+    ScopedValue tv(scope, __qmljs_to_primitive(O, NUMBER_HINT));
 
-    if (tv.isNumber() && !std::isfinite(tv.toNumber()))
+    if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Value::nullValue();
 
-    FunctionObject *toIso = O.objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
+    FunctionObject *toIso = O->objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))).asFunctionObject();
 
     if (!toIso)
         ctx->throwTypeError();
 
-    CALLDATA(0);
-    d.thisObject = ctx->thisObject;
-    return toIso->call(d);
+    ScopedCallData callData(ctx->engine, 0);
+    callData->thisObject = ctx->thisObject;
+    return toIso->call(callData);
 }
 
 void DatePrototype::timezoneUpdated()

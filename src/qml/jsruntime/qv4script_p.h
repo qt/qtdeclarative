@@ -56,7 +56,7 @@ struct QmlBindingWrapper : FunctionObject {
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
 
-    static Value call(Managed *that, const CallData &);
+    static Value call(Managed *that, CallData *);
     static void markObjects(Managed *m);
 
 private:

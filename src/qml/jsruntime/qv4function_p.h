@@ -49,6 +49,7 @@
 
 #include "qv4value_def_p.h"
 #include <private/qv4compileddata_p.h>
+#include <private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,7 +85,17 @@ struct Function {
 
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
-    Value (*code)(ExecutionContext *, const uchar *);
+    inline Value code(ExecutionContext *ctx, const uchar *data) {
+        Value *stack = ctx->engine->jsStackTop;
+        try {
+            return codePtr(ctx, data);
+        } catch (...) {
+            ctx->engine->jsStackTop = stack;
+            throw;
+        }
+    }
+
+    Value (*codePtr)(ExecutionContext *, const uchar *);
     const uchar *codeData;
     quint32 codeSize;
 

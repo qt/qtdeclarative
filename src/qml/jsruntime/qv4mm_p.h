@@ -44,6 +44,7 @@
 
 #include "qv4global_p.h"
 #include "qv4context_p.h"
+#include "qv4value_p.h"
 
 #include <QScopedPointer>
 
@@ -129,6 +130,7 @@ protected:
 
 private:
     void collectFromStack() const;
+    void collectFromJSStack() const;
     void mark();
     std::size_t sweep(bool lastSweep = false);
     std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);

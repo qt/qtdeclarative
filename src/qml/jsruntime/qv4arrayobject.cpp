@@ -42,6 +42,7 @@
 #include "qv4arrayobject_p.h"
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4scopedvalue_p.h"
 
 using namespace QV4;
 
@@ -53,25 +54,25 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ArrayCtor::construct(Managed *m, const CallData &d)
+Value ArrayCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     ArrayObject *a = v4->newArrayObject();
     uint len;
-    if (d.argc == 1 && d.args[0].isNumber()) {
+    if (callData->argc == 1 && callData->args[0].isNumber()) {
         bool ok;
-        len = d.args[0].asArrayLength(&ok);
+        len = callData->args[0].asArrayLength(&ok);
 
         if (!ok)
-            v4->current->throwRangeError(d.args[0]);
+            v4->current->throwRangeError(callData->args[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
     } else {
-        len = d.argc;
+        len = callData->argc;
         a->arrayReserve(len);
         for (unsigned int i = 0; i < len; ++i)
-            a->arrayData[i].value = d.args[i];
+            a->arrayData[i].value = callData->args[i];
         a->arrayDataLen = len;
     }
     a->setArrayLengthUnchecked(len);
@@ -79,9 +80,9 @@ Value ArrayCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(a);
 }
 
-Value ArrayCtor::call(Managed *that, const CallData &d)
+Value ArrayCtor::call(Managed *that, CallData *callData)
 {
-    return construct(that, d);
+    return construct(that, callData);
 }
 
 ArrayPrototype::ArrayPrototype(InternalClass *ic)
@@ -137,8 +138,8 @@ Value ArrayPrototype::method_toString(SimpleCallContext *ctx)
     QV4::Object *o = ctx->thisObject.toObject(ctx);
     FunctionObject *f = o->get(ctx->engine->newString("join")).asFunctionObject();
     if (f) {
-        CALLDATA(0);
-        d.thisObject = ctx->thisObject;
+        ScopedCallData d(ctx->engine, 0);
+        d->thisObject = ctx->thisObject;
         return f->call(d);
     }
     return ObjectPrototype::method_toString(ctx);
@@ -545,12 +546,14 @@ Value ArrayPrototype::method_unshift(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
 
-    Value searchValue;
+    ScopedValue searchValue(scope);
     uint fromIndex = 0;
 
     if (ctx->argumentCount >= 1)
@@ -568,9 +571,10 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     }
 
     if (instance->isStringObject()) {
+        ScopedValue v(scope);
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
-            Value v = instance->getIndexed(k, &exists);
+            v = instance->getIndexed(k, &exists);
             if (exists && __qmljs_strict_equal(v, searchValue))
                 return Value::fromDouble(k);
         }
@@ -582,12 +586,14 @@ Value ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 
 Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
     if (!len)
         return Value::fromInt32(-1);
 
-    Value searchValue;
+    ScopedValue searchValue(scope);
     uint fromIndex = len;
 
     if (ctx->argumentCount >= 1)
@@ -607,10 +613,11 @@ Value ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         fromIndex = (uint) f + 1;
     }
 
+    ScopedValue v(scope);
     for (uint k = fromIndex; k > 0;) {
         --k;
         bool exists;
-        Value v = instance->getIndexed(k, &exists);
+        v = instance->getIndexed(k, &exists);
         if (exists && __qmljs_strict_equal(v, searchValue))
             return Value::fromDouble(k);
     }
@@ -636,12 +643,12 @@ Value ArrayPrototype::method_every(SimpleCallContext *ctx)
         if (!exists)
             continue;
 
-        CALLDATA(3);
-        d.args[0] = v;
-        d.args[1] = Value::fromDouble(k);
-        d.args[2] = Value::fromObject(instance);
-        d.thisObject = thisArg;
-        Value r = callback->call(d);
+        ScopedCallData callData(ctx->engine, 3);
+        callData->args[0] = v;
+        callData->args[1] = Value::fromDouble(k);
+        callData->args[2] = Value::fromObject(instance);
+        callData->thisObject = thisArg;
+        Value r = callback->call(callData);
         ok = r.toBoolean();
     }
     return Value::fromBoolean(ok);
@@ -665,12 +672,12 @@ Value ArrayPrototype::method_some(SimpleCallContext *ctx)
         if (!exists)
             continue;
 
-        CALLDATA(3);
-        d.args[0] = v;
-        d.args[1] = Value::fromDouble(k);
-        d.args[2] = Value::fromObject(instance);
-        d.thisObject = thisArg;
-        Value r = callback->call(d);
+        ScopedCallData callData(ctx->engine, 3);
+        callData->thisObject = thisArg;
+        callData->args[0] = v;
+        callData->args[1] = Value::fromDouble(k);
+        callData->args[2] = Value::fromObject(instance);
+        Value r = callback->call(callData);
         if (r.toBoolean())
             return Value::fromBoolean(true);
     }
@@ -695,12 +702,12 @@ Value ArrayPrototype::method_forEach(SimpleCallContext *ctx)
         if (!exists)
             continue;
 
-        CALLDATA(3);
-        d.args[0] = v;
-        d.args[1] = Value::fromDouble(k);
-        d.args[2] = Value::fromObject(instance);
-        d.thisObject = thisArg;
-        callback->call(d);
+        ScopedCallData callData(ctx->engine, 3);
+        callData->thisObject = thisArg;
+        callData->args[0] = v;
+        callData->args[1] = Value::fromDouble(k);
+        callData->args[2] = Value::fromObject(instance);
+        callback->call(callData);
     }
     return Value::undefinedValue();
 }
@@ -727,12 +734,12 @@ Value ArrayPrototype::method_map(SimpleCallContext *ctx)
         if (!exists)
             continue;
 
-        CALLDATA(3);
-        d.args[0] = v;
-        d.args[1] = Value::fromDouble(k);
-        d.args[2] = Value::fromObject(instance);
-        d.thisObject = thisArg;
-        Value mapped = callback->call(d);
+        ScopedCallData callData(ctx->engine, 3);
+        callData->thisObject = thisArg;
+        callData->args[0] = v;
+        callData->args[1] = Value::fromDouble(k);
+        callData->args[2] = Value::fromObject(instance);
+        Value mapped = callback->call(callData);
         a->arraySet(k, mapped);
     }
     return Value::fromObject(a);
@@ -760,12 +767,12 @@ Value ArrayPrototype::method_filter(SimpleCallContext *ctx)
         if (!exists)
             continue;
 
-        CALLDATA(3);
-        d.args[0] = v;
-        d.args[1] = Value::fromDouble(k);
-        d.args[2] = Value::fromObject(instance);
-        d.thisObject = thisArg;
-        Value selected = callback->call(d);
+        ScopedCallData callData(ctx->engine, 3);
+        callData->thisObject = thisArg;
+        callData->args[0] = v;
+        callData->args[1] = Value::fromDouble(k);
+        callData->args[2] = Value::fromObject(instance);
+        Value selected = callback->call(callData);
         if (selected.toBoolean()) {
             a->arraySet(to, v);
             ++to;
@@ -804,13 +811,13 @@ Value ArrayPrototype::method_reduce(SimpleCallContext *ctx)
         bool kPresent;
         Value v = instance->getIndexed(k, &kPresent);
         if (kPresent) {
-            CALLDATA(4);
-            d.args[0] = acc;
-            d.args[1] = v;
-            d.args[2] = Value::fromDouble(k);
-            d.args[3] = Value::fromObject(instance);
-            d.thisObject = Value::undefinedValue();
-            acc = callback->call(d);
+            ScopedCallData callData(ctx->engine, 4);
+            callData->thisObject = Value::undefinedValue();
+            callData->args[0] = acc;
+            callData->args[1] = v;
+            callData->args[2] = Value::fromDouble(k);
+            callData->args[3] = Value::fromObject(instance);
+            acc = callback->call(callData);
         }
         ++k;
     }
@@ -853,13 +860,13 @@ Value ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
         bool kPresent;
         Value v = instance->getIndexed(k - 1, &kPresent);
         if (kPresent) {
-            CALLDATA(4);
-            d.args[0] = acc;
-            d.args[1] = v;
-            d.args[2] = Value::fromDouble(k - 1);
-            d.args[3] = Value::fromObject(instance);
-            d.thisObject = Value::undefinedValue();
-            acc = callback->call(d);
+            ScopedCallData callData(ctx->engine, 4);
+            callData->thisObject = Value::undefinedValue();
+            callData->args[0] = acc;
+            callData->args[1] = v;
+            callData->args[2] = Value::fromDouble(k - 1);
+            callData->args[3] = Value::fromObject(instance);
+            acc = callback->call(callData);
         }
         --k;
     }

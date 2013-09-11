@@ -47,6 +47,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4errorobject_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -125,8 +126,7 @@ QV4::Value
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function, bool *isUndefined)
 {
-    QV4::Value args[QV4::Global::ReservedArgumentCount];
-    return evaluate(context, function, 0, args, isUndefined);
+    return evaluate(context, function, 0, 0, isUndefined);
 }
 
 QV4::Value
@@ -173,11 +173,10 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 This = value;
         }
 
-        QV4::CallData d;
-        d.thisObject = This;
-        d.args = args;
-        d.argc = argc;
-        result = function.asFunctionObject()->call(d);
+        QV4::ScopedCallData callData(v4, argc);
+        callData->thisObject = This;
+        memcpy(callData->args, args, argc*sizeof(QV4::Value));
+        result = function.asFunctionObject()->call(callData);
 
         if (isUndefined)
             *isUndefined = result.isUndefined();

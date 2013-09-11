@@ -53,8 +53,8 @@ struct BooleanCtor: FunctionObject
 {
     BooleanCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *, const CallData &d);
-    static Value call(Managed *that, const CallData &d);
+    static Value construct(Managed *, CallData *callData);
+    static Value call(Managed *that, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

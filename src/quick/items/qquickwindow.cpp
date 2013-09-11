@@ -46,6 +46,8 @@
 #include "qquickitem_p.h"
 #include "qquickevents_p_p.h"
 
+#include <private/qquickdrag_p.h>
+
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgflashnode_p.h>
@@ -279,6 +281,26 @@ void QQuickWindow::update()
     d->windowManager->update(this);
 }
 
+void forcePolishHelper(QQuickItem *item)
+{
+    if (item->flags() & QQuickItem::ItemHasContents) {
+        item->polish();
+    }
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i=0; i<items.size(); ++i)
+        forcePolishHelper(items.at(i));
+}
+
+/*!
+    Schedules polish events on all items in the scene.
+*/
+void QQuickWindow::forcePolish()
+{
+    Q_D(QQuickWindow);
+    forcePolishHelper(d->contentItem);
+}
+
 void forceUpdate(QQuickItem *item)
 {
     if (item->flags() & QQuickItem::ItemHasContents)
@@ -344,6 +366,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 #ifndef QT_NO_CURSOR
     , cursorItem(0)
 #endif
+#ifndef QT_NO_DRAGANDDROP
+    , dragGrabber(0)
+#endif
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
     , dirtyItemList(0)
@@ -360,6 +385,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderTargetId(0)
     , incubationController(0)
 {
+#ifndef QT_NO_DRAGANDDROP
+    dragGrabber = new QQuickDragGrabber;
+#endif
 }
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
@@ -389,6 +417,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 
     QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
+    QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(forcePolish()));
 }
 
 /*!
@@ -963,7 +992,9 @@ QQuickWindow::~QQuickWindow()
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
-
+#ifndef QT_NO_DRAGANDDROP
+    delete d->dragGrabber; d->dragGrabber = 0;
+#endif
     delete d->contentItem; d->contentItem = 0;
 }
 
@@ -1181,7 +1212,7 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::DragLeave:
     case QEvent::DragMove:
     case QEvent::Drop:
-        d->deliverDragEvent(&d->dragGrabber, e);
+        d->deliverDragEvent(d->dragGrabber, e);
         break;
 #endif
     case QEvent::WindowDeactivate:
@@ -3050,6 +3081,68 @@ bool QQuickWindow::hasDefaultAlphaBuffer()
 void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 {
     QQuickWindowPrivate::defaultAlphaBuffer = useAlpha;
+}
+
+/*!
+    \since 5.2
+
+    Call this function to reset the OpenGL context its default state.
+
+    The scene graph uses the OpenGL context and will both rely on and
+    clobber its state. When mixing raw OpenGL commands with scene
+    graph rendering, this function provides a convenient way of
+    resetting the OpenGL context state back to its default values.
+
+    This function does not touch state in the fixed-function pipeline.
+
+    This function does not clear the color, depth and stencil buffers. Use
+    QQuickWindow::setClearBeforeRendering to control clearing of the color
+    buffer. The depth and stencil buffer might be clobbered by the scene
+    graph renderer. Clear these manually on demand.
+
+    \sa QQuickWindow::beforeRendering()
+ */
+void QQuickWindow::resetOpenGLState()
+{
+    if (!openglContext())
+        return;
+
+    QOpenGLFunctions *gl = openglContext()->functions();
+
+    gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    int maxAttribs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+    for (int i=0; i<maxAttribs; ++i) {
+        gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        gl->glDisableVertexAttribArray(i);
+    }
+
+    gl->glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_SCISSOR_TEST);
+
+    glColorMask(true, true, true, true);
+    glClearColor(0, 0, 0, 0);
+
+    glDepthMask(true);
+    glDepthFunc(GL_LESS);
+    gl->glClearDepthf(1);
+
+    glStencilMask(0xff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+
+    gl->glUseProgram(0);
+
+    QOpenGLFramebufferObject::bindDefault();
 }
 
 /*!

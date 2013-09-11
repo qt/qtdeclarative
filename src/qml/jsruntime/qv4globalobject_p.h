@@ -55,7 +55,7 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
     Value evalCall(Value thisObject, Value *args, int argc, bool directCall);
 
     using Managed::construct;
-    static Value call(Managed *that, const CallData &d);
+    static Value call(Managed *that, CallData *callData);
 
 protected:
     static const ManagedVTable static_vtbl;

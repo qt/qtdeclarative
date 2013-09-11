@@ -114,7 +114,7 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifi
 {
     if (!d)
         return 0;
-    assert(d->entries);
+    Q_ASSERT(d->entries);
 
     uint idx = identifier->hashValue % d->alloc;
     while (1) {
@@ -131,7 +131,7 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const QString &str) const
 {
     if (!d)
         return 0;
-    assert(d->entries);
+    Q_ASSERT(d->entries);
 
     uint hash = String::createHashValue(str.constData(), str.length());
     uint idx = hash % d->alloc;

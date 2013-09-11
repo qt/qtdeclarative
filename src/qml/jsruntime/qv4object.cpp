@@ -47,6 +47,7 @@
 #include "qv4argumentsobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4lookup_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -134,19 +135,19 @@ Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttri
     if (!getter)
         return Value::undefinedValue();
 
-    CALLDATA(0);
-    d.thisObject = thisObject;
-    return getter->call(d);
+    ScopedCallData callData(getter->engine(), 0);
+    callData->thisObject = thisObject;
+    return getter->call(callData);
 }
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            CALLDATA(1);
-            d.args[0] = value;
-            d.thisObject = Value::fromObject(this);
-            pd->set->call(d);
+            ScopedCallData callData(pd->set->engine(), 1);
+            callData->args[0] = value;
+            callData->thisObject = Value::fromObject(this);
+            pd->set->call(callData);
             return;
         }
         goto reject;
@@ -164,50 +165,54 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *, BinOp op, String *name, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
 {
-    Value v = get(name);
-    Value result;
-    op(&result, v, rhs);
+    ValueScope scope(ctx);
+    ScopedValue v(scope, get(name));
+    ScopedValue result(scope);
+    op(result, v, rhs);
     put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const Value &index, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
 {
-    uint idx = index.asArrayIndex();
+    ValueScope scope(ctx);
+    uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = getIndexed(idx, &hasProperty);
-        Value result;
-        op(&result, v, rhs);
+        ScopedValue v(scope, getIndexed(idx, &hasProperty));
+        ScopedValue result(scope);
+        op(result, v, rhs);
         putIndexed(idx, result);
         return;
     }
-    String *name = index.toString(ctx);
+    String *name = index->toString(ctx);
     assert(name);
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
 {
-    Value v = get(name);
-    Value result;
-    op(ctx, &result, v, rhs);
+    ValueScope scope(ctx);
+    ScopedValue v(scope, get(name));
+    ScopedValue result(scope);
+    op(ctx, result, v, rhs);
     put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const Value &index, const Value &rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
 {
-    uint idx = index.asArrayIndex();
+    ValueScope scope(ctx);
+    uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
-        Value v = getIndexed(idx, &hasProperty);
-        Value result;
-        op(ctx, &result, v, rhs);
+        ScopedValue v(scope, getIndexed(idx, &hasProperty));
+        ScopedValue result(scope);
+        op(ctx, result, v, rhs);
         putIndexed(idx, result);
         return;
     }
-    String *name = index.toString(ctx);
+    String *name = index->toString(ctx);
     assert(name);
     inplaceBinOp(ctx, op, name, rhs);
 }
@@ -773,10 +778,10 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        CALLDATA(1);
-        d.args[0] = value;
-        d.thisObject = Value::fromObject(this);
-        pd->setter()->call(d);
+        ScopedCallData callData(engine(), 1);
+        callData->args[0] = value;
+        callData->thisObject = Value::fromObject(this);
+        pd->setter()->call(callData);
         return;
     }
 
@@ -851,10 +856,10 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        CALLDATA(1);
-        d.args[0] = value;
-        d.thisObject = Value::fromObject(this);
-        pd->setter()->call(d);
+        ScopedCallData callData(engine(), 1);
+        callData->args[0] = value;
+        callData->thisObject = Value::fromObject(this);
+        pd->setter()->call(callData);
         return;
     }
 
@@ -1132,18 +1137,21 @@ void Object::copyArrayData(Object *other)
 
 Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
+    ValueScope scope(engine());
+    ScopedValue value(scope);
+
     if (o->protoHasArray() || o->arrayAttributes) {
         // lets be safe and slow
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
-            Value value = o->getIndexed(i, &exists);
-            if (exists && __qmljs_strict_equal(value, v))
+            value = o->getIndexed(i, &exists);
+            if (exists && __qmljs_strict_equal(value, ValueRef(&v)))
                 return Value::fromDouble(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
-            Value value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
-            if (__qmljs_strict_equal(value, v))
+            value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
+            if (__qmljs_strict_equal(value, ValueRef(&v)))
                 return Value::fromDouble(n->key());
         }
     } else {
@@ -1154,8 +1162,8 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
         pd += fromIndex;
         while (pd < end) {
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
-                Value value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
-                if (__qmljs_strict_equal(value, v))
+                value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
+                if (__qmljs_strict_equal(value, ValueRef(&v)))
                     return Value::fromDouble(pd - arrayData);
             }
             ++pd;
@@ -1245,6 +1253,9 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
             }
         }
     }
+
+    if (!(comparefn.isUndefined() || comparefn.asObject()))
+        context->throwTypeError();
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 

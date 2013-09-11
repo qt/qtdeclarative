@@ -84,6 +84,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
+    , jsStack(new WTF::PageAllocation)
     , debugger(0)
     , globalObject(0)
     , globalCode(0)
@@ -95,8 +96,13 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     if (!factory) {
+
 #ifdef V4_ENABLE_JIT
-        factory = new QQmlJS::MASM::ISelFactory;
+        static const bool forceMoth = !qgetenv("QV4_FORCE_INTERPRETER").isEmpty();
+        if (forceMoth)
+            factory = new QQmlJS::Moth::ISelFactory;
+        else
+            factory = new QQmlJS::MASM::ISelFactory;
 #else // !V4_ENABLE_JIT
         factory = new QQmlJS::Moth::ISelFactory;
 #endif // V4_ENABLE_JIT
@@ -104,6 +110,11 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     iselFactory.reset(factory);
 
     memoryManager->setExecutionEngine(this);
+
+    // reserve 8MB for the JS stack
+    *jsStack = WTF::PageAllocation::allocate(8*1024*1024, WTF::OSAllocator::JSVMStackPages, true);
+    jsStackBase = (Value *)jsStack->base();
+    jsStackTop = jsStackBase;
 
     identifierTable = new IdentifierTable(this);
 
@@ -291,6 +302,8 @@ ExecutionEngine::~ExecutionEngine()
     delete regExpCache;
     delete regExpAllocator;
     delete executableAllocator;
+    jsStack->deallocate();
+    delete jsStack;
 }
 
 void ExecutionEngine::enableDebugger()
@@ -708,13 +721,13 @@ namespace {
     {
         bool operator()(Function *function, quintptr pc)
         {
-            return reinterpret_cast<quintptr>(function->code) < pc
-                   && (reinterpret_cast<quintptr>(function->code) + function->codeSize) < pc;
+            return reinterpret_cast<quintptr>(function->codePtr) < pc
+                   && (reinterpret_cast<quintptr>(function->codePtr) + function->codeSize) < pc;
         }
 
         bool operator()(quintptr pc, Function *function)
         {
-            return pc < reinterpret_cast<quintptr>(function->code);
+            return pc < reinterpret_cast<quintptr>(function->codePtr);
         }
     };
 }

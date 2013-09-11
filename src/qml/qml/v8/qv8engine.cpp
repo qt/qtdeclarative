@@ -57,6 +57,7 @@
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include "qv4domerrors_p.h"
 #include "qv4sqlerrors_p.h"
@@ -310,6 +311,8 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
                 a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
             a->setArrayLengthUnchecked(list.count());
             return QV4::Value::fromObject(a);
+        } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
+            return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
         }
 
         bool objOk;
@@ -440,10 +443,10 @@ void QV8Engine::initializeGlobal()
 
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
-    CALLDATA(1);
-    d.args[0] = value;
-    d.thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
-    m_freezeObject.value().asFunctionObject()->call(d);
+    QV4::ScopedCallData callData(m_v4Engine, 1);
+    callData->args[0] = value;
+    callData->thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
+    m_freezeObject.value().asFunctionObject()->call(callData);
 }
 
 void QV8Engine::gc()

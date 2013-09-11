@@ -143,18 +143,90 @@ private:
 };
 
 class QQmlV4Function;
+class QQuickDragAttached;
+class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
+{
+    Q_OBJECT
+
+    Q_ENUMS(Axis DragType)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget)
+    Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged)
+    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
+    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
+    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
+    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
+    //### consider drag and drop
+
+public:
+    QQuickDrag(QObject *parent=0);
+    ~QQuickDrag();
+
+    enum DragType { None, Automatic, Internal };
+
+    QQuickItem *target() const;
+    void setTarget(QQuickItem *target);
+    void resetTarget();
+
+    enum Axis { XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
+    Axis axis() const;
+    void setAxis(Axis);
+
+    qreal xmin() const;
+    void setXmin(qreal);
+    qreal xmax() const;
+    void setXmax(qreal);
+    qreal ymin() const;
+    void setYmin(qreal);
+    qreal ymax() const;
+    void setYmax(qreal);
+
+    bool active() const;
+    void setActive(bool);
+
+    bool filterChildren() const;
+    void setFilterChildren(bool);
+
+    static QQuickDragAttached *qmlAttachedProperties(QObject *obj);
+
+Q_SIGNALS:
+    void targetChanged();
+    void axisChanged();
+    void minimumXChanged();
+    void maximumXChanged();
+    void minimumYChanged();
+    void maximumYChanged();
+    void activeChanged();
+    void filterChildrenChanged();
+
+private:
+    QQuickItem *_target;
+    Axis _axis;
+    qreal _xmin;
+    qreal _xmax;
+    qreal _ymin;
+    qreal _ymax;
+    bool _active : 1;
+    bool _filterChildren: 1;
+    Q_DISABLE_COPY(QQuickDrag)
+};
 
 class QQuickDragAttachedPrivate;
 class QQuickDragAttached : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QQuickDragAttached)
+
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(QObject *source READ source WRITE setSource NOTIFY sourceChanged RESET resetSource)
     Q_PROPERTY(QObject *target READ target NOTIFY targetChanged)
     Q_PROPERTY(QPointF hotSpot READ hotSpot WRITE setHotSpot NOTIFY hotSpotChanged)
     Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
+    Q_PROPERTY(QVariantMap mimeData READ mimeData WRITE setMimeData NOTIFY mimeDataChanged)
     Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions WRITE setSupportedActions NOTIFY supportedActionsChanged)
     Q_PROPERTY(Qt::DropAction proposedAction READ proposedAction WRITE setProposedAction NOTIFY proposedActionChanged)
+    Q_PROPERTY(QQuickDrag::DragType dragType READ dragType WRITE setDragType NOTIFY dragTypeChanged)
 public:
     QQuickDragAttached(QObject *parent);
     ~QQuickDragAttached();
@@ -174,11 +246,17 @@ public:
     QStringList keys() const;
     void setKeys(const QStringList &keys);
 
+    QVariantMap mimeData() const;
+    void setMimeData(const QVariantMap &mimeData);
+
     Qt::DropActions supportedActions() const;
     void setSupportedActions(Qt::DropActions actions);
 
     Qt::DropAction proposedAction() const;
     void setProposedAction(Qt::DropAction action);
+
+    QQuickDrag::DragType dragType() const;
+    void setDragType(QQuickDrag::DragType dragType);
 
     Q_INVOKABLE int drop();
 
@@ -186,23 +264,28 @@ public:
 
 public Q_SLOTS:
     void start(QQmlV4Function *);
+    void startDrag(QQmlV4Function *);
     void cancel();
 
 Q_SIGNALS:
+    void dragStarted();
+    void dragFinished(Qt::DropAction dropAction);
+
     void activeChanged();
     void sourceChanged();
     void targetChanged();
     void hotSpotChanged();
     void keysChanged();
+    void mimeDataChanged();
     void supportedActionsChanged();
     void proposedActionChanged();
-
-private:
-    Q_DECLARE_PRIVATE(QQuickDragAttached)
+    void dragTypeChanged();
 };
 
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickDrag)
+QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QT_NO_DRAGANDDROP
 

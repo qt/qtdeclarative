@@ -140,9 +140,10 @@ public:
     void addDebugger(Debugger *debugger);
     void removeDebugger(Debugger *debugger);
 
-    void pause(Debugger *debugger);
-    void addBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber);
-    void removeBreakPoint(Debugger *debugger, const QString &fileName, int lineNumber);
+    void pause(Debugger *debugger) const;
+    void pauseAll() const;
+    void addBreakPoint(const QString &fileName, int lineNumber) const;
+    void removeBreakPoint(const QString &fileName, int lineNumber) const;
 
     Q_INVOKABLE virtual void debuggerPaused(QV4::Debugging::Debugger *debugger) = 0;
 

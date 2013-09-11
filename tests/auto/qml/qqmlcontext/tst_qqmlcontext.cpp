@@ -72,6 +72,7 @@ private slots:
 
     void qtbug_22535();
     void evalAfterInvalidate();
+    void qobjectDerived();
 
 private:
     QQmlEngine engine;
@@ -657,6 +658,26 @@ void tst_qqmlcontext::evalAfterInvalidate()
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
+}
+
+void tst_qqmlcontext::qobjectDerived()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("refreshExpressions.qml"));
+
+    CountCommand command;
+    // This test is similar to refreshExpressions, but with the key difference that
+    // we use the QVariant overload of setContextProperty. That way, we test that
+    // QVariant knowledge that it contains a QObject derived pointer is used.
+    engine.rootContext()->setContextProperty("countCommand", QVariant::fromValue(&command));
+
+    // We use a fresh context here to bypass any root-context optimizations in
+    // the engine
+    QQmlContext context(engine.rootContext());
+
+    QObject *o1 = component.create(&context);
+
+    QCOMPARE(command.count, 2);
 }
 
 QTEST_MAIN(tst_qqmlcontext)

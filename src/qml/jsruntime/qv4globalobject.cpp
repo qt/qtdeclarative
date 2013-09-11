@@ -47,6 +47,7 @@
 #include "qv4debugging_p.h"
 #include "qv4script_p.h"
 #include "qv4exception_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -390,9 +391,9 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     if (strictMode) {
         FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
-        CALLDATA(0);
-        d.thisObject = ctx->thisObject;
-        return e->call(d);
+        ScopedCallData callData(ctx->engine, 0);
+        callData->thisObject = ctx->thisObject;
+        return e->call(callData);
     }
 
     ExecutionContext::EvalCode evalCode;
@@ -438,10 +439,11 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 }
 
 
-Value EvalFunction::call(Managed *that, const CallData &d)
+Value EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
-    return static_cast<EvalFunction *>(that)->evalCall(d.thisObject, d.args, d.argc, false);
+    // ### const_cast
+    return static_cast<EvalFunction *>(that)->evalCall(callData->thisObject, const_cast<Value *>(callData->args), callData->argc, false);
 }
 
 

@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 QSGSimpleRectNode::QSGSimpleRectNode(const QRectF &rect, const QColor &color)
     : m_geometry(QSGGeometry::defaultAttributes_Point2D(), 4)
 {
+    Q_UNUSED(reserved);
     QSGGeometry::updateRectGeometry(&m_geometry, rect);
     m_material.setColor(color);
     setMaterial(&m_material);

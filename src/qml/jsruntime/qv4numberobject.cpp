@@ -56,15 +56,15 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value NumberCtor::construct(Managed *m, const CallData &d)
+Value NumberCtor::construct(Managed *m, CallData *callData)
 {
-    double dbl = d.argc ? d.args[0].toNumber() : 0.;
+    double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
     return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl)));
 }
 
-Value NumberCtor::call(Managed *, const CallData &d)
+Value NumberCtor::call(Managed *, CallData *callData)
 {
-    double dbl = d.argc ? d.args[0].toNumber() : 0.;
+    double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
     return Value::fromDouble(dbl);
 }
 
@@ -225,7 +225,9 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
 Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
-    Value v = thisNumberValue(ctx);
+    ValueScope scope(ctx);
+
+    ScopedValue v(scope, thisNumberValue(ctx));
 
     Value prec = ctx->argument(0);
     if (prec.isUndefined())
@@ -239,7 +241,7 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     char str[100];
     double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v.asDouble(), precision, &builder);
+    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
     return Value::fromString(ctx, result);

@@ -127,7 +127,7 @@ UnwindInfo::~UnwindInfo()
 
 static void ensureUnwindInfo(Function *f)
 {
-    if (!f->code)
+    if (!f->codePtr)
         return; // Not a JIT generated function
 
     ExecutableAllocator::ChunkOfPages *chunk = f->compilationUnit->chunkForFunction(f->compiledFunction->index);

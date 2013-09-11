@@ -77,11 +77,12 @@ public:
     QPointF dragPosition;
     QQuickDropAreaDrag *drag;
     QPointer<QObject> source;
-    QPointer<QMimeData> mimeData;
+    bool containsDrag;
 };
 
 QQuickDropAreaPrivate::QQuickDropAreaPrivate()
     : drag(0)
+    , containsDrag(false)
 {
 }
 
@@ -133,7 +134,7 @@ QQuickDropArea::~QQuickDropArea()
 bool QQuickDropArea::containsDrag() const
 {
     Q_D(const QQuickDropArea);
-    return d->mimeData;
+    return d->containsDrag;
 }
 
 /*!
@@ -217,7 +218,7 @@ qreal QQuickDropAreaDrag::y() const
 void QQuickDropArea::dragMoveEvent(QDragMoveEvent *event)
 {
     Q_D(QQuickDropArea);
-    if (!d->mimeData)
+    if (!d->containsDrag)
         return;
 
     d->dragPosition = event->pos();
@@ -259,28 +260,27 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
 {
     Q_D(QQuickDropArea);
     const QMimeData *mimeData = event->mimeData();
-    if (!d->effectiveEnable || d->mimeData || !mimeData || !d->hasMatchingKey(d->getKeys(mimeData)))
+    if (!d->effectiveEnable || d->containsDrag || !mimeData || !d->hasMatchingKey(d->getKeys(mimeData)))
         return;
 
     d->dragPosition = event->pos();
 
     event->accept();
+
     QQuickDropEvent dragTargetEvent(d, event);
     emit entered(&dragTargetEvent);
 
-    if (event->isAccepted()) {
-        d->mimeData = const_cast<QMimeData *>(mimeData);
-        if (QQuickDragMimeData *dragMime = qobject_cast<QQuickDragMimeData *>(d->mimeData))
-            d->source = dragMime->source();
-        else
-            d->source = event->source();
-        d->dragPosition = event->pos();
-        if (d->drag) {
-            emit d->drag->positionChanged();
-            emit d->drag->sourceChanged();
-        }
-        emit containsDragChanged();
+    d->containsDrag = true;
+    if (QQuickDragMimeData *dragMime = qobject_cast<QQuickDragMimeData *>(const_cast<QMimeData *>(mimeData)))
+        d->source = dragMime->source();
+    else
+        d->source = event->source();
+    d->dragPosition = event->pos();
+    if (d->drag) {
+        emit d->drag->positionChanged();
+        emit d->drag->sourceChanged();
     }
+    emit containsDragChanged();
 }
 
 /*!
@@ -292,12 +292,12 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
 void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
 {
     Q_D(QQuickDropArea);
-    if (!d->mimeData)
+    if (!d->containsDrag)
         return;
 
     emit exited();
 
-    d->mimeData = 0;
+    d->containsDrag = false;
     d->source = 0;
     emit containsDragChanged();
     if (d->drag)
@@ -314,13 +314,13 @@ void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
 void QQuickDropArea::dropEvent(QDropEvent *event)
 {
     Q_D(QQuickDropArea);
-    if (!d->mimeData)
+    if (!d->containsDrag)
         return;
 
     QQuickDropEvent dragTargetEvent(d, event);
     emit dropped(&dragTargetEvent);
 
-    d->mimeData = 0;
+    d->containsDrag = false;
     d->source = 0;
     emit containsDragChanged();
     if (d->drag)
@@ -337,6 +337,16 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     The position of the drag event can be obtained from the \l x and \l y
     properties, and the \l keys property identifies the drag keys of the event
     \l source.
+
+    The existence of specific drag types can be determined using the \l hasColor,
+    \l hasHtml, \l hasText, and \l hasUrls properties.
+
+    The list of all supplied formats can be determined using the \l formats property.
+
+    Specific drag types can be obtained using the \l colorData, \l html, \l text,
+    and \l urls properties.
+
+    A string version of any available mimeType can be obtained using \l getDataAsString.
 */
 
 /*!
@@ -357,25 +367,12 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     This property holds the source of a drag event.
 */
 
-QObject *QQuickDropEvent::source()
-{
-    if (const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(event->mimeData()))
-        return dragMime->source();
-    else
-        return event->source();
-}
-
 /*!
     \qmlproperty stringlist QtQuick2::DragEvent::keys
 
     This property holds a list of keys identifying the data type or source of a
     drag event.
 */
-
-QStringList QQuickDropEvent::keys() const
-{
-    return d->getKeys(event->mimeData());
-}
 
 /*!
     \qmlproperty enumeration QtQuick2::DragEvent::action
@@ -400,6 +397,14 @@ QStringList QQuickDropEvent::keys() const
 */
 
 /*!
+    \qmlproperty flags QtQuick2::DragEvent::proposedAction
+    \since QtQuick 2.2
+
+    This property holds the set of \l {action}{actions} proposed by the
+    drag source.
+*/
+
+/*!
     \qmlproperty bool QtQuick2::DragEvent::accepted
 
     This property holds whether the drag event was accepted by a handler.
@@ -416,6 +421,157 @@ QStringList QQuickDropEvent::keys() const
     If an \a action is specified it will overwrite the value of the \l action property.
 */
 
+/*!
+    \qmlmethod QtQuick2::DragEvent::acceptProposedAction()
+    \since QtQuick 2.2
+
+    Accepts the drag event with the \l proposedAction.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::DragEvent::hasColor
+    \since QtQuick 2.2
+
+    This property holds whether the drag event contains a color item.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::DragEvent::hasHtml
+    \since QtQuick 2.2
+
+    This property holds whether the drag event contains a html item.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::DragEvent::hasText
+    \since QtQuick 2.2
+
+    This property holds whether the drag event contains a text item.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::DragEvent::hasUrls
+    \since QtQuick 2.2
+
+    This property holds whether the drag event contains one or more url items.
+*/
+
+/*!
+    \qmlproperty color QtQuick2::DragEvent::colorData
+    \since QtQuick 2.2
+
+    This property holds color data, if any.
+*/
+
+/*!
+    \qmlproperty string QtQuick2::DragEvent::html
+    \since QtQuick 2.2
+
+    This property holds html data, if any.
+*/
+
+/*!
+    \qmlproperty string QtQuick2::DragEvent::text
+    \since QtQuick 2.2
+
+    This property holds text data, if any.
+*/
+
+/*!
+    \qmlproperty urllist QtQuick2::DragEvent::urls
+    \since QtQuick 2.2
+
+    This property holds a list of urls, if any.
+*/
+
+/*!
+    \qmlproperty stringlist QtQuick2::DragEvent::formats
+    \since QtQuick 2.2
+
+    This property holds a list of mime type formats contained in the drag data.
+*/
+
+/*!
+    \qmlmethod string QtQuick2::DragEvent::getDataAsString(string format)
+    \since QtQuick 2.2
+
+    Returns the data for the given \a format converted to a string. \a format should be one contained in the \l formats property.
+*/
+
+QObject *QQuickDropEvent::source()
+{
+    if (const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(event->mimeData()))
+        return dragMime->source();
+    else
+        return event->source();
+}
+
+QStringList QQuickDropEvent::keys() const
+{
+    return d->getKeys(event->mimeData());
+}
+
+bool QQuickDropEvent::hasColor() const
+{
+    return event->mimeData()->hasColor();
+}
+
+bool QQuickDropEvent::hasHtml() const
+{
+    return event->mimeData()->hasHtml();
+}
+
+bool QQuickDropEvent::hasText() const
+{
+    return event->mimeData()->hasText();
+}
+
+bool QQuickDropEvent::hasUrls() const
+{
+    return event->mimeData()->hasUrls();
+}
+
+QVariant QQuickDropEvent::colorData() const
+{
+    return event->mimeData()->colorData();
+}
+
+QString QQuickDropEvent::html() const
+{
+    return event->mimeData()->html();
+}
+
+QString QQuickDropEvent::text() const
+{
+    return event->mimeData()->text();
+}
+
+QList<QUrl> QQuickDropEvent::urls() const
+{
+    return event->mimeData()->urls();
+}
+
+QStringList QQuickDropEvent::formats() const
+{
+    return event->mimeData()->formats();
+}
+
+void QQuickDropEvent::getDataAsString(QQmlV4Function *args)
+{
+    if (args->length() != 0) {
+        QV4::Value v = (*args)[0];
+        QString format = v.toQString();
+        QString rv = QString::fromUtf8(event->mimeData()->data(format));
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
+        args->setReturnValue(QV4::Value::fromString(v4, rv));
+    }
+}
+
+void QQuickDropEvent::acceptProposedAction(QQmlV4Function *)
+{
+    event->acceptProposedAction();
+}
+
 void QQuickDropEvent::accept(QQmlV4Function *args)
 {
     Qt::DropAction action = event->dropAction();
@@ -425,6 +581,7 @@ void QQuickDropEvent::accept(QQmlV4Function *args)
         if (v.isInt32())
             action = Qt::DropAction(v.integerValue());
     }
+
     // get action from arguments.
     event->setDropAction(action);
     event->accept();

@@ -42,7 +42,8 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global_p.h"
-#include "qv4runtime_p.h"
+#include "qv4value_def_p.h"
+#include "qv4managed_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +53,7 @@ struct Object;
 struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
+struct Function;
 
 namespace CompiledData {
 struct CompilationUnit;
@@ -114,8 +116,8 @@ struct Q_QML_EXPORT ExecutionContext
         interpreterInstructionPointer = 0;
     }
 
-    CallContext *newCallContext(void *stackSpace, FunctionObject *f, const CallData &d);
-    CallContext *newCallContext(FunctionObject *f, const CallData &d);
+    CallContext *newCallContext(void *stackSpace, FunctionObject *f, CallData *callData);
+    CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(Object *with);
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, Object *qml);
@@ -143,7 +145,6 @@ struct Q_QML_EXPORT ExecutionContext
     Value getProperty(String *name);
     Value getPropertyNoThrow(String *name);
     Value getPropertyAndBase(String *name, Object **base);
-    void inplaceBitOp(String *name, const QV4::Value &value, BinOp op);
     bool deleteProperty(String *name);
 
     inline Value argument(unsigned int index = 0);

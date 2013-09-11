@@ -54,20 +54,13 @@ using namespace QV4;
 Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
                    Value (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
         : name(0)
-        , compiledFunction(0)
-        , compilationUnit(0)
-        , code(0)
+        , compiledFunction(function)
+        , compilationUnit(unit)
+        , codePtr(codePtr)
         , codeData(0)
-        , codeSize(0)
+        , codeSize(_codeSize)
 {
-    Q_ASSERT(!compilationUnit);
-    compilationUnit = unit;
-    compiledFunction = function;
-
     name = compilationUnit->runtimeStrings[compiledFunction->nameIndex];
-
-    code = codePtr;
-    codeSize = _codeSize;
 
     formals.resize(compiledFunction->nFormals);
     const quint32 *formalsIndices = compiledFunction->formalsTable();

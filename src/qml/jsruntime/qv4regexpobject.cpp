@@ -45,6 +45,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -228,13 +229,15 @@ RegExpCtor::RegExpCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RegExpCtor::construct(Managed *m, const CallData &d)
+Value RegExpCtor::construct(Managed *m, CallData *callData)
 {
-    Value r = d.argc > 0 ? d.args[0] : Value::undefinedValue();
-    Value f = d.argc > 1 ? d.args[1] : Value::undefinedValue();
     ExecutionContext *ctx = m->engine()->current;
-    if (RegExpObject *re = r.as<RegExpObject>()) {
-        if (!f.isUndefined())
+    ValueScope scope(ctx);
+
+    ScopedValue r(scope, callData->argc > 0 ? callData->args[0] : Value::undefinedValue());
+    ScopedValue f(scope, callData->argc > 1 ? callData->args[1] : Value::undefinedValue());
+    if (RegExpObject *re = r->as<RegExpObject>()) {
+        if (!f->isUndefined())
             ctx->throwTypeError();
 
         RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
@@ -242,15 +245,15 @@ Value RegExpCtor::construct(Managed *m, const CallData &d)
     }
 
     QString pattern;
-    if (!r.isUndefined())
-        pattern = r.toString(ctx)->toQString();
+    if (!r->isUndefined())
+        pattern = r->toString(ctx)->toQString();
 
     bool global = false;
     bool ignoreCase = false;
     bool multiLine = false;
-    if (!f.isUndefined()) {
+    if (!f->isUndefined()) {
         f = __qmljs_to_string(f, ctx);
-        QString str = f.stringValue()->toQString();
+        QString str = f->stringValue()->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QChar('g') && !global) {
                 global = true;
@@ -272,14 +275,14 @@ Value RegExpCtor::construct(Managed *m, const CallData &d)
     return Value::fromObject(o);
 }
 
-Value RegExpCtor::call(Managed *that, const CallData &d)
+Value RegExpCtor::call(Managed *that, CallData *callData)
 {
-    if (d.argc > 0 && d.args[0].as<RegExpObject>()) {
-        if (d.argc == 1 || d.args[1].isUndefined())
-            return d.args[0];
+    if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
+        if (callData->argc == 1 || callData->args[1].isUndefined())
+            return callData->args[0];
     }
 
-    return construct(that, d);
+    return construct(that, callData);
 }
 
 void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -295,13 +298,15 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
+    ValueScope scope(ctx);
+
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
-    Value arg = ctx->argument(0);
+    ScopedValue arg(scope, ctx->argument(0));
     arg = __qmljs_to_string(arg, ctx);
-    QString s = arg.stringValue()->toQString();
+    QString s = arg->stringValue()->toQString();
 
     int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
@@ -358,10 +363,9 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    CallData d;
-    d.args = ctx->arguments;
-    d.argc = ctx->argumentCount;
-    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(d).as<RegExpObject>();
+    ScopedCallData callData(ctx->engine, ctx->argumentCount);
+    memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
+    RegExpObject *re = ctx->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
 
     r->value = re->value;
     r->global = re->global;

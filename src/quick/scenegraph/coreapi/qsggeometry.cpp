@@ -406,6 +406,7 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_vertex_usage_pattern(AlwaysUploadPattern)
     , m_line_width(1.0)
 {
+    Q_UNUSED(m_reserved_bits);
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
 

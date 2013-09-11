@@ -51,6 +51,7 @@ QQuickDefaultClipNode::QQuickDefaultClipNode(const QRectF &rect)
     , m_dirty_geometry(true)
     , m_geometry(QSGGeometry::defaultAttributes_Point2D(), 0)
 {
+    Q_UNUSED(m_reserved);
     setGeometry(&m_geometry);
     setIsRectangular(true);
 }

@@ -54,6 +54,7 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -663,10 +664,10 @@ void QQuickCanvasItem::updatePolish()
             QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
             QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
 
-            CALLDATA(1);
-            d.thisObject = QV4::QObjectWrapper::wrap(v4, this);
-            d.args[0] = QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
-            f->call(d);
+            QV4::ScopedCallData callData(v4, 1);
+            callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+            callData->args[0] = QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
+            f->call(callData);
         }
     }
     else {

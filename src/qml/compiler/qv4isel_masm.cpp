@@ -68,7 +68,7 @@ using namespace QV4;
 CompilationUnit::~CompilationUnit()
 {
     foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->code));
+        engine->allFunctions.remove(reinterpret_cast<quintptr>(f->codePtr));
     UnwindHelper::deregisterFunctions(runtimeFunctions);
 }
 
@@ -87,7 +87,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     UnwindHelper::registerFunctions(runtimeFunctions);
 
     foreach (Function *f, runtimeFunctions)
-        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->code), f);
+        engine->allFunctions.insert(reinterpret_cast<quintptr>(f->codePtr), f);
 }
 
 QV4::ExecutableAllocator::ChunkOfPages *CompilationUnit::chunkForFunction(int functionIndex)
@@ -341,7 +341,7 @@ void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
     storeValue(value, addr);
 }
 
-void Assembler::enterStandardStackFrame(bool withLocals)
+void Assembler::enterStandardStackFrame()
 {
     platformEnterStandardStackFrame();
 
@@ -350,23 +350,22 @@ void Assembler::enterStandardStackFrame(bool withLocals)
     push(StackFrameRegister);
     move(StackPointerRegister, StackFrameRegister);
 
-    int frameSize = _stackLayout.calculateStackFrameSize(withLocals);
+    int frameSize = _stackLayout.calculateStackFrameSize();
 
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     for (int i = 0; i < calleeSavedRegisterCount; ++i)
         storePtr(calleeSavedRegisters[i], Address(StackFrameRegister, -(i + 1) * sizeof(void*)));
 
-    move(StackFrameRegister, LocalsRegister);
 }
 
-void Assembler::leaveStandardStackFrame(bool withLocals)
+void Assembler::leaveStandardStackFrame()
 {
     // restore the callee saved registers
     for (int i = calleeSavedRegisterCount - 1; i >= 0; --i)
         loadPtr(Address(StackFrameRegister, -(i + 1) * sizeof(void*)), calleeSavedRegisters[i]);
 
-    int frameSize = _stackLayout.calculateStackFrameSize(withLocals);
+    int frameSize = _stackLayout.calculateStackFrameSize();
     // Work around bug in ARMv7Assembler.h where add32(imm, sp, sp) doesn't
     // work well for large immediates.
 #if CPU(ARM_THUMB2)
@@ -625,7 +624,7 @@ void InstructionSelection::run(V4IR::Function *function)
     Assembler* oldAssembler = _as;
     _as = new Assembler(this, _function, executableAllocator, 6); // 6 == max argc for calls to built-ins with an argument array
 
-    _as->enterStandardStackFrame(/*withLocals*/true);
+    _as->enterStandardStackFrame();
 
     int contextPointer = 0;
 #if !defined(RETURN_VALUE_IN_REGISTER)
@@ -641,13 +640,19 @@ void InstructionSelection::run(V4IR::Function *function)
     _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
 #endif
 
+    const int locals = _as->stackLayout().calculateJSStackFrameSize();
+    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
+    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         V4IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _block = _function->basicBlocks[i];
         _as->registerBlock(_block, nextBlock);
 
         if (_reentryBlocks.contains(_block)) {
-            _as->enterStandardStackFrame(/*locals*/false);
+            _as->enterStandardStackFrame();
 #ifdef ARGUMENTS_IN_REGISTERS
             _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
             _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
@@ -694,21 +699,19 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    int argc = prepareVariableArguments(args);
+    int argc = prepareCallData(args, 0);
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
         generateFunctionCall(Assembler::Void, __qmljs_call_global_lookup,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
                              Assembler::TrustedImm32(index),
-                             baseAddressForCallArguments(),
-                             Assembler::TrustedImm32(argc));
+                             baseAddressForCallData());
     } else {
         generateFunctionCall(Assembler::Void, __qmljs_call_activation_property,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
                              Assembler::PointerToString(*func->id),
-                             baseAddressForCallArguments(),
-                             Assembler::TrustedImm32(argc));
+                             baseAddressForCallData());
     }
 }
 
@@ -829,16 +832,21 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
 {
     *exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
+    Value *jsStackTop = context->engine->jsStackTop;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {
+        context->engine->jsStackTop = jsStackTop;
         ex.accept(context);
         *exceptionVar = ex.value();
         try {
-            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, ex.value(), context);
+            QV4::ValueScope scope(context);
+            QV4::ScopedValue exception(scope, ex.value());
+            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exception, context);
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
+            context->engine->jsStackTop = jsStackTop;
             *exceptionVar = ex.value();
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
@@ -867,7 +875,7 @@ void InstructionSelection::callBuiltinFinishTry()
     // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
     // with the address that we'd like to continue at, which is right after the ret below.
     Assembler::DataLabelPtr continuation = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ReturnValueRegister);
-    _as->leaveStandardStackFrame(/*locals*/false);
+    _as->leaveStandardStackFrame();
     _as->ret();
     _as->addPatch(continuation, _as->label());
 }
@@ -976,11 +984,10 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 {
     Q_ASSERT(value);
 
-    int argc = prepareVariableArguments(args);
-    V4IR::Temp* thisObject = 0;
+    int argc = prepareCallData(args, 0);
     generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister,
-            Assembler::PointerToValue(result), Assembler::PointerToValue(thisObject),
-            Assembler::Reference(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+                         Assembler::PointerToValue(result), Assembler::Reference(value),
+                         baseAddressForCallData());
 }
 
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
@@ -1333,19 +1340,19 @@ void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V
 {
     assert(base != 0);
 
-    int argc = prepareVariableArguments(args);
+    int argc = prepareCallData(args, base);
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
         generateFunctionCall(Assembler::Void, __qmljs_call_property_lookup,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
-                             Assembler::PointerToValue(base), Assembler::TrustedImm32(index),
-                             baseAddressForCallArguments(),
-                             Assembler::TrustedImm32(argc));
-    } else {
+                             Assembler::TrustedImm32(index),
+                             baseAddressForCallData());
+    } else
+    {
         generateFunctionCall(Assembler::Void, __qmljs_call_property, Assembler::ContextRegister,
-                             Assembler::PointerToValue(result), Assembler::PointerToValue(base), Assembler::PointerToString(name),
-                             baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+                             Assembler::PointerToValue(result), Assembler::PointerToString(name),
+                             baseAddressForCallData());
     }
 }
 
@@ -1354,11 +1361,10 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 {
     assert(base != 0);
 
-    int argc = prepareVariableArguments(args);
+    int argc = prepareCallData(args, base);
     generateFunctionCall(Assembler::Void, __qmljs_call_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base),
-                         Assembler::PointerToValue(index), baseAddressForCallArguments(),
-                         Assembler::TrustedImm32(argc));
+                         Assembler::PointerToValue(result), Assembler::PointerToValue(index),
+                         baseAddressForCallData());
 }
 
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
@@ -1559,35 +1565,41 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     assert(func != 0);
+    int argc = prepareCallData(args, 0);
 
     if (useFastLookups && func->global) {
-        int argc = prepareVariableArguments(args);
         uint index = registerGlobalGetterLookup(*func->id);
         generateFunctionCall(Assembler::Void, __qmljs_construct_global_lookup,
                              Assembler::ContextRegister, Assembler::PointerToValue(result),
                              Assembler::TrustedImm32(index),
-                             baseAddressForCallArguments(),
-                             Assembler::TrustedImm32(argc));
+                             baseAddressForCallData());
         return;
     }
 
-    callRuntimeMethod(result, __qmljs_construct_activation_property, func, args);
+    generateFunctionCall(Assembler::Void, __qmljs_construct_activation_property,
+                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+                         Assembler::PointerToString(*func->id),
+                         baseAddressForCallData());
 }
+
 
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    int argc = prepareVariableArguments(args);
+    int argc = prepareCallData(args, 0);
     generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister,
-            Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name),
+                         baseAddressForCallData());
 }
 
 void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     assert(value != 0);
 
-    int argc = prepareVariableArguments(args);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_value, Assembler::ContextRegister,
-            Assembler::PointerToValue(result), Assembler::Reference(value), baseAddressForCallArguments(), Assembler::TrustedImm32(argc));
+    int argc = prepareCallData(args, 0);
+    generateFunctionCall(Assembler::Void, __qmljs_construct_value,
+                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+                         Assembler::Reference(value),
+                         baseAddressForCallData());
 }
 
 void InstructionSelection::visitJump(V4IR::Jump *s)
@@ -1740,7 +1752,12 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         Q_UNUSED(s);
     }
 
-    _as->leaveStandardStackFrame(/*withLocals*/true);
+    const int locals = _as->stackLayout().calculateJSStackFrameSize();
+    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+
+    _as->leaveStandardStackFrame();
 #if !defined(ARGUMENTS_IN_REGISTERS) && !defined(RETURN_VALUE_IN_REGISTER)
     // Emulate ret(n) instruction
     // Pop off return address into scratch register ...
@@ -1769,16 +1786,32 @@ int InstructionSelection::prepareVariableArguments(V4IR::ExprList* args)
     return argc;
 }
 
-void InstructionSelection::callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args)
+int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject)
 {
-    V4IR::Name *baseName = base->asName();
-    assert(baseName != 0);
+    int argc = 0;
+    for (V4IR::ExprList *it = args; it; it = it->next) {
+        ++argc;
+    }
 
-    int argc = prepareVariableArguments(args);
-    _as->generateFunctionCallImp(Assembler::Void, name, method, Assembler::ContextRegister, Assembler::PointerToValue(result),
-                                 Assembler::PointerToString(*baseName->id), baseAddressForCallArguments(),
-                                 Assembler::TrustedImm32(argc));
+    Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
+    _as->store32(Assembler::TrustedImm32(0), p);
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
+    _as->store32(Assembler::TrustedImm32(argc), p);
+    p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
+    if (!thisObject)
+        _as->storeValue(QV4::Value::undefinedValue(), p);
+    else
+        _as->copyValue(p, thisObject);
+
+    int i = 0;
+    for (V4IR::ExprList *it = args; it; it = it->next, ++i) {
+        V4IR::Expr *arg = it->expr;
+        Q_ASSERT(arg != 0);
+        _as->copyValue(_as->stackLayout().argumentAddressForCall(i), arg);
+    }
+    return argc;
 }
+
 
 QT_BEGIN_NAMESPACE
 namespace QV4 {

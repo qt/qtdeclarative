@@ -75,20 +75,20 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         isBuiltinFunction = true;
     }
 
-    static QV4::Value construct(QV4::Managed *m, const QV4::CallData &)
+    static QV4::Value construct(QV4::Managed *m, QV4::CallData *)
     {
         m->engine()->current->throwTypeError();
         return QV4::Value::undefinedValue();
     }
 
-    static QV4::Value call(QV4::Managed *that, const QV4::CallData &d)
+    static QV4::Value call(QV4::Managed *that, QV4::CallData *callData)
     {
         DelegateModelGroupFunction *f = static_cast<DelegateModelGroupFunction *>(that);
-        QQmlDelegateModelItemObject *o = d.thisObject.as<QQmlDelegateModelItemObject>();
+        QQmlDelegateModelItemObject *o = callData->thisObject.as<QQmlDelegateModelItemObject>();
         if (!o)
             that->engine()->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        QV4::Value v = d.argc ? d.args[0] : QV4::Value::undefinedValue();
+        QV4::Value v = callData->argc ? callData->args[0] : QV4::Value::undefinedValue();
         return f->code(o->item, f->flag, v);
     }
 };

@@ -269,7 +269,7 @@ public:
     public:
         StackLayout(V4IR::Function *function, int maxArgCountForBuiltins)
             : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
-            , maxOutgoingArgumentCount(qMax(function->maxNumberOfArguments, maxArgCountForBuiltins))
+            , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
             , savedConstCount(maxArgCountForBuiltins)
         {
@@ -289,19 +289,24 @@ public:
 #endif
         }
 
-        int calculateStackFrameSize(bool withLocals) const
+        int calculateStackFrameSize() const
         {
             const int stackSpaceAllocatedOtherwise = StackSpaceAllocatedUponFunctionEntry
                                                      + RegisterSize; // saved StackFrameRegister
 
-            const int locals = withLocals ? (maxOutgoingArgumentCount + localCount + savedConstCount) : 0;
-
-            // space for the locals and the callee saved registers
-            int frameSize = locals * sizeof(QV4::Value) + RegisterSize * calleeSavedRegisterCount;
+            // space for the callee saved registers
+            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedConstCount);
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
 
+            return frameSize;
+        }
+
+        int calculateJSStackFrameSize() const
+        {
+            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
+            int frameSize = locals * sizeof(QV4::Value);
             return frameSize;
         }
 
@@ -310,7 +315,7 @@ public:
             Q_ASSERT(idx >= 0);
             Q_ASSERT(idx < localCount);
 
-            Pointer addr = argumentAddressForCall(0);
+            Pointer addr = callDataAddress(0);
             addr.offset -= sizeof(QV4::Value) * (idx + 1);
             return addr;
         }
@@ -323,8 +328,11 @@ public:
             Q_ASSERT(argument < maxOutgoingArgumentCount);
 
             const int index = maxOutgoingArgumentCount - argument;
-            return Pointer(Assembler::LocalsRegister,
-                           sizeof(QV4::Value) * (-index) - calleeSavedRegisterSpace());
+            return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index));
+        }
+
+        Pointer callDataAddress(int offset = 0) const {
+            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)) + offset);
         }
 
         Address savedRegPointer(int offset) const
@@ -430,6 +438,38 @@ public:
 
         return Pointer(_stackLayout.stackSlotPointer(t->index));
     }
+
+    template <int argumentNumber>
+    void saveOutRegister(PointerToValue arg)
+    {
+        if (!arg.value)
+            return;
+        if (V4IR::Temp *t = arg.value->asTemp()) {
+            if (t->kind == V4IR::Temp::PhysicalRegister) {
+                Pointer addr(_stackLayout.savedRegPointer(argumentNumber));
+                switch (t->type) {
+                case V4IR::BoolType:
+                    storeBool((RegisterID) t->index, addr);
+                    break;
+                case V4IR::SInt32Type:
+                    storeInt32((RegisterID) t->index, addr);
+                    break;
+                case V4IR::UInt32Type:
+                    storeUInt32((RegisterID) t->index, addr);
+                    break;
+                case V4IR::DoubleType:
+                    storeDouble((FPRegisterID) t->index, addr);
+                    break;
+                default:
+                    Q_UNIMPLEMENTED();
+                }
+            }
+        }
+    }
+
+    template <int, typename ArgType>
+    void saveOutRegister(ArgType)
+    {}
 
     void loadArgumentInRegister(RegisterID source, RegisterID dest, int argumentNumber)
     {
@@ -684,8 +724,8 @@ public:
 
     void storeValue(QV4::Value value, V4IR::Temp* temp);
 
-    void enterStandardStackFrame(bool withLocals);
-    void leaveStandardStackFrame(bool withLocals);
+    void enterStandardStackFrame();
+    void leaveStandardStackFrame();
 
     template <int argumentNumber, typename T>
     void loadArgumentOnStackOrRegister(const T &value)
@@ -746,6 +786,15 @@ public:
             stackSpaceNeeded = WTF::roundUpToMultipleOf(StackAlignment, stackSpaceNeeded);
             sub32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
         }
+
+        // First save any arguments that reside in registers, because they could be overwritten
+        // if that register is also used to pass arguments.
+        saveOutRegister<5>(arg6);
+        saveOutRegister<4>(arg5);
+        saveOutRegister<3>(arg4);
+        saveOutRegister<2>(arg3);
+        saveOutRegister<1>(arg2);
+        saveOutRegister<0>(arg1);
 
         loadArgumentOnStackOrRegister<5>(arg6);
         loadArgumentOnStackOrRegister<4>(arg5);
@@ -967,25 +1016,8 @@ public:
         if (t->kind != V4IR::Temp::PhysicalRegister)
             return loadTempAddress(tmpReg, t);
 
-        Pointer addr(_stackLayout.savedRegPointer(offset));
-        switch (t->type) {
-        case V4IR::BoolType:
-            storeBool((RegisterID) t->index, addr);
-            break;
-        case V4IR::SInt32Type:
-            storeInt32((RegisterID) t->index, addr);
-            break;
-        case V4IR::UInt32Type:
-            storeUInt32((RegisterID) t->index, addr);
-            break;
-        case V4IR::DoubleType:
-            storeDouble((FPRegisterID) t->index, addr);
-            break;
-        default:
-            Q_UNIMPLEMENTED();
-        }
 
-        return addr;
+        return Pointer(_stackLayout.savedRegPointer(offset));
     }
 
     void storeBool(RegisterID reg, Pointer addr)
@@ -1226,6 +1258,11 @@ protected:
         return _as->stackLayout().argumentAddressForCall(0);
     }
 
+    Pointer baseAddressForCallData()
+    {
+        return _as->stackLayout().callDataAddress();
+    }
+
     virtual void constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
@@ -1300,11 +1337,7 @@ private:
         _as->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
     int prepareVariableArguments(V4IR::ExprList* args);
-
-    typedef void (*ActivationMethod)(QV4::ExecutionContext *, QV4::Value *result, QV4::String *name, QV4::Value *args, int argc);
-    void callRuntimeMethodImp(V4IR::Temp *result, const char* name, ActivationMethod method, V4IR::Expr *base, V4IR::ExprList *args);
-#define callRuntimeMethod(result, function, ...) \
-    callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
+    int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
     template <typename Arg1, typename Arg2>
     void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)

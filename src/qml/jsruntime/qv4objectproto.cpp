@@ -42,6 +42,7 @@
 
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
+#include "qv4scopedvalue_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
@@ -78,25 +79,25 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(Managed *that, const CallData &d)
+Value ObjectCtor::construct(Managed *that, CallData *callData)
 {
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     ExecutionEngine *v4 = that->engine();
-    if (!d.argc || d.args[0].isUndefined() || d.args[0].isNull()) {
+    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         Object *obj = v4->newObject();
         Value proto = ctor->get(v4->id_prototype);
         if (proto.isObject())
             obj->setPrototype(proto.objectValue());
         return Value::fromObject(obj);
     }
-    return __qmljs_to_object(v4->current, d.args[0]);
+    return __qmljs_to_object(v4->current, ValueRef(&callData->args[0]));
 }
 
-Value ObjectCtor::call(Managed *m, const CallData &d)
+Value ObjectCtor::call(Managed *m, CallData *callData)
 {
-    if (!d.argc || d.args[0].isUndefined() || d.args[0].isNull())
+    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return Value::fromObject(m->engine()->newObject());
-    return __qmljs_to_object(m->engine()->current, d.args[0]);
+    return __qmljs_to_object(m->engine()->current, ValueRef(&callData->args[0]));
 }
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -372,7 +373,7 @@ Value ObjectPrototype::method_toString(SimpleCallContext *ctx)
     } else if (ctx->thisObject.isNull()) {
         return Value::fromString(ctx, QStringLiteral("[object Null]"));
     } else {
-        Value obj = __qmljs_to_object(ctx, ctx->thisObject);
+        Value obj = __qmljs_to_object(ctx, ValueRef(&ctx->thisObject));
         QString className = obj.objectValue()->className();
         return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className));
     }
@@ -385,9 +386,9 @@ Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
     FunctionObject *f = ts.asFunctionObject();
     if (!f)
         ctx->throwTypeError();
-    CALLDATA(0);
-    d.thisObject = Value::fromObject(o);
-    return f->call(d);
+    ScopedCallData callData(ctx->engine, 0);
+    callData->thisObject = Value::fromObject(o);
+    return f->call(callData);
 }
 
 Value ObjectPrototype::method_valueOf(SimpleCallContext *ctx)

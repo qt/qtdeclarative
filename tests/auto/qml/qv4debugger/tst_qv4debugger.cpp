@@ -192,7 +192,7 @@ void tst_qv4debugger::breakAnywhere()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->pause(m_v4->debugger);
+    m_debuggerAgent->pauseAll();
     evaluateJavaScript(script, "testFile");
     QVERIFY(m_debuggerAgent->m_wasPaused);
 }
@@ -203,7 +203,7 @@ void tst_qv4debugger::pendingBreakpoint()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint(m_v4->debugger, "testfile", 2);
+    m_debuggerAgent->addBreakPoint("testfile", 2);
     evaluateJavaScript(script, "testfile");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
@@ -219,7 +219,7 @@ void tst_qv4debugger::liveBreakPoint()
             "var j = i + 1\n"
             "var k = i\n";
     m_debuggerAgent->m_breakPointsToAddWhenPaused << TestAgent::TestBreakPoint("liveBreakPoint", 3);
-    m_debuggerAgent->pause(m_v4->debugger);
+    m_debuggerAgent->pauseAll();
     evaluateJavaScript(script, "liveBreakPoint");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 2);
@@ -234,8 +234,8 @@ void tst_qv4debugger::removePendingBreakPoint()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint(m_v4->debugger, "removePendingBreakPoint", 2);
-    m_debuggerAgent->removeBreakPoint(m_v4->debugger, "removePendingBreakPoint", 2);
+    m_debuggerAgent->addBreakPoint("removePendingBreakPoint", 2);
+    m_debuggerAgent->removeBreakPoint("removePendingBreakPoint", 2);
     evaluateJavaScript(script, "removePendingBreakPoint");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
 }
@@ -246,7 +246,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint(m_v4->debugger, "addBreakPointWhilePaused", 1);
+    m_debuggerAgent->addBreakPoint("addBreakPointWhilePaused", 1);
     m_debuggerAgent->m_breakPointsToAddWhenPaused << TestAgent::TestBreakPoint("addBreakPointWhilePaused", 2);
     evaluateJavaScript(script, "addBreakPointWhilePaused");
     QVERIFY(m_debuggerAgent->m_wasPaused);
@@ -276,7 +276,7 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
     QMetaObject::invokeMethod(m_engine, "injectFunction", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, "someCall"), Q_ARG(TestEngine::InjectedFunction, someCall));
 
-    m_debuggerAgent->addBreakPoint(m_v4->debugger, "removeBreakPointForNextInstruction", 2);
+    m_debuggerAgent->addBreakPoint("removeBreakPointForNextInstruction", 2);
 
     evaluateJavaScript(script, "removeBreakPointForNextInstruction");
     QVERIFY(!m_debuggerAgent->m_wasPaused);

@@ -55,6 +55,7 @@
 #include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
 #include <private/qv4exception_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -2260,9 +2261,9 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        CALLDATA(1);
-        d.args[0] = o;
-        d.thisObject = engine->global();
+        QV4::ScopedCallData d(ctx->engine, 1);
+        d->args[0] = o;
+        d->thisObject = engine->global();
         function->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -2285,11 +2286,14 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return false;
-        CALLDATA(1);
-        d.args[0] = o;
-        d.thisObject = engine->global();
-        QV4::Value value = function->call(d);
-        return __qmljs_strict_equal(value, result);
+        QV4::ValueScope scope(ctx);
+        QV4::ScopedValue value(scope);
+        QV4::ScopedValue res(scope, result);
+        QV4::ScopedCallData d(ctx->engine, 1);
+        d->args[0] = o;
+        d->thisObject = engine->global();
+        value = function->call(d);
+        return __qmljs_strict_equal(value, res);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
@@ -2309,9 +2313,9 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
         QV4::FunctionObject *function = program.run().asFunctionObject();
         if (!function)
             return QV4::Value::emptyValue();
-        CALLDATA(1);
-        d.args[0] = o;
-        d.thisObject = engine->global();
+        QV4::ScopedCallData d(ctx->engine, 1);
+        d->args[0] = o;
+        d->thisObject = engine->global();
         QV4::Value value = function->call(d);
         return value;
     } catch (QV4::Exception &e) {

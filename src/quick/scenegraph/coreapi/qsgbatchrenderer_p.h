@@ -450,7 +450,8 @@ private:
     QDataBuffer<Element *> m_opaqueRenderList;
     QDataBuffer<Element *> m_alphaRenderList;
     int m_nextRenderOrder;
-    bool m_explicitOrdering;
+    bool m_partialRebuild;
+    QSGNode *m_partialRebuildRoot;
 
     QHash<QSGRenderNode *, RenderNodeElement *> m_renderNodeElements;
     QDataBuffer<Batch *> m_opaqueBatches;
