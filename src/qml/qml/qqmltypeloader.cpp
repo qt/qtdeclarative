@@ -2218,15 +2218,19 @@ void QQmlTypeData::compile()
             QByteArray vmeMetaObjectData;
             QQmlPropertyCache *propertyCache = 0;
 
-            if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
-                errors << propertyCacheBuilder.errors;
-                break;
+            // If the object has no type, then it's probably a nested object definition as part
+            // of a group property.
+            const bool objectHasType = !parsedQML->jsGenerator.strings.at(obj->inheritedTypeNameIndex).isEmpty();
+            if (objectHasType) {
+                if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
+                    errors << propertyCacheBuilder.errors;
+                    break;
+                }
             }
 
-            Q_ASSERT(propertyCache);
-
             m_compiledData->datas << vmeMetaObjectData;
-            propertyCache->addref();
+            if (propertyCache)
+                propertyCache->addref();
             m_compiledData->propertyCaches << propertyCache;
         }
 

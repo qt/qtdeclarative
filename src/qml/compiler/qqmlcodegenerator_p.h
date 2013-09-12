@@ -215,8 +215,14 @@ public:
 
     void setBindingValue(QV4::CompiledData::Binding *binding, AST::Statement *statement);
 
+    void appendBinding(AST::UiQualifiedId *name, AST::Statement *value);
+    void appendBinding(AST::UiQualifiedId *name, int objectIndex);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex);
+
+    // resolves qualified name (font.pixelSize for example) and returns the last name along
+    // with the object any right-hand-side of a binding should apply to.
+    AST::UiQualifiedId *resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object);
 
     bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex);
 
@@ -228,6 +234,8 @@ public:
 
     int registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
+
+    QString stringAt(int index) const { return jsGenerator->strings.at(index); }
 
     QList<QQmlError> errors;
 

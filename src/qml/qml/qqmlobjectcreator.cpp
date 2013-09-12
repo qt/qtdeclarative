@@ -72,6 +72,7 @@ QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePriv
 
 bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
 {
+    Q_ASSERT(!stringAt(obj->inheritedTypeNameIndex).isEmpty());
     QQmlType *baseType = resolvedTypes->value(obj->inheritedTypeNameIndex).type;
     Q_ASSERT(baseType);
 
@@ -475,12 +476,38 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
         QString name = stringAt(binding->propertyNameIndex);
 
+        // Child item:
+        // ...
+        //    Item {
+        //        ...
+        //    }
         if (name.isEmpty() && binding->value.type == QV4::CompiledData::Value::Type_Object) {
             create(binding->value.objectIndex, _qobject);
             continue;
         }
 
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
+
+        // Grouped property:
+        //  ...
+        //  font {
+        //      pixelSize: 24
+        //      ...
+        //  }
+        if (binding->value.type == QV4::CompiledData::Value::Type_Object) {
+            const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
+            if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
+                QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType);
+
+                valueType->read(_qobject, property->coreIndex);
+
+                QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(valueType);
+                populateInstance(binding->value.objectIndex, valueType, cache);
+
+                valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
+                continue;
+            }
+        }
 
         if (_ddata->hasBindingBit(property->coreIndex))
             removeBindingOnProperty(_qobject, property->coreIndex);
@@ -551,22 +578,31 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
     Q_ASSERT(type);
 
-    QObject *result = type->create();
+    QObject *instance = type->create();
     // ### use no-event variant
     if (parent)
-        result->setParent(parent);
-
-    QQmlData *declarativeData = QQmlData::get(result, /*create*/true);
+        instance->setParent(parent);
 
     QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
     Q_ASSERT(!cache.isNull());
 
+    context->addObject(instance);
+
+    populateInstance(index, instance, cache);
+
+    return instance;
+}
+
+void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache)
+{
+    const QV4::CompiledData::Object *obj = unit->objectAt(index);
+
+    QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
+
     qSwap(_propertyCache, cache);
-    qSwap(_qobject, result);
+    qSwap(_qobject, instance);
     qSwap(_compiledObject, obj);
     qSwap(_ddata, declarativeData);
-
-    context->addObject(_qobject);
 
     const QByteArray data = vmeMetaObjectData.value(index);
     if (!data.isEmpty()) {
@@ -600,9 +636,7 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     qSwap(_propertyCache, cache);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
-    qSwap(_qobject, result);
-
-    return result;
+    qSwap(_qobject, instance);
 }
 
 QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const

@@ -152,21 +152,38 @@ bool QQmlCodeGenerator::visit(AST::UiProgram *)
 
 bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
 {
-    int idx = defineQMLObject(node);
-    appendBinding(AST::SourceLocation(), registerString(QString()), idx);
+    // The grammar can't distinguish between two different definitions here:
+    //     Item { ... }
+    // versus
+    //     font { ... }
+    // The former is a new binding with no property name and "Item" as type name,
+    // and the latter is a binding to the font property with no type name but
+    // only initializer.
+
+    AST::UiQualifiedId *lastId = node->qualifiedTypeNameId;
+    while (lastId->next)
+        lastId = lastId->next;
+    bool isType = lastId->name.unicode()->isUpper();
+    if (isType) {
+        int idx = defineQMLObject(node);
+        appendBinding(AST::SourceLocation(), registerString(QString()), idx);
+    } else {
+        int idx = defineQMLObject(/*qualfied type name id*/0, node->initializer);
+        appendBinding(node->qualifiedTypeNameId, idx);
+    }
     return false;
 }
 
 bool QQmlCodeGenerator::visit(AST::UiObjectBinding *node)
 {
     int idx = defineQMLObject(node->qualifiedTypeNameId, node->initializer);
-    appendBinding(node->qualifiedId->identifierToken, registerString(asString(node->qualifiedId)), idx);
+    appendBinding(node->qualifiedId, idx);
     return false;
 }
 
 bool QQmlCodeGenerator::visit(AST::UiScriptBinding *node)
 {
-    appendBinding(node->qualifiedId->identifierToken, registerString(asString(node->qualifiedId)), node->statement);
+    appendBinding(node->qualifiedId, node->statement);
     return false;
 }
 
@@ -237,7 +254,9 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
 
     _object->inheritedTypeNameIndex = registerString(asString(qualifiedTypeNameId));
 
-    AST::SourceLocation loc = qualifiedTypeNameId->firstSourceLocation();
+    AST::SourceLocation loc;
+    if (qualifiedTypeNameId)
+        loc = qualifiedTypeNameId->firstSourceLocation();
     _object->location.line = loc.startLine;
     _object->location.column = loc.startColumn;
 
@@ -664,6 +683,24 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST
     }
 }
 
+void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, AST::Statement *value)
+{
+    QmlObject *object = 0;
+    name = resolveQualifiedId(name, &object);
+    qSwap(_object, object);
+    appendBinding(name->identifierToken, registerString(name->name.toString()), value);
+    qSwap(_object, object);
+}
+
+void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex)
+{
+    QmlObject *object = 0;
+    name = resolveQualifiedId(name, &object);
+    qSwap(_object, object);
+    appendBinding(name->identifierToken, registerString(name->name.toString()), objectIndex);
+    qSwap(_object, object);
+}
+
 void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value)
 {
     if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
@@ -685,9 +722,31 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     _object->bindings->append(binding);
 }
 
+AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object)
+{
+    *object = _object;
+    while (name->next) {
+        Binding *binding = New<Binding>();
+        binding->propertyNameIndex = registerString(name->name.toString());
+        binding->value.type = QV4::CompiledData::Value::Type_Object;
+
+        int objIndex = defineQMLObject(0, 0);
+        binding->value.objectIndex = objIndex;
+
+        (*object)->bindings->append(binding);
+        *object = _objects[objIndex];
+
+        name = name->next;
+    }
+    return name;
+}
+
 bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex)
 {
-    QString name = jsGenerator->strings.at(nameIndex);
+    const QString &name = jsGenerator->strings.at(nameIndex);
+    if (name.isEmpty())
+        return true;
+
     if (_propertyNames.contains(name))
         COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
 
@@ -720,7 +779,8 @@ void QQmlCodeGenerator::recordError(const AST::SourceLocation &location, const Q
 void QQmlCodeGenerator::collectTypeReferences()
 {
     foreach (QmlObject *obj, _objects) {
-        _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
+        if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
+            _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
 
         for (QmlProperty *prop = obj->properties->first; prop; prop = prop->next) {
             if (prop->type >= QV4::CompiledData::Property::Custom)

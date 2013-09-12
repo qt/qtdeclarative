@@ -87,6 +87,8 @@ public:
     QList<QQmlError> errors;
 
 private:
+    void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
+
     QVector<QQmlAbstractBinding *> setupBindings(QV4::Object *qmlGlobal);
     void setupFunctions(QV4::Object *qmlGlobal);
 

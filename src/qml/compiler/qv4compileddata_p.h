@@ -315,6 +315,9 @@ struct Property
 
 struct Object
 {
+    // An empty inherited type name suggests that this object doesn't require to be instantiated
+    // by itself but is merely used for grouped properties. It can therefore only have bindings,
+    // so nProperties, nFunctions and nSignals must be zero.
     quint32 inheritedTypeNameIndex;
     quint32 idIndex;
     quint32 indexOfDefaultProperty;
