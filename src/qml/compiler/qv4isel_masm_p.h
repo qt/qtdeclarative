@@ -249,21 +249,32 @@ public:
         {}
     };
 
-    // Stack layout:
+    // V4 uses two stacks: one stack with QV4::Value items, which is checked by the garbage
+    // collector, and one stack used by the native C/C++/ABI code. This C++ stack is not scanned
+    // by the garbage collector, so if any JS object needs to be retained, it should be put on the
+    // JS stack.
+    //
+    // The "saved reg arg X" are on the C++ stack is used to store values in registers that need to
+    // be passed by reference to native functions. It is fine to use the C++ stack, because only
+    // non-object values can be stored in registers.
+    //
+    // Stack layout for the C++ stack:
     //   return address
-    //   old FP                    <- FP, LocalsRegister
+    //   old FP                     <- FP
     //   callee saved reg n
     //   ...
     //   callee saved reg 0
-    //   function call argument n
+    //   saved reg arg 0
+    //   ...
+    //   saved reg arg n            <- SP
+    //
+    // Stack layout for the JS stack:
+    //   function call argument n   <- LocalsRegister
     //   ...
     //   function call argument 0
     //   local 0
     //   ...
     //   local n
-    //   saved const arg 0
-    //   ...
-    //   saved const arg n         <- SP
     class StackLayout
     {
     public:
@@ -271,21 +282,27 @@ public:
             : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
-            , savedConstCount(maxArgCountForBuiltins)
+            , savedRegCount(maxArgCountForBuiltins)
         {
 #if 0 // debug code
             qDebug("calleeSavedRegCount.....: %d",calleeSavedRegCount);
             qDebug("maxOutgoingArgumentCount: %d",maxOutgoingArgumentCount);
             qDebug("localCount..............: %d",localCount);
             qDebug("savedConstCount.........: %d",savedConstCount);
-            qDebug("argumentAddressForCall(0) = 0x%x / -0x%x", argumentAddressForCall(0).offset, -argumentAddressForCall(0).offset);
-            if (localCount)qDebug("local(0) = 0x%x / -0x%x", stackSlotPointer(0).offset, -stackSlotPointer(0).offset);
-            qDebug("savedReg(0) = 0x%x", savedRegPointer(0).offset);
-            qDebug("savedReg(1) = 0x%x", savedRegPointer(1).offset);
-            qDebug("savedReg(2) = 0x%x", savedRegPointer(2).offset);
-            qDebug("savedReg(3) = 0x%x", savedRegPointer(3).offset);
-            qDebug("savedReg(4) = 0x%x", savedRegPointer(4).offset);
-            qDebug("savedReg(5) = 0x%x", savedRegPointer(5).offset);
+            for (int i = 0; i < maxOutgoingArgumentCount; ++i)
+                qDebug("argumentAddressForCall(%d) = 0x%x / -0x%x", i,
+                       argumentAddressForCall(i).offset, -argumentAddressForCall(i).offset);
+            for (int i = 0; i < localCount; ++i)
+                qDebug("local(%d) = 0x%x / -0x%x", i, stackSlotPointer(i).offset,
+                       -stackSlotPointer(i).offset);
+            qDebug("savedReg(0) = 0x%x / -0x%x", savedRegPointer(0).offset, -savedRegPointer(0).offset);
+            qDebug("savedReg(1) = 0x%x / -0x%x", savedRegPointer(1).offset, -savedRegPointer(1).offset);
+            qDebug("savedReg(2) = 0x%x / -0x%x", savedRegPointer(2).offset, -savedRegPointer(2).offset);
+            qDebug("savedReg(3) = 0x%x / -0x%x", savedRegPointer(3).offset, -savedRegPointer(3).offset);
+            qDebug("savedReg(4) = 0x%x / -0x%x", savedRegPointer(4).offset, -savedRegPointer(4).offset);
+            qDebug("savedReg(5) = 0x%x / -0x%x", savedRegPointer(5).offset, -savedRegPointer(5).offset);
+
+            qDebug("callDataAddress(0) = 0x%x", callDataAddress(0).offset);
 #endif
         }
 
@@ -295,7 +312,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedConstCount);
+            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedRegCount);
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
@@ -338,11 +355,10 @@ public:
         Address savedRegPointer(int offset) const
         {
             Q_ASSERT(offset >= 0);
-            Q_ASSERT(offset < savedConstCount);
+            Q_ASSERT(offset < savedRegCount);
 
-            Address addr = argumentAddressForCall(0);
-            addr.offset -= sizeof(QV4::Value) * (offset + localCount + 1);
-            return addr;
+            const int off = offset * sizeof(QV4::Value);
+            return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
         }
 
         int calleeSavedRegisterSpace() const
@@ -362,7 +378,7 @@ public:
 
         /// used by built-ins to save arguments (e.g. constants) to the stack when they need to be
         /// passed by reference.
-        int savedConstCount;
+        int savedRegCount;
     };
 
     class ConstantTable
