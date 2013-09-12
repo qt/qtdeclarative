@@ -46,6 +46,8 @@
 #include "qv4instr_moth_p.h"
 #include <iostream>
 
+#include <algorithm>
+
 using namespace QV4;
 using namespace QV4::Debugging;
 
@@ -331,7 +333,7 @@ void Debugger::BreakPoints::add(const QString &fileName, int lineNumber)
     QList<int> &lines = (*this)[fileName];
     if (!lines.contains(lineNumber)) {
         lines.append(lineNumber);
-        qSort(lines);
+        std::sort(lines.begin(), lines.end());
     }
 }
 

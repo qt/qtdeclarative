@@ -58,6 +58,7 @@
 #include <QtCore/private/qmetaobject_p.h>
 
 #include <iostream>
+#include <algorithm>
 
 #include "qmlstreamwriter.h"
 
@@ -330,7 +331,7 @@ public:
 
             // ensure exports are sorted and don't change order when the plugin is dumped again
             QStringList exportStrings = exports.keys();
-            qSort(exportStrings);
+            std::sort(exportStrings.begin(), exportStrings.end());
             qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
 
             // write meta object revisions

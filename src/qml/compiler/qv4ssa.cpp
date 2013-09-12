@@ -54,6 +54,7 @@
 #include <cmath>
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 
 #ifdef CONST
 #undef CONST
@@ -2576,7 +2577,7 @@ public:
             range.setTemp(i.key());
             _sortedRanges.append(range);
         }
-        qSort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
+        std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
     }
 
     QList<LifeTimeInterval> ranges() const { return _sortedRanges; }
@@ -2593,7 +2594,7 @@ public:
         foreach (BasicBlock *bb, _liveIn.keys()) {
             qout << "L" << bb->index <<" live-in: ";
             QList<Temp> live = QList<Temp>::fromSet(_liveIn.value(bb));
-            qSort(live);
+            std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
                 live[i].dump(qout);

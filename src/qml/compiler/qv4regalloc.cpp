@@ -41,6 +41,8 @@
 
 #include "qv4regalloc_p.h"
 
+#include <algorithm>
+
 //#define DEBUG_REGALLOC
 
 namespace {
@@ -137,7 +139,7 @@ public:
 
         qout << "RegAllocInfo:" << endl << "Defs/uses:" << endl;
         QList<Temp> temps = _defs.keys();
-        qSort(temps);
+        std::sort(temps.begin(), temps.end());
         foreach (const Temp &t, temps) {
             t.dump(qout);
             qout << " def at " << _defs[t].defStmt << " ("
@@ -165,7 +167,7 @@ public:
         QList<Temp> hinted = _hints.keys();
         if (hinted.isEmpty())
             qout << "\t(none)" << endl;
-        qSort(hinted);
+        std::sort(hinted.begin(), hinted.end());
         foreach (const Temp &t, hinted) {
             qout << "\t";
             t.dump(qout);
@@ -1127,7 +1129,7 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
         QTextStream qout(stdout, QIODevice::WriteOnly);
         qout << "Ranges:" << endl;
         QList<LifeTimeInterval> handled = _unhandled;
-        qSort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
+        std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, handled) {
             r.dump(qout);
             qout << endl;
@@ -1150,7 +1152,7 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
     dump();
 #endif // DEBUG_REGALLOC
 
-    qSort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
+    std::sort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
     ResolutionPhase(_handled, function, _info.data(), _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
 
     function->tempCount = QSet<int>::fromList(_assignedSpillSlots.values()).size();
@@ -1199,7 +1201,7 @@ void RegisterAllocator::prepareRanges()
         if (_fixedFPRegisterRanges[fpReg].isValid())
             _active.append(_fixedFPRegisterRanges[fpReg]);
 
-    qSort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
+    std::sort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
 }
 
 void RegisterAllocator::linearScan()
@@ -1621,7 +1623,7 @@ void RegisterAllocator::dump() const
     {
         qout << "Ranges:" << endl;
         QList<LifeTimeInterval> handled = _handled;
-        qSort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
+        std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, handled) {
             r.dump(qout);
             qout << endl;
@@ -1633,7 +1635,7 @@ void RegisterAllocator::dump() const
         QList<Temp> temps = _assignedSpillSlots.keys();
         if (temps.isEmpty())
             qout << "\t(none)" << endl;
-        qSort(temps);
+        std::sort(temps.begin(), temps.end());
         foreach (const Temp &t, temps) {
             qout << "\t";
             t.dump(qout);

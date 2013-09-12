@@ -51,6 +51,8 @@
 #include <QTime>
 #include <QtNumeric>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 struct Update {
@@ -808,7 +810,7 @@ int QQuickTimeLinePrivate::advance(int t)
         length -= qMin(length, advanceTime);
         syncPoint -= advanceTime;
 
-        qSort(updates.begin(), updates.end());
+        std::sort(updates.begin(), updates.end());
         updateQueue = &updates;
         for (int ii = 0; ii < updates.count(); ++ii) {
             const Update &v = updates.at(ii).second;

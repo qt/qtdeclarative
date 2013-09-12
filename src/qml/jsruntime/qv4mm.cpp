@@ -55,6 +55,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 #include "qv4alloca_p.h"
 
 #ifdef V4_USE_VALGRIND
@@ -215,7 +216,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
         allocation.chunkSize = size;
         m_d->heapChunks.append(allocation);
-        qSort(m_d->heapChunks);
+        std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
         memset(chunk, 0, allocation.memory.size());

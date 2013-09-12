@@ -48,6 +48,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -376,10 +378,10 @@ public:
         if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
             QV4::Value compareFn = ctx->arguments[0];
             CompareFunctor cf(ctx, compareFn);
-            qSort(m_container.begin(), m_container.end(), cf);
+            std::sort(m_container.begin(), m_container.end(), cf);
         } else {
             DefaultCompareFunctor cf;
-            qSort(m_container.begin(), m_container.end(), cf);
+            std::sort(m_container.begin(), m_container.end(), cf);
         }
 
         if (m_isReference)

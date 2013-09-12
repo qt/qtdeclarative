@@ -59,6 +59,8 @@
 #include <QtGui/qvector3d.h>
 #include <QtQml/private/qqmlglobal_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 static const char *globalProgramName = 0;
@@ -625,7 +627,7 @@ static QBenchmarkResult qMedian(const QList<QBenchmarkResult> &container)
         return container.at(0);
 
     QList<QBenchmarkResult> containerCopy = container;
-    qSort(containerCopy);
+    std::sort(containerCopy.begin(), containerCopy.end());
 
     const int middle = count / 2;
 

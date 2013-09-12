@@ -47,6 +47,8 @@
 #include <QFile>
 #include <QXmlStreamReader>
 
+#include <algorithm>
+
 namespace Constants {
     const char TYPE_PAINTING_STR[] = "Painting";
     const char TYPE_COMPILING_STR[] = "Compiling";
@@ -437,9 +439,9 @@ void QmlProfilerData::sortStartTimes()
             itFrom--;
 
         if (itTo->startTime <= itFrom->startTime)
-            qSort(itFrom, itTo + 1, compareStartTimes);
+            std::sort(itFrom, itTo + 1, compareStartTimes);
         else
-            qSort(itFrom + 1, itTo + 1, compareStartTimes);
+            std::sort(itFrom + 1, itTo + 1, compareStartTimes);
 
         // move to next block
         itTo = itFrom;

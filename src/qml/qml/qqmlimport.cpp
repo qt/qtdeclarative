@@ -56,6 +56,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlImportTrace, QML_IMPORT_TRACE)
@@ -835,7 +837,7 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
         dir.chop(1);
 
     QStringList paths = database->fileImportPath;
-    qSort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
+    std::sort(paths.begin(), paths.end(), I::greaterThan); // Ensure subdirs preceed their parents.
 
     QString stableRelativePath = dir;
     foreach(const QString &path, paths) {
