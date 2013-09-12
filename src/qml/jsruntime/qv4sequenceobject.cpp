@@ -571,36 +571,38 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex); \
-        return QV4::Value::fromObject(obj); \
+        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex))); \
+        return obj.asReturnedValue(); \
     } else
 
-QV4::Value SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
+ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
 {
+    QV4::Scope scope(engine);
     // This function is called when the property is a QObject Q_PROPERTY of
     // the given sequence type.  Internally we store a typed-sequence
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Value::undefinedValue(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_REFERENCE_SEQUENCE
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()); \
-        return QV4::Value::fromObject(obj); \
+        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()))); \
+        return obj.asReturnedValue(); \
     } else
 
-QV4::Value SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded)
+ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded)
 {
+    QV4::Scope scope(engine);
     // This function is called when assigning a sequence value to a normal JS var
     // in a JS block.  Internally, we store a sequence of the specified type.
     // Access and mutation is extremely fast since it will not need to modify any
     // QObject property.
     int sequenceType = v.userType();
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Value::undefinedValue(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_COPY_SEQUENCE
 

@@ -92,38 +92,38 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
     return 0;
 }
 
-Value ObjectIterator::nextPropertyName(Value *value)
+ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
     PropertyAttributes attrs;
     uint index;
     String *name;
     Property *p = next(&name, &index, &attrs);
     if (!p)
-        return Value::nullValue();
+        return Encode::null();
 
     if (value)
         *value = Value::fromReturnedValue(object->getValue(p, attrs));
 
     if (name)
-        return Value::fromString(name);
+        return Value::fromString(name).asReturnedValue();
     assert(index < UINT_MAX);
-    return Value::fromDouble(index);
+    return Encode(index);
 }
 
-Value ObjectIterator::nextPropertyNameAsString(Value *value)
+ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
     PropertyAttributes attrs;
     uint index;
     String *name;
     Property *p = next(&name, &index, &attrs);
     if (!p)
-        return Value::nullValue();
+        return Encode::null();
 
     if (value)
         *value = Value::fromReturnedValue(object->getValue(p, attrs));
 
     if (name)
-        return Value::fromString(name);
+        return Value::fromString(name).asReturnedValue();
     assert(index < UINT_MAX);
-    return Value::fromString(object->engine()->newString(QString::number(index)));
+    return Value::fromString(object->engine()->newString(QString::number(index))).asReturnedValue();
 }

@@ -944,7 +944,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_get_canvas(QV4::SimpleCall
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, r->context->canvas()).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, r->context->canvas());
 }
 
 /*!
@@ -1386,7 +1386,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_fillRule(QV4::SimpleCallContext
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = ctx->engine->v8Engine;
-    return engine->fromVariant(r->context->state.fillRule).asReturnedValue();
+    return engine->fromVariant(r->context->state.fillRule);
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_fillRule(QV4::SimpleCallContext *ctx)

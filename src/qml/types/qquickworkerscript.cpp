@@ -725,7 +725,8 @@ bool QQuickWorkerScript::event(QEvent *event)
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
-            QV4::Value value = QV4::Serialize::deserialize(workerEvent->data(), v8engine);
+            QV4::Scope scope(QV8Engine::getV4(v8engine));
+            QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), v8engine));
             emit message(QQmlV4Handle(value));
         }
         return true;

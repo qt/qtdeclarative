@@ -600,7 +600,7 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
         return Value::fromInt32(-1).asReturnedValue();
     }
 
-    return instance->arrayIndexOf(searchValue, fromIndex, len, ctx, instance).asReturnedValue();
+    return instance->arrayIndexOf(searchValue, fromIndex, len, ctx, instance);
 }
 
 ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)

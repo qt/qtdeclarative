@@ -755,7 +755,7 @@ ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator->objectValue());
     Q_ASSERT(it->as<ForEachIteratorObject>());
 
-    return it->nextPropertyName().asReturnedValue();
+    return it->nextPropertyName();
 }
 
 

@@ -107,8 +107,8 @@ public:
     void setValue(const QString &role, const QVariant &value);
     bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
-    static QV4::Value get_property(QV4::SimpleCallContext *ctx, uint propertyId);
-    static QV4::Value set_property(QV4::SimpleCallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue get_property(QV4::SimpleCallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue set_property(QV4::SimpleCallContext *ctx, uint propertyId);
 
     VDMModelDelegateDataType *type;
     QVector<QVariant> cachedData;
@@ -341,7 +341,7 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
     }
 }
 
-QV4::Value QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint propertyId)
 {
     QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
     if (!o)
@@ -357,10 +357,10 @@ QV4::Value QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint
         return ctx->engine->v8Engine->fromVariant(
                 modelData->value(modelData->type->propertyRoles.at(propertyId)));
     }
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
-QV4::Value QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint propertyId)
 {
     QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
     if (!o)
@@ -381,6 +381,7 @@ QV4::Value QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint
             }
         }
     }
+    return QV4::Encode::undefined();
 }
 
 //-----------------------------------------------------------------
@@ -421,7 +422,7 @@ public:
                 type->model->aim()->index(index, 0, type->model->rootIndex), value, role);
     }
 
-    QV4::Value get()
+    QV4::ReturnedValue get()
     {
         if (type->prototype.isEmpty()) {
             QQmlAdaptorModelEngineData * const data = engineData(v4->v8Engine);
@@ -432,7 +433,7 @@ public:
         o->setPrototype(proto);
         QV4::Value data = QV4::Value::fromObject(o);
         ++scriptRef;
-        return data;
+        return data.asReturnedValue();
     }
 };
 
@@ -584,7 +585,7 @@ public:
         if (!o)
             ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->item)->cachedData).asReturnedValue();
+        return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->item)->cachedData);
     }
 
     static QV4::ReturnedValue set_modelData(QV4::SimpleCallContext *ctx)
@@ -599,14 +600,14 @@ public:
         return QV4::Encode::undefined();
     }
 
-    QV4::Value get()
+    QV4::ReturnedValue get()
     {
         QQmlAdaptorModelEngineData *data = engineData(v4->v8Engine);
         QV4::Object *o = new (v4->memoryManager) QQmlDelegateModelItemObject(v4, this);
         o->setPrototype(data->listItemProto.value().asObject());
         QV4::Value val = QV4::Value::fromObject(o);
         ++scriptRef;
-        return val;
+        return val.asReturnedValue();
     }
 
     void setValue(const QString &role, const QVariant &value)

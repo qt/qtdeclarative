@@ -327,8 +327,10 @@ QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::Scope scope(v4);
     QQmlEngine::setObjectOwnership(object, QQmlEngine::JavaScriptOwnership);
-    return new QJSValuePrivate(v4, QV4::QObjectWrapper::wrap(v4, object));
+    QV4::ScopedValue v(scope, QV4::QObjectWrapper::wrap(v4, object));
+    return new QJSValuePrivate(v4, v);
 }
 
 /*!
@@ -353,7 +355,7 @@ QJSValue QJSEngine::globalObject() const
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
-    return new QJSValuePrivate(d->m_v4Engine, d->metaTypeToJS(type, ptr));
+    return new QJSValuePrivate(d->m_v4Engine, QV4::Value::fromReturnedValue(d->metaTypeToJS(type, ptr)));
 }
 
 /*!
@@ -365,7 +367,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
     QV8Engine *engine = vp->engine ? vp->engine->v8Engine : 0;
     if (engine) {
-        return engine->metaTypeFromJS(vp->getValue(engine->m_v4Engine), type, ptr);
+        return engine->metaTypeFromJS(QV4::Value::fromReturnedValue(vp->getValue(engine->m_v4Engine)), type, ptr);
     } else {
         switch (type) {
             case QMetaType::Bool:

@@ -73,15 +73,15 @@ QmlContextWrapper::~QmlContextWrapper()
         context->destroy();
 }
 
-QV4::Value QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
+ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
-QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
+ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
@@ -92,7 +92,7 @@ QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, context, 0);
     w->isNullWrapper = true;
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
@@ -192,9 +192,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
                 else
                     return QV4::Value::undefinedValue().asReturnedValue();
             } else if (r.type) {
-                return QmlTypeWrapper::create(engine, scopeObject, r.type).asReturnedValue();
+                return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {
-                return QmlTypeWrapper::create(engine, scopeObject, context->imports, r.importNamespace).asReturnedValue();
+                return QmlTypeWrapper::create(engine, scopeObject, context->imports, r.importNamespace);
             }
             Q_ASSERT(!"Unreachable");
         }
@@ -216,7 +216,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
                     ep->captureProperty(&context->idValues[propertyIdx].bindings);
                     if (hasProperty)
                         *hasProperty = true;
-                    return QV4::QObjectWrapper::wrap(v4, context->idValues[propertyIdx]).asReturnedValue();
+                    return QV4::QObjectWrapper::wrap(v4, context->idValues[propertyIdx]);
                 } else {
 
                     QQmlContextPrivate *cp = context->asQQmlContextPrivate();
@@ -231,9 +231,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
                         QQmlListProperty<QObject> prop(context->asQQmlContext(), (void*) qintptr(propertyIdx),
                                                                QQmlContextPrivate::context_count,
                                                                QQmlContextPrivate::context_at);
-                        return QmlListWrapper::create(engine, prop, qMetaTypeId<QQmlListProperty<QObject> >()).asReturnedValue();
+                        return QmlListWrapper::create(engine, prop, qMetaTypeId<QQmlListProperty<QObject> >());
                     } else {
-                        return engine->fromVariant(cp->propertyValues.at(propertyIdx)).asReturnedValue();
+                        return engine->fromVariant(cp->propertyValues.at(propertyIdx));
                     }
                 }
             }
@@ -242,7 +242,8 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
-            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject,
+                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;

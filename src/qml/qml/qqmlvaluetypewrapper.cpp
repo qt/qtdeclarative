@@ -139,7 +139,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     v4->qmlExtensions()->valueTypeWrapperPrototype = o;
 }
 
-Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
+ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     initProto(v4);
@@ -147,10 +147,10 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, 
     QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->object = object; r->property = property;
-    return Value::fromObject(r);
+    return Value::fromObject(r).asReturnedValue();
 }
 
-Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValueType *type)
+ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     initProto(v4);
@@ -158,7 +158,7 @@ Value QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValu
     QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->value = value;
-    return Value::fromObject(r);
+    return Value::fromObject(r).asReturnedValue();
 }
 
 QVariant QmlValueTypeWrapper::toVariant() const
@@ -301,7 +301,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision).asReturnedValue();
+        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
@@ -321,7 +321,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
     r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args);
-    return r->v8->fromVariant(v).asReturnedValue();
+    return r->v8->fromVariant(v);
 #undef VALUE_TYPE_ACCESSOR
 }
 

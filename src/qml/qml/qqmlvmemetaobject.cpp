@@ -911,8 +911,10 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
+                QV4::Scope scope(ep->v4engine());
 
-                QV4::FunctionObject *function = method(id).asFunctionObject();
+
+                QV4::Scoped<QV4::FunctionObject> function(scope, method(id));
                 if (!function) {
                     // The function was not compiled.  There are some exceptional cases which the
                     // expression rewriter does not rewrite properly (e.g., \r-terminated lines
@@ -927,12 +929,11 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QQmlVMEMetaData::MethodData *data = metaData->methodData() + id;
 
-                QV4::Scope scope(function->engine());
                 QV4::ScopedCallData callData(scope, data->parameterCount);
                 callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
+                    callData->args[ii] = QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]));
 
                 QV4::ScopedValue result(scope);
                 QV4::ExecutionContext *ctx = function->engine()->current;
@@ -961,11 +962,11 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
         return object->qt_metacall(c, _id, a);
 }
 
-QV4::Value QQmlVMEMetaObject::method(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return QV4::Value::emptyValue();
+        return QV4::Value::emptyValue().asReturnedValue();
     }
 
     if (!v8methods) 
@@ -984,16 +985,16 @@ QV4::Value QQmlVMEMetaObject::method(int index)
                                                                ctxt->urlString, data->lineNumber);
     }
 
-    return v8methods[index];
+    return v8methods[index].value().asReturnedValue();
 }
 
-QV4::Value QQmlVMEMetaObject::readVarProperty(int id)
+QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
     if (ensureVarPropertiesAllocated())
-        return QV4::Value::fromReturnedValue(varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
-    return QV4::Value::emptyValue();
+        return varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
+    return QV4::Value::emptyValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
@@ -1070,8 +1071,8 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        QV4::Value newv = QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
-        if (QV4::VariantObject *v = newv.as<QV4::VariantObject>())
+        QV4::ScopedValue newv(scope, QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value));
+        if (QV4::VariantObject *v = newv->as<QV4::VariantObject>())
             v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.
@@ -1150,7 +1151,7 @@ quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
     return data->lineNumber;
 }
 
-QV4::Value QQmlVMEMetaObject::vmeMethod(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1178,7 +1179,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, QV4::PersistentValue function)
     v8methods[methodIndex] = function;
 }
 
-QV4::Value QQmlVMEMetaObject::vmeProperty(int index)
+QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());

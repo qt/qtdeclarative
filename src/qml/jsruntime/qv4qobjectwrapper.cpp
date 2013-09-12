@@ -138,30 +138,16 @@ struct ReadAccessor {
     }
 };
 
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, int v)
-{ return QV4::Value::fromInt32(v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, uint v)
-{ return QV4::Value::fromUInt32(v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, bool v)
-{ return QV4::Value::fromBoolean(v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *e, const QString &v)
-{ return QV4::Value::fromString(e, v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, float v)
-{ return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *, double v)
-{ return QV4::Value::fromDouble(v); }
-static inline QV4::Value valueToHandle(QV4::ExecutionEngine *e, QObject *v)
-{ return QV4::QObjectWrapper::wrap(e, v); }
-
 // Load value properties
 template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
                               void *, QQmlNotifier **)>
-static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
+static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
                                           const QQmlPropertyData &property,
                                           QQmlNotifier **notifier)
 {
     Q_ASSERT(!property.isFunction());
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
 
     if (property.isQObject()) {
         QObject *rv = 0;
@@ -172,35 +158,35 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == QMetaType::QReal) {
         qreal v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.propType == QMetaType::Int || property.isEnum()) {
         int v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.propType == QMetaType::Bool) {
         bool v = false;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.propType == QMetaType::QString) {
         QString v;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return Value::fromString(v4, v).asReturnedValue();
     } else if (property.propType == QMetaType::UInt) {
         uint v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.propType == QMetaType::Float) {
         float v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.propType == QMetaType::Double) {
         double v = 0;
         ReadFunction(object, property, &v, notifier);
-        return valueToHandle(v4, v);
+        return QV4::Encode(v);
     } else if (property.isV4Handle()) {
         QQmlV4Handle handle;
         ReadFunction(object, property, &handle, notifier);
-        return handle.toValue();
+        return handle.toValue().asReturnedValue();
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
@@ -225,16 +211,16 @@ static QV4::Value LoadProperty(QV8Engine *engine, QObject *object,
 
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::Value retn = QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded);
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded));
         if (succeeded)
-            return retn;
+            return retn.asReturnedValue();
     }
 
     if (property.propType == QMetaType::UnknownType) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex);
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     } else {
         QVariant v(property.propType, (void *)0);
         ReadFunction(object, property, v.data(), notifier);
@@ -271,20 +257,23 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     return result;
 }
 
-Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, bool includeImports)
+ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode,
+                                             bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(m_object)) {
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     }
+
+    QV4:Scope scope(ctx);
 
     if (name->isEqualTo(m_destroy) || name->isEqualTo(m_toString)) {
         int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-        QV4::Value method = QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index);
+        QV4::ScopedValue method(scope, QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index));
         if (hasProperty)
             *hasProperty = true;
-        return method;
+        return method.asReturnedValue();
     }
 
     QQmlPropertyData local;
@@ -301,7 +290,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
 
                 if (r.isValid()) {
                     if (r.scriptIndex != -1) {
-                        return QV4::Value::undefinedValue();
+                        return QV4::Encode::undefined();
                     } else if (r.type) {
                         return QmlTypeWrapper::create(ctx->engine->v8Engine, m_object, r.type, QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
@@ -311,7 +300,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
                 }
             }
         }
-        return QV4::Value::fromReturnedValue(QV4::Object::get(this, name, hasProperty));
+        return QV4::Object::get(this, name, hasProperty);
     }
 
     QQmlData::flushPendingBinding(m_object, result->coreIndex);
@@ -321,7 +310,7 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result)) {
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         }
     }
 
@@ -334,7 +323,8 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV4Function()) {
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex, QV4::Value::fromObject(ctx->engine->qmlContextObject()));
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex,
+                                              QV4::Value::fromObject(ctx->engine->qmlContextObject())).asReturnedValue();
         } else if (result->isSignalHandler()) {
             QV4::QmlSignalHandler *handler = new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex);
 
@@ -343,9 +333,9 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
             handler->put(connect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(connect)));
             handler->put(disconnect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(disconnect)));
 
-            return QV4::Value::fromObject(handler);
+            return QV4::Value::fromObject(handler).asReturnedValue();
         } else {
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex);
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex).asReturnedValue();
         }
     }
 
@@ -358,15 +348,16 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
         if (ep && ep->propertyCapture && result->accessors->notifier)
             nptr = &n;
 
-        QV4::Value rv = LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *result, nptr);
+        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *result, nptr));
 
         if (result->accessors->notifier) {
-            if (n) ep->captureProperty(n);
+            if (n)
+                ep->captureProperty(n);
         } else {
             ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
         }
 
-        return rv;
+        return rv.asReturnedValue();
     }
 
     if (ep && !result->isConstant())
@@ -383,25 +374,26 @@ Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qml
     }
 }
 
-Value QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
+ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
 {
+    QV4::Scope scope(ctx);
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::nullValue();
+        return QV4::Encode::null();
     }
 
     if (!QQmlData::get(object, true)) {
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::nullValue();
+        return QV4::Encode::null();
     }
 
-    QObjectWrapper *wrapper = wrap(ctx->engine, object).as<QV4::QObjectWrapper>();
+    QV4::Scoped<QObjectWrapper> wrapper(scope, wrap(ctx->engine, object));
     if (!wrapper) {
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::nullValue();
+        return QV4::Encode::null();
     }
     return wrapper->getQmlProperty(ctx, qmlContext, name, revisionMode, hasProperty);
 }
@@ -540,57 +532,59 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     return true;
 }
 
-Value QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
+ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 {
     if (QQmlData::wasDeleted(object))
-        return QV4::Value::nullValue();
+        return QV4::Encode::null();
 
     QQmlData *ddata = QQmlData::get(object, true);
     if (!ddata)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
+
+    Scope scope(engine);
 
     if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isEmpty()) {
         // We own the JS object
-        return ddata->jsWrapper.value();
+        return ddata->jsWrapper.value().asReturnedValue();
     } else if (ddata->jsWrapper.isEmpty() &&
                (ddata->jsEngineId == engine->m_engineId || // We own the QObject
                 ddata->jsEngineId == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
-        QV4::Value rv = create(engine, ddata, object);
+        QV4::ScopedValue rv(scope, create(engine, ddata, object));
         ddata->jsWrapper = rv;
         ddata->jsEngineId = engine->m_engineId;
-        return rv;
+        return rv.asReturnedValue();
 
     } else {
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
-        Object *alternateWrapper = 0;
+        Scoped<Object> alternateWrapper(scope, 0);
         if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
-            alternateWrapper = engine->m_multiplyWrappedQObjects->value(object);
+            alternateWrapper = Value::fromObject(engine->m_multiplyWrappedQObjects->value(object));
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
         if (ddata->jsWrapper.isEmpty() && !alternateWrapper) {
-            QV4::Value result = create(engine, ddata, object);
+            QV4::ScopedValue result(scope, create(engine, ddata, object));
             ddata->jsWrapper = result;
             ddata->jsEngineId = engine->m_engineId;
-            return result;
+            return result.asReturnedValue();
         }
 
         if (!alternateWrapper) {
-            alternateWrapper = create(engine, ddata, object).asObject();
+            alternateWrapper = create(engine, ddata, object);
             if (!engine->m_multiplyWrappedQObjects)
                 engine->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
-            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
+            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper.getPointer());
             ddata->hasTaintedV8Object = true;
         }
 
-        return QV4::Value::fromObject(alternateWrapper);
+        return alternateWrapper.asReturnedValue();
     }
 }
 
-QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
+ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
 {
     QQmlEngine *qmlEngine = engine->v8Engine->engine();
     if (!ddata->propertyCache && qmlEngine) {
@@ -598,7 +592,7 @@ QV4::Value QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObj
         if (ddata->propertyCache) ddata->propertyCache->addref();
     }
 
-    return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object));
+    return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object)).asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
@@ -606,7 +600,7 @@ QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProper
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true).asReturnedValue();
+    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, String *name, const Value &value)
@@ -707,9 +701,9 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    callData->args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    callData->args[ii] = QV4::Value::fromReturnedValue(v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1])));
                 } else {
-                    callData->args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    callData->args[ii] = QV4::Value::fromReturnedValue(v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1])));
                 }
             }
 
@@ -968,7 +962,7 @@ struct CallArgument {
 
     inline void initAsType(int type);
     inline void fromValue(int type, QV8Engine *, const QV4::Value&);
-    inline QV4::Value toValue(QV8Engine *);
+    inline ReturnedValue toValue(QV8Engine *);
 
 private:
     CallArgument(const CallArgument &);
@@ -1052,7 +1046,7 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, argData.data());
 
-        return args[0].toValue(engine).asReturnedValue();
+        return args[0].toValue(engine);
 
     } else if (returnType != QMetaType::Void) {
         
@@ -1063,7 +1057,7 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, args);
 
-        return arg.toValue(engine).asReturnedValue();
+        return arg.toValue(engine);
 
     } else {
 
@@ -1581,23 +1575,25 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
     }
 }
 
-QV4::Value CallArgument::toValue(QV8Engine *engine)
+QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
+
     if (type == qMetaTypeId<QJSValue>()) {
         return QJSValuePrivate::get(*qjsValuePtr)->getValue(v4);
     } else if (type == QMetaType::Int) {
-        return QV4::Value::fromInt32(int(intValue));
+        return QV4::Encode(int(intValue));
     } else if (type == QMetaType::UInt) {
-        return QV4::Value::fromUInt32(intValue);
+        return QV4::Encode((uint)intValue);
     } else if (type == QMetaType::Bool) {
-        return QV4::Value::fromBoolean(boolValue);
+        return QV4::Encode(boolValue);
     } else if (type == QMetaType::Double) {
-        return QV4::Value::fromDouble(doubleValue);
+        return QV4::Encode(doubleValue);
     } else if (type == QMetaType::Float) {
-        return QV4::Value::fromDouble(floatValue);
+        return QV4::Encode(floatValue);
     } else if (type == QMetaType::QString) {
-        return engine->toString(*qstringPtr);
+        return engine->toString(*qstringPtr).asReturnedValue();
     } else if (type == QMetaType::QObjectStar) {
         QObject *object = qobjectPtr;
         if (object)
@@ -1611,11 +1607,11 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         array->arrayReserve(list.count());
         array->arrayDataLen = list.count();
         for (int ii = 0; ii < list.count(); ++ii)
-            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
+            array->arrayData[ii].value = Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, list.at(ii)));
         array->setArrayLengthUnchecked(list.count());
-        return QV4::Value::fromObject(array);
+        return QV4::Value::fromObject(array).asReturnedValue();
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-        return handlePtr->toValue();
+        return handlePtr->toValue().asReturnedValue();
     } else if (type == QMetaType::QJsonArray) {
         return QV4::JsonObject::fromJsonArray(v4, *jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {
@@ -1624,14 +1620,14 @@ QV4::Value CallArgument::toValue(QV8Engine *engine)
         return QV4::JsonObject::fromJsonValue(v4, *jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
-        QV4::Value rv = engine->fromVariant(value);
-        if (QV4::QObjectWrapper *qobjectWrapper = rv.as<QV4::QObjectWrapper>()) {
+        QV4::ScopedValue rv(scope, engine->fromVariant(value));
+        if (QV4::QObjectWrapper *qobjectWrapper = rv->as<QV4::QObjectWrapper>()) {
             if (QObject *object = qobjectWrapper->object())
                 QQmlData::get(object, true)->setImplicitDestructible();
         }
-        return rv;
+        return rv.asReturnedValue();
     } else {
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     }
 }
 

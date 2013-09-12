@@ -63,10 +63,10 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
 {
     Q_MANAGED
 
-    QV4::Value (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg);
+    QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg);
     uint flag;
 
-    DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::Value (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
+    DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
         : FunctionObject(scope, /*name*/0)
         , code(code)
         , flag(flag)
@@ -89,7 +89,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
             that->engine()->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::Value v = callData->argc ? callData->args[0] : QV4::Value::undefinedValue();
-        return f->code(o->item, f->flag, v).asReturnedValue();
+        return f->code(o->item, f->flag, v);
     }
 };
 
@@ -1550,13 +1550,16 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     if (!o)
         return false;
 
+    QV4::Scope scope(o->engine());
+
     QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ScopedValue propertyName(scope);
     while (1) {
         QV4::Value value;
-        QV4::Value propertyName = it.nextPropertyNameAsString(&value);
-        if (propertyName.isNull())
+        propertyName = it.nextPropertyNameAsString(&value);
+        if (propertyName->isNull())
             break;
-        cacheItem->setValue(propertyName.toQStringNoThrow(), m_cacheMetaType->v8Engine->toVariant(value, QVariant::Invalid));
+        cacheItem->setValue(propertyName->toQStringNoThrow(), m_cacheMetaType->v8Engine->toVariant(value, QVariant::Invalid));
     }
 
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;
@@ -1698,7 +1701,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
     if (!o->item->metaType->model)
         return QV4::Encode::undefined();
 
-    return o->item->get().asReturnedValue();
+    return o->item->get();
 }
 
 QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
@@ -1713,7 +1716,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx
             groups.append(o->item->metaType->groupNames.at(i - 1));
     }
 
-    return ctx->engine->v8Engine->fromVariant(groups).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(groups);
 }
 
 QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
@@ -1735,22 +1738,22 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx
     return QV4::Encode::undefined();
 }
 
-QV4::Value QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
+QV4::ReturnedValue QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
 {
-    return QV4::Value::fromBoolean(thisItem->groups & (1 << flag));
+    return QV4::Encode(bool(thisItem->groups & (1 << flag)));
 }
 
-QV4::Value QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cacheItem, uint flag, const QV4::Value &arg)
+QV4::ReturnedValue QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cacheItem, uint flag, const QV4::Value &arg)
 {
     if (!cacheItem->metaType->model)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(cacheItem->metaType->model);
 
     bool member = arg.toBoolean();
     uint groupFlag = (1 << flag);
     if (member == ((cacheItem->groups & groupFlag) != 0))
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     const int cacheIndex = model->m_cache.indexOf(cacheItem);
     Compositor::iterator it = model->m_compositor.find(Compositor::Cache, cacheIndex);
@@ -1758,12 +1761,12 @@ QV4::Value QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cacheItem, u
         model->addGroups(it, 1, Compositor::Cache, groupFlag);
     else
         model->removeGroups(it, 1, Compositor::Cache, groupFlag);
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
-QV4::Value QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
+QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
 {
-    return QV4::Value::fromInt32(thisItem->groupIndex(Compositor::Group(flag)));
+    return QV4::Encode((int)thisItem->groupIndex(Compositor::Group(flag)));
 }
 
 

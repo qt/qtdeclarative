@@ -121,6 +121,7 @@ namespace QV4 {
 // valid during the call.  If the return value isn't set within myMethod(), the will return
 // undefined.
 class QV8Engine;
+// ### GC
 class QQmlV4Function
 {
 public:
@@ -129,6 +130,7 @@ public:
     QQmlContextData *context() { return ctx; }
     QV4::Value qmlGlobal() { return global; }
     void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
+    void setReturnValue(QV4::ReturnedValue rv) { *retVal = QV4::Value::fromReturnedValue(rv); }
     QV8Engine *engine() const { return e; }
 private:
     friend struct QV4::QObjectMethod;
@@ -149,6 +151,7 @@ private:
     QV8Engine *e;
 };
 
+// ### GC
 class Q_QML_PRIVATE_EXPORT QQmlV4Handle
 {
 public:
@@ -210,7 +213,7 @@ public:
     void freezeObject(const QV4::Value &value);
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
-    QV4::Value fromVariant(const QVariant &);
+    QV4::ReturnedValue fromVariant(const QVariant &);
 
     // Return a JS string for the given QString \a string
     QV4::Value toString(const QString &string);
@@ -232,19 +235,19 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    QV4::Value variantListToJS(const QVariantList &lst);
+    QV4::ReturnedValue variantListToJS(const QVariantList &lst);
     inline QVariantList variantListFromJS(QV4::ArrayObject *array)
     { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
 
-    QV4::Value variantMapToJS(const QVariantMap &vmap);
+    QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
     inline QVariantMap variantMapFromJS(QV4::Object *object)
     { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
 
-    QV4::Value variantToJS(const QVariant &value);
+    QV4::ReturnedValue variantToJS(const QVariant &value);
     inline QVariant variantFromJS(const QV4::Value &value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
-    QV4::Value metaTypeToJS(int type, const void *data);
+    QV4::ReturnedValue metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
 
     bool convertToNativeQObject(const QV4::Value &value,

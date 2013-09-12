@@ -180,10 +180,10 @@ struct IndexedBuiltinFunction: FunctionObject
 {
     Q_MANAGED
 
-    Value (*code)(SimpleCallContext *ctx, uint index);
+    ReturnedValue (*code)(SimpleCallContext *ctx, uint index);
     uint index;
 
-    IndexedBuiltinFunction(ExecutionContext *scope, uint index, Value (*code)(SimpleCallContext *ctx, uint index))
+    IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(SimpleCallContext *ctx, uint index))
         : FunctionObject(scope, /*name*/0)
         , code(code)
         , index(index)

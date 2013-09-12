@@ -1127,7 +1127,7 @@ void Object::copyArrayData(Object *other)
 }
 
 
-Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
+ReturnedValue Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
     Scope scope(engine());
     ScopedValue value(scope);
@@ -1138,13 +1138,13 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
             bool exists;
             value = o->getIndexed(i, &exists);
             if (exists && __qmljs_strict_equal(value, ValueRef(&v)))
-                return Value::fromDouble(i);
+                return Encode(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
             if (__qmljs_strict_equal(value, ValueRef(&v)))
-                return Value::fromDouble(n->key());
+                return Encode(n->key());
         }
     } else {
         if ((int) endIndex > arrayDataLen)
@@ -1156,12 +1156,12 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
                 value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
                 if (__qmljs_strict_equal(value, ValueRef(&v)))
-                    return Value::fromDouble(pd - arrayData);
+                    return Encode((uint)(pd - arrayData));
             }
             ++pd;
         }
     }
-    return Value::fromInt32(-1);
+    return Encode(-1);
 }
 
 void Object::arrayConcat(const ArrayObject *other)

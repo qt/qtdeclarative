@@ -1221,8 +1221,8 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     QQmlComponent_setQmlParent(rv, parent);
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(v4engine, rv);
-    Q_ASSERT(object.asObject());
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, rv));
+    Q_ASSERT(object->isObject());
 
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
@@ -1369,8 +1369,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
     QV4::Scope scope(v4engine);
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(v4engine, toCreate);
-    Q_ASSERT(object.asObject());
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
+    Q_ASSERT(object->asObject());
 
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
@@ -1412,7 +1412,7 @@ QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::SimpleCallContext 
     if (!o)
         ctx->throwTypeError();
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, o->object()).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, o->object());
 }
 
 QV4::ReturnedValue QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ctx)
@@ -1478,7 +1478,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject()));
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = QV4::Value::fromObject(v4->globalObject);
-        callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);
+        callData->args[0] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, o));
         callData->args[1] = valuemap;
         f->call(callData);
     }

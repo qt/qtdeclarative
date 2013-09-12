@@ -202,7 +202,7 @@ ReturnedValue QtObject::method_rgba(QV4::SimpleCallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a)).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
 }
 
 /*!
@@ -231,7 +231,7 @@ ReturnedValue QtObject::method_hsla(QV4::SimpleCallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a)).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
 }
 
 /*!
@@ -292,7 +292,7 @@ ReturnedValue QtObject::method_rect(QV4::SimpleCallContext *ctx)
     double w = ctx->arguments[2].toNumber();
     double h = ctx->arguments[3].toNumber();
 
-    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QRectF(x, y, w, h))).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
 }
 
 /*!
@@ -307,7 +307,7 @@ ReturnedValue QtObject::method_point(QV4::SimpleCallContext *ctx)
     double x = ctx->arguments[0].toNumber();
     double y = ctx->arguments[1].toNumber();
 
-    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QPointF(x, y))).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QPointF(x, y)));
 }
 
 /*!
@@ -322,7 +322,7 @@ ReturnedValue QtObject::method_size(QV4::SimpleCallContext *ctx)
     double w = ctx->arguments[0].toNumber();
     double h = ctx->arguments[1].toNumber();
 
-    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QSizeF(w, h))).asReturnedValue();
+    return ctx->engine->v8Engine->fromVariant(QVariant::fromValue(QSizeF(w, h)));
 }
 
 /*!
@@ -343,7 +343,7 @@ ReturnedValue QtObject::method_font(QV4::SimpleCallContext *ctx)
     QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle(ctx->arguments[0]), v8engine, &ok);
     if (!ok)
         V4THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
-    return v8engine->fromVariant(v).asReturnedValue();
+    return v8engine->fromVariant(v);
 }
 
 
@@ -363,7 +363,7 @@ ReturnedValue QtObject::method_vector2d(QV4::SimpleCallContext *ctx)
 
     const void *params[] = { xy };
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params)).asReturnedValue();
+    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
 }
 
 /*!
@@ -382,7 +382,7 @@ ReturnedValue QtObject::method_vector3d(QV4::SimpleCallContext *ctx)
 
     const void *params[] = { xyz };
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params)).asReturnedValue();
+    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
 }
 
 /*!
@@ -402,7 +402,7 @@ ReturnedValue QtObject::method_vector4d(QV4::SimpleCallContext *ctx)
 
     const void *params[] = { xyzw };
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params)).asReturnedValue();
+    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
 }
 
 /*!
@@ -422,7 +422,7 @@ ReturnedValue QtObject::method_quaternion(QV4::SimpleCallContext *ctx)
 
     const void *params[] = { sxyz };
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params)).asReturnedValue();
+    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
 }
 
 /*!
@@ -441,7 +441,7 @@ ReturnedValue QtObject::method_matrix4x4(QV4::SimpleCallContext *ctx)
         QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle(ctx->arguments[0]), v8engine, &ok);
         if (!ok)
             V4THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
-        return v8engine->fromVariant(v).asReturnedValue();
+        return v8engine->fromVariant(v);
     }
 
     if (ctx->argumentCount != 16)
@@ -466,7 +466,7 @@ ReturnedValue QtObject::method_matrix4x4(QV4::SimpleCallContext *ctx)
     vals[15] = ctx->arguments[15].toNumber();
 
     const void *params[] = { vals };
-    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params)).asReturnedValue();
+    return v8engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
 }
 
 /*!
@@ -504,7 +504,7 @@ ReturnedValue QtObject::method_lighter(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount == 2)
         factor = ctx->arguments[1].toNumber();
 
-    return v8engine->fromVariant(QQml_colorProvider()->lighter(v, factor)).asReturnedValue();
+    return v8engine->fromVariant(QQml_colorProvider()->lighter(v, factor));
 }
 
 /*!
@@ -543,7 +543,7 @@ ReturnedValue QtObject::method_darker(QV4::SimpleCallContext *ctx)
     if (ctx->argumentCount == 2)
         factor = ctx->arguments[1].toNumber();
 
-    return v8engine->fromVariant(QQml_colorProvider()->darker(v, factor)).asReturnedValue();
+    return v8engine->fromVariant(QQml_colorProvider()->darker(v, factor));
 }
 
 /*!
@@ -601,7 +601,7 @@ ReturnedValue QtObject::method_tint(QV4::SimpleCallContext *ctx)
         return QV4::Encode::null();
     }
 
-    return v8engine->fromVariant(QQml_colorProvider()->tint(v1, v2)).asReturnedValue();
+    return v8engine->fromVariant(QQml_colorProvider()->tint(v1, v2));
 }
 
 /*!
@@ -645,7 +645,7 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
          formattedDate = date.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDate)).asReturnedValue();
+    return v8engine->fromVariant(QVariant::fromValue(formattedDate));
 }
 
 /*!
@@ -694,7 +694,7 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
          formattedTime = time.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedTime)).asReturnedValue();
+    return v8engine->fromVariant(QVariant::fromValue(formattedTime));
 }
 
 /*!
@@ -812,7 +812,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
          formattedDt = dt.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDt)).asReturnedValue();
+    return v8engine->fromVariant(QVariant::fromValue(formattedDt));
 }
 
 /*!
@@ -827,7 +827,7 @@ ReturnedValue QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
     QUrl url(Value::fromReturnedValue(method_resolvedUrl(ctx)).toQStringNoThrow());
-    return v8engine->fromVariant(QQml_guiProvider()->openUrlExternally(url)).asReturnedValue();
+    return v8engine->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
 /*!
@@ -863,7 +863,7 @@ ReturnedValue QtObject::method_fontFamilies(SimpleCallContext *ctx)
         V4THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
-    return v8engine->fromVariant(QVariant(QQml_guiProvider()->fontFamilies())).asReturnedValue();
+    return v8engine->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
 }
 
 /*!
@@ -1039,7 +1039,7 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
 
     Q_ASSERT(obj);
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, obj).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, obj);
 }
 
 /*!
@@ -1133,7 +1133,7 @@ ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
     QQmlData::get(c, true)->explicitIndestructibleSet = false;
     QQmlData::get(c)->indestructible = false;
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, c).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, c);
 }
 
 /*!
@@ -1168,7 +1168,7 @@ ReturnedValue QtObject::method_locale(SimpleCallContext *ctx)
     if (ctx->argumentCount == 1)
         code = ctx->arguments[0].toQStringNoThrow();
 
-    return QQmlLocale::locale(v8engine, code).asReturnedValue();
+    return QQmlLocale::locale(v8engine, code);
 }
 
 namespace {
@@ -1276,7 +1276,7 @@ ReturnedValue QtObject::method_get_platform(SimpleCallContext *ctx)
         // Only allocate a platform object once
         qt->m_platform = new QQmlPlatform(ctx->engine->v8Engine->publicEngine());
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_platform).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_platform);
 }
 
 ReturnedValue QtObject::method_get_application(SimpleCallContext *ctx)
@@ -1293,7 +1293,7 @@ ReturnedValue QtObject::method_get_application(SimpleCallContext *ctx)
         // Only allocate an application object once
         qt->m_application = QQml_guiProvider()->application(ctx->engine->v8Engine->publicEngine());
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_application).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_application);
 }
 
 #ifndef QT_NO_IM
@@ -1301,7 +1301,7 @@ ReturnedValue QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 {
     QObject *o = QQml_guiProvider()->inputMethod();
     QQmlEngine::setObjectOwnership(o, QQmlEngine::CppOwnership);
-    return QV4::QObjectWrapper::wrap(ctx->engine, o).asReturnedValue();
+    return QV4::QObjectWrapper::wrap(ctx->engine, o);
 }
 #endif
 

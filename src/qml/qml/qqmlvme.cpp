@@ -372,7 +372,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         // Store a created object in a property.  These all pop from the objects stack.
         QML_STORE_VALUE(StoreObject, QObject *, objects.pop());
         QML_STORE_VALUE(StoreVariantObject, QVariant, QVariant::fromValue(objects.pop()));
-        QML_STORE_VAR(StoreVarObject, QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop()));
+        QML_STORE_VAR(StoreVarObject, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop())));
 
         // Store a literal value in a corresponding property
         QML_STORE_VALUE(StoreFloat, float, instr.value);
@@ -420,7 +420,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         // Store a literal value in a var property.
         // We deliberately do not use string converters here
-        QML_STORE_VAR(StoreVar, ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value)));
+        QML_STORE_VAR(StoreVar, QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
         QML_STORE_VAR(StoreVarInteger, QV4::Value::fromInt32(instr.value));
         QML_STORE_VAR(StoreVarDouble, QV4::Value::fromDouble(instr.value));
         QML_STORE_VAR(StoreVarBool, QV4::Value::fromBoolean(instr.value));
@@ -1113,6 +1113,8 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
     QV8Engine *v8engine = ep->v8engine();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
+    QV4::Scope scope(v4);
 
     if (script->hasError()) {
         ep->warning(script->error());
@@ -1178,7 +1180,7 @@ QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *s
         return QV4::PersistentValue();
     }
 
-    QV4::Value qmlglobal = QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0);
+    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;

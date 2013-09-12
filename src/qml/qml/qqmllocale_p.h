@@ -118,7 +118,7 @@ public:
         Saturday = Qt::Saturday
     };
 
-    static QV4::Value locale(QV8Engine *v8engine, const QString &lang);
+    static QV4::ReturnedValue locale(QV8Engine *v8engine, const QString &lang);
 
     static void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
 

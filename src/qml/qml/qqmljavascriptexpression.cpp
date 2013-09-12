@@ -122,15 +122,13 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
     clearGuards();
 }
 
-QV4::Value
-QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function, bool *isUndefined)
 {
     return evaluate(context, function, 0, 0, isUndefined);
 }
 
-QV4::Value
-QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    const QV4::Value &function,
                                    int argc, QV4::Value *args,
                                    bool *isUndefined)
@@ -140,7 +138,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     if (function.isEmpty() || function.isUndefined()) {
         if (isUndefined)
             *isUndefined = true;
-        return QV4::Value::emptyValue();
+        return QV4::Value::emptyValue().asReturnedValue();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -167,15 +165,14 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
     try {
-        QV4::Value This = ep->v8engine()->global();
+        QV4::ScopedCallData callData(scope, argc);
+        callData->thisObject = ep->v8engine()->global();
         if (scopeObject() && requiresThisObject()) {
-            QV4::Value value = QV4::QObjectWrapper::wrap(ctx->engine, scopeObject());
-            if (value.isObject())
-                This = value;
+            QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->engine, scopeObject()));
+            if (value->isObject())
+                callData->thisObject = value;
         }
 
-        QV4::ScopedCallData callData(scope, argc);
-        callData->thisObject = This;
         memcpy(callData->args, args, argc*sizeof(QV4::Value));
         result = function.asFunctionObject()->call(callData);
 
@@ -211,7 +208,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
     ep->propertyCapture = lastPropertyCapture;
 
-    return result;
+    return result.asReturnedValue();
 }
 
 void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
@@ -360,7 +357,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     return result.asReturnedValue();
 }
 
-QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *scope,
+QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
                                                        const QString &code, const QString &filename, quint16 line,
                                                        QV4::PersistentValue *qmlscope)
 {
@@ -369,10 +366,11 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
+    QV4::Scope scope(v4);
 
-    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scope);
-    QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
-    QV4::Value result;
+    QV4::ScopedValue qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
+    QV4::Script script(v4, qmlScopeObject->asObject(), code, filename, line);
+    QV4::ScopedValue result(scope);
     try {
         script.parse();
         result = script.qmlBinding();
@@ -386,13 +384,13 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
             error.setLine(line);
         if (error.url().isEmpty())
             error.setUrl(QUrl::fromLocalFile(filename));
-        error.setObject(scope);
+        error.setObject(qmlScope);
         ep->warning(error);
         return QV4::PersistentValue();
     }
     if (qmlscope)
-        *qmlscope = scopeObject;
-    return result;
+        *qmlscope = qmlScopeObject;
+    return result.asReturnedValue();
 }
 
 

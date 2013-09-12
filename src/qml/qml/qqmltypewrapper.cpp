@@ -87,19 +87,19 @@ QVariant QmlTypeWrapper::toVariant() const
 
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
-Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, TypeNameMode mode)
+ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, TypeNameMode mode)
 {
     Q_ASSERT(t);
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
     w->mode = mode; w->object = o; w->type = t;
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, const void *importNamespace, TypeNameMode mode)
+ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, const void *importNamespace, TypeNameMode mode)
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
@@ -108,16 +108,19 @@ Value QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, co
     QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
     w->mode = mode; w->object = o; w->typeNamespace = t; w->importNamespace = importNamespace;
     t->addref();
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
 
 ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
-    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
+    QV4::Scope scope(v4);
+
+    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     if (!w)
         v4->current->throwTypeError();
+
 
     if (hasProperty)
         *hasProperty = true;
@@ -155,12 +158,12 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty).asReturnedValue();
+                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
-                QV4::Object *o = QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine).asObject();
-                if (o)
+                QV4::Scoped<Object> o(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine));
+                if (!!o)
                     return o->get(name);
             }
 
@@ -179,7 +182,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty).asReturnedValue();
+                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
                 // Fall through to base implementation
             }
@@ -196,16 +199,16 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
         if (r.isValid()) {
             QQmlContextData *context = v8engine->callingContext();
             if (r.type) {
-                return create(w->v8, object, r.type, w->mode).asReturnedValue();
+                return create(w->v8, object, r.type, w->mode);
             } else if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
                     return context->importedScripts.at(index).value().asReturnedValue();
             } else if (r.importNamespace) {
-                return create(w->v8, object, context->imports, r.importNamespace).asReturnedValue();
+                return create(w->v8, object, context->imports, r.importNamespace);
             }
 
-            return QV4::Value::undefinedValue().asReturnedValue();
+            return QV4::Encode::undefined();
 
         }
 

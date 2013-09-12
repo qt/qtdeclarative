@@ -78,8 +78,8 @@ public:
 
     QVariant toVariant() const;
 
-    static QV4::Value create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
-    static QV4::Value create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
 
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

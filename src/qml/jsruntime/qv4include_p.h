@@ -88,9 +88,9 @@ private:
                const QV4::Value &qmlglobal, const QV4::Value &callback);
     ~QV4Include();
 
-    QV4::Value result();
+    QV4::ReturnedValue result();
 
-    static QV4::Value resultValue(QV4::ExecutionEngine *v4, Status status = Loading);
+    static QV4::ReturnedValue resultValue(QV4::ExecutionEngine *v4, Status status = Loading);
     static void callback(const QV4::Value &callback, const QV4::Value &status);
 
     QV4::ExecutionEngine *v4;

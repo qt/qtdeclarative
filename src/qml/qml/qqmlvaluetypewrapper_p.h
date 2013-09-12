@@ -76,8 +76,8 @@ protected:
 
 public:
 
-    static Value create(QV8Engine *v8, QObject *, int, QQmlValueType *);
-    static Value create(QV8Engine *v8, const QVariant &, QQmlValueType *);
+    static ReturnedValue create(QV8Engine *v8, QObject *, int, QQmlValueType *);
+    static ReturnedValue create(QV8Engine *v8, const QVariant &, QQmlValueType *);
 
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);

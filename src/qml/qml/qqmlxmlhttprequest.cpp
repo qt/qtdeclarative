@@ -100,9 +100,11 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
 static Value constructMeObject(const Value &thisObj, QV8Engine *e)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(e);
+    Scope scope(v4);
     Object *meObj = v4->newObject();
     meObj->put(v4->newString(QStringLiteral("ThisObject")), thisObj);
-    meObj->put(v4->newString(QStringLiteral("ActivationObject")), QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
+    ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
+    meObj->put(v4->newString(QStringLiteral("ActivationObject")), v);
     return Value::fromObject(meObj);
 }
 

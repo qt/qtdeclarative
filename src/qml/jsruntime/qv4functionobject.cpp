@@ -618,6 +618,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
     ExecutionContext *context = v4->current;
+    Scope scope(v4);
 
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
@@ -628,7 +629,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 
-    Value result;
+    ScopedValue result(scope);
     try {
         result = f->code(&ctx, f->index);
     } catch (Exception &ex) {

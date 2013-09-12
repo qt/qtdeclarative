@@ -2268,12 +2268,12 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
 
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return false;
-        QV4::Scope scope(ctx);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
@@ -2295,11 +2295,13 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
+
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return false;
-        QV4::Scope scope(ctx);
+
         QV4::ScopedValue value(scope);
         QV4::ScopedValue res(scope, result);
         QV4::ScopedCallData d(scope, 1);
@@ -2320,13 +2322,14 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
+
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     program.inheritContext = true;
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return QV4::Value::emptyValue();
-        QV4::Scope scope(ctx);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
@@ -2352,8 +2355,9 @@ void tst_qqmlecmascript::callQtInvokables()
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
     
     QV8Engine *engine = ep->v8engine();
+    QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o);
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
 
     // Non-existent methods
     o->reset();
@@ -3899,7 +3903,8 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             scriptContext = QV4::QmlContextWrapper::getContext(qmlglobal);
 
             {
-                QV4::Value temporaryScope = QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0);
+                QV4::Scope scope(QV8Engine::getV4((engine)));
+                QV4::ScopedValue temporaryScope(scope, QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0));
                 Q_UNUSED(temporaryScope)
             }
 
@@ -4981,9 +4986,9 @@ void tst_qqmlecmascript::propertyVarInheritance()
     {
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        QV4::Value tmp = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
+        QV4::Value tmp = QV4::Value::fromReturnedValue(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
         icoCanaryHandle = tmp;
-        tmp = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
+        tmp = QV4::Value::fromReturnedValue(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
         ccoCanaryHandle = tmp;
         tmp = QV4::Value::nullValue();
         QVERIFY(!icoCanaryHandle.isEmpty());
@@ -5027,7 +5032,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        QV4::Value tmp = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
+        QV4::Value tmp = QV4::Value::fromReturnedValue(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle = tmp;
         tmp = QV4::Value::nullValue();
         QVERIFY(!childObjectVarArrayValueHandle.isEmpty());

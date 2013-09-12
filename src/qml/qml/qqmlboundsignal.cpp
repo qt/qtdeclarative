@@ -194,7 +194,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             //    for several cases (such as QVariant type and QObject-derived types)
             //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
             if (type == QMetaType::QVariant) {
-                args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
+                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(*((QVariant *)a[ii + 1])));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
                 args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
@@ -204,9 +204,9 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                     args[ii] = QV4::Value::nullValue();
                 else
-                    args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                    args[ii] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1])));
             } else {
-                args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
+                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(QVariant(type, a[ii + 1])));
             }
         }
 

@@ -783,13 +783,14 @@ QString Stringify::JO(Object *o)
     QStringList partial;
     if (propertyList.isEmpty()) {
         ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+        ScopedValue name(scope);
 
         while (1) {
             Value v;
-            Value name = it.nextPropertyNameAsString(&v);
-            if (name.isNull())
+            name = it.nextPropertyNameAsString(&v);
+            if (name->isNull())
                 break;
-            QString key = name.toQStringNoThrow();
+            QString key = name->toQStringNoThrow();
             QString member = makeMember(key, v);
             if (!member.isEmpty())
                 partial += member;
@@ -936,22 +937,22 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 
 
 
-QV4::Value JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
+ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return Value::fromString(engine->current, value.toString());
+        return Value::fromString(engine->current, value.toString()).asReturnedValue();
     else if (value.isDouble())
-        return Value::fromDouble(value.toDouble());
+        return Encode(value.toDouble());
     else if (value.isBool())
-        return Value::fromBoolean(value.toBool());
+        return Encode(value.toBool());
     else if (value.isArray())
         return fromJsonArray(engine, value.toArray());
     else if (value.isObject())
         return fromJsonObject(engine, value.toObject());
     else if (value.isNull())
-        return Value::nullValue();
+        return Encode::null();
     else
-        return Value::undefinedValue();
+        return Encode::undefined();
 }
 
 QJsonValue JsonObject::toJsonValue(const QV4::Value &value,
@@ -973,12 +974,13 @@ QJsonValue JsonObject::toJsonValue(const QV4::Value &value,
         return QJsonValue(QJsonValue::Undefined);
 }
 
-QV4::Value JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
+QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
 {
-    Object *o = engine->newObject();
+    Scope scope(engine);
+    Scoped<Object> o(scope, Value::fromObject(engine->newObject()));
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
-        o->put(engine->newString(it.key()), fromJsonValue(engine, it.value()));
-    return Value::fromObject(o);
+        o->put(engine->newString(it.key()), Value::fromReturnedValue(fromJsonValue(engine, it.value())));
+    return o.asReturnedValue();
 }
 
 QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects)
@@ -986,6 +988,8 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
     QJsonObject result;
     if (!o || o->asFunctionObject())
         return result;
+
+    Scope scope(o->engine());
 
     if (visitedObjects.contains(o)) {
         // Avoid recursion.
@@ -997,13 +1001,14 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
     visitedObjects.insert(o);
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+    ScopedValue name(scope);
     while (1) {
         Value v;
-        Value name = it.nextPropertyNameAsString(&v);
-        if (name.isNull())
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
             break;
 
-        QString key = name.toQStringNoThrow();
+        QString key = name->toQStringNoThrow();
         if (!v.asFunctionObject())
             result.insert(key, toJsonValue(v, visitedObjects));
     }
@@ -1013,16 +1018,16 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
     return result;
 }
 
-QV4::Value JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &array)
+QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &array)
 {
     int size = array.size();
     ArrayObject *a = engine->newArrayObject();
     a->arrayReserve(size);
     a->arrayDataLen = size;
     for (int i = 0; i < size; i++)
-        a->arrayData[i].value = fromJsonValue(engine, array.at(i));
+        a->arrayData[i].value = Value::fromReturnedValue(fromJsonValue(engine, array.at(i)));
     a->setArrayLengthUnchecked(size);
-    return Value::fromObject(a);
+    return Value::fromObject(a).asReturnedValue();
 }
 
 QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)

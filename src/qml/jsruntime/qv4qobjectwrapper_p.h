@@ -85,17 +85,17 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     QObject *object() const { return m_object.data(); }
 
-    Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
-    static Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
+    ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
+    static ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
     static bool setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
-    static Value wrap(ExecutionEngine *engine, QObject *object);
+    static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
 
     using Object::get;
 
 private:
-    static Value create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
+    static ReturnedValue create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
 

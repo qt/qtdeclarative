@@ -352,14 +352,16 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
+    Scope scope(ctx);
     Object *o = ctx->argument(0).objectValue();
 
     ArrayObject *a = ctx->engine->newArrayObject();
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+    ScopedValue name(scope);
     while (1) {
-        Value name = it.nextPropertyNameAsString();
-        if (name.isNull())
+        name = it.nextPropertyNameAsString();
+        if (name->isNull())
             break;
         a->push_back(name);
     }
@@ -605,15 +607,17 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
 
 ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
 {
+    Scope scope(v4);
     ArrayObject *array = v4->newArrayObject();
     Object *O = o.asObject();
     if (!O)
         return array;
 
     ObjectIterator it(O, ObjectIterator::NoFlags);
+    ScopedValue name(scope);
     while (1) {
-        Value name = it.nextPropertyNameAsString();
-        if (name.isNull())
+        name = it.nextPropertyNameAsString();
+        if (name->isNull())
             break;
         array->push_back(name);
     }

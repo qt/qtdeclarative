@@ -82,7 +82,7 @@ QV4Include::~QV4Include()
     delete m_reply; m_reply = 0;
 }
 
-QV4::Value QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
+QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 {
 
     // XXX It seems inefficient to create this object from scratch each time.
@@ -94,7 +94,7 @@ QV4::Value QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 
     o->put(v4->newString("status"), QV4::Value::fromInt32(status));
 
-    return QV4::Value::fromObject(o);
+    return QV4::Value::fromObject(o).asReturnedValue();
 }
 
 void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
@@ -115,9 +115,9 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     }
 }
 
-QV4::Value QV4Include::result()
+QV4::ReturnedValue QV4Include::result()
 {
-    return m_resultObject.value();
+    return m_resultObject.value().asReturnedValue();
 }
 
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15

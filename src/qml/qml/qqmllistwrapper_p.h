@@ -76,8 +76,8 @@ protected:
 
 public:
 
-    static Value create(QV8Engine *v8, QObject *object, int propId, int propType);
-    static Value create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);
+    static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
+    static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);
 
     QVariant toVariant() const;
 

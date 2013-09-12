@@ -128,7 +128,7 @@ public:
     int modelIndex() const { return index; }
     void setModelIndex(int idx) { index = idx; Q_EMIT modelIndexChanged(); }
 
-    virtual QV4::Value get() { return QV4::QObjectWrapper::wrap(v4, this); }
+    virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQmlAdaptorModel &, int) { return false; }
@@ -136,9 +136,9 @@ public:
     static QV4::ReturnedValue get_model(QV4::SimpleCallContext *ctx);
     static QV4::ReturnedValue get_groups(QV4::SimpleCallContext *ctx);
     static QV4::ReturnedValue set_groups(QV4::SimpleCallContext *ctx);
-    static QV4::Value get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
-    static QV4::Value set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
-    static QV4::Value get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
+    static QV4::ReturnedValue get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
+    static QV4::ReturnedValue set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
+    static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
 
     QV4::ExecutionEngine *v4;
     QQmlDelegateModelItemMetaType * const metaType;

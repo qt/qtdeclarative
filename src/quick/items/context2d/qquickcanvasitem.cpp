@@ -663,7 +663,7 @@ void QQuickCanvasItem::updatePolish()
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
         QV4::Scope scope(v4);
         QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+        callData->thisObject = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, this));
 
         foreach (int key, animationCallbacks.keys()) {
             QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();

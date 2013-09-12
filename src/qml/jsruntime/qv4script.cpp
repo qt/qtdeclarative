@@ -263,12 +263,12 @@ Function *Script::function()
     return vmFunction;
 }
 
-Value Script::qmlBinding()
+ReturnedValue Script::qmlBinding()
 {
     if (!parsed)
         parse();
     QV4::ExecutionEngine *v4 = scope->engine;
-    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject()));
+    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject())).asReturnedValue();
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)

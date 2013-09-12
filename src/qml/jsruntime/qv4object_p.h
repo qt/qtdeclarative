@@ -277,7 +277,7 @@ public:
 
     void arrayConcat(const ArrayObject *other);
     void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayDataLen);
-    Value arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
+    ReturnedValue arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
 
     void arrayReserve(uint n);
     void ensureArrayAttributes();
@@ -350,7 +350,7 @@ struct ForEachIteratorObject: Object {
         type = Type_ForeachIteratorObject;
     }
 
-    Value nextPropertyName() { return it.nextPropertyNameAsString(); }
+    ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
     static void markObjects(Managed *that);

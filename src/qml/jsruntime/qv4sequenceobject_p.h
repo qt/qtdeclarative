@@ -69,7 +69,7 @@ struct SequencePrototype : public QV4::Object
 
     void init(QV4::ExecutionEngine *engine);
 
-    static QV4::ReturnedValue method_valueOf(QV4::SimpleCallContext *ctx)
+    static ReturnedValue method_valueOf(QV4::SimpleCallContext *ctx)
     {
         return QV4::Value::fromString(ctx->thisObject.toString(ctx)).asReturnedValue();
     }
@@ -77,8 +77,8 @@ struct SequencePrototype : public QV4::Object
     static ReturnedValue method_sort(QV4::SimpleCallContext *ctx);
 
     static bool isSequenceType(int sequenceTypeId);
-    static QV4::Value newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
-    static QV4::Value fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
+    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
     static int metaTypeForSequence(QV4::Object *object);
     static QVariant toVariant(QV4::Object *object);
     static QVariant toVariant(const QV4::Value &array, int typeHint, bool *succeeded);

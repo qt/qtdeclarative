@@ -59,9 +59,9 @@ public:
     static ReturnedValue method_parse(SimpleCallContext *ctx);
     static ReturnedValue method_stringify(SimpleCallContext *ctx);
 
-    static QV4::Value fromJsonValue(ExecutionEngine *engine, const QJsonValue &value);
-    static QV4::Value fromJsonObject(ExecutionEngine *engine, const QJsonObject &object);
-    static QV4::Value fromJsonArray(ExecutionEngine *engine, const QJsonArray &array);
+    static ReturnedValue fromJsonValue(ExecutionEngine *engine, const QJsonValue &value);
+    static ReturnedValue fromJsonObject(ExecutionEngine *engine, const QJsonObject &object);
+    static ReturnedValue fromJsonArray(ExecutionEngine *engine, const QJsonArray &array);
 
     static inline QJsonValue toJsonValue(const QV4::Value &value)
     { V4ObjectSet visitedObjects; return toJsonValue(value, visitedObjects); }

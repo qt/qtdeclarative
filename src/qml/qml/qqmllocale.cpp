@@ -807,7 +807,7 @@ QQmlLocale::~QQmlLocale()
 {
 }
 
-QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
+QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
 {
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
     QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
@@ -815,7 +815,7 @@ QV4::Value QQmlLocale::locale(QV8Engine *v8engine, const QString &locale)
     if (!locale.isEmpty())
         wrapper->locale = QLocale(locale);
     wrapper->setPrototype(d->prototype.value().asObject());
-    return QV4::Value::fromObject(wrapper);
+    return QV4::Value::fromObject(wrapper).asReturnedValue();
 }
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)

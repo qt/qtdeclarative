@@ -204,7 +204,7 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
             if (v.isNull()) {
                 row->put(v4->newIdentifier(record.fieldName(ii)), Value::nullValue());
             } else {
-                row->put(v4->newIdentifier(record.fieldName(ii)), v8->fromVariant(v));
+                row->put(v4->newIdentifier(record.fieldName(ii)), Value::fromReturnedValue(v8->fromVariant(v)));
             }
         }
         if (hasProperty)
@@ -257,7 +257,8 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
     QSqlQuery query(db);
     bool err = false;
 
-    Value result = Value::undefinedValue();
+    Scope scope(QV8Engine::getV4(engine));
+    ScopedValue result(scope, Value::undefinedValue());
 
     if (query.prepare(sql)) {
         if (ctx->argumentCount > 1) {
@@ -268,17 +269,18 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
                     query.bindValue(ii, engine->toVariant(QV4::Value::fromReturnedValue(array->getIndexed(ii)), -1));
             } else if (Object *object = values.asObject()) {
                 ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
+                ScopedValue key(scope);
                 while (1) {
                     Value value;
-                    Value key = it.nextPropertyName(&value);
-                    if (key.isNull())
+                    key = it.nextPropertyName(&value);
+                    if (key->isNull())
                         break;
                     QVariant v = engine->toVariant(value, -1);
-                    if (key.isString()) {
-                        query.bindValue(key.stringValue()->toQString(), v);
+                    if (key->isString()) {
+                        query.bindValue(key->stringValue()->toQString(), v);
                     } else {
-                        assert(key.isInteger());
-                        query.bindValue(key.integerValue(), v);
+                        assert(key->isInteger());
+                        query.bindValue(key->integerValue(), v);
                     }
                 }
             } else {
