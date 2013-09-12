@@ -125,7 +125,7 @@ class QQmlV4Function
 {
 public:
     int length() const { return argc; }
-    QV4::Value operator[](int idx) { return args[idx]; }
+    QV4::Value operator[](int idx) { return idx < argc ? args[idx] : QV4::Value::undefinedValue(); }
     QQmlContextData *context() { return ctx; }
     QV4::Value qmlGlobal() { return global; }
     void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
