@@ -135,6 +135,11 @@ bool ExecutableAllocator::ChunkOfPages::contains(Allocation *alloc) const
     return false;
 }
 
+ExecutableAllocator::ExecutableAllocator()
+    : mutex(QMutex::NonRecursive)
+{
+}
+
 ExecutableAllocator::~ExecutableAllocator()
 {
     qDeleteAll(chunks);
@@ -142,6 +147,7 @@ ExecutableAllocator::~ExecutableAllocator()
 
 ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
 {
+    QMutexLocker locker(&mutex);
     Allocation *allocation = 0;
 
     // Code is best aligned to 16-byte boundaries.
@@ -182,6 +188,8 @@ ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
 
 void ExecutableAllocator::free(Allocation *allocation)
 {
+    QMutexLocker locker(&mutex);
+
     assert(allocation);
 
     allocation->free = true;
@@ -210,6 +218,8 @@ void ExecutableAllocator::free(Allocation *allocation)
 
 ExecutableAllocator::ChunkOfPages *ExecutableAllocator::chunkForAllocation(Allocation *allocation) const
 {
+    QMutexLocker locker(&mutex);
+
     QMap<quintptr, ChunkOfPages*>::ConstIterator it = chunks.lowerBound(allocation->addr);
     if (it != chunks.begin())
         --it;
