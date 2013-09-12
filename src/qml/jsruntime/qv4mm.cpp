@@ -582,7 +582,7 @@ void MemoryManager::collectFromStack() const
 
         if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
             continue;
-        int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
+        int index = std::lower_bound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
         assert(index >= 0 && index < m_d->heapChunks.count() * 2);
         if (index & 1) {

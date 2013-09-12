@@ -57,7 +57,6 @@
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtexttable.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qalgorithms.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlproperty_p.h>
@@ -65,6 +64,8 @@
 #include <private/qsgadaptationlayer_p.h>
 
 #include "qquicktextdocument.h"
+
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -1859,7 +1860,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     if ((it.atEnd()) || (firstCleanNode && block.next().position() >= firstCleanNode->startPos())) // last node that needed replacing or last block of the frame
                         break;
 
-                    QList<int>::const_iterator lowerBound = qLowerBound(frameBoundaries, block.next().position());
+                    QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
                     if (currentNodeSize > nodeBreakingSize || *lowerBound > nodeStart) {
                         currentNodeSize = 0;
                         d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
@@ -2039,13 +2040,13 @@ void QQuickTextEdit::markDirtyNodesForRange(int start, int end, int charDelta)
         return;
 
     TextNode dummyNode(start, 0);
-    TextNodeIterator it = qLowerBound(d->textNodeMap.begin(), d->textNodeMap.end(), &dummyNode, &comesBefore);
+    TextNodeIterator it = std::lower_bound(d->textNodeMap.begin(), d->textNodeMap.end(), &dummyNode, &comesBefore);
     // qLowerBound gives us the first node past the start of the affected portion, rewind to the first node
     // that starts at the last position before the edit position. (there might be several because of images)
     if (it != d->textNodeMap.begin()) {
         --it;
         TextNode otherDummy((*it)->startPos(), 0);
-        it = qLowerBound(d->textNodeMap.begin(), d->textNodeMap.end(), &otherDummy, &comesBefore);
+        it = std::lower_bound(d->textNodeMap.begin(), d->textNodeMap.end(), &otherDummy, &comesBefore);
     }
 
     // mark the affected nodes as dirty
