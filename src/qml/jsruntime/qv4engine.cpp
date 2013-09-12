@@ -340,7 +340,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 
 FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
 {
-    BuiltinFunctionOld *f = new (memoryManager) BuiltinFunctionOld(scope, name, code);
+    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
     return f;
 }
 

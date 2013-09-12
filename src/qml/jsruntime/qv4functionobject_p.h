@@ -164,10 +164,10 @@ struct FunctionPrototype: FunctionObject
     static Value method_bind(SimpleCallContext *ctx);
 };
 
-struct BuiltinFunctionOld: FunctionObject {
+struct BuiltinFunction: FunctionObject {
     Value (*code)(SimpleCallContext *);
 
-    BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
+    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);

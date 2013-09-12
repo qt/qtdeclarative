@@ -569,9 +569,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
 
 
-DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
+DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
-BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
@@ -579,15 +579,15 @@ BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Va
     isBuiltinFunction = true;
 }
 
-ReturnedValue BuiltinFunctionOld::construct(Managed *f, CallData *)
+ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
     f->engine()->current->throwTypeError();
     return Value::undefinedValue().asReturnedValue();
 }
 
-ReturnedValue BuiltinFunctionOld::call(Managed *that, CallData *callData)
+ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 {
-    BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
+    BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
     ExecutionContext *context = v4->current;
 
