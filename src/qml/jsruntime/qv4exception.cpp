@@ -87,7 +87,8 @@ void Exception::throwException(ExecutionContext *context, const Value &value)
 }
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
-    : exception(exceptionValue)
+    : e(throwingContext->engine)
+    , exception(exceptionValue)
 {
     this->throwingContext = throwingContext->engine->current;
     accepted = false;

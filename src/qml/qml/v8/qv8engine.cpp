@@ -404,6 +404,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
 void QV8Engine::initializeGlobal()
 {
+    QV4::Scope scope(m_v4Engine);
     QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
@@ -440,9 +441,9 @@ void QV8Engine::initializeGlobal()
                       "    }"\
                       "})"
 
-        QV4::Value result = QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0);
-        Q_ASSERT(result.asFunctionObject());
-        m_freezeObject = result;
+        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
+        Q_ASSERT(!!result);
+        m_freezeObject = result.asValue();
 #undef FREEZE_SOURCE
     }
 }

@@ -375,7 +375,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
             context->interpreterInstructionPointer = &code;
         } catch (QV4::Exception &ex) {
             ex.accept(context);
-            VALUE(instr.exceptionVar) = ex.value();
+            STOREVALUE(instr.exceptionVar, ex.value());
             try {
                 QV4::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(runtimeStrings[instr.exceptionVarName], VALUEPTR(instr.exceptionVar), context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
@@ -385,7 +385,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
                 context = __qmljs_builtin_pop_scope(catchContext);
             } catch (QV4::Exception &ex) {
                 ex.accept(context);
-                VALUE(instr.exceptionVar) = ex.value();
+                STOREVALUE(instr.exceptionVar, ex.value());
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;

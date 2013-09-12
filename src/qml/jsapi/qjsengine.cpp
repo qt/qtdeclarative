@@ -260,18 +260,20 @@ void QJSEngine::collectGarbage()
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
+    QV4::Scope scope(d->m_v4Engine);
     QV4::ExecutionContext *ctx = d->m_v4Engine->current;
+    QV4::ScopedValue result(scope);
     try {
         QV4::Script script(ctx, program, fileName, lineNumber);
         script.strictMode = ctx->strictMode;
         script.inheritContext = true;
         script.parse();
-        QV4::Value result = script.run();
-        return new QJSValuePrivate(d->m_v4Engine, result);
+        result = script.run();
     } catch (QV4::Exception& ex) {
         ex.accept(ctx);
-        return new QJSValuePrivate(d->m_v4Engine, ex.value());
+        result = ex.value();
     }
+    return new QJSValuePrivate(d->m_v4Engine, result);
 }
 
 /*!

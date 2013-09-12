@@ -74,13 +74,13 @@ struct Q_QML_EXPORT Script {
     bool parseAsBinding;
 
     void parse();
-    Value run();
+    ReturnedValue run();
     Value qmlBinding();
 
     Function *function();
 
 
-    static Value evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
+    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
 };
 
 }

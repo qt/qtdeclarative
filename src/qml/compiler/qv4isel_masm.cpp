@@ -776,9 +776,9 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        QV4::String *exceptionVarName, Value *exceptionVar)
+                        QV4::String *exceptionVarName, ValueRef exceptionVar)
 {
-    *exceptionVar = Value::undefinedValue();
+    exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
     Value *jsStackTop = context->engine->jsStackTop;
     try {
@@ -786,7 +786,7 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
     } catch (Exception& ex) {
         context->engine->jsStackTop = jsStackTop;
         ex.accept(context);
-        *exceptionVar = ex.value();
+        exceptionVar = ex.value();
         try {
             QV4::Scope scope(context);
             QV4::ScopedValue exception(scope, ex.value());
@@ -795,7 +795,7 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
             context->engine->jsStackTop = jsStackTop;
-            *exceptionVar = ex.value();
+            exceptionVar = ex.value();
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
         }

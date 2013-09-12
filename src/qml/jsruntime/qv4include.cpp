@@ -149,7 +149,8 @@ void QV4Include::finished()
         QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        QV4::Object *o = m_resultObject.value().asObject();
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::Object> o(scope, m_resultObject.value());
         try {
             script.parse();
             script.run();
@@ -157,7 +158,8 @@ void QV4Include::finished()
         } catch (QV4::Exception &e) {
             e.accept(ctx);
             o->put(v4->newString("status"), QV4::Value::fromInt32(Exception));
-            o->put(v4->newString("exception"), e.value());
+            QV4::ScopedValue ex(scope, e.value());
+            o->put(v4->newString("exception"), ex);
         }
     } else {
         m_resultObject.value().asObject()->put(v4->newString("status"), QV4::Value::fromInt32(NetworkError));
@@ -178,6 +180,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
         return QV4::Encode::undefined();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
+    QV4::Scope scope(v4);
     QV8Engine *engine = v4->v8Engine;
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(v4);
 
@@ -192,7 +195,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
-    QV4::Value result = QV4::Value::undefinedValue();
+    QV4::ScopedValue result(scope);
 
     if (localFile.isEmpty()) {
 
@@ -210,8 +213,8 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
             QString code = QString::fromUtf8(data);
             QQmlScript::Parser::extractPragmas(code);
 
-            QV4::Object *qmlglobal = v4->qmlContextObject();
-            QV4::Script script(v4, qmlglobal, code, url.toString());
+            QV4::Scoped<QV4::Object> qmlglobal(scope, QV4::Value::fromObject(v4->qmlContextObject()));
+            QV4::Script script(v4, qmlglobal.getPointer(), code, url.toString());
 
             QV4::ExecutionContext *ctx = v4->current;
             try {
@@ -221,7 +224,8 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 result = resultValue(v4, Exception);
-                result.asObject()->put(v4->newString("exception"), e.value());
+                QV4::ScopedValue ex(scope, e.value());
+                result->asObject()->put(v4->newString("exception"), ex);
             }
         } else {
             result = resultValue(v4, NetworkError);

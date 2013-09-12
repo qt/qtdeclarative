@@ -86,7 +86,7 @@ void QQmlDelayedError::setErrorObject(QObject *object)
 
 void QQmlDelayedError::setError(const QV4::Exception &e)
 {
-    m_error.setDescription(e.value().toQStringNoThrow());
+    m_error.setDescription(QV4::Value::fromReturnedValue(e.value()).toQStringNoThrow());
     QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
     if (!trace.isEmpty()) {
         QV4::ExecutionEngine::StackFrame frame = trace.first();
@@ -186,13 +186,15 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             delayedError()->clearError();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
+        QV4::ScopedValue ex(scope, e.value());
         if (isUndefined)
             *isUndefined = true;
         if (!watcher.wasDeleted()) {
-            if (!e.value().isEmpty()) {
+            if (!ex->isEmpty()) {
                 delayedError()->setError(e);
             } else {
-                if (hasDelayedError()) delayedError()->clearError();
+                if (hasDelayedError())
+                    delayedError()->clearError();
             }
         }
     }
@@ -303,6 +305,7 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 
 void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlError &error)
 {
+    QV4::Scope scope(e.engine());
     QV4::ExecutionEngine::StackTrace trace = e.stackTrace();
     if (!trace.isEmpty()) {
         QV4::ExecutionEngine::StackFrame frame = trace.first();
@@ -310,15 +313,18 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
         error.setLine(frame.line);
         error.setColumn(frame.column);
     }
-    QV4::ErrorObject *errorObj = e.value().asErrorObject();
-    if (errorObj && errorObj->asSyntaxError())
-        error.setDescription(QV4::Value::fromReturnedValue(errorObj->get(errorObj->engine()->newString("message"))).toQStringNoThrow());
-    else
-        error.setDescription(e.value().toQStringNoThrow());
+    QV4::Scoped<QV4::ErrorObject> errorObj(scope, e.value());
+    if (!!errorObj && errorObj->asSyntaxError()) {
+        QV4::ScopedValue v(scope, errorObj->get(errorObj->engine()->newString("message")));
+        error.setDescription(v->toQStringNoThrow());
+    } else {
+        QV4::ScopedValue v(scope, e.value());
+        error.setDescription(v->toQStringNoThrow());
+    }
 }
 
 QV4::PersistentValue
-QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
+QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObject,
                                        const QString &code, const QString &filename, quint16 line,
                                        QV4::PersistentValue *qmlscope)
 {
@@ -327,10 +333,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::ExecutionContext *ctx = v4->current;
+    QV4::Scope scope(v4);
 
-    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scope);
-    QV4::Script script(v4, scopeObject.asObject(), code, filename, line);
-    QV4::Value result;
+    QV4::Scoped<QV4::Object> qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
+    QV4::Script script(v4, qmlScopeObject.getPointer(), code, filename, line);
+    QV4::ScopedValue result(scope);
     try {
         script.parse();
         result = script.run();
@@ -344,13 +351,13 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
             error.setLine(line);
         if (error.url().isEmpty())
             error.setUrl(QUrl::fromLocalFile(filename));
-        error.setObject(scope);
+        error.setObject(scopeObject);
         ep->warning(error);
         return QV4::PersistentValue();
     }
     if (qmlscope)
-        *qmlscope = scopeObject;
-    return result;
+        *qmlscope = qmlScopeObject.asValue();
+    return result.asReturnedValue();
 }
 
 QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *scope,
