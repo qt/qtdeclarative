@@ -66,35 +66,35 @@ struct ObjectPrototype: Object
 
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_getPrototypeOf(SimpleCallContext *ctx);
-    static Value method_getOwnPropertyDescriptor(SimpleCallContext *ctx);
-    static Value method_getOwnPropertyNames(SimpleCallContext *context);
-    static Value method_create(SimpleCallContext *ctx);
-    static Value method_defineProperty(SimpleCallContext *ctx);
-    static Value method_defineProperties(SimpleCallContext *ctx);
-    static Value method_seal(SimpleCallContext *ctx);
-    static Value method_freeze(SimpleCallContext *ctx);
-    static Value method_preventExtensions(SimpleCallContext *ctx);
-    static Value method_isSealed(SimpleCallContext *ctx);
-    static Value method_isFrozen(SimpleCallContext *ctx);
-    static Value method_isExtensible(SimpleCallContext *ctx);
-    static Value method_keys(SimpleCallContext *ctx);
+    static ReturnedValue method_getPrototypeOf(SimpleCallContext *ctx);
+    static ReturnedValue method_getOwnPropertyDescriptor(SimpleCallContext *ctx);
+    static ReturnedValue method_getOwnPropertyNames(SimpleCallContext *context);
+    static ReturnedValue method_create(SimpleCallContext *ctx);
+    static ReturnedValue method_defineProperty(SimpleCallContext *ctx);
+    static ReturnedValue method_defineProperties(SimpleCallContext *ctx);
+    static ReturnedValue method_seal(SimpleCallContext *ctx);
+    static ReturnedValue method_freeze(SimpleCallContext *ctx);
+    static ReturnedValue method_preventExtensions(SimpleCallContext *ctx);
+    static ReturnedValue method_isSealed(SimpleCallContext *ctx);
+    static ReturnedValue method_isFrozen(SimpleCallContext *ctx);
+    static ReturnedValue method_isExtensible(SimpleCallContext *ctx);
+    static ReturnedValue method_keys(SimpleCallContext *ctx);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_toLocaleString(SimpleCallContext *ctx);
-    static Value method_valueOf(SimpleCallContext *ctx);
-    static Value method_hasOwnProperty(SimpleCallContext *ctx);
-    static Value method_isPrototypeOf(SimpleCallContext *ctx);
-    static Value method_propertyIsEnumerable(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_toLocaleString(SimpleCallContext *ctx);
+    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
+    static ReturnedValue method_hasOwnProperty(SimpleCallContext *ctx);
+    static ReturnedValue method_isPrototypeOf(SimpleCallContext *ctx);
+    static ReturnedValue method_propertyIsEnumerable(SimpleCallContext *ctx);
 
-    static Value method_defineGetter(SimpleCallContext *ctx);
-    static Value method_defineSetter(SimpleCallContext *ctx);
+    static ReturnedValue method_defineGetter(SimpleCallContext *ctx);
+    static ReturnedValue method_defineSetter(SimpleCallContext *ctx);
 
-    static Value method_get_proto(SimpleCallContext *ctx);
-    static Value method_set_proto(SimpleCallContext *ctx);
+    static ReturnedValue method_get_proto(SimpleCallContext *ctx);
+    static ReturnedValue method_set_proto(SimpleCallContext *ctx);
 
     static void toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs);
-    static Value fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
+    static ReturnedValue fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
 
     static ArrayObject *getOwnPropertyNames(ExecutionEngine *v4, const Value &o);
 };

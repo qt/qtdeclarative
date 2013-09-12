@@ -1690,18 +1690,18 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
     return groupFlags;
 }
 
-QV4::Value QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
 {
     QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
     if (!o)
         ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
     if (!o->item->metaType->model)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
-    return o->item->get();
+    return o->item->get().asReturnedValue();
 }
 
-QV4::Value QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
 {
     QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
     if (!o)
@@ -1713,10 +1713,10 @@ QV4::Value QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
             groups.append(o->item->metaType->groupNames.at(i - 1));
     }
 
-    return ctx->engine->v8Engine->fromVariant(groups);
+    return ctx->engine->v8Engine->fromVariant(groups).asReturnedValue();
 }
 
-QV4::Value QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
 {
     QQmlDelegateModelItemObject *o = ctx->thisObject.as<QQmlDelegateModelItemObject>();
     if (!o)
@@ -1725,14 +1725,14 @@ QV4::Value QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     if (!o->item->metaType->model)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(o->item->metaType->model);
 
     const int groupFlags = model->m_cacheMetaType->parseGroups(ctx->arguments[0]);
     const int cacheIndex = model->m_cache.indexOf(o->item);
     Compositor::iterator it = model->m_compositor.find(Compositor::Cache, cacheIndex);
     model->setGroups(it, 1, Compositor::Cache, groupFlags);
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 QV4::Value QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
@@ -3106,25 +3106,25 @@ struct QQmlDelegateModelGroupChange : QV4::Object
         vtbl = &static_vtbl;
     }
 
-    static QV4::Value method_get_index(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_index(QV4::SimpleCallContext *ctx) {
         QQmlDelegateModelGroupChange *that = ctx->thisObject.as<QQmlDelegateModelGroupChange>();
         if (!that)
             ctx->throwTypeError();
-        return QV4::Value::fromInt32(that->change.index);
+        return QV4::Encode(that->change.index);
     }
-    static QV4::Value method_get_count(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_count(QV4::SimpleCallContext *ctx) {
         QQmlDelegateModelGroupChange *that = ctx->thisObject.as<QQmlDelegateModelGroupChange>();
         if (!that)
             ctx->throwTypeError();
-        return QV4::Value::fromInt32(that->change.count);
+        return QV4::Encode(that->change.count);
     }
-    static QV4::Value method_get_moveId(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_moveId(QV4::SimpleCallContext *ctx) {
         QQmlDelegateModelGroupChange *that = ctx->thisObject.as<QQmlDelegateModelGroupChange>();
         if (!that)
             ctx->throwTypeError();
         if (that->change.moveId < 0)
-            return QV4::Value::undefinedValue();
-        return QV4::Value::fromInt32(that->change.moveId);
+            return QV4::Encode::undefined();
+        return QV4::Encode(that->change.moveId);
     }
 
     QQmlChangeSet::Change change;
@@ -3180,7 +3180,7 @@ public:
         if (name == m->engine()->id_length) {
             if (hasProperty)
                 *hasProperty = true;
-            return QV4::Value::fromInt32(array->count()).asReturnedValue();
+            return QV4::Encode(array->count());
         }
 
         return Object::get(m, name, hasProperty);

@@ -231,7 +231,7 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
     defineDefaultProperty(engine->newIdentifier(name), value);
 }
 
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = context->engine->newIdentifier(name);
@@ -240,7 +240,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(s, Value::fromObject(function));
 }
 
-void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = engine->newIdentifier(name);
@@ -250,13 +250,13 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
 }
 
 void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
-                                    Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+                                    ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     String *s = engine->newString(name);
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(String *name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     ExecutionEngine *v4 = engine();
     Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);

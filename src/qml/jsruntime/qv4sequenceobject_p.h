@@ -69,12 +69,12 @@ struct SequencePrototype : public QV4::Object
 
     void init(QV4::ExecutionEngine *engine);
 
-    static QV4::Value method_valueOf(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue method_valueOf(QV4::SimpleCallContext *ctx)
     {
-        return QV4::Value::fromString(ctx->thisObject.toString(ctx));
+        return QV4::Value::fromString(ctx->thisObject.toString(ctx)).asReturnedValue();
     }
 
-    static QV4::Value method_sort(QV4::SimpleCallContext *ctx);
+    static ReturnedValue method_sort(QV4::SimpleCallContext *ctx);
 
     static bool isSequenceType(int sequenceTypeId);
     static QV4::Value newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);

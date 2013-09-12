@@ -357,6 +357,39 @@ private:
     CallData *ptr;
 };
 
+struct Encode : private Value {
+    static ReturnedValue undefined() {
+        return quint64(_Undefined_Type) << Tag_Shift;
+    }
+    static ReturnedValue null() {
+        return quint64(_Null_Type) << Tag_Shift;
+    }
+
+    Encode(bool b) {
+        tag = _Boolean_Type;
+        int_32 = b;
+    }
+    Encode(double d) {
+        dbl = d;
+    }
+    Encode(int i) {
+        tag = _Integer_Type;
+        int_32 = i;
+    }
+    Encode(uint i) {
+        if (i <= INT_MAX) {
+            tag = _Integer_Type;
+            int_32 = i;
+        } else {
+            dbl = i;
+        }
+    }
+
+    operator ReturnedValue() const {
+        return val;
+    }
+};
+
 }
 
 QT_END_NAMESPACE

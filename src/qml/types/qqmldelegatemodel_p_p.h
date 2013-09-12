@@ -133,9 +133,9 @@ public:
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQmlAdaptorModel &, int) { return false; }
 
-    static QV4::Value get_model(QV4::SimpleCallContext *ctx);
-    static QV4::Value get_groups(QV4::SimpleCallContext *ctx);
-    static QV4::Value set_groups(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue get_model(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue get_groups(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue set_groups(QV4::SimpleCallContext *ctx);
     static QV4::Value get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
     static QV4::Value set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
     static QV4::Value get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);

@@ -96,112 +96,112 @@ static double copySign(double x, double y)
     return x;
 }
 
-Value MathObject::method_abs(SimpleCallContext *context)
+ReturnedValue MathObject::method_abs(SimpleCallContext *context)
 {
     if (!context->argumentCount)
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
 
     if (context->arguments[0].isInteger()) {
         int i = context->arguments[0].integerValue();
-        return Value::fromInt32(i < 0 ? - i : i);
+        return Encode(i < 0 ? - i : i);
     }
 
     double v = context->arguments[0].toNumber();
     if (v == 0) // 0 | -0
-        return Value::fromDouble(0);
+        return Encode(0);
 
-    return Value::fromDouble(v < 0 ? -v : v);
+    return Encode(v < 0 ? -v : v);
 }
 
-Value MathObject::method_acos(SimpleCallContext *context)
+ReturnedValue MathObject::method_acos(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : 2;
     if (v > 1)
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
 
-    return Value::fromDouble(::acos(v));
+    return Encode(::acos(v));
 }
 
-Value MathObject::method_asin(SimpleCallContext *context)
+ReturnedValue MathObject::method_asin(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : 2;
     if (v > 1)
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
     else
-        return Value::fromDouble(::asin(v));
+        return Encode(::asin(v));
 }
 
-Value MathObject::method_atan(SimpleCallContext *context)
+ReturnedValue MathObject::method_atan(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     if (v == 0.0)
-        return Value::fromDouble(v);
+        return Encode(v);
     else
-        return Value::fromDouble(::atan(v));
+        return Encode(::atan(v));
 }
 
-Value MathObject::method_atan2(SimpleCallContext *context)
+ReturnedValue MathObject::method_atan2(SimpleCallContext *context)
 {
     double v1 = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     double v2 = context->argumentCount > 1 ? context->arguments[1].toNumber() : qSNaN();
 
     if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0))
-        return Value::fromDouble(copySign(0, -1.0));
+        return Encode(copySign(0, -1.0));
 
     if ((v1 == 0.0) && (v2 == 0.0)) {
         if ((copySign(1.0, v1) == 1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Value::fromDouble(qt_PI);
+            return Encode(qt_PI);
         } else if ((copySign(1.0, v1) == -1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Value::fromDouble(-qt_PI);
+            return Encode(-qt_PI);
         }
     }
-    return Value::fromDouble(::atan2(v1, v2));
+    return Encode(::atan2(v1, v2));
 }
 
-Value MathObject::method_ceil(SimpleCallContext *context)
+ReturnedValue MathObject::method_ceil(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     if (v < 0.0 && v > -1.0)
-        return Value::fromDouble(copySign(0, -1.0));
+        return Encode(copySign(0, -1.0));
     else
-        return Value::fromDouble(::ceil(v));
+        return Encode(::ceil(v));
 }
 
-Value MathObject::method_cos(SimpleCallContext *context)
+ReturnedValue MathObject::method_cos(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
-    return Value::fromDouble(::cos(v));
+    return Encode(::cos(v));
 }
 
-Value MathObject::method_exp(SimpleCallContext *context)
+ReturnedValue MathObject::method_exp(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     if (qIsInf(v)) {
         if (copySign(1.0, v) == -1.0)
-            return Value::fromDouble(0);
+            return Encode(0);
         else
-            return Value::fromDouble(qInf());
+            return Encode(qInf());
     } else {
-        return Value::fromDouble(::exp(v));
+        return Encode(::exp(v));
     }
 }
 
-Value MathObject::method_floor(SimpleCallContext *context)
+ReturnedValue MathObject::method_floor(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
-    return Value::fromDouble(::floor(v));
+    return Encode(::floor(v));
 }
 
-Value MathObject::method_log(SimpleCallContext *context)
+ReturnedValue MathObject::method_log(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     if (v < 0)
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
     else
-        return Value::fromDouble(::log(v));
+        return Encode(::log(v));
 }
 
-Value MathObject::method_max(SimpleCallContext *context)
+ReturnedValue MathObject::method_max(SimpleCallContext *context)
 {
     double mx = -qInf();
     for (unsigned i = 0; i < context->argumentCount; ++i) {
@@ -209,10 +209,10 @@ Value MathObject::method_max(SimpleCallContext *context)
         if (x > mx || std::isnan(x))
             mx = x;
     }
-    return Value::fromDouble(mx);
+    return Encode(mx);
 }
 
-Value MathObject::method_min(SimpleCallContext *context)
+ReturnedValue MathObject::method_min(SimpleCallContext *context)
 {
     double mx = qInf();
     for (unsigned i = 0; i < context->argumentCount; ++i) {
@@ -222,34 +222,34 @@ Value MathObject::method_min(SimpleCallContext *context)
             mx = x;
         }
     }
-    return Value::fromDouble(mx);
+    return Encode(mx);
 }
 
-Value MathObject::method_pow(SimpleCallContext *context)
+ReturnedValue MathObject::method_pow(SimpleCallContext *context)
 {
     double x = context->argumentCount > 0 ? context->arguments[0].toNumber() : qSNaN();
     double y = context->argumentCount > 1 ? context->arguments[1].toNumber() : qSNaN();
 
     if (std::isnan(y))
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
 
     if (y == 0) {
-        return Value::fromDouble(1);
+        return Encode(1);
     } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
-        return Value::fromDouble(qSNaN());
+        return Encode(qSNaN());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
-        return Value::fromDouble(qInf());
+        return Encode(qInf());
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                return Value::fromDouble(-qInf());
+                return Encode(-qInf());
             else
-                return Value::fromDouble(qInf());
+                return Encode(qInf());
         } else if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                return Value::fromDouble(copySign(0, -1.0));
+                return Encode(copySign(0, -1.0));
             else
-                return Value::fromDouble(0);
+                return Encode(0);
         }
     }
 
@@ -257,54 +257,54 @@ Value MathObject::method_pow(SimpleCallContext *context)
     else if (qIsInf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                return Value::fromDouble(-qInf());
+                return Encode(-qInf());
             else
-                return Value::fromDouble(qInf());
+                return Encode(qInf());
         } else if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                return Value::fromDouble(copySign(0, -1.0));
+                return Encode(copySign(0, -1.0));
             else
-                return Value::fromDouble(0);
+                return Encode(0);
         }
     }
 #endif
     else {
-        return Value::fromDouble(::pow(x, y));
+        return Encode(::pow(x, y));
     }
     // ###
-    return Value::fromDouble(qSNaN());
+    return Encode(qSNaN());
 }
 
-Value MathObject::method_random(SimpleCallContext *)
+ReturnedValue MathObject::method_random(SimpleCallContext *)
 {
-    return Value::fromDouble(qrand() / (double) RAND_MAX);
+    return Encode(qrand() / (double) RAND_MAX);
 }
 
-Value MathObject::method_round(SimpleCallContext *context)
+ReturnedValue MathObject::method_round(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     v = copySign(::floor(v + 0.5), v);
-    return Value::fromDouble(v);
+    return Encode(v);
 }
 
-Value MathObject::method_sin(SimpleCallContext *context)
+ReturnedValue MathObject::method_sin(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
-    return Value::fromDouble(::sin(v));
+    return Encode(::sin(v));
 }
 
-Value MathObject::method_sqrt(SimpleCallContext *context)
+ReturnedValue MathObject::method_sqrt(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
-    return Value::fromDouble(::sqrt(v));
+    return Encode(::sqrt(v));
 }
 
-Value MathObject::method_tan(SimpleCallContext *context)
+ReturnedValue MathObject::method_tan(SimpleCallContext *context)
 {
     double v = context->argumentCount ? context->arguments[0].toNumber() : qSNaN();
     if (v == 0.0)
-        return Value::fromDouble(v);
+        return Encode(v);
     else
-        return Value::fromDouble(::tan(v));
+        return Encode(::tan(v));
 }
 

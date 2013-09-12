@@ -338,7 +338,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
+FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
 {
     BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
     return f;

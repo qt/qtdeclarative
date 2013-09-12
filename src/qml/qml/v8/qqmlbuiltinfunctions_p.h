@@ -68,41 +68,41 @@ struct QtObject : Object
     Q_MANAGED
     QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
 
-    static Value method_isQtObject(SimpleCallContext *ctx);
-    static Value method_rgba(SimpleCallContext *ctx);
-    static Value method_hsla(SimpleCallContext *ctx);
-    static Value method_colorEqual(SimpleCallContext *ctx);
-    static Value method_font(SimpleCallContext *ctx);
-    static Value method_rect(SimpleCallContext *ctx);
-    static Value method_point(SimpleCallContext *ctx);
-    static Value method_size(SimpleCallContext *ctx);
-    static Value method_vector2d(SimpleCallContext *ctx);
-    static Value method_vector3d(SimpleCallContext *ctx);
-    static Value method_vector4d(SimpleCallContext *ctx);
-    static Value method_quaternion(SimpleCallContext *ctx);
-    static Value method_matrix4x4(SimpleCallContext *ctx);
-    static Value method_lighter(SimpleCallContext *ctx);
-    static Value method_darker(SimpleCallContext *ctx);
-    static Value method_tint(SimpleCallContext *ctx);
-    static Value method_formatDate(SimpleCallContext *ctx);
-    static Value method_formatTime(SimpleCallContext *ctx);
-    static Value method_formatDateTime(SimpleCallContext *ctx);
-    static Value method_openUrlExternally(SimpleCallContext *ctx);
-    static Value method_fontFamilies(SimpleCallContext *ctx);
-    static Value method_md5(SimpleCallContext *ctx);
-    static Value method_btoa(SimpleCallContext *ctx);
-    static Value method_atob(SimpleCallContext *ctx);
-    static Value method_quit(SimpleCallContext *ctx);
-    static Value method_resolvedUrl(SimpleCallContext *ctx);
-    static Value method_createQmlObject(SimpleCallContext *ctx);
-    static Value method_createComponent(SimpleCallContext *ctx);
-    static Value method_locale(SimpleCallContext *ctx);
-    static Value method_binding(SimpleCallContext *ctx);
+    static ReturnedValue method_isQtObject(SimpleCallContext *ctx);
+    static ReturnedValue method_rgba(SimpleCallContext *ctx);
+    static ReturnedValue method_hsla(SimpleCallContext *ctx);
+    static ReturnedValue method_colorEqual(SimpleCallContext *ctx);
+    static ReturnedValue method_font(SimpleCallContext *ctx);
+    static ReturnedValue method_rect(SimpleCallContext *ctx);
+    static ReturnedValue method_point(SimpleCallContext *ctx);
+    static ReturnedValue method_size(SimpleCallContext *ctx);
+    static ReturnedValue method_vector2d(SimpleCallContext *ctx);
+    static ReturnedValue method_vector3d(SimpleCallContext *ctx);
+    static ReturnedValue method_vector4d(SimpleCallContext *ctx);
+    static ReturnedValue method_quaternion(SimpleCallContext *ctx);
+    static ReturnedValue method_matrix4x4(SimpleCallContext *ctx);
+    static ReturnedValue method_lighter(SimpleCallContext *ctx);
+    static ReturnedValue method_darker(SimpleCallContext *ctx);
+    static ReturnedValue method_tint(SimpleCallContext *ctx);
+    static ReturnedValue method_formatDate(SimpleCallContext *ctx);
+    static ReturnedValue method_formatTime(SimpleCallContext *ctx);
+    static ReturnedValue method_formatDateTime(SimpleCallContext *ctx);
+    static ReturnedValue method_openUrlExternally(SimpleCallContext *ctx);
+    static ReturnedValue method_fontFamilies(SimpleCallContext *ctx);
+    static ReturnedValue method_md5(SimpleCallContext *ctx);
+    static ReturnedValue method_btoa(SimpleCallContext *ctx);
+    static ReturnedValue method_atob(SimpleCallContext *ctx);
+    static ReturnedValue method_quit(SimpleCallContext *ctx);
+    static ReturnedValue method_resolvedUrl(SimpleCallContext *ctx);
+    static ReturnedValue method_createQmlObject(SimpleCallContext *ctx);
+    static ReturnedValue method_createComponent(SimpleCallContext *ctx);
+    static ReturnedValue method_locale(SimpleCallContext *ctx);
+    static ReturnedValue method_binding(SimpleCallContext *ctx);
 
-    static Value method_get_platform(SimpleCallContext *ctx);
-    static Value method_get_application(SimpleCallContext *ctx);
+    static ReturnedValue method_get_platform(SimpleCallContext *ctx);
+    static ReturnedValue method_get_application(SimpleCallContext *ctx);
 #ifndef QT_NO_IM
-    static Value method_get_inputMethod(SimpleCallContext *ctx);
+    static ReturnedValue method_get_inputMethod(SimpleCallContext *ctx);
 #endif
 
     QObject *m_platform;
@@ -113,17 +113,17 @@ struct ConsoleObject : Object
 {
     ConsoleObject(ExecutionEngine *v4);
 
-    static Value method_error(SimpleCallContext *ctx);
-    static Value method_log(SimpleCallContext *ctx);
-    static Value method_profile(SimpleCallContext *ctx);
-    static Value method_profileEnd(SimpleCallContext *ctx);
-    static Value method_time(SimpleCallContext *ctx);
-    static Value method_timeEnd(SimpleCallContext *ctx);
-    static Value method_count(SimpleCallContext *ctx);
-    static Value method_trace(SimpleCallContext *ctx);
-    static Value method_warn(SimpleCallContext *ctx);
-    static Value method_assert(SimpleCallContext *ctx);
-    static Value method_exception(SimpleCallContext *ctx);
+    static ReturnedValue method_error(SimpleCallContext *ctx);
+    static ReturnedValue method_log(SimpleCallContext *ctx);
+    static ReturnedValue method_profile(SimpleCallContext *ctx);
+    static ReturnedValue method_profileEnd(SimpleCallContext *ctx);
+    static ReturnedValue method_time(SimpleCallContext *ctx);
+    static ReturnedValue method_timeEnd(SimpleCallContext *ctx);
+    static ReturnedValue method_count(SimpleCallContext *ctx);
+    static ReturnedValue method_trace(SimpleCallContext *ctx);
+    static ReturnedValue method_warn(SimpleCallContext *ctx);
+    static ReturnedValue method_assert(SimpleCallContext *ctx);
+    static ReturnedValue method_exception(SimpleCallContext *ctx);
 
 };
 
@@ -131,17 +131,17 @@ struct GlobalExtensions {
     static void init(QQmlEngine *qmlEngine, Object *globalObject);
 
 #ifndef QT_NO_TRANSLATION
-    static Value method_qsTranslate(SimpleCallContext *ctx);
-    static Value method_qsTranslateNoOp(SimpleCallContext *ctx);
-    static Value method_qsTr(SimpleCallContext *ctx);
-    static Value method_qsTrNoOp(SimpleCallContext *ctx);
-    static Value method_qsTrId(SimpleCallContext *ctx);
-    static Value method_qsTrIdNoOp(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTranslate(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTranslateNoOp(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTr(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTrNoOp(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTrId(SimpleCallContext *ctx);
+    static ReturnedValue method_qsTrIdNoOp(SimpleCallContext *ctx);
 #endif
-    static Value method_gc(SimpleCallContext *ctx);
+    static ReturnedValue method_gc(SimpleCallContext *ctx);
 
     // on String:prototype
-    static Value string_arg(SimpleCallContext *ctx);
+    static ReturnedValue method_string_arg(SimpleCallContext *ctx);
 
 };
 

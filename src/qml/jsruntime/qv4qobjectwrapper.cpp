@@ -780,7 +780,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-Value QObjectWrapper::method_connect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
@@ -816,10 +816,10 @@ Value QObjectWrapper::method_connect(SimpleCallContext *ctx)
 
     QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
 
-    return QV4::Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
@@ -865,7 +865,7 @@ Value QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
 
     QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
 
-    return QV4::Value::undefinedValue();
+    return Encode::undefined();
 }
 
 static void markChildQObjectsRecursively(QObject *parent)
@@ -1022,7 +1022,7 @@ private:
 };
 }
 
-static QV4::Value CallMethod(QObject *object, int index, int returnType, int argCount,
+static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType, int argCount,
                                         int *argTypes, QV8Engine *engine, CallArgs &callArgs)
 {
     if (argCount > 0) {
@@ -1052,7 +1052,7 @@ static QV4::Value CallMethod(QObject *object, int index, int returnType, int arg
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, argData.data());
 
-        return args[0].toValue(engine);
+        return args[0].toValue(engine).asReturnedValue();
 
     } else if (returnType != QMetaType::Void) {
         
@@ -1063,13 +1063,13 @@ static QV4::Value CallMethod(QObject *object, int index, int returnType, int arg
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, args);
 
-        return arg.toValue(engine);
+        return arg.toValue(engine).asReturnedValue();
 
     } else {
 
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, args);
-        return QV4::Value::undefinedValue();
+        return Encode::undefined();
 
     }
 }
@@ -1265,7 +1265,7 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
     }
 }
 
-static QV4::Value CallPrecise(QObject *object, const QQmlPropertyData &data,
+static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &data,
                                          QV8Engine *engine, CallArgs &callArgs)
 {
     QByteArray unknownTypeError;
@@ -1319,7 +1319,7 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         If two or more overloads have the same match score, call the last one.  The match
         score is constructed by adding the matchScore() result for each of the parameters.
 */
-static QV4::Value CallOverloaded(QObject *object, const QQmlPropertyData &data,
+static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData &data,
                                             QV8Engine *engine, CallArgs &callArgs)
 {
     int argumentCount = callArgs.Length();
@@ -1650,7 +1650,7 @@ QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index
     subtype = WrappedQtMethod;
 }
 
-QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
+QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
 {
     QString result;
     if (m_object) {
@@ -1671,13 +1671,13 @@ QV4::Value QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
         result = QLatin1String("null");
     }
 
-    return QV4::Value::fromString(ctx, result);
+    return QV4::Value::fromString(ctx, result).asReturnedValue();
 }
 
-QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
+QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
 {
     if (!m_object)
-        return QV4::Value::undefinedValue();
+        return Encode::undefined();
     if (QQmlData::keepAliveDuringGarbageCollection(m_object))
         ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
@@ -1690,16 +1690,16 @@ QV4::Value QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value
     else
         m_object->deleteLater();
 
-    return QV4::Value::undefinedValue();
+    return Encode::undefined();
 }
 
 ReturnedValue QObjectMethod::call(Managed *m, CallData *callData)
 {
     QObjectMethod *This = static_cast<QObjectMethod*>(m);
-    return This->callInternal(callData).asReturnedValue();
+    return This->callInternal(callData);
 }
 
-Value QObjectMethod::callInternal(CallData *callData)
+ReturnedValue QObjectMethod::callInternal(CallData *callData)
 {
     ExecutionContext *context = engine()->current;
     if (m_index == DestroyMethod)
@@ -1709,11 +1709,11 @@ Value QObjectMethod::callInternal(CallData *callData)
 
     QObject *object = m_object.data();
     if (!object)
-        return QV4::Value::undefinedValue();
+        return Encode::undefined();
 
     QQmlData *ddata = QQmlData::get(object);
     if (!ddata)
-        return QV4::Value::undefinedValue();
+        return Encode::undefined();
 
     QV8Engine *v8Engine = context->engine->v8Engine;
 
@@ -1723,7 +1723,7 @@ Value QObjectMethod::callInternal(CallData *callData)
         if (ddata->propertyCache) {
             QQmlPropertyData *d = ddata->propertyCache->method(m_index);
             if (!d)
-                return QV4::Value::undefinedValue();
+                return QV4::Encode::undefined();
             method = *d;
         }
     }
@@ -1732,7 +1732,7 @@ Value QObjectMethod::callInternal(CallData *callData)
         method.load(object->metaObject()->method(m_index));
 
         if (method.coreIndex == -1)
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
     }
 
     if (method.isV4Function()) {
@@ -1746,7 +1746,7 @@ Value QObjectMethod::callInternal(CallData *callData)
         void *args[] = { 0, &funcptr };
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
-        return rv;
+        return rv.asReturnedValue();
     }
 
     CallArgs callArgs(callData->argc, callData->args);

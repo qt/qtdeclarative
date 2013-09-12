@@ -72,7 +72,7 @@ struct ErrorObject: Object {
     ExecutionEngine::StackTrace stackTrace;
     String *stack;
 
-    static Value method_get_stack(SimpleCallContext *ctx);
+    static ReturnedValue method_get_stack(SimpleCallContext *ctx);
     static void markObjects(Managed *that);
     static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
@@ -189,7 +189,7 @@ struct ErrorPrototype: ErrorObject
     void init(ExecutionEngine *engine, const Value &ctor) { init(engine, ctor, this); }
 
     static void init(ExecutionEngine *engine, const Value &ctor, Object *obj);
-    static Value method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
 };
 
 struct EvalErrorPrototype: ErrorObject

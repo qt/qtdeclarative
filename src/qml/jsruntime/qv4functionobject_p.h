@@ -158,16 +158,16 @@ struct FunctionPrototype: FunctionObject
     FunctionPrototype(InternalClass *ic);
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_apply(SimpleCallContext *ctx);
-    static Value method_call(SimpleCallContext *ctx);
-    static Value method_bind(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_apply(SimpleCallContext *ctx);
+    static ReturnedValue method_call(SimpleCallContext *ctx);
+    static ReturnedValue method_bind(SimpleCallContext *ctx);
 };
 
 struct BuiltinFunction: FunctionObject {
-    Value (*code)(SimpleCallContext *);
+    ReturnedValue (*code)(SimpleCallContext *);
 
-    BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
+    BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *));
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);

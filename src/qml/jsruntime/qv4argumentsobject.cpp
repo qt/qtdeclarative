@@ -44,10 +44,10 @@
 
 using namespace QV4;
 
-static Value throwTypeError(SimpleCallContext *ctx)
+static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(ArgumentsObject);

@@ -239,7 +239,7 @@ bool QmlValueTypeWrapper::isEqual(const QVariant& value)
     }
 }
 
-Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
+ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)
@@ -251,15 +251,15 @@ Value QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     if (w->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
         if (reference->object && readReferenceValue(reference)) {
-            return w->v8->toString(w->type->toString());
+            return w->v8->toString(w->type->toString()).asReturnedValue();
         } else {
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         }
     } else {
         Q_ASSERT(w->objectType == QmlValueTypeWrapper::Copy);
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(w);
         w->type->setValue(copy->value);
-        return w->v8->toString(w->type->toString());
+        return w->v8->toString(w->type->toString()).asReturnedValue();
     }
 }
 

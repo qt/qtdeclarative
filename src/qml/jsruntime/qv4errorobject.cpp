@@ -127,7 +127,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineDefaultProperty(ic->engine, QStringLiteral("message"), Value::fromString(ic->engine->newString(message)));
 }
 
-Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
+ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
 {
     ErrorObject *This = ctx->thisObject.asErrorObject();
     if (!This)
@@ -148,7 +148,7 @@ Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
         }
         This->stack = ctx->engine->newString(trace);
     }
-    return Value::fromString(This->stack);
+    return Value::fromString(This->stack).asReturnedValue();
 }
 
 void ErrorObject::markObjects(Managed *that)
@@ -326,7 +326,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
     obj->defineDefaultProperty(engine, QStringLiteral("message"), Value::fromString(engine, QString()));
 }
 
-Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -355,5 +355,5 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    return Value::fromString(ctx, str);
+    return Value::fromString(ctx, str).asReturnedValue();
 }

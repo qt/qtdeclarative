@@ -152,15 +152,15 @@ void VariantPrototype::init(ExecutionEngine *engine)
     defineDefaultProperty(engine, QStringLiteral("toString"), method_toString, 0);
 }
 
-QV4::Value VariantPrototype::method_preserve(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)
 {
     VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o && o->isScarce())
         o->node.remove();
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-QV4::Value VariantPrototype::method_destroy(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_destroy(SimpleCallContext *ctx)
 {
     VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o) {
@@ -168,42 +168,42 @@ QV4::Value VariantPrototype::method_destroy(SimpleCallContext *ctx)
             o->node.remove();
         o->data = QVariant();
     }
-    return QV4::Value::undefinedValue();
+    return Encode::undefined();
 }
 
-QV4::Value VariantPrototype::method_toString(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_toString(SimpleCallContext *ctx)
 {
     VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (!o)
-        return Value::undefinedValue();
+        return Encode::undefined();
     QString result = o->data.toString();
     if (result.isEmpty() && !o->data.canConvert(QVariant::String))
         result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->data.typeName()));
-    return Value::fromString(ctx->engine->newString(result));
+    return Value::fromString(ctx->engine->newString(result)).asReturnedValue();
 }
 
-QV4::Value VariantPrototype::method_valueOf(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
 {
     VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
     if (o) {
         QVariant v = o->data;
         switch (v.type()) {
         case QVariant::Invalid:
-            return Value::undefinedValue();
+            return Encode::undefined();
         case QVariant::String:
-            return Value::fromString(ctx->engine->newString(v.toString()));
+            return Value::fromString(ctx->engine->newString(v.toString())).asReturnedValue();
         case QVariant::Int:
-            return Value::fromInt32(v.toInt());
+            return Encode(v.toInt());
         case QVariant::Double:
         case QVariant::UInt:
-            return Value::fromDouble(v.toDouble());
+            return Encode(v.toDouble());
         case QVariant::Bool:
-            return Value::fromBoolean(v.toBool());
+            return Encode(v.toBool());
         default:
             break;
         }
     }
-    return ctx->thisObject;
+    return ctx->thisObject.asReturnedValue();
 }
 
 QT_END_NAMESPACE

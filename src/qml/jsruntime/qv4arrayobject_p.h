@@ -68,28 +68,28 @@ struct ArrayPrototype: ArrayObject
 
     static uint getLength(ExecutionContext *ctx, Object *o);
 
-    static Value method_isArray(SimpleCallContext *ctx);
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_toLocaleString(SimpleCallContext *ctx);
-    static Value method_concat(SimpleCallContext *ctx);
-    static Value method_join(SimpleCallContext *ctx);
-    static Value method_pop(SimpleCallContext *ctx);
-    static Value method_push(SimpleCallContext *ctx);
-    static Value method_reverse(SimpleCallContext *ctx);
-    static Value method_shift(SimpleCallContext *ctx);
-    static Value method_slice(SimpleCallContext *ctx);
-    static Value method_sort(SimpleCallContext *ctx);
-    static Value method_splice(SimpleCallContext *ctx);
-    static Value method_unshift(SimpleCallContext *ctx);
-    static Value method_indexOf(SimpleCallContext *ctx);
-    static Value method_lastIndexOf(SimpleCallContext *ctx);
-    static Value method_every(SimpleCallContext *ctx);
-    static Value method_some(SimpleCallContext *ctx);
-    static Value method_forEach(SimpleCallContext *ctx);
-    static Value method_map(SimpleCallContext *ctx);
-    static Value method_filter(SimpleCallContext *ctx);
-    static Value method_reduce(SimpleCallContext *ctx);
-    static Value method_reduceRight(SimpleCallContext *ctx);
+    static ReturnedValue method_isArray(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_toLocaleString(SimpleCallContext *ctx);
+    static ReturnedValue method_concat(SimpleCallContext *ctx);
+    static ReturnedValue method_join(SimpleCallContext *ctx);
+    static ReturnedValue method_pop(SimpleCallContext *ctx);
+    static ReturnedValue method_push(SimpleCallContext *ctx);
+    static ReturnedValue method_reverse(SimpleCallContext *ctx);
+    static ReturnedValue method_shift(SimpleCallContext *ctx);
+    static ReturnedValue method_slice(SimpleCallContext *ctx);
+    static ReturnedValue method_sort(SimpleCallContext *ctx);
+    static ReturnedValue method_splice(SimpleCallContext *ctx);
+    static ReturnedValue method_unshift(SimpleCallContext *ctx);
+    static ReturnedValue method_indexOf(SimpleCallContext *ctx);
+    static ReturnedValue method_lastIndexOf(SimpleCallContext *ctx);
+    static ReturnedValue method_every(SimpleCallContext *ctx);
+    static ReturnedValue method_some(SimpleCallContext *ctx);
+    static ReturnedValue method_forEach(SimpleCallContext *ctx);
+    static ReturnedValue method_map(SimpleCallContext *ctx);
+    static ReturnedValue method_filter(SimpleCallContext *ctx);
+    static ReturnedValue method_reduce(SimpleCallContext *ctx);
+    static ReturnedValue method_reduceRight(SimpleCallContext *ctx);
 };
 
 

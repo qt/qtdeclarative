@@ -172,10 +172,10 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
 {
     if (!ctx->argumentCount)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
     QV8Engine *engine = v4->v8Engine;
@@ -230,7 +230,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
         callback(callbackFunction, result);
     }
 
-    return result;
+    return result.asReturnedValue();
 }
 
 QT_END_NAMESPACE

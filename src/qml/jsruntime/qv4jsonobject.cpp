@@ -874,7 +874,7 @@ JsonObject::JsonObject(ExecutionContext *context)
 }
 
 
-Value JsonObject::method_parse(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
 {
     QString jtext = ctx->argument(0).toString(ctx)->toQString();
 
@@ -887,10 +887,10 @@ Value JsonObject::method_parse(SimpleCallContext *ctx)
         ctx->throwSyntaxError("JSON.parse: Parse error");
     }
 
-    return result;
+    return result.asReturnedValue();
 }
 
-Value JsonObject::method_stringify(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -930,8 +930,8 @@ Value JsonObject::method_stringify(SimpleCallContext *ctx)
 
     QString result = stringify.Str(QString(), ctx->argument(0));
     if (result.isEmpty())
-        return Value::undefinedValue();
-    return Value::fromString(ctx, result);
+        return Encode::undefined();
+    return Value::fromString(ctx, result).asReturnedValue();
 }
 
 

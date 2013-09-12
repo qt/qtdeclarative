@@ -78,7 +78,7 @@ public:
         Exception = 3
     };
 
-    static QV4::Value include(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_include(QV4::SimpleCallContext *ctx);
 
 private Q_SLOTS:
     void finished();

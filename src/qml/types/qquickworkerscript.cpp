@@ -181,7 +181,7 @@ public:
 
     int m_nextId;
 
-    static QV4::Value sendMessage(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_sendMessage(QV4::SimpleCallContext *ctx);
 
 signals:
     void stopThread();
@@ -234,7 +234,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::FunctionObject *createsendconstructor = createsendscript.run().asFunctionObject();
 
     QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
-                                                          QQuickWorkerScriptEnginePrivate::sendMessage));
+                                                          QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
@@ -278,7 +278,7 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::SimpleCallContext *ctx)
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
@@ -289,12 +289,12 @@ QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
     if (!script)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     if (script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 // Requires handle scope and context scope

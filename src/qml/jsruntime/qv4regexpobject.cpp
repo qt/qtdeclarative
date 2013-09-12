@@ -297,7 +297,7 @@ void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("compile"), method_compile, 2);
 }
 
-Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -312,14 +312,14 @@ Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
     int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
         r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
-        return Value::nullValue();
+        return Encode::null();
     }
 
     uint* matchOffsets = (uint*)alloca(r->value->captureCount() * 2 * sizeof(uint));
     int result = r->value->match(s, offset, matchOffsets);
     if (result == -1) {
         r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
-        return Value::nullValue();
+        return Encode::null();
     }
 
     // fill in result data
@@ -340,25 +340,26 @@ Value RegExpPrototype::method_exec(SimpleCallContext *ctx)
     if (r->global)
         r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);
 
-    return Value::fromObject(array);
+    return Value::fromObject(array).asReturnedValue();
 }
 
-Value RegExpPrototype::method_test(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_test(SimpleCallContext *ctx)
 {
-    Value r = method_exec(ctx);
-    return Value::fromBoolean(!r.isNull());
+    Scope scope(ctx);
+    ScopedValue r(scope, method_exec(ctx));
+    return Encode(!r->isNull());
 }
 
-Value RegExpPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
 {
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
     if (!r)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, r->toString());
+    return Value::fromString(ctx, r->toString()).asReturnedValue();
 }
 
-Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     RegExpObject *r = ctx->thisObject.as<RegExpObject>();
@@ -371,7 +372,7 @@ Value RegExpPrototype::method_compile(SimpleCallContext *ctx)
 
     r->value = re->value;
     r->global = re->global;
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
 QT_END_NAMESPACE

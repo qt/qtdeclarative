@@ -261,7 +261,7 @@ struct Q_QML_EXPORT ExecutionEngine
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
 
-    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
+    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *));
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();

@@ -1093,11 +1093,11 @@ class QmlIncubatorObject : public QV4::Object, public QQmlIncubator
 public:
     QmlIncubatorObject(QV8Engine *engine, IncubationMode = Asynchronous);
 
-    static QV4::Value method_get_statusChanged(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_set_statusChanged(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_get_status(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_get_object(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_forceCompletion(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_statusChanged(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_set_statusChanged(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_status(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_object(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_forceCompletion(QV4::SimpleCallContext *ctx);
 
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
@@ -1405,16 +1405,16 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     incubationProto = QV4::Value::fromObject(proto);
 }
 
-QV4::Value QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
         ctx->throwTypeError();
 
-    return QV4::QObjectWrapper::wrap(ctx->engine, o->object());
+    return QV4::QObjectWrapper::wrap(ctx->engine, o->object()).asReturnedValue();
 }
 
-QV4::Value QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
@@ -1422,35 +1422,35 @@ QV4::Value QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ct
 
     o->forceCompletion();
 
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
-QV4::Value QmlIncubatorObject::method_get_status(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_status(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
         ctx->throwTypeError();
 
-    return QV4::Value::fromUInt32(o->status());
+    return QV4::Encode(o->status());
 }
 
-QV4::Value QmlIncubatorObject::method_get_statusChanged(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_statusChanged(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
         ctx->throwTypeError();
 
-    return o->m_statusChanged;
+    return o->m_statusChanged.asReturnedValue();
 }
 
-QV4::Value QmlIncubatorObject::method_set_statusChanged(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_set_statusChanged(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o || ctx->argumentCount < 1)
         ctx->throwTypeError();
 
     o->m_statusChanged = ctx->arguments[0];
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 QQmlComponentExtension::~QQmlComponentExtension()

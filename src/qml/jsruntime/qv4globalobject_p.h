@@ -63,16 +63,16 @@ protected:
 
 struct GlobalFunctions
 {
-    static Value method_parseInt(SimpleCallContext *context);
-    static Value method_parseFloat(SimpleCallContext *context);
-    static Value method_isNaN(SimpleCallContext *context);
-    static Value method_isFinite(SimpleCallContext *context);
-    static Value method_decodeURI(SimpleCallContext *context);
-    static Value method_decodeURIComponent(SimpleCallContext *context);
-    static Value method_encodeURI(SimpleCallContext *context);
-    static Value method_encodeURIComponent(SimpleCallContext *context);
-    static Value method_escape(SimpleCallContext *context);
-    static Value method_unescape(SimpleCallContext *context);
+    static ReturnedValue method_parseInt(SimpleCallContext *context);
+    static ReturnedValue method_parseFloat(SimpleCallContext *context);
+    static ReturnedValue method_isNaN(SimpleCallContext *context);
+    static ReturnedValue method_isFinite(SimpleCallContext *context);
+    static ReturnedValue method_decodeURI(SimpleCallContext *context);
+    static ReturnedValue method_decodeURIComponent(SimpleCallContext *context);
+    static ReturnedValue method_encodeURI(SimpleCallContext *context);
+    static ReturnedValue method_encodeURIComponent(SimpleCallContext *context);
+    static ReturnedValue method_escape(SimpleCallContext *context);
+    static ReturnedValue method_unescape(SimpleCallContext *context);
 };
 
 }

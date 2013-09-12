@@ -389,7 +389,7 @@ public:
             storeReference();
     }
 
-    static QV4::Value method_get_length(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
     {
         QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
         if (!This)
@@ -397,13 +397,13 @@ public:
 
         if (This->m_isReference) {
             if (!This->m_object)
-                return QV4::Value::fromInt32(0);
+                return QV4::Encode(0);
             This->loadReference();
         }
-        return QV4::Value::fromInt32(This->m_container.count());
+        return QV4::Encode(This->m_container.count());
     }
 
-    static QV4::Value method_set_length(QV4::SimpleCallContext* ctx)
+    static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
     {
         QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
         if (!This)
@@ -413,19 +413,19 @@ public:
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         }
         /* Read the sequence from the QObject property if we're a reference */
         if (This->m_isReference) {
             if (!This->m_object)
-                return QV4::Value::undefinedValue();
+                return QV4::Encode::undefined();
             This->loadReference();
         }
         /* Determine whether we need to modify the sequence */
         qint32 newCount = static_cast<qint32>(newLength);
         qint32 count = This->m_container.count();
         if (newCount == count) {
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         } else if (newCount > count) {
             /* according to ECMA262r3 we need to insert */
             /* undefined values increasing length to newLength. */
@@ -447,7 +447,7 @@ public:
             /* write back.  already checked that object is non-null, so skip that check here. */
             This->storeReference();
         }
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     }
 
     QVariant toVariant() const
@@ -538,14 +538,14 @@ void SequencePrototype::init(QV4::ExecutionEngine *engine)
     defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
 }
 
-QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
     QV4::Object *o = ctx->thisObject.asObject();
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
     if (ctx->argumentCount >= 2)
-        return ctx->thisObject;
+        return ctx->thisObject.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -555,7 +555,7 @@ QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->thisObject;
+    return ctx->thisObject.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \

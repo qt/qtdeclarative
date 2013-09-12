@@ -116,8 +116,8 @@ private:
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
 
-    static Value method_connect(SimpleCallContext *ctx);
-    static Value method_disconnect(SimpleCallContext *ctx);
+    static ReturnedValue method_connect(SimpleCallContext *ctx);
+    static ReturnedValue method_disconnect(SimpleCallContext *ctx);
 };
 
 struct QObjectMethod : public QV4::FunctionObject
@@ -134,8 +134,8 @@ struct QObjectMethod : public QV4::FunctionObject
 private:
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
 
-    QV4::Value method_toString(QV4::ExecutionContext *ctx);
-    QV4::Value method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
+    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
+    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
 
     QPointer<QObject> m_object;
     int m_index;
@@ -143,7 +143,7 @@ private:
 
     static ReturnedValue call(Managed *, CallData *callData);
 
-    Value callInternal(CallData *callData);
+    ReturnedValue callInternal(CallData *callData);
 
     static void destroy(Managed *that)
     {

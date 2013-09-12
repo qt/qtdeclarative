@@ -65,8 +65,8 @@ struct BooleanPrototype: BooleanObject
     BooleanPrototype(InternalClass *ic): BooleanObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_valueOf(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
 };
 
 

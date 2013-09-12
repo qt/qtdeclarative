@@ -172,7 +172,7 @@ ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 
 ReturnedValue FunctionObject::call(Managed *, CallData *)
 {
-    return Value::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void FunctionObject::markObjects(Managed *that)
@@ -281,16 +281,16 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 }
 
-Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
     FunctionObject *fun = ctx->thisObject.asFunctionObject();
     if (!fun)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, QStringLiteral("function() { [code] }"));
+    return Value::fromString(ctx, QStringLiteral("function() { [code] }")).asReturnedValue();
 }
 
-Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     FunctionObject *o = ctx->thisObject.asFunctionObject();
@@ -307,7 +307,7 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
         len = 0;
         if (!arg.isNullOrUndefined()) {
             ctx->throwTypeError();
-            return Value::undefinedValue();
+            return Encode::undefined();
         }
     } else {
         len = ArrayPrototype::getLength(ctx, arr);
@@ -329,10 +329,10 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     }
 
     callData->thisObject = thisArg;
-    return Value::fromReturnedValue(o->call(callData));
+    return o->call(callData);
 }
 
-Value FunctionPrototype::method_call(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     Value thisArg = ctx->argument(0);
@@ -347,10 +347,10 @@ Value FunctionPrototype::method_call(SimpleCallContext *ctx)
                   ctx->arguments + ctx->argumentCount, callData->args);
     }
     callData->thisObject = thisArg;
-    return Value::fromReturnedValue(o->call(callData));
+    return o->call(callData);
 }
 
-Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
     FunctionObject *target = ctx->thisObject.asFunctionObject();
     if (!target)
@@ -363,14 +363,14 @@ Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
 
 
     BoundFunction *f = ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs);
-    return Value::fromObject(f);
+    return Value::fromObject(f).asReturnedValue();
 }
 
 
-static Value throwTypeError(SimpleCallContext *ctx)
+static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue();
+    return 0;
 }
 
 DEFINE_MANAGED_VTABLE(ScriptFunction);
@@ -571,7 +571,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
 DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
@@ -582,13 +582,14 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, Value (*
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
     f->engine()->current->throwTypeError();
-    return Value::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 {
     BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
     ExecutionContext *context = v4->current;
 
     SimpleCallContext ctx;
@@ -600,7 +601,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 
-    Value result;
+    ScopedValue result(scope);
     try {
         result = f->code(&ctx);
     } catch (Exception &ex) {

@@ -56,8 +56,8 @@ private:
 public:
     JsonObject(ExecutionContext *context);
 
-    static Value method_parse(SimpleCallContext *ctx);
-    static Value method_stringify(SimpleCallContext *ctx);
+    static ReturnedValue method_parse(SimpleCallContext *ctx);
+    static ReturnedValue method_stringify(SimpleCallContext *ctx);
 
     static QV4::Value fromJsonValue(ExecutionEngine *engine, const QJsonValue &value);
     static QV4::Value fromJsonObject(ExecutionEngine *engine, const QJsonObject &object);
