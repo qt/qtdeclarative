@@ -227,7 +227,7 @@ struct Scoped
     }
 
     T *operator->() {
-        return static_cast<T *>(ptr->asManaged());
+        return static_cast<T *>(ptr->managed());
     }
 
 //    const Value *operator->() const {
@@ -235,11 +235,11 @@ struct Scoped
 //    }
 
     bool operator!() const {
-        return !ptr->asManaged();
+        return !ptr->managed();
     }
 
     T *getPointer() {
-        return static_cast<T *>(ptr->asManaged());
+        return static_cast<T *>(ptr->managed());
     }
 
     Value asValue() const {
