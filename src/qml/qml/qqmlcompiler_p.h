@@ -110,7 +110,12 @@ public:
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
     };
+    // --- old compiler:
     QList<TypeReference> types;
+    // --- new compiler:
+    // map from name index
+    QHash<int, TypeReference> resolvedTypes;
+    // ---
 
     struct V8Program {
         V8Program(const QByteArray &p, QQmlCompiledData *c)

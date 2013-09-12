@@ -109,6 +109,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     qSwap(_imports, output->imports);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
+    qSwap(_typeReferences, output->typeReferences);
     this->pool = output->jsParserEngine.pool();
     this->jsGenerator = &output->jsGenerator;
 
@@ -128,9 +129,13 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     AST::UiObjectDefinition *rootObject = AST::cast<AST::UiObjectDefinition*>(program->members->member);
     Q_ASSERT(rootObject);
     output->indexOfRootObject = defineQMLObject(rootObject);
+
+    collectTypeReferences();
+
     qSwap(_imports, output->imports);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
+    qSwap(_typeReferences, output->typeReferences);
     return true;
 }
 
@@ -440,6 +445,8 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             }
 
             param->nameIndex = registerString(p->name.toString());
+            param->location.line = p->identifierToken.startLine;
+            param->location.column = p->identifierToken.startColumn;
             signal->parameters->append(param);
             p = p->next;
         }
@@ -708,6 +715,22 @@ void QQmlCodeGenerator::recordError(const AST::SourceLocation &location, const Q
     error.setColumn(location.startColumn);
     error.setDescription(description);
     errors << error;
+}
+
+void QQmlCodeGenerator::collectTypeReferences()
+{
+    foreach (QmlObject *obj, _objects) {
+        _typeReferences.add(obj->inheritedTypeNameIndex, obj->location);
+
+        for (QmlProperty *prop = obj->properties->first; prop; prop = prop->next) {
+            if (prop->type >= QV4::CompiledData::Property::Custom)
+                _typeReferences.add(prop->customTypeNameIndex, prop->location);
+        }
+
+        for (Signal *sig = obj->qmlSignals->first; sig; sig = sig->next)
+            for (SignalParameter *param = sig->parameters->first; param; param = param->next)
+                _typeReferences.add(param->customTypeNameIndex, param->location);
+    }
 }
 
 QQmlScript::LocationSpan QQmlCodeGenerator::location(AST::SourceLocation start, AST::SourceLocation end)

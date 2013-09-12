@@ -900,7 +900,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         if (cc->compilationUnit && !cc->compilationUnit->engine)
             cc->compilationUnit->linkToEngine(v4);
 
-        state.creator = new QmlObjectCreator(context, cc->qmlUnit, cc->compilationUnit, cc->importCache,
+        state.creator = new QmlObjectCreator(context, cc->qmlUnit, cc->compilationUnit, cc->resolvedTypes,
                                              cc->propertyCaches, cc->datas);
         rv = state.creator->create();
         if (!rv)

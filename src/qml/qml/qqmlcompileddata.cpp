@@ -116,6 +116,14 @@ QQmlCompiledData::~QQmlCompiledData()
             types.at(ii).typePropertyCache->release();
     }
 
+    for (QHash<int, TypeReference>::Iterator resolvedType = resolvedTypes.begin(), end = resolvedTypes.end();
+         resolvedType != end; ++resolvedType) {
+        if (resolvedType->component)
+            resolvedType->component->release();
+        if (resolvedType->typePropertyCache)
+            resolvedType->typePropertyCache->release();
+    }
+
     for (int ii = 0; ii < propertyCaches.count(); ++ii) 
         propertyCaches.at(ii)->release();
 

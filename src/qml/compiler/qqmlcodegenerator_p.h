@@ -163,6 +163,8 @@ struct ParsedQML
     QList<AST::Node*> functions; // FunctionDeclaration, Statement or Expression
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
+    QV4::CompiledData::TypeReferenceMap typeReferences;
+
     QString stringAt(int index) const { return jsGenerator.strings.value(index); }
 };
 
@@ -220,6 +222,8 @@ public:
 
     void recordError(const AST::SourceLocation &location, const QString &description);
 
+    void collectTypeReferences();
+
     static QQmlScript::LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
 
     int registerString(const QString &str) const { return jsGenerator->registerString(str); }
@@ -230,6 +234,8 @@ public:
     QList<QV4::CompiledData::Import*> _imports;
     QList<QmlObject*> _objects;
     QList<AST::Node*> _functions;
+
+    QV4::CompiledData::TypeReferenceMap _typeReferences;
 
     QmlObject *_object;
     QSet<QString> _propertyNames;

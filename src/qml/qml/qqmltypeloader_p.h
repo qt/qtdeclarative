@@ -457,7 +457,12 @@ private:
 
     QSet<QString> m_namespaces;
 
+    // --- old compiler
     QList<TypeReference> m_types;
+    // --- new compiler
+    // map from name index to resolved type
+    QHash<int, TypeReference> m_resolvedTypes;
+    // ---
     bool m_typesResolved:1;
     bool m_useNewCompiler:1;
 

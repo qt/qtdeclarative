@@ -44,6 +44,7 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qqmlcompiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,7 +55,8 @@ class QQmlPropertyCacheCreator
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
     QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit,
-                             const QUrl &url, QQmlTypeNameCache *typeNameCache, const QQmlImports *imports);
+                             const QUrl &url, const QQmlImports *imports,
+                             QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes);
 
     QList<QQmlError> errors;
 
@@ -67,8 +69,8 @@ protected:
     QQmlEnginePrivate *enginePrivate;
     const QV4::CompiledData::QmlUnit *unit;
     QUrl url;
-    QQmlTypeNameCache *typeNameCache;
     const QQmlImports *imports;
+    QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
 };
 
 class QmlObjectCreator
@@ -76,7 +78,7 @@ class QmlObjectCreator
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
     QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::CompilationUnit *jsUnit,
-                     QQmlTypeNameCache *typeNameCache, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData);
+                     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData);
 
     QObject *create(QObject *parent = 0)
     { return create(unit->indexOfRootObject, parent); }
@@ -102,7 +104,7 @@ private:
     const QV4::CompiledData::QmlUnit *unit;
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *context;
-    QQmlTypeNameCache *typeNameCache;
+    const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
     const QList<QQmlPropertyCache *> propertyCaches;
     const QList<QByteArray> vmeMetaObjectData;
 

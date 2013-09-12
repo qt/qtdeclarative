@@ -2167,6 +2167,13 @@ void QQmlTypeData::compile()
         m_imports.populateCache(m_compiledData->importCache);
         m_compiledData->importCache->addref();
 
+        for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+             resolvedType != end; ++resolvedType) {
+            QQmlCompiledData::TypeReference ref;
+            ref.type = resolvedType->type;
+            m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
+        }
+
         JSCodeGen jsCodeGen;
         jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 
@@ -2196,8 +2203,8 @@ void QQmlTypeData::compile()
         m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
 
         QQmlPropertyCacheCreator propertyCacheBuilder(QQmlEnginePrivate::get(m_typeLoader->engine()),
-                                                      qmlUnit, m_compiledData->url, m_compiledData->importCache,
-                                                      &m_imports);
+                                                      qmlUnit, m_compiledData->url,
+                                                      &m_imports, &m_compiledData->resolvedTypes);
 
         for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
             const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
@@ -2255,10 +2262,10 @@ void QQmlTypeData::resolveTypes()
         m_scripts << ref;
     }
 
+    // --- old compiler:
     foreach (QQmlScript::TypeReference *parserRef, scriptParser.referencedTypes()) {
         TypeReference ref;
 
-        QString url;
         int majorVersion = -1;
         int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
@@ -2317,6 +2324,80 @@ void QQmlTypeData::resolveTypes()
         ref.location = parserRef->firstUse->location.start;
 
         m_types << ref;
+    }
+
+    // --- new compiler:
+    QV4::CompiledData::TypeReferenceMap typeReferences;
+    QStringList names;
+    if (parsedQML) {
+        typeReferences = parsedQML->typeReferences;
+        names = parsedQML->jsGenerator.strings;
+    } else {
+        // ### collect from available QV4::CompiledData::QmlUnit
+    }
+    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = typeReferences.constBegin(), end = typeReferences.constEnd();
+         unresolvedRef != end; ++unresolvedRef) {
+
+        TypeReference ref; // resolved reference
+
+        int majorVersion = -1;
+        int minorVersion = -1;
+        QQmlImportNamespace *typeNamespace = 0;
+        QList<QQmlError> errors;
+
+        const QString name = names.at(unresolvedRef.key());
+        bool typeFound = m_imports.resolveType(name, &ref.type,
+                &majorVersion, &minorVersion, &typeNamespace, &errors);
+        if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
+            // Lazy loading of implicit import
+            if (loadImplicitImport()) {
+                // Try again to find the type
+                errors.clear();
+                typeFound = m_imports.resolveType(name, &ref.type,
+                    &majorVersion, &minorVersion, &typeNamespace, &errors);
+            } else {
+                return; //loadImplicitImport() hit an error, and called setError already
+            }
+        }
+
+        if (!typeFound || typeNamespace) {
+            // Known to not be a type:
+            //  - known to be a namespace (Namespace {})
+            //  - type with unknown namespace (UnknownNamespace.SomeType {})
+            QQmlError error;
+            if (typeNamespace) {
+                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(name));
+            } else {
+                if (errors.size()) {
+                    error = errors.takeFirst();
+                } else {
+                    // this should not be possible!
+                    // Description should come from error provided by addImport() function.
+                    error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
+                }
+                error.setUrl(m_imports.baseUrl());
+                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(name).arg(error.description()));
+            }
+
+            error.setLine(unresolvedRef->line);
+            error.setColumn(unresolvedRef->column);
+
+            errors.prepend(error);
+            setError(errors);
+            return;
+        }
+
+        if (ref.type->isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
+            addDependency(ref.typeData);
+        }
+        ref.majorVersion = majorVersion;
+        ref.minorVersion = minorVersion;
+
+        ref.location.line = unresolvedRef->line;
+        ref.location.column = unresolvedRef->column;
+
+        m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
 }
 

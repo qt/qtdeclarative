@@ -44,6 +44,7 @@
 #include <QtCore/qstring.h>
 #include <QVector>
 #include <QStringList>
+#include <QHash>
 #include <private/qv4value_def_p.h>
 #include <private/qv4executableallocator_p.h>
 
@@ -71,6 +72,16 @@ struct Location
 {
     int line;
     int column;
+};
+
+// map from name index to location of first use
+struct TypeReferenceMap : QHash<int, Location>
+{
+    void add(int nameIndex, const Location &loc) {
+        if (contains(nameIndex))
+            return;
+        insert(nameIndex, loc);
+    }
 };
 
 struct RegExp
@@ -263,6 +274,7 @@ struct Parameter
     quint32 type;
     quint32 customTypeNameIndex;
     quint32 reserved;
+    Location location;
 };
 
 struct Signal

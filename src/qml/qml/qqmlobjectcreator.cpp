@@ -60,21 +60,22 @@ QT_USE_NAMESPACE
 
 static QAtomicInt classIndexCounter(0);
 
-QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit, const QUrl &url, QQmlTypeNameCache *typeNameCache, const QQmlImports *imports)
+QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit, const QUrl &url, const QQmlImports *imports,
+                                                   QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes)
     : enginePrivate(enginePrivate)
     , unit(unit)
     , url(url)
-    , typeNameCache(typeNameCache)
     , imports(imports)
+    , resolvedTypes(resolvedTypes)
 {
 }
 
 bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
 {
-    QQmlTypeNameCache::Result res = typeNameCache->query(stringAt(obj->inheritedTypeNameIndex));
-    Q_ASSERT(res.isValid()); // types resolved earlier in resolveTypes()
+    QQmlType *baseType = resolvedTypes->value(obj->inheritedTypeNameIndex).type;
+    Q_ASSERT(baseType);
 
-    QQmlPropertyCache *baseTypeCache = enginePrivate->cache(res.type->metaObject());
+    QQmlPropertyCache *baseTypeCache = enginePrivate->cache(baseType->metaObject());
     if (obj->nProperties == 0 && obj->nSignals == 0 && obj->nFunctions == 0) {
         *resultCache = baseTypeCache;
         vmeMetaObjectData->clear();
@@ -441,14 +442,15 @@ static void removeBindingOnProperty(QObject *o, int index)
 }
 
 QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit,
-                                   const QV4::CompiledData::CompilationUnit *jsUnit, QQmlTypeNameCache *typeNameCache,
+                                   const QV4::CompiledData::CompilationUnit *jsUnit,
+                                   const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
                                    const QList<QQmlPropertyCache*> &propertyCaches,
                                    const QList<QByteArray> &vmeMetaObjectData)
     : engine(contextData->engine)
     , unit(qmlUnit)
     , jsUnit(jsUnit)
     , context(contextData)
-    , typeNameCache(typeNameCache)
+    , resolvedTypes(resolvedTypes)
     , propertyCaches(propertyCaches)
     , vmeMetaObjectData(vmeMetaObjectData)
     , _qobject(0)
@@ -546,11 +548,10 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
 {
     const QV4::CompiledData::Object *obj = unit->objectAt(index);
 
-    QQmlTypeNameCache::Result res = typeNameCache->query(stringAt(obj->inheritedTypeNameIndex));
-    if (!res.isValid())
-        return 0;
+    QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
+    Q_ASSERT(type);
 
-    QObject *result = res.type->create();
+    QObject *result = type->create();
     // ### use no-event variant
     if (parent)
         result->setParent(parent);
