@@ -705,6 +705,12 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
 {
     if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
         return;
+
+    if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
+        setId(value);
+        return;
+    }
+
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     setBindingValue(binding, value);
@@ -720,6 +726,45 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     binding->value.type = QV4::CompiledData::Value::Type_Object;
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
+}
+
+bool QQmlCodeGenerator::setId(AST::Statement *value)
+{
+    AST::SourceLocation loc = value->firstSourceLocation();
+    QStringRef str;
+
+    if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(value))
+        if (AST::StringLiteral *lit = AST::cast<AST::StringLiteral *>(stmt->expression))
+            str = lit->value;
+
+    if (str.isEmpty())
+        str = asStringRef(value);
+
+    if (str.isEmpty())
+        COMPILE_EXCEPTION(loc, tr( "Invalid empty ID"));
+
+    QChar ch = str.at(0);
+    if (ch.isLetter() && !ch.isLower())
+        COMPILE_EXCEPTION(loc, tr( "IDs cannot start with an uppercase letter"));
+
+    QChar u(QLatin1Char('_'));
+    if (!ch.isLetter() && ch != u)
+        COMPILE_EXCEPTION(loc, tr( "IDs must start with a letter or underscore"));
+
+    for (int ii = 1; ii < str.count(); ++ii) {
+        ch = str.at(ii);
+        if (!ch.isLetterOrNumber() && ch != u)
+            COMPILE_EXCEPTION(loc, tr( "IDs must contain only letters, numbers, and underscores"));
+    }
+
+#if 0 // ###
+    if (enginePrivate->v8engine()->illegalNames().contains(str))
+        COMPILE_EXCEPTION(v, tr( "ID illegally masks global JavaScript property"));
+#endif
+
+    _object->idIndex = registerString(str.toString());
+
+    return true;
 }
 
 AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object)

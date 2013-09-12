@@ -446,7 +446,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
                                    const QV4::CompiledData::CompilationUnit *jsUnit,
                                    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
                                    const QList<QQmlPropertyCache*> &propertyCaches,
-                                   const QList<QByteArray> &vmeMetaObjectData)
+                                   const QList<QByteArray> &vmeMetaObjectData, const QHash<int, int> &objectIndexToId)
     : engine(contextData->engine)
     , unit(qmlUnit)
     , jsUnit(jsUnit)
@@ -454,6 +454,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
     , resolvedTypes(resolvedTypes)
     , propertyCaches(propertyCaches)
     , vmeMetaObjectData(vmeMetaObjectData)
+    , objectIndexToId(objectIndexToId)
     , _qobject(0)
     , _compiledObject(0)
     , _ddata(0)
@@ -587,6 +588,10 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     Q_ASSERT(!cache.isNull());
 
     context->addObject(instance);
+
+    QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
+    if (idEntry != objectIndexToId.constEnd())
+        context->setIdProperty(idEntry.value(), instance);
 
     populateInstance(index, instance, cache);
 

@@ -220,6 +220,8 @@ public:
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex);
 
+    bool setId(AST::Statement *value);
+
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
     AST::UiQualifiedId *resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object);

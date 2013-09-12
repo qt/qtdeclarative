@@ -900,8 +900,21 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         if (cc->compilationUnit && !cc->compilationUnit->engine)
             cc->compilationUnit->linkToEngine(v4);
 
+        // ### sub-contexts
+        QVector<QQmlContextData::ObjectIdMapping> mapping(cc->objectIndexToId.count());
+        for (QHash<int, int>::ConstIterator it = cc->objectIndexToId.constBegin(), end = cc->objectIndexToId.constEnd();
+             it != end; ++it) {
+            const QV4::CompiledData::Object *obj = cc->qmlUnit->objectAt(it.key());
+
+            QQmlContextData::ObjectIdMapping m;
+            m.id = it.value();
+            m.name = cc->qmlUnit->header.stringAt(obj->idIndex);
+            mapping[m.id] = m;
+        }
+        context->setIdPropertyData(mapping);
+
         state.creator = new QmlObjectCreator(context, cc->qmlUnit, cc->compilationUnit, cc->resolvedTypes,
-                                             cc->propertyCaches, cc->datas);
+                                             cc->propertyCaches, cc->datas, cc->objectIndexToId);
         rv = state.creator->create();
         if (!rv)
             state.errors = state.creator->errors;

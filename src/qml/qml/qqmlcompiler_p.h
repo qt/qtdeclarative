@@ -140,6 +140,8 @@ public:
     // --- new compiler
     QV4::CompiledData::CompilationUnit *compilationUnit;
     QV4::CompiledData::QmlUnit *qmlUnit;
+    // ### sub-context support
+    QHash<int, int> objectIndexToId;
     // ---
 
     struct Instruction {

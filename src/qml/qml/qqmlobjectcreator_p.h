@@ -78,7 +78,8 @@ class QmlObjectCreator
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
     QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::CompilationUnit *jsUnit,
-                     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData);
+                     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData,
+                     const QHash<int, int> &objectIndexToId);
 
     QObject *create(QObject *parent = 0)
     { return create(unit->indexOfRootObject, parent); }
@@ -109,6 +110,7 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
     const QList<QQmlPropertyCache *> propertyCaches;
     const QList<QByteArray> vmeMetaObjectData;
+    const QHash<int, int> &objectIndexToId;
 
     QObject *_qobject;
     const QV4::CompiledData::Object *_compiledObject;

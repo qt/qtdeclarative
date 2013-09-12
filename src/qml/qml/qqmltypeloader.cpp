@@ -2234,6 +2234,14 @@ void QQmlTypeData::compile()
             m_compiledData->propertyCaches << propertyCache;
         }
 
+        // ### support sub-contexts
+        for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
+            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+            const QString &id = qmlUnit->header.stringAt(obj->idIndex);
+            if (!id.isEmpty())
+                m_compiledData->objectIndexToId.insert(i, m_compiledData->objectIndexToId.count());
+        }
+
         if (!errors.isEmpty()) {
             setError(errors);
             m_compiledData->release();
