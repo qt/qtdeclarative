@@ -63,6 +63,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
+#include <algorithm>
 #include "qv4alloca_p.h"
 
 using namespace QV4;
@@ -335,9 +336,10 @@ Value FunctionPrototype::method_call(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     ScopedCallData callData(ctx->engine, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount)
-        qCopy(ctx->arguments + 1,
-              ctx->arguments + ctx->argumentCount, callData->args);
+    if (ctx->argumentCount) {
+        std::copy(ctx->arguments + 1,
+                  ctx->arguments + ctx->argumentCount, callData->args);
+    }
     callData->thisObject = thisArg;
     return o->call(callData);
 }
