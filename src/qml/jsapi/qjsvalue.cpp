@@ -663,12 +663,17 @@ QJSEngine* QJSValue::engine() const
 */
 QJSValue QJSValue::prototype() const
 {
-    Object *o = d->value.asObject();
+    QV4::ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+    QV4::Scope scope(engine);
+    Scoped<Object> o(scope, d->value.asObject());
     if (!o)
         return QJSValue();
-    if (!o->prototype())
+    Scoped<Object> p(scope, o->prototype());
+    if (!p)
         return QJSValue(NullValue);
-    return new QJSValuePrivate(o->internalClass->engine, Value::fromObject(o->prototype()));
+    return new QJSValuePrivate(o->internalClass->engine, p.asValue());
 }
 
 /*!
