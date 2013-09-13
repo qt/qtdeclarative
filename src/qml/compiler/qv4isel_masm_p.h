@@ -595,9 +595,18 @@ public:
         move(ReturnValueRegister, dest);
     }
 
+    void storeUInt32ReturnValue(RegisterID dest)
+    {
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        storeReturnValue(tmp);
+        toUInt32Register(tmp, dest);
+    }
+
     void storeReturnValue(FPRegisterID dest)
     {
-        moveDouble(FPGpr0, dest);
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        storeReturnValue(tmp);
+        loadDouble(tmp, dest);
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
@@ -627,8 +636,18 @@ public:
     {
         if (!temp)
             return;
-        Pointer addr = loadTempAddress(ScratchRegister, temp);
-        storeReturnValue(addr);
+
+        if (temp->kind == V4IR::Temp::PhysicalRegister) {
+            if (temp->type == V4IR::DoubleType)
+                storeReturnValue((FPRegisterID) temp->index);
+            else if (temp->type == V4IR::UInt32Type)
+                storeUInt32ReturnValue((RegisterID) temp->index);
+            else
+                storeReturnValue((RegisterID) temp->index);
+        } else {
+            Pointer addr = loadTempAddress(ScratchRegister, temp);
+            storeReturnValue(addr);
+        }
     }
 
     void storeReturnValue(VoidType)
@@ -1395,6 +1414,7 @@ private:
     void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToBool(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *target);
+    void convertTypeToUInt32(V4IR::Temp *source, V4IR::Temp *target);
 
     void convertIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {

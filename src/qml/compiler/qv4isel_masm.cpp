@@ -1220,7 +1220,6 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     if (op) {
         _as->generateFunctionCallImp(targetTemp, opName, op,
                                      Assembler::PointerToValue(sourceTemp));
-        storeTarget(0, targetTemp);
     }
 }
 
@@ -1335,13 +1334,11 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         _as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
-        storeTarget(0, target);
     } else if (info.contextImplementation) {
         _as->generateFunctionCallImp(target, info.name, info.contextImplementation,
                                      Assembler::ContextRegister,
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
-        storeTarget(1, target);
     } else {
         assert(!"unreachable");
     }
@@ -1475,6 +1472,9 @@ void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
         break;
     case V4IR::SInt32Type:
         convertTypeToSInt32(source, target);
+        break;
+    case V4IR::UInt32Type:
+        convertTypeToUInt32(source, target);
         break;
     default:
         convertTypeSlowPath(source, target);
@@ -1665,6 +1665,13 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
     default:
         break;
     } // switch (source->type)
+}
+
+void InstructionSelection::convertTypeToUInt32(V4IR::Temp *source, V4IR::Temp *target)
+{
+    generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_uint32,
+                         Assembler::PointerToValue(source));
+    _as->storeUInt32(Assembler::ReturnValueRegister, target);
 }
 
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
