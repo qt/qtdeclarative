@@ -2173,11 +2173,27 @@ void QQmlTypeData::compile()
         m_imports.populateCache(m_compiledData->importCache);
         m_compiledData->importCache->addref();
 
+        QQmlEngine *engine = typeLoader()->engine();
+
+        QHash<int, QQmlPropertyCache*> resolvedPropertyCaches;
+
         for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
              resolvedType != end; ++resolvedType) {
             QQmlCompiledData::TypeReference ref;
             ref.type = resolvedType->type;
+            Q_ASSERT(ref.type);
+            resolvedPropertyCaches.insert(resolvedType.key(), ref.createPropertyCache(engine));
             m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
+        }
+
+        {
+            SignalHandlerConverter converter(parsedQML.data(), resolvedPropertyCaches, m_compiledData);
+            if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations()) {
+                setError(converter.errors);
+                m_compiledData->release();
+                m_compiledData = 0;
+                return;
+            }
         }
 
         JSCodeGen jsCodeGen;

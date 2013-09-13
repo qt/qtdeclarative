@@ -49,6 +49,7 @@
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 QT_USE_NAMESPACE
 
@@ -515,16 +516,25 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionCont
 
         if (binding->type == QV4::CompiledData::Binding::Type_Script) {
             QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-            QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+            QV4::Value function = QV4::Value::fromObject(QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction));
 
-            QQmlBinding *binding = new QQmlBinding(QV4::Value::fromObject(function), _qobject, context,
-                                                   QString(), 0, 0); // ###
+            if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
+                int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex);
+                QQmlBoundSignal *bs = new QQmlBoundSignal(_qobject, signalIndex, _qobject, engine);
+                QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_qobject, signalIndex,
+                                                                                context, _qobject, function);
 
-            binding->setTarget(_qobject, *property, context);
-            binding->addToObject();
+                bs->takeExpression(expr);
+            } else {
+                QQmlBinding *qmlBinding = new QQmlBinding(function, _qobject, context,
+                                                          QString(), 0, 0); // ###
 
-            createdDynamicBindings[i] = binding;
-            binding->m_mePtr = &createdDynamicBindings[i];
+                qmlBinding->setTarget(_qobject, *property, context);
+                qmlBinding->addToObject();
+
+                createdDynamicBindings[i] = qmlBinding;
+                qmlBinding->m_mePtr = &createdDynamicBindings[i];
+            }
             continue;
         }
 

@@ -114,6 +114,9 @@ struct Signal
     int nameIndex;
     QV4::CompiledData::Location location;
     PoolList<SignalParameter> *parameters;
+
+    QStringList parameterStringList(const QStringList &stringPool) const;
+
     Signal *next;
 };
 
@@ -176,6 +179,8 @@ struct Q_QML_EXPORT QQmlCodeGenerator : public AST::Visitor
 public:
     QQmlCodeGenerator();
     bool generateFromQml(const QString &code, const QUrl &url, const QString &urlString, ParsedQML *output);
+
+    static bool isSignalPropertyName(const QString &name);
 
     using AST::Visitor::visit;
     using AST::Visitor::endVisit;
@@ -272,6 +277,49 @@ private:
     int getStringId(const QString &str) const;
 
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
+};
+
+struct PropertyResolver
+{
+    PropertyResolver(QQmlPropertyCache *cache)
+        : cache(cache)
+    {}
+
+    QQmlPropertyData *property(int index)
+    {
+        return cache->property(index);
+    }
+
+    QQmlPropertyData *property(const QString &name, bool *notInRevision);
+
+    // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
+    QQmlPropertyData *signal(const QString &name, bool *notInRevision);
+
+    QQmlPropertyCache *cache;
+};
+
+// "Converts" signal expressions to full-fleged function declarations with
+// parameters taken from the signal declarations
+// It also updates the QV4::CompiledData::Binding objects to set the property name
+// to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
+struct SignalHandlerConverter
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
+public:
+    SignalHandlerConverter(ParsedQML *parsedQML, const QHash<int, QQmlPropertyCache*> &resolvedPropertyCaches,
+                           QQmlCompiledData *unit);
+
+    bool convertSignalHandlerExpressionsToFunctionDeclarations();
+
+    QList<QQmlError> errors;
+
+private:
+    const QString &stringAt(int index) const { return parsedQML->jsGenerator.strings.at(index); }
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
+    ParsedQML *parsedQML;
+    const QHash<int, QQmlPropertyCache*> &resolvedPropertyCaches;
+    QQmlCompiledData *unit;
 };
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen

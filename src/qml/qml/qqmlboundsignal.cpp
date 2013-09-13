@@ -86,6 +86,19 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     m_expression = expression;
 }
 
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::PersistentValue &function)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+      m_v8function(function),
+      m_line(-1),
+      m_column(-1),
+      m_target(target),
+      m_index(index),
+      m_expressionFunctionValid(true),
+      m_invalidParameterName(false)
+{
+    init(ctxt, scope);
+}
+
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
 {
     setNotifyOnValueChanged(false);

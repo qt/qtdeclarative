@@ -44,6 +44,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
+#include <private/qqmlcompiler_p.h>
 #include <QCoreApplication>
 
 QT_USE_NAMESPACE
@@ -63,6 +64,15 @@ void QmlObject::dump(DebugStream &out)
 
     out.indent--;
     out << "}" << endl;
+}
+
+QStringList Signal::parameterStringList(const QStringList &stringPool) const
+{
+    QStringList result;
+    result.reserve(parameters->count);
+    for (SignalParameter *param = parameters->first; param; param = param->next)
+        result << stringPool.at(param->nameIndex);
+    return result;
 }
 
 QQmlCodeGenerator::QQmlCodeGenerator()
@@ -142,6 +152,20 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
     return true;
+}
+
+bool QQmlCodeGenerator::isSignalPropertyName(const QString &name)
+{
+    if (name.length() < 3) return false;
+    if (!name.startsWith(QStringLiteral("on"))) return false;
+    int ns = name.length();
+    for (int i = 2; i < ns; ++i) {
+        const QChar curr = name.at(i);
+        if (curr.unicode() == '_') continue;
+        if (curr.isUpper()) return true;
+        return false;
+    }
+    return false; // consists solely of underscores - invalid.
 }
 
 bool QQmlCodeGenerator::visit(AST::UiArrayMemberList *ast)
@@ -718,6 +742,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
 
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->location.line = nameLocation.startLine;
+    binding->location.column = nameLocation.startColumn;
+    binding->flags = 0;
     setBindingValue(binding, value);
     _object->bindings->append(binding);
 }
@@ -728,6 +755,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         return;
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
+    binding->location.line = nameLocation.startLine;
+    binding->location.column = nameLocation.startColumn;
+    binding->flags = 0;
     binding->type = QV4::CompiledData::Binding::Type_Object;
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
@@ -778,6 +808,9 @@ AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *na
     while (name->next) {
         Binding *binding = New<Binding>();
         binding->propertyNameIndex = registerString(name->name.toString());
+        binding->location.line = name->identifierToken.startLine;
+        binding->location.column = name->identifierToken.startColumn;
+        binding->flags = 0;
         binding->type = QV4::CompiledData::Binding::Type_Object;
 
         int objIndex = defineQMLObject(0, 0);
@@ -1035,4 +1068,186 @@ void JSCodeGen::QmlScanner::begin(AST::Node *rootNode)
 void JSCodeGen::QmlScanner::end()
 {
     leaveEnvironment();
+}
+
+SignalHandlerConverter::SignalHandlerConverter(ParsedQML *parsedQML, const QHash<int, QQmlPropertyCache *> &resolvedPropertyCaches, QQmlCompiledData *unit)
+    : parsedQML(parsedQML)
+    , resolvedPropertyCaches(resolvedPropertyCaches)
+    , unit(unit)
+{
+}
+
+bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations()
+{
+    foreach (QmlObject *obj, parsedQML->objects) {
+        QString elementName = stringAt(obj->inheritedTypeNameIndex);
+        if (elementName.isEmpty())
+            continue;
+        QQmlPropertyCache *propertyCache = 0;
+        // map from signal name defined in qml itself to list of parameters
+        QHash<QString, QStringList> customSignals;
+
+        for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+                continue;
+
+            QString propertyName = stringAt(binding->propertyNameIndex);
+            if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
+                continue;
+
+            if (!propertyCache)
+                propertyCache = resolvedPropertyCaches.value(obj->inheritedTypeNameIndex);
+            Q_ASSERT(propertyCache);
+
+            PropertyResolver resolver(propertyCache);
+
+            Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
+            propertyName.remove(0, 2);
+
+            // Note that the property name could start with any alpha or '_' or '$' character,
+            // so we need to do the lower-casing of the first alpha character.
+            for (int firstAlphaIndex = 0; firstAlphaIndex < propertyName.size(); ++firstAlphaIndex) {
+                if (propertyName.at(firstAlphaIndex).isUpper()) {
+                    propertyName[firstAlphaIndex] = propertyName.at(firstAlphaIndex).toLower();
+                    break;
+                }
+            }
+
+            QList<QString> parameters;
+
+            bool notInRevision = false;
+            QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
+            if (signal) {
+                int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
+                foreach (const QByteArray &param, propertyCache->signalParameterNames(sigIndex))
+                    parameters << QString::fromUtf8(param);
+            } else {
+                if (notInRevision) {
+                    // Try assinging it as a property later
+                    if (resolver.property(propertyName, /*notInRevision ptr*/0))
+                        continue;
+
+                    const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
+
+                    const QQmlType *type = unit->resolvedTypes.value(obj->inheritedTypeNameIndex).type;
+                    if (type) {
+                        COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
+                    } else {
+                        COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName).arg(originalPropertyName));
+                    }
+                }
+
+                // Try to look up the signal parameter names in the object itself
+
+                // build cache if necessary
+                if (customSignals.isEmpty()) {
+                    for (Signal *signal = obj->qmlSignals->first; signal; signal = signal->next) {
+                        const QString &signalName = stringAt(signal->nameIndex);
+                        customSignals.insert(signalName, signal->parameterStringList(parsedQML->jsGenerator.strings));
+                    }
+                }
+
+                QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
+                if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
+                    QString alternateName = propertyName.mid(0, propertyName.length() - strlen("Changed"));
+                    entry = customSignals.find(alternateName);
+                }
+
+                if (entry == customSignals.constEnd()) {
+                    // Can't find even a custom signal, then just don't do anything and try
+                    // keeping the binding as a regular property assignment.
+                    continue;
+                }
+
+                parameters = entry.value();
+            }
+
+            QQmlJS::Engine &jsEngine = parsedQML->jsParserEngine;
+            QQmlJS::MemoryPool *pool = jsEngine.pool();
+
+            AST::FormalParameterList *paramList = 0;
+            foreach (const QString &param, parameters) {
+                QStringRef paramNameRef = jsEngine.newStringRef(param);
+
+                if (paramList)
+                    paramList = new (pool) AST::FormalParameterList(paramList, paramNameRef);
+                else
+                    paramList = new (pool) AST::FormalParameterList(paramNameRef);
+            }
+
+            if (paramList)
+                paramList = paramList->finish();
+
+            AST::Statement *statement = static_cast<AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex]);
+            AST::SourceElement *sourceElement = new (pool) AST::StatementSourceElement(statement);
+            AST::SourceElements *elements = new (pool) AST::SourceElements(sourceElement);
+            elements = elements->finish();
+
+            AST::FunctionBody *body = new (pool) AST::FunctionBody(elements);
+
+            AST::FunctionDeclaration *functionDeclaration = new (pool) AST::FunctionDeclaration(jsEngine.newStringRef(propertyName), paramList, body);
+
+            parsedQML->functions[binding->value.compiledScriptIndex] = functionDeclaration;
+            binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
+            binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
+        }
+    }
+    return true;
+}
+
+void SignalHandlerConverter::recordError(const QV4::CompiledData::Location &location, const QString &description)
+{
+    QQmlError error;
+    error.setUrl(unit->url);
+    error.setLine(location.line);
+    error.setColumn(location.column);
+    error.setDescription(description);
+    errors << error;
+}
+
+QQmlPropertyData *PropertyResolver::property(const QString &name, bool *notInRevision)
+{
+    if (notInRevision) *notInRevision = false;
+
+    QQmlPropertyData *d = cache->property(name, 0, 0);
+
+    // Find the first property
+    while (d && d->isFunction())
+        d = cache->overrideData(d);
+
+    if (d && !cache->isAllowedInRevision(d)) {
+        if (notInRevision) *notInRevision = true;
+        return 0;
+    } else {
+        return d;
+    }
+}
+
+
+QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevision)
+{
+    if (notInRevision) *notInRevision = false;
+
+    QQmlPropertyData *d = cache->property(name, 0, 0);
+    if (notInRevision) *notInRevision = false;
+
+    while (d && !(d->isFunction()))
+        d = cache->overrideData(d);
+
+    if (d && !cache->isAllowedInRevision(d)) {
+        if (notInRevision) *notInRevision = true;
+        return 0;
+    } else if (d && d->isSignal()) {
+        return d;
+    }
+
+    if (name.endsWith(QStringLiteral("Changed"))) {
+        QString propName = name.mid(0, name.length() - strlen("Changed"));
+
+        d = property(propName, notInRevision);
+        if (d)
+            return cache->signal(d->notifyIndex);
+    }
+
+    return 0;
 }

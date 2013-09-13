@@ -254,7 +254,12 @@ struct Binding
         Type_Object
     };
 
-    quint32 type;
+    enum Flags {
+        IsSignalHandlerExpression = 0x1
+    };
+
+    quint32 flags : 16;
+    quint32 type : 16;
     union {
         bool b;
         double d;
@@ -262,6 +267,8 @@ struct Binding
         quint32 objectIndex;
     } value;
     quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
+
+    Location location;
 
     QString valueAsString(const Unit *unit) const;
     double valueAsNumber() const
