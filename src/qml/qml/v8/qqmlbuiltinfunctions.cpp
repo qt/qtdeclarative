@@ -1577,7 +1577,7 @@ v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
     is not present, or is not a valid ISO 3166 code, the most
     appropriate country is chosen for the specified language.
 
-    \sa QtQuick2::Locale
+    \sa {QtQml2::Locale}{Locale}
 */
 v8::Handle<v8::Value> locale(const v8::Arguments &args)
 {

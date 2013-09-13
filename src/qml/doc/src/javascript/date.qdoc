@@ -132,7 +132,7 @@
     hour, if DST is currently in effect, while it was not for the time specified, or
     vice versa.
 
-    \sa {QtQuick2::Locale}{Locale}
+    \sa {QtQml2::Locale}{Locale}
 */
 
 /*!

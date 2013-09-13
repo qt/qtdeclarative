@@ -929,7 +929,7 @@ QQuickIntValidator::QQuickIntValidator(QObject *parent)
 
     This property holds the name of the locale used to interpret the number.
 
-    \sa QML:Qt::locale()
+    \sa {QtQml2::Qt::locale()}{Qt.locale()}
 */
 
 QString QQuickIntValidator::localeName() const
@@ -1004,7 +1004,7 @@ QQuickDoubleValidator::QQuickDoubleValidator(QObject *parent)
 
     This property holds the name of the locale used to interpret the number.
 
-    \sa QML:Qt::locale()
+    \sa {QtQml2::Qt::locale()}{Qt.locale()}
 */
 
 QString QQuickDoubleValidator::localeName() const
