@@ -70,8 +70,10 @@ using namespace QV4;
 
 #ifndef QT_NO_XMLSTREAMREADER
 
-#define V4THROW_REFERENCE(string) \
-    ctx->throwError(Value::fromObject(ctx->engine->newReferenceErrorObject(QStringLiteral(string))))
+#define V4THROW_REFERENCE(string) { \
+        Scoped<Object> error(scope, ctx->engine->newReferenceErrorObject(QStringLiteral(string))); \
+        ctx->throwError(error); \
+    }
 
 QT_BEGIN_NAMESPACE
 
@@ -1658,6 +1660,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
 // XMLHttpRequest methods
 ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1706,6 +1709,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1752,6 +1757,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext 
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1772,6 +1779,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1782,6 +1791,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1802,6 +1813,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1823,6 +1836,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallCon
 // XMLHttpRequest properties
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1833,6 +1848,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *c
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1850,6 +1867,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1869,6 +1888,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *c
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1885,6 +1906,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext 
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");

@@ -375,10 +375,10 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Object *ExecutionEngine::newStringObject(const Value &value)
+Returned<Object> *ExecutionEngine::newStringObject(const Value &value)
 {
     StringObject *object = new (memoryManager) StringObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
 Returned<Object> *ExecutionEngine::newNumberObject(const Value &value)
@@ -455,20 +455,22 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
     return object->asReturned<RegExpObject>();
 }
 
-Object *ExecutionEngine::newErrorObject(const Value &value)
+Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
 {
     ErrorObject *object = new (memoryManager) ErrorObject(errorClass, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
+Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    return new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    Object *error = new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    return error->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
+Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    return new (memoryManager) SyntaxErrorObject(this, message, fileName, line, column);
+    Object *error = new (memoryManager) SyntaxErrorObject(this, message, fileName, line, column);
+    return error->asReturned<Object>();
 }
 
 

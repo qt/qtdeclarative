@@ -242,7 +242,7 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope, String *name)
 
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(m->engine()->newErrorObject(callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
+    return Encode(m->engine()->newErrorObject(callData->argc ? callData->args[0] : Value::undefinedValue()));
 }
 
 ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)

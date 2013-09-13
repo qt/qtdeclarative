@@ -270,7 +270,7 @@ struct Q_QML_EXPORT ExecutionEngine
     String *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Object *newStringObject(const Value &value);
+    Returned<Object> *newStringObject(const Value &value);
     Returned<Object> *newNumberObject(const Value &value);
     Returned<Object> *newBooleanObject(const Value &value);
 
@@ -285,9 +285,9 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
-    Object *newErrorObject(const Value &value);
-    Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
-    Object *newSyntaxErrorObject(const QString &message);
+    Returned<Object> *newErrorObject(const Value &value);
+    Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
+    Returned<Object> *newSyntaxErrorObject(const QString &message);
     Object *newReferenceErrorObject(const QString &message);
     Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
     Object *newTypeErrorObject(const QString &message);

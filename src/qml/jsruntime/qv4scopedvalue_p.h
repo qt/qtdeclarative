@@ -142,7 +142,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope, Returned<T> *t)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = T::toValue(t->getPointer());
+        *ptr = T::toValue(t->getPointer());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -159,8 +159,8 @@ struct ScopedValue
     }
 
     template<typename T>
-    ScopedValue &operator=(const Returned<T> *t) {
-        ptr->val = T::toValue(t->getPointer());
+    ScopedValue &operator=(Returned<T> *t) {
+        *ptr = T::toValue(t->getPointer());
         return *this;
     }
 
@@ -330,6 +330,9 @@ struct ScopedCallData {
 
 struct ValueRef {
     ValueRef(const ScopedValue &v)
+        : ptr(v.ptr) {}
+    template <typename T>
+    ValueRef(const Scoped<T> &v)
         : ptr(v.ptr) {}
     ValueRef(const PersistentValue &v)
         : ptr(&v.d->value) {}

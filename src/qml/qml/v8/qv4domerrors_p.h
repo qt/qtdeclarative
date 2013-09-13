@@ -77,10 +77,10 @@ QT_BEGIN_NAMESPACE
 #define DOMEXCEPTION_TYPE_MISMATCH_ERR 17
 
 #define V4THROW_DOM(error, string) { \
-    QV4::Value v = QV4::Value::fromString(ctx, QStringLiteral(string)); \
-    QV4::Object *ex = ctx->engine->newErrorObject(v); \
+    QV4::ScopedValue v(scope, QV4::Value::fromString(ctx, QStringLiteral(string))); \
+    QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
     ex->put(ctx->engine->newIdentifier(QStringLiteral("code")), QV4::Value::fromInt32(error)); \
-    ctx->throwError(QV4::Value::fromObject(ex)); \
+    ctx->throwError(ex); \
 }
 
 namespace QV4 {

@@ -949,29 +949,30 @@ See \l {Dynamic QML Object Creation from JavaScript} for more information on usi
 */
 ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     if (ctx->argumentCount < 2 || ctx->argumentCount > 3)
         V4THROW_ERROR("Qt.createQmlObject(): Invalid arguments");
 
     struct Error {
-        static Value create(QV8Engine *engine, const QList<QQmlError> &errors) {
+        static ReturnedValue create(QV4::ExecutionEngine *v4, const QList<QQmlError> &errors) {
+            Scope scope(v4);
             QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-            QV4::ArrayObject *qmlerrors = v4->newArrayObject();
+            QV4::Scoped<ArrayObject> qmlerrors(scope, v4->newArrayObject());
             for (int ii = 0; ii < errors.count(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
                 QV4::Object *qmlerror = v4->newObject();
                 qmlerror->put(v4->newString("lineNumber"), QV4::Value::fromInt32(error.line()));
                 qmlerror->put(v4->newString("columnNumber"), QV4::Value::fromInt32(error.column()));
-                qmlerror->put(v4->newString("fileName"), engine->toString(error.url().toString()));
-                qmlerror->put(v4->newString("message"), engine->toString(error.description()));
+                qmlerror->put(v4->newString("fileName"), Value::fromString(v4->newString(error.url().toString())));
+                qmlerror->put(v4->newString("message"), Value::fromString(v4->newString(error.description())));
                 qmlerrors->putIndexed(ii, QV4::Value::fromObject(qmlerror));
             }
 
-            QV4::Object *errorObject = v4->newErrorObject(engine->toString(errorstr));
-            errorObject->put(v4->newString("qmlErrors"), Value::fromObject(qmlerrors));
-            return Value::fromObject(errorObject);
+            Scoped<Object> errorObject(scope, v4->newErrorObject(Value::fromString(v4->newString(errorstr))));
+            errorObject->put(v4->newString("qmlErrors"), qmlerrors.asValue());
+            return errorObject.asReturnedValue();
         }
     };
 
@@ -1009,7 +1010,8 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
     component.setData(qml.toUtf8(), url);
 
     if (component.isError()) {
-        ctx->throwError(Error::create(v8engine, component.errors()));
+        ScopedValue v(scope, Error::create(ctx->engine, component.errors()));
+        ctx->throwError(v);
         return QV4::Encode::undefined();
     }
 
@@ -1033,7 +1035,8 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
     component.completeCreate();
 
     if (component.isError()) {
-        ctx->throwError(Error::create(v8engine, component.errors()));
+        ScopedValue v(scope, Error::create(ctx->engine, component.errors()));
+        ctx->throwError(v);
         return QV4::Encode::undefined();
     }
 

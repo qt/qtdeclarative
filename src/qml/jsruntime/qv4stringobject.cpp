@@ -167,7 +167,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
         value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
-    return Value::fromObject(m->engine()->newStringObject(value)).asReturnedValue();
+    return Encode(m->engine()->newStringObject(value));
 }
 
 ReturnedValue StringCtor::call(Managed *m, CallData *callData)

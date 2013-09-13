@@ -54,6 +54,7 @@ struct ExecutionEngine;
 struct DeclarativeEnvironment;
 struct Lookup;
 struct Function;
+struct ValueRef;
 
 namespace CompiledData {
 struct CompilationUnit;
@@ -129,13 +130,13 @@ struct Q_QML_EXPORT ExecutionContext
 
     void createMutableBinding(String *name, bool deletable);
 
-    void Q_NORETURN throwError(const Value &value);
+    void Q_NORETURN throwError(const QV4::ValueRef value);
     void Q_NORETURN throwError(const QString &message);
     void Q_NORETURN throwSyntaxError(const QString &message);
     void Q_NORETURN throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
     void Q_NORETURN throwTypeError();
     void Q_NORETURN throwTypeError(const QString &message);
-    void Q_NORETURN throwReferenceError(Value value);
+    void Q_NORETURN throwReferenceError(const ValueRef value);
     void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
     void Q_NORETURN throwRangeError(Value value);
     void Q_NORETURN throwURIError(Value msg);

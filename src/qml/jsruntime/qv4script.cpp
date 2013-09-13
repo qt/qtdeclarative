@@ -153,6 +153,7 @@ void Script::parse()
     parsed = true;
 
     ExecutionEngine *v4 = scope->engine;
+    Scope valueScope(v4);
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
@@ -199,9 +200,11 @@ void Script::parse()
         compilationUnitHolder = Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
     }
 
-    if (!vmFunction)
+    if (!vmFunction) {
         // ### FIX file/line number
-        v4->current->throwError(QV4::Value::fromObject(v4->newSyntaxErrorObject("Syntax error")));
+        Scoped<Object> error(valueScope, v4->newSyntaxErrorObject("Syntax error"));
+        v4->current->throwError(error);
+    }
 }
 
 ReturnedValue Script::run()

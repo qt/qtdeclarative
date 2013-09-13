@@ -363,6 +363,7 @@ void ExecutionContext::mark()
 
 void ExecutionContext::setProperty(String *name, const Value& value)
 {
+    Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->withObject;
@@ -398,8 +399,10 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             }
         }
     }
-    if (strictMode || name->isEqualTo(engine->id_this))
-        throwReferenceError(Value::fromString(name));
+    if (strictMode || name->isEqualTo(engine->id_this)) {
+        Scoped<String> n(scope, name);
+        throwReferenceError(n);
+    }
     engine->globalObject->put(name, value);
 }
 
@@ -463,7 +466,8 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return v.asReturnedValue();
         }
     }
-    throwReferenceError(Value::fromString(name));
+    Scoped<String> n(scope, name);
+    throwReferenceError(n);
     return Value::undefinedValue().asReturnedValue();
 }
 
@@ -595,75 +599,92 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
                 return v.asReturnedValue();
         }
     }
-    throwReferenceError(Value::fromString(name));
+    Scoped<String> n(scope, name);
+    throwReferenceError(n);
     return Value::undefinedValue().asReturnedValue();
 }
 
 
-void ExecutionContext::throwError(const Value &value)
+void ExecutionContext::throwError(const ValueRef value)
 {
-    Scope scope(this);
-    ScopedValue v(scope, value);
-    __qmljs_throw(this, v);
+    __qmljs_throw(this, value);
 }
 
 void ExecutionContext::throwError(const QString &message)
 {
-    Value v = Value::fromString(this, message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
+    Scope scope(this);
+    ScopedValue v(scope, Value::fromString(this, message));
+    v = engine->newErrorObject(v);
+    throwError(v);
 }
 
 void ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
 {
-    Object *error = engine->newSyntaxErrorObject(message, fileName, line, column);
-    throwError(Value::fromObject(error));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newSyntaxErrorObject(message, fileName, line, column));
+    throwError(error);
 }
 
 void ExecutionContext::throwSyntaxError(const QString &message)
 {
-    Object *error = engine->newSyntaxErrorObject(message);
-    throwError(Value::fromObject(error));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newSyntaxErrorObject(message));
+    throwError(error);
 }
 
 void ExecutionContext::throwTypeError()
 {
-    throwError(Value::fromObject(engine->newTypeErrorObject(QStringLiteral("Type error"))));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newTypeErrorObject(QStringLiteral("Type error")));
+    throwError(error);
 }
 
 void ExecutionContext::throwTypeError(const QString &message)
 {
-    throwError(Value::fromObject(engine->newTypeErrorObject(message)));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newTypeErrorObject(message));
+    throwError(error);
 }
 
 void ExecutionContext::throwUnimplemented(const QString &message)
 {
-    Value v = Value::fromString(this, QStringLiteral("Unimplemented ") + message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
+    Scope scope(this);
+    ScopedValue v(scope, Value::fromString(this, QStringLiteral("Unimplemented ") + message));
+    v = engine->newErrorObject(v);
+    throwError(v);
 }
 
-void ExecutionContext::throwReferenceError(Value value)
+void ExecutionContext::throwReferenceError(const ValueRef value)
 {
-    String *s = value.toString(this);
+    Scope scope(this);
+    Scoped<String> s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(msg)));
+    Scoped<Object> error(scope, engine->newReferenceErrorObject(msg));
+    throwError(error);
 }
 
 void ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
 {
+    Scope scope(this);
     QString msg = message + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(msg, fileName, line, column)));
+    Scoped<Object> error(scope, engine->newReferenceErrorObject(msg, fileName, line, column));
+    throwError(error);
 }
 
 void ExecutionContext::throwRangeError(Value value)
 {
-    String *s = value.toString(this);
+    Scope scope(this);
+    Scoped<String> s(scope, value.toString(this));
     QString msg = s->toQString() + QStringLiteral(" out of range");
-    throwError(Value::fromObject(engine->newRangeErrorObject(msg)));
+    Scoped<Object> error(scope, engine->newRangeErrorObject(msg));
+    throwError(error);
 }
 
 void ExecutionContext::throwURIError(Value msg)
 {
-    throwError(Value::fromObject(engine->newURIErrorObject(msg)));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newURIErrorObject(msg));
+    throwError(error);
 }
 
 void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)

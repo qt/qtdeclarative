@@ -274,8 +274,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
 
 void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 {
-    QmlContextWrapper *wrapper = m->as<QmlContextWrapper>();
     ExecutionEngine *v4 = m->engine();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
     if (!wrapper)
         v4->current->throwTypeError();
 
@@ -283,7 +284,8 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (wrapper && wrapper->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
-            v4->current->throwError(Value::fromString(v4->current->engine->newString(error)));
+            Scoped<String> e(scope, v4->current->engine->newString(error));
+            v4->current->throwError(e);
         }
 
         Object::put(m, name, value);

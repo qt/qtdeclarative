@@ -327,14 +327,15 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
 
 void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
-    QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     ExecutionEngine *v4 = m->engine();
+    Scope scope(v4);
+    Scoped<QmlValueTypeWrapper> r(scope, m->as<QmlValueTypeWrapper>());
     if (!r)
         v4->current->throwTypeError();
 
     QByteArray propName = name->toQString().toUtf8();
     if (r->objectType == QmlValueTypeWrapper::Reference) {
-        QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
+        QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r.getPointer());
         QMetaProperty writebackProperty = reference->object->metaObject()->property(reference->property);
 
         if (!reference->object || !writebackProperty.isWritable() || !readReferenceValue(reference))
@@ -353,7 +354,8 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             if (!f->bindingKeyFlag) {
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
-                v4->current->throwError(r->v8->toString(error));
+                Scoped<String> e(scope, r->v8->toString(error));
+                v4->current->throwError(e);
             }
 
             QQmlContextData *context = r->v8->callingContext();
@@ -400,7 +402,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
     } else {
         Q_ASSERT(r->objectType == QmlValueTypeWrapper::Copy);
 
-        QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(r);
+        QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(r.getPointer());
 
         int index = r->type->metaObject()->indexOfProperty(propName.constData());
         if (index == -1)

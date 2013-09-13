@@ -334,7 +334,9 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
             return o->getValue(p, attrs);
         }
     }
-    ctx->throwReferenceError(Value::fromString(l->name));
+    Scope scope(ctx);
+    Scoped<String> n(scope, l->name);
+    ctx->throwReferenceError(n);
 }
 
 ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionContext *ctx)

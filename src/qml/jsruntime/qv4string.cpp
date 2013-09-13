@@ -173,15 +173,17 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 
 void String::put(Managed *m, String *name, const Value &value)
 {
+    Scope scope(m->engine());
     String *that = static_cast<String *>(m);
-    Object *o = that->engine()->newStringObject(Value::fromString(that));
+    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
     o->put(name, value);
 }
 
 void String::putIndexed(Managed *m, uint index, const Value &value)
 {
+    Scope scope(m->engine());
     String *that = static_cast<String *>(m);
-    Object *o = m->engine()->newStringObject(Value::fromString(that));
+    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
     o->putIndexed(index, value);
 }
 
