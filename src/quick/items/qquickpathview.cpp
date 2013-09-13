@@ -744,10 +744,6 @@ int QQuickPathView::currentIndex() const
     return d->currentIndex;
 }
 
-/*!
-    \qmlproperty int QtQuick2::PathView::currentItem
-    This property holds the current item in the view.
-*/
 void QQuickPathView::setCurrentIndex(int idx)
 {
     Q_D(QQuickPathView);
@@ -787,6 +783,10 @@ void QQuickPathView::setCurrentIndex(int idx)
     }
 }
 
+/*!
+    \qmlproperty Item QtQuick2::PathView::currentItem
+    This property holds the current item in the view.
+*/
 QQuickItem *QQuickPathView::currentItem() const
 {
     Q_D(const QQuickPathView);
