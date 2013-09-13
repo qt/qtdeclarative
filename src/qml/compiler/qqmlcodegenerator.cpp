@@ -839,7 +839,8 @@ void QQmlCodeGenerator::collectTypeReferences()
 
         for (Signal *sig = obj->qmlSignals->first; sig; sig = sig->next)
             for (SignalParameter *param = sig->parameters->first; param; param = param->next)
-                _typeReferences.add(param->customTypeNameIndex, param->location);
+                if (!stringAt(param->customTypeNameIndex).isEmpty())
+                    _typeReferences.add(param->customTypeNameIndex, param->location);
     }
 }
 
