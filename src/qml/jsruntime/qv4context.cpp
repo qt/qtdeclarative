@@ -271,10 +271,12 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     activation = qml;
 
-    compilationUnit = function->function->compilationUnit;
-    compiledFunction = function->function->compiledFunction;
-    lookups = compilationUnit->runtimeLookups;
-    runtimeStrings = compilationUnit->runtimeStrings;
+    if (function->function) {
+        compilationUnit = function->function->compilationUnit;
+        compiledFunction = function->function->compiledFunction;
+        lookups = compilationUnit->runtimeLookups;
+        runtimeStrings = compilationUnit->runtimeStrings;
+    }
 
     locals = (Value *)(this + 1);
     if (function->varCount)

@@ -105,6 +105,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     }
 
     output->code = code;
+    output->program = program;
 
     qSwap(_imports, output->imports);
     qSwap(_objects, output->objects);
@@ -126,6 +127,10 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
         errors << error;
         return false;
     }
+
+    // Reserve space for pseudo context-scope function
+    _functions << program;
+
     AST::UiObjectDefinition *rootObject = AST::cast<AST::UiObjectDefinition*>(program->members->member);
     Q_ASSERT(rootObject);
     output->indexOfRootObject = defineQMLObject(rootObject);
@@ -981,15 +986,27 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
     _module = &output->jsModule;
     _module->setFileName(fileName);
 
+    QmlScanner scan(this, output->code);
+    scan.begin(output->program);
     foreach (AST::Node *node, output->functions) {
-        _env = 0;
-
+        if (node == output->program)
+            continue;
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
-        ScanFunctions scan(this, output->code);
         scan.enterEnvironment(node);
         scan(function ? function->body : node);
         scan.leaveEnvironment();
+    }
+    scan.end();
+
+    _env = 0;
+    _function = defineFunction(QString("context scope"), output->program, 0, 0, QmlBinding);
+
+    foreach (AST::Node *node, output->functions) {
+        if (node == output->program)
+            continue;
+
+        AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
         QString name;
         if (function)
@@ -1005,4 +1022,16 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
 
     qDeleteAll(_envMap);
     _envMap.clear();
+}
+
+
+void JSCodeGen::QmlScanner::begin(AST::Node *rootNode)
+{
+    enterEnvironment(0);
+    enterFunction(rootNode, "context scope", 0, 0, 0, /*isExpression*/false);
+}
+
+void JSCodeGen::QmlScanner::end()
+{
+    leaveEnvironment();
 }

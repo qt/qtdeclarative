@@ -158,6 +158,7 @@ struct ParsedQML
     QQmlJS::Engine jsParserEngine;
     V4IR::Module jsModule;
     QList<QV4::CompiledData::Import*> imports;
+    AST::UiProgram *program;
     int indexOfRootObject;
     QList<QmlObject*> objects;
     QList<AST::Node*> functions; // FunctionDeclaration, Statement or Expression
@@ -282,6 +283,19 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     void generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
 
 private:
+    struct QmlScanner : public ScanFunctions
+    {
+        QmlScanner(JSCodeGen *cg, const QString &sourceCode)
+            : ScanFunctions(cg, sourceCode)
+            , codeGen(cg)
+        {}
+
+        void begin(AST::Node *rootNode);
+        void end();
+
+        JSCodeGen *codeGen;
+    };
+
     V4IR::Module jsModule;
 };
 

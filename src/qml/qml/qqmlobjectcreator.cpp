@@ -462,7 +462,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
 {
 }
 
-QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGlobal)
+QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
@@ -515,7 +515,8 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
 
         if (binding->type == QV4::CompiledData::Binding::Type_Script) {
             QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-            QV4::FunctionObject *function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, runtimeFunction, qmlGlobal);
+            QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+
             QQmlBinding *binding = new QQmlBinding(QV4::Value::fromObject(function), _qobject, context,
                                                    QString(), 0, 0); // ###
 
@@ -553,22 +554,22 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
     return createdDynamicBindings;
 }
 
-void QmlObjectCreator::setupFunctions(QV4::Object *qmlGlobal)
+void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
-        QV4::Function *function = jsUnit->runtimeFunctions[*functionIdx];
-        const QString name = function->name->toQString();
+        QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[*functionIdx];
+        const QString name = runtimeFunction->name->toQString();
 
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
         if (!property->isVMEFunction())
             continue;
 
-        QV4::FunctionObject *v4Function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, function, qmlGlobal);
-        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(v4Function));
+        QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(function));
     }
 }
 
@@ -619,11 +620,15 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
         _ddata->propertyCache->addref();
     }
 
-    QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::ScopedValue scopeObject(scope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject));
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject));
+    QV4::QmlBindingWrapper *qmlBindingWrapper = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject->asObject());
+    QV4::ScopedValue qmlScopeFunction(valueScope, QV4::Value::fromObject(qmlBindingWrapper));
+    QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
-    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(scopeObject->asObject());
-    setupFunctions(scopeObject->asObject());
+    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(qmlContext);
+    setupFunctions(qmlContext);
 
     // ### do this later when requested
     for (int i = 0; i < dynamicBindings.count(); ++i) {

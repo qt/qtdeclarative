@@ -90,8 +90,8 @@ public:
 private:
     void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
-    QVector<QQmlAbstractBinding *> setupBindings(QV4::Object *qmlGlobal);
-    void setupFunctions(QV4::Object *qmlGlobal);
+    QVector<QQmlAbstractBinding *> setupBindings(QV4::ExecutionContext *qmlContext);
+    void setupFunctions(QV4::ExecutionContext *qmlContext);
 
     QVariant variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const;
 
