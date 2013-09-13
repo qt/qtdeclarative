@@ -95,7 +95,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
-        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags)->getPointer();
         runtimeRegularExpressions[i] = QV4::Value::fromObject(obj);
     }
 

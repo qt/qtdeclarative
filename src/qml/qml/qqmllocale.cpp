@@ -270,7 +270,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::SimpleCallCon
         QLocale locale;
         QString dateString = ctx->arguments[0].stringValue()->toQString();
         QDateTime dt = locale.toDateTime(dateString);
-        return QV4::Value::fromObject(engine->newDateObject(dt)).asReturnedValue();
+        return QV4::Encode(engine->newDateObject(dt));
     }
 
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
@@ -296,7 +296,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::SimpleCallCon
         dt = r->locale.toDateTime(dateString, enumFormat);
     }
 
-    return QV4::Value::fromObject(engine->newDateObject(dt)).asReturnedValue();
+    return QV4::Encode(engine->newDateObject(dt));
 }
 
 QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::SimpleCallContext *ctx)
@@ -309,7 +309,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::SimpleCal
         QTime time = locale.toTime(timeString);
         QDateTime dt = QDateTime::currentDateTime();
         dt.setTime(time);
-        return QV4::Value::fromObject(engine->newDateObject(dt)).asReturnedValue();
+        return QV4::Encode(engine->newDateObject(dt));
     }
 
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
@@ -338,7 +338,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::SimpleCal
     QDateTime dt = QDateTime::currentDateTime();
     dt.setTime(tm);
 
-    return QV4::Value::fromObject(engine->newDateObject(dt)).asReturnedValue();
+    return QV4::Encode(engine->newDateObject(dt));
 }
 
 QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::SimpleCallContext *ctx)
@@ -349,7 +349,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::SimpleCal
         QLocale locale;
         QString dateString = ctx->arguments[0].stringValue()->toQString();
         QDate date = locale.toDate(dateString);
-        return QV4::Value::fromObject(engine->newDateObject(QDateTime(date))).asReturnedValue();
+        return QV4::Encode(engine->newDateObject(QDateTime(date)));
     }
 
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
@@ -375,7 +375,7 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::SimpleCal
         dt = r->locale.toDate(dateString, enumFormat);
     }
 
-    return QV4::Value::fromObject(engine->newDateObject(QDateTime(dt))).asReturnedValue();
+    return QV4::Encode(engine->newDateObject(QDateTime(dt)));
 }
 
 QV4::ReturnedValue QQmlDateExtension::method_timeZoneUpdated(QV4::SimpleCallContext *ctx)

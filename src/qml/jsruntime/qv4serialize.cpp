@@ -345,14 +345,14 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Value::fromObject(v4->newDateObject(QV4::Value::fromDouble(popDouble(data)))).asReturnedValue();
+        return QV4::Encode(v4->newDateObject(QV4::Value::fromDouble(popDouble(data))));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);
         quint32 length = popUint32(data);
         QString pattern = QString((QChar *)data, length - 1);
         data += ALIGN(length * sizeof(uint16_t));
-        return QV4::Value::fromObject(v4->newRegExpObject(pattern, flags)).asReturnedValue();
+        return Encode(v4->newRegExpObject(pattern, flags));
     }
     case WorkerListModel:
     {

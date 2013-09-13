@@ -634,9 +634,12 @@ static double getLocalTZA()
 #endif
 }
 
+DEFINE_MANAGED_VTABLE(DateObject);
+
 DateObject::DateObject(ExecutionEngine *engine, const QDateTime &date)
     : Object(engine->dateClass)
 {
+    vtbl = &static_vtbl;
     type = Type_DateObject;
     value = Value::fromDouble(date.toMSecsSinceEpoch());
 }
@@ -689,8 +692,7 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    Object *o = m->engine()->newDateObject(Value::fromDouble(t));
-    return Value::fromObject(o).asReturnedValue();
+    return Encode(m->engine()->newDateObject(Value::fromDouble(t)));
 }
 
 ReturnedValue DateCtor::call(Managed *m, CallData *)

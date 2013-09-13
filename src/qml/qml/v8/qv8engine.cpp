@@ -255,13 +255,13 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QChar:
                 return QV4::Encode((int)(*reinterpret_cast<const QChar*>(ptr)).unicode());
             case QMetaType::QDateTime:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(ptr))).asReturnedValue();
+                return QV4::Encode(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr)))).asReturnedValue();
+                return QV4::Encode(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr)))).asReturnedValue();
+            return QV4::Encode(m_v4Engine->newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
-                return QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr))).asReturnedValue();
+                return QV4::Encode(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
                 return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
@@ -661,11 +661,11 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QVariantMap:
         return variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
     case QMetaType::QDateTime:
-        return QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data))).asReturnedValue();
+        return QV4::Encode(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
     case QMetaType::QDate:
-        return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data)))).asReturnedValue();
+        return QV4::Encode(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
     case QMetaType::QRegExp:
-        return QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data))).asReturnedValue();
+        return QV4::Encode(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
     case QMetaType::QObjectStar:
         return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(data));
     case QMetaType::QVariant:

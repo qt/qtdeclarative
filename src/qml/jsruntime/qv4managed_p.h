@@ -68,6 +68,8 @@ struct Returned : private T
     T *getPointer() { return this; }
     template<typename X>
     static T *getPointer(Returned<X> *x) { return x->getPointer(); }
+    template<typename X>
+    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
     using T::asReturnedValue;
 };
 

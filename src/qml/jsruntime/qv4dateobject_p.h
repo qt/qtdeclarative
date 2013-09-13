@@ -52,14 +52,21 @@ class QDateTime;
 namespace QV4 {
 
 struct DateObject: Object {
+    Q_MANAGED
     Value value;
-    DateObject(ExecutionEngine *engine, const Value &value): Object(engine->dateClass), value(value) { type = Type_DateObject; }
+    DateObject(ExecutionEngine *engine, const Value &value): Object(engine->dateClass), value(value) {
+        vtbl = &static_vtbl;
+        type = Type_DateObject;
+    }
     DateObject(ExecutionEngine *engine, const QDateTime &value);
 
     QDateTime toQDateTime() const;
 
 protected:
-    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) { type = Type_DateObject; }
+    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) {
+        vtbl = &static_vtbl;
+        type = Type_DateObject;
+    }
 };
 
 struct DateCtor: FunctionObject

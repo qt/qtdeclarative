@@ -418,19 +418,19 @@ ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic)
 }
 
 
-DateObject *ExecutionEngine::newDateObject(const Value &value)
+Returned<DateObject> *ExecutionEngine::newDateObject(const Value &value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
-    return object;
+    return object->asReturned<DateObject>();
 }
 
-DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
+Returned<DateObject> *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     DateObject *object = new (memoryManager) DateObject(this, dt);
-    return object;
+    return object->asReturned<DateObject>();
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & QQmlJS::V4IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
@@ -443,16 +443,16 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
     return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
-    return object;
+    return object->asReturned<RegExpObject>();
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re);
-    return object;
+    return object->asReturned<RegExpObject>();
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)

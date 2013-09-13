@@ -241,8 +241,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         if (!f->isUndefined())
             ctx->throwTypeError();
 
-        RegExpObject *o = ctx->engine->newRegExpObject(re->value, re->global);
-        return Value::fromObject(o).asReturnedValue();
+        return Encode(ctx->engine->newRegExpObject(re->value, re->global));
     }
 
     QString pattern;
@@ -272,8 +271,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     if (!re->isValid())
         ctx->throwSyntaxError(0);
 
-    RegExpObject *o = ctx->engine->newRegExpObject(re, global);
-    return Value::fromObject(o).asReturnedValue();
+    return Encode(ctx->engine->newRegExpObject(re, global));
 }
 
 ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)

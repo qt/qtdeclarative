@@ -380,7 +380,7 @@ private:
 };
 
 template<typename T>
-Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
+inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
 {
     ptr = scope.engine->jsStackTop++;
     if (T::cast(*v.operator ->()))
@@ -393,7 +393,7 @@ Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
 }
 
 template<typename T>
-Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
+inline Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
 {
     if (T::cast(*v.operator ->()))
         *ptr = *v.operator ->();

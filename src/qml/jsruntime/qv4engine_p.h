@@ -278,12 +278,12 @@ struct Q_QML_EXPORT ExecutionEngine
     ArrayObject *newArrayObject(const QStringList &list);
     ArrayObject *newArrayObject(InternalClass *ic);
 
-    DateObject *newDateObject(const Value &value);
-    DateObject *newDateObject(const QDateTime &dt);
+    Returned<DateObject> *newDateObject(const Value &value);
+    Returned<DateObject> *newDateObject(const QDateTime &dt);
 
-    RegExpObject *newRegExpObject(const QString &pattern, int flags);
-    RegExpObject *newRegExpObject(RegExp* re, bool global);
-    RegExpObject *newRegExpObject(const QRegExp &re);
+    Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
+    Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
+    Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
     Object *newErrorObject(const Value &value);
     Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
