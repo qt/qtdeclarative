@@ -647,27 +647,27 @@ QStringRef QQmlCodeGenerator::textRefAt(const AST::SourceLocation &first, const 
 
 void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST::Statement *statement)
 {
-    binding->value.type = QV4::CompiledData::Value::Type_Invalid;
+    binding->type = QV4::CompiledData::Binding::Type_Invalid;
 
     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(statement)) {
         AST::ExpressionNode *expr = stmt->expression;
         if (AST::StringLiteral *lit = AST::cast<AST::StringLiteral *>(expr)) {
-            binding->value.type = QV4::CompiledData::Value::Type_String;
-            binding->value.stringIndex = registerString(lit->value.toString());
+            binding->type = QV4::CompiledData::Binding::Type_String;
+            binding->stringIndex = registerString(lit->value.toString());
         } else if (expr->kind == AST::Node::Kind_TrueLiteral) {
-            binding->value.type = QV4::CompiledData::Value::Type_Boolean;
+            binding->type = QV4::CompiledData::Binding::Type_Boolean;
             binding->value.b = true;
         } else if (expr->kind == AST::Node::Kind_FalseLiteral) {
-            binding->value.type = QV4::CompiledData::Value::Type_Boolean;
+            binding->type = QV4::CompiledData::Binding::Type_Boolean;
             binding->value.b = false;
         } else if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(expr)) {
-            binding->value.type = QV4::CompiledData::Value::Type_Number;
+            binding->type = QV4::CompiledData::Binding::Type_Number;
             binding->value.d = lit->value;
         } else {
 
             if (AST::UnaryMinusExpression *unaryMinus = AST::cast<AST::UnaryMinusExpression *>(expr)) {
                if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(unaryMinus->expression)) {
-                   binding->value.type = QV4::CompiledData::Value::Type_Number;
+                   binding->type = QV4::CompiledData::Binding::Type_Number;
                    binding->value.d = -lit->value;
                }
             }
@@ -675,11 +675,11 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST
     }
 
     // Do binding instead
-    if (binding->value.type == QV4::CompiledData::Value::Type_Invalid) {
-        binding->value.type = QV4::CompiledData::Value::Type_Script;
+    if (binding->type == QV4::CompiledData::Binding::Type_Invalid) {
+        binding->type = QV4::CompiledData::Binding::Type_Script;
         _functions << statement;
         binding->value.compiledScriptIndex = _functions.size() - 1;
-        binding->value.stringIndex = registerString(asStringRef(statement).toString());
+        binding->stringIndex = registerString(asStringRef(statement).toString());
     }
 }
 
@@ -723,7 +723,7 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         return;
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
-    binding->value.type = QV4::CompiledData::Value::Type_Object;
+    binding->type = QV4::CompiledData::Binding::Type_Object;
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
 }
@@ -773,7 +773,7 @@ AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *na
     while (name->next) {
         Binding *binding = New<Binding>();
         binding->propertyNameIndex = registerString(name->name.toString());
-        binding->value.type = QV4::CompiledData::Value::Type_Object;
+        binding->type = QV4::CompiledData::Binding::Type_Object;
 
         int objIndex = defineQMLObject(0, 0);
         binding->value.objectIndex = objIndex;

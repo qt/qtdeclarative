@@ -482,7 +482,7 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
         //    Item {
         //        ...
         //    }
-        if (name.isEmpty() && binding->value.type == QV4::CompiledData::Value::Type_Object) {
+        if (name.isEmpty() && binding->type == QV4::CompiledData::Binding::Type_Object) {
             create(binding->value.objectIndex, _qobject);
             continue;
         }
@@ -495,7 +495,7 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
         //      pixelSize: 24
         //      ...
         //  }
-        if (binding->value.type == QV4::CompiledData::Value::Type_Object) {
+        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
             const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
             if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
                 QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType);
@@ -513,7 +513,7 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
         if (_ddata->hasBindingBit(property->coreIndex))
             removeBindingOnProperty(_qobject, property->coreIndex);
 
-        if (binding->value.type == QV4::CompiledData::Value::Type_Script) {
+        if (binding->type == QV4::CompiledData::Binding::Type_Script) {
             QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
             QV4::FunctionObject *function = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, runtimeFunction, qmlGlobal);
             QQmlBinding *binding = new QQmlBinding(QV4::Value::fromObject(function), _qobject, context,
@@ -531,9 +531,9 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::Object *qmlGl
 
         // shortcuts
 #if 0
-        if (property->propType == QMetaType::Double && binding->value.type == QV4::CompiledData::Value::Type_Number) {
+        if (property->propType == QMetaType::Double && binding->value.type == QV4::CompiledData::Binding::Type_Number) {
             argv[0] = const_cast<double*>(&binding->value.d);
-        } else if (property->propType == QMetaType::Bool && binding->value.type == QV4::CompiledData::Value::Type_Boolean) {
+        } else if (property->propType == QMetaType::Bool && binding->value.type == QV4::CompiledData::Binding::Type_Boolean) {
             argv[0] = const_cast<bool*>(&binding->value.b);
         } else
 #endif
@@ -650,20 +650,20 @@ QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::Co
 
     switch (expectedMetaType) {
     case QMetaType::QString:
-        result = valueAsString(&binding->value);
+        result = binding->valueAsString(&unit->header);
         break;
     case QMetaType::Bool:
-        result = valueAsBoolean(&binding->value);
+        result = binding->valueAsBoolean();
         break;
     case QMetaType::Double:
-        result = valueAsNumber(&binding->value);
+        result = binding->valueAsNumber();
         break;
     case QMetaType::Int:
-        result = (int)valueAsNumber(&binding->value);
+        result = (int)binding->valueAsNumber();
         break;
     case QVariant::Color: {
         bool ok = false;
-        result = QQmlStringConverters::colorFromString(valueAsString(&binding->value), &ok);
+        result = QQmlStringConverters::colorFromString(binding->valueAsString(&unit->header), &ok);
         if (!ok) {
             // ### compile error
         }
@@ -672,7 +672,7 @@ QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::Co
     default:
         QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(expectedMetaType);
         if (converter) {
-            result = converter(valueAsString(&binding->value));
+            result = converter(binding->valueAsString(&unit->header));
         } else {
             if (expectedMetaType == QMetaType::QVariant)
                 result = QVariant();
@@ -682,38 +682,6 @@ QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::Co
         break;
     }
     return result;
-}
-
-QString QmlObjectCreator::valueAsString(const QV4::CompiledData::Value *value) const
-{
-    switch (value->type) {
-    case QV4::CompiledData::Value::Type_Script:
-    case QV4::CompiledData::Value::Type_String:
-        return stringAt(value->stringIndex);
-    case QV4::CompiledData::Value::Type_Boolean:
-        return value->b ? QStringLiteral("true") : QStringLiteral("false");
-    case QV4::CompiledData::Value::Type_Number:
-        return QString::number(value->d);
-    case QV4::CompiledData::Value::Type_Invalid:
-        return QString();
-    default:
-        break;
-    }
-    return QString();
-}
-
-double QmlObjectCreator::valueAsNumber(const QV4::CompiledData::Value *value)
-{
-    if (value->type == QV4::CompiledData::Value::Type_Number)
-        return value->d;
-    return 0.0;
-}
-
-bool QmlObjectCreator::valueAsBoolean(const QV4::CompiledData::Value *value)
-{
-    if (value->type == QV4::CompiledData::Value::Type_Boolean)
-        return value->b;
-    return false;
 }
 
 void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)

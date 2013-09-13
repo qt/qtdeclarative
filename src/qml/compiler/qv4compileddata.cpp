@@ -156,6 +156,24 @@ void CompilationUnit::markObjects()
         runtimeFunctions[i]->mark();
 }
 
+QString Binding::valueAsString(const Unit *unit) const
+{
+    switch (type) {
+    case Type_Script:
+    case Type_String:
+        return unit->stringAt(stringIndex);
+    case Type_Boolean:
+        return value.b ? QStringLiteral("true") : QStringLiteral("false");
+    case Type_Number:
+        return QString::number(value.d);
+    case Type_Invalid:
+        return QString();
+    default:
+        break;
+    }
+    return QString();
+}
+
 }
 
 }

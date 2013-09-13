@@ -95,10 +95,6 @@ private:
 
     QVariant variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const;
 
-    QString valueAsString(const QV4::CompiledData::Value *value) const;
-    static double valueAsNumber(const QV4::CompiledData::Value *value);
-    static bool valueAsBoolean(const QV4::CompiledData::Value *value);
-
     QString stringAt(int idx) const { return unit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 

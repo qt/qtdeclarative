@@ -241,8 +241,10 @@ struct Function
 
 // Qml data structures
 
-struct Value
+struct Binding
 {
+    quint32 propertyNameIndex;
+
     enum ValueType {
         Type_Invalid,
         Type_Boolean,
@@ -258,14 +260,24 @@ struct Value
         double d;
         quint32 compiledScriptIndex; // used when Type_Script
         quint32 objectIndex;
-    };
+    } value;
     quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
-};
 
-struct Binding
-{
-    quint32 propertyNameIndex;
-    Value value;
+    QString valueAsString(const Unit *unit) const;
+    double valueAsNumber() const
+    {
+        if (type == Type_Number)
+            return value.d;
+        return 0.0;
+
+    }
+    bool valueAsBoolean() const
+    {
+        if (type == Type_Boolean)
+            return value.b;
+        return false;
+    }
+
 };
 
 struct Parameter
