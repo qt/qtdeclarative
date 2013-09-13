@@ -344,7 +344,7 @@ ReturnedValue ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
-    return Encode(o->extensible);
+    return Encode((bool)o->extensible);
 }
 
 ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
