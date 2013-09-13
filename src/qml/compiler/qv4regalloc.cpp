@@ -878,7 +878,9 @@ private:
         mapping.dump();
 #endif // DEBUG_REGALLOC
 
-        mapping.insertMoves(predecessor, _function);
+        bool insertIntoPredecessor = successor->in.size() > 1;
+        mapping.insertMoves(insertIntoPredecessor ? predecessor : successor, _function,
+                            insertIntoPredecessor);
     }
 
     Temp *createTemp(Temp::Kind kind, int index, Type type) const

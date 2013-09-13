@@ -2786,7 +2786,7 @@ void Optimizer::run()
 
 //    showMeTheCode(function);
 
-    static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();;
+    static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
     if (!function->hasTry && !function->hasWith && doSSA) {
@@ -2878,7 +2878,7 @@ void Optimizer::convertOutOfSSA() {
 
         moves.order();
 
-        moves.insertMoves(bb, function);
+        moves.insertMoves(bb, function, true);
     }
 
     foreach (BasicBlock *bb, function->basicBlocks) {
@@ -2983,15 +2983,15 @@ void MoveMapping::order()
     qSwap(_moves, output);
 }
 
-void MoveMapping::insertMoves(BasicBlock *predecessor, Function *function) const
+void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) const
 {
-    int predecessorInsertionPoint = predecessor->statements.size() - 1;
+    int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
         move->init(m.to, m.from, OpInvalid);
         move->id = m.id;
         move->swap = m.needsSwap;
-        predecessor->statements.insert(predecessorInsertionPoint++, move);
+        bb->statements.insert(insertionPoint++, move);
     }
 }
 
