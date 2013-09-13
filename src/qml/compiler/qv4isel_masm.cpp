@@ -1213,7 +1213,20 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     const char *opName = 0;
     switch (oper) {
     case V4IR::OpIfTrue: assert(!"unreachable"); break;
-    case V4IR::OpNot: setOp(op, opName, __qmljs_not); break;
+    case V4IR::OpNot:
+        if (sourceTemp->type == V4IR::BoolType && targetTemp->type == V4IR::BoolType) {
+            Assembler::RegisterID tReg = Assembler::ScratchRegister;
+            if (targetTemp->kind == V4IR::Temp::PhysicalRegister)
+                tReg = (Assembler::RegisterID) targetTemp->index;
+            _as->xor32(Assembler::TrustedImm32(0x1),
+                       _as->toInt32Register(sourceTemp, Assembler::ScratchRegister),
+                       tReg);
+            if (targetTemp->kind != V4IR::Temp::PhysicalRegister)
+                _as->storeBool(tReg, targetTemp);
+            return;
+        } else {
+            setOp(op, opName, __qmljs_not); break;
+        }
     case V4IR::OpUMinus: setOp(op, opName, __qmljs_uminus); break;
     case V4IR::OpUPlus: setOp(op, opName, __qmljs_uplus); break;
     case V4IR::OpCompl: setOp(op, opName, __qmljs_compl); break;

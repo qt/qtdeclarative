@@ -392,6 +392,9 @@ protected: // IRDecoder
         addDef(targetTemp);
 
         bool needsCall = true;
+        if (oper == OpNot && sourceTemp->type == V4IR::BoolType && targetTemp->type == V4IR::BoolType)
+            needsCall = false;
+
 #if 0 // TODO: change masm to generate code
         switch (oper) {
         case OpIfTrue:
