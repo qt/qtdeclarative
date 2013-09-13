@@ -152,7 +152,7 @@ bool QJSValueIterator::next()
 QString QJSValueIterator::name() const
 {
     if (!QJSValuePrivate::get(d_ptr->value)->value.isObject())
-        return false;
+        return QString();
     if (d_ptr->currentName)
         return d_ptr->currentName->toQString();
     if (d_ptr->currentIndex < UINT_MAX)
