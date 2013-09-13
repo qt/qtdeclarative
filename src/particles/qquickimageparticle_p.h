@@ -353,6 +353,7 @@ private Q_SLOTS:
 
     void spriteAdvance(int spriteIndex);
     void spritesUpdate(qreal time = 0 );
+    void mainThreadFetchImageData();
     void finishBuildParticleNodes();
 private:
     struct ImageData {
@@ -436,7 +437,7 @@ private:
     }
     EntryEffect m_entryEffect;
     Status m_status;
-    bool m_buildingNodes;
+    int m_startedImageLoading;
 };
 
 QT_END_NAMESPACE

@@ -846,7 +846,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_lastLevel(Unknown)
     , m_debugMode(false)
     , m_entryEffect(Fade)
-    , m_buildingNodes(false)
+    , m_startedImageLoading(0)
 {
     setFlag(ItemHasContents);
 }
@@ -1293,39 +1293,47 @@ bool QQuickImageParticle::loadingSomething()
         || (m_spriteEngine && m_spriteEngine->isLoading());
 }
 
-void QQuickImageParticle::buildParticleNodes()//Starts async parts, like loading images.
+void QQuickImageParticle::mainThreadFetchImageData()
 {
+    if (m_image) {//ImageData created on setSource
+        m_image->pix.clear(this);
+        m_image->pix.load(qmlEngine(this), m_image->source);
+    }
+
+    if (m_spriteEngine)
+        m_spriteEngine->startAssemblingImage();
+
+    if (m_colorTable)
+        m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
+
+    if (m_sizeTable)
+        m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
+
+    if (m_opacityTable)
+        m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
+
+    m_startedImageLoading = 2;
+}
+
+void QQuickImageParticle::buildParticleNodes()
+{
+    // Starts async parts, like loading images, on gui thread
+    // Not on individual properties, because we delay until system is running
     if (m_rootNode || loadingSomething())
         return;
 
-    if (!m_buildingNodes) {
-        if (m_image) {//ImageData created on setSource
-            m_image->pix.clear(this);
-            m_image->pix.load(qmlEngine(this), m_image->source);
-        }
-
-        if (m_spriteEngine)
-            m_spriteEngine->startAssemblingImage();
-
-        if (m_colorTable)
-            m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
-
-        if (m_sizeTable)
-            m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
-
-        if (m_opacityTable)
-            m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
-
-        m_buildingNodes = true;
-        if (loadingSomething())
-            return;
+    if (m_startedImageLoading == 0) {
+        m_startedImageLoading = 1;
+        QQuickImageParticle::staticMetaObject.invokeMethod(this, "mainThreadFetchImageData", Qt::QueuedConnection);
+    } else if (m_startedImageLoading == 2) { //stage 1 is in gui thread
+        finishBuildParticleNodes(); //rest happens in render thread
     }
-    finishBuildParticleNodes();
+
+    //No mutex, because it's slow and a compare that fails due to a race condition means just a dropped frame
 }
 
 void QQuickImageParticle::finishBuildParticleNodes()
 {
-    m_buildingNodes = false;
 #ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
@@ -1574,7 +1582,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         m_material = 0;
 
         m_pleaseReset = false;
-        m_buildingNodes = false;//Cancel a part-way build
+        m_startedImageLoading = 0;//Cancel a part-way build (may still have a pending load)
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
@@ -1583,7 +1591,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
             update();
             foreach (QSGGeometryNode* node, m_nodes)
                 node->markDirty(QSGNode::DirtyGeometry);
-        } else if (m_buildingNodes) {
+        } else if (m_startedImageLoading < 2) {
             update();//To call prepareNextFrame() again from the renderThread
         }
     }
