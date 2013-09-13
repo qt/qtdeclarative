@@ -298,6 +298,8 @@ void forcePolishHelper(QQuickItem *item)
 void QQuickWindow::forcePolish()
 {
     Q_D(QQuickWindow);
+    if (!screen())
+        return;
     forcePolishHelper(d->contentItem);
 }
 
