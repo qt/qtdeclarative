@@ -138,6 +138,16 @@ struct ScopedValue
 #endif
     }
 
+    template<typename T>
+    ScopedValue(const Scope &scope, Returned<T> *t)
+    {
+        ptr = scope.engine->jsStackTop++;
+        ptr->val = T::toValue(t->getPointer());
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
     ScopedValue &operator=(const Value &v) {
         *ptr = v;
         return *this;
@@ -145,6 +155,12 @@ struct ScopedValue
 
     ScopedValue &operator=(const ReturnedValue &v) {
         ptr->val = v;
+        return *this;
+    }
+
+    template<typename T>
+    ScopedValue &operator=(const Returned<T> *t) {
+        ptr->val = T::toValue(t->getPointer());
         return *this;
     }
 
@@ -193,6 +209,27 @@ struct Scoped
 #endif
     }
 
+    Scoped(const Scope &scope, const ValueRef &v);
+
+    Scoped(const Scope &scope, T *t)
+    {
+        ptr = scope.engine->jsStackTop++;
+        *ptr = T::toValue(t);
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+    template<typename X>
+    Scoped(const Scope &scope, Returned<X> *x)
+    {
+        ptr = scope.engine->jsStackTop++;
+        T *t = Returned<T>::getPointer(x);
+        *ptr = T::toValue(t);
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
@@ -213,6 +250,8 @@ struct Scoped
         return *this;
     }
 
+    Scoped<T> &operator=(const ValueRef &v);
+
     Scoped<T> &operator=(const ReturnedValue &v) {
         if (T::cast(QV4::Value::fromReturnedValue(v)))
             ptr->val = v;
@@ -226,16 +265,31 @@ struct Scoped
         return *this;
     }
 
+    Scoped<T> &operator=(T *t) {
+        *ptr = T::toValue(t);
+        return *this;
+    }
+
+    template<typename X>
+    Scoped<T> &operator=(Returned<X> *x) {
+        *ptr = T::toValue(Returned<T>::getPointer(x));
+        return *this;
+    }
+
+
     T *operator->() {
         return static_cast<T *>(ptr->managed());
     }
 
-//    const Value *operator->() const {
-//        return T::cast(*ptr);
-//    }
+    const Value *operator->() const {
+        return T::cast(*ptr);
+    }
 
     bool operator!() const {
         return !ptr->managed();
+    }
+    operator bool() const {
+        return ptr->managed();
     }
 
     T *getPointer() {
@@ -325,6 +379,29 @@ private:
     Value *ptr;
 };
 
+template<typename T>
+Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
+{
+    ptr = scope.engine->jsStackTop++;
+    if (T::cast(*v.operator ->()))
+        *ptr = *v.operator ->();
+    else
+        *ptr = QV4::Value::undefinedValue();
+#ifndef QT_NO_DEBUG
+    ++scope.size;
+#endif
+}
+
+template<typename T>
+Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
+{
+    if (T::cast(*v.operator ->()))
+        *ptr = *v.operator ->();
+    else
+        *ptr = QV4::Value::undefinedValue();
+    return *this;
+}
+
 
 struct CallDataRef {
     CallDataRef(const ScopedCallData &c)
@@ -383,6 +460,14 @@ struct Encode : private Value {
         } else {
             dbl = i;
         }
+    }
+    Encode(ReturnedValue v) {
+        val = v;
+    }
+
+    template<typename T>
+    Encode(Returned<T> *t) {
+        val = T::toValue(t->getPointer()).val;
     }
 
     operator ReturnedValue() const {

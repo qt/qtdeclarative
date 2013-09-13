@@ -50,15 +50,13 @@ namespace QV4 {
 
 struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
+    Q_MANAGED
     EvalFunction(ExecutionContext *scope);
 
     ReturnedValue evalCall(Value thisObject, Value *args, int argc, bool directCall);
 
     using Managed::construct;
     static ReturnedValue call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct GlobalFunctions

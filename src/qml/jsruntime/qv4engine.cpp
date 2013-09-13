@@ -381,16 +381,16 @@ Object *ExecutionEngine::newStringObject(const Value &value)
     return object;
 }
 
-Object *ExecutionEngine::newNumberObject(const Value &value)
+Returned<Object> *ExecutionEngine::newNumberObject(const Value &value)
 {
     NumberObject *object = new (memoryManager) NumberObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newBooleanObject(const Value &value)
+Returned<Object> *ExecutionEngine::newBooleanObject(const Value &value)
 {
     Object *object = new (memoryManager) BooleanObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
 ArrayObject *ExecutionEngine::newArrayObject(int count)

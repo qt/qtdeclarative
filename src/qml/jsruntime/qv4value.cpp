@@ -312,7 +312,7 @@ Object *Value::toObject(ExecutionContext *ctx) const
 {
     if (isObject())
         return objectValue();
-    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this));
+    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
 

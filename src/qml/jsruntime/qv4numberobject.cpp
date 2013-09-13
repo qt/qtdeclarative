@@ -59,7 +59,7 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl))).asReturnedValue();
+    return Encode(m->engine()->newNumberObject(Value::fromDouble(dbl)));
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)

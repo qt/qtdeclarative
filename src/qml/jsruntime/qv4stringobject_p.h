@@ -68,13 +68,11 @@ protected:
 
 struct StringCtor: FunctionObject
 {
+    Q_MANAGED
     StringCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct StringPrototype: StringObject

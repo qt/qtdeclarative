@@ -105,6 +105,7 @@ typedef Value (*PropertyEnumeratorFunction)(Object *object);
 typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
+    Q_MANAGED
     uint memberDataAlloc;
     Property *memberData;
 
@@ -181,6 +182,9 @@ struct Q_QML_EXPORT Object: Managed {
 
     static Object *cast(const Value &v) {
         return v.asObject();
+    }
+    static Value toValue(Object *o) {
+        return Value::fromObject(o);
     }
 
     // Array handling
@@ -283,7 +287,8 @@ public:
     void ensureArrayAttributes();
 
     inline bool protoHasArray() {
-        Object *p = this;
+        Scope scope(engine());
+        Scoped<Object> p(scope, this);
 
         while ((p = p->prototype()))
             if (p->arrayDataLen)
@@ -313,7 +318,6 @@ public:
     using Managed::setLookup;
     using Managed::advanceIterator;
 protected:
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

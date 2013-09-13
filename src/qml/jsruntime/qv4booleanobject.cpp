@@ -54,13 +54,13 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n))).asReturnedValue();
+    return Encode(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
 ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
 {
     bool value = callData->argc ? callData->args[0].toBoolean() : 0;
-    return Value::fromBoolean(value).asReturnedValue();
+    return Encode(value);
 }
 
 void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)

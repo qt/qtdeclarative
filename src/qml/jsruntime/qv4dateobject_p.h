@@ -64,13 +64,11 @@ protected:
 
 struct DateCtor: FunctionObject
 {
+    Q_MANAGED
     DateCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct DatePrototype: DateObject

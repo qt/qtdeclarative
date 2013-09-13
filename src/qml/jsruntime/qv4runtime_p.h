@@ -172,7 +172,7 @@ QV4::ReturnedValue __qmljs_to_string(const ValueRef value, QV4::ExecutionContext
 Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 void __qmljs_numberToString(QString *result, double num, int radix = 10);
 ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
-QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
+Returned<Object> *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
 
 QV4::Bool __qmljs_equal_helper(const ValueRef x, const ValueRef y);
 Q_QML_EXPORT QV4::Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y);
@@ -293,21 +293,6 @@ inline double __qmljs_to_number(const ValueRef value)
 {
     return value->toNumber();
 }
-
-inline QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
-{
-    if (value->isString())
-        return value.asReturnedValue();
-    return __qmljs_convert_to_string(ctx, value)->asReturnedValue();
-}
-
-inline QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
-{
-    if (value->isObject())
-        return value.asReturnedValue();
-    return Value::fromObject(__qmljs_convert_to_object(ctx, value)).asReturnedValue();
-}
-
 
 inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {

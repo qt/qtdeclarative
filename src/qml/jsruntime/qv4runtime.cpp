@@ -598,7 +598,7 @@ Bool __qmljs_to_boolean(const ValueRef value)
 }
 
 
-Object *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
+Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
 {
     assert(!value->isObject());
     switch (value->type()) {
@@ -608,7 +608,7 @@ Object *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(*value);
     case Value::String_Type:
-        return ctx->engine->newStringObject(*value);
+        return ctx->engine->newStringObject(*value)->asReturned<Object>();
         break;
     case Value::Object_Type:
         Q_UNREACHABLE();
@@ -658,9 +658,10 @@ void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, String *
 
 ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index)
 {
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
 
-    Object *o = object->asObject();
+    Scoped<Object> o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
@@ -766,18 +767,19 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
 
 ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *name)
 {
-    Value res;
-    Managed *m = object->asManaged();
-    if (m)
-        return m->get(name);
+    Scope scope(ctx);
+
+    Scoped<Object> o(scope, object);
+    if (o)
+        return o->get(name);
 
     if (object->isNullOrUndefined()) {
         QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
         ctx->throwTypeError(message);
     }
 
-    m = __qmljs_convert_to_object(ctx, object);
-    return m->get(name);
+    o = __qmljs_convert_to_object(ctx, object);
+    return o->get(name);
 }
 
 ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
@@ -974,7 +976,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String
 ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
     Scope scope(context);
-    Managed *baseObject = callData->thisObject.asManaged();
+    Scoped<Object> baseObject(scope, callData->thisObject);
     if (!baseObject) {
         if (callData->thisObject.isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
@@ -982,7 +984,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, Cal
         }
 
         baseObject = __qmljs_convert_to_object(context, ValueRef(&callData->thisObject));
-        callData->thisObject = Value::fromObject(static_cast<Object *>(baseObject));
+        callData->thisObject = baseObject.asValue();
     }
 
     Scoped<FunctionObject> o(scope, baseObject->get(name));
@@ -1249,6 +1251,20 @@ QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
         double d = value->toNumber();
         return Value::fromDouble(d - 1).asReturnedValue();
     }
+}
+
+QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
+{
+    if (value->isString())
+        return value.asReturnedValue();
+    return __qmljs_convert_to_string(ctx, value)->asReturnedValue();
+}
+
+QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
+{
+    if (value->isObject())
+        return value.asReturnedValue();
+    return Encode(__qmljs_convert_to_object(ctx, value));
 }
 
 void __qmljs_value_to_double(double *result, const ValueRef value)

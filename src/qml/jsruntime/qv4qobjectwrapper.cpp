@@ -559,7 +559,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     } else {
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
-        Scoped<Object> alternateWrapper(scope, 0);
+        Scoped<Object> alternateWrapper(scope, (Object *)0);
         if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
             alternateWrapper = Value::fromObject(engine->m_multiplyWrappedQObjects->value(object));
 

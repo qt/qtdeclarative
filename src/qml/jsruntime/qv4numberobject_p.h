@@ -51,13 +51,11 @@ namespace QV4 {
 
 struct NumberCtor: FunctionObject
 {
+    Q_MANAGED
     NumberCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *that, CallData *callData);
     static ReturnedValue call(Managed *, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct NumberPrototype: NumberObject

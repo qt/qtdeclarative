@@ -59,8 +59,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
-
 inline Managed *Value::asManaged() const
 {
     if (isManaged())

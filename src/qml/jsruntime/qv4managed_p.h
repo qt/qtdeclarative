@@ -61,10 +61,22 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
+template <typename T>
+struct Returned : private T
+{
+    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
+    T *getPointer() { return this; }
+    template<typename X>
+    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
+};
+
 #define Q_MANAGED \
     public: \
         Q_MANAGED_CHECK \
-        static const QV4::ManagedVTable static_vtbl;
+        static const QV4::ManagedVTable static_vtbl; \
+        template <typename T> \
+        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+
 
 struct GCDeletable
 {
@@ -162,6 +174,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
 
 struct Q_QML_EXPORT Managed
 {
+    Q_MANAGED
 private:
     void *operator new(size_t);
     Managed(const Managed &other);
@@ -319,9 +332,6 @@ public:
     };
 
 protected:
-
-    static const ManagedVTable static_vtbl;
-
     const ManagedVTable *vtbl;
 public:
     InternalClass *internalClass;

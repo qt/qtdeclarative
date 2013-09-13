@@ -93,11 +93,9 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
+    Q_MANAGED
     SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct TypeErrorObject: ErrorObject {
@@ -111,74 +109,60 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
+    Q_MANAGED
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, String *name);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     EvalErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     RangeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     ReferenceErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     SyntaxErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     TypeErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct URIErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     URIErrorCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 

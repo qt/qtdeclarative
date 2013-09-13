@@ -51,13 +51,11 @@ namespace QV4 {
 
 struct ArrayCtor: FunctionObject
 {
+    Q_MANAGED
     ArrayCtor(ExecutionContext *scope);
 
     static ReturnedValue construct(Managed *m, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct ArrayPrototype: ArrayObject
