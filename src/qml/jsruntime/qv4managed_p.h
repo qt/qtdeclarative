@@ -68,6 +68,7 @@ struct Returned : private T
     T *getPointer() { return this; }
     template<typename X>
     static T *getPointer(Returned<X> *x) { return x->getPointer(); }
+    using T::asReturnedValue;
 };
 
 #define Q_MANAGED \

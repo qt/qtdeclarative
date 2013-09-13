@@ -143,8 +143,8 @@ QV4::ReturnedValue __qmljs_init_closure(QV4::ExecutionContext *ctx, int function
 
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);
-QV4::ReturnedValue __qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
-QV4::String *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
+Returned<String> *__qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
+Returned<String> *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
 
 // objects
 Q_QML_EXPORT ReturnedValue __qmljs_object_default_value(QV4::Object *object, int typeHint);
@@ -169,7 +169,7 @@ QV4::ReturnedValue __qmljs_to_primitive(const ValueRef value, int typeHint);
 Q_QML_EXPORT QV4::Bool __qmljs_to_boolean(const QV4::ValueRef value);
 double __qmljs_to_number(const QV4::ValueRef value);
 QV4::ReturnedValue __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
-Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
+Q_QML_EXPORT Returned<String> *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 void __qmljs_numberToString(QString *result, double num, int radix = 10);
 ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
 Returned<Object> *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);

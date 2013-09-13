@@ -305,7 +305,7 @@ String *Value::toString(ExecutionContext *ctx) const
 {
     if (isString())
         return stringValue();
-    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this));
+    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
 Object *Value::toObject(ExecutionContext *ctx) const

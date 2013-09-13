@@ -196,7 +196,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     else if (v < 1.e21)
         str = QString::number(v, 'f', int (fdigits));
     else
-        return __qmljs_string_from_number(ctx, v);
+        return __qmljs_string_from_number(ctx, v)->asReturnedValue();
     return Value::fromString(ctx, str).asReturnedValue();
 }
 

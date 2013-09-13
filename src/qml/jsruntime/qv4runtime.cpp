@@ -285,8 +285,7 @@ QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left
             pleft = __qmljs_to_string(pleft, ctx);
         if (!pright->isString())
             pright = __qmljs_to_string(pright, ctx);
-        String *string = __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue());
-        return Value::fromString(string).asReturnedValue();
+        return __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue())->asReturnedValue();
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
@@ -532,15 +531,15 @@ double __qmljs_string_to_number(const QString &string)
     return d;
 }
 
-ReturnedValue __qmljs_string_from_number(ExecutionContext *ctx, double number)
+Returned<String> *__qmljs_string_from_number(ExecutionContext *ctx, double number)
 {
     QString qstr;
     __qmljs_numberToString(&qstr, number, 10);
     String *string = ctx->engine->newString(qstr);
-    return string->asReturnedValue();
+    return string->asReturned<String>();
 }
 
-String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
+Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
 {
     const QString &a = first->toQString();
     const QString &b = second->toQString();
@@ -550,7 +549,7 @@ String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *seco
     data += a.length();
     memcpy(data, b.constData(), b.length()*sizeof(QChar));
 
-    return ctx->engine->newString(newStr);
+    return ctx->engine->newString(newStr)->asReturned<String>();
 }
 
 ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
@@ -618,35 +617,29 @@ Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRe
     }
 }
 
-String *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
+Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:
-        return ctx->engine->id_undefined;
+        return ctx->engine->id_undefined->asReturned<String>();
     case Value::Null_Type:
-        return ctx->engine->id_null;
+        return ctx->engine->id_null->asReturned<String>();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine->id_true;
+            return ctx->engine->id_true->asReturned<String>();
         else
-            return ctx->engine->id_false;
+            return ctx->engine->id_false->asReturned<String>();
     case Value::String_Type:
-        return value->stringValue();
+        return value->stringValue()->asReturned<String>();
     case Value::Object_Type: {
         Scope scope(ctx);
         ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
         return __qmljs_convert_to_string(ctx, prim);
     }
-    case Value::Integer_Type: {
-        Scope scope(ctx);
-        ScopedValue dbl(scope, __qmljs_string_from_number(ctx, value->int_32));
-        return dbl->stringValue();
-    }
-    default: { // double
-        Scope scope(ctx);
-        ScopedValue dbl(scope, __qmljs_string_from_number(ctx, value->doubleValue()));
-        return dbl->stringValue();
-    }
+    case Value::Integer_Type:
+        return __qmljs_string_from_number(ctx, value->int_32);
+    default: // double
+        return __qmljs_string_from_number(ctx, value->doubleValue());
     } // switch
 }
 
