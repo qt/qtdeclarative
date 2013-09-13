@@ -2786,7 +2786,7 @@ void Optimizer::run()
 
 //    showMeTheCode(function);
 
-    static bool doSSA = /*qgetenv("QV4_NO_SSA").isEmpty();*/ false;
+    static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();;
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
     if (!function->hasTry && !function->hasWith && doSSA) {

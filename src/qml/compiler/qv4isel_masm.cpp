@@ -620,7 +620,7 @@ void InstructionSelection::run(int functionIndex)
     opt.run();
 
 #if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))
-    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
+    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty() && false; // disabled for now
     if (opt.isInSSA() && withRegisterAllocator) {
         static const QVector<int> intRegisters = QVector<int>()
                 << JSC::X86Registers::edi
