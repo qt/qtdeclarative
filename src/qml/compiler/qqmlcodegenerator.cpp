@@ -874,6 +874,15 @@ void QQmlCodeGenerator::collectTypeReferences()
             for (SignalParameter *param = sig->parameters->first; param; param = param->next)
                 if (!stringAt(param->customTypeNameIndex).isEmpty())
                     _typeReferences.add(param->customTypeNameIndex, param->location);
+
+        for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+            if (binding->type != QV4::CompiledData::Binding::Type_Object)
+                continue;
+            const QString &propName = stringAt(binding->propertyNameIndex);
+            // Attached property?
+            if (propName.unicode()->isUpper())
+                _typeReferences.add(binding->propertyNameIndex, binding->location);
+        }
     }
 }
 
@@ -1070,9 +1079,10 @@ void JSCodeGen::QmlScanner::end()
     leaveEnvironment();
 }
 
-SignalHandlerConverter::SignalHandlerConverter(ParsedQML *parsedQML, const QHash<int, QQmlPropertyCache *> &resolvedPropertyCaches, QQmlCompiledData *unit)
-    : parsedQML(parsedQML)
-    , resolvedPropertyCaches(resolvedPropertyCaches)
+SignalHandlerConverter::SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,
+                                               QQmlCompiledData *unit)
+    : enginePrivate(enginePrivate)
+    , parsedQML(parsedQML)
     , unit(unit)
 {
 }
@@ -1083,114 +1093,127 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QString elementName = stringAt(obj->inheritedTypeNameIndex);
         if (elementName.isEmpty())
             continue;
-        QQmlPropertyCache *propertyCache = 0;
-        // map from signal name defined in qml itself to list of parameters
-        QHash<QString, QStringList> customSignals;
+        QQmlPropertyCache *cache = unit->resolvedTypes[obj->inheritedTypeNameIndex].createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
+            return false;
+    }
+    return true;
+}
 
-        for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
-            if (binding->type != QV4::CompiledData::Binding::Type_Script)
-                continue;
+bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations(QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache)
+{
+    // map from signal name defined in qml itself to list of parameters
+    QHash<QString, QStringList> customSignals;
 
-            QString propertyName = stringAt(binding->propertyNameIndex);
-            if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
-                continue;
+    for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+        QString propertyName = stringAt(binding->propertyNameIndex);
+        // Attached property?
+        if (propertyName.unicode()->isUpper() && binding->type == QV4::CompiledData::Binding::Type_Object) {
+            QmlObject *attachedObj = parsedQML->objects[binding->value.objectIndex];
+            QQmlType *type = unit->resolvedTypes.value(binding->propertyNameIndex).type;
+            QQmlPropertyCache *cache = enginePrivate->cache(type->attachedPropertiesType());
+            if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, propertyName, cache))
+                return false;
+            continue;
+        }
 
-            if (!propertyCache)
-                propertyCache = resolvedPropertyCaches.value(obj->inheritedTypeNameIndex);
-            Q_ASSERT(propertyCache);
+        if (binding->type != QV4::CompiledData::Binding::Type_Script)
+            continue;
 
-            PropertyResolver resolver(propertyCache);
+        if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
+            continue;
 
-            Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
-            propertyName.remove(0, 2);
+        PropertyResolver resolver(propertyCache);
 
-            // Note that the property name could start with any alpha or '_' or '$' character,
-            // so we need to do the lower-casing of the first alpha character.
-            for (int firstAlphaIndex = 0; firstAlphaIndex < propertyName.size(); ++firstAlphaIndex) {
-                if (propertyName.at(firstAlphaIndex).isUpper()) {
-                    propertyName[firstAlphaIndex] = propertyName.at(firstAlphaIndex).toLower();
-                    break;
-                }
+        Q_ASSERT(propertyName.startsWith(QStringLiteral("on")));
+        propertyName.remove(0, 2);
+
+        // Note that the property name could start with any alpha or '_' or '$' character,
+        // so we need to do the lower-casing of the first alpha character.
+        for (int firstAlphaIndex = 0; firstAlphaIndex < propertyName.size(); ++firstAlphaIndex) {
+            if (propertyName.at(firstAlphaIndex).isUpper()) {
+                propertyName[firstAlphaIndex] = propertyName.at(firstAlphaIndex).toLower();
+                break;
             }
+        }
 
-            QList<QString> parameters;
+        QList<QString> parameters;
 
-            bool notInRevision = false;
-            QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
-            if (signal) {
-                int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
-                foreach (const QByteArray &param, propertyCache->signalParameterNames(sigIndex))
-                    parameters << QString::fromUtf8(param);
-            } else {
-                if (notInRevision) {
-                    // Try assinging it as a property later
-                    if (resolver.property(propertyName, /*notInRevision ptr*/0))
-                        continue;
-
-                    const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
-
-                    const QQmlType *type = unit->resolvedTypes.value(obj->inheritedTypeNameIndex).type;
-                    if (type) {
-                        COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
-                    } else {
-                        COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName).arg(originalPropertyName));
-                    }
-                }
-
-                // Try to look up the signal parameter names in the object itself
-
-                // build cache if necessary
-                if (customSignals.isEmpty()) {
-                    for (Signal *signal = obj->qmlSignals->first; signal; signal = signal->next) {
-                        const QString &signalName = stringAt(signal->nameIndex);
-                        customSignals.insert(signalName, signal->parameterStringList(parsedQML->jsGenerator.strings));
-                    }
-                }
-
-                QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
-                if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
-                    QString alternateName = propertyName.mid(0, propertyName.length() - strlen("Changed"));
-                    entry = customSignals.find(alternateName);
-                }
-
-                if (entry == customSignals.constEnd()) {
-                    // Can't find even a custom signal, then just don't do anything and try
-                    // keeping the binding as a regular property assignment.
+        bool notInRevision = false;
+        QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
+        if (signal) {
+            int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex);
+            foreach (const QByteArray &param, propertyCache->signalParameterNames(sigIndex))
+                parameters << QString::fromUtf8(param);
+        } else {
+            if (notInRevision) {
+                // Try assinging it as a property later
+                if (resolver.property(propertyName, /*notInRevision ptr*/0))
                     continue;
+
+                const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
+
+                const QQmlType *type = unit->resolvedTypes.value(obj->inheritedTypeNameIndex).type;
+                if (type) {
+                    COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
+                } else {
+                    COMPILE_EXCEPTION(binding->location, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(originalPropertyName));
                 }
-
-                parameters = entry.value();
             }
 
-            QQmlJS::Engine &jsEngine = parsedQML->jsParserEngine;
-            QQmlJS::MemoryPool *pool = jsEngine.pool();
+            // Try to look up the signal parameter names in the object itself
 
-            AST::FormalParameterList *paramList = 0;
-            foreach (const QString &param, parameters) {
-                QStringRef paramNameRef = jsEngine.newStringRef(param);
-
-                if (paramList)
-                    paramList = new (pool) AST::FormalParameterList(paramList, paramNameRef);
-                else
-                    paramList = new (pool) AST::FormalParameterList(paramNameRef);
+            // build cache if necessary
+            if (customSignals.isEmpty()) {
+                for (Signal *signal = obj->qmlSignals->first; signal; signal = signal->next) {
+                    const QString &signalName = stringAt(signal->nameIndex);
+                    customSignals.insert(signalName, signal->parameterStringList(parsedQML->jsGenerator.strings));
+                }
             }
+
+            QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
+            if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
+                QString alternateName = propertyName.mid(0, propertyName.length() - strlen("Changed"));
+                entry = customSignals.find(alternateName);
+            }
+
+            if (entry == customSignals.constEnd()) {
+                // Can't find even a custom signal, then just don't do anything and try
+                // keeping the binding as a regular property assignment.
+                continue;
+            }
+
+            parameters = entry.value();
+        }
+
+        QQmlJS::Engine &jsEngine = parsedQML->jsParserEngine;
+        QQmlJS::MemoryPool *pool = jsEngine.pool();
+
+        AST::FormalParameterList *paramList = 0;
+        foreach (const QString &param, parameters) {
+            QStringRef paramNameRef = jsEngine.newStringRef(param);
 
             if (paramList)
-                paramList = paramList->finish();
-
-            AST::Statement *statement = static_cast<AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex]);
-            AST::SourceElement *sourceElement = new (pool) AST::StatementSourceElement(statement);
-            AST::SourceElements *elements = new (pool) AST::SourceElements(sourceElement);
-            elements = elements->finish();
-
-            AST::FunctionBody *body = new (pool) AST::FunctionBody(elements);
-
-            AST::FunctionDeclaration *functionDeclaration = new (pool) AST::FunctionDeclaration(jsEngine.newStringRef(propertyName), paramList, body);
-
-            parsedQML->functions[binding->value.compiledScriptIndex] = functionDeclaration;
-            binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
-            binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
+                paramList = new (pool) AST::FormalParameterList(paramList, paramNameRef);
+            else
+                paramList = new (pool) AST::FormalParameterList(paramNameRef);
         }
+
+        if (paramList)
+            paramList = paramList->finish();
+
+        AST::Statement *statement = static_cast<AST::Statement*>(parsedQML->functions[binding->value.compiledScriptIndex]);
+        AST::SourceElement *sourceElement = new (pool) AST::StatementSourceElement(statement);
+        AST::SourceElements *elements = new (pool) AST::SourceElements(sourceElement);
+        elements = elements->finish();
+
+        AST::FunctionBody *body = new (pool) AST::FunctionBody(elements);
+
+        AST::FunctionDeclaration *functionDeclaration = new (pool) AST::FunctionDeclaration(jsEngine.newStringRef(propertyName), paramList, body);
+
+        parsedQML->functions[binding->value.compiledScriptIndex] = functionDeclaration;
+        binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
+        binding->propertyNameIndex = parsedQML->jsGenerator.registerString(propertyName);
     }
     return true;
 }

@@ -503,6 +503,19 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionCont
             continue;
         }
 
+        // Attached property
+        if (binding->type == QV4::CompiledData::Binding::Type_Object
+            && name.unicode()->isUpper()) {
+            const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
+            Q_ASSERT(stringAt(obj->inheritedTypeNameIndex).isEmpty());
+            QQmlType *attachedType = resolvedTypes.value(binding->propertyNameIndex).type;
+            const int id = attachedType->attachedPropertiesId();
+            QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
+            QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
+            populateInstance(binding->value.objectIndex, qmlObject, cache);
+            continue;
+        }
+
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
 
         // Grouped property:

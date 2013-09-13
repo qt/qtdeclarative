@@ -49,6 +49,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
+#include <private/qqmlcodegenerator_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -2175,19 +2176,18 @@ void QQmlTypeData::compile()
 
         QQmlEngine *engine = typeLoader()->engine();
 
-        QHash<int, QQmlPropertyCache*> resolvedPropertyCaches;
-
         for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
              resolvedType != end; ++resolvedType) {
             QQmlCompiledData::TypeReference ref;
             ref.type = resolvedType->type;
             Q_ASSERT(ref.type);
-            resolvedPropertyCaches.insert(resolvedType.key(), ref.createPropertyCache(engine));
             m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
         }
 
         {
-            SignalHandlerConverter converter(parsedQML.data(), resolvedPropertyCaches, m_compiledData);
+            SignalHandlerConverter converter(QQmlEnginePrivate::get(engine),
+                                             parsedQML.data(),
+                                             m_compiledData);
             if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations()) {
                 setError(converter.errors);
                 m_compiledData->release();

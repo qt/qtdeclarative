@@ -306,7 +306,7 @@ struct SignalHandlerConverter
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
-    SignalHandlerConverter(ParsedQML *parsedQML, const QHash<int, QQmlPropertyCache*> &resolvedPropertyCaches,
+    SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,
                            QQmlCompiledData *unit);
 
     bool convertSignalHandlerExpressionsToFunctionDeclarations();
@@ -314,11 +314,13 @@ public:
     QList<QQmlError> errors;
 
 private:
+    bool convertSignalHandlerExpressionsToFunctionDeclarations(QmlObject *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
+
     const QString &stringAt(int index) const { return parsedQML->jsGenerator.strings.at(index); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
+    QQmlEnginePrivate *enginePrivate;
     ParsedQML *parsedQML;
-    const QHash<int, QQmlPropertyCache*> &resolvedPropertyCaches;
     QQmlCompiledData *unit;
 };
 

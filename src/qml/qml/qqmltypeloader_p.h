@@ -68,7 +68,6 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
-#include <private/qqmlcodegenerator_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4script_p.h>
@@ -84,6 +83,10 @@ class QQmlComponentPrivate;
 class QQmlTypeData;
 class QQmlDataLoader;
 class QQmlExtensionInterface;
+
+namespace QtQml {
+struct ParsedQML;
+}
 
 class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
 {
