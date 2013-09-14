@@ -298,12 +298,11 @@ inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    Value result = *value;
-    if (result.tryIntegerConversion())
-        return result.asReturnedValue();
+    if (value->isConvertibleToInt())
+        return Encode(value->int_32);
 
-    double n = __qmljs_to_number(value);
-    return QV4::Value::fromDouble(n).asReturnedValue();
+    double n = value->toNumber();
+    return Encode(n);
 }
 
 inline QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value)
@@ -327,9 +326,9 @@ inline QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value)
     if (value->isConvertibleToInt())
         n = value->int_32;
     else
-        n = QV4::Value::toInt32(__qmljs_to_number(value));
+        n = value->toInt32();
 
-    return QV4::Value::fromInt32(~n).asReturnedValue();
+    return Encode((int)~n);
 }
 
 inline QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value)
@@ -337,7 +336,7 @@ inline QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value)
     TRACE1(value);
 
     bool b = value->toBoolean();
-    return QV4::Value::fromBoolean(!b).asReturnedValue();
+    return Encode(!b);
 }
 
 // binary operators
@@ -348,8 +347,8 @@ inline ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRe
     if (QV4::Value::integerCompatible(*left, *right))
         return QV4::Value::fromInt32(left->integerValue() | right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
+    int lval = left->toInt32();
+    int rval = right->toInt32();
     return QV4::Value::fromInt32(lval | rval).asReturnedValue();
 }
 
@@ -360,8 +359,8 @@ inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueR
     if (QV4::Value::integerCompatible(*left, *right))
         return QV4::Value::fromInt32(left->integerValue() ^ right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
+    int lval = left->toInt32();
+    int rval = right->toInt32();
     return QV4::Value::fromInt32(lval ^ rval).asReturnedValue();
 }
 
@@ -372,8 +371,8 @@ inline ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueR
     if (QV4::Value::integerCompatible(*left, *right))
         return QV4::Value::fromInt32(left->integerValue() & right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
+    int lval = left->toInt32();
+    int rval = right->toInt32();
     return QV4::Value::fromInt32(lval & rval).asReturnedValue();
 }
 
@@ -445,8 +444,8 @@ inline QV4::ReturnedValue __qmljs_shl(const QV4::ValueRef left, const QV4::Value
     if (QV4::Value::integerCompatible(*left, *right))
         return QV4::Value::fromInt32(left->integerValue() << ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
+    int lval = left->toInt32();
+    unsigned rval = right->toUInt32() & 0x1f;
     return QV4::Value::fromInt32(lval << rval).asReturnedValue();
 }
 
@@ -457,8 +456,8 @@ inline QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::Value
     if (QV4::Value::integerCompatible(*left, *right))
         return QV4::Value::fromInt32(left->integerValue() >> ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
+    int lval = left->toInt32();
+    unsigned rval = right->toUInt32() & 0x1f;
     return QV4::Value::fromInt32(lval >> rval).asReturnedValue();
 }
 
@@ -470,8 +469,8 @@ inline QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::Valu
     if (QV4::Value::integerCompatible(*left, *right)) {
         res = uint(left->integerValue()) >> (uint(right->integerValue()) & 0x1f);
     } else {
-        unsigned lval = QV4::Value::toUInt32(__qmljs_to_number(left));
-        unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
+        unsigned lval = left->toUInt32();
+        unsigned rval = right->toUInt32() & 0x1f;
         res = lval >> rval;
     }
 

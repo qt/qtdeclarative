@@ -171,6 +171,51 @@ inline Value Value::fromObject(Object *o)
     return v;
 }
 
+inline double Value::toNumber() const
+{
+    if (isConvertibleToInt())
+        return int_32;
+    if (isDouble())
+        return dbl;
+    return toNumberImpl();
+}
+
+inline int Value::toInt32() const
+{
+    if (isConvertibleToInt())
+        return int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = toNumberImpl();
+
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((d >= -D31 && d < D31))
+        return static_cast<int>(d);
+
+    return Value::toInt32(d);
+}
+
+inline unsigned int Value::toUInt32() const
+{
+    if (isConvertibleToInt())
+        return (unsigned) int_32;
+    double d;
+    if (isDouble())
+        d = dbl;
+    else
+        d = toNumberImpl();
+
+    const double D32 = 4294967296.0;
+    if (d >= 0 && d < D32)
+        return static_cast<uint>(d);
+    return toUInt32(d);
+}
+
+
 inline bool Value::toBoolean() const
 {
     switch (type()) {

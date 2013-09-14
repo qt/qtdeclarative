@@ -48,41 +48,6 @@
 
 using namespace QV4;
 
-int Value::toInt32() const
-{
-    if (isConvertibleToInt())
-        return int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = toNumber();
-
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
-
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Value::toInt32(d);
-}
-
-unsigned int Value::toUInt32() const
-{
-    if (isConvertibleToInt())
-        return (unsigned) int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = toNumber();
-
-    const double D32 = 4294967296.0;
-    if (d >= 0 && d < D32)
-        return static_cast<uint>(d);
-    return toUInt32(d);
-}
-
 int Value::toUInt16() const
 {
     if (isConvertibleToInt())
@@ -117,17 +82,11 @@ double Value::toInteger() const
     return Value::toInteger(toNumber());
 }
 
-double Value::toNumber() const
+double Value::toNumberImpl() const
 {
     switch (type()) {
     case QV4::Value::Undefined_Type:
         return std::numeric_limits<double>::quiet_NaN();
-    case QV4::Value::Null_Type:
-        return 0;
-    case QV4::Value::Boolean_Type:
-        return (booleanValue() ? 1. : 0.);
-    case QV4::Value::Integer_Type:
-        return int_32;
     case QV4::Value::String_Type:
         return __qmljs_string_to_number(stringValue()->toQString());
     case QV4::Value::Object_Type: {
@@ -136,8 +95,11 @@ double Value::toNumber() const
         ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
         return prim->toNumber();
     }
+    case QV4::Value::Null_Type:
+    case QV4::Value::Boolean_Type:
+    case QV4::Value::Integer_Type:
     default: // double
-        return doubleValue();
+        Q_UNREACHABLE();
     }
 }
 
