@@ -973,7 +973,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 {
     if (state->completePending) {
         if (enginePriv->useNewCompiler) {
-            // ###
+            state->creator->finalize();
         } else {
             state->vme.complete();
         }
@@ -1049,9 +1049,11 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     if (!engine)
         return a;
 
-    if (QQmlEnginePrivate::get(engine)->activeVME) { // XXX should only be allowed during begin
-        QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
+    QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
+    if (p->activeVME) { // XXX should only be allowed during begin
         a->add(&p->activeVME->componentAttached);
+    } else if (p->activeObjectCreator) {
+        a->add(&p->activeObjectCreator->componentAttached);
     } else {
         QQmlData *d = QQmlData::get(obj);
         Q_ASSERT(d);

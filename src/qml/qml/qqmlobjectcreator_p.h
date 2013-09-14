@@ -85,7 +85,12 @@ public:
     { return create(unit->indexOfRootObject, parent); }
     QObject *create(int index, QObject *parent = 0);
 
+    void finalize();
+
     QList<QQmlError> errors;
+
+    QQmlComponentAttached *componentAttached;
+    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
 private:
     void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);

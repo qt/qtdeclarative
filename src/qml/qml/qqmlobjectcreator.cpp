@@ -50,8 +50,22 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmltrace_p.h>
+#include <private/qqmlcomponentattached_p.h>
 
 QT_USE_NAMESPACE
+
+namespace {
+struct ActiveOCRestorer
+{
+    ActiveOCRestorer(QmlObjectCreator *creator, QQmlEnginePrivate *ep)
+    : ep(ep), oldCreator(ep->activeObjectCreator) { ep->activeObjectCreator = creator; }
+    ~ActiveOCRestorer() { ep->activeObjectCreator = oldCreator; }
+
+    QQmlEnginePrivate *ep;
+    QmlObjectCreator *oldCreator;
+};
+}
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -448,7 +462,8 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
                                    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
                                    const QList<QQmlPropertyCache*> &propertyCaches,
                                    const QList<QByteArray> &vmeMetaObjectData, const QHash<int, int> &objectIndexToId)
-    : engine(contextData->engine)
+    : componentAttached(0)
+    , engine(contextData->engine)
     , unit(qmlUnit)
     , jsUnit(jsUnit)
     , context(contextData)
@@ -585,6 +600,8 @@ void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
 
 QObject *QmlObjectCreator::create(int index, QObject *parent)
 {
+    ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
+
     const QV4::CompiledData::Object *obj = unit->objectAt(index);
 
     QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
@@ -607,6 +624,28 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     populateInstance(index, instance, cache);
 
     return instance;
+}
+
+void QmlObjectCreator::finalize()
+{
+    {
+    QQmlTrace trace("VME Component.onCompleted Callbacks");
+    while (componentAttached) {
+        QQmlComponentAttached *a = componentAttached;
+        a->rem();
+        QQmlData *d = QQmlData::get(a->parent());
+        Q_ASSERT(d);
+        Q_ASSERT(d->context);
+        a->add(&d->context->componentAttached);
+        // ### designer if (componentCompleteEnabled())
+            emit a->completed();
+
+#if 0 // ###
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+            return 0;
+#endif
+    }
+    }
 }
 
 void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache)

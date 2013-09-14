@@ -554,6 +554,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   outputWarningsToStdErr(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
+  activeObjectCreator(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
@@ -1030,6 +1031,8 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
     if (activeVME) {
         activeVME->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
+    } else if (activeObjectCreator) {
+        activeObjectCreator->finalizeCallbacks.append(qMakePair(QPointer<QObject>(obj), index));
     } else {
         void *args[] = { 0 };
         QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
