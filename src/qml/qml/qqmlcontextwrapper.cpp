@@ -97,22 +97,22 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
 {
-    QV4::Object *qmlglobal = v4->qmlContextObject();
-    if (!qmlglobal)
-        return 0;
+    Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
 
-    QmlContextWrapper *c = qmlglobal->as<QmlContextWrapper>();
-    return c ? c->getContext() : 0;
+    return !!c ? c->getContext() : 0;
 }
 
 QQmlContextData *QmlContextWrapper::getContext(const Value &value)
 {
-    Object *o = value.asObject();
-    QmlContextWrapper *c = o ? o->as<QmlContextWrapper>() : 0;
-    if (!c)
+    QV4::ExecutionEngine *v4 = value.engine();
+    if (!v4)
         return 0;
 
-    return c ? c->getContext():0;
+    Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> c(scope, value.as<QmlContextWrapper>());
+
+    return !!c ? c->getContext():0;
 }
 
 void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)

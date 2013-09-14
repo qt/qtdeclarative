@@ -184,27 +184,29 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject();
+    QV4::Scope scope(e);
+    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
     a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
     a->setArrayLengthUnchecked(len);
-    return QV4::Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariantList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject();
+    QV4::Scope scope(e);
+    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
     a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = QV4::Value::fromReturnedValue(engine->fromVariant(list.at(ii)));
     a->setArrayLengthUnchecked(len);
-    return QV4::Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariantMap &map)
@@ -308,13 +310,13 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
-            QV4::ArrayObject *a = m_v4Engine->newArrayObject();
+            QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
             a->arrayReserve(list.count());
             a->arrayDataLen = list.count();
             for (int ii = 0; ii < list.count(); ++ii)
                 a->arrayData[ii].value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii)));
             a->setArrayLengthUnchecked(list.count());
-            return QV4::Value::fromObject(a).asReturnedValue();
+            return a.asReturnedValue();
         } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
             return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
         }
@@ -337,7 +339,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
     //    + QObjectList
     //    + QList<int>
 
-    return QV4::Value::fromObject(m_v4Engine->newVariantObject(variant)).asReturnedValue();
+    return QV4::Encode(m_v4Engine->newVariantObject(variant));
 }
 
 QNetworkAccessManager *QV8Engine::networkAccessManager()
@@ -517,13 +519,14 @@ QV4::Value QV8Engine::global()
 // elements converted to JS, recursively.
 QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 {
-    QV4::ArrayObject *a = m_v4Engine->newArrayObject();
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
     a->arrayDataLen = lst.size();
     for (int i = 0; i < lst.size(); i++)
         a->arrayData[i].value = QV4::Value::fromReturnedValue(variantToJS(lst.at(i)));
     a->setArrayLengthUnchecked(lst.size());
-    return QV4::Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 // Converts a JS Array object to a QVariantList.
@@ -655,7 +658,7 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QChar:
         return QV4::Encode((int)(*reinterpret_cast<const QChar*>(data)).unicode());
     case QMetaType::QStringList:
-        return QV4::Value::fromObject(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data))).asReturnedValue();
+        return QV4::Encode(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
     case QMetaType::QVariantList:
         return variantListToJS(*reinterpret_cast<const QVariantList *>(data));
     case QMetaType::QVariantMap:
@@ -685,7 +688,7 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
                 return QV4::Encode::null();
             } else {
                 // Fall back to wrapping in a QVariant.
-                return QV4::Value::fromObject(m_v4Engine->newVariantObject(QVariant(type, data))).asReturnedValue();
+                return QV4::Encode(m_v4Engine->newVariantObject(QVariant(type, data)));
             }
         }
     }

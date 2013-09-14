@@ -57,7 +57,8 @@ ArrayCtor::ArrayCtor(ExecutionContext *scope)
 ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
-    ArrayObject *a = v4->newArrayObject();
+    Scope scope(v4);
+    Scoped<ArrayObject> a(scope, v4->newArrayObject());
     uint len;
     if (callData->argc == 1 && callData->args[0].isNumber()) {
         bool ok;
@@ -77,7 +78,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
     }
     a->setArrayLengthUnchecked(len);
 
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 ReturnedValue ArrayCtor::call(Managed *that, CallData *callData)
@@ -156,7 +157,8 @@ ReturnedValue ArrayPrototype::method_toLocaleString(SimpleCallContext *ctx)
 
 ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
 {
-    ArrayObject *result = ctx->engine->newArrayObject();
+    Scope scope(ctx);
+    Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
 
     if (ArrayObject *instance = ctx->thisObject.asArrayObject()) {
         result->copyArrayData(instance);
@@ -178,10 +180,10 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
             result->arrayConcat(elt);
 
         else
-            result->arraySet(getLength(ctx, result), arg);
+            result->arraySet(getLength(ctx, result.getPointer()), arg);
     }
 
-    return Value::fromObject(result).asReturnedValue();
+    return result.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
@@ -404,7 +406,7 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
     Scope scope(ctx);
     Object *o = ctx->thisObject.toObject(ctx);
 
-    ArrayObject *result = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
     uint len = ArrayPrototype::getLength(ctx, o);
     double s = ctx->argument(0).toInteger();
     uint start;
@@ -435,7 +437,7 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
         }
         ++n;
     }
-    return Value::fromObject(result).asReturnedValue();
+    return result.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
@@ -455,7 +457,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     Object *instance = ctx->thisObject.toObject(ctx);
     uint len = getLength(ctx, instance);
 
-    ArrayObject *newArray = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> newArray(scope, ctx->engine->newArrayObject());
 
     double rs = ctx->argument(0).toInteger();
     uint start;
@@ -508,7 +510,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     ctx->strictMode = true;
     instance->put(ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
 
-    return Value::fromObject(newArray).asReturnedValue();
+    return newArray.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
@@ -750,7 +752,7 @@ ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
 
     Value thisArg = ctx->argument(1);
 
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
     a->arrayReserve(len);
     a->setArrayLengthUnchecked(len);
 
@@ -771,7 +773,7 @@ ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
         mapped = callback->call(callData);
         a->arraySet(k, mapped);
     }
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
@@ -787,7 +789,7 @@ ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
 
     Value thisArg = ctx->argument(1);
 
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
     a->arrayReserve(len);
 
     ScopedValue selected(scope);
@@ -812,7 +814,7 @@ ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
             ++to;
         }
     }
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)

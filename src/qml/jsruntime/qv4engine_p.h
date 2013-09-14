@@ -274,9 +274,9 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<Object> *newNumberObject(const Value &value);
     Returned<Object> *newBooleanObject(const Value &value);
 
-    ArrayObject *newArrayObject(int count = 0);
-    ArrayObject *newArrayObject(const QStringList &list);
-    ArrayObject *newArrayObject(InternalClass *ic);
+    Returned<ArrayObject> *newArrayObject(int count = 0);
+    Returned<ArrayObject> *newArrayObject(const QStringList &list);
+    Returned<ArrayObject> *newArrayObject(InternalClass *ic);
 
     Returned<DateObject> *newDateObject(const Value &value);
     Returned<DateObject> *newDateObject(const QDateTime &dt);
@@ -288,17 +288,17 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<Object> *newErrorObject(const Value &value);
     Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Returned<Object> *newSyntaxErrorObject(const QString &message);
-    Object *newReferenceErrorObject(const QString &message);
-    Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
-    Object *newTypeErrorObject(const QString &message);
-    Object *newRangeErrorObject(const QString &message);
-    Object *newURIErrorObject(Value message);
+    Returned<Object> *newReferenceErrorObject(const QString &message);
+    Returned<Object> *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
+    Returned<Object> *newTypeErrorObject(const QString &message);
+    Returned<Object> *newRangeErrorObject(const QString &message);
+    Returned<Object> *newURIErrorObject(Value message);
 
-    Object *newVariantObject(const QVariant &v);
+    Returned<Object> *newVariantObject(const QVariant &v);
 
-    Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
-    Object *qmlContextObject() const;
+    Returned<Object> *qmlContextObject() const;
 
     struct StackFrame {
         QString source;

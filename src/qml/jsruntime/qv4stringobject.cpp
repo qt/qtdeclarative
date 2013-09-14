@@ -379,7 +379,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
-    ArrayObject *a = context->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, context->engine->newArrayObject());
 
     double previousLastIndex = 0;
     uint n = 0;
@@ -406,7 +406,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
     if (!n)
         return Encode::null();
 
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 
 }
 
@@ -618,6 +618,7 @@ ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
 
 ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QString text;
     if (StringObject *thisObject = ctx->thisObject.asStringObject())
         text = thisObject->value.stringValue()->toQString();
@@ -627,13 +628,12 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
     Value separatorValue = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
     Value limitValue = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
 
-    ArrayObject* array = ctx->engine->newArrayObject();
-    Value result = Value::fromObject(array);
+    Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject());
 
     if (separatorValue.isUndefined()) {
         if (limitValue.isUndefined()) {
             array->push_back(Value::fromString(ctx, text));
-            return result.asReturnedValue();
+            return array.asReturnedValue();
         }
         return Value::fromString(ctx, text.left(limitValue.toInteger())).asReturnedValue();
     }
@@ -641,7 +641,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
     uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32();
 
     if (limit == 0)
-        return result.asReturnedValue();
+        return array.asReturnedValue();
 
     if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
         if (re->value->pattern().isEmpty()) {
@@ -679,7 +679,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
                 array->push_back(Value::fromString(ctx, text.mid(i, 1)));
-            return result.asReturnedValue();
+            return array.asReturnedValue();
         }
 
         int start = 0;
@@ -693,7 +693,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
         if (array->arrayLength() < limit && start != -1)
             array->push_back(Value::fromString(ctx, text.mid(start)));
     }
-    return result.asReturnedValue();
+    return array.asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)

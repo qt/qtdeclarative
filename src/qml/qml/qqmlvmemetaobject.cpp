@@ -1245,7 +1245,8 @@ void QQmlVMEMetaObject::allocateVarPropertiesArray()
     QQmlEngine *qml = qmlEngine(object);
     assert(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
-    varProperties = QV4::Value::fromObject(v4->newArrayObject(metaData->varPropertyCount));
+    QV4::Scope scope(v4);
+    varProperties = QV4::ScopedValue(scope, v4->newArrayObject(metaData->varPropertyCount));
     varPropertiesInitialized = true;
 }
 

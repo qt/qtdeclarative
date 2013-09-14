@@ -317,13 +317,13 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerArray:
     {
         quint32 size = headersize(header);
-        QV4::ArrayObject *a = v4->newArrayObject();
+        Scoped<ArrayObject> a(scope, v4->newArrayObject());
         ScopedValue v(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             v = deserialize(data, engine);
             a->putIndexed(ii, v);
         }
-        return QV4::Value::fromObject(a).asReturnedValue();
+        return a.asReturnedValue();
     }
     case WorkerObject:
     {
@@ -377,7 +377,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 seqLength = length - 1;
         value = deserialize(data, engine);
         int sequenceType = value->integerValue();
-        QV4::ArrayObject *array = v4->newArrayObject();
+        Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(seqLength);
         array->arrayDataLen = seqLength;
         for (quint32 ii = 0; ii < seqLength; ++ii) {
@@ -385,7 +385,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
             array->arrayData[ii].value = value;
         }
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = QV4::SequencePrototype::toVariant(QV4::Value::fromObject(array), sequenceType, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(array.asValue(), sequenceType, &succeeded);
         return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);
     }
     }

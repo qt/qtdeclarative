@@ -481,14 +481,15 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
     if (isEmitConnected()) {
         QQmlEngine *qmlEngine = ::qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+        QV4::Scope scope(v4);
 
         //Done after emitParticle so that the Painter::load is done first, this allows you to customize its static variables
         //We then don't need to request another reload, because the first reload isn't scheduled until we get back to the render thread
-        QV4::ArrayObject *array = v4->newArrayObject(toEmit.size());
+        QV4::Scoped<QV4::ArrayObject> array(scope, v4->newArrayObject(toEmit.size()));
         for (int i=0; i<toEmit.size(); i++)
             array->putIndexed(i, toEmit[i]->v4Value().toValue());
 
-        emitParticles(QQmlV4Handle(QV4::Value::fromObject(array)));//A chance for arbitrary JS changes
+        emitParticles(QQmlV4Handle(array.asValue()));//A chance for arbitrary JS changes
     }
 
     m_last_emission = pt;

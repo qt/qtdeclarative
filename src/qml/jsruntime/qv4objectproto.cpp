@@ -355,7 +355,7 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
     Scope scope(ctx);
     Object *o = ctx->argument(0).objectValue();
 
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
@@ -366,7 +366,7 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
         a->push_back(name);
     }
 
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
@@ -608,10 +608,10 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
 ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
 {
     Scope scope(v4);
-    ArrayObject *array = v4->newArrayObject();
+    Scoped<ArrayObject> array(scope, v4->newArrayObject());
     Object *O = o.asObject();
     if (!O)
-        return array;
+        return array.getPointer();
 
     ObjectIterator it(O, ObjectIterator::NoFlags);
     ScopedValue name(scope);
@@ -621,5 +621,5 @@ ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Val
             break;
         array->push_back(name);
     }
-    return array;
+    return array.getPointer();
 }

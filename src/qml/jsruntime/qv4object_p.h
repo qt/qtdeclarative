@@ -375,6 +375,7 @@ protected:
 };
 
 struct ArrayObject: Object {
+    Q_MANAGED
     enum {
         LengthPropertyIndex = 0
     };

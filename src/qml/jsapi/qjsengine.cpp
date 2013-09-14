@@ -296,11 +296,12 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QV4::ArrayObject *array = d->m_v4Engine->newArrayObject();
+    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scoped<QV4::ArrayObject> array(scope, d->m_v4Engine->newArrayObject());
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return new QJSValuePrivate(array);
+    return new QJSValuePrivate(d->m_v4Engine, array.asValue());
 }
 
 /*!

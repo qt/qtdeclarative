@@ -321,7 +321,7 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     }
 
     // fill in result data
-    ArrayObject *array = ctx->engine->newArrayObject(ctx->engine->regExpExecArrayClass);
+    Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject(ctx->engine->regExpExecArrayClass));
     int len = r->value->captureCount();
     array->arrayReserve(len);
     for (int i = 0; i < len; ++i) {
@@ -338,7 +338,7 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     if (r->global)
         r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);
 
-    return Value::fromObject(array).asReturnedValue();
+    return array.asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_test(SimpleCallContext *ctx)

@@ -323,8 +323,9 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV4Function()) {
+            QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->engine->qmlContextObject());
             return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex,
-                                              QV4::Value::fromObject(ctx->engine->qmlContextObject())).asReturnedValue();
+                                              qmlcontextobject.asValue()).asReturnedValue();
         } else if (result->isSignalHandler()) {
             QV4::QmlSignalHandler *handler = new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex);
 
@@ -1603,13 +1604,13 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         // XXX Can this be made more by using Array as a prototype and implementing
         // directly against QList<QObject*>?
         QList<QObject *> &list = *qlistPtr;
-        QV4::ArrayObject *array = v4->newArrayObject();
+        QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
         array->arrayDataLen = list.count();
         for (int ii = 0; ii < list.count(); ++ii)
             array->arrayData[ii].value = Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, list.at(ii)));
         array->setArrayLengthUnchecked(list.count());
-        return QV4::Value::fromObject(array).asReturnedValue();
+        return array.asReturnedValue();
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
         return handlePtr->toValue().asReturnedValue();
     } else if (type == QMetaType::QJsonArray) {

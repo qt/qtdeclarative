@@ -735,11 +735,12 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
 
 ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const ValueRef in)
 {
-    Object *o = 0;
+    Scope scope(ctx);
+    Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
-        o = in->toObject(ctx);
-    Object *it = ctx->engine->newForEachIteratorObject(ctx, o);
-    return Value::fromObject(it).asReturnedValue();
+        o = in;
+    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o.getPointer()));
+    return it.asReturnedValue();
 }
 
 ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator)
@@ -1161,7 +1162,8 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
 
 ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scope scope(ctx);
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
     // ### FIXME: We need to allocate the array data to avoid crashes other places
     // This should rather be done when required
@@ -1181,7 +1183,7 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
         }
         a->setArrayLengthUnchecked(length);
     }
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef getter, const ValueRef setter)

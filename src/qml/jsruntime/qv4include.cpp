@@ -196,11 +196,11 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     QV4::ScopedValue result(scope);
+    QV4::Scoped<QV4::Object> qmlcontextobject(scope, v4->qmlContextObject());
 
     if (localFile.isEmpty()) {
-
         QV4Include *i = new QV4Include(url, engine, context,
-                                       QV4::Value::fromObject(v4->qmlContextObject()),
+                                       qmlcontextobject.asValue(),
                                        callbackFunction);
         result = i->result();
 
@@ -213,8 +213,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
             QString code = QString::fromUtf8(data);
             QQmlScript::Parser::extractPragmas(code);
 
-            QV4::Scoped<QV4::Object> qmlglobal(scope, QV4::Value::fromObject(v4->qmlContextObject()));
-            QV4::Script script(v4, qmlglobal.getPointer(), code, url.toString());
+            QV4::Script script(v4, qmlcontextobject.getPointer(), code, url.toString());
 
             QV4::ExecutionContext *ctx = v4->current;
             try {

@@ -77,8 +77,8 @@ private:
     inline bool eatSpace();
     inline QChar nextToken();
 
-    Value parseObject();
-    Value parseArray();
+    ReturnedValue parseObject();
+    ReturnedValue parseArray();
     bool parseMember(Object *o);
     bool parseString(QString *string);
     bool parseValue(Value *val);
@@ -224,42 +224,42 @@ Value JsonParser::parse(QJsonParseError *error)
     end-object
 */
 
-Value JsonParser::parseObject()
+ReturnedValue JsonParser::parseObject()
 {
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
-        return Value::undefinedValue();
+        return Encode::undefined();
     }
 
     BEGIN << "parseObject pos=" << json;
+    Scope scope(context);
 
-    Object *o = context->engine->newObject();
-    Value objectVal = Value::fromObject(o);
+    Scoped<Object> o(scope, context->engine->newObject());
 
     QChar token = nextToken();
     while (token == Quote) {
-        if (!parseMember(o))
-            return Value::undefinedValue();
+        if (!parseMember(o.getPointer()))
+            return Encode::undefined();
         token = nextToken();
         if (token != ValueSeparator)
             break;
         token = nextToken();
         if (token == EndObject) {
             lastError = QJsonParseError::MissingObject;
-            return Value::undefinedValue();
+            return Encode::undefined();
         }
     }
 
     DEBUG << "end token=" << token;
     if (token != EndObject) {
         lastError = QJsonParseError::UnterminatedObject;
-        return Value::undefinedValue();
+        return Encode::undefined();
     }
 
     END;
 
     --nestingLevel;
-    return objectVal;
+    return o.asReturnedValue();
 }
 
 /*
@@ -291,19 +291,20 @@ bool JsonParser::parseMember(Object *o)
 /*
     array = begin-array [ value *( value-separator value ) ] end-array
 */
-Value JsonParser::parseArray()
+ReturnedValue JsonParser::parseArray()
 {
+    Scope scope(context);
     BEGIN << "parseArray";
-    ArrayObject *array = context->engine->newArrayObject();
+    Scoped<ArrayObject> array(scope, context->engine->newArrayObject());
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
-        return Value::undefinedValue();
+        return Encode::undefined();
     }
 
     if (!eatSpace()) {
         lastError = QJsonParseError::UnterminatedArray;
-        return Value::undefinedValue();
+        return Encode::undefined();
     }
     if (*json == EndArray) {
         nextToken();
@@ -312,7 +313,7 @@ Value JsonParser::parseArray()
         while (1) {
             Value val;
             if (!parseValue(&val))
-                return Value::undefinedValue();
+                return Encode::undefined();
             array->arraySet(index, val);
             QChar token = nextToken();
             if (token == EndArray)
@@ -322,7 +323,7 @@ Value JsonParser::parseArray()
                     lastError = QJsonParseError::UnterminatedArray;
                 else
                     lastError = QJsonParseError::MissingValueSeparator;
-                return Value::undefinedValue();
+                return Encode::undefined();
             }
             ++index;
         }
@@ -332,7 +333,7 @@ Value JsonParser::parseArray()
     END;
 
     --nestingLevel;
-    return Value::fromObject(array);
+    return array.asReturnedValue();
 }
 
 /*
@@ -401,7 +402,7 @@ bool JsonParser::parseValue(Value *val)
         return true;
     }
     case BeginArray: {
-        *val = parseArray();
+        *val = Value::fromReturnedValue(parseArray());
         if (val->isUndefined())
             return false;
         DEBUG << "value: array";
@@ -409,7 +410,7 @@ bool JsonParser::parseValue(Value *val)
         return true;
     }
     case BeginObject: {
-        *val = parseObject();
+        *val = Value::fromReturnedValue(parseObject());
         if (val->isUndefined())
             return false;
         DEBUG << "value: object";
@@ -1020,14 +1021,15 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
 
 QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJsonArray &array)
 {
+    Scope scope(engine);
     int size = array.size();
-    ArrayObject *a = engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, engine->newArrayObject());
     a->arrayReserve(size);
     a->arrayDataLen = size;
     for (int i = 0; i < size; i++)
         a->arrayData[i].value = Value::fromReturnedValue(fromJsonValue(engine, array.at(i)));
     a->setArrayLengthUnchecked(size);
-    return Value::fromObject(a).asReturnedValue();
+    return a.asReturnedValue();
 }
 
 QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)

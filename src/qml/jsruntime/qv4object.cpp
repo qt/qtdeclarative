@@ -1424,6 +1424,8 @@ void Object::markArrayObjects() const
     }
 }
 
+DEFINE_MANAGED_VTABLE(ArrayObject);
+
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)
 {
