@@ -717,19 +717,54 @@ public:
         poke(TrustedImmPtr(name), StackSlot);
     }
 
-    using JSC::MacroAssembler::loadDouble;
     void loadDouble(V4IR::Temp* temp, FPRegisterID dest)
     {
+        if (temp->kind == V4IR::Temp::PhysicalRegister) {
+            moveDouble((FPRegisterID) temp->index, dest);
+            return;
+        }
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         loadDouble(ptr, dest);
     }
 
-    using JSC::MacroAssembler::storeDouble;
     void storeDouble(FPRegisterID source, V4IR::Temp* temp)
     {
+        if (temp->kind == V4IR::Temp::PhysicalRegister) {
+            moveDouble(source, (FPRegisterID) temp->index);
+            return;
+        }
+#if QT_POINTER_SIZE == 8
+        moveDoubleTo64(source, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        store64(ReturnValueRegister, ptr);
+#else
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         storeDouble(source, ptr);
+#endif
     }
+#if QT_POINTER_SIZE == 8
+    // We need to (de)mangle the double
+    void loadDouble(Address addr, FPRegisterID dest)
+    {
+        load64(addr, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        move64ToDouble(ReturnValueRegister, dest);
+    }
+
+    void storeDouble(FPRegisterID source, Address addr)
+    {
+        moveDoubleTo64(source, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        store64(ReturnValueRegister, addr);
+    }
+#else
+    using JSC::MacroAssembler::loadDouble;
+    using JSC::MacroAssembler::storeDouble;
+#endif
 
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
@@ -1127,10 +1162,27 @@ public:
 #endif
     }
 
+    void storeUInt32(RegisterID reg, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) target->index);
+        } else {
+            Pointer addr = loadTempAddress(ScratchRegister, target);
+            storeUInt32(reg, addr);
+        }
+    }
+
     FPRegisterID toDoubleRegister(V4IR::Expr *e, FPRegisterID target = FPGpr0)
     {
         if (V4IR::Const *c = e->asConst()) {
-            loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+#if QT_POINTER_SIZE == 8
+            load64(constantTable().loadValueAddress(c, ScratchRegister), ReturnValueRegister);
+            move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+            xor64(ScratchRegister, ReturnValueRegister);
+            move64ToDouble(ReturnValueRegister, target);
+#else
+            JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+#endif
             return target;
         }
 

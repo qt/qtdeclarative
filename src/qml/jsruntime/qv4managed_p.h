@@ -226,6 +226,9 @@ public:
 
     template <typename T>
     T *as() {
+        // ### FIXME:
+        if (!this)
+            return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
 #endif
@@ -233,6 +236,9 @@ public:
     }
     template <typename T>
     const T *as() const {
+        // ### FIXME:
+        if (!this)
+            return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(const_cast<Managed *>(this)));
 #endif
@@ -315,6 +321,8 @@ public:
         return type;
     }
 
+    ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
+
     union {
         uint _data;
         struct {
@@ -345,10 +353,12 @@ private:
     friend struct ObjectIterator;
 };
 
-// ### Not a good placement
-template<typename T>
-inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
-
+inline ReturnedValue Managed::construct(CallData *d) {
+    return vtbl->construct(this, d);
+}
+inline ReturnedValue Managed::call(CallData *d) {
+    return vtbl->call(this, d);
+}
 
 }
 

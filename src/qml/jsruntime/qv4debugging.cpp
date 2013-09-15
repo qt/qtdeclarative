@@ -214,12 +214,11 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
 
     cout << prefix << "tag: " << hex << v.tag << dec << endl << prefix << "\t-> ";
     switch (v.type()) {
-    case Value::Undefined_Type: cout << "Undefined" << endl; return;
-    case Value::Null_Type: cout << "Null" << endl; return;
+    case Value::Undefined_Type: cout << "Undefined"; return;
+    case Value::Null_Type: cout << "Null"; return;
     case Value::Boolean_Type: cout << "Boolean"; break;
     case Value::Integer_Type: cout << "Integer"; break;
-    case Value::Object_Type: cout << "Object"; break;
-    case Value::String_Type: cout << "String"; break;
+    case Value::Managed_Type: cout << v.managed()->className().toUtf8().data(); break;
     default: cout << "UNKNOWN" << endl; return;
     }
     cout << endl;

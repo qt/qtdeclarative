@@ -123,11 +123,6 @@ struct Q_QML_EXPORT String : public Managed {
     static String *cast(const Value &v) {
         return v.asString();
     }
-    static Value toValue(String *s) {
-        return Value::fromString(s);
-    }
-
-    ReturnedValue asReturnedValue() { return Value::fromString(this).asReturnedValue(); }
 
     QString _text;
     mutable Identifier *identifier;

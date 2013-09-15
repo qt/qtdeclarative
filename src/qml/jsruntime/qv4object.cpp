@@ -1372,7 +1372,7 @@ bool Object::setArrayLength(uint newLen) {
                             arrayAttributes[it->value].clear();
                         }
                     }
-                    pd.value.tag = Value::_Empty_Type;
+                    pd.value.tag = Value::Empty_Type;
                     pd.value.int_32 = arrayFreeList;
                     arrayFreeList = it->value;
                     bool brk = (it == begin);

@@ -282,12 +282,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
-        TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
+        TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         STOREVALUE(instr.result, __qmljs_get_activation_property(context, runtimeStrings[instr.name]));
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(StoreName)
-        TRACE(inline, "property name = %s", instr.name->toQString().toUtf8().constData());
+        TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         __qmljs_set_activation_property(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
     MOTH_END_INSTR(StoreName)
 
@@ -315,7 +315,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
-#ifdef DO_TRACE_INSTR
+#if 0 //def DO_TRACE_INSTR
         if (Debugging::Debugger *debugger = context->engine->debugger) {
             if (QV4::FunctionObject *o = (VALUE(instr.dest)).asFunctionObject()) {
                 if (Debugging::FunctionDebugInfo *info = debugger->debugInfo(o)) {
@@ -327,17 +327,17 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 #endif // DO_TRACE_INSTR
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
         STOREVALUE(instr.result, __qmljs_call_value(context, VALUEPTR(instr.dest), callData));
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(instr.name->toQString()), instr.args, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
         STOREVALUE(instr.result, __qmljs_call_property(context, runtimeStrings[instr.name], callData));
@@ -346,7 +346,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(CallElement)
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
         STOREVALUE(instr.result, __qmljs_call_element(context, VALUEPTR(instr.index), callData));
@@ -356,7 +356,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
         STOREVALUE(instr.result, __qmljs_call_activation_property(context, runtimeStrings[instr.name], callData));
@@ -472,7 +472,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
         STOREVALUE(instr.result, __qmljs_construct_value(context, VALUEPTR(instr.func), callData));
@@ -481,17 +481,17 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(CreateProperty)
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
         STOREVALUE(instr.result, __qmljs_construct_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
-        TRACE(inline, "property name = %s, args = %d, argc = %d", instr.name->toQString().toUtf8().constData(), instr.args, instr.argc);
+        TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = 0;
+        callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
         callData->thisObject = QV4::Value::undefinedValue();
         STOREVALUE(instr.result, __qmljs_construct_activation_property(context, runtimeStrings[instr.name], callData));
@@ -573,7 +573,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(InplaceMemberOp)
 
     MOTH_BEGIN_INSTR(InplaceNameOp)
-        TRACE(name, "%s", instr.name->toQString().toUtf8().constData());
+        TRACE(name, "%s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         instr.alu(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
     MOTH_END_INSTR(InplaceNameOp)
 

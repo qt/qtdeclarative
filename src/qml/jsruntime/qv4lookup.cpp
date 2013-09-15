@@ -101,7 +101,8 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const QV4::Value &object)
     case Value::Boolean_Type:
         proto = engine->booleanClass->prototype;
         break;
-    case Value::String_Type:
+    case Value::Managed_Type:
+        Q_ASSERT(object.isString());
         proto = engine->stringClass->prototype;
         if (l->name == engine->id_length) {
             // special case, as the property is on the object itself

@@ -50,7 +50,7 @@ using namespace QV4;
 
 int Value::toUInt16() const
 {
-    if (isConvertibleToInt())
+    if (integerCompatible())
         return (ushort)(uint)integerValue();
 
     double number = toNumber();
@@ -76,7 +76,7 @@ int Value::toUInt16() const
 
 double Value::toInteger() const
 {
-    if (isConvertibleToInt())
+    if (integerCompatible())
         return int_32;
 
     return Value::toInteger(toNumber());
@@ -87,14 +87,15 @@ double Value::toNumberImpl() const
     switch (type()) {
     case QV4::Value::Undefined_Type:
         return std::numeric_limits<double>::quiet_NaN();
-    case QV4::Value::String_Type:
-        return __qmljs_string_to_number(stringValue()->toQString());
-    case QV4::Value::Object_Type: {
-        ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        Scope scope(ctx);
-        ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
-        return prim->toNumber();
-    }
+    case QV4::Value::Managed_Type:
+        if (isString())
+            return __qmljs_string_to_number(stringValue()->toQString());
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
+            return prim->toNumber();
+        }
     case QV4::Value::Null_Type:
     case QV4::Value::Boolean_Type:
     case QV4::Value::Integer_Type:
@@ -115,28 +116,29 @@ QString Value::toQStringNoThrow() const
             return QStringLiteral("true");
         else
             return QStringLiteral("false");
-    case Value::String_Type:
-        return stringValue()->toQString();
-    case Value::Object_Type: {
-        ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        Scope scope(ctx);
-        try {
-            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
-            if (prim->isPrimitive())
-                return prim->toQStringNoThrow();
-        } catch (Exception &e) {
-            e.accept(ctx);
+    case Value::Managed_Type:
+        if (isString())
+            return stringValue()->toQString();
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
             try {
-                ScopedValue ex(scope, e.value());
-                ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
                 if (prim->isPrimitive())
                     return prim->toQStringNoThrow();
-            } catch(Exception &e) {
+            } catch (Exception &e) {
                 e.accept(ctx);
+                try {
+                    ScopedValue ex(scope, e.value());
+                    ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                    if (prim->isPrimitive())
+                        return prim->toQStringNoThrow();
+                } catch(Exception &e) {
+                    e.accept(ctx);
+                }
             }
+            return QString();
         }
-        return QString();
-    }
     case Value::Integer_Type: {
         QString str;
         __qmljs_numberToString(&str, (double)int_32, 10);
@@ -162,14 +164,15 @@ QString Value::toQString() const
             return QStringLiteral("true");
         else
             return QStringLiteral("false");
-    case Value::String_Type:
-        return stringValue()->toQString();
-    case Value::Object_Type: {
-        ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        Scope scope(ctx);
-        ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
-        return prim->toQString();
-    }
+    case Value::Managed_Type:
+        if (isString())
+            return stringValue()->toQString();
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            return prim->toQString();
+        }
     case Value::Integer_Type: {
         QString str;
         __qmljs_numberToString(&str, (double)int_32, 10);
@@ -188,10 +191,10 @@ bool Value::sameValue(Value other) const {
         return true;
     if (isString() && other.isString())
         return stringValue()->isEqualTo(other.stringValue());
-    if (isInteger())
-        return int_32 ? (double(int_32) == other.dbl) : (other.val == 0);
-    if (other.isInteger())
-        return other.int_32 ? (dbl == double(other.int_32)) : (val == 0);
+    if (isInteger() && other.isDouble())
+        return int_32 ? (double(int_32) == other.doubleValue()) : (other.val == 0);
+    if (isDouble() && other.isInteger())
+        return other.int_32 ? (doubleValue() == double(other.int_32)) : (val == 0);
     return false;
 }
 

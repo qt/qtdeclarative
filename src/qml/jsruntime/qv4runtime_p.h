@@ -186,7 +186,7 @@ QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value);
 QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value);
 QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value);
 
-Q_QML_EXPORT void __qmljs_value_to_double(double *result, const ValueRef value);
+Q_QML_EXPORT ReturnedValue __qmljs_value_to_double(const ValueRef value);
 Q_QML_EXPORT int __qmljs_value_to_int32(const ValueRef value);
 Q_QML_EXPORT int __qmljs_double_to_int32(const double &d);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const ValueRef value);
@@ -298,7 +298,7 @@ inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->isConvertibleToInt())
+    if (value->integerCompatible())
         return Encode(value->int_32);
 
     double n = value->toNumber();
@@ -323,7 +323,7 @@ inline QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value)
     TRACE1(value);
 
     int n;
-    if (value->isConvertibleToInt())
+    if (value->integerCompatible())
         n = value->int_32;
     else
         n = value->toInt32();
@@ -542,14 +542,15 @@ inline QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef ri
 {
     TRACE2(left, right);
 
-    if (left->val == right->val)
+    if (left->rawValue() == right->rawValue())
         // NaN != NaN
-        return (left->tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+        return !left->isNaN();
 
     if (left->type() == right->type()) {
-        if (left->isManaged())
+        if (!left->isManaged())
+            return false;
+        if (left->isString() == right->isString())
             return left->managed()->isEqualTo(right->managed());
-        return false;
     }
 
     return __qmljs_equal_helper(left, right);

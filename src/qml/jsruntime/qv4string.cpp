@@ -215,6 +215,8 @@ bool String::isEqualTo(Managed *t, Managed *o)
 {
     if (t == o)
         return true;
+
+    Q_ASSERT(t->type == Type_String && o->type == Type_String);
     String *that = static_cast<String *>(t);
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())

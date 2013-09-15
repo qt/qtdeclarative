@@ -75,8 +75,7 @@ struct RuntimeCounters::Data {
         Null = 2,
         Boolean = 3,
         Integer = 4,
-        String = 5,
-        Object = 6,
+        Managed = 5,
         Double = 7
     };
 
@@ -87,8 +86,7 @@ struct RuntimeCounters::Data {
         case Null: return "Null";
         case Boolean: return "Boolean";
         case Integer: return "Integer";
-        case String: return "String";
-        case Object: return "Object";
+        case Managed: return "Managed";
         case Double: return "Double";
         default: return "Unknown";
         }
@@ -100,8 +98,7 @@ struct RuntimeCounters::Data {
         case Value::Null_Type: return Null;
         case Value::Boolean_Type: return Boolean;
         case Value::Integer_Type: return Integer;
-        case Value::String_Type: return String;
-        case Value::Object_Type: return Object;
+        case Value::Managed_Type: return Managed;
         default: return Double;
         }
     }
@@ -247,7 +244,8 @@ ReturnedValue __qmljs_init_closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    return FunctionObject::creatScriptFunction(ctx, clos)->asReturnedValue();
+    FunctionObject *f = FunctionObject::creatScriptFunction(ctx, clos);
+    return f->asReturnedValue();
 }
 
 ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef base, const ValueRef index)
@@ -606,11 +604,9 @@ Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRe
         ctx->throwTypeError();
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(*value);
-    case Value::String_Type:
+    case Value::Managed_Type:
+        Q_ASSERT(value->isString());
         return ctx->engine->newStringObject(*value);
-        break;
-    case Value::Object_Type:
-        Q_UNREACHABLE();
     case Value::Integer_Type:
     default: // double
         return ctx->engine->newNumberObject(*value);
@@ -629,13 +625,14 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
             return ctx->engine->id_true->asReturned<String>();
         else
             return ctx->engine->id_false->asReturned<String>();
-    case Value::String_Type:
-        return value->stringValue()->asReturned<String>();
-    case Value::Object_Type: {
-        Scope scope(ctx);
-        ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
-        return __qmljs_convert_to_string(ctx, prim);
-    }
+    case Value::Managed_Type:
+        if (value->isString())
+            return value->stringValue()->asReturned<String>();
+        {
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
+            return __qmljs_convert_to_string(ctx, prim);
+        }
     case Value::Integer_Type:
         return __qmljs_string_from_number(ctx, value->int_32);
     default: // double
@@ -783,7 +780,7 @@ ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *nam
 
 uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
 {
-    Q_ASSERT(x->type() != y->type());
+    Q_ASSERT(x->type() != y->type() || (x->isManaged() && (x->isString() != y->isString())));
 
     if (x->isNumber() && y->isNumber())
         return x->asDouble() == y->asDouble();
@@ -822,7 +819,7 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
 
     if (x->rawValue() == y->rawValue())
         // NaN != NaN
-        return (x->tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+        return !x->isNaN();
 
     if (x->isNumber())
         return y->isNumber() && x->asDouble() == y->asDouble();
@@ -1089,11 +1086,10 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
     case Value::Boolean_Type:
         res = ctx->engine->id_boolean;
         break;
-    case Value::String_Type:
-        res = ctx->engine->id_string;
-        break;
-    case Value::Object_Type:
-        if (value->objectValue()->asFunctionObject())
+    case Value::Managed_Type:
+        if (value->isString())
+            res = ctx->engine->id_string;
+        else if (value->objectValue()->asFunctionObject())
             res = ctx->engine->id_function;
         else
             res = ctx->engine->id_object; // ### implementation-defined
@@ -1262,9 +1258,9 @@ QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Valu
     return Encode(__qmljs_convert_to_object(ctx, value));
 }
 
-void __qmljs_value_to_double(double *result, const ValueRef value)
+ReturnedValue __qmljs_value_to_double(const ValueRef value)
 {
-    *result = value->toNumber();
+    return Encode(value->toNumber());
 }
 
 int __qmljs_value_to_int32(const ValueRef value)

@@ -331,8 +331,15 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
     } else if (source->type == V4IR::DoubleType) {
         storeDouble(toDoubleRegister(source), result);
     } else if (V4IR::Temp *temp = source->asTemp()) {
+#ifdef VALUE_FITS_IN_REGISTER
+        // Use ReturnValueRegister as "scratch" register because loadArgument
+        // and storeArgument are functions that may need a scratch register themselves.
+        loadArgumentInRegister(source, ReturnValueRegister, 0);
+        storeReturnValue(result);
+#else
         loadDouble(temp, FPGpr0);
         storeDouble(FPGpr0, result);
+#endif
     } else if (V4IR::Const *c = source->asConst()) {
         QV4::Value v = convertToValue(c);
         storeValue(v, result);
@@ -977,13 +984,13 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
     _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
     Pointer destAddr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
 #if QT_POINTER_SIZE == 8
-    _as->or64(Assembler::TrustedImm64(quint64(QV4::Value::_String_Type) << QV4::Value::Tag_Shift),
+    _as->or64(Assembler::TrustedImm64(quint64(QV4::Value::Managed_Type) << QV4::Value::Tag_Shift),
               Assembler::ReturnValueRegister);
     _as->store64(Assembler::ReturnValueRegister, destAddr);
 #else
     _as->store32(Assembler::ReturnValueRegister, destAddr);
     destAddr.offset += 4;
-    _as->store32(Assembler::TrustedImm32(QV4::Value::String_Type), destAddr);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Managed_Type), destAddr);
 #endif
 }
 
@@ -1070,19 +1077,18 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
                           (Assembler::RegisterID) targetTemp->index);
             return;
         } else {
-            Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
             switch (sourceTemp->type) {
             case V4IR::DoubleType:
-                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, addr);
+                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::SInt32Type:
-                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::UInt32Type:
-                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::BoolType:
-                _as->storeBool((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeBool((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             default:
                 Q_ASSERT(!"Unreachable");
@@ -1137,11 +1143,13 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
     } else if (sourceTemp->kind == V4IR::Temp::StackSlot) {
         if (targetTemp->kind == V4IR::Temp::StackSlot) {
             // Note: a swap for two stack-slots can involve different types.
-            Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
 #if CPU(X86_64)
+            _as->load64(_as->stackSlotPointer(targetTemp), Assembler::ReturnValueRegister);
             _as->load64(_as->stackSlotPointer(sourceTemp), Assembler::ScratchRegister);
             _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(targetTemp));
+            _as->store64(Assembler::ReturnValueRegister, _as->stackSlotPointer(sourceTemp));
 #else
+            Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
             Assembler::Pointer sAddr = _as->stackSlotPointer(sourceTemp);
             Assembler::Pointer tAddr = _as->stackSlotPointer(targetTemp);
             _as->load32(sAddr, Assembler::ScratchRegister);
@@ -1150,8 +1158,8 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
             tAddr.offset += 4;
             _as->load32(sAddr, Assembler::ScratchRegister);
             _as->store32(Assembler::ScratchRegister, tAddr);
-#endif
             _as->storeDouble(tReg, _as->stackSlotPointer(sourceTemp));
+#endif
             return;
         }
     }
@@ -1165,12 +1173,9 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         _as->storeDouble((Assembler::FPRegisterID) registerTemp->index, addr);
         _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) registerTemp->index);
     } else if (registerTemp->type == V4IR::UInt32Type) {
-        Address tmp = addressForArgument(0);
-        _as->storeUInt32((Assembler::RegisterID) registerTemp->index, Pointer(tmp));
-        _as->move(_as->toUInt32Register(addr, Assembler::ScratchRegister),
-                  (Assembler::RegisterID) registerTemp->index);
-        _as->loadDouble(tmp, Assembler::FPGpr0);
-        _as->storeDouble(Assembler::FPGpr0, addr);
+        _as->toUInt32Register(addr, Assembler::ScratchRegister);
+        _as->storeUInt32((Assembler::RegisterID) registerTemp->index, addr);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
     } else {
         _as->load32(addr, Assembler::ScratchRegister);
         _as->store32((Assembler::RegisterID) registerTemp->index, addr);
@@ -1509,22 +1514,30 @@ void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *t
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
+#if QT_POINTER_SIZE == 8
+        _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+        Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                              Assembler::TrustedImm32(0));
+#else
         _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
         Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                               Assembler::TrustedImm32(Value::NotDouble_Mask));
+#endif
 
-        generateFunctionCall(Assembler::Void, __qmljs_value_to_double,
-                             Assembler::PointerToValue(target),
-                             Assembler::PointerToValue(source));
-        storeTarget(0, target);
+        generateFunctionCall(target, __qmljs_value_to_double, Assembler::PointerToValue(source));
         Assembler::Jump noDoubleDone = _as->jump();
 
         // it is a double:
         isDbl.link(_as);
         Assembler::Pointer addr2 = _as->loadTempAddress(Assembler::ScratchRegister, source);
         if (target->kind == V4IR::Temp::StackSlot) {
+#if QT_POINTER_SIZE == 8
+            _as->load64(addr2, Assembler::ScratchRegister);
+            _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(target));
+#else
             _as->loadDouble(addr2, Assembler::FPGpr0);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+#endif
         } else {
             _as->loadDouble(addr2, (Assembler::FPRegisterID) target->index);
         }
@@ -1875,7 +1888,7 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     }
 
     Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
-    _as->store32(Assembler::TrustedImm32(0), p);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
     _as->store32(Assembler::TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
@@ -1984,9 +1997,15 @@ Assembler::Jump InstructionSelection::genTryDoubleConversion(V4IR::Expr *src,
 
     // not an int, check if it's a double:
     isNoInt.link(_as);
+#if QT_POINTER_SIZE == 8
+    _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = _as->branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(0));
+#else
     _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
     Assembler::Jump isNoDbl = _as->branch32(Assembler::Equal, Assembler::ScratchRegister,
                                             Assembler::TrustedImm32(Value::NotDouble_Mask));
+#endif
     _as->toDoubleRegister(src, dest);
     intDone.link(_as);
 

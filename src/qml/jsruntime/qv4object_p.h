@@ -178,13 +178,8 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 
-    ReturnedValue asReturnedValue() { return Value::fromObject(this).asReturnedValue(); }
-
     static Object *cast(const Value &v) {
         return v.asObject();
-    }
-    static Value toValue(Object *o) {
-        return Value::fromObject(o);
     }
 
     // Array handling
@@ -207,7 +202,7 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void freeArrayValue(int idx) {
         Property &pd = arrayData[idx];
-        pd.value.tag = Value::_Empty_Type;
+        pd.value.tag = Value::Empty_Type;
         pd.value.int_32 = arrayFreeList;
         arrayFreeList = idx;
         if (arrayAttributes)
