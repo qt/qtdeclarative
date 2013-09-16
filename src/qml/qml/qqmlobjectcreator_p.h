@@ -96,9 +96,8 @@ private:
     void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
     QVector<QQmlAbstractBinding *> setupBindings(QV4::ExecutionContext *qmlContext);
+    void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions(QV4::ExecutionContext *qmlContext);
-
-    QVariant variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const;
 
     QString stringAt(int idx) const { return unit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
@@ -117,6 +116,7 @@ private:
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
+    QQmlVMEMetaObject *_vmeMetaObject;
 };
 
 QT_END_NAMESPACE

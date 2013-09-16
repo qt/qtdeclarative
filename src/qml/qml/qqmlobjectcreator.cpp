@@ -475,18 +475,411 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
     , _compiledObject(0)
     , _ddata(0)
     , _propertyCache(0)
+    , _vmeMetaObject(0)
 {
+}
+
+void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+{
+    QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
+                                                               QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+    int propertyWriteStatus = -1;
+    void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
+
+    // ### enums
+
+    switch (property->propType) {
+    case QMetaType::QVariant: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            double n = binding->valueAsNumber();
+            if (double(int(n)) == n) {
+                if (property->isVarProperty()) {
+                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromInt32(int(n)));
+                } else {
+                    int i = int(n);
+                    QVariant value(i);
+                    argv[0] = &value;
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                }
+            } else {
+                if (property->isVarProperty()) {
+                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromDouble(n));
+                } else {
+                    QVariant value(n);
+                    argv[0] = &value;
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                }
+            }
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+            if (property->isVarProperty()) {
+                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromBoolean(binding->valueAsBoolean()));
+            } else {
+                QVariant value(binding->valueAsBoolean());
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            }
+        } else {
+            QString stringValue = binding->valueAsString(&unit->header);
+            if (property->isVarProperty()) {
+                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromString(QV8Engine::getV4(engine), stringValue));
+            } else {
+                QVariant value = QQmlStringConverters::variantFromString(stringValue);
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            }
+        }
+    }
+    break;
+    case QVariant::String: {
+        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+            QString value = binding->valueAsString(&unit->header);
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: string expected"));
+        }
+    }
+    break;
+    case QVariant::StringList: {
+        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+            QStringList value(binding->valueAsString(&unit->header));
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: string or string list expected"));
+        }
+    }
+    break;
+    case QVariant::ByteArray: {
+        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+            QByteArray value(binding->valueAsString(&unit->header).toUtf8());
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: byte array expected"));
+        }
+    }
+    break;
+    case QVariant::Url: {
+        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+            QString string = binding->valueAsString(&unit->header);
+            // Encoded dir-separators defeat QUrl processing - decode them first
+            string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
+            QUrl value = string.isEmpty() ? QUrl() : this->url.resolved(QUrl(string));
+            // Apply URL interceptor
+            if (engine->urlInterceptor())
+                value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: url expected"));
+        }
+    }
+    break;
+    case QVariant::UInt: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            double d = binding->valueAsNumber();
+            if (double(uint(d)) == d) {
+                uint value = uint(d);
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                break;
+            }
+        }
+        recordError(binding->location, tr("Invalid property assignment: unsigned int expected"));
+    }
+    break;
+    case QVariant::Int: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            double d = binding->valueAsNumber();
+            if (double(int(d)) == d) {
+                int value = int(d);
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                break;
+            }
+        }
+        recordError(binding->location, tr("Invalid property assignment: int expected"));
+    }
+    break;
+    case QMetaType::Float: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            float value = float(binding->valueAsNumber());
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: number expected"));
+        }
+    }
+    break;
+    case QVariant::Double: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+            double value = binding->valueAsNumber();
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: number expected"));
+        }
+    }
+    break;
+    case QVariant::Color: {
+        bool ok = false;
+        uint colorValue = QQmlStringConverters::rgbaFromString(binding->valueAsString(&unit->header), &ok);
+
+        if (ok) {
+            struct { void *data[4]; } buffer;
+            if (QQml_valueTypeProvider()->storeValueType(property->propType, &colorValue, &buffer, sizeof(buffer))) {
+                argv[0] = reinterpret_cast<void *>(&buffer);
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            }
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: color expected"));
+        }
+    }
+    break;
+#ifndef QT_NO_DATESTRING
+    case QVariant::Date: {
+        bool ok = false;
+        QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: date expected"));
+        }
+    }
+    break;
+    case QVariant::Time: {
+        bool ok = false;
+        QTime value = QQmlStringConverters::timeFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: time expected"));
+        }
+    }
+    break;
+    case QVariant::DateTime: {
+        bool ok = false;
+        QDateTime value = QQmlStringConverters::dateTimeFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: datetime expected"));
+        }
+    }
+    break;
+#endif // QT_NO_DATESTRING
+    case QVariant::Point: {
+        bool ok = false;
+        QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(&unit->header), &ok).toPoint();
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: point expected"));
+        }
+    }
+    break;
+    case QVariant::PointF: {
+        bool ok = false;
+        QPointF value = QQmlStringConverters::pointFFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: point expected"));
+        }
+    }
+    break;
+    case QVariant::Size: {
+        bool ok = false;
+        QSize value = QQmlStringConverters::sizeFFromString(binding->valueAsString(&unit->header), &ok).toSize();
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: size expected"));
+        }
+    }
+    break;
+    case QVariant::SizeF: {
+        bool ok = false;
+        QSizeF value = QQmlStringConverters::sizeFFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: size expected"));
+        }
+    }
+    break;
+    case QVariant::Rect: {
+        bool ok = false;
+        QRect value = QQmlStringConverters::rectFFromString(binding->valueAsString(&unit->header), &ok).toRect();
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: point expected"));
+        }
+    }
+    break;
+    case QVariant::RectF: {
+        bool ok = false;
+        QRectF value = QQmlStringConverters::rectFFromString(binding->valueAsString(&unit->header), &ok);
+        if (ok) {
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: point expected"));
+        }
+    }
+    break;
+    case QVariant::Bool: {
+        if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+            bool value = binding->valueAsBoolean();
+            argv[0] = &value;
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: boolean expected"));
+        }
+    }
+    break;
+    case QVariant::Vector3D: {
+        struct {
+            float xp;
+            float yp;
+            float zy;
+        } vec;
+        if (QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(&unit->header), &vec, sizeof(vec))) {
+            argv[0] = reinterpret_cast<void *>(&vec);
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: 3D vector expected"));
+        }
+    }
+    break;
+    case QVariant::Vector4D: {
+        struct {
+            float xp;
+            float yp;
+            float zy;
+            float wp;
+        } vec;
+        if (QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(&unit->header), &vec, sizeof(vec))) {
+            argv[0] = reinterpret_cast<void *>(&vec);
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: 4D vector expected"));
+        }
+    }
+    break;
+    case QVariant::RegExp:
+        recordError(binding->location, tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
+        break;
+    default: {
+        // generate single literal value assignment to a list property if required
+        if (property->propType == qMetaTypeId<QList<qreal> >()) {
+            if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+                QList<qreal> value;
+                value.append(binding->valueAsNumber());
+                argv[0] = reinterpret_cast<void *>(&value);
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            } else {
+                recordError(binding->location, tr("Invalid property assignment: real or array of reals expected"));
+            }
+            break;
+        } else if (property->propType == qMetaTypeId<QList<int> >()) {
+            if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+                double n = binding->valueAsNumber();
+                if (double(int(n)) == n) {
+                    QList<int> value;
+                    value.append(int(n));
+                    argv[0] = reinterpret_cast<void *>(&value);
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                    break;
+                } else {
+                    recordError(binding->location, tr("Invalid property assignment: int or array of ints expected"));
+                }
+            }
+            break;
+        } else if (property->propType == qMetaTypeId<QList<bool> >()) {
+            if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+                QList<bool> value;
+                value.append(binding->valueAsBoolean());
+                argv[0] = reinterpret_cast<void *>(&value);
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            } else {
+                recordError(binding->location, tr("Invalid property assignment: bool or array of bools expected"));
+            }
+            break;
+        } else if (property->propType == qMetaTypeId<QList<QUrl> >()) {
+            if (binding->type == QV4::CompiledData::Binding::Type_String) {
+                QString urlString = binding->valueAsString(&unit->header);
+                QUrl u = urlString.isEmpty() ? QUrl() : this->url.resolved(QUrl(urlString));
+                QList<QUrl> value;
+                value.append(u);
+                argv[0] = reinterpret_cast<void *>(&value);
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            } else {
+                recordError(binding->location, tr("Invalid property assignment: url or array of urls expected"));
+            }
+            break;
+        } else if (property->propType == qMetaTypeId<QList<QString> >()) {
+            if (binding->type == QV4::CompiledData::Binding::Type_String) {
+                QList<QString> value;
+                value.append(binding->valueAsString(&unit->header));
+                argv[0] = reinterpret_cast<void *>(&value);
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            } else {
+                recordError(binding->location, tr("Invalid property assignment: string or array of strings expected"));
+            }
+            break;
+        } else if (property->propType == qMetaTypeId<QJSValue>()) {
+            QJSValue value;
+            if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+                value = QJSValue(binding->valueAsBoolean());
+            } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+                double n = binding->valueAsNumber();
+                if (double(int(n)) == n) {
+                    value = QJSValue(int(n));
+                } else
+                    value = QJSValue(n);
+            } else {
+                value = QJSValue(binding->valueAsString(&unit->header));
+            }
+            argv[0] = reinterpret_cast<void *>(&value);
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+            break;
+        }
+
+        // otherwise, try a custom type assignment
+        QString stringValue = binding->valueAsString(&unit->header);
+        QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType);
+        if (converter) {
+            QVariant value = (*converter)(stringValue);
+
+            QMetaProperty metaProperty = _qobject->metaObject()->property(property->coreIndex);
+            if (value.isNull() || ((int)metaProperty.type() != property->propType && metaProperty.userType() != property->propType)) {
+                recordError(binding->location, tr("Cannot assign value %1 to property %2").arg(stringValue).arg(QString::fromUtf8(metaProperty.name())));
+                break;
+            }
+
+            argv[0] = value.data();
+            QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        } else {
+            recordError(binding->location, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType::typeName(property->propType))));
+        }
+    }
+    break;
+    }
 }
 
 QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-
-    QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
-                                                               QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
-    int propertyWriteStatus = -1;
-    QVariant fallbackVariantValue;
-
     QVector<QQmlAbstractBinding*> createdDynamicBindings(_compiledObject->nBindings, 0);
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
@@ -566,27 +959,10 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionCont
             continue;
         }
 
-        void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
+        setPropertyValue(property, binding);
 
-        // shortcuts
-#if 0
-        if (property->propType == QMetaType::Double && binding->value.type == QV4::CompiledData::Binding::Type_Number) {
-            argv[0] = const_cast<double*>(&binding->value.d);
-        } else if (property->propType == QMetaType::Bool && binding->value.type == QV4::CompiledData::Binding::Type_Boolean) {
-            argv[0] = const_cast<bool*>(&binding->value.b);
-        } else
-#endif
-        {
-            // fallback
-            fallbackVariantValue = variantForBinding(property->propType, binding);
-
-            if (property->propType == QMetaType::QVariant)
-                argv[0] = &fallbackVariantValue;
-            else
-                argv[0] = fallbackVariantValue.data();
-        }
-
-        QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+        if (!errors.isEmpty())
+            break;
     }
 
     return createdDynamicBindings;
@@ -672,15 +1048,20 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_compiledObject, obj);
     qSwap(_ddata, declarativeData);
 
+    QQmlVMEMetaObject *vmeMetaObject = 0;
     const QByteArray data = vmeMetaObjectData.value(index);
     if (!data.isEmpty()) {
         // install on _object
-        (void)new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
+        vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
         _ddata->propertyCache = _propertyCache;
         _ddata->propertyCache->addref();
+    } else {
+        vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
+
+    qSwap(_vmeMetaObject, vmeMetaObject);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
@@ -705,50 +1086,11 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
                             QQmlPropertyPrivate::DontRemoveBinding);
     }
 
+    qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_propertyCache, cache);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
     qSwap(_qobject, instance);
-}
-
-QVariant QmlObjectCreator::variantForBinding(int expectedMetaType, const QV4::CompiledData::Binding *binding) const
-{
-    QVariant result;
-
-    switch (expectedMetaType) {
-    case QMetaType::QString:
-        result = binding->valueAsString(&unit->header);
-        break;
-    case QMetaType::Bool:
-        result = binding->valueAsBoolean();
-        break;
-    case QMetaType::Double:
-        result = binding->valueAsNumber();
-        break;
-    case QMetaType::Int:
-        result = (int)binding->valueAsNumber();
-        break;
-    case QVariant::Color: {
-        bool ok = false;
-        result = QQmlStringConverters::colorFromString(binding->valueAsString(&unit->header), &ok);
-        if (!ok) {
-            // ### compile error
-        }
-        break;
-    }
-    default:
-        QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(expectedMetaType);
-        if (converter) {
-            result = converter(binding->valueAsString(&unit->header));
-        } else {
-            if (expectedMetaType == QMetaType::QVariant)
-                result = QVariant();
-            else
-                result = QVariant(expectedMetaType, (void*)0);
-        }
-        break;
-    }
-    return result;
 }
 
 void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
