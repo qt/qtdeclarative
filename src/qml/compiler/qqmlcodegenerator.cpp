@@ -151,7 +151,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
-    return true;
+    return errors.isEmpty();
 }
 
 bool QQmlCodeGenerator::isSignalPropertyName(const QString &name)
@@ -216,9 +216,24 @@ bool QQmlCodeGenerator::visit(AST::UiScriptBinding *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(AST::UiArrayBinding*)
+bool QQmlCodeGenerator::visit(AST::UiArrayBinding *node)
 {
-    return true;
+    QmlObject *object = 0;
+    AST::UiQualifiedId *name = resolveQualifiedId(node->qualifiedId, &object);
+    qSwap(_object, object);
+
+    AST::UiArrayMemberList *member = node->members;
+    while (member) {
+        AST::UiObjectDefinition *def = AST::cast<AST::UiObjectDefinition*>(member->member);
+
+        int idx = defineQMLObject(def);
+        appendBinding(name->identifierToken, registerString(name->name.toString()), idx, /*isListItem*/ true);
+
+        member = member->next;
+    }
+
+    qSwap(_object, object);
+    return false;
 }
 
 bool QQmlCodeGenerator::visit(AST::UiImportList *list)
@@ -603,7 +618,6 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         }
 
         // process QML-like initializers (e.g. property Object o: Object {})
-        // ### check if this is correct?
         AST::Node::accept(node->binding, this);
     }
 
@@ -749,9 +763,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     _object->bindings->append(binding);
 }
 
-void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem)
 {
-    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex))
+    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex, isListItem))
         return;
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
@@ -828,16 +842,19 @@ AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *na
     return name;
 }
 
-bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex)
+bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItem)
 {
     const QString &name = jsGenerator->strings.at(nameIndex);
     if (name.isEmpty())
         return true;
 
-    if (_propertyNames.contains(name))
-        COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
+    // List items are implement by multiple bindings to the same name, so allow duplicates.
+    if (!isListItem) {
+        if (_propertyNames.contains(name))
+            COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
 
-    _propertyNames.insert(name);
+        _propertyNames.insert(name);
+    }
 
     if (name.at(0).isUpper())
         COMPILE_EXCEPTION(nameLocation, tr("Property names cannot begin with an upper case letter"));

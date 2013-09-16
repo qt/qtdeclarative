@@ -97,6 +97,7 @@ private:
     bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
     void setupBindings(QV4::ExecutionContext *qmlContext);
+    bool setPropertyValue(QV4::ExecutionContext *qmlContext, QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions(QV4::ExecutionContext *qmlContext);
 
@@ -120,6 +121,7 @@ private:
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
     QQmlVMEMetaObject *_vmeMetaObject;
     QVector<QQmlAbstractBinding*> _createdBindings;
+    QQmlListProperty<void> _currentList;
 };
 
 QT_END_NAMESPACE
