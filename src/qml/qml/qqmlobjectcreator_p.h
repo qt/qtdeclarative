@@ -94,7 +94,7 @@ public:
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
 private:
-    void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
     void setupBindings(QV4::ExecutionContext *qmlContext);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);

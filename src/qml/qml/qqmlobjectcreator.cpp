@@ -464,6 +464,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
                                    const QList<QByteArray> &vmeMetaObjectData, const QHash<int, int> &objectIndexToId)
     : componentAttached(0)
     , engine(contextData->engine)
+    , url(contextData->url)
     , unit(qmlUnit)
     , jsUnit(jsUnit)
     , context(contextData)
@@ -889,15 +890,19 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
             const int id = attachedType->attachedPropertiesId();
             QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
             QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
-            populateInstance(binding->value.objectIndex, qmlObject, cache);
+            if (!populateInstance(binding->value.objectIndex, qmlObject, cache))
+                break;
             continue;
         }
 
         QString name = stringAt(binding->propertyNameIndex);
 
         QObject *createdSubObject = 0;
-        if (binding->type == QV4::CompiledData::Binding::Type_Object)
+        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
             createdSubObject = create(binding->value.objectIndex, _qobject);
+            if (!createdSubObject)
+                return;
+        }
 
         // Child item:
         // ...
@@ -917,7 +922,8 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
                 valueType->read(_qobject, property->coreIndex);
 
                 QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(valueType);
-                populateInstance(binding->value.objectIndex, valueType, cache);
+                if (!populateInstance(binding->value.objectIndex, valueType, cache))
+                    break;
 
                 valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
                 continue;
@@ -951,6 +957,62 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
             continue;
         }
 
+        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+            QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
+                                                                       QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
+            int propertyWriteStatus = -1;
+            void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
+
+            if (const char *iid = QQmlMetaType::interfaceIId(property->propType)) {
+                void *ptr = createdSubObject->qt_metacast(iid);
+                if (ptr) {
+                    argv[0] = &ptr;
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                } else {
+                    recordError(binding->location, tr("Cannot assign object to interface property"));
+                    break;
+                }
+            } else if (property->propType == QMetaType::QVariant) {
+                if (property->isVarProperty()) {
+                    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+                    QV4::Scope scope(v4);
+                    QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), createdSubObject));
+                    _vmeMetaObject->setVMEProperty(property->coreIndex, wrappedObject);
+                } else {
+                    QVariant value = QVariant::fromValue(createdSubObject);
+                    argv[0] = &value;
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                }
+            } else {
+                QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+
+                // We want to raw metaObject here as the raw metaobject is the
+                // actual property type before we applied any extensions that might
+                // effect the properties on the type, but don't effect assignability
+                QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType);
+
+                // Will be true if the assgned type inherits propertyMetaObject
+                bool isAssignable = false;
+                // Determine isAssignable value
+                if (propertyMetaObject) {
+                    QQmlPropertyCache *c = enginePrivate->cache(createdSubObject);
+                    while (c && !isAssignable) {
+                        isAssignable |= c == propertyMetaObject;
+                        c = c->parent();
+                    }
+                }
+
+                if (isAssignable) {
+                    argv[0] = &createdSubObject;
+                    QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
+                } else {
+                    recordError(binding->location, tr("Cannot assign object to property"));
+                    break;
+                }
+            }
+            continue;
+        }
+
         setPropertyValue(property, binding);
 
         if (!errors.isEmpty())
@@ -961,7 +1023,6 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
@@ -1000,7 +1061,8 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
     if (idEntry != objectIndexToId.constEnd())
         context->setIdProperty(idEntry.value(), instance);
 
-    populateInstance(index, instance, cache);
+    if (!populateInstance(index, instance, cache))
+        return 0;
 
     return instance;
 }
@@ -1050,7 +1112,7 @@ void QmlObjectCreator::finalize()
     }
 }
 
-void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache)
+bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache)
 {
     const QV4::CompiledData::Object *obj = unit->objectAt(index);
 
@@ -1097,6 +1159,8 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_qobject, instance);
 
     allCreatedBindings.append(_createdBindings);
+
+    return errors.isEmpty();
 }
 
 void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)

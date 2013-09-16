@@ -913,6 +913,8 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         }
         context->setIdPropertyData(mapping);
 
+        context->url = cc->url;
+
         state.creator = new QmlObjectCreator(context, cc->qmlUnit, cc->compilationUnit, cc->resolvedTypes,
                                              cc->propertyCaches, cc->datas, cc->objectIndexToId);
         rv = state.creator->create();
