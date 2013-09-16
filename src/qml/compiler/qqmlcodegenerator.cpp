@@ -811,7 +811,11 @@ AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *na
         binding->location.line = name->identifierToken.startLine;
         binding->location.column = name->identifierToken.startColumn;
         binding->flags = 0;
-        binding->type = QV4::CompiledData::Binding::Type_Object;
+
+        if (name->name.unicode()->isUpper())
+            binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
+        else
+            binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
         int objIndex = defineQMLObject(0, 0);
         binding->value.objectIndex = objIndex;
@@ -876,11 +880,7 @@ void QQmlCodeGenerator::collectTypeReferences()
                     _typeReferences.add(param->customTypeNameIndex, param->location);
 
         for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
-            if (binding->type != QV4::CompiledData::Binding::Type_Object)
-                continue;
-            const QString &propName = stringAt(binding->propertyNameIndex);
-            // Attached property?
-            if (propName.unicode()->isUpper())
+            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
                 _typeReferences.add(binding->propertyNameIndex, binding->location);
         }
     }
@@ -1108,7 +1108,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
     for (Binding *binding = obj->bindings->first; binding; binding = binding->next) {
         QString propertyName = stringAt(binding->propertyNameIndex);
         // Attached property?
-        if (propertyName.unicode()->isUpper() && binding->type == QV4::CompiledData::Binding::Type_Object) {
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             QmlObject *attachedObj = parsedQML->objects[binding->value.objectIndex];
             QQmlType *type = unit->resolvedTypes.value(binding->propertyNameIndex).type;
             QQmlPropertyCache *cache = enginePrivate->cache(type->attachedPropertiesType());

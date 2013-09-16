@@ -882,21 +882,7 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 {
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-        QString name = stringAt(binding->propertyNameIndex);
-
-        // Child item:
-        // ...
-        //    Item {
-        //        ...
-        //    }
-        if (name.isEmpty() && binding->type == QV4::CompiledData::Binding::Type_Object) {
-            create(binding->value.objectIndex, _qobject);
-            continue;
-        }
-
-        // Attached property
-        if (binding->type == QV4::CompiledData::Binding::Type_Object
-            && name.unicode()->isUpper()) {
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
             Q_ASSERT(stringAt(obj->inheritedTypeNameIndex).isEmpty());
             QQmlType *attachedType = resolvedTypes.value(binding->propertyNameIndex).type;
@@ -907,15 +893,23 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
             continue;
         }
 
+        QString name = stringAt(binding->propertyNameIndex);
+
+        QObject *createdSubObject = 0;
+        if (binding->type == QV4::CompiledData::Binding::Type_Object)
+            createdSubObject = create(binding->value.objectIndex, _qobject);
+
+        // Child item:
+        // ...
+        //    Item {
+        //        ...
+        //    }
+        if (name.isEmpty())
+            continue;
+
         QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
 
-        // Grouped property:
-        //  ...
-        //  font {
-        //      pixelSize: 24
-        //      ...
-        //  }
-        if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+        if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
             const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
             if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
                 QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType);

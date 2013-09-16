@@ -251,7 +251,9 @@ struct Binding
         Type_Number,
         Type_String,
         Type_Script,
-        Type_Object
+        Type_Object,
+        Type_AttachedProperty,
+        Type_GroupProperty
     };
 
     enum Flags {
