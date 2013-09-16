@@ -248,7 +248,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     //
     // set up the global object
     //
-    globalObject = newObject();
+    globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
     rootContext->thisObject = Value::fromObject(globalObject);
 
@@ -350,25 +350,25 @@ FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, Str
     return f;
 }
 
-BoundFunction *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
 {
     assert(target);
 
     BoundFunction *f = new (memoryManager) BoundFunction(scope, target, boundThis, boundArgs);
-    return f;
+    return f->asReturned<BoundFunction>();
 }
 
 
-Object *ExecutionEngine::newObject()
+Returned<Object> *ExecutionEngine::newObject()
 {
     Object *object = new (memoryManager) Object(this);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newObject(InternalClass *internalClass)
+Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
 {
     Object *object = new (memoryManager) Object(internalClass);
-    return object;
+    return object->asReturned<Object>();
 }
 
 String *ExecutionEngine::newString(const QString &s)

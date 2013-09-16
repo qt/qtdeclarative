@@ -213,7 +213,8 @@ public:
     void initializeConstructor(QQmlAdaptorModelEngineData *const data)
     {
         QV4::ExecutionEngine *v4 = data->v4;
-        QV4::Object *proto = v4->newObject();
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
         QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
                                                QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
         p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
@@ -232,7 +233,7 @@ public:
             p->setGetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::get_property));
             p->setSetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::set_property));
         }
-        prototype = QV4::Value::fromObject(proto);
+        prototype = proto.asValue();
     }
 
     // QAbstractDynamicMetaObject
@@ -955,7 +956,8 @@ void QQmlAdaptorModel::objectDestroyed(QObject *)
 QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
     : v4(QV8Engine::getV4(e))
 {
-    QV4::Object *proto = v4->newObject();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
                                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
@@ -963,7 +965,7 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
                             QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::get_modelData));
     p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::set_modelData));
-    listItemProto = QV4::Value::fromObject(proto);
+    listItemProto = proto;
 }
 
 QQmlAdaptorModelEngineData::~QQmlAdaptorModelEngineData()

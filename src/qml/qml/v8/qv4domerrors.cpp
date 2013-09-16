@@ -48,7 +48,8 @@ using namespace QV4;
 
 void qt_add_domexceptions(ExecutionEngine *e)
 {
-    Object *domexception = e->newObject();
+    Scope scope(e);
+    Scoped<Object> domexception(scope, e->newObject());
     domexception->defineReadonlyProperty(e, QStringLiteral("INDEX_SIZE_ERR"), Value::fromInt32(DOMEXCEPTION_INDEX_SIZE_ERR));
     domexception->defineReadonlyProperty(e, QStringLiteral("DOMSTRING_SIZE_ERR"), Value::fromInt32(DOMEXCEPTION_DOMSTRING_SIZE_ERR));
     domexception->defineReadonlyProperty(e, QStringLiteral("HIERARCHY_REQUEST_ERR"), Value::fromInt32(DOMEXCEPTION_HIERARCHY_REQUEST_ERR));
@@ -66,7 +67,7 @@ void qt_add_domexceptions(ExecutionEngine *e)
     domexception->defineReadonlyProperty(e, QStringLiteral("INVALID_ACCESS_ERR"), Value::fromInt32(DOMEXCEPTION_INVALID_ACCESS_ERR));
     domexception->defineReadonlyProperty(e, QStringLiteral("VALIDATION_ERR"), Value::fromInt32(DOMEXCEPTION_VALIDATION_ERR));
     domexception->defineReadonlyProperty(e, QStringLiteral("TYPE_MISMATCH_ERR"), Value::fromInt32(DOMEXCEPTION_TYPE_MISMATCH_ERR));
-    e->globalObject->defineDefaultProperty(e->current, QStringLiteral("DOMException"), Value::fromObject(domexception));
+    e->globalObject->defineDefaultProperty(e->current, QStringLiteral("DOMException"), domexception.asValue());
 }
 
 QT_END_NAMESPACE

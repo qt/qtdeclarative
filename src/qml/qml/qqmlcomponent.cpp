@@ -1408,7 +1408,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Object *proto = v4->newObject();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     QV4::Property *s = proto->insertMember(v4->newString(QStringLiteral("onStatusChanged")),
                                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     s->setGetter(V4FUNCTION(QmlIncubatorObject::method_get_statusChanged, v4));
@@ -1421,7 +1422,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     s->setGetter(V4FUNCTION(QmlIncubatorObject::method_get_object, v4));
     proto->defineDefaultProperty(v4, QStringLiteral("forceCompletion"), QmlIncubatorObject::method_forceCompletion);
 
-    incubationProto = QV4::Value::fromObject(proto);
+    incubationProto = proto;
 }
 
 QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)

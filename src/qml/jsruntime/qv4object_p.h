@@ -178,10 +178,6 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 
-    static Object *cast(const Value &v) {
-        return v.asObject();
-    }
-
     // Array handling
 
     uint allocArrayValue() {
@@ -462,6 +458,17 @@ inline void Object::arraySet(uint index, Value value)
 inline void Object::arraySet(uint index, const Property *pd)
 {
     *arrayInsert(index) = *pd;
+}
+
+template<>
+inline Object *value_cast(const Value &v) {
+    return v.asObject();
+}
+
+template<>
+inline ReturnedValue value_convert<Object>(ExecutionContext *ctx, const Value &v)
+{
+    return v.toObject(ctx)->asReturnedValue();
 }
 
 }

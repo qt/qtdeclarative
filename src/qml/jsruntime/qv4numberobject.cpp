@@ -110,9 +110,8 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
     double num = thisNumberValue(ctx).asDouble();
 
-    Value arg = ctx->argument(0);
-    if (!arg.isUndefined()) {
-        int radix = arg.toInt32();
+    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
+        int radix = ctx->arguments[0].toInt32();
         if (radix < 2 || radix > 36) {
             ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
@@ -180,7 +179,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     double fdigits = 0;
 
     if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger();
+        fdigits = ctx->arguments[0].toInteger();
 
     if (std::isnan(fdigits))
         fdigits = 0;
@@ -204,11 +203,10 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
     double d = thisNumberValue(ctx).asDouble();
 
-    Value fraction = ctx->argument(0);
     int fdigits = -1;
 
-    if (!fraction.isUndefined()) {
-        int fdigits = ctx->argument(0).toInt32();
+    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
+        int fdigits = ctx->arguments[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range"));
             ctx->throwRangeError(Value::fromString(error));
@@ -229,11 +227,10 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     ScopedValue v(scope, thisNumberValue(ctx));
 
-    Value prec = ctx->argument(0);
-    if (prec.isUndefined())
+    if (!ctx->argumentCount || ctx->arguments[0].isUndefined())
         return __qmljs_to_string(v, ctx);
 
-    double precision = prec.toInt32();
+    double precision = ctx->arguments[0].toInt32();
     if (precision < 1 || precision > 21) {
         String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range"));
         ctx->throwRangeError(Value::fromString(error));

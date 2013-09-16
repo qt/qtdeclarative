@@ -328,7 +328,8 @@ static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
 }
 #define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::ReturnedValue particleData_get_ ## NAME (QV4::SimpleCallContext *ctx) \
 { \
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum) \
         ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
@@ -337,18 +338,21 @@ static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
 \
 static QV4::ReturnedValue particleData_set_ ## NAME (QV4::SimpleCallContext *ctx)\
 {\
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum)\
         ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum->color. VAR = qMin(255, qMax(0, (int)floor(ctx->argument(0).toNumber() * 255.0)));\
+    double d = ctx->argumentCount ? ctx->arguments[0].toNumber() : 0; \
+    r->datum->color. VAR = qMin(255, qMax(0, (int)floor(d * 255.0)));\
     return QV4::Encode::undefined(); \
 }
 
 
 #define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum) \
         ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
@@ -357,17 +361,19 @@ static QV4::ReturnedValue particleData_set_ ## NAME (QV4::SimpleCallContext *ctx
 \
 static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum)\
         ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> VARIABLE = ctx->argument(0).toBoolean() ? 1.0 : 0.0;\
+    r->datum-> VARIABLE = (ctx->argumentCount && ctx->arguments[0].toBoolean()) ? 1.0 : 0.0;\
     return QV4::Encode::undefined(); \
 }
 
 #define FLOAT_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum) \
         ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
@@ -376,17 +382,19 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
 \
 static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum)\
         ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> VARIABLE = ctx->argument(0).toNumber();\
+    r->datum-> VARIABLE = ctx->argumentCount ? ctx->arguments[0].toNumber() : qSNaN();\
     return QV4::Encode::undefined(); \
 }
 
 #define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
 { \
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum) \
         ctx->throwError(QStringLiteral("Not a valid ParticleData object")); \
 \
@@ -395,11 +403,12 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
 \
 static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
 {\
-    QV4ParticleData *r = ctx->thisObject.as<QV4ParticleData>(); \
+    QV4::Scope scope(ctx); \
+    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject); \
     if (!r || !r->datum)\
         ctx->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->datum-> SETTER ( ctx->argument(0).toNumber() );\
+    r->datum-> SETTER (ctx->argumentCount ? ctx->arguments[0].toNumber() : qSNaN());\
     return QV4::Encode::undefined(); \
 }
 
@@ -444,7 +453,8 @@ FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Object *p = v4->newObject();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::Object> p(scope, v4->newObject());
 
     p->defineDefaultProperty(v4, QStringLiteral("discard"), particleData_discard);
     p->defineDefaultProperty(v4, QStringLiteral("lifeLeft"), particleData_lifeLeft);
@@ -485,7 +495,7 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     REGISTER_ACCESSOR(p, v4, blue, blue);
     REGISTER_ACCESSOR(p, v4, alpha, alpha);
 
-    proto = QV4::Value::fromObject(p);
+    proto = p;
 }
 
 QV8ParticleDataDeletable::~QV8ParticleDataDeletable()

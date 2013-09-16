@@ -444,7 +444,7 @@ ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
     // ### const_cast
-    return static_cast<EvalFunction *>(that)->evalCall(callData->thisObject, const_cast<Value *>(callData->args), callData->argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(callData->thisObject, const_cast<Value *>(static_cast<const Value *>(callData->args)), callData->argc, false);
 }
 
 
@@ -465,14 +465,15 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
 {
-    Value string = context->argument(0);
-    Value radix = context->argument(1);
-    int R = radix.isUndefined() ? 0 : radix.toInt32();
+    Scope scope(ctx);
+    ScopedValue string(scope, ctx->argument(0));
+    ScopedValue radix(scope, ctx->argument(1));
+    int R = radix->isUndefined() ? 0 : radix->toInt32();
 
     // [15.1.2.2] step by step:
-    String *inputString = string.toString(context); // 1
+    String *inputString = string->toString(ctx); // 1
     QString trimmed = inputString->toQString().trimmed(); // 2
     const QChar *pos = trimmed.constData();
     const QChar *end = pos + trimmed.length();
@@ -544,12 +545,12 @@ ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *context)
 }
 
 // parseFloat [15.1.2.3]
-ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
 {
-    Value string = context->argument(0);
+    Scope scope(ctx);
 
     // [15.1.2.3] step by step:
-    String *inputString = string.toString(context); // 1
+    Scoped<String> inputString(scope, ctx->argument(0), Scoped<String>::Convert);
     QString trimmed = inputString->toQString().trimmed(); // 2
 
     // 4:
@@ -570,24 +571,30 @@ ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *context)
 }
 
 /// isNaN [15.1.2.4]
-ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
 {
-    const Value &v = context->argument(0);
-    if (v.integerCompatible())
+    if (!ctx->argumentCount)
+        // undefined gets converted to NaN
+        return Encode(true);
+
+    if (ctx->arguments[0].integerCompatible())
         return Encode(false);
 
-    double d = v.toNumber();
+    double d = ctx->arguments[0].toNumber();
     return Encode((bool)std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]
-ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
 {
-    const Value &v = context->argument(0);
-    if (v.integerCompatible())
+    if (!ctx->argumentCount)
+        // undefined gets converted to NaN
+        return Encode(false);
+
+    if (ctx->arguments[0].integerCompatible())
         return Encode(true);
 
-    double d = v.toNumber();
+    double d = ctx->arguments[0].toNumber();
     return Encode((bool)std::isfinite(d));
 }
 
@@ -656,7 +663,7 @@ ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
     if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
-    QString str = context->argument(0).toString(context)->toQString();
+    QString str = context->arguments[0].toString(context)->toQString();
     return Value::fromString(context, escape(str)).asReturnedValue();
 }
 
@@ -665,6 +672,6 @@ ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
     if (!context->argumentCount)
         return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
-    QString str = context->argument(0).toString(context)->toQString();
+    QString str = context->arguments[0].toString(context)->toQString();
     return Value::fromString(context, unescape(str)).asReturnedValue();
 }

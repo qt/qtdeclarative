@@ -1196,8 +1196,9 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
 
 ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)
 {
+    Scope scope(ctx);
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
-    Object *o = ctx->engine->newObject(klass);
+    Scoped<Object> o(scope, ctx->engine->newObject(klass));
 
     for (int i = 0; i < klass->size; ++i) {
         if (klass->propertyData[i].isData())
@@ -1210,7 +1211,7 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
         }
     }
 
-    return Value::fromObject(o).asReturnedValue();
+    return o.asReturnedValue();
 }
 
 QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx)

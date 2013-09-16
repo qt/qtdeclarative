@@ -84,12 +84,12 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         ensureArrayAttributes();
         context->engine->requireArgumentsAccessors(numAccessors);
         for (uint i = 0; i < (uint)numAccessors; ++i) {
-            mappedArguments.append(context->argument(i));
+            mappedArguments.append(context->arguments[i]);
             arrayData[i] = context->engine->argumentsAccessors.at(i);
             arrayAttributes[i] = Attr_Accessor;
         }
         for (uint i = numAccessors; i < argCount; ++i) {
-            arrayData[i] = Property::fromValue(context->argument(i));
+            arrayData[i] = Property::fromValue(context->arguments[i]);
             arrayAttributes[i] = Attr_Data;
         }
         arrayDataLen = argCount;
@@ -160,7 +160,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
         getter->engine()->current->throwTypeError();
 
     assert(g->index < o->context->argumentCount);
-    return o->context->argument(g->index).asReturnedValue();
+    return o->context->argument(g->index);
 }
 
 DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);

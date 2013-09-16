@@ -177,7 +177,7 @@ public:
     };
 
     QHash<int, WorkerScript *> workers;
-    QV4::Value getWorker(WorkerScript *);
+    QV4::ReturnedValue getWorker(WorkerScript *);
 
     int m_nextId;
 
@@ -282,9 +282,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
-    int id = ctx->argument(1).toInt32();
+    int id = ctx->argumentCount > 1 ? ctx->arguments[1].toInt32() : 0;
 
-    QByteArray data = QV4::Serialize::serialize(ctx->argument(2), engine);
+    QByteArray data = QV4::Serialize::serialize(ctx->argumentCount > 2 ? ctx->arguments[2] : QV4::Value::undefinedValue(), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
@@ -298,27 +298,29 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 }
 
 // Requires handle scope and context scope
-QV4::Value QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
 {
     if (!script->initialized) {
         script->initialized = true;
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+        QV4::Scope scope(v4);
 
         script->object = QV4::QmlContextWrapper::urlScope(workerEngine, script->source);
 
-        QV4::QmlContextWrapper *w = script->object.value().asObject()->as<QV4::QmlContextWrapper>();
+        QV4::Scoped<QV4::QmlContextWrapper> w(scope, script->object.value());
+        Q_ASSERT(!!w);
         w->setReadOnly(false);
 
-        QV4::Object *api = v4->newObject();
+        QV4::Scoped<QV4::Object> api(scope, v4->newObject());
         api->put(v4->newString("sendMessage"), workerEngine->sendFunction(script->id));
 
-        script->object.value().asObject()->put(v4->newString("WorkerScript"), QV4::Value::fromObject(api));
+        script->object.value().asObject()->put(v4->newString("WorkerScript"), api.asValue());
 
         w->setReadOnly(true);
     }
 
-    return script->object.value();
+    return script->object.value().asReturnedValue();
 }
 
 bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
@@ -386,12 +388,15 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         if (!script)
             return;
         script->source = url;
-        QV4::Value activation = getWorker(script);
-        if (activation.isEmpty())
-            return;
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
-        QV4::Script program(v4, activation.asObject(), sourceCode, url.toString());
+        QV4::Scope scope(v4);
+
+        QV4::Scoped<QV4::Object> activation(scope, getWorker(script));
+        if (!activation)
+            return;
+
+        QV4::Script program(v4, activation.getPointer(), sourceCode, url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
         try {

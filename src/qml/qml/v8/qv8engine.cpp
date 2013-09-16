@@ -212,10 +212,11 @@ static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariant
 static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariantMap &map)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::Object *o = e->newObject();
+    QV4::Scope scope(e);
+    QV4::Scoped<QV4::Object> o(scope, e->newObject());
     for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
         o->put(e->newString(iter.key()), QV4::Value::fromReturnedValue(engine->fromVariant(iter.value())));
-    return QV4::Value::fromObject(o).asReturnedValue();
+    return o.asReturnedValue();
 }
 
 Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
@@ -566,13 +567,14 @@ QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
 // the QVariantMap converted to JS, recursively.
 QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 {
-    QV4::Object *o = m_v4Engine->newObject();
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::Object> o(scope, m_v4Engine->newObject());
     QVariantMap::const_iterator it;
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
         QV4::Property *p = o->insertMember(m_v4Engine->newIdentifier(it.key()), QV4::Attr_Data);
         p->value = QV4::Value::fromReturnedValue(variantToJS(it.value()));
     }
-    return QV4::Value::fromObject(o).asReturnedValue();
+    return o.asReturnedValue();
 }
 
 // Converts a JS Object to a QVariantMap.

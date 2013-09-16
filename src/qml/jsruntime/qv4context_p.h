@@ -148,8 +148,6 @@ struct Q_QML_EXPORT ExecutionContext
     ReturnedValue getPropertyAndBase(String *name, Object **base);
     bool deleteProperty(String *name);
 
-    inline Value argument(unsigned int index = 0);
-
     void mark();
 
     inline CallContext *asCallContext();
@@ -160,9 +158,13 @@ struct SimpleCallContext : public ExecutionContext
 {
     void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
-    Value *arguments;
+    SafeValue *arguments;
     unsigned int realArgumentCount;
     unsigned int argumentCount;
+
+    ReturnedValue argument(uint i) {
+        return i < argumentCount ? arguments[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
+    }
 };
 
 struct CallContext : public SimpleCallContext
@@ -195,16 +197,6 @@ struct WithContext : public ExecutionContext
 
     void initWithContext(ExecutionContext *p, Object *with);
 };
-
-inline Value ExecutionContext::argument(unsigned int index)
-{
-    if (type >= Type_SimpleCallContext) {
-        CallContext *ctx = static_cast<CallContext *>(this);
-        if (index < ctx->argumentCount)
-            return ctx->arguments[index];
-    }
-    return Value::undefinedValue();
-}
 
 inline CallContext *ExecutionContext::asCallContext()
 {

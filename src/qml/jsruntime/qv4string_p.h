@@ -120,10 +120,6 @@ struct Q_QML_EXPORT String : public Managed {
         return _text.length();
     }
 
-    static String *cast(const Value &v) {
-        return v.asString();
-    }
-
     QString _text;
     mutable Identifier *identifier;
     mutable uint stringHash;
@@ -141,6 +137,17 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
 };
+
+template<>
+inline String *value_cast(const Value &v) {
+    return v.asString();
+}
+
+template<>
+inline ReturnedValue value_convert<String>(ExecutionContext *ctx, const Value &v)
+{
+    return v.toString(ctx)->asReturnedValue();
+}
 
 }
 

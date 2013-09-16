@@ -64,7 +64,7 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, FunctionObject *
 
     c->function = function;
     // ###
-    c->arguments = const_cast<Value *>(callData->args);
+    c->arguments = const_cast<SafeValue *>(callData->args);
     c->realArgumentCount = callData->argc;
     c->argumentCount = callData->argc;
     c->thisObject = callData->thisObject;
@@ -135,7 +135,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
         std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
 
     c->argumentCount = qMax((uint)callData->argc, function->formalParameterCount);
-    c->arguments = c->locals + function->varCount;
+    c->arguments = static_cast<SafeValue *>(c->locals + function->varCount);
     if (callData->argc)
         ::memcpy(c->arguments, callData->args, callData->argc * sizeof(Value));
     if (callData->argc < function->formalParameterCount)
@@ -182,7 +182,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
             if (!c->activation)
-                c->activation = engine->newObject();
+                c->activation = engine->newObject()->getPointer();
             activation = c->activation;
             break;
         }

@@ -288,6 +288,11 @@ PersistentValue::PersistentValue(const Value &val)
 {
 }
 
+PersistentValue::PersistentValue(const ScopedValue &val)
+    : d(new PersistentValuePrivate(*val.operator ->()))
+{
+}
+
 PersistentValue::PersistentValue(ReturnedValue val)
     : d(new PersistentValuePrivate(Value::fromReturnedValue(val)))
 {
@@ -326,6 +331,16 @@ PersistentValue &PersistentValue::operator =(const Value &other)
     return *this;
 }
 
+PersistentValue &PersistentValue::operator =(const ScopedValue &other)
+{
+    return operator=(*other.operator ->());
+}
+
+PersistentValue &PersistentValue::operator =(const ValueRef other)
+{
+    return operator=(*other.operator ->());
+}
+
 PersistentValue &PersistentValue::operator =(const ReturnedValue &other)
 {
     if (!d) {
@@ -354,6 +369,11 @@ WeakValue::WeakValue(const WeakValue &other)
         d->ref();
 }
 
+WeakValue::WeakValue(ReturnedValue val)
+    : d(new PersistentValuePrivate(Value::fromReturnedValue(val), /*engine*/0, /*weak*/true))
+{
+}
+
 WeakValue &WeakValue::operator=(const WeakValue &other)
 {
     if (d == other.d)
@@ -377,6 +397,16 @@ WeakValue &WeakValue::operator =(const Value &other)
         return *this;
     }
     d = d->detach(other, /*weak*/true);
+    return *this;
+}
+
+WeakValue &WeakValue::operator =(const ReturnedValue &other)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(Value::fromReturnedValue(other), /*engine*/0, /*weak*/true);
+        return *this;
+    }
+    d = d->detach(Value::fromReturnedValue(other), /*weak*/true);
     return *this;
 }
 

@@ -142,6 +142,11 @@ protected:
     { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
 
+template<>
+inline FunctionObject *value_cast(const Value &v) {
+    return v.asFunctionObject();
+}
+
 struct FunctionCtor: FunctionObject
 {
     Q_MANAGED

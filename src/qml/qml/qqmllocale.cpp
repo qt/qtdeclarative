@@ -112,7 +112,7 @@ private:
 DEFINE_MANAGED_VTABLE(QQmlLocaleData);
 
 #define GET_LOCALE_DATA_RESOURCE(OBJECT) \
-    QQmlLocaleData *r = OBJECT.as<QQmlLocaleData>(); \
+    QV4::Scoped<QQmlLocaleData> r(scope, OBJECT.as<QQmlLocaleData>()); \
     if (!r) \
         V4THROW_ERROR("Not a valid Locale object")
 
@@ -139,6 +139,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::SimpleCallConte
 {
     if (ctx->argumentCount > 2)
         return QV4::DatePrototype::method_toLocaleString(ctx);
+
+    QV4::Scope scope(ctx);
 
     QV4::DateObject *date = ctx->thisObject.asDateObject();
     if (!date)
@@ -182,6 +184,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleTimeString(QV4::SimpleCallC
     if (ctx->argumentCount > 2)
         return QV4::DatePrototype::method_toLocaleTimeString(ctx);
 
+    QV4::Scope scope(ctx);
+
     QV4::DateObject *date = ctx->thisObject.asDateObject();
     if (!date)
         return QV4::DatePrototype::method_toLocaleTimeString(ctx);
@@ -224,6 +228,8 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleDateString(QV4::SimpleCallC
 {
     if (ctx->argumentCount > 2)
         return QV4::DatePrototype::method_toLocaleDateString(ctx);
+
+    QV4::Scope scope(ctx);
 
     QV4::DateObject *dateObj = ctx->thisObject.asDateObject();
     if (!dateObj)
@@ -273,6 +279,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleString(QV4::SimpleCallCon
         return QV4::Encode(engine->newDateObject(dt));
     }
 
+    QV4::Scope scope(ctx);
+
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
         V4THROW_ERROR("Locale: Date.fromLocaleString(): Invalid arguments");
 
@@ -315,6 +323,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(QV4::SimpleCal
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
         V4THROW_ERROR("Locale: Date.fromLocaleTimeString(): Invalid arguments");
 
+    QV4::Scope scope(ctx);
+
     GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
@@ -354,6 +364,8 @@ QV4::ReturnedValue QQmlDateExtension::method_fromLocaleDateString(QV4::SimpleCal
 
     if (ctx->argumentCount < 1 || ctx->argumentCount > 3 || !isLocaleObject(ctx->arguments[0]))
         V4THROW_ERROR("Locale: Date.fromLocaleDateString(): Invalid arguments");
+
+    QV4::Scope scope(ctx);
 
     GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
@@ -414,6 +426,8 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(QV4::SimpleCallCon
     if (!isLocaleObject(ctx->arguments[0]))
         return QV4::NumberPrototype::method_toLocaleString(ctx); // Use the default Number toLocaleString()
 
+    QV4::Scope scope(ctx);
+
     GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
     quint16 format = 'f';
@@ -450,6 +464,8 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleCurrencyString(QV4::Simpl
     if (!isLocaleObject(ctx->arguments[0]))
         V4THROW_ERROR("Locale: Number.toLocaleCurrencyString(): Invalid arguments");
 
+    QV4::Scope scope(ctx);
+
     GET_LOCALE_DATA_RESOURCE(ctx->arguments[0]);
 
     QString symbol;
@@ -469,6 +485,8 @@ QV4::ReturnedValue QQmlNumberExtension::method_fromLocaleString(QV4::SimpleCallC
 
     int numberIdx = 0;
     QLocale locale;
+
+    QV4::Scope scope(ctx);
 
     if (ctx->argumentCount == 2) {
         if (!isLocaleObject(ctx->arguments[0]))
@@ -671,8 +689,8 @@ public:
 QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
     QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
-    QV4::Object *o = eng->newObject();
-    prototype = QV4::Value::fromObject(o);
+    QV4::Scope scope(eng);
+    QV4::Scoped<QV4::Object> o(scope, eng->newObject());
 
     o->defineDefaultProperty(eng, QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
     o->defineDefaultProperty(eng, QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);
@@ -699,6 +717,8 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     o->defineAccessorProperty(eng, QStringLiteral("amText"), QQmlLocaleData::method_get_amText, 0);
     o->defineAccessorProperty(eng, QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, 0);
     o->defineAccessorProperty(eng, QStringLiteral("exponential"), QQmlLocaleData::method_get_exponential, 0);
+
+    prototype = o;
 }
 
 QV8LocaleDataDeletable::~QV8LocaleDataDeletable()

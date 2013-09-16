@@ -286,7 +286,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    return new QJSValuePrivate(d->m_v4Engine->newObject());
+    return new QJSValuePrivate(d->m_v4Engine->newObject()->getPointer());
 }
 
 /*!

@@ -134,9 +134,10 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     if (v4->qmlExtensions()->valueTypeWrapperPrototype)
         return;
 
-    Object *o = v4->newObject();
+    Scope scope(v4);
+    Scoped<Object> o(scope, v4->newObject());
     o->defineDefaultProperty(v4, QStringLiteral("toString"), method_toString, 1);
-    v4->qmlExtensions()->valueTypeWrapperPrototype = o;
+    v4->qmlExtensions()->valueTypeWrapperPrototype = o.getPointer();
 }
 
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)

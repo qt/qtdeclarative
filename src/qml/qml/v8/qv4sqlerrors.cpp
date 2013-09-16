@@ -49,7 +49,8 @@ using namespace QV4;
 
 void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
 {
-    Object *sqlexception = engine->newObject();
+    Scope scope(engine);
+    Scoped<Object> sqlexception(scope, engine->newObject());
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("UNKNOWN_ERR"), Value::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("DATABASE_ERR"), Value::fromInt32(SQLEXCEPTION_DATABASE_ERR));
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("VERSION_ERR"), Value::fromInt32(SQLEXCEPTION_VERSION_ERR));
@@ -58,7 +59,7 @@ void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("SYNTAX_ERR"), Value::fromInt32(SQLEXCEPTION_SYNTAX_ERR));
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("CONSTRAINT_ERR"), Value::fromInt32(SQLEXCEPTION_CONSTRAINT_ERR));
     sqlexception->defineReadonlyProperty(engine, QStringLiteral("TIMEOUT_ERR"), Value::fromInt32(SQLEXCEPTION_TIMEOUT_ERR));
-    engine->globalObject->defineDefaultProperty(engine->current, QStringLiteral("SQLException"), Value::fromObject(sqlexception));
+    engine->globalObject->defineDefaultProperty(engine->current, QStringLiteral("SQLException"), sqlexception.asValue());
 }
 
 QT_END_NAMESPACE

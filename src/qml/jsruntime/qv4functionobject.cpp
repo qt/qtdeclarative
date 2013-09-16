@@ -92,9 +92,10 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool creat
 #endif
 
      if (createProto) {
-         Object *proto = scope->engine->newObject(scope->engine->protoClass);
+         Scope s(scope);
+         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
          proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
-         memberData[Index_Prototype].value = Value::fromObject(proto);
+         memberData[Index_Prototype].value = proto.asValue();
      }
 
      if (name)
@@ -158,16 +159,16 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    FunctionObject *f = static_cast<FunctionObject *>(that);
-    ExecutionEngine *v4 = f->engine();
+    ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    Scoped<FunctionObject> f(scope, that, Scoped<FunctionObject>::Cast);
 
     InternalClass *ic = v4->objectClass;
     Scoped<Object> proto(scope, f->get(v4->id_prototype));
     if (!!proto)
         ic = v4->emptyClass->changePrototype(proto.getPointer());
-    Object *obj = v4->newObject(ic);
-    return Value::fromObject(obj).asReturnedValue();
+    Scoped<Object> obj(scope, v4->newObject(ic));
+    return obj.asReturnedValue();
 }
 
 ReturnedValue FunctionObject::call(Managed *, CallData *)
@@ -298,20 +299,19 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    Value thisArg = ctx->argument(0);
-    Value arg = ctx->argument(1);
+    ScopedValue arg(scope, ctx->argument(1));
 
-    Object *arr = arg.asObject();
+    Scoped<Object> arr(scope, arg);
 
     quint32 len;
     if (!arr) {
         len = 0;
-        if (!arg.isNullOrUndefined()) {
+        if (!arg->isNullOrUndefined()) {
             ctx->throwTypeError();
             return Encode::undefined();
         }
     } else {
-        len = ArrayPrototype::getLength(ctx, arr);
+        len = ArrayPrototype::getLength(ctx, arr.getPointer());
     }
 
     ScopedCallData callData(scope, len);
@@ -329,14 +329,13 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
         }
     }
 
-    callData->thisObject = thisArg;
+    callData->thisObject = ctx->argument(0);
     return o->call(callData);
 }
 
 ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Value thisArg = ctx->argument(0);
 
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
@@ -347,24 +346,23 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
         std::copy(ctx->arguments + 1,
                   ctx->arguments + ctx->argumentCount, callData->args);
     }
-    callData->thisObject = thisArg;
+    callData->thisObject = ctx->argument(0);
     return o->call(callData);
 }
 
 ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
-    FunctionObject *target = ctx->thisObject.asFunctionObject();
+    Scope scope(ctx);
+    Scoped<FunctionObject> target(scope, ctx->thisObject);
     if (!target)
         ctx->throwTypeError();
 
-    Value boundThis = ctx->argument(0);
+    ScopedValue boundThis(scope, ctx->argument(0));
     QVector<Value> boundArgs;
     for (uint i = 1; i < ctx->argumentCount; ++i)
-        boundArgs += ctx->argument(i);
+        boundArgs += ctx->arguments[i];
 
-
-    BoundFunction *f = ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs);
-    return Value::fromObject(f).asReturnedValue();
+    return ctx->engine->newBoundFunction(ctx->engine->rootContext, target.getPointer(), boundThis, boundArgs)->asReturnedValue();
 }
 
 
@@ -411,19 +409,19 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
 ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
+    ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
     if (proto.isObject())
         ic = v4->emptyClass->changePrototype(proto.objectValue());
-    Object *obj = v4->newObject(ic);
+    Scoped<Object> obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
-    callData->thisObject = Value::fromObject(obj);
-    ExecutionContext *ctx = context->newCallContext(f, callData);
+    callData->thisObject = obj.asValue();
+    ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
     ScopedValue result(scope);
     SAVE_JS_STACK(f->scope);
@@ -438,7 +436,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
     if (result->isObject())
         return result.asReturnedValue();
-    return Value::fromObject(obj).asReturnedValue();
+    return obj.asReturnedValue();
 }
 
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
@@ -507,35 +505,32 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
 ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
-    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
+    ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->memberData[Index_Prototype].value;
-    if (proto.isObject())
-        ic = v4->emptyClass->changePrototype(proto.objectValue());
-    Object *obj = v4->newObject(ic);
+    Scoped<Object> proto(scope, f->memberData[Index_Prototype].value);
+    if (!!proto)
+        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    Scoped<Object> obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
-    callData->thisObject = Value::fromObject(obj);
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
+    callData->thisObject = obj;
+    ExecutionContext *ctx = context->newCallContext(stackSpace, f.getPointer(), callData);
 
-    ScopedValue result(scope);
-    SAVE_JS_STACK(f->scope);
     try {
-        result = f->function->code(ctx, f->function->codeData);
+        Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
+        ctx->engine->popContext();
+
+        if (!result)
+            return obj.asReturnedValue();
+        return result.asReturnedValue();
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
-    CHECK_JS_STACK(f->scope);
-    ctx->engine->popContext();
-
-    if (result->isObject())
-        return result.asReturnedValue();
-    return Value::fromObject(obj).asReturnedValue();
 }
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
@@ -598,7 +593,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.thisObject = callData->thisObject;
     // ### const_cast
-    ctx.arguments = const_cast<Value *>(callData->args);
+    ctx.arguments = const_cast<SafeValue *>(callData->args);
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 
@@ -626,7 +621,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.thisObject = callData->thisObject;
     // ### const_cast
-    ctx.arguments = const_cast<Value *>(callData->args);
+    ctx.arguments = const_cast<SafeValue *>(callData->args);
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 

@@ -328,7 +328,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerObject:
     {
         quint32 size = headersize(header);
-        QV4::Object *o = v4->newObject();
+        Scoped<Object> o(scope, v4->newObject());
         ScopedValue name(scope);
         ScopedValue value(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
@@ -336,7 +336,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
             value = deserialize(data, engine);
             o->put(name->asString(), value);
         }
-        return QV4::Value::fromObject(o).asReturnedValue();
+        return o.asReturnedValue();
     }
     case WorkerInt32:
         return QV4::Encode((qint32)popUint32(data));

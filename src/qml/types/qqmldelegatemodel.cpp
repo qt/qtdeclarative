@@ -83,10 +83,12 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
     {
-        DelegateModelGroupFunction *f = static_cast<DelegateModelGroupFunction *>(that);
-        QQmlDelegateModelItemObject *o = callData->thisObject.as<QQmlDelegateModelItemObject>();
+        QV4::ExecutionEngine *v4 = that->engine();
+        QV4::Scope scope(v4);
+        QV4::Scoped<DelegateModelGroupFunction> f(scope, that, QV4::Scoped<DelegateModelGroupFunction>::Cast);
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
         if (!o)
-            that->engine()->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::Value v = callData->argc ? callData->args[0] : QV4::Value::undefinedValue();
         return f->code(o->item, f->flag, v);
@@ -1622,8 +1624,9 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
 {
     QQmlDelegateModelEngineData *data = engineData(v8Engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8Engine);
+    QV4::Scope scope(v4);
 
-    QV4::Object *proto = v4->newObject();
+    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     proto->defineAccessorProperty(v4, QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
     proto->defineAccessorProperty(v4, QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
     QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("isUnresolved")),
@@ -1656,7 +1659,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
         p = proto->insertMember(v4->newString(propertyName), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
         p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, i + 1, QQmlDelegateModelItem::get_index));
     }
-    modelItemProto = QV4::Value::fromObject(proto);
+    modelItemProto = proto;
 }
 
 int QQmlDelegateModelItemMetaType::parseGroups(const QStringList &groups) const
@@ -3233,15 +3236,16 @@ private:
 QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+    QV4::Scope scope(v4);
 
-    QV4::Object *proto = v4->newObject();
+    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_index));
     p = proto->insertMember(v4->newString(QStringLiteral("count")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_count));
     p = proto->insertMember(v4->newString(QStringLiteral("moveId")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_moveId));
-    changeProto = QV4::Value::fromObject(proto);
+    changeProto = proto;
 }
 
 QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()

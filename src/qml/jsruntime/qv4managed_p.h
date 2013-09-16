@@ -89,21 +89,6 @@ struct GCDeletable
     bool lastCall;
 };
 
-struct CallData
-{
-    // below is to be compatible with Value. Initialize tag to 0
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-    uint tag;
-#endif
-    int argc;
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-    uint tag;
-#endif
-
-    Value thisObject;
-    Value args[1];
-};
-
 struct ManagedVTable
 {
     ReturnedValue (*call)(Managed *, CallData *data);
@@ -245,14 +230,8 @@ public:
         return vtbl == &T::static_vtbl ? static_cast<const T *>(this) : 0;
     }
 
-    template<typename T>
-    static T *cast(const Value &v) {
-        return v.as<T>();
-    }
-    static Managed *cast(const Value &v) {
-        return v.asManaged();
-    }
-
+    String *asString() { return type == Type_String ? reinterpret_cast<String *>(this) : 0; }
+    Object *asObject() { return type != Type_String ? reinterpret_cast<Object *>(this) : 0; }
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
     FunctionObject *asFunctionObject() { return type == Type_FunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
@@ -352,6 +331,34 @@ private:
     friend struct Identifiers;
     friend struct ObjectIterator;
 };
+
+template<>
+inline Managed *value_cast(const Value &v) {
+    return v.asManaged();
+}
+
+template<typename T>
+inline T *managed_cast(Managed *m)
+{
+    return m->as<T>();
+}
+
+template<>
+inline String *managed_cast(Managed *m)
+{
+    return m->asString();
+}
+template<>
+inline Object *managed_cast(Managed *m)
+{
+    return m->asObject();
+}
+template<>
+inline FunctionObject *managed_cast(Managed *m)
+{
+    return m->asFunctionObject();
+}
+
 
 inline ReturnedValue Managed::construct(CallData *d) {
     return vtbl->construct(this, d);

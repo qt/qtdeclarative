@@ -3878,8 +3878,9 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         }
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Object *rv = v4->newObject();
-        args->setReturnValue(QV4::Value::fromObject(rv));
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
+        args->setReturnValue(rv.asValue());
 
         qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
         qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
@@ -3952,8 +3953,9 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         }
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Object *rv = v4->newObject();
-        args->setReturnValue(QV4::Value::fromObject(rv));
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
+        args->setReturnValue(rv.asValue());
 
         qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
         qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;

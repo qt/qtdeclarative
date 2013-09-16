@@ -201,12 +201,13 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
 
 static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
+    Scope scope(v4);
     QV8Engine *v8 = v4->v8Engine;
 
     if (r->sqlQuery.at() == (int)index || r->sqlQuery.seek(index)) {
         QSqlRecord record = r->sqlQuery.record();
         // XXX optimize
-        Object *row = v4->newObject();
+        Scoped<Object> row(scope, v4->newObject());
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             if (v.isNull()) {
@@ -217,11 +218,11 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
         }
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromObject(row).asReturnedValue();
+        return row.asReturnedValue();
     } else {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue().asReturnedValue();
+        return Encode::undefined();
     }
 }
 
@@ -247,7 +248,7 @@ static ReturnedValue qmlsqldatabase_rows_item(SimpleCallContext *ctx)
 static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QQmlSqlDatabaseWrapper *r = ctx->thisObject.as<QQmlSqlDatabaseWrapper>();
+    Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->thisObject);
     if (!r || r->type != QQmlSqlDatabaseWrapper::Query)
         V4THROW_REFERENCE("Not a SQLDatabase::Query object");
 
@@ -258,7 +259,7 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
 
     QSqlDatabase db = r->database;
 
-    QString sql = ctx->argument(0).toQStringNoThrow();
+    QString sql = ctx->argumentCount ? ctx->arguments[0].toQString() : QString();
 
     if (r->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
         V4THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
@@ -303,8 +304,8 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             rows->database = db;
             rows->sqlQuery = query;
 
-            Object *resultObject = ctx->engine->newObject();
-            result = Value::fromObject(resultObject);
+            Scoped<Object> resultObject(scope, ctx->engine->newObject());
+            result = resultObject.asValue();
             // XXX optimize
             resultObject->put(ctx->engine->newIdentifier("rowsAffected"), Value::fromInt32(query.numRowsAffected()));
             resultObject->put(ctx->engine->newIdentifier("insertId"), engine->toString(query.lastInsertId().toString()));
@@ -328,16 +329,16 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
 
     Scope scope(ctx);
 
-    QQmlSqlDatabaseWrapper *r = ctx->thisObject.as<QQmlSqlDatabaseWrapper>();
+    Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->thisObject);
     if (!r || r->type != QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
     QSqlDatabase db = r->database;
-    QString from_version = ctx->arguments[0].toQStringNoThrow();
-    QString to_version = ctx->arguments[1].toQStringNoThrow();
-    Value callback = ctx->argument(2);
+    QString from_version = ctx->arguments[0].toQString();
+    QString to_version = ctx->arguments[1].toQString();
+    Scoped<FunctionObject> callback(scope, ctx->argument(2));
 
     if (from_version != r->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
@@ -350,7 +351,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     w->inTransaction = true;
 
     bool ok = true;
-    if (FunctionObject *f = callback.asFunctionObject()) {
+    if (!!callback) {
         ok = false;
         db.transaction();
 
@@ -358,7 +359,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         callData->thisObject = engine->global();
         callData->args[0] = Value::fromObject(w);
         try {
-            f->call(callData);
+            callback->call(callData);
         } catch (Exception &) {
             db.rollback();
             throw;
@@ -442,24 +443,25 @@ static ReturnedValue qmlsqldatabase_read_transaction(SimpleCallContext *ctx)
 QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    Scope scope(v4);
     {
-        Object *proto = v4->newObject();
+        Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("transaction"), qmlsqldatabase_transaction);
         proto->defineDefaultProperty(v4, QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
         Property *p = proto->insertMember(v4->newString(QStringLiteral("version")),
                                           Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("version")), qmlsqldatabase_version));
         proto->defineDefaultProperty(v4, QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
-        databaseProto = Value::fromObject(proto);
+        databaseProto = proto;
     }
 
     {
-        Object *proto = v4->newObject();
+        Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("executeSql"), qmlsqldatabase_executeSql);
-        queryProto = Value::fromObject(proto);
+        queryProto = proto;
     }
     {
-        Object *proto = v4->newObject();
+        Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("item"), qmlsqldatabase_rows_item);
         Property *p = proto->insertMember(v4->newString(QStringLiteral("length")),
                                           Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
@@ -468,7 +470,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
                                 Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("forwardOnly")), qmlsqldatabase_rows_forwardOnly));
         p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("setForwardOnly")), qmlsqldatabase_rows_setForwardOnly));
-        rowsProto = Value::fromObject(proto);
+        rowsProto = proto;
     }
 }
 

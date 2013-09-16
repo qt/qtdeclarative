@@ -340,7 +340,7 @@ std::size_t MemoryManager::sweep(bool lastSweep)
         }
         if (Managed *m = weak->value.asManaged()) {
             if (!m->markBit) {
-                weak->value = Value::emptyValue();
+                weak->value = Value::undefinedValue();
                 PersistentValuePrivate *n = weak->next;
                 weak->removeFromList();
                 weak = n;

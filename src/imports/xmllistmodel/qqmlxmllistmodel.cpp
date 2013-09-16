@@ -923,13 +923,14 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
     ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
-    Object *o = v4engine->newObject();
+    Scope scope(v4engine);
+    Scoped<Object> o(scope, v4engine->newObject());
     for (int ii = 0; ii < d->roleObjects.count(); ++ii) {
         Property *p = o->insertMember(v4engine->newIdentifier(d->roleObjects[ii]->name()), PropertyAttributes());
         p->value = Value::fromReturnedValue(v8engine->fromVariant(d->data.value(ii).value(index)));
     }
 
-    return QQmlV4Handle(Value::fromObject(o));
+    return QQmlV4Handle(o.asValue());
 }
 
 /*!

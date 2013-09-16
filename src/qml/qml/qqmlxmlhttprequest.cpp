@@ -65,6 +65,7 @@
 #include <QtCore/qdebug.h>
 
 #include <private/qv4objectproto_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 using namespace QV4;
 
@@ -99,15 +100,15 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
     return (QQmlXMLHttpRequestData *)engine->xmlHttpRequestData();
 }
 
-static Value constructMeObject(const Value &thisObj, QV8Engine *e)
+static ReturnedValue constructMeObject(const Value &thisObj, QV8Engine *e)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
-    Object *meObj = v4->newObject();
+    Scoped<Object> meObj(scope, v4->newObject());
     meObj->put(v4->newString(QStringLiteral("ThisObject")), thisObj);
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
     meObj->put(v4->newString(QStringLiteral("ActivationObject")), v);
-    return Value::fromObject(meObj);
+    return meObj.asReturnedValue();
 }
 
 QQmlXMLHttpRequestData::QQmlXMLHttpRequestData()
@@ -625,10 +626,11 @@ Value Element::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->elementPrototype.isEmpty()) {
-        Object *p = engine->newObject();
+        Scope scope(engine);
+        Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
         p->defineAccessorProperty(engine, QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
-        d->elementPrototype = Value::fromObject(p);
+        d->elementPrototype = p;
         engine->v8Engine->freezeObject(d->elementPrototype.value());
     }
     return d->elementPrototype.value();
@@ -638,12 +640,13 @@ Value Attr::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->attrPrototype.isEmpty()) {
-        Object *p = engine->newObject();
+        Scope scope(engine);
+        Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
         p->defineAccessorProperty(engine, QStringLiteral("name"), method_name, 0);
         p->defineAccessorProperty(engine, QStringLiteral("value"), method_value, 0);
         p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), method_ownerElement, 0);
-        d->attrPrototype = Value::fromObject(p);
+        d->attrPrototype = p;
         engine->v8Engine->freezeObject(d->attrPrototype.value());
     }
     return d->attrPrototype.value();
@@ -693,11 +696,12 @@ Value CharacterData::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->characterDataPrototype.isEmpty()) {
-        Object *p = v4->newObject();
+        Scope scope(v4);
+        Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(v4, QStringLiteral("length"), method_length, 0);
-        d->characterDataPrototype = Value::fromObject(p);
+        d->characterDataPrototype = p;
         v4->v8Engine->freezeObject(d->characterDataPrototype);
     }
     return d->characterDataPrototype.value();
@@ -725,11 +729,12 @@ Value Text::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->textPrototype.isEmpty()) {
-        Object *p = v4->newObject();
+        Scope scope(v4);
+        Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(CharacterData::prototype(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
         p->defineAccessorProperty(v4, QStringLiteral("wholeText"), method_wholeText, 0);
-        d->textPrototype = Value::fromObject(p);
+        d->textPrototype = p;
         v4->v8Engine->freezeObject(d->textPrototype);
     }
     return d->textPrototype.value();
@@ -740,9 +745,10 @@ Value CDATA::prototype(ExecutionEngine *v4)
     // ### why not just use TextProto???
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->cdataPrototype.isEmpty()) {
-        Object *p = v4->newObject();
+        Scope scope(v4);
+        Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(Text::prototype(v4).asObject());
-        d->cdataPrototype = Value::fromObject(p);
+        d->cdataPrototype = p;
         v4->v8Engine->freezeObject(d->cdataPrototype);
     }
     return d->cdataPrototype.value();
@@ -752,13 +758,14 @@ Value Document::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->documentPrototype.isEmpty()) {
-        Object *p = v4->newObject();
+        Scope scope(v4);
+        Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), method_xmlVersion, 0);
         p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
         p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
         p->defineAccessorProperty(v4, QStringLiteral("documentElement"), method_documentElement, 0);
-        d->documentPrototype = Value::fromObject(p);
+        d->documentPrototype = p;
         v4->v8Engine->freezeObject(d->documentPrototype);
     }
     return d->documentPrototype.value();
@@ -1016,9 +1023,9 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    Value open(const Value &me, const QString &, const QUrl &);
-    Value send(const Value &me, const QByteArray &);
-    Value abort(const Value &me);
+    ReturnedValue open(const ValueRef me, const QString &, const QUrl &);
+    ReturnedValue send(const ValueRef me, const QByteArray &);
+    ReturnedValue abort(const ValueRef me);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name);
@@ -1060,11 +1067,11 @@ private:
 #endif
     void readEncoding();
 
-    Value getMe() const;
-    void setMe(const Value &me);
+    ReturnedValue getMe() const;
+    void setMe(const ValueRef me);
     PersistentValue m_me;
 
-    void dispatchCallback(const Value &me);
+    void dispatchCallback(const ValueRef me);
     void printError(const Exception &e);
 
     int m_status;
@@ -1115,8 +1122,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-Value QQmlXMLHttpRequest::open(const Value &me, const QString &method,
-                                                       const QUrl &url)
+ReturnedValue QQmlXMLHttpRequest::open(const ValueRef me, const QString &method, const QUrl &url)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1127,7 +1133,7 @@ Value QQmlXMLHttpRequest::open(const Value &me, const QString &method,
     m_state = Opened;
     m_addedHeaders.clear();
     dispatchCallback(me);
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
 void QQmlXMLHttpRequest::addHeader(const QString &name, const QString &value)
@@ -1241,7 +1247,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
                      this, SLOT(finished()));
 }
 
-Value QQmlXMLHttpRequest::send(const Value &me, const QByteArray &data)
+ReturnedValue QQmlXMLHttpRequest::send(const ValueRef me, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
@@ -1252,10 +1258,10 @@ Value QQmlXMLHttpRequest::send(const Value &me, const QByteArray &data)
 
     requestFromUrl(m_url);
 
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value QQmlXMLHttpRequest::abort(const Value &me)
+ReturnedValue QQmlXMLHttpRequest::abort(const ValueRef me)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1273,15 +1279,15 @@ Value QQmlXMLHttpRequest::abort(const Value &me)
 
     m_state = Unsent;
 
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value QQmlXMLHttpRequest::getMe() const
+ReturnedValue QQmlXMLHttpRequest::getMe() const
 {
-    return m_me.value();
+    return m_me.value().asReturnedValue();
 }
 
-void QQmlXMLHttpRequest::setMe(const Value &me)
+void QQmlXMLHttpRequest::setMe(const ValueRef me)
 {
     m_me = me;
 }
@@ -1293,18 +1299,22 @@ void QQmlXMLHttpRequest::readyRead()
     m_statusText =
         QString::fromUtf8(m_network->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toByteArray());
 
+    Scope scope(v4);
+    ScopedValue me(scope, m_me.value());
+
     // ### We assume if this is called the headers are now available
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        dispatchCallback(m_me.value());
+        dispatchCallback(me);
     }
 
     bool wasEmpty = m_responseEntityBody.isEmpty();
     m_responseEntityBody.append(m_network->readAll());
     if (wasEmpty && !m_responseEntityBody.isEmpty())
         m_state = Loading;
-    dispatchCallback(m_me.value());
+
+    dispatchCallback(me);
 }
 
 static const char *errorToString(QNetworkReply::NetworkError error)
@@ -1335,6 +1345,9 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         qWarning().nospace() << "    " << error << ' ' << errorToString(error) << ' ' << m_statusText;
     }
 
+    Scope scope(v4);
+    ScopedValue me(scope, m_me.value());
+
     if (error == QNetworkReply::ContentAccessDenied ||
         error == QNetworkReply::ContentOperationNotPermittedError ||
         error == QNetworkReply::ContentNotFoundError ||
@@ -1342,7 +1355,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ContentReSendError ||
         error == QNetworkReply::UnknownContentError) {
         m_state = Loading;
-        dispatchCallback(m_me.value());
+        dispatchCallback(me);
     } else {
         m_errorFlag = true;
         m_responseEntityBody = QByteArray();
@@ -1350,7 +1363,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
 
     m_state = Done;
 
-    dispatchCallback(m_me.value());
+    dispatchCallback(me);
 }
 
 #define XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION 15
@@ -1405,7 +1418,9 @@ void QQmlXMLHttpRequest::finished()
 
     dispatchCallback(m_me);
 
-    setMe(Value::emptyValue());
+    Scope scope(v4);
+    ScopedValue v(scope, Value::emptyValue());
+    setMe(v);
 }
 
 
@@ -1483,12 +1498,12 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
+void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
 {
     ExecutionContext *ctx = v4->current;
     QV4::Scope scope(v4);
     try {
-        Object *o = me.asObject();
+        Scoped<Object> o(scope, me);
         if (!o)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
@@ -1631,7 +1646,9 @@ DEFINE_MANAGED_VTABLE(QQmlXMLHttpRequestCtor);
 void QQmlXMLHttpRequestCtor::setupProto()
 {
     ExecutionEngine *v4 = engine();
-    proto = v4->newObject();
+    Scope scope(v4);
+    Scoped<Object> p(scope, v4->newObject());
+    proto = p.getPointer();
 
     // Methods
     proto->defineDefaultProperty(v4, QStringLiteral("open"), method_open);
@@ -1704,7 +1721,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(constructMeObject(ctx->thisObject, engine), method, url).asReturnedValue();
+    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, engine));
+    return r->open(meObject, method, url);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
@@ -1774,7 +1792,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
     if (ctx->argumentCount > 0)
         data = ctx->arguments[0].toQStringNoThrow().toUtf8();
 
-    return r->send(constructMeObject(ctx->thisObject, engine), data).asReturnedValue();
+    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, engine));
+    return r->send(meObject, data);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
@@ -1786,7 +1805,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    return r->abort(constructMeObject(ctx->thisObject, ctx->engine->v8Engine)).asReturnedValue();
+    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, ctx->engine->v8Engine));
+    return r->abort(meObject);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)

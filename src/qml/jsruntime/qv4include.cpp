@@ -84,9 +84,10 @@ QV4Include::~QV4Include()
 
 QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 {
+    QV4::Scope scope(v4);
 
     // XXX It seems inefficient to create this object from scratch each time.
-    QV4::Object *o = v4->newObject();
+    QV4::Scoped<QV4::Object> o(scope, v4->newObject());
     o->put(v4->newString("OK"), QV4::Value::fromInt32(Ok));
     o->put(v4->newString("LOADING"), QV4::Value::fromInt32(Loading));
     o->put(v4->newString("NETWORK_ERROR"), QV4::Value::fromInt32(NetworkError));
@@ -94,7 +95,7 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
 
     o->put(v4->newString("status"), QV4::Value::fromInt32(status));
 
-    return QV4::Value::fromObject(o).asReturnedValue();
+    return o.asReturnedValue();
 }
 
 void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)

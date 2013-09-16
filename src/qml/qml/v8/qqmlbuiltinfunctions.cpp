@@ -962,12 +962,12 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
             for (int ii = 0; ii < errors.count(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
-                QV4::Object *qmlerror = v4->newObject();
+                QV4::Scoped<QV4::Object> qmlerror(scope, v4->newObject());
                 qmlerror->put(v4->newString("lineNumber"), QV4::Value::fromInt32(error.line()));
                 qmlerror->put(v4->newString("columnNumber"), QV4::Value::fromInt32(error.column()));
                 qmlerror->put(v4->newString("fileName"), Value::fromString(v4->newString(error.url().toString())));
                 qmlerror->put(v4->newString("message"), Value::fromString(v4->newString(error.description())));
-                qmlerrors->putIndexed(ii, QV4::Value::fromObject(qmlerror));
+                qmlerrors->putIndexed(ii, qmlerror.asValue());
             }
 
             Scoped<Object> errorObject(scope, v4->newErrorObject(Value::fromString(v4->newString(errorstr))));
@@ -1001,7 +1001,8 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
         url = context->resolvedUrl(url);
 
     QObject *parentArg = 0;
-    if (QV4::QObjectWrapper *qobjectWrapper = ctx->arguments[1].as<QV4::QObjectWrapper>())
+    QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, ctx->arguments[1]);
+    if (!!qobjectWrapper)
         parentArg = qobjectWrapper->object();
     if (!parentArg)
         V4THROW_ERROR("Qt.createQmlObject(): Missing parent object");

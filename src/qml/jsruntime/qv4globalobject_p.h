@@ -64,7 +64,7 @@ struct GlobalFunctions
     static ReturnedValue method_parseInt(SimpleCallContext *context);
     static ReturnedValue method_parseFloat(SimpleCallContext *context);
     static ReturnedValue method_isNaN(SimpleCallContext *context);
-    static ReturnedValue method_isFinite(SimpleCallContext *context);
+    static ReturnedValue method_isFinite(SimpleCallContext *ctx);
     static ReturnedValue method_decodeURI(SimpleCallContext *context);
     static ReturnedValue method_decodeURIComponent(SimpleCallContext *context);
     static ReturnedValue method_encodeURI(SimpleCallContext *context);

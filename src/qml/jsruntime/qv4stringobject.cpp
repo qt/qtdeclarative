@@ -472,8 +472,8 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
     uint *matchOffsets = _matchOffsets;
     uint nMatchOffsets = 0;
 
-    Value searchValue = ctx->argument(0);
-    RegExpObject *regExp = searchValue.as<RegExpObject>();
+    ScopedValue searchValue(scope, ctx->argument(0));
+    Scoped<RegExpObject> regExp(scope, searchValue);
     if (regExp) {
         uint offset = 0;
         while (true) {
@@ -501,7 +501,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
         numCaptures = regExp->value->captureCount();
     } else {
         numCaptures = 1;
-        QString searchString = searchValue.toString(ctx)->toQString();
+        QString searchString = searchValue->toString(ctx)->toQString();
         int idx = string.indexOf(searchString);
         if (idx != -1) {
             numStringMatches = 1;
@@ -512,9 +512,10 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
     }
 
     QString result;
-    Value replaceValue = ctx->argument(1);
     ScopedValue replacement(scope);
-    if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
+    ScopedValue replaceValue(scope, ctx->argument(1));
+    Scoped<FunctionObject> searchCallback(scope, replaceValue);
+    if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedCallData callData(scope, numCaptures + 2);
         callData->thisObject = Value::undefinedValue();
@@ -542,7 +543,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
         }
         result += string.midRef(lastEnd);
     } else {
-        QString newString = replaceValue.toString(ctx)->toQString();
+        QString newString = replaceValue->toString(ctx)->toQString();
         result.reserve(string.length() + numStringMatches*newString.size());
 
         int lastEnd = 0;
@@ -595,9 +596,9 @@ ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
     const QString text = getThisString(ctx);
     const double length = text.length();
 
-    double start = ctx->argument(0).toInteger();
-    double end = ctx->argument(1).isUndefined()
-            ? length : ctx->argument(1).toInteger();
+    double start = ctx->argumentCount ? ctx->arguments[0].toInteger() : 0;
+    double end = (ctx->argumentCount < 2 || ctx->arguments[1].isUndefined())
+            ? length : ctx->arguments[1].toInteger();
 
     if (start < 0)
         start = qMax(length + start, 0.);
@@ -625,32 +626,33 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
     else
         text = ctx->thisObject.toString(ctx)->toQString();
 
-    Value separatorValue = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
-    Value limitValue = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
+    ScopedValue separatorValue(scope, ctx->argument(0));
+    ScopedValue limitValue(scope, ctx->argument(1));
 
     Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject());
 
-    if (separatorValue.isUndefined()) {
-        if (limitValue.isUndefined()) {
+    if (separatorValue->isUndefined()) {
+        if (limitValue->isUndefined()) {
             array->push_back(Value::fromString(ctx, text));
             return array.asReturnedValue();
         }
-        return Value::fromString(ctx, text.left(limitValue.toInteger())).asReturnedValue();
+        return Value::fromString(ctx, text.left(limitValue->toInteger())).asReturnedValue();
     }
 
-    uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32();
+    uint limit = limitValue->isUndefined() ? UINT_MAX : limitValue->toUInt32();
 
     if (limit == 0)
         return array.asReturnedValue();
 
-    if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
+    Scoped<RegExpObject> re(scope, separatorValue);
+    if (!!re) {
         if (re->value->pattern().isEmpty()) {
-            re = 0;
+            re = (RegExpObject *)0;
             separatorValue = Value::fromString(ctx, QString());
         }
     }
 
-    if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
+    if (!!re) {
         uint offset = 0;
         uint* matchOffsets = (uint*)alloca(re->value->captureCount() * 2 * sizeof(uint));
         while (true) {
@@ -675,7 +677,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
         if (array->arrayLength() < limit)
             array->push_back(Value::fromString(ctx, text.mid(offset)));
     } else {
-        QString separator = separatorValue.toString(ctx)->toQString();
+        QString separator = separatorValue->toString(ctx)->toQString();
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
                 array->push_back(Value::fromString(ctx, text.mid(i, 1)));

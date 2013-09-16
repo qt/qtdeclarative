@@ -341,6 +341,37 @@ struct Q_QML_EXPORT Value
     inline void mark() const;
 };
 
+struct SafeValue : public Value
+{
+    SafeValue &operator =(const ScopedValue &v);
+    template<typename T>
+    SafeValue &operator=(Returned<T> *t);
+    SafeValue &operator=(ReturnedValue v) {
+        val = v;
+        return *this;
+    }
+    template<typename T>
+    SafeValue &operator=(const Scoped<T> &t);
+    SafeValue &operator=(const Value &v) {
+        val = v.val;
+        return *this;
+    }
+
+    template<typename T>
+    Returned<T> *as();
+};
+
+template<typename T>
+T *value_cast(const Value &v)
+{
+    return v.as<T>();
+}
+
+template<typename T>
+ReturnedValue value_convert(ExecutionContext *ctx, const Value &v);
+
+
+
 }
 
 QT_END_NAMESPACE

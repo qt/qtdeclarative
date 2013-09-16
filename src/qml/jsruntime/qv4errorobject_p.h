@@ -77,6 +77,11 @@ struct ErrorObject: Object {
     static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
 
+template<>
+inline ErrorObject *value_cast(const Value &v) {
+    return v.asErrorObject();
+}
+
 struct EvalErrorObject: ErrorObject {
     EvalErrorObject(ExecutionEngine *engine, const Value &message);
 };

@@ -372,11 +372,22 @@ public:
     PersistentValue() : d(0) {}
 
     PersistentValue(const Value &val);
+    PersistentValue(const ScopedValue &val);
     PersistentValue(ReturnedValue val);
+    template<typename T>
+    PersistentValue(Returned<T> *obj);
+    template<typename T>
+    PersistentValue(const Scoped<T> &obj);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const Value &other);
+    PersistentValue &operator=(const ScopedValue &other);
+    PersistentValue &operator=(const ValueRef other);
     PersistentValue &operator =(const ReturnedValue &other);
+    template<typename T>
+    PersistentValue &operator=(Returned<T> *obj);
+    template<typename T>
+    PersistentValue &operator=(const Scoped<T> &obj);
     ~PersistentValue();
 
     Value value() const {
@@ -408,8 +419,15 @@ public:
     WeakValue() : d(0) {}
     WeakValue(const Value &val);
     WeakValue(const WeakValue &other);
+    WeakValue(ReturnedValue val);
+    template<typename T>
+    WeakValue(Returned<T> *obj);
     WeakValue &operator=(const WeakValue &other);
     WeakValue &operator=(const Value &other);
+    WeakValue &operator =(const ReturnedValue &other);
+    template<typename T>
+    WeakValue &operator=(Returned<T> *obj);
+
     ~WeakValue();
 
     Value value() const {

@@ -713,13 +713,12 @@ QString Stringify::Str(const QString &key, Value value)
     }
 
     if (replacerFunction) {
-        Object *holder = ctx->engine->newObject();
-        Value holderValue = Value::fromObject(holder);
+        Scoped<Object> holder(scope, ctx->engine->newObject());
         holder->put(ctx, QString(), value);
         ScopedCallData callData(scope, 2);
         callData->args[0] = Value::fromString(ctx, key);
         callData->args[1] = value;
-        callData->thisObject = holderValue;
+        callData->thisObject = holder;
         value = Value::fromReturnedValue(replacerFunction->call(callData));
     }
 
@@ -878,12 +877,14 @@ JsonObject::JsonObject(ExecutionContext *context)
 
 ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
 {
-    QString jtext = ctx->argument(0).toString(ctx)->toQString();
+    Scope scope(ctx);
+    ScopedValue v(scope, ctx->argument(0));
+    QString jtext = v->toString(ctx)->toQString();
 
     DEBUG << "parsing source = " << jtext;
     JsonParser parser(ctx, jtext.constData(), jtext.length());
     QJsonParseError error;
-    Value result = parser.parse(&error);
+    ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
         ctx->throwSyntaxError("JSON.parse: Parse error");
@@ -898,7 +899,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 
     Stringify stringify(ctx);
 
-    Object *o = ctx->argument(1).asObject();
+    Scoped<Object> o(scope, ctx->argument(1));
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
@@ -917,20 +918,21 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
         }
     }
 
-    Value s = ctx->argument(2);
-    if (NumberObject *n = s.asNumberObject())
+    ScopedValue s(scope, ctx->argument(2));
+    if (NumberObject *n = s->asNumberObject())
         s = n->value;
-    else if (StringObject *so = s.asStringObject())
+    else if (StringObject *so = s->asStringObject())
         s = so->value;
 
-    if (s.isNumber()) {
-        stringify.gap = QString(qMin(10, (int)s.toInteger()), ' ');
-    } else if (s.isString()) {
-        stringify.gap = s.stringValue()->toQString().left(10);
+    if (s->isNumber()) {
+        stringify.gap = QString(qMin(10, (int)s->toInteger()), ' ');
+    } else if (s->isString()) {
+        stringify.gap = s->stringValue()->toQString().left(10);
     }
 
 
-    QString result = stringify.Str(QString(), ctx->argument(0));
+    ScopedValue arg0(scope, ctx->argument(0));
+    QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty())
         return Encode::undefined();
     return Value::fromString(ctx, result).asReturnedValue();
@@ -978,7 +980,7 @@ QJsonValue JsonObject::toJsonValue(const QV4::Value &value,
 QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
 {
     Scope scope(engine);
-    Scoped<Object> o(scope, Value::fromObject(engine->newObject()));
+    Scoped<Object> o(scope, engine->newObject());
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
         o->put(engine->newString(it.key()), Value::fromReturnedValue(fromJsonValue(engine, it.value())));
     return o.asReturnedValue();
