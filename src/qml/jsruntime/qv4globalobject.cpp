@@ -577,7 +577,7 @@ ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *context)
         return Encode(false);
 
     double d = v.toNumber();
-    return Encode(std::isnan(d));
+    return Encode((bool)std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]
@@ -588,7 +588,7 @@ ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *context)
         return Encode(true);
 
     double d = v.toNumber();
-    return Encode(std::isfinite(d));
+    return Encode((bool)std::isfinite(d));
 }
 
 /// decodeURI [15.1.3.1]
