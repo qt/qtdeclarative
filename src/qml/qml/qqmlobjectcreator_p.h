@@ -45,6 +45,7 @@
 #include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmlcompiler_p.h>
+#include <QLinkedList>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,7 +96,7 @@ public:
 private:
     void populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
-    QVector<QQmlAbstractBinding *> setupBindings(QV4::ExecutionContext *qmlContext);
+    void setupBindings(QV4::ExecutionContext *qmlContext);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions(QV4::ExecutionContext *qmlContext);
 
@@ -111,12 +112,14 @@ private:
     const QList<QQmlPropertyCache *> propertyCaches;
     const QList<QByteArray> vmeMetaObjectData;
     const QHash<int, int> &objectIndexToId;
+    QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
 
     QObject *_qobject;
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
     QQmlVMEMetaObject *_vmeMetaObject;
+    QVector<QQmlAbstractBinding*> _createdBindings;
 };
 
 QT_END_NAMESPACE

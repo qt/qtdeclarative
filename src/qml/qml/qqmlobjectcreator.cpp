@@ -878,10 +878,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     }
 }
 
-QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
+void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 {
-    QVector<QQmlAbstractBinding*> createdDynamicBindings(_compiledObject->nBindings, 0);
-
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
         QString name = stringAt(binding->propertyNameIndex);
@@ -953,8 +951,8 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionCont
                 qmlBinding->setTarget(_qobject, *property, context);
                 qmlBinding->addToObject();
 
-                createdDynamicBindings[i] = qmlBinding;
-                qmlBinding->m_mePtr = &createdDynamicBindings[i];
+                _createdBindings[i] = qmlBinding;
+                qmlBinding->m_mePtr = &_createdBindings[i];
             }
             continue;
         }
@@ -964,8 +962,6 @@ QVector<QQmlAbstractBinding*> QmlObjectCreator::setupBindings(QV4::ExecutionCont
         if (!errors.isEmpty())
             break;
     }
-
-    return createdDynamicBindings;
 }
 
 void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
@@ -1018,6 +1014,29 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
 void QmlObjectCreator::finalize()
 {
     {
+    QQmlTrace trace("VME Binding Enable");
+    trace.event("begin binding eval");
+
+    Q_ASSERT(allCreatedBindings.isDetached());
+
+    for (QLinkedList<QVector<QQmlAbstractBinding*> >::Iterator it = allCreatedBindings.begin(), end = allCreatedBindings.end();
+         it != end; ++it) {
+        const QVector<QQmlAbstractBinding *> &bindings = *it;
+        for (int i = 0; i < bindings.count(); ++i) {
+            QQmlAbstractBinding *b = bindings.at(i);
+            if (!b)
+                continue;
+            b->m_mePtr = 0;
+            QQmlData *data = QQmlData::get(b->object());
+            Q_ASSERT(data);
+            data->clearPendingBindingBit(b->propertyIndex());
+            b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
+                          QQmlPropertyPrivate::DontRemoveBinding);
+        }
+    }
+    }
+
+    {
     QQmlTrace trace("VME Component.onCompleted Callbacks");
     while (componentAttached) {
         QQmlComponentAttached *a = componentAttached;
@@ -1063,6 +1082,9 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 
     qSwap(_vmeMetaObject, vmeMetaObject);
 
+    QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
+    qSwap(_createdBindings, createdBindings);
+
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject));
@@ -1070,27 +1092,17 @@ void QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     QV4::ScopedValue qmlScopeFunction(valueScope, QV4::Value::fromObject(qmlBindingWrapper));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
-    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(qmlContext);
+    setupBindings(qmlContext);
     setupFunctions(qmlContext);
 
-    // ### do this later when requested
-    for (int i = 0; i < dynamicBindings.count(); ++i) {
-        QQmlAbstractBinding *b = dynamicBindings.at(i);
-        if (!b)
-            continue;
-        b->m_mePtr = 0;
-        QQmlData *data = QQmlData::get(b->object());
-        Q_ASSERT(data);
-        data->clearPendingBindingBit(b->propertyIndex());
-        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                            QQmlPropertyPrivate::DontRemoveBinding);
-    }
-
+    qSwap(_createdBindings, createdBindings);
     qSwap(_vmeMetaObject, vmeMetaObject);
     qSwap(_propertyCache, cache);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
     qSwap(_qobject, instance);
+
+    allCreatedBindings.append(_createdBindings);
 }
 
 void QmlObjectCreator::recordError(const QV4::CompiledData::Location &location, const QString &description)
