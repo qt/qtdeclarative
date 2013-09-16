@@ -983,6 +983,22 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
                     argv[0] = &value;
                     QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex, argv);
                 }
+            } else if (property->isQList()) {
+                QQmlListProperty<void> list;
+                argv[0] = (void*)&list;
+                QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
+
+                void *itemToAdd = createdSubObject;
+
+                const char *iid = 0;
+                int listItemType = QQmlEnginePrivate::get(engine)->listType(property->propType);
+                if (listItemType != -1)
+                    iid = QQmlMetaType::interfaceIId(listItemType);
+                if (iid)
+                    itemToAdd = createdSubObject->qt_metacast(iid);
+
+                if (list.append)
+                    list.append(&list, itemToAdd);
             } else {
                 QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
 
@@ -1011,6 +1027,11 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
                 }
             }
             continue;
+        }
+
+        if (property->isQList()) {
+            recordError(binding->location, tr("Cannot assign primitives to lists"));
+            break;
         }
 
         setPropertyValue(property, binding);
