@@ -122,7 +122,10 @@ protected:
         //qDebug() << Q_FUNC_INFO << qmlDir << qmlName << uri;
         bool needQml = true;
 
-#ifndef PURE_QML_ONLY
+#ifdef PURE_QML_ONLY
+        Q_UNUSED(widgetsDir)
+        Q_UNUSED(hasTopLevelWindows)
+#else
         // If there is a qmldir and we have a QApplication instance (as opposed to a
         // widget-free QGuiApplication), assume that the widget-based dialog will work.
         if (hasTopLevelWindows && widgetsDir.exists("qmldir") &&
