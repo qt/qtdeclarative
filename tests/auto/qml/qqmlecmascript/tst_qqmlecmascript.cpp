@@ -6640,7 +6640,7 @@ void tst_qqmlecmascript::qtbug_22843()
     QQmlComponent component(&engine, testFileUrl(fileName));
     QString url = component.url().toString();
     QString warning1 = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
-    QString warning2 = url + QLatin1String(":5: TypeError: Property 'func' of object NaN is not a function");
+    QString warning2 = url + QLatin1String(":5: TypeError: Cannot call method 'func' of undefined");
 
     qRegisterMetaType<QList<QQmlError> >("QList<QQmlError>");
     QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));

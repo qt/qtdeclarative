@@ -617,6 +617,7 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
 {
     switch (value->type()) {
     case Value::Undefined_Type:
+    case Value::Empty_Type:
         return ctx->engine->id_undefined->asReturned<String>();
     case Value::Null_Type:
         return ctx->engine->id_null->asReturned<String>();
@@ -969,7 +970,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, Cal
     Scope scope(context);
     Scoped<Object> baseObject(scope, callData->thisObject);
     if (!baseObject) {
-        if (callData->thisObject.isNullOrUndefined()) {
+        if (callData->thisObject.isNullOrUndefined() || callData->thisObject.isEmpty()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
             context->throwTypeError(message);
         }
