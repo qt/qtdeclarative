@@ -1463,6 +1463,10 @@ QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, IncubationMode m)
 {
     v8 = engine;
     vtbl = &static_vtbl;
+
+    valuemap = QV4::Value::undefinedValue();
+    qmlGlobal = QV4::Value::undefinedValue();
+    m_statusChanged = QV4::Value::undefinedValue();
 }
 
 void QmlIncubatorObject::setInitialState(QObject *o)
