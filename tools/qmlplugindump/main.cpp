@@ -352,23 +352,23 @@ public:
         }
     }
 
-    QString getPrototypeNameForCompositeType(const QMetaObject *metaObject)
+    QString getPrototypeNameForCompositeType(const QMetaObject *metaObject, QSet<QByteArray> &defaultReachableNames)
     {
         QString prototypeName;
-        const QMetaObject *superMetaObject = metaObject->superClass();
-        if (!superMetaObject)
-            return "QObject";
-        QString className = convertToId(superMetaObject->className());
-        if (className.startsWith("QQuick"))
-            prototypeName = className;
-        else
-            prototypeName = getPrototypeNameForCompositeType(superMetaObject);
+        if (!defaultReachableNames.contains(metaObject->className())) {
+            const QMetaObject *superMetaObject = metaObject->superClass();
+            if (!superMetaObject)
+                prototypeName = "QObject";
+            else
+                prototypeName = getPrototypeNameForCompositeType(superMetaObject, defaultReachableNames);
+        } else {
+            prototypeName = convertToId(metaObject->className());
+        }
         return prototypeName;
     }
 
     void dumpComposite(QQmlEngine *engine, const QQmlType *compositeType, QSet<QByteArray> &defaultReachableNames)
     {
-
         QQmlComponent e(engine, compositeType->sourceUrl());
         QObject *object = e.create();
 
@@ -380,7 +380,7 @@ public:
         const QMetaObject *mainMeta = object->metaObject();
 
         // Get C++ base class name for the composite type
-        QString prototypeName = getPrototypeNameForCompositeType(mainMeta);
+        QString prototypeName = getPrototypeNameForCompositeType(mainMeta, defaultReachableNames);
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
 
         QString qmlTyName = compositeType->qmlTypeName();
