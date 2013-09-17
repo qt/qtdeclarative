@@ -344,10 +344,10 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
+Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
 {
     BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
-    return f;
+    return f->asReturned<FunctionObject>();
 }
 
 Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)

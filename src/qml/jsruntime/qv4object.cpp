@@ -234,26 +234,29 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
-    String *s = context->engine->newIdentifier(name);
-    FunctionObject* function = context->engine->newBuiltinFunction(context, s, code);
+    Scope scope(context);
+    Scoped<String> s(scope, context->engine->newIdentifier(name));
+    Scoped<FunctionObject> function(scope, context->engine->newBuiltinFunction(context, s.getPointer(), code));
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s, Value::fromObject(function));
+    defineDefaultProperty(s.getPointer(), function.asValue());
 }
 
 void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
-    String *s = engine->newIdentifier(name);
-    FunctionObject* function = engine->newBuiltinFunction(engine->rootContext, s, code);
+    Scope scope(engine);
+    Scoped<String> s(scope, engine->newIdentifier(name));
+    Scoped<FunctionObject> function(scope, engine->newBuiltinFunction(engine->rootContext, s.getPointer(), code));
     function->defineReadonlyProperty(engine->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s, Value::fromObject(function));
+    defineDefaultProperty(s.getPointer(), function.asValue());
 }
 
 void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
                                     ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
-    String *s = engine->newString(name);
-    defineAccessorProperty(s, getter, setter);
+    Scope scope(engine);
+    Scoped<String> s(scope, engine->newIdentifier(name));
+    defineAccessorProperty(s.getPointer(), getter, setter);
 }
 
 void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
@@ -261,9 +264,9 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(Simple
     ExecutionEngine *v4 = engine();
     Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     if (getter)
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter));
+        p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter)->getPointer());
     if (setter)
-        p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter));
+        p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
 }
 
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)

@@ -1402,24 +1402,15 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     }
 }
 
-#define V4FUNCTION(function, engine) engine->newBuiltinFunction(engine->rootContext, engine->id_undefined, function)
-
-
 QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    QV4::Property *s = proto->insertMember(v4->newString(QStringLiteral("onStatusChanged")),
-                                           QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    s->setGetter(V4FUNCTION(QmlIncubatorObject::method_get_statusChanged, v4));
-    s->setSetter(V4FUNCTION(QmlIncubatorObject::method_set_statusChanged, v4));
-    s = proto->insertMember(v4->newString(QStringLiteral("status")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    s->setGetter(V4FUNCTION(QmlIncubatorObject::method_get_status, v4));
-    s = proto->insertMember(v4->newString(QStringLiteral("object")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    s->setGetter(V4FUNCTION(QmlIncubatorObject::method_get_object, v4));
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("onStatusChanged")),
+                                  QmlIncubatorObject::method_get_statusChanged, QmlIncubatorObject::method_set_statusChanged);
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("status")), QmlIncubatorObject::method_get_status, 0);
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("object")), QmlIncubatorObject::method_get_object, 0);
     proto->defineDefaultProperty(v4, QStringLiteral("forceCompletion"), QmlIncubatorObject::method_forceCompletion);
 
     incubationProto = proto;

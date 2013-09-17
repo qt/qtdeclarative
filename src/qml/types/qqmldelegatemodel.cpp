@@ -3239,12 +3239,9 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_index));
-    p = proto->insertMember(v4->newString(QStringLiteral("count")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_count));
-    p = proto->insertMember(v4->newString(QStringLiteral("moveId")), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDelegateModelGroupChange::method_get_moveId));
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("index")), QQmlDelegateModelGroupChange::method_get_index, 0);
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("count")), QQmlDelegateModelGroupChange::method_get_count, 0);
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("moveId")), QQmlDelegateModelGroupChange::method_get_moveId, 0);
     changeProto = proto;
 }
 

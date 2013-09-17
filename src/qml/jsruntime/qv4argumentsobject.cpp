@@ -58,11 +58,13 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
 
+    Scope scope(context);
+
     if (context->strictMode) {
         internalClass = engine()->strictArgumentsObjectClass;
 
-        FunctionObject *thrower = context->engine->newBuiltinFunction(context, 0, throwTypeError);
-        Property pd = Property::fromAccessor(thrower, thrower);
+        Scoped<FunctionObject> thrower(scope, context->engine->newBuiltinFunction(context, 0, throwTypeError));
+        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
         assert(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         assert(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
         memberData[CalleePropertyIndex] = pd;

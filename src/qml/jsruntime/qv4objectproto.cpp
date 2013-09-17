@@ -131,8 +131,8 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
     ExecutionEngine *v4 = ctx->engine;
     Property *p = insertMember(v4->id___proto__, Attr_Accessor|Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_get_proto));
-    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto));
+    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_get_proto)->getPointer());
+    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto)->getPointer());
 }
 
 ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)

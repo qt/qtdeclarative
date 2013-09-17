@@ -215,21 +215,16 @@ public:
         QV4::ExecutionEngine *v4 = data->v4;
         QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-        QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
-                                               QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
-
-        p = proto->insertMember(v4->newString(QStringLiteral("hasModelChildren")),
-                                               QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_hasModelChildren));
+        proto->defineAccessorProperty(v4->newString(QStringLiteral("index")), get_index, 0);
+        proto->defineAccessorProperty(v4->newString(QStringLiteral("hasModelChildren")), get_hasModelChildren, 0);
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
         for (iterator it = roleNames.constBegin(), end = roleNames.constEnd(); it != end; ++it) {
             const int propertyId = propertyRoles.indexOf(it.value());
             const QByteArray &propertyName = it.key();
 
-            p = proto->insertMember(v4->newString(QString::fromUtf8(propertyName)),
-                                    QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+            QV4::Property *p = proto->insertMember(v4->newString(QString::fromUtf8(propertyName)),
+                                              QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
             p->setGetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::get_property));
             p->setSetter(new (v4->memoryManager) QV4::IndexedBuiltinFunction(v4->rootContext, propertyId, QQmlDMCachedModelData::set_property));
         }
@@ -958,13 +953,9 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
 {
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("index")),
-                                           QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, get_index));
-    p = proto->insertMember(v4->newString(QStringLiteral("modelData")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::get_modelData));
-    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id_undefined, QQmlDMListAccessorData::set_modelData));
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("index")), get_index, 0);
+    proto->defineAccessorProperty(v4->newString(QStringLiteral("modelData")),
+                                  QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
     listItemProto = proto;
 }
 

@@ -233,8 +233,8 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
     QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
 
-    QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
-                                                          QQuickWorkerScriptEnginePrivate::method_sendMessage));
+    QV4::ScopedValue function(scope, m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
+                                                                    QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();

@@ -448,9 +448,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
         Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("transaction"), qmlsqldatabase_transaction);
         proto->defineDefaultProperty(v4, QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
-        Property *p = proto->insertMember(v4->newString(QStringLiteral("version")),
-                                          Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("version")), qmlsqldatabase_version));
+        proto->defineAccessorProperty(v4->newString(QStringLiteral("version")), qmlsqldatabase_version, 0);
         proto->defineDefaultProperty(v4, QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
         databaseProto = proto;
     }
@@ -463,13 +461,9 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     {
         Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("item"), qmlsqldatabase_rows_item);
-        Property *p = proto->insertMember(v4->newString(QStringLiteral("length")),
-                                          Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("length")), qmlsqldatabase_rows_length));
-        p = proto->insertMember(v4->newString(QStringLiteral("forwardOnly")),
-                                Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("forwardOnly")), qmlsqldatabase_rows_forwardOnly));
-        p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->newString(QStringLiteral("setForwardOnly")), qmlsqldatabase_rows_setForwardOnly));
+        proto->defineAccessorProperty(v4->newString(QStringLiteral("length")), qmlsqldatabase_rows_length, 0);
+        proto->defineAccessorProperty(v4->newString(QStringLiteral("forwardOnly")),
+                                      qmlsqldatabase_rows_forwardOnly, qmlsqldatabase_rows_setForwardOnly);
         rowsProto = proto;
     }
 }

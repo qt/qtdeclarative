@@ -92,6 +92,8 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
 {
     vtbl = &static_vtbl;
 
+    Scope scope(v4);
+
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
@@ -141,25 +143,10 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
         defineDefaultProperty(v4, QStringLiteral("createComponent"), method_createComponent);
     }
 
-    {
-        String *s = v4->newString(QStringLiteral("platform"));
-        Property *p = insertMember(s, Attr_Accessor);
-        FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_platform);
-        p->setGetter(f);
-    }
-    {
-        String *s = v4->newString(QStringLiteral("application"));
-        Property *p = insertMember(s, Attr_Accessor);
-        FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_application);
-        p->setGetter(f);
-    }
+    defineAccessorProperty(v4->newString(QStringLiteral("platform")), method_get_platform, 0);
+    defineAccessorProperty(v4->newString(QStringLiteral("application")), method_get_application, 0);
 #ifndef QT_NO_IM
-    {
-        String *s = v4->newString(QStringLiteral("inputMethod"));
-        Property *p = insertMember(s, Attr_Accessor);
-        FunctionObject* f = v4->newBuiltinFunction(v4->rootContext, s, method_get_inputMethod);
-        p->setGetter(f);
-    }
+    defineAccessorProperty(v4->newString(QStringLiteral("inputMethod")), method_get_inputMethod, 0);
 #endif
 }
 

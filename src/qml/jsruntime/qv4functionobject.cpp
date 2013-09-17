@@ -400,10 +400,11 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     varList = function->locals.constData();
 
     if (scope->strictMode) {
-        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
-        Property pd = Property::fromAccessor(thrower, thrower);
-        __defineOwnProperty__(scope, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
-        __defineOwnProperty__(scope, QStringLiteral("arguments"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
+        Scope s(scope);
+        Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
+        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+        *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
+        *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     }
 }
 
@@ -496,10 +497,11 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     varList = function->locals.constData();
 
     if (scope->strictMode) {
-        FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
-        Property pd = Property::fromAccessor(thrower, thrower);
-        __defineOwnProperty__(scope, QStringLiteral("caller"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
-        __defineOwnProperty__(scope, QStringLiteral("arguments"), pd, Attr_Accessor|Attr_NotEnumerable|Attr_NotConfigurable);
+        Scope s(scope);
+        Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
+        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+        *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
+        *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     }
 }
 
@@ -654,8 +656,9 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
         len = 0;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
 
-    FunctionObject *thrower = scope->engine->newBuiltinFunction(scope, 0, throwTypeError);
-    Property pd = Property::fromAccessor(thrower, thrower);
+    Scope s(scope);
+    Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
+    Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
     *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
 }
