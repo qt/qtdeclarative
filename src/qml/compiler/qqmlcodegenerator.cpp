@@ -782,12 +782,16 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
     AST::SourceLocation loc = value->firstSourceLocation();
     QStringRef str;
 
-    if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(value))
+    AST::Node *node = value;
+    if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(node)) {
         if (AST::StringLiteral *lit = AST::cast<AST::StringLiteral *>(stmt->expression))
             str = lit->value;
+        else
+            node = stmt->expression;
+    }
 
     if (str.isEmpty())
-        str = asStringRef(value);
+        str = asStringRef(node);
 
     if (str.isEmpty())
         COMPILE_EXCEPTION(loc, tr( "Invalid empty ID"));
