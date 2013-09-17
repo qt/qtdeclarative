@@ -580,7 +580,7 @@ ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
 Value NodePrototype::getProto(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
-    if (d->nodePrototype.isEmpty()) {
+    if (d->nodePrototype.isUndefined()) {
         Object *p = new (v4->memoryManager) NodePrototype(v4);
         d->nodePrototype = Value::fromObject(p);
         v4->v8Engine->freezeObject(d->nodePrototype.value());
@@ -625,7 +625,7 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
 Value Element::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
-    if (d->elementPrototype.isEmpty()) {
+    if (d->elementPrototype.isUndefined()) {
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
@@ -639,7 +639,7 @@ Value Element::prototype(ExecutionEngine *engine)
 Value Attr::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
-    if (d->attrPrototype.isEmpty()) {
+    if (d->attrPrototype.isUndefined()) {
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
@@ -695,7 +695,7 @@ ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
 Value CharacterData::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
-    if (d->characterDataPrototype.isEmpty()) {
+    if (d->characterDataPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
@@ -728,7 +728,7 @@ ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
 Value Text::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
-    if (d->textPrototype.isEmpty()) {
+    if (d->textPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(CharacterData::prototype(v4).asObject());
@@ -744,7 +744,7 @@ Value CDATA::prototype(ExecutionEngine *v4)
 {
     // ### why not just use TextProto???
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
-    if (d->cdataPrototype.isEmpty()) {
+    if (d->cdataPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(Text::prototype(v4).asObject());
@@ -757,7 +757,7 @@ Value CDATA::prototype(ExecutionEngine *v4)
 Value Document::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
-    if (d->documentPrototype.isEmpty()) {
+    if (d->documentPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
@@ -1419,7 +1419,7 @@ void QQmlXMLHttpRequest::finished()
     dispatchCallback(m_me);
 
     Scope scope(v4);
-    ScopedValue v(scope, Value::emptyValue());
+    ScopedValue v(scope, Value::undefinedValue());
     setMe(v);
 }
 

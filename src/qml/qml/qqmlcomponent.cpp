@@ -1206,7 +1206,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     Q_ASSERT(args);
 
     QObject *parent = 0;
-    QV4::Value valuemap = QV4::Value::emptyValue();
+    QV4::Value valuemap = QV4::Value::undefinedValue();
 
     if (args->length() >= 1) {
         if (QV4::QObjectWrapper *qobjectWrapper = (*args)[0].as<QV4::QObjectWrapper>())
@@ -1242,7 +1242,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, rv));
     Q_ASSERT(object->isObject());
 
-    if (!valuemap.isEmpty()) {
+    if (!valuemap.isUndefined()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4engine, QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject()));
         QV4::ScopedCallData callData(scope, 2);
@@ -1330,7 +1330,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     Q_ASSERT(args);
 
     QObject *parent = 0;
-    QV4::Value valuemap = QV4::Value::emptyValue();
+    QV4::Value valuemap = QV4::Value::undefinedValue();
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
     if (args->length() >= 1) {
@@ -1364,7 +1364,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QmlIncubatorObject *r = new (v4->memoryManager) QmlIncubatorObject(args->engine(), mode);
     r->setPrototype(e->incubationProto.value().asObject());
 
-    if (!valuemap.isEmpty()) {
+    if (!valuemap.isUndefined()) {
         r->valuemap = valuemap;
         r->qmlGlobal = args->qmlGlobal();
     }
@@ -1390,7 +1390,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->asObject());
 
-    if (!valuemap.isEmpty()) {
+    if (!valuemap.isUndefined()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::Scoped<QV4::FunctionObject>  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
                                                                     QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject()));
@@ -1492,7 +1492,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
 {
     QQmlComponent_setQmlParent(o, parent);
 
-    if (!valuemap.isEmpty()) {
+    if (!valuemap.isUndefined()) {
         QQmlComponentExtension *e = componentExtension(v8);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);

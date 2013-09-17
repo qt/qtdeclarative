@@ -425,7 +425,7 @@ public:
 
     QV4::ReturnedValue get()
     {
-        if (type->prototype.isEmpty()) {
+        if (type->prototype.isUndefined()) {
             QQmlAdaptorModelEngineData * const data = engineData(v4->v8Engine);
             type->initializeConstructor(data);
         }

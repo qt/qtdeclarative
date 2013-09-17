@@ -107,8 +107,9 @@ double Value::toNumberImpl() const
 QString Value::toQStringNoThrow() const
 {
     switch (type()) {
-    case Value::Undefined_Type:
     case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+    case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
         return QStringLiteral("null");
@@ -156,8 +157,9 @@ QString Value::toQStringNoThrow() const
 QString Value::toQString() const
 {
     switch (type()) {
-    case Value::Undefined_Type:
     case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+    case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
         return QStringLiteral("null");

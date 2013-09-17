@@ -86,7 +86,7 @@ QVariant VariantObject::toVariant(const QV4::Value &v)
     }
     if (v.isNull())
         return QVariant(QMetaType::VoidStar, 0);
-    assert (v.isUndefined() || v.isEmpty());
+    Q_ASSERT(v.isUndefined());
     return QVariant();
 }
 

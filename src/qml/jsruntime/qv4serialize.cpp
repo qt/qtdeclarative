@@ -153,6 +153,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
     QV4::Scope scope(v4);
 
     if (v.isEmpty()) {
+        Q_ASSERT(!"Serialize: got empty value");
     } else if (v.isUndefined()) {
         push(data, valueheader(WorkerUndefined));
     } else if (v.isNull()) {

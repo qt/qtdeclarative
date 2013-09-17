@@ -135,10 +135,10 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 {
     Q_ASSERT(context && context->engine);
 
-    if (function.isEmpty() || function.isUndefined()) {
+    if (function.isUndefined()) {
         if (isUndefined)
             *isUndefined = true;
-        return QV4::Value::emptyValue().asReturnedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -187,7 +187,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
         if (isUndefined)
             *isUndefined = true;
         if (!watcher.wasDeleted()) {
-            if (!ex->isEmpty()) {
+            if (!ex->isUndefined()) {
                 delayedError()->setError(e);
             } else {
                 if (hasDelayedError())

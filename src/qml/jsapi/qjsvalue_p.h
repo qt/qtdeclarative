@@ -72,8 +72,7 @@ public:
     QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::Value &v)
         : PersistentValuePrivate(v, engine)
     {
-        if (value.isEmpty())
-            value = QV4::Value::undefinedValue();
+        Q_ASSERT(!value.isEmpty());
     }
     QJSValuePrivate(QV4::Object *o)
         : PersistentValuePrivate(QV4::Value::fromObject(o))

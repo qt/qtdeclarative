@@ -544,10 +544,10 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 
     Scope scope(engine);
 
-    if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isEmpty()) {
+    if (ddata->jsEngineId == engine->m_engineId && !ddata->jsWrapper.isUndefined()) {
         // We own the JS object
         return ddata->jsWrapper.value().asReturnedValue();
-    } else if (ddata->jsWrapper.isEmpty() &&
+    } else if (ddata->jsWrapper.isUndefined() &&
                (ddata->jsEngineId == engine->m_engineId || // We own the QObject
                 ddata->jsEngineId == 0 ||    // No one owns the QObject
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
@@ -566,7 +566,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
-        if (ddata->jsWrapper.isEmpty() && !alternateWrapper) {
+        if (ddata->jsWrapper.isUndefined() && !alternateWrapper) {
             QV4::ScopedValue result(scope, create(engine, ddata, object));
             ddata->jsWrapper = result;
             ddata->jsEngineId = engine->m_engineId;
@@ -698,7 +698,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
             Scope scope(v4);
             QV4::ScopedCallData callData(scope, argCount);
-            callData->thisObject = This->thisObject.isEmpty() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
+            callData->thisObject = This->thisObject.isUndefined() ?  Value::fromObject(v4->globalObject) : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
@@ -722,7 +722,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
         break;
         case Compare: {
             QObjectSlotDispatcher *connection = static_cast<QObjectSlotDispatcher*>(this_);
-            if (connection->function.isEmpty()) {
+            if (connection->function.isUndefined()) {
                 *ret = false;
                 return;
             }
@@ -744,8 +744,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
             if (slotIndexToDisconnect != -1) {
                 // This is a QObject function wrapper
-                if (connection->thisObject.isEmpty() == thisObject->isEmpty() &&
-                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                if (connection->thisObject.isUndefined() == thisObject->isUndefined() &&
+                        (connection->thisObject.isUndefined() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
 
                     QPair<QObject *, int> connectedFunctionData = extractQtMethod(connection->function.value().asFunctionObject());
                     if (connectedFunctionData.first == receiverToDisconnect &&
@@ -757,8 +757,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             } else {
                 // This is a normal JS function
                 if (__qmljs_strict_equal(connection->function, function) &&
-                        connection->thisObject.isEmpty() == thisObject->isEmpty() &&
-                        (connection->thisObject.isEmpty() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
+                        connection->thisObject.isUndefined() == thisObject->isUndefined() &&
+                        (connection->thisObject.isUndefined() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
                     *ret = true;
                     return;
                 }
@@ -806,7 +806,7 @@ ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
     if (!slot->function.value().asFunctionObject())
         V4THROW_ERROR("Function.prototype.connect: target is not a function");
 
-    if (!slot->thisObject.isEmpty() && !slot->thisObject.value().isObject())
+    if (!slot->thisObject.isUndefined() && !slot->thisObject.value().isObject())
         V4THROW_ERROR("Function.prototype.connect: target this is not an object");
 
     QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
@@ -832,8 +832,8 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
-    QV4::Value functionValue = QV4::Value::emptyValue();
-    QV4::Value functionThisValue = QV4::Value::emptyValue();
+    QV4::Value functionValue = QV4::Value::undefinedValue();
+    QV4::Value functionThisValue = QV4::Value::undefinedValue();
 
     if (ctx->argumentCount == 1) {
         functionValue = ctx->arguments[0];
@@ -845,7 +845,7 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     if (!functionValue.asFunctionObject())
         V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
 
-    if (!functionThisValue.isEmpty() && !functionThisValue.isObject())
+    if (!functionThisValue.isUndefined() && !functionThisValue.isObject())
         V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
     QPair<QObject *, int> functionData = extractQtMethod(functionValue.asFunctionObject());

@@ -391,7 +391,7 @@ public:
     ~PersistentValue();
 
     Value value() const {
-        return d ? d->value : Value::emptyValue();
+        return d ? d->value : Value::undefinedValue();
     }
 
     ExecutionEngine *engine() {
@@ -403,7 +403,8 @@ public:
 
     operator Value() const { return value(); }
 
-    bool isEmpty() const { return !d || d->value.isEmpty(); }
+    bool isUndefined() const { return !d || d->value.isUndefined(); }
+    bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }
     void clear() {
         *this = PersistentValue();
     }
@@ -431,7 +432,7 @@ public:
     ~WeakValue();
 
     Value value() const {
-        return d ? d->value : Value::emptyValue();
+        return d ? d->value : Value::undefinedValue();
     }
 
     ExecutionEngine *engine() {
@@ -443,7 +444,8 @@ public:
 
     operator Value() const { return value(); }
 
-    bool isEmpty() const { return !d || d->value.isEmpty(); }
+    bool isUndefined() const { return !d || d->value.isUndefined(); }
+    bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }
     void clear() {
         *this = WeakValue();
     }

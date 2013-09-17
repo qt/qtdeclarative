@@ -2330,7 +2330,7 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
     try {
         QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
-            return QV4::Value::emptyValue();
+            return QV4::Value::undefinedValue();
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
@@ -2339,7 +2339,7 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
-    return QV4::Value::emptyValue();
+    return QV4::Value::undefinedValue();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
@@ -2424,7 +2424,7 @@ void tst_qqmlecmascript::callQtInvokables()
     o->reset();
     {
     QV4::Value ret = EVALUATE("object.method_NoArgs_QPointF()");
-    QVERIFY(!ret.isEmpty());
+    QVERIFY(!ret.isUndefined());
     QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
@@ -3641,6 +3641,10 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_twoEngines()
 
     QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
     emit object->signalWithVariant(QVariant::fromValue(value));
+    if (expression == "undefined")
+        // if the engine is wrong, we return undefined to the other engine,
+        // making this one case pass
+        return;
     QVERIFY(!object->property("pass").toBool());
 }
 
@@ -3898,7 +3902,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         foreach (const QV4::PersistentValue& qmlglobal, ctxt->importedScripts) {
             QQmlContextData *scriptContext, *newContext;
 
-            if (qmlglobal.isEmpty())
+            if (qmlglobal.isUndefined())
                 continue;
 
             scriptContext = QV4::QmlContextWrapper::getContext(qmlglobal);
@@ -4992,11 +4996,11 @@ void tst_qqmlecmascript::propertyVarInheritance()
         tmp = QV4::Value::fromReturnedValue(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
         ccoCanaryHandle = tmp;
         tmp = QV4::Value::nullValue();
-        QVERIFY(!icoCanaryHandle.isEmpty());
-        QVERIFY(!ccoCanaryHandle.isEmpty());
+        QVERIFY(!icoCanaryHandle.isUndefined());
+        QVERIFY(!ccoCanaryHandle.isUndefined());
         gc(engine);
-        QVERIFY(!icoCanaryHandle.isEmpty());
-        QVERIFY(!ccoCanaryHandle.isEmpty());
+        QVERIFY(!icoCanaryHandle.isUndefined());
+        QVERIFY(!ccoCanaryHandle.isUndefined());
     }
     // now we deassign the var prop, which should trigger collection of item subtrees.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
@@ -5007,8 +5011,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
     QSKIP("This test does not work reliably with MSVC.");
 #endif
 #if !defined(Q_CC_CLANG)
-    QVERIFY(icoCanaryHandle.isEmpty());
-    QVERIFY(ccoCanaryHandle.isEmpty());
+    QVERIFY(icoCanaryHandle.isUndefined());
+    QVERIFY(ccoCanaryHandle.isUndefined());
 #endif
     delete object;
     // since there are no parent vmemo's to keep implicit references alive, and the only handles
@@ -5036,9 +5040,9 @@ void tst_qqmlecmascript::propertyVarInheritance2()
         QV4::Value tmp = QV4::Value::fromReturnedValue(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle = tmp;
         tmp = QV4::Value::nullValue();
-        QVERIFY(!childObjectVarArrayValueHandle.isEmpty());
+        QVERIFY(!childObjectVarArrayValueHandle.isUndefined());
         gc(engine);
-        QVERIFY(!childObjectVarArrayValueHandle.isEmpty()); // should not have been collected yet.
+        QVERIFY(!childObjectVarArrayValueHandle.isUndefined()); // should not have been collected yet.
         QCOMPARE(childObject->property("vp").value<QObject*>(), rootObject);
         QCOMPARE(childObject->property("textCanary").toInt(), 10);
     }
@@ -5046,7 +5050,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
 #if !defined(Q_CC_CLANG)
-    QVERIFY(childObjectVarArrayValueHandle.isEmpty()); // should have been collected now.
+    QVERIFY(childObjectVarArrayValueHandle.isUndefined()); // should have been collected now.
 #endif
     delete object;
 }

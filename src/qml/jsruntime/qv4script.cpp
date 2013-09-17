@@ -221,7 +221,7 @@ ReturnedValue Script::run()
     QV4::ExecutionEngine *engine = scope->engine;
     QV4::Scope valueScope(engine);
 
-    if (qml.isEmpty()) {
+    if (qml.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         bool strict = scope->strictMode;

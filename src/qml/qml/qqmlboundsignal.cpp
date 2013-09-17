@@ -181,7 +181,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_v8function = evalFunction(context(), scopeObject(), expression,
                                         m_fileName, m_line, &m_v8qmlscope);
 
-            if (m_v8function.isEmpty() || m_v8function.value().isNull()) {
+            if (m_v8function.isUndefined() || m_v8function.value().isNull()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }

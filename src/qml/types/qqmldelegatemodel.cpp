@@ -2383,7 +2383,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_compositor.setFlags(it, 1, Compositor::CacheFlag);
     }
 
-    if (model->m_cacheMetaType->modelItemProto.isEmpty())
+    if (model->m_cacheMetaType->modelItemProto.isUndefined())
         model->m_cacheMetaType->initializePrototype();
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);

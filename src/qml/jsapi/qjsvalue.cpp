@@ -63,7 +63,7 @@ QV4::ReturnedValue QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
         this->engine = e;
     else if (this->engine != e) {
         qWarning("JSValue can't be reassigned to another engine.");
-        return QV4::Value::emptyValue().asReturnedValue();
+        return QV4::Encode::undefined();
     }
     if (value.asString() == &string) {
         value = QV4::Value::fromString(engine->newString(string.toQString()));

@@ -464,7 +464,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
                 if (role.type == ListLayout::Role::VariantMap)
                     roleIndex = e->setVariantMapProperty(role, o, eng);
             }
-        } else if (propertyValue.isEmpty() || propertyValue.isUndefined() || propertyValue.isNull()) {
+        } else if (propertyValue.isUndefined() || propertyValue.isNull()) {
             const ListLayout::Role *r = m_layout->getExistingRole(propertyName.getPointer());
             if (r)
                 e->clearProperty(*r);
@@ -540,7 +540,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
                 if (role.type == ListLayout::Role::VariantMap)
                     e->setVariantMapFast(role, o, eng);
             }
-        } else if (propertyValue.isEmpty() || propertyValue.isUndefined() || propertyValue.isNull()) {
+        } else if (propertyValue.isUndefined() || propertyValue.isNull()) {
             const ListLayout::Role *r = m_layout->getExistingRole(propertyName.getPointer());
             if (r)
                 e->clearProperty(*r);
@@ -1198,7 +1198,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         } else if (role.type == ListLayout::Role::VariantMap) {
             roleIndex = setVariantMapProperty(role, o, eng);
         }
-    } else if (d.isEmpty() || d.isUndefined() || d.isNull()) {
+    } else if (d.isUndefined() || d.isNull()) {
         clearProperty(role);
     }
 

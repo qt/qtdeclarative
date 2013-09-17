@@ -119,8 +119,7 @@ QV8Engine::~QV8Engine()
 
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 {
-    if (value.isEmpty())
-        return QVariant();
+    Q_ASSERT (!value.isEmpty());
 
     if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->data;

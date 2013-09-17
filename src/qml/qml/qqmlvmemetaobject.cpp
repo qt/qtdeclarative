@@ -71,7 +71,7 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
-        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isEmpty()) {
+        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isUndefined()) {
             // Set the var property to NULL
             QV4::ArrayObject *a = m_target->varProperties.value().asArrayObject();
             if (a)
@@ -966,13 +966,13 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return QV4::Value::emptyValue().asReturnedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     }
 
     if (!v8methods) 
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
-    if (v8methods[index].isEmpty()) {
+    if (v8methods[index].isUndefined()) {
         QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
 
         const char *body = ((const char*)metaData) + data->bodyOffset;
@@ -994,7 +994,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 
     if (ensureVarPropertiesAllocated())
         return varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-    return QV4::Value::emptyValue().asReturnedValue();
+    return QV4::Value::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
@@ -1208,7 +1208,7 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
     // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
     // In this situation, the varProperties handle will be (and should remain)
     // empty.
-    return !varProperties.isEmpty();
+    return !varProperties.isUndefined();
 }
 
 void QQmlVMEMetaObject::ensureQObjectWrapper()

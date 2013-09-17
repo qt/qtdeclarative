@@ -575,7 +575,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
 
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
-    if (!ipv.isEmpty()) {
+    if (!ipv.isUndefined()) {
         d->disposeInitialPropertyValues();
         d->initialPropertyValues = ipv;
         d->qmlGlobalForIpv = args->qmlGlobal();
@@ -639,7 +639,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
         itemContext = 0;
     }
 
-    if (initialPropertyValues.isEmpty())
+    if (initialPropertyValues.isUndefined())
         return;
 
     QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
@@ -933,7 +933,7 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 
 QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
-    QV4::Value valuemap = QV4::Value::emptyValue();
+    QV4::Value valuemap = QV4::Value::undefinedValue();
     if (args->length() >= 2) {
         QV4::Value v = (*args)[1];
         if (!v.isObject() || v.asArrayObject()) {
