@@ -96,10 +96,10 @@ public:
 private:
     bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
-    void setupBindings(QV4::ExecutionContext *qmlContext);
-    bool setPropertyValue(QV4::ExecutionContext *qmlContext, QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
+    void setupBindings();
+    bool setPropertyValue(QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
-    void setupFunctions(QV4::ExecutionContext *qmlContext);
+    void setupFunctions();
 
     QString stringAt(int idx) const { return unit->header.stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
@@ -122,6 +122,7 @@ private:
     QQmlVMEMetaObject *_vmeMetaObject;
     QVector<QQmlAbstractBinding*> _createdBindings;
     QQmlListProperty<void> _currentList;
+    QV4::ExecutionContext *_qmlContext;
 };
 
 QT_END_NAMESPACE

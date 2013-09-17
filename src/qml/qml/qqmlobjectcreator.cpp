@@ -477,6 +477,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
     , _ddata(0)
     , _propertyCache(0)
     , _vmeMetaObject(0)
+    , _qmlContext(0)
 {
 }
 
@@ -879,7 +880,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     }
 }
 
-void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
+void QmlObjectCreator::setupBindings()
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -904,15 +905,14 @@ void QmlObjectCreator::setupBindings(QV4::ExecutionContext *qmlContext)
 
         }
 
-        if (!setPropertyValue(qmlContext, property, i, binding))
+        if (!setPropertyValue(property, i, binding))
             return;
     }
 
     qSwap(_currentList, savedList);
 }
 
-bool QmlObjectCreator::setPropertyValue(QV4::ExecutionContext *qmlContext, QQmlPropertyData *property,
-                                        int bindingIndex, const QV4::CompiledData::Binding *binding)
+bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingIndex, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         const QV4::CompiledData::Object *obj = unit->objectAt(binding->value.objectIndex);
@@ -962,7 +962,7 @@ bool QmlObjectCreator::setPropertyValue(QV4::ExecutionContext *qmlContext, QQmlP
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-        QV4::Value function = QV4::Value::fromObject(QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction));
+        QV4::Value function = QV4::Value::fromObject(QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex);
@@ -1062,7 +1062,7 @@ bool QmlObjectCreator::setPropertyValue(QV4::ExecutionContext *qmlContext, QQmlP
     return true;
 }
 
-void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
+void QmlObjectCreator::setupFunctions()
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
 
@@ -1075,7 +1075,7 @@ void QmlObjectCreator::setupFunctions(QV4::ExecutionContext *qmlContext)
         if (!property->isVMEFunction())
             continue;
 
-        QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+        QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
         vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(function));
     }
 }
@@ -1190,8 +1190,12 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     QV4::ScopedValue qmlScopeFunction(valueScope, QV4::Value::fromObject(qmlBindingWrapper));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
-    setupBindings(qmlContext);
-    setupFunctions(qmlContext);
+    qSwap(_qmlContext, qmlContext);
+
+    setupBindings();
+    setupFunctions();
+
+    qSwap(_qmlContext, qmlContext);
 
     qSwap(_createdBindings, createdBindings);
     qSwap(_vmeMetaObject, vmeMetaObject);
