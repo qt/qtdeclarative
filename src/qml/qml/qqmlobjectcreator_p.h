@@ -51,30 +51,36 @@ QT_BEGIN_NAMESPACE
 
 class QQmlAbstractBinding;
 
-class QQmlPropertyCacheCreator
+struct QQmlCompilePass
+{
+    QQmlCompilePass(const QUrl &url, const QV4::CompiledData::QmlUnit *unit);
+    QList<QQmlError> errors;
+
+protected:
+    QString stringAt(int idx) const { return qmlUnit->header.stringAt(idx); }
+    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+
+    const QUrl url;
+    const QV4::CompiledData::QmlUnit *qmlUnit;
+};
+
+class QQmlPropertyCacheCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreator)
 public:
-    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *unit,
+    QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePrivate, const QV4::CompiledData::QmlUnit *qmlUnit,
                              const QUrl &url, const QQmlImports *imports,
                              QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes);
-
-    QList<QQmlError> errors;
 
     bool create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **cache, QByteArray *vmeMetaObjectData);
 
 protected:
-    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
-
     QQmlEnginePrivate *enginePrivate;
-    const QV4::CompiledData::QmlUnit *unit;
-    QUrl url;
     const QQmlImports *imports;
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
 };
 
-class QmlObjectCreator
+class QmlObjectCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
@@ -83,12 +89,10 @@ public:
                      const QHash<int, int> &objectIndexToId);
 
     QObject *create(QObject *parent = 0)
-    { return create(unit->indexOfRootObject, parent); }
+    { return create(qmlUnit->indexOfRootObject, parent); }
     QObject *create(int index, QObject *parent = 0);
 
     void finalize();
-
-    QList<QQmlError> errors;
 
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
@@ -101,12 +105,7 @@ private:
     void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
-    QString stringAt(int idx) const { return unit->header.stringAt(idx); }
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
-
     QQmlEngine *engine;
-    QUrl url;
-    const QV4::CompiledData::QmlUnit *unit;
     const QV4::CompiledData::CompilationUnit *jsUnit;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
