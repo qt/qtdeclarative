@@ -140,8 +140,11 @@ public:
     // --- new compiler
     QV4::CompiledData::CompilationUnit *compilationUnit;
     QV4::CompiledData::QmlUnit *qmlUnit;
-    // ### sub-context support
-    QHash<int, int> objectIndexToId;
+    // index in first hash is component index, hash inside maps from object index in that scope to integer id
+    QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
+    QHash<int, int> objectIndexToIdForRoot;
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
     // ---
 
     struct Instruction {

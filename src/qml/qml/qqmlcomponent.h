@@ -129,6 +129,7 @@ private:
     Q_DISABLE_COPY(QQmlComponent)
     friend class QQmlVME;
     friend class QQmlTypeData;
+    friend class QmlObjectCreator;
 };
 
 QT_END_NAMESPACE

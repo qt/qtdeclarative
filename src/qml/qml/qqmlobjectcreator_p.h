@@ -80,24 +80,44 @@ protected:
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
 };
 
+class QQmlAnonymousComponentResolver : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
+public:
+    QQmlAnonymousComponentResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+                                   const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                                   const QList<QQmlPropertyCache *> &propertyCaches);
+
+    bool resolve();
+
+    QVector<int> componentRoots;
+    QHash<int, int> objectIndexToComponentIndex;
+
+protected:
+    bool recordComponentSubTree(int objectIndex);
+
+    int _componentIndex;
+    QSet<int> _ids;
+
+    const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
+    const QList<QQmlPropertyCache *> propertyCaches;
+};
+
 class QmlObjectCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
 public:
-    QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit, const QV4::CompiledData::CompilationUnit *jsUnit,
-                     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes, const QList<QQmlPropertyCache *> &propertyCaches, const QList<QByteArray> &vmeMetaObjectData,
-                     const QHash<int, int> &objectIndexToId);
+    QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData);
 
-    QObject *create(QObject *parent = 0)
-    { return create(qmlUnit->indexOfRootObject, parent); }
-    QObject *create(int index, QObject *parent = 0);
-
+    QObject *create(int subComponentIndex, QObject *parent = 0);
     void finalize();
 
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
 private:
+    QObject *createInstance(int index, QObject *parent = 0);
+
     bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
 
     void setupBindings();
@@ -107,12 +127,14 @@ private:
 
     QQmlEngine *engine;
     const QV4::CompiledData::CompilationUnit *jsUnit;
+    QQmlContextData *parentContext;
     QQmlContextData *context;
     const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
     const QList<QQmlPropertyCache *> propertyCaches;
     const QList<QByteArray> vmeMetaObjectData;
-    const QHash<int, int> &objectIndexToId;
+    QHash<int, int> objectIndexToId;
     QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
+    QQmlCompiledData *compiledData;
 
     QObject *_qobject;
     const QV4::CompiledData::Object *_compiledObject;

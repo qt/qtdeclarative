@@ -52,6 +52,8 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <QQmlComponent>
+#include <private/qqmlcomponent_p.h>
 
 QT_USE_NAMESPACE
 
@@ -462,20 +464,17 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::CompiledData::QmlUnit *qmlUnit,
-                                   const QV4::CompiledData::CompilationUnit *jsUnit,
-                                   const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                   const QList<QQmlPropertyCache*> &propertyCaches,
-                                   const QList<QByteArray> &vmeMetaObjectData, const QHash<int, int> &objectIndexToId)
-    : QQmlCompilePass(contextData->url, qmlUnit)
+QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData)
+    : QQmlCompilePass(compiledData->url, compiledData->qmlUnit)
     , componentAttached(0)
-    , engine(contextData->engine)
-    , jsUnit(jsUnit)
-    , context(contextData)
-    , resolvedTypes(resolvedTypes)
-    , propertyCaches(propertyCaches)
-    , vmeMetaObjectData(vmeMetaObjectData)
-    , objectIndexToId(objectIndexToId)
+    , engine(parentContext->engine)
+    , jsUnit(compiledData->compilationUnit)
+    , parentContext(parentContext)
+    , context(0)
+    , resolvedTypes(compiledData->resolvedTypes)
+    , propertyCaches(compiledData->propertyCaches)
+    , vmeMetaObjectData(compiledData->datas)
+    , compiledData(compiledData)
     , _qobject(0)
     , _compiledObject(0)
     , _ddata(0)
@@ -483,6 +482,49 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *contextData, const QV4::Comp
     , _vmeMetaObject(0)
     , _qmlContext(0)
 {
+}
+
+QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
+{
+    int objectToCreate;
+
+    if (subComponentIndex == -1) {
+        objectIndexToId = compiledData->objectIndexToIdForRoot;
+        objectToCreate = qmlUnit->indexOfRootObject;
+    } else {
+        objectIndexToId = compiledData->objectIndexToIdPerComponent[subComponentIndex];
+        const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
+        objectToCreate = compObj->bindingTable()->value.objectIndex;
+    }
+
+    context = new QQmlContextData;
+    context->isInternal = true;
+    context->url = compiledData->url;
+    context->urlString = compiledData->name;
+    context->imports = compiledData->importCache;
+    context->imports->addref();
+    context->setParent(parentContext);
+
+    QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
+    for (QHash<int, int>::ConstIterator it = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
+         it != end; ++it) {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(it.key());
+
+        QQmlContextData::ObjectIdMapping m;
+        m.id = it.value();
+        m.name = stringAt(obj->idIndex);
+        mapping[m.id] = m;
+    }
+    context->setIdPropertyData(mapping);
+
+    QObject *instance = createInstance(objectToCreate, parent);
+
+    QQmlData *ddata = QQmlData::get(instance);
+    Q_ASSERT(ddata);
+    ddata->compiledData = compiledData;
+    ddata->compiledData->addref();
+
+    return instance;
 }
 
 void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
@@ -932,7 +974,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
     QObject *createdSubObject = 0;
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        createdSubObject = create(binding->value.objectIndex, _qobject);
+        createdSubObject = createInstance(binding->value.objectIndex, _qobject);
         if (!createdSubObject)
             return false;
     }
@@ -1084,31 +1126,58 @@ void QmlObjectCreator::setupFunctions()
     }
 }
 
-QObject *QmlObjectCreator::create(int index, QObject *parent)
+QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 {
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+    bool isComponent = false;
+    QObject *instance = 0;
 
-    QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
-    Q_ASSERT(type);
+    if (compiledData->isComponent(index)) {
+        isComponent = true;
+        QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
+        QQmlComponentPrivate::get(component)->creationContext = context;
+        instance = component;
+    } else {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
-    QObject *instance = type->create();
-    // ### use no-event variant
-    if (parent)
-        instance->setParent(parent);
+        QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
+        Q_ASSERT(type);
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
-    Q_ASSERT(!cache.isNull());
+        instance = type->create();
+        // ### use no-event variant
+        if (parent)
+            instance->setParent(parent);
+    }
 
-    context->addObject(instance);
+    QQmlData *ddata = QQmlData::get(instance, /*create*/true);
+    if (index == qmlUnit->indexOfRootObject) {
+        if (ddata->context) {
+            Q_ASSERT(ddata->context != context);
+            Q_ASSERT(ddata->outerContext);
+            Q_ASSERT(ddata->outerContext != context);
+            QQmlContextData *c = ddata->context;
+            while (c->linkedContext) c = c->linkedContext;
+            c->linkedContext = context;
+        } else
+            context->addObject(instance);
+        ddata->ownContext = true;
+    } else if (!ddata->context)
+        context->addObject(instance);
+
+    ddata->outerContext = context;
 
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
     if (idEntry != objectIndexToId.constEnd())
         context->setIdProperty(idEntry.value(), instance);
 
-    if (!populateInstance(index, instance, cache))
-        return 0;
+    if (!isComponent) {
+        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
+        Q_ASSERT(!cache.isNull());
+
+        if (!populateInstance(index, instance, cache))
+            return 0;
+    }
 
     return instance;
 }
@@ -1119,7 +1188,7 @@ void QmlObjectCreator::finalize()
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
 
-    Q_ASSERT(allCreatedBindings.isDetached());
+    Q_ASSERT(allCreatedBindings.isEmpty() || allCreatedBindings.isDetached());
 
     for (QLinkedList<QVector<QQmlAbstractBinding*> >::Iterator it = allCreatedBindings.begin(), end = allCreatedBindings.end();
          it != end; ++it) {
@@ -1182,6 +1251,9 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
 
+    _ddata->lineNumber = _compiledObject->location.line;
+    _ddata->columnNumber = _compiledObject->location.column;
+
     qSwap(_vmeMetaObject, vmeMetaObject);
 
     QVector<QQmlAbstractBinding*> createdBindings(_compiledObject->nBindings, 0);
@@ -1211,4 +1283,105 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     allCreatedBindings.append(_createdBindings);
 
     return errors.isEmpty();
+}
+
+
+QQmlAnonymousComponentResolver::QQmlAnonymousComponentResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+                                                               const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                                                               const QList<QQmlPropertyCache *> &propertyCaches)
+    : QQmlCompilePass(url, qmlUnit)
+    , _componentIndex(-1)
+    , resolvedTypes(resolvedTypes)
+    , propertyCaches(propertyCaches)
+{
+}
+
+bool QQmlAnonymousComponentResolver::resolve()
+{
+    Q_ASSERT(componentRoots.isEmpty());
+
+    // Find objects that are Components. This is missing an extra pass
+    // that finds implicitly defined components, i.e.
+    //    someProperty: Item { ... }
+    // when someProperty _is_ a QQmlComponent. In that case the Item {}
+    // should be implicitly surrounded by Component {}
+
+    for (int i = 0; i < qmlUnit->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+        if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
+            continue;
+
+        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(i);
+        if (!cache || cache->metaObject() != &QQmlComponent::staticMetaObject)
+            continue;
+
+        componentRoots.append(i);
+        // Sanity checks: There can be only an (optional) id property and
+        // a default property, that defines the component tree.
+    }
+
+    std::sort(componentRoots.begin(), componentRoots.end());
+
+    // For each component's tree, remember to which component the children
+    // belong to
+    for (int i = 0; i < componentRoots.count(); ++i) {
+        const QV4::CompiledData::Object *component = qmlUnit->objectAt(componentRoots.at(i));
+
+        if (component->nFunctions > 0)
+            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new functions."));
+        if (component->nProperties > 0)
+            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new properties."));
+        if (component->nSignals > 0)
+            COMPILE_EXCEPTION(component, tr("Component objects cannot declare new signals."));
+
+        if (component->nBindings == 0)
+            COMPILE_EXCEPTION(component, tr("Cannot create empty component specification"));
+
+        const QV4::CompiledData::Binding *rootBinding = component->bindingTable();
+        if (component->nBindings > 1 || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
+            COMPILE_EXCEPTION(rootBinding, tr("Component elements may not contain properties other than id"));
+
+        _componentIndex = i;
+        _ids.clear();
+        if (!recordComponentSubTree(rootBinding->value.objectIndex))
+            break;
+    }
+
+    return errors.isEmpty();
+}
+
+bool QQmlAnonymousComponentResolver::recordComponentSubTree(int objectIndex)
+{
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+
+    // Only include creatable types. Everything else is synthetic, such as group property
+    // objects.
+    if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
+        objectIndexToComponentIndex.insert(objectIndex, _componentIndex);
+
+    QString id = stringAt(obj->idIndex);
+    if (!id.isEmpty()) {
+        if (_ids.contains(obj->idIndex)) {
+            recordError(obj->locationOfIdProperty, tr("id is not unique"));
+            return false;
+        }
+        _ids.insert(obj->idIndex);
+    }
+
+    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    for (int i = 0; i < obj->nBindings; ++i, ++binding) {
+        if (binding->type != QV4::CompiledData::Binding::Type_Object
+            && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
+            && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
+            continue;
+
+        // Stop at Component boundary
+        if (std::binary_search(componentRoots.constBegin(), componentRoots.constEnd(), binding->value.objectIndex))
+            continue;
+
+        if (!recordComponentSubTree(binding->value.objectIndex))
+            return false;
+    }
+
+    return true;
 }

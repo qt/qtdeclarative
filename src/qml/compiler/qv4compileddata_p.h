@@ -351,6 +351,7 @@ struct Object
     quint32 nBindings;
     quint32 offsetToBindings;
     Location location;
+    Location locationOfIdProperty;
 //    Function[]
 //    Property[]
 //    Signal[]

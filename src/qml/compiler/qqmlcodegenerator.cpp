@@ -827,6 +827,8 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
 #endif
 
     _object->idIndex = registerString(str.toString());
+    _object->locationOfIdProperty.line = loc.startLine;
+    _object->locationOfIdProperty.column = loc.startColumn;
 
     return true;
 }
@@ -993,6 +995,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
         objectToWrite->indexOfDefaultProperty = o->indexOfDefaultProperty;
         objectToWrite->idIndex = o->idIndex;
         objectToWrite->location = o->location;
+        objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
 
         quint32 nextOffset = sizeof(QV4::CompiledData::Object);
 
