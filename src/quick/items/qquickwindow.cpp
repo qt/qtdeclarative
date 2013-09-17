@@ -1710,9 +1710,14 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     // a single stationary press on an item shouldn't cause an event
     if (matchingNewPoints.isEmpty()) {
         bool stationaryOnly = true;
-        Q_FOREACH (QTouchEvent::TouchPoint tp, matchingPoints)
-            if (tp.state() != Qt::TouchPointStationary)
+
+        foreach (const QTouchEvent::TouchPoint &tp, matchingPoints) {
+            if (tp.state() != Qt::TouchPointStationary) {
                 stationaryOnly = false;
+                break;
+            }
+        }
+
         if (stationaryOnly)
             matchingPoints.clear();
     }
