@@ -773,6 +773,7 @@ void QQmlEnginePrivate::init()
     if (baseModulesUninitialized) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
+        qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 
         QQmlData::init();
         baseModulesUninitialized = false;
