@@ -230,7 +230,7 @@ public:
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
-    AST::UiQualifiedId *resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object);
+    bool resolveQualifiedId(AST::UiQualifiedId **nameToResolve, QmlObject **object);
 
     bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItem = false);
 

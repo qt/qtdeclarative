@@ -219,7 +219,10 @@ bool QQmlCodeGenerator::visit(AST::UiScriptBinding *node)
 bool QQmlCodeGenerator::visit(AST::UiArrayBinding *node)
 {
     QmlObject *object = 0;
-    AST::UiQualifiedId *name = resolveQualifiedId(node->qualifiedId, &object);
+    AST::UiQualifiedId *name = node->qualifiedId;
+    if (!resolveQualifiedId(&name, &object))
+        return false;
+
     qSwap(_object, object);
 
     AST::UiArrayMemberList *member = node->members;
@@ -729,7 +732,8 @@ void QQmlCodeGenerator::setBindingValue(QV4::CompiledData::Binding *binding, AST
 void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, AST::Statement *value)
 {
     QmlObject *object = 0;
-    name = resolveQualifiedId(name, &object);
+    if (!resolveQualifiedId(&name, &object))
+        return;
     qSwap(_object, object);
     appendBinding(name->identifierToken, registerString(name->name.toString()), value);
     qSwap(_object, object);
@@ -738,7 +742,8 @@ void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, AST::Statement *
 void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex)
 {
     QmlObject *object = 0;
-    name = resolveQualifiedId(name, &object);
+    if (!resolveQualifiedId(&name, &object))
+        return;
     qSwap(_object, object);
     appendBinding(name->identifierToken, registerString(name->name.toString()), objectIndex);
     qSwap(_object, object);
@@ -767,6 +772,12 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
 {
     if (!sanityCheckPropertyName(nameLocation, propertyNameIndex, isListItem))
         return;
+
+    if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
+        recordError(nameLocation, tr("Invalid component id specification"));
+        return;
+    }
+
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->location.line = nameLocation.startLine;
@@ -820,8 +831,13 @@ bool QQmlCodeGenerator::setId(AST::Statement *value)
     return true;
 }
 
-AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *name, QmlObject **object)
+bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, QmlObject **object)
 {
+    AST::UiQualifiedId *name = *nameToResolve;
+
+    if (name->name == QStringLiteral("id") && name->next)
+        COMPILE_EXCEPTION(name->identifierToken, tr( "Invalid use of id property"));
+
     *object = _object;
     while (name->next) {
         Binding *binding = New<Binding>();
@@ -843,7 +859,8 @@ AST::UiQualifiedId *QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId *na
 
         name = name->next;
     }
-    return name;
+    *nameToResolve = name;
+    return true;
 }
 
 bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItem)
