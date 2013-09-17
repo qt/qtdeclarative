@@ -44,8 +44,6 @@
  \inmodule QtQml
  \brief allows you to control QML file loading.
 
- \note This class is in an extended validation period and still subject to change. It should be treated as private API for 5.1
-
  QQmlAbstractUrlInterceptor is an interface which can be used to alter URLs
  before they are used by the QML engine. This is primarily useful for altering
  file urls into other file urls, such as selecting different graphical assets
@@ -88,4 +86,7 @@
 
  A pure virtual function where you can intercept the url. The returned value is taken as the
  new value for the url. The type of url being intercepted is given by the type variable.
+
+ Your implementation of this function must be thread-safe, as it can be called from multiple threads
+ at the same time.
 */

@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qqmltypeloader_p.h"
-#include "qqmlabstracturlinterceptor_p.h"
+#include "qqmlabstracturlinterceptor.h"
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>

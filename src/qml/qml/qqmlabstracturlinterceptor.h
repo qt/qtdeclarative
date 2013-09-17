@@ -38,11 +38,12 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//Private API for 5.1 (at least)
+
 #ifndef QQMLABSTRACTURLINTERCEPTOR_H
 #define QQMLABSTRACTURLINTERCEPTOR_H
 
 #include <QtCore/qurl.h>
+#include <qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 

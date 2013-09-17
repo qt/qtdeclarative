@@ -48,7 +48,7 @@
 #include "qqmlengine_p.h"
 #include "qqmlengine.h"
 #include "qqmlinfo.h"
-#include "qqmlabstracturlinterceptor_p.h"
+#include "qqmlabstracturlinterceptor.h"
 
 #include <qjsengine.h>
 #include <QtCore/qvarlengtharray.h>

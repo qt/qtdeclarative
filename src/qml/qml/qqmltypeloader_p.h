@@ -59,6 +59,7 @@
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlabstracturlinterceptor.h>
 
 #include <private/qhashedstring_p.h>
 #include <private/qqmlscript_p.h>
@@ -67,7 +68,6 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
-#include <private/qqmlabstracturlinterceptor_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4script_p.h>
