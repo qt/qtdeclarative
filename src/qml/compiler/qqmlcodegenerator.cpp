@@ -1076,7 +1076,7 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
 
         defineFunction(name, node,
                        function ? function->formals : 0,
-                       function ? function->body->elements : node, QmlBinding);
+                       function ? function->body->elements : node, function ? FunctionCode : QmlBinding);
 
     }
 
