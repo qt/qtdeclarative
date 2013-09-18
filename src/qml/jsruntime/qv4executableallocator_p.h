@@ -81,8 +81,13 @@ public:
         {}
 
         void *start() const;
+        void invalidate() { addr = 0; }
+        bool isValid() const { return addr != 0; }
+        void deallocate(ExecutableAllocator *allocator);
 
     private:
+        ~Allocation() {}
+
         friend class ExecutableAllocator;
 
         Allocation *split(size_t dividingSize);

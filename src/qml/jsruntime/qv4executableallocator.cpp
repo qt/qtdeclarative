@@ -52,6 +52,14 @@ void *ExecutableAllocator::Allocation::start() const
     return reinterpret_cast<void*>(addr);
 }
 
+void ExecutableAllocator::Allocation::deallocate(ExecutableAllocator *allocator)
+{
+    if (isValid())
+        allocator->free(this);
+    else
+        delete this;
+}
+
 ExecutableAllocator::Allocation *ExecutableAllocator::Allocation::split(size_t dividingSize)
 {
     Allocation *remainder = new Allocation;
@@ -117,7 +125,8 @@ ExecutableAllocator::ChunkOfPages::~ChunkOfPages()
     Allocation *alloc = firstAllocation;
     while (alloc) {
         Allocation *next = alloc->next;
-        delete alloc;
+        if (alloc->isValid())
+            delete alloc;
         alloc = next;
     }
     pages->deallocate();
@@ -142,6 +151,12 @@ ExecutableAllocator::ExecutableAllocator()
 
 ExecutableAllocator::~ExecutableAllocator()
 {
+    foreach (ChunkOfPages *chunk, chunks) {
+        for (Allocation *allocation = chunk->firstAllocation; allocation; allocation = allocation->next)
+            if (!allocation->free)
+                allocation->invalidate();
+    }
+
     qDeleteAll(chunks);
 }
 
