@@ -366,7 +366,7 @@ void Updater::visitTransformNode(Node *n)
     QSGTransformNode *tn = static_cast<QSGTransformNode *>(n->sgNode);
 
     if (n->isBatchRoot) {
-        if (m_added > 0 && m_roots.size() > 0)
+        if (m_added > 0 && m_roots.last())
             renderer->registerBatchRoot(n, m_roots.last());
         tn->setCombinedMatrix(m_rootMatrices.last() * *m_combined_matrix_stack.last() * tn->matrix());
 
