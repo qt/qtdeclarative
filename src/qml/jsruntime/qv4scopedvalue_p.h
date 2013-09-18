@@ -450,7 +450,11 @@ struct Referenced {
     }
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
+    static Referenced null() { return Referenced(Null); }
+    bool isNull() const { return !ptr; }
 private:
+    enum _Null { Null };
+    Referenced(_Null) { ptr = 0; }
     Value *ptr;
 };
 

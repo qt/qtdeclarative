@@ -974,12 +974,16 @@ bool QJSValue::deleteProperty(const QString &name)
 */
 bool QJSValue::hasProperty(const QString &name) const
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return false;
+
+    Scope scope(engine);
+    ScopedObject o(scope, d->value);
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine;
-    String *s = engine->newIdentifier(name);
+    ScopedString s(scope, engine->newIdentifier(name));
     return o->__hasProperty__(s);
 }
 
@@ -991,12 +995,16 @@ bool QJSValue::hasProperty(const QString &name) const
 */
 bool QJSValue::hasOwnProperty(const QString &name) const
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return false;
+
+    Scope scope(engine);
+    ScopedObject o(scope, d->value);
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine;
-    String *s = engine->newIdentifier(name);
+    ScopedString s(scope, engine->newIdentifier(name));
     return o->__getOwnProperty__(s);
 }
 

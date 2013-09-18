@@ -293,7 +293,8 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     }
 
     PropertyAttributes attrs;
-    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
+    ScopedString n(scope, name);
+    Property *pd  = wrapper->__getOwnProperty__(n, &attrs);
     if (pd) {
         wrapper->putValue(pd, attrs, value);
         return;

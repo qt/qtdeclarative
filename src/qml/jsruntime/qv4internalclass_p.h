@@ -140,7 +140,7 @@ struct InternalClass {
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, Identifier *id);
-    uint find(String *s);
+    uint find(const String *s);
 
     InternalClass *sealed();
     InternalClass *frozen();

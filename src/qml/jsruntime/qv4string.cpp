@@ -131,6 +131,9 @@ void String::destroy(Managed *that)
 
 ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
 {
+    Scope scope(m->engine());
+    ScopedString n(scope, name);
+
     String *that = static_cast<String *>(m);
     ExecutionEngine *v4 = m->engine();
     if (name == v4->id_length) {
@@ -139,7 +142,7 @@ ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
         return Value::fromInt32(that->_text.length()).asReturnedValue();
     }
     PropertyAttributes attrs;
-    Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
+    Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(n, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -256,7 +259,7 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-void String::makeIdentifierImpl()
+void String::makeIdentifierImpl() const
 {
     engine()->identifierTable->identifier(this);
 }

@@ -255,7 +255,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     transitions.insert(t, object->internalClass);
 }
 
-uint InternalClass::find(String *string)
+uint InternalClass::find(const String *string)
 {
     engine->identifierTable->identifier(string);
     const Identifier *id = string->identifier;

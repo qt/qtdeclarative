@@ -273,11 +273,11 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
 
     cout << prefix << "properties:" << endl;
     ForEachIteratorObject it(ctx, o);
-    QV4::ScopedValue name(scope);
+    ScopedValue name(scope);
     for (name = it.nextPropertyName(); !name->isNull(); name = it.nextPropertyName()) {
         cout << prefix << "\t\"" << qPrintable(name->stringValue()->toQString()) << "\"" << endl;
         PropertyAttributes attrs;
-        Property *d = o->__getOwnProperty__(name->stringValue(), &attrs);
+        Property *d = o->__getOwnProperty__(ScopedString(scope, name), &attrs);
         Value pval = Value::fromReturnedValue(o->getValue(d, attrs));
         cout << prefix << "\tvalue:" << endl;
         realDumpValue(pval, ctx, prefix + "\t");

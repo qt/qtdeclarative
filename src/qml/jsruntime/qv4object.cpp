@@ -318,7 +318,7 @@ Property *Object::insertMember(const StringRef s, PropertyAttributes attributes)
 }
 
 // Section 8.12.1
-Property *Object::__getOwnProperty__(String *name, PropertyAttributes *attrs)
+Property *Object::__getOwnProperty__(const StringRef name, PropertyAttributes *attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -363,7 +363,7 @@ Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
 }
 
 // Section 8.12.2
-Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const
+Property *Object::__getPropertyDescriptor__(const StringRef name, PropertyAttributes *attrs) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -372,7 +372,7 @@ Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *at
 
     const Object *o = this;
     while (o) {
-        uint idx = o->internalClass->find(name);
+        uint idx = o->internalClass->find(name.getPointer());
         if (idx < UINT_MAX) {
             if (attrs)
                 *attrs = o->internalClass->propertyData[idx];
@@ -414,14 +414,14 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     return 0;
 }
 
-bool Object::__hasProperty__(String *name) const
+bool Object::__hasProperty__(const StringRef name) const
 {
     if (__getPropertyDescriptor__(name))
         return true;
 
     const Object *o = this;
     while (o) {
-        if (!o->query(name).isEmpty())
+        if (!o->query(name.getPointer()).isEmpty())
             return true;
         o = o->prototype();
     }
@@ -456,7 +456,9 @@ ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
 
 void Object::put(Managed *m, String *name, const Value &value)
 {
-    static_cast<Object *>(m)->internalPut(name, value);
+    Scope scope(m->engine());
+    ScopedString s(scope, name);
+    static_cast<Object *>(m)->internalPut(s, value);
 }
 
 void Object::putIndexed(Managed *m, uint index, const Value &value)
@@ -704,7 +706,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::internalPut(String *name, const Value &value)
+void Object::internalPut(const StringRef name, const Value &value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -712,7 +714,7 @@ void Object::internalPut(String *name, const Value &value)
 
     name->makeIdentifier();
 
-    uint member = internalClass->find(name);
+    uint member = internalClass->find(name.getPointer());
     Property *pd = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
@@ -772,9 +774,7 @@ void Object::internalPut(String *name, const Value &value)
     }
 
     {
-        Scope scope(engine());
-        ScopedString s(scope, name);
-        Property *p = insertMember(s, Attr_Data);
+        Property *p = insertMember(name, Attr_Data);
         p->value = value;
         return;
     }
@@ -910,7 +910,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, const Property &p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -948,7 +948,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
 
     // Clause 1
     {
-        uint member = internalClass->find(name);
+        uint member = internalClass->find(name.getPointer());
         current = (member < UINT_MAX) ? memberData + member : 0;
         cattrs = internalClass->propertyData.data() + member;
     }
@@ -958,9 +958,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        Scope scope(engine());
-        ScopedString s(scope, name);
-        Property *pd = insertMember(s, attrs);
+        Property *pd = insertMember(name, attrs);
         *pd = p;
         pd->fullyPopulated(&attrs);
         return true;
@@ -1004,21 +1002,21 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Prop
         return true;
     }
 
-    return __defineOwnProperty__(ctx, current, 0 /*member*/, p, attrs);
+    return __defineOwnProperty__(ctx, current, StringRef::null(), p, attrs);
 reject:
   if (ctx->strictMode)
       ctx->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, String *member, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, const StringRef member, const Property &p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
         return true;
 
     PropertyAttributes cattrs = Attr_Data;
-    if (member)
+    if (!member.isNull())
         cattrs = internalClass->propertyData[current - memberData];
     else if (arrayAttributes)
         cattrs = arrayAttributes[current - arrayData];
@@ -1074,8 +1072,8 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, Str
   accept:
 
     current->merge(cattrs, p, attrs);
-    if (member) {
-        internalClass = internalClass->changeMember(member, cattrs);
+    if (!member.isNull()) {
+        internalClass = internalClass->changeMember(member.getPointer(), cattrs);
     } else {
         if (cattrs != Attr_Data)
             ensureArrayAttributes();
@@ -1094,7 +1092,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, Str
 
 bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs)
 {
-    return __defineOwnProperty__(ctx, ctx->engine->newString(name), p, attrs);
+    Scope scope(ctx);
+    ScopedString s(scope, ctx->engine->newString(name));
+    return __defineOwnProperty__(ctx, s, p, attrs);
 }
 
 

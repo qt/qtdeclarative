@@ -304,7 +304,8 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
 {
     if (!right->isObject())
         ctx->throwTypeError();
-    String *s = left->toString(ctx);
+    Scope scope(ctx);
+    ScopedString s(scope, left->toString(ctx));
     bool r = right->objectValue()->__hasProperty__(s);
     return Value::fromBoolean(r).asReturnedValue();
 }

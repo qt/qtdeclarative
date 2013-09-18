@@ -135,7 +135,7 @@ String *IdentifierTable::insertString(const QString &s)
 }
 
 
-Identifier *IdentifierTable::identifierImpl(String *str)
+Identifier *IdentifierTable::identifierImpl(const String *str)
 {
     if (str->identifier)
         return str->identifier;
@@ -153,7 +153,7 @@ Identifier *IdentifierTable::identifierImpl(String *str)
         idx %= alloc;
     }
 
-    addEntry(str);
+    addEntry(const_cast<QV4::String *>(str));
     return str->identifier;
 }
 

@@ -131,17 +131,17 @@ struct Q_QML_EXPORT Object: Managed {
     Object *prototype() const { return internalClass->prototype; }
     bool setPrototype(Object *proto);
 
-    Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);
+    Property *__getOwnProperty__(const StringRef name, PropertyAttributes *attrs = 0);
     Property *__getOwnProperty__(uint index, PropertyAttributes *attrs = 0);
 
-    Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs = 0) const;
+    Property *__getPropertyDescriptor__(const StringRef name, PropertyAttributes *attrs = 0) const;
     Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
 
-    bool __hasProperty__(String *name) const;
+    bool __hasProperty__(const StringRef name) const;
     bool __hasProperty__(uint index) const;
 
-    bool __defineOwnProperty__(ExecutionContext *ctx, Property *current, String *member, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionContext *ctx, Property *current, const StringRef member, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionContext *ctx, const StringRef name, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs);
 
@@ -325,7 +325,7 @@ protected:
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty);
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
-    void internalPut(String *name, const Value &value);
+    void internalPut(const StringRef name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);

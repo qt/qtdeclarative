@@ -68,7 +68,7 @@ public:
 
     String *insertString(const QString &s);
 
-    Identifier *identifier(String *str) {
+    Identifier *identifier(const String *str) {
         if (str->identifier)
             return str->identifier;
         return identifierImpl(str);
@@ -77,7 +77,7 @@ public:
     Identifier *identifier(const QString &s);
     Identifier *identifier(const char *s, int len);
 
-    Identifier *identifierImpl(String *str);
+    Identifier *identifierImpl(const String *str);
 
     void mark() {
         for (int i = 0; i < alloc; ++i)
