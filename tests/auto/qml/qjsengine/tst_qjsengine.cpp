@@ -452,6 +452,7 @@ void tst_QJSEngine::newQObject()
 
 void tst_QJSEngine::newQObject_ownership()
 {
+    QSKIP("unreliable test due to our conservative GC");
     QJSEngine eng;
     {
         QPointer<QObject> ptr = new QObject();
@@ -1240,6 +1241,7 @@ void tst_QJSEngine::castWithMultipleInheritance()
 
 void tst_QJSEngine::collectGarbage()
 {
+    QSKIP("This test is not reliable due to our conservative GC");
     QJSEngine eng;
     eng.evaluate("a = new Object(); a = new Object(); a = new Object()");
     QJSValue a = eng.newObject();
