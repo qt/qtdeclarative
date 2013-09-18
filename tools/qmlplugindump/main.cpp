@@ -545,7 +545,7 @@ private:
     void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
-            if (meth.access() != QMetaMethod::Protected)
+            if (meth.access() != QMetaMethod::Public)
                 return; // nothing to do.
         } else if (meth.access() != QMetaMethod::Public) {
             return; // nothing to do.
