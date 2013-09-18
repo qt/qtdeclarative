@@ -627,7 +627,7 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     qWarning() << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-[non]relocatable] module.uri version [module/import/path]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
@@ -654,7 +654,17 @@ int main(int argc, char *argv[])
 #endif
 
     // don't require a window manager even though we're a QGuiApplication
-    qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
+    bool requireWindowManager = false;
+    for (int index = 1; index < argc; ++index) {
+        if (QString::fromLocal8Bit(argv[index]) == "--defaultplatform"
+                || QString::fromLocal8Bit(argv[index]) == "-defaultplatform") {
+            requireWindowManager = true;
+            break;
+        }
+    }
+
+    if (!requireWindowManager)
+        qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
 
     QGuiApplication app(argc, argv);
     const QStringList args = app.arguments();
@@ -696,6 +706,9 @@ int main(int argc, char *argv[])
                 action = Builtins;
             } else if (arg == QLatin1String("-v")) {
                 verbose = true;
+            } else if (arg == QLatin1String("--defaultplatform")
+                       || arg == QLatin1String("-defaultplatform")) {
+                continue;
             } else {
                 qWarning() << "Invalid argument: " << arg;
                 return EXIT_INVALIDARGUMENTS;
