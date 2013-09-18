@@ -225,6 +225,16 @@ void MyWorkerObject::doIt()
     new MyWorkerObjectThread(this);
 }
 
+class MyDateClass : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QDateTime invalidDate()
+    {
+        return QDateTime();
+    }
+};
+
 class MyStringClass : public QObject
 {
     Q_OBJECT
@@ -317,6 +327,7 @@ void registerTypes()
     qmlRegisterType<FallbackBindingsTypeObject>("Qt.test.fallbackBindingsObject", 1, 0, "FallbackBindingsType");
     qmlRegisterType<FallbackBindingsTypeDerived>("Qt.test.fallbackBindingsDerived", 1, 0, "FallbackBindingsType");
 
+    qmlRegisterType<MyDateClass>("Qt.test", 1, 0, "MyDateClass");
     qmlRegisterType<MyStringClass>("Qt.test", 1, 0, "MyStringClass");
 
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi",1,0,"Data",testImportOrder_api);

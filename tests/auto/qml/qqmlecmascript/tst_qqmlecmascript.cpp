@@ -209,6 +209,7 @@ private slots:
     void assignSequenceTypes();
     void sequenceSort_data();
     void sequenceSort();
+    void dateParse();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -7202,6 +7203,25 @@ void tst_qqmlecmascript::sequenceSort()
     QVERIFY(q.toBool() == true);
 
     delete object;
+}
+
+void tst_qqmlecmascript::dateParse()
+{
+    QQmlComponent component(&engine, testFileUrl("date.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, "test_is_invalid_jsDateTime", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+    QMetaObject::invokeMethod(object, "test_is_invalid_qtDateTime", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+
 }
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
