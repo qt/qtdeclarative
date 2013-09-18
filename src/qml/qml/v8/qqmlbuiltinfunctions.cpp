@@ -143,10 +143,10 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
         defineDefaultProperty(v4, QStringLiteral("createComponent"), method_createComponent);
     }
 
-    defineAccessorProperty(v4->newString(QStringLiteral("platform")), method_get_platform, 0);
-    defineAccessorProperty(v4->newString(QStringLiteral("application")), method_get_application, 0);
+    defineAccessorProperty(v4, QStringLiteral("platform"), method_get_platform, 0);
+    defineAccessorProperty(v4, QStringLiteral("application"), method_get_application, 0);
 #ifndef QT_NO_IM
-    defineAccessorProperty(v4->newString(QStringLiteral("inputMethod")), method_get_inputMethod, 0);
+    defineAccessorProperty(v4, QStringLiteral("inputMethod"), method_get_inputMethod, 0);
 #endif
 }
 

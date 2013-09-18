@@ -163,13 +163,13 @@ struct Q_QML_EXPORT Object: Managed {
     void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(String *name, Value value);
+    void defineDefaultProperty(const StringRef name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value value);
     void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
     void defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
     void defineAccessorProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
-    void defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
+    void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);

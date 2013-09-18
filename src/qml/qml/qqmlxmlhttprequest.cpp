@@ -1592,7 +1592,9 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         defineReadonlyProperty(engine, QStringLiteral("DONE"), Value::fromInt32(4));
         if (!proto)
             setupProto();
-        defineDefaultProperty(engine->id_prototype, Value::fromObject(proto));
+        Scope scope(engine);
+        ScopedString s(scope, engine->id_prototype);
+        defineDefaultProperty(s, Value::fromObject(proto));
     }
     ~QQmlXMLHttpRequestCtor()
     {}

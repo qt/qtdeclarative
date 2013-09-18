@@ -354,7 +354,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, StringRef name, ReturnedValue (*code)(SimpleCallContext *))
+Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *))
 {
     BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name.getPointer(), code);
     return f->asReturned<FunctionObject>();

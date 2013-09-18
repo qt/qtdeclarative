@@ -443,7 +443,7 @@ struct Referenced {
         return static_cast<T*>(ptr->managed());
     }
 
-    T *getPointer() {
+    T *getPointer() const {
         return static_cast<T *>(ptr->managed());
     }
     ReturnedValue asReturnedValue() const { return ptr->val; }

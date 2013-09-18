@@ -215,20 +215,24 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::defineDefaultProperty(String *name, Value value)
+void Object::defineDefaultProperty(const StringRef name, Value value)
 {
-    Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
+    Property *pd = insertMember(name.getPointer(), Attr_Data|Attr_NotEnumerable);
     pd->value = value;
 }
 
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value value)
 {
-    defineDefaultProperty(context->engine->newIdentifier(name), value);
+    Scope scope(context);
+    ScopedString s(scope, context->engine->newIdentifier(name));
+    defineDefaultProperty(s, value);
 }
 
 void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value)
 {
-    defineDefaultProperty(engine->newIdentifier(name), value);
+    Scope scope(engine);
+    ScopedString s(scope, engine->newIdentifier(name));
+    defineDefaultProperty(s, value);
 }
 
 void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
@@ -238,7 +242,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     Scoped<String> s(scope, context->engine->newIdentifier(name));
     Scoped<FunctionObject> function(scope, context->engine->newBuiltinFunction(context, s, code));
     function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s.getPointer(), function.asValue());
+    defineDefaultProperty(s, function.asValue());
 }
 
 void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
@@ -248,7 +252,7 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
     Scoped<String> s(scope, engine->newIdentifier(name));
     Scoped<FunctionObject> function(scope, engine->newBuiltinFunction(engine->rootContext, s, code));
     function->defineReadonlyProperty(engine->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s.getPointer(), function.asValue());
+    defineDefaultProperty(s, function.asValue());
 }
 
 void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
@@ -256,20 +260,18 @@ void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name
 {
     Scope scope(engine);
     Scoped<String> s(scope, engine->newIdentifier(name));
-    defineAccessorProperty(s.getPointer(), getter, setter);
+    defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
+void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     ExecutionEngine *v4 = engine();
-    Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    Property *p = insertMember(name.getPointer(), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
-    Scope scope(v4);
-    ScopedString s(scope, name);
     if (getter)
-        p->setGetter(v4->newBuiltinFunction(v4->rootContext, s, getter)->getPointer());
+        p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter)->getPointer());
     if (setter)
-        p->setSetter(v4->newBuiltinFunction(v4->rootContext, s, setter)->getPointer());
+        p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
 }
 
 void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)

@@ -3239,9 +3239,9 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    proto->defineAccessorProperty(v4->newString(QStringLiteral("index")), QQmlDelegateModelGroupChange::method_get_index, 0);
-    proto->defineAccessorProperty(v4->newString(QStringLiteral("count")), QQmlDelegateModelGroupChange::method_get_count, 0);
-    proto->defineAccessorProperty(v4->newString(QStringLiteral("moveId")), QQmlDelegateModelGroupChange::method_get_moveId, 0);
+    proto->defineAccessorProperty(v4, QStringLiteral("index"), QQmlDelegateModelGroupChange::method_get_index, 0);
+    proto->defineAccessorProperty(v4, QStringLiteral("count"), QQmlDelegateModelGroupChange::method_get_count, 0);
+    proto->defineAccessorProperty(v4, QStringLiteral("moveId"), QQmlDelegateModelGroupChange::method_get_moveId, 0);
     changeProto = proto;
 }
 

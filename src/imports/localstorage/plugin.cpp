@@ -448,7 +448,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
         Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("transaction"), qmlsqldatabase_transaction);
         proto->defineDefaultProperty(v4, QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
-        proto->defineAccessorProperty(v4->newString(QStringLiteral("version")), qmlsqldatabase_version, 0);
+        proto->defineAccessorProperty(v4, QStringLiteral("version"), qmlsqldatabase_version, 0);
         proto->defineDefaultProperty(v4, QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
         databaseProto = proto;
     }
@@ -461,8 +461,8 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     {
         Scoped<Object> proto(scope, v4->newObject());
         proto->defineDefaultProperty(v4, QStringLiteral("item"), qmlsqldatabase_rows_item);
-        proto->defineAccessorProperty(v4->newString(QStringLiteral("length")), qmlsqldatabase_rows_length, 0);
-        proto->defineAccessorProperty(v4->newString(QStringLiteral("forwardOnly")),
+        proto->defineAccessorProperty(v4, QStringLiteral("length"), qmlsqldatabase_rows_length, 0);
+        proto->defineAccessorProperty(v4, QStringLiteral("forwardOnly"),
                                       qmlsqldatabase_rows_forwardOnly, qmlsqldatabase_rows_setForwardOnly);
         rowsProto = proto;
     }

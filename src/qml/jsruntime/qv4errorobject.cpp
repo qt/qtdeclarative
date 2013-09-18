@@ -91,7 +91,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const Value &message, ErrorType t)
     defineAccessorProperty(ic->engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message.isUndefined())
-        defineDefaultProperty(ic->engine->newString(QStringLiteral("message")), message);
+        defineDefaultProperty(ic->engine, QStringLiteral("message"), message);
     defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
     stackTrace = ic->engine->stackTrace();

@@ -4179,7 +4179,8 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     gradientProto = proto;
 
     proto = v4->newObject();
-    proto->defineAccessorProperty(v4->id_length, QQuickJSContext2DPixelData::proto_get_length, 0);
+    QV4::ScopedString s(scope, v4->id_length);
+    proto->defineAccessorProperty(s, QQuickJSContext2DPixelData::proto_get_length, 0);
     pixelArrayProto = proto;
 }
 
