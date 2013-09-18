@@ -115,7 +115,10 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
         return true;
     }
 
-    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate), obj->nProperties, obj->nFunctions, obj->nSignals);
+    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate),
+                                                             obj->nProperties,
+                                                             obj->nFunctions + obj->nProperties + obj->nSignals,
+                                                             obj->nSignals + obj->nProperties);
     *resultCache = cache;
 
     vmeMetaObjectData->clear();
