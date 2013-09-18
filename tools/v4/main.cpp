@@ -193,11 +193,11 @@ int main(int argc, char *argv[])
         QV4::ExecutionContext *ctx = vm.rootContext;
         QV4::Scope scope(ctx);
 
-        QV4::Object *globalObject = vm.globalObject;
-        QV4::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
-        globalObject->put(vm.newIdentifier(QStringLiteral("print")), QV4::Value::fromObject(print));
-        QV4::Object *gc = new (ctx->engine->memoryManager) builtins::GC(ctx);
-        globalObject->put(vm.newIdentifier(QStringLiteral("gc")), QV4::Value::fromObject(gc));
+        QV4::ScopedObject globalObject(scope, vm.globalObject);
+        QV4::ScopedObject print(scope, new (ctx->engine->memoryManager) builtins::Print(ctx));
+        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))), print);
+        QV4::ScopedObject gc(scope, new (ctx->engine->memoryManager) builtins::GC(ctx));
+        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))), gc);
 
         foreach (const QString &fn, args) {
             QFile file(fn);

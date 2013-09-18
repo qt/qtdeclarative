@@ -87,13 +87,14 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
     QV4::Scope scope(v4);
 
     // XXX It seems inefficient to create this object from scratch each time.
-    QV4::Scoped<QV4::Object> o(scope, v4->newObject());
-    o->put(v4->newString("OK"), QV4::Value::fromInt32(Ok));
-    o->put(v4->newString("LOADING"), QV4::Value::fromInt32(Loading));
-    o->put(v4->newString("NETWORK_ERROR"), QV4::Value::fromInt32(NetworkError));
-    o->put(v4->newString("EXCEPTION"), QV4::Value::fromInt32(Exception));
-
-    o->put(v4->newString("status"), QV4::Value::fromInt32(status));
+    QV4::ScopedObject o(scope, v4->newObject());
+    QV4::ScopedString s(scope);
+    QV4::ScopedValue v(scope);
+    o->put((s = v4->newString("OK")), (v = QV4::Value::fromInt32(Ok)));
+    o->put((s = v4->newString("LOADING")), (v = QV4::Value::fromInt32(Loading)));
+    o->put((s = v4->newString("NETWORK_ERROR")), (v = QV4::Value::fromInt32(NetworkError)));
+    o->put((s = v4->newString("EXCEPTION")), (v = QV4::Value::fromInt32(Exception)));
+    o->put((s = v4->newString("status")), (v = QV4::Value::fromInt32(status)));
 
     return o.asReturnedValue();
 }
@@ -141,6 +142,7 @@ void QV4Include::finished()
         }
     }
 
+    QV4::Scope scope(v4);
     if (m_reply->error() == QNetworkReply::NoError) {
         QByteArray data = m_reply->readAll();
 
@@ -150,20 +152,20 @@ void QV4Include::finished()
         QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> o(scope, m_resultObject.value());
+        QV4::ScopedString status(scope, v4->newString("status"));
         try {
             script.parse();
             script.run();
-            o->put(v4->newString("status"), QV4::Value::fromInt32(Ok));
+            o->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Ok)));
         } catch (QV4::Exception &e) {
             e.accept(ctx);
-            o->put(v4->newString("status"), QV4::Value::fromInt32(Exception));
+            o->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Exception)));
             QV4::ScopedValue ex(scope, e.value());
-            o->put(v4->newString("exception"), ex);
+            o->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
         }
     } else {
-        m_resultObject.value().asObject()->put(v4->newString("status"), QV4::Value::fromInt32(NetworkError));
+        m_resultObject.value().asObject()->put(QV4::ScopedString(scope, v4->newString("status")), QV4::ScopedValue(scope, QV4::Value::fromInt32(NetworkError)));
     }
 
     callback(m_callbackFunction.value(), m_resultObject.value());
@@ -225,7 +227,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
                 e.accept(ctx);
                 result = resultValue(v4, Exception);
                 QV4::ScopedValue ex(scope, e.value());
-                result->asObject()->put(v4->newString("exception"), ex);
+                result->asObject()->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
             }
         } else {
             result = resultValue(v4, NetworkError);

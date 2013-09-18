@@ -247,12 +247,12 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Object *instance = ctx->thisObject.toObject(ctx);
-    uint len = getLength(ctx, instance);
+    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    uint len = getLength(ctx, instance.getPointer());
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromInt32(0)));
         return Value::undefinedValue().asReturnedValue();
     }
 
@@ -262,25 +262,27 @@ ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->put(ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(len - 1)));
     return result.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
 {
-    Object *instance = ctx->thisObject.toObject(ctx);
-    uint len = getLength(ctx, instance);
+    Scope scope(ctx);
+    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    uint len = getLength(ctx, instance.getPointer());
 
     if (len + ctx->argumentCount < len) {
         // ughh...
         double l = len;
         for (int i = 0; i < ctx->argumentCount; ++i) {
             Value idx = Value::fromDouble(l + i);
-            instance->put(idx.toString(ctx), ctx->arguments[i]);
+            ScopedString s(scope, idx.toString(ctx));
+            instance->put(s, ctx->arguments[i]);
         }
         double newLen = l + ctx->argumentCount;
         if (!instance->isArrayObject())
-            instance->put(ctx->engine->id_length, Value::fromDouble(newLen));
+            instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(newLen)));
         else
             ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
         return Value::fromDouble(newLen).asReturnedValue();
@@ -311,7 +313,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
     else
-        instance->put(ctx->engine->id_length, Value::fromDouble(len));
+        instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(len)));
 
     if (len < INT_MAX)
         return Value::fromInt32(len).asReturnedValue();
@@ -353,7 +355,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx->engine->id_length, Value::fromInt32(0));
+            instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromInt32(0)));
         return Value::undefinedValue().asReturnedValue();
     }
 
@@ -395,7 +397,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->put(ctx->engine->id_length, Value::fromDouble(len - 1));
+        instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(len - 1)));
     return result.asReturnedValue();
 }
 
@@ -507,7 +509,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
         instance->putIndexed(start + i, ctx->arguments[i + 2]);
 
     ctx->strictMode = true;
-    instance->put(ctx->engine->id_length, Value::fromDouble(len - deleteCount + itemCount));
+    instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(len - deleteCount + itemCount)));
 
     return newArray.asReturnedValue();
 }
@@ -558,7 +560,7 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else
-        instance->put(ctx->engine->id_length, Value::fromDouble(newLen));
+        instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(newLen)));
 
     if (newLen < INT_MAX)
         return Value::fromInt32(newLen).asReturnedValue();

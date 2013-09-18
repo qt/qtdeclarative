@@ -96,14 +96,16 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
 
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
+    ScopedString str(scope);
+    ScopedValue v(scope);
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            put(v4->newString(enumerator.key(jj)), QV4::Value::fromInt32(enumerator.value(jj)));
+            put((str = v4->newString(enumerator.key(jj))), (v = QV4::Value::fromInt32(enumerator.value(jj))));
         }
     }
-    put(v4->newString("Asynchronous"), QV4::Value::fromInt32(0));
-    put(v4->newString("Synchronous"), QV4::Value::fromInt32(1));
+    put((str = v4->newString("Asynchronous")), (v = QV4::Value::fromInt32(0)));
+    put((str = v4->newString("Synchronous")), (v = QV4::Value::fromInt32(1)));
 
     defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     defineDefaultProperty(QStringLiteral("isQtObject"), method_isQtObject);
@@ -946,19 +948,22 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
             QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
             QV4::Scoped<ArrayObject> qmlerrors(scope, v4->newArrayObject());
+            QV4::ScopedObject qmlerror(scope);
+            QV4::ScopedString s(scope);
+            QV4::ScopedValue v(scope);
             for (int ii = 0; ii < errors.count(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
-                QV4::Scoped<QV4::Object> qmlerror(scope, v4->newObject());
-                qmlerror->put(v4->newString("lineNumber"), QV4::Value::fromInt32(error.line()));
-                qmlerror->put(v4->newString("columnNumber"), QV4::Value::fromInt32(error.column()));
-                qmlerror->put(v4->newString("fileName"), Value::fromString(v4->newString(error.url().toString())));
-                qmlerror->put(v4->newString("message"), Value::fromString(v4->newString(error.description())));
+                qmlerror = v4->newObject();
+                qmlerror->put((s = v4->newString("lineNumber")), (v = QV4::Value::fromInt32(error.line())));
+                qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Value::fromInt32(error.column())));
+                qmlerror->put((s = v4->newString("fileName")), (v = Value::fromString(v4->newString(error.url().toString()))));
+                qmlerror->put((s = v4->newString("message")), (v = Value::fromString(v4->newString(error.description()))));
                 qmlerrors->putIndexed(ii, qmlerror.asValue());
             }
 
             Scoped<Object> errorObject(scope, v4->newErrorObject(Value::fromString(v4->newString(errorstr))));
-            errorObject->put(v4->newString("qmlErrors"), qmlerrors.asValue());
+            errorObject->put((s = v4->newString("qmlErrors")), qmlerrors);
             return errorObject.asReturnedValue();
         }
     };

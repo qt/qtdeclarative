@@ -148,7 +148,7 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    void put(ExecutionContext *ctx, const QString &name, const Value &value);
+    void put(ExecutionContext *ctx, const QString &name, const ValueRef value);
 
     static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
     ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
@@ -292,7 +292,7 @@ public:
     { return vtbl->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
-    inline void put(String *name, const Value &v)
+    inline void put(const StringRef name, const ValueRef v)
     { vtbl->put(this, name, v); }
     inline void putIndexed(uint idx, const Value &v)
     { vtbl->putIndexed(this, idx, v); }
@@ -312,21 +312,21 @@ protected:
     static void markObjects(Managed *that);
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static void put(Managed *m, const StringRef name, const ValueRef value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(Managed *m, Lookup *l);
-    static void setLookup(Managed *m, Lookup *l, const Value &v);
+    static void setLookup(Managed *m, Lookup *l, const ValueRef v);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
 
 
 private:
     ReturnedValue internalGet(const StringRef name, bool *hasProperty);
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
-    void internalPut(const StringRef name, const Value &value);
+    void internalPut(const StringRef name, const ValueRef value);
     void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);

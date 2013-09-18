@@ -332,8 +332,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
 
             QV4::ScopedString connect(scope, ctx->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect.getPointer(), QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(connect)));
-            handler->put(disconnect.getPointer(), QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(disconnect)));
+            handler->put(connect, QV4::ScopedValue(scope, ctx->engine->functionClass->prototype->get(connect)));
+            handler->put(disconnect, QV4::ScopedValue(scope, ctx->engine->functionClass->prototype->get(disconnect)));
 
             return QV4::Value::fromObject(handler).asReturnedValue();
         } else {
@@ -605,7 +605,7 @@ QV4::ReturnedValue QObjectWrapper::get(Managed *m, const StringRef name, bool *h
     return that->getQmlProperty(v4->current, qmlContext, name.getPointer(), IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-void QObjectWrapper::put(Managed *m, String *name, const Value &value)
+void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
@@ -614,7 +614,7 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    if (!setQmlProperty(v4->current, qmlContext, that->m_object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
+    if (!setQmlProperty(v4->current, qmlContext, that->m_object, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, *value)) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
                         name->toQString() + QLatin1Char('\"');
         v4->current->throwError(error);

@@ -645,8 +645,10 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
 
 void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value)
 {
-    Object *o = object->toObject(ctx);
-    o->put(name, *value);
+    Scope scope(ctx);
+    ScopedObject o(scope, object->toObject(ctx));
+    ScopedString n(scope, name);
+    o->put(n, value);
 }
 
 ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index)
@@ -692,7 +694,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
 {
     Scope scope(ctx);
-    Object *o = object->toObject(ctx);
+    ScopedObject o(scope, object->toObject(ctx));
 
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
@@ -719,7 +721,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
                 }
 
                 ScopedCallData callData(scope, 1);
-                callData->thisObject = Value::fromObject(o);
+                callData->thisObject = o;
                 callData->args[0] = *value;
                 setter->call(callData);
                 return;
@@ -729,8 +731,8 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
         return;
     }
 
-    String *name = index->toString(ctx);
-    o->put(name, *value);
+    ScopedString name(scope, index->toString(ctx));
+    o->put(name, value);
 }
 
 ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const ValueRef in)
@@ -756,7 +758,7 @@ ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator
 
 void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const ValueRef value)
 {
-    ctx->setProperty(name, *value);
+    ctx->setProperty(name, value);
 }
 
 ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *n)

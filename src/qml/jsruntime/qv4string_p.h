@@ -129,7 +129,7 @@ protected:
     static void destroy(Managed *);
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static void put(Managed *m, const StringRef name, const ValueRef value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);

@@ -173,7 +173,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     return engine->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
 }
 
-void String::put(Managed *m, String *name, const Value &value)
+void String::put(Managed *m, const StringRef name, const ValueRef value)
 {
     Scope scope(m->engine());
     String *that = static_cast<String *>(m);

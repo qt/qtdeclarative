@@ -883,7 +883,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    String *s = engine->newString(name);
+    ScopedString s(scope, engine->newString(name));
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
         setProperty(idx, value);

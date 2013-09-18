@@ -87,14 +87,14 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 }
 
 
-ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const QV4::Value &object)
+ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject())
+    if (Object *o = object->asObject())
         return o->getLookup(l);
 
     ExecutionEngine *engine = l->name->engine();
     Object *proto;
-    switch (object.type()) {
+    switch (object->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
         engine->current->throwTypeError();
@@ -102,7 +102,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const QV4::Value &object)
         proto = engine->booleanClass->prototype;
         break;
     case Value::Managed_Type:
-        Q_ASSERT(object.isString());
+        Q_ASSERT(object->isString());
         proto = engine->stringClass->prototype;
         if (l->name == engine->id_length) {
             // special case, as the property is on the object itself
@@ -118,7 +118,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const QV4::Value &object)
     PropertyAttributes attrs;
     Property *p = l->lookup(proto, &attrs);
     if (p) {
-        l->type = object.type();
+        l->type = object->type();
         l->proto = proto;
         if (attrs.isData()) {
             if (l->level == 0)
@@ -131,16 +131,16 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const QV4::Value &object)
                 l->getter = Lookup::primitiveGetterAccessor0;
             else if (l->level == 1)
                 l->getter = Lookup::primitiveGetterAccessor1;
-            return proto->getValue(object, p, attrs);
+            return proto->getValue(*object, p, attrs);
         }
     }
 
     return Value::undefinedValue().asReturnedValue();
 }
 
-ReturnedValue Lookup::getter0(Lookup *l, const Value &object)
+ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass)
             return o->memberData[l->index].value.asReturnedValue();
     }
@@ -148,9 +148,9 @@ ReturnedValue Lookup::getter0(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::getter1(Lookup *l, const Value &object)
+ReturnedValue Lookup::getter1(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass)
             return o->prototype()->memberData[l->index].value.asReturnedValue();
@@ -159,9 +159,9 @@ ReturnedValue Lookup::getter1(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::getter2(Lookup *l, const Value &object)
+ReturnedValue Lookup::getter2(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass) {
             o = o->prototype();
             if (l->classList[1] == o->internalClass) {
@@ -175,9 +175,9 @@ ReturnedValue Lookup::getter2(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::getterAccessor0(Lookup *l, const Value &object)
+ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass) {
             Scope scope(o->engine());
             FunctionObject *getter = o->memberData[l->index].getter();
@@ -185,7 +185,7 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, const Value &object)
                 return Value::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
+            callData->thisObject = *object;
             return getter->call(callData);
         }
     }
@@ -193,9 +193,9 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::getterAccessor1(Lookup *l, const Value &object)
+ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass) {
             Scope scope(o->engine());
@@ -204,7 +204,7 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, const Value &object)
                 return Value::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
+            callData->thisObject = *object;
             return getter->call(callData);
         }
     }
@@ -212,9 +212,9 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::getterAccessor2(Lookup *l, const Value &object)
+ReturnedValue Lookup::getterAccessor2(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object.asObject()) {
+    if (Object *o = object->asObject()) {
         if (l->classList[0] == o->internalClass) {
             o = o->prototype();
             if (l->classList[1] == o->internalClass) {
@@ -226,7 +226,7 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, const Value &object)
                         return Value::undefinedValue().asReturnedValue();
 
                     ScopedCallData callData(scope, 0);
-                    callData->thisObject = object;
+                    callData->thisObject = *object;
                     return getter->call(callData);
                 }
             }
@@ -237,9 +237,9 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, const Value &object)
 }
 
 
-ReturnedValue Lookup::primitiveGetter0(Lookup *l, const Value &object)
+ReturnedValue Lookup::primitiveGetter0(Lookup *l, const ValueRef object)
 {
-    if (object.type() == l->type) {
+    if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass)
             return o->memberData[l->index].value.asReturnedValue();
@@ -248,9 +248,9 @@ ReturnedValue Lookup::primitiveGetter0(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::primitiveGetter1(Lookup *l, const Value &object)
+ReturnedValue Lookup::primitiveGetter1(Lookup *l, const ValueRef object)
 {
-    if (object.type() == l->type) {
+    if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass)
@@ -260,9 +260,9 @@ ReturnedValue Lookup::primitiveGetter1(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const Value &object)
+ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const ValueRef object)
 {
-    if (object.type() == l->type) {
+    if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass) {
             Scope scope(o->engine());
@@ -272,7 +272,7 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const Value &object)
                 return Value::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
+            callData->thisObject = *object;
             return getter->call(callData);
         }
     }
@@ -280,9 +280,9 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const Value &object)
+ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
 {
-    if (object.type() == l->type) {
+    if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass) {
@@ -293,7 +293,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const Value &object)
                 return Value::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
+            callData->thisObject = *object;
             return getter->call(callData);
         }
     }
@@ -301,9 +301,9 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const Value &object)
     return getterGeneric(l, object);
 }
 
-ReturnedValue Lookup::stringLengthGetter(Lookup *l, const Value &object)
+ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
 {
-    if (String *s = object.asString())
+    if (String *s = object->asString())
         return Value::fromUInt32(s->length()).asReturnedValue();
 
     l->getter = getterGeneric;
@@ -435,22 +435,24 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx)
     return globalGetterGeneric(l, ctx);
 }
 
-void Lookup::setterGeneric(Lookup *l, const Value &object, const Value &value)
+void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef value)
 {
-    Object *o = object.asObject();
+    Scope scope(l->name->engine());
+    ScopedObject o(scope, object);
     if (!o) {
-        o = __qmljs_convert_to_object(l->name->engine()->current, ValueRef::fromRawValue(&object))->getPointer();
-        o->put(l->name, value);
+        o = __qmljs_convert_to_object(scope.engine->current, object);
+        ScopedString s(scope, l->name);
+        o->put(s, value);
         return;
     }
     o->setLookup(l, value);
 }
 
-void Lookup::setter0(Lookup *l, const Value &object, const Value &value)
+void Lookup::setter0(Lookup *l, const ValueRef object, const ValueRef value)
 {
-    Object *o = object.asObject();
+    Object *o = object->asObject();
     if (o && o->internalClass == l->classList[0]) {
-        o->memberData[l->index].value = value;
+        o->memberData[l->index].value = *value;
         return;
     }
 
@@ -458,12 +460,12 @@ void Lookup::setter0(Lookup *l, const Value &object, const Value &value)
     setterGeneric(l, object, value);
 }
 
-void Lookup::setterInsert0(Lookup *l, const Value &object, const Value &value)
+void Lookup::setterInsert0(Lookup *l, const ValueRef object, const ValueRef value)
 {
-    Object *o = object.asObject();
+    Object *o = object->asObject();
     if (o && o->internalClass == l->classList[0]) {
         if (!o->prototype()) {
-            o->memberData[l->index].value = value;
+            o->memberData[l->index].value = *value;
             o->internalClass = l->classList[3];
             return;
         }
@@ -473,13 +475,13 @@ void Lookup::setterInsert0(Lookup *l, const Value &object, const Value &value)
     setterGeneric(l, object, value);
 }
 
-void Lookup::setterInsert1(Lookup *l, const Value &object, const Value &value)
+void Lookup::setterInsert1(Lookup *l, const ValueRef object, const ValueRef value)
 {
-    Object *o = object.asObject();
+    Object *o = object->asObject();
     if (o && o->internalClass == l->classList[0]) {
         Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
-            o->memberData[l->index].value = value;
+            o->memberData[l->index].value = *value;
             o->internalClass = l->classList[3];
             return;
         }
@@ -489,16 +491,16 @@ void Lookup::setterInsert1(Lookup *l, const Value &object, const Value &value)
     setterGeneric(l, object, value);
 }
 
-void Lookup::setterInsert2(Lookup *l, const Value &object, const Value &value)
+void Lookup::setterInsert2(Lookup *l, const ValueRef object, const ValueRef value)
 {
-    Object *o = object.asObject();
+    Object *o = object->asObject();
     if (o && o->internalClass == l->classList[0]) {
         Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
             p = p->prototype();
             if (p && p->internalClass == l->classList[2]) {
                 o->ensureMemberIndex(l->index);
-                o->memberData[l->index].value = value;
+                o->memberData[l->index].value = *value;
                 o->internalClass = l->classList[3];
                 return;
             }

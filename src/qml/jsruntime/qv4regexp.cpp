@@ -146,7 +146,7 @@ ReturnedValue RegExp::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Value::undefinedValue().asReturnedValue();
 }
 
-void RegExp::put(Managed *m, String *name, const Value &value)
+void RegExp::put(Managed *m, const StringRef name, const ValueRef value)
 {
 }
 

@@ -379,7 +379,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         return exec->call(callData);
 
     ScopedString lastIndex(scope, context->engine->newString(QStringLiteral("lastIndex")));
-    rx->put(lastIndex.getPointer(), Value::fromInt32(0));
+    rx->put(lastIndex, ScopedValue(scope, Value::fromInt32(0)));
     Scoped<ArrayObject> a(scope, context->engine->newArrayObject());
 
     double previousLastIndex = 0;
@@ -396,7 +396,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(lastIndex.getPointer(), Value::fromDouble(previousLastIndex));
+            rx->put(lastIndex, ScopedValue(scope, Value::fromDouble(previousLastIndex)));
         } else {
             previousLastIndex = thisIndex;
         }

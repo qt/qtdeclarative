@@ -83,7 +83,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     void setReadOnly(bool b) { readOnly = b; }
 
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
-    static void put(Managed *m, String *name, const Value &value);
+    static void put(Managed *m, const StringRef name, const ValueRef value);
     static void destroy(Managed *that);
 
 

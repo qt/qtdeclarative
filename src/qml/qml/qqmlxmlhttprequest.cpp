@@ -105,9 +105,9 @@ static ReturnedValue constructMeObject(const Value &thisObj, QV8Engine *e)
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
     Scoped<Object> meObj(scope, v4->newObject());
-    meObj->put(v4->newString(QStringLiteral("ThisObject")), thisObj);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), ScopedValue(scope, thisObj));
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
-    meObj->put(v4->newString(QStringLiteral("ActivationObject")), v);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
     return meObj.asReturnedValue();
 }
 

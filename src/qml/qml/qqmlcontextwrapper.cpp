@@ -272,7 +272,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
     return Value::undefinedValue().asReturnedValue();
 }
 
-void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
+void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
@@ -293,10 +293,9 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     }
 
     PropertyAttributes attrs;
-    ScopedString n(scope, name);
-    Property *pd  = wrapper->__getOwnProperty__(n, &attrs);
+    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
     if (pd) {
-        wrapper->putValue(pd, attrs, value);
+        wrapper->putValue(pd, attrs, *value);
         return;
     }
 
@@ -314,18 +313,18 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     while (context) {
         // Search context properties
-        if (context->propertyNames.count() && -1 != context->propertyNames.value(name))
+        if (context->propertyNames.count() && -1 != context->propertyNames.value(name.getPointer()))
             return;
 
         // Search scope object
         if (scopeObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
             return;
 
         context = context->parent;

@@ -142,7 +142,7 @@ struct Q_QML_EXPORT ExecutionContext
     void Q_NORETURN throwURIError(Value msg);
     void Q_NORETURN throwUnimplemented(const QString &message);
 
-    void setProperty(String *name, const Value &value);
+    void setProperty(String *name, const ValueRef value);
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyNoThrow(String *name);
     ReturnedValue getPropertyAndBase(String *name, Object **base);

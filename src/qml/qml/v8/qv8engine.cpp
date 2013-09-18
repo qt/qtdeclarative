@@ -212,9 +212,11 @@ static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariant
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
     QV4::Scope scope(e);
-    QV4::Scoped<QV4::Object> o(scope, e->newObject());
+    QV4::ScopedObject o(scope, e->newObject());
+    QV4::ScopedString s(scope);
+    QV4::ScopedValue v(scope);
     for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
-        o->put(e->newString(iter.key()), QV4::Value::fromReturnedValue(engine->fromVariant(iter.value())));
+        o->put((s = e->newString(iter.key())), (v = engine->fromVariant(iter.value())));
     return o.asReturnedValue();
 }
 

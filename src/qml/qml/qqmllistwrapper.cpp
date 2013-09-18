@@ -131,7 +131,7 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
     return Value::undefinedValue().asReturnedValue();
 }
 
-void QmlListWrapper::put(Managed *m, String *name, const Value &value)
+void QmlListWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);

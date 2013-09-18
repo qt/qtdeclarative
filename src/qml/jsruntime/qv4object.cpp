@@ -122,9 +122,11 @@ void Object::destroy(Managed *that)
     static_cast<Object *>(that)->~Object();
 }
 
-void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
+void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef value)
 {
-    put(ctx->engine->newString(name), value);
+    Scope scope(ctx);
+    ScopedString n(scope, ctx->engine->newString(name));
+    put(n, value);
 }
 
 ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
@@ -173,7 +175,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const V
     ScopedString n(scope, name);
     ScopedValue v(scope, get(n));
     ScopedValue result(scope, op(v, rhs));
-    put(name, result);
+    put(n, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
@@ -198,7 +200,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, 
     ScopedString n(scope, name);
     ScopedValue v(scope, get(n));
     ScopedValue result(scope, op(ctx, v, rhs));
-    put(name, result);
+    put(n, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
@@ -465,11 +467,9 @@ ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, String *name, const Value &value)
+void Object::put(Managed *m, const StringRef name, const ValueRef value)
 {
-    Scope scope(m->engine());
-    ScopedString s(scope, name);
-    static_cast<Object *>(m)->internalPut(s, value);
+    static_cast<Object *>(m)->internalPut(name, value);
 }
 
 void Object::putIndexed(Managed *m, uint index, const Value &value)
@@ -545,9 +545,10 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
     return Value::undefinedValue().asReturnedValue();
 }
 
-void Object::setLookup(Managed *m, Lookup *l, const Value &value)
+void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
 {
-    Object *o = static_cast<Object *>(m);
+    Scope scope(m->engine());
+    ScopedObject o(scope, static_cast<Object *>(m));
 
     InternalClass *c = o->internalClass;
     uint idx = c->find(l->name);
@@ -556,17 +557,18 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
             l->classList[0] = o->internalClass;
             l->index = idx;
             l->setter = Lookup::setter0;
-            o->memberData[idx].value = value;
+            o->memberData[idx].value = *value;
             return;
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], value);
+            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], *value);
             return;
         }
     }
 
-    o->put(l->name, value);
+    ScopedString s(scope, l->name);
+    o->put(s, value);
 
     if (o->internalClass == c)
         return;
@@ -717,11 +719,11 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::internalPut(const StringRef name, const Value &value)
+void Object::internalPut(const StringRef name, const ValueRef value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return putIndexed(idx, value);
+        return putIndexed(idx, *value);
 
     name->makeIdentifier();
 
@@ -743,14 +745,14 @@ void Object::internalPut(const StringRef name, const Value &value)
             goto reject;
         else if (isArrayObject() && name->isEqualTo(engine()->id_length)) {
             bool ok;
-            uint l = value.asArrayLength(&ok);
+            uint l = value->asArrayLength(&ok);
             if (!ok)
-                engine()->current->throwRangeError(value);
+                engine()->current->throwRangeError(*value);
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
         } else {
-            pd->value = value;
+            pd->value = *value;
         }
         return;
     } else if (!prototype()) {
@@ -778,7 +780,7 @@ void Object::internalPut(const StringRef name, const Value &value)
 
         Scope scope(engine());
         ScopedCallData callData(scope, 1);
-        callData->args[0] = value;
+        callData->args[0] = *value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);
         return;
@@ -786,7 +788,7 @@ void Object::internalPut(const StringRef name, const Value &value)
 
     {
         Property *p = insertMember(name, Attr_Data);
-        p->value = value;
+        p->value = *value;
         return;
     }
 

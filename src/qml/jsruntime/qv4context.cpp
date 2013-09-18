@@ -367,7 +367,7 @@ void ExecutionContext::mark()
     }
 }
 
-void ExecutionContext::setProperty(String *name, const Value& value)
+void ExecutionContext::setProperty(String *name, const ValueRef value)
 {
     Scope scope(this);
     ScopedString n(scope, name);
@@ -375,11 +375,11 @@ void ExecutionContext::setProperty(String *name, const Value& value)
         if (ctx->type == Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             if (w->__hasProperty__(n)) {
-                w->put(name, value);
+                w->put(n, value);
                 return;
             }
         } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
-            static_cast<CatchContext *>(ctx)->exceptionValue = value;
+            static_cast<CatchContext *>(ctx)->exceptionValue = *value;
             return;
         } else {
             Object *activation = 0;
@@ -387,12 +387,12 @@ void ExecutionContext::setProperty(String *name, const Value& value)
                 CallContext *c = static_cast<CallContext *>(ctx);
                 for (unsigned int i = 0; i < c->function->varCount; ++i)
                     if (c->function->varList[i]->isEqualTo(name)) {
-                        c->locals[i] = value;
+                        c->locals[i] = *value;
                         return;
                     }
                 for (int i = (int)c->function->formalParameterCount - 1; i >= 0; --i)
                     if (c->function->formalParameterList[i]->isEqualTo(name)) {
-                        c->arguments[i] = value;
+                        c->arguments[i] = *value;
                         return;
                     }
                 activation = c->activation;
@@ -401,7 +401,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             }
 
             if (activation && (ctx->type == Type_QmlContext || activation->__hasProperty__(n))) {
-                activation->put(name, value);
+                activation->put(n, value);
                 return;
             }
         }
@@ -410,7 +410,7 @@ void ExecutionContext::setProperty(String *name, const Value& value)
         Scoped<String> n(scope, name);
         throwReferenceError(n);
     }
-    engine->globalObject->put(name, value);
+    engine->globalObject->put(n, value);
 }
 
 ReturnedValue ExecutionContext::getProperty(String *name)

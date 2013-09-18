@@ -147,7 +147,7 @@ public:
 
         QQuickWorkerScriptEnginePrivate *p;
 
-        QV4::Value sendFunction(int id);
+        QV4::ReturnedValue sendFunction(int id);
 
         QV4::PersistentValue onmessage;
     private:
@@ -242,7 +242,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 }
 
 // Requires handle and context scope
-QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
     QV4::FunctionObject *f = createsend.value().asFunctionObject();
     QV4::ExecutionContext *ctx = f->engine()->current;
@@ -258,7 +258,7 @@ QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
         e.accept(ctx);
         v = e.value();
     }
-    return v;
+    return v.asReturnedValue();
 }
 
 QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager() 
@@ -313,9 +313,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         w->setReadOnly(false);
 
         QV4::Scoped<QV4::Object> api(scope, v4->newObject());
-        api->put(v4->newString("sendMessage"), workerEngine->sendFunction(script->id));
+        api->put(QV4::ScopedString(scope, v4->newString("sendMessage")), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
-        script->object.value().asObject()->put(v4->newString("WorkerScript"), api.asValue());
+        script->object.value().asObject()->put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
 
         w->setReadOnly(true);
     }

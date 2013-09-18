@@ -99,14 +99,14 @@ struct ManagedVTable
     bool (*hasInstance)(Managed *, const Value &value);
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, String *name, const Value &value);
+    void (*put)(Managed *, const StringRef name, const ValueRef value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
-    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
+    void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     bool (*isEqualTo)(Managed *m, Managed *other);
     Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
     const char *className;
@@ -265,8 +265,7 @@ public:
     ReturnedValue call(CallData *d);
     ReturnedValue get(const StringRef name, bool *hasProperty = 0);
     ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
-    void put(String *name, const Value &value)
-    { vtbl->put(this, name, value); }
+    void put(const StringRef name, const ValueRef value);
     void putIndexed(uint index, const Value &value)
     { vtbl->putIndexed(this, index, value); }
     PropertyAttributes query(String *name) const
@@ -280,8 +279,7 @@ public:
     { return vtbl->deleteIndexedProperty(this, index); }
     ReturnedValue getLookup(Lookup *l)
     { return vtbl->getLookup(this, l); }
-    void setLookup(Lookup *l, const Value &v)
-    { vtbl->setLookup(this, l, v); }
+    void setLookup(Lookup *l, const ValueRef v);
 
     bool isEqualTo(Managed *other)
     { return vtbl->isEqualTo(this, other); }
@@ -293,7 +291,7 @@ public:
     static ReturnedValue construct(Managed *m, CallData *d);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue getLookup(Managed *m, Lookup *);
-    static void setLookup(Managed *m, Lookup *l, const Value &v);
+    static void setLookup(Managed *m, Lookup *l, const ValueRef v);
     static bool isEqualTo(Managed *m, Managed *other);
 
     uint internalType() const {

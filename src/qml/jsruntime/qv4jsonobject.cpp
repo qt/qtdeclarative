@@ -716,7 +716,8 @@ QString Stringify::Str(const QString &key, Value value)
 
     if (replacerFunction) {
         Scoped<Object> holder(scope, ctx->engine->newObject());
-        holder->put(ctx, QString(), value);
+        ScopedValue v(scope, value);
+        holder->put(ctx, QString(), v);
         ScopedCallData callData(scope, 2);
         callData->args[0] = Value::fromString(ctx, key);
         callData->args[1] = value;
@@ -985,8 +986,12 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
 {
     Scope scope(engine);
     Scoped<Object> o(scope, engine->newObject());
-    for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it)
-        o->put(engine->newString(it.key()), Value::fromReturnedValue(fromJsonValue(engine, it.value())));
+    ScopedString s(scope);
+    ScopedValue v(scope);
+    for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it) {
+        v = Value::fromReturnedValue(fromJsonValue(engine, it.value()));
+        o->put((s = engine->newString(it.key())), v);
+    }
     return o.asReturnedValue();
 }
 

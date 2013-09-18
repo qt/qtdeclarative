@@ -2866,7 +2866,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCal
         QFontMetrics fm(r->context->state.font);
         uint width = fm.width(ctx->arguments[0].toQStringNoThrow());
         QV4::Scoped<QV4::Object> tm(scope, ctx->engine->newObject());
-        tm->put(ctx->engine->newIdentifier(QStringLiteral("width")), QV4::Value::fromDouble(width));
+        tm->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("width"))),
+                QV4::ScopedValue(scope, QV4::Value::fromDouble(width)));
         return tm.asReturnedValue();
     }
     return QV4::Encode::undefined();

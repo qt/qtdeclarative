@@ -333,11 +333,13 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 size = headersize(header);
         Scoped<Object> o(scope, v4->newObject());
         ScopedValue name(scope);
+        ScopedString n(scope);
         ScopedValue value(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             name = deserialize(data, engine);
             value = deserialize(data, engine);
-            o->put(name->asString(), value);
+            n = name.asReturnedValue();
+            o->put(n, value);
         }
         return o.asReturnedValue();
     }

@@ -326,7 +326,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
 #undef VALUE_TYPE_ACCESSOR
 }
 
-void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
+void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
@@ -350,7 +350,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 
         QQmlBinding *newBinding = 0;
 
-        QV4::FunctionObject *f = value.asFunctionObject();
+        QV4::ScopedFunctionObject f(scope, value);
         if (f) {
             if (!f->bindingKeyFlag) {
                 // assigning a JS function to a non-var-property is not allowed.
@@ -372,7 +372,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-            newBinding = new QQmlBinding(value, reference->object, context,
+            newBinding = new QQmlBinding(*value, reference->object, context,
                                          frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
@@ -385,7 +385,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
             oldBinding->destroy();
 
         if (!f) {
-            QVariant v = r->v8->toVariant(value, -1);
+            QVariant v = r->v8->toVariant(*value, -1);
 
             if (p.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
                 v = v.toInt();
@@ -409,7 +409,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
         if (index == -1)
             return;
 
-        QVariant v = r->v8->toVariant(value, -1);
+        QVariant v = r->v8->toVariant(*value, -1);
 
         r->type->setValue(copy->value);
         QMetaProperty p = r->type->metaObject()->property(index);

@@ -67,7 +67,7 @@ using namespace QV4;
 #define V4THROW_SQL(error, desc) { \
     QV4::Scoped<String> v(scope, Value::fromString(ctx, desc)); \
     QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v.asValue())); \
-    ex->put(ctx->engine->newIdentifier(QStringLiteral("code")), Value::fromInt32(error)); \
+    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Value::fromInt32(error))); \
     ctx->throwError(ex); \
 }
 
@@ -210,11 +210,9 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
         Scoped<Object> row(scope, v4->newObject());
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
-            if (v.isNull()) {
-                row->put(v4->newIdentifier(record.fieldName(ii)), Value::nullValue());
-            } else {
-                row->put(v4->newIdentifier(record.fieldName(ii)), Value::fromReturnedValue(v8->fromVariant(v)));
-            }
+            ScopedString s(scope, v4->newIdentifier(record.fieldName(ii)));
+            ScopedValue val(scope, v.isNull() ? Encode::null() : v8->fromVariant(v));
+            row->put(s, val);
         }
         if (hasProperty)
             *hasProperty = true;
@@ -307,9 +305,11 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             Scoped<Object> resultObject(scope, ctx->engine->newObject());
             result = resultObject.asValue();
             // XXX optimize
-            resultObject->put(ctx->engine->newIdentifier("rowsAffected"), Value::fromInt32(query.numRowsAffected()));
-            resultObject->put(ctx->engine->newIdentifier("insertId"), engine->toString(query.lastInsertId().toString()));
-            resultObject->put(ctx->engine->newIdentifier("rows"), Value::fromObject(rows));
+            ScopedString s(scope);
+            ScopedValue v(scope);
+            resultObject->put((s = ctx->engine->newIdentifier("rowsAffected")), (v = Value::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = ctx->engine->newIdentifier("insertId")), (v = engine->toString(query.lastInsertId().toString())));
+            resultObject->put((s = ctx->engine->newIdentifier("rows")), (v = Value::fromObject(rows)));
         } else {
             err = true;
         }

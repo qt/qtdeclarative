@@ -224,7 +224,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
 }
 
 
-void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
+void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -239,7 +239,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
         QObject *object = w->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, ao, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, *value);
     } else if (type && type->isSingleton()) {
         QQmlEngine *e = v8engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
@@ -247,7 +247,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, qobjectSingleton, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, *value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
             QV4::Object *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e))->value.asObject();
             if (!apiprivate) {

@@ -192,7 +192,7 @@ ReturnedValue Managed::getLookup(Managed *m, Lookup *)
     return 0;
 }
 
-void Managed::setLookup(Managed *m, Lookup *, const Value &)
+void Managed::setLookup(Managed *m, Lookup *, const ValueRef)
 {
     m->engine()->current->throwTypeError();
 }
@@ -210,4 +210,14 @@ ReturnedValue Managed::get(const StringRef name, bool *hasProperty)
 ReturnedValue Managed::getIndexed(uint index, bool *hasProperty)
 {
     return vtbl->getIndexed(this, index, hasProperty);
+}
+
+void Managed::put(const StringRef name, const ValueRef value)
+{
+    vtbl->put(this, name, value);
+}
+
+void Managed::setLookup(Lookup *l, const ValueRef v)
+{
+    vtbl->setLookup(this, l, v);
 }

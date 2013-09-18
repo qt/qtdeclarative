@@ -3882,6 +3882,9 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
         args->setReturnValue(rv.asValue());
 
+        QV4::ScopedString s(scope);
+        QV4::ScopedValue v(scope);
+
         qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
         qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
@@ -3891,15 +3894,15 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(r.x()));
-            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(r.y()));
-            rv->put(v4->newString(QStringLiteral("width")), QV4::Value::fromDouble(r.width()));
-            rv->put(v4->newString(QStringLiteral("height")), QV4::Value::fromDouble(r.height()));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Value::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Value::fromDouble(r.height())));
         } else {
             QPointF p = mapFromItem(itemObj, QPointF(x, y));
 
-            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(p.x()));
-            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(p.y()));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(p.y())));
         }
     }
 }
@@ -3960,21 +3963,24 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
         qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
 
+        QV4::ScopedString s(scope);
+        QV4::ScopedValue v(scope);
+
         if (args->length() > 3) {
             qreal w = (*args)[3].asDouble();
             qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(r.x()));
-            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(r.y()));
-            rv->put(v4->newString(QStringLiteral("width")), QV4::Value::fromDouble(r.width()));
-            rv->put(v4->newString(QStringLiteral("height")), QV4::Value::fromDouble(r.height()));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Value::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Value::fromDouble(r.height())));
         } else {
             QPointF p = mapToItem(itemObj, QPointF(x, y));
 
-            rv->put(v4->newString(QStringLiteral("x")), QV4::Value::fromDouble(p.x()));
-            rv->put(v4->newString(QStringLiteral("y")), QV4::Value::fromDouble(p.y()));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(p.y())));
         }
     }
 }
