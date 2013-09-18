@@ -105,10 +105,10 @@ QQmlPropertyCacheCreator::QQmlPropertyCacheCreator(QQmlEnginePrivate *enginePriv
 bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQmlPropertyCache **resultCache, QByteArray *vmeMetaObjectData)
 {
     Q_ASSERT(!stringAt(obj->inheritedTypeNameIndex).isEmpty());
-    QQmlType *baseType = resolvedTypes->value(obj->inheritedTypeNameIndex).type;
-    Q_ASSERT(baseType);
 
-    QQmlPropertyCache *baseTypeCache = enginePrivate->cache(baseType->metaObject());
+    QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+    QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+    Q_ASSERT(baseTypeCache);
     if (obj->nProperties == 0 && obj->nSignals == 0 && obj->nFunctions == 0) {
         *resultCache = baseTypeCache;
         vmeMetaObjectData->clear();
@@ -1141,10 +1141,15 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     } else {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
-        QQmlType *type = resolvedTypes.value(obj->inheritedTypeNameIndex).type;
-        Q_ASSERT(type);
-
-        instance = type->create();
+        QQmlCompiledData::TypeReference typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        QQmlType *type = typeRef.type;
+        if (type) {
+            instance = type->create();
+        } else {
+            Q_ASSERT(typeRef.component);
+            QmlObjectCreator subCreator(context, typeRef.component);
+            instance = subCreator.create();
+        }
         // ### use no-event variant
         if (parent)
             instance->setParent(parent);

@@ -2179,8 +2179,13 @@ void QQmlTypeData::compile()
         for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
              resolvedType != end; ++resolvedType) {
             QQmlCompiledData::TypeReference ref;
-            ref.type = resolvedType->type;
-            Q_ASSERT(ref.type);
+            if (resolvedType->typeData) {
+                ref.component = resolvedType->typeData->compiledData();
+                ref.component->addref();
+            } else {
+                ref.type = resolvedType->type;
+                Q_ASSERT(ref.type);
+            }
             m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
         }
 
@@ -2248,6 +2253,12 @@ void QQmlTypeData::compile()
             if (propertyCache)
                 propertyCache->addref();
             m_compiledData->propertyCaches << propertyCache;
+
+            if (i == qmlUnit->indexOfRootObject) {
+                Q_ASSERT(propertyCache);
+                m_compiledData->rootPropertyCache = propertyCache;
+                propertyCache->addref();
+            }
         }
 
         {

@@ -109,7 +109,7 @@ class QmlObjectCreator : public QQmlCompilePass
 public:
     QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData);
 
-    QObject *create(int subComponentIndex, QObject *parent = 0);
+    QObject *create(int subComponentIndex = -1, QObject *parent = 0);
     void finalize();
 
     QQmlComponentAttached *componentAttached;
