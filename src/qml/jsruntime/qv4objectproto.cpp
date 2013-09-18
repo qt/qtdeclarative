@@ -133,7 +133,7 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     Scoped<String> id_proto(scope, v4->id___proto__);
-    Property *p = insertMember(v4->id___proto__, Attr_Accessor|Attr_NotEnumerable);
+    Property *p = insertMember(StringRef(v4->id___proto__), Attr_Accessor|Attr_NotEnumerable);
     p->setGetter(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer());
     p->setSetter(v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
 }

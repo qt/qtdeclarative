@@ -174,7 +174,7 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);
 
-    Property *insertMember(String *s, PropertyAttributes attributes);
+    Property *insertMember(const StringRef s, PropertyAttributes attributes);
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
 

@@ -142,8 +142,9 @@ void RegExpObject::init(ExecutionEngine *engine)
     vtbl = &static_vtbl;
     type = Type_RegExpObject;
 
-    Property *lastIndexProperty = insertMember(engine->newIdentifier(QStringLiteral("lastIndex")),
-                                                         Attr_NotEnumerable|Attr_NotConfigurable);
+    Scope scope(engine);
+    ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
+    Property *lastIndexProperty = insertMember(lastIndex, Attr_NotEnumerable|Attr_NotConfigurable);
     lastIndexProperty->value = Value::fromInt32(0);
     if (!this->value)
         return;

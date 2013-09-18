@@ -281,7 +281,9 @@ bool JsonParser::parseMember(Object *o)
     if (!parseValue(&val))
         return false;
 
-    Property *p = o->insertMember(context->engine->newIdentifier(key), Attr_Data);
+    Scope scope(o->engine());
+    ScopedString s(scope, context->engine->newIdentifier(key));
+    Property *p = o->insertMember(s, Attr_Data);
     p->value = val;
 
     END;

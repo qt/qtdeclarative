@@ -217,7 +217,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef
 
 void Object::defineDefaultProperty(const StringRef name, Value value)
 {
-    Property *pd = insertMember(name.getPointer(), Attr_Data|Attr_NotEnumerable);
+    Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
     pd->value = value;
 }
 
@@ -266,7 +266,7 @@ void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name
 void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     ExecutionEngine *v4 = engine();
-    Property *p = insertMember(name.getPointer(), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 
     if (getter)
         p->setGetter(v4->newBuiltinFunction(v4->rootContext, name, getter)->getPointer());
@@ -281,7 +281,9 @@ void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name
 
 void Object::defineReadonlyProperty(String *name, Value value)
 {
-    Property *pd = insertMember(name, Attr_ReadOnly);
+    Scope scope(engine());
+    ScopedString s(scope, name);
+    Property *pd = insertMember(s, Attr_ReadOnly);
     pd->value = value;
 }
 
@@ -317,10 +319,10 @@ void Object::ensureMemberIndex(uint idx)
     }
 }
 
-Property *Object::insertMember(String *s, PropertyAttributes attributes)
+Property *Object::insertMember(const StringRef s, PropertyAttributes attributes)
 {
     uint idx;
-    internalClass = internalClass->addMember(s, attributes, &idx);
+    internalClass = internalClass->addMember(s.getPointer(), attributes, &idx);
 
     if (attributes.isAccessor())
         hasAccessorProperty = 1;
@@ -785,7 +787,9 @@ void Object::internalPut(String *name, const Value &value)
     }
 
     {
-        Property *p = insertMember(name, Attr_Data);
+        Scope scope(engine());
+        ScopedString s(scope, name);
+        Property *p = insertMember(s, Attr_Data);
         p->value = value;
         return;
     }
@@ -969,7 +973,9 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         if (!extensible)
             goto reject;
         // clause 4
-        Property *pd = insertMember(name, attrs);
+        Scope scope(engine());
+        ScopedString s(scope, name);
+        Property *pd = insertMember(s, attrs);
         *pd = p;
         pd->fullyPopulated(&attrs);
         return true;

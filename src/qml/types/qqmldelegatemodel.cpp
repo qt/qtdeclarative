@@ -1629,34 +1629,37 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
     proto->defineAccessorProperty(v4, QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
     proto->defineAccessorProperty(v4, QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
-    QV4::Property *p = proto->insertMember(v4->newString(QStringLiteral("isUnresolved")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    QV4::ScopedString s(scope);
+    s = v4->newString(QStringLiteral("isUnresolved"));
+    QV4::Property *p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, 30, QQmlDelegateModelItem::get_member));
-    p = proto->insertMember(v4->newString(QStringLiteral("inItems")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    s = v4->newString(QStringLiteral("inItems"));
+    p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Default, QQmlDelegateModelItem::get_member));
     p->setSetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Default, QQmlDelegateModelItem::set_member));
-    p = proto->insertMember(v4->newString(QStringLiteral("inPersistedItems")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    s = v4->newString(QStringLiteral("inPersistedItems"));
+    p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_member));
     p->setSetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Persisted, QQmlDelegateModelItem::set_member));
-    p = proto->insertMember(v4->newString(QStringLiteral("itemsIndex")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    s = v4->newString(QStringLiteral("itemsIndex"));
+    p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Default, QQmlDelegateModelItem::get_index));
-    p = proto->insertMember(v4->newString(QStringLiteral("persistedItemsIndex")),
-                            QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    s = v4->newString(QStringLiteral("persistedItemsIndex"));
+    p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, QQmlListCompositor::Persisted, QQmlDelegateModelItem::get_index));
 
     for (int i = 2; i < groupNames.count(); ++i) {
         QString propertyName = QStringLiteral("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
-        p = proto->insertMember(v4->newString(propertyName), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+        s = v4->newString(propertyName);
+        p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
         p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, i + 1, QQmlDelegateModelItem::get_member));
         p->setSetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, i + 1, QQmlDelegateModelItem::set_member));
     }
     for (int i = 2; i < groupNames.count(); ++i) {
         const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
-        p = proto->insertMember(v4->newString(propertyName), QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+        s = v4->newString(propertyName);
+        p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
         p->setGetter(new (v4->memoryManager) DelegateModelGroupFunction(v4->rootContext, i + 1, QQmlDelegateModelItem::get_index));
     }
     modelItemProto = proto;

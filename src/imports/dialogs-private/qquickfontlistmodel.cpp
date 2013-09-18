@@ -216,13 +216,15 @@ QQmlV4Handle QQuickFontListModel::get(int idx) const
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
     ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
-    Object *o = v4engine->newObject();
+    Scope scope(v4engine);
+    ScopedObject o(scope, v4engine->newObject());
+    ScopedString s(scope);
     for (int ii = 0; ii < d->roleNames.keys().count(); ++ii) {
-        Property *p = o->insertMember(v4engine->newIdentifier(d->roleNames[Qt::UserRole + ii + 1]), PropertyAttributes());
+        Property *p = o->insertMember((s = v4engine->newIdentifier(d->roleNames[Qt::UserRole + ii + 1])), PropertyAttributes());
         p->value = Value::fromReturnedValue(v8engine->fromVariant(data(index(idx, 0), Qt::UserRole + ii + 1)));
     }
 
-    return QQmlV4Handle(Value::fromObject(o));
+    return QQmlV4Handle(o.asValue());
 }
 
 QQmlV4Handle QQuickFontListModel::pointSizes()

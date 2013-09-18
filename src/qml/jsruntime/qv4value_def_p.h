@@ -361,6 +361,22 @@ struct SafeValue : public Value
     Returned<T> *as();
 };
 
+template <typename T>
+struct Safe : public Value
+{
+    Safe &operator =(T *t);
+    Safe &operator =(const Scoped<T> &v);
+    Safe &operator =(Returned<T> *t);
+    Safe &operator =(const Safe<T> &t);
+
+    // ### GC: remove me
+    operator T*() { return static_cast<T *>(managed()); }
+    Value *operator->() { return this; }
+    operator Returned<T> *();
+};
+typedef Safe<String> SafeString;
+typedef Safe<Object> SafeObject;
+
 template<typename T>
 T *value_cast(const Value &v)
 {

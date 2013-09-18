@@ -619,14 +619,14 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return ctx->engine->id_undefined->asReturned<String>();
+        return ctx->engine->id_undefined;
     case Value::Null_Type:
-        return ctx->engine->id_null->asReturned<String>();
+        return ctx->engine->id_null;
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine->id_true->asReturned<String>();
+            return ctx->engine->id_true;
         else
-            return ctx->engine->id_false->asReturned<String>();
+            return ctx->engine->id_false;
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->asReturned<String>();
@@ -1151,11 +1151,12 @@ void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *
 
 void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef object, String *name, ValueRef val)
 {
-    Object *o = object->asObject();
+    Scope scope(ctx);
+    ScopedObject o(scope, object->asObject());
     assert(o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(ScopedString(scope, name), Attr_Data);
     pd->value = val ? *val : Value::undefinedValue();
 }
 
@@ -1187,11 +1188,12 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
 
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef getter, const ValueRef setter)
 {
-    Object *o = object->asObject();
-    assert(o);
+    Scope scope(ctx);
+    ScopedObject o(scope, object->asObject());
+    Q_ASSERT(!!o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(name, Attr_Accessor);
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(ScopedString(scope, name), Attr_Accessor);
     pd->setGetter(getter ? getter->asFunctionObject() : 0);
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }

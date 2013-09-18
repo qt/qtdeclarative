@@ -367,6 +367,7 @@ struct ValueRef {
         : ptr(&v.d->value) {}
     ValueRef(PersistentValuePrivate *p)
         : ptr(&p->value) {}
+    ValueRef(SafeValue &v) { ptr = &v; }
     // Important: Do NOT add a copy constructor to this class
     // adding a copy constructor actually changes the calling convention, ie.
     // is not even binary compatible. Adding it would break assumptions made
@@ -420,6 +421,7 @@ struct Referenced {
     // in the jit'ed code.
     Referenced(const Scoped<T> &v)
         : ptr(v.ptr) {}
+    Referenced(Safe<T> &v) { ptr = &v; }
     Referenced &operator=(const Referenced &o)
     { *ptr = *o.ptr; return *this; }
     Referenced &operator=(T *t)
@@ -570,6 +572,41 @@ inline Returned<T> *SafeValue::as()
 {
     return Returned<T>::create(value_cast<T>(*this));
 }
+
+template<typename T>
+inline Safe<T> &Safe<T>::operator =(T *t)
+{
+    val = t->asReturnedValue();
+    return *this;
+}
+
+template<typename T>
+inline Safe<T> &Safe<T>::operator =(const Scoped<T> &v)
+{
+    val = v.ptr->val;
+    return *this;
+}
+
+template<typename T>
+inline Safe<T> &Safe<T>::operator=(Returned<T> *t)
+{
+    val = t->getPointer()->asReturnedValue();
+    return *this;
+}
+
+template<typename T>
+inline Safe<T> &Safe<T>::operator=(const Safe<T> &t)
+{
+    val = t.val;
+    return *this;
+}
+
+template<typename T>
+inline Safe<T>::operator Returned<T> *()
+{
+    return Returned<T>::create(static_cast<T *>(managed()));
+}
+
 
 template<typename T>
 PersistentValue::PersistentValue(Returned<T> *obj)
