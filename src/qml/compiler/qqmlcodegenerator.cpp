@@ -1163,7 +1163,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             QmlObject *attachedObj = parsedQML->objects[binding->value.objectIndex];
             QQmlType *type = unit->resolvedTypes.value(binding->propertyNameIndex).type;
-            QQmlPropertyCache *cache = enginePrivate->cache(type->attachedPropertiesType());
+            const QMetaObject *attachedType = type ? type->attachedPropertiesType() : 0;
+            if (!attachedType)
+                COMPILE_EXCEPTION(binding->location, tr("Non-existent attached object"));
+            QQmlPropertyCache *cache = enginePrivate->cache(attachedType);
             if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, propertyName, cache))
                 return false;
             continue;
