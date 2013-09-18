@@ -1098,9 +1098,20 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
         else
             name = QStringLiteral("%qml-expression-entry");
 
+        AST::SourceElements *body;
+        if (function)
+            body = function->body ? function->body->elements : 0;
+        else {
+            // Synthesize source elements.
+            QQmlJS::MemoryPool *pool = output->jsParserEngine.pool();
+            AST::SourceElement *element = new (pool) AST::StatementSourceElement(static_cast<AST::Statement*>(node));
+            body = new (output->jsParserEngine.pool()) AST::SourceElements(element);
+            body = body->finish();
+        }
+
         defineFunction(name, node,
                        function ? function->formals : 0,
-                       function ? function->body->elements : node, function ? FunctionCode : QmlBinding);
+                       body, function ? FunctionCode : QmlBinding);
 
     }
 

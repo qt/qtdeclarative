@@ -1746,7 +1746,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
 V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                                       AST::FormalParameterList *formals,
-                                      AST::Node *body, Mode mode,
+                                      AST::SourceElements *body, Mode mode,
                                       const QStringList &inheritedLocals)
 {
     qSwap(_mode, mode); // enter function code.
@@ -1852,13 +1852,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                      ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
 
-    if (AST::SourceElements *elements = AST::cast<AST::SourceElements*>(body))
-        sourceElements(elements);
-    else if (body) {
-        Q_ASSERT(_mode == QmlBinding);
-        _block->nextLocation = ast->firstSourceLocation();
-        accept(body);
-    }
+    sourceElements(body);
 
     _function->insertBasicBlock(_exitBlock);
 

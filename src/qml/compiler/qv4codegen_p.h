@@ -282,7 +282,7 @@ protected:
 
     V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
                                  AST::FormalParameterList *formals,
-                                 AST::Node *body,
+                                 AST::SourceElements *body,
                                  Mode mode = FunctionCode,
                                  const QStringList &inheritedLocals = QStringList());
 
