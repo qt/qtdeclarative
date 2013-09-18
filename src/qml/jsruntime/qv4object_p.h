@@ -164,15 +164,13 @@ struct Q_QML_EXPORT Object: Managed {
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(const StringRef name, Value value);
-    void defineDefaultProperty(ExecutionContext *context, const QString &name, Value value);
-    void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value);
-    void defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
-    void defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
-    void defineAccessorProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
+    void defineDefaultProperty(const QString &name, Value value);
+    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
+    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
-    void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
-    void defineReadonlyProperty(String *name, Value value);
+    void defineReadonlyProperty(const QString &name, Value value);
+    void defineReadonlyProperty(const StringRef name, Value value);
 
     Property *insertMember(const StringRef s, PropertyAttributes attributes);
 

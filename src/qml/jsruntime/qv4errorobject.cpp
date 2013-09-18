@@ -78,7 +78,7 @@ ErrorObject::ErrorObject(InternalClass *ic)
 {
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
-    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
+    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
 }
 
 ErrorObject::ErrorObject(InternalClass *ic, const Value &message, ErrorType t)
@@ -88,16 +88,16 @@ ErrorObject::ErrorObject(InternalClass *ic, const Value &message, ErrorType t)
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
-    defineAccessorProperty(ic->engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message.isUndefined())
-        defineDefaultProperty(ic->engine, QStringLiteral("message"), message);
-    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, className()));
+        defineDefaultProperty(QStringLiteral("message"), message);
+    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
     stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(ic->engine, QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
-        defineDefaultProperty(ic->engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
+        defineDefaultProperty(QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
     }
 }
 
@@ -108,9 +108,9 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
-    defineAccessorProperty(ic->engine, QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
+    defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
-    defineDefaultProperty(ic->engine, QStringLiteral("name"), Value::fromString(ic->engine, className()));
+    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
     stackTrace = ic->engine->stackTrace();
     ExecutionEngine::StackFrame frame;
@@ -120,11 +120,11 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     stackTrace.prepend(frame);
 
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(ic->engine, QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
-        defineDefaultProperty(ic->engine, QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
+        defineDefaultProperty(QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(QStringLiteral("lineNumber"), Value::fromInt32(stackTrace.at(0).line));
     }
 
-    defineDefaultProperty(ic->engine, QStringLiteral("message"), Value::fromString(ic->engine->newString(message)));
+    defineDefaultProperty(QStringLiteral("message"), Value::fromString(ic->engine->newString(message)));
 }
 
 ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
@@ -321,9 +321,9 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
 {
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(obj));
     ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
-    obj->defineDefaultProperty(engine, QStringLiteral("constructor"), ctor);
-    obj->defineDefaultProperty(engine, QStringLiteral("toString"), method_toString, 0);
-    obj->defineDefaultProperty(engine, QStringLiteral("message"), Value::fromString(engine, QString()));
+    obj->defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    obj->defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    obj->defineDefaultProperty(QStringLiteral("message"), Value::fromString(engine, QString()));
 }
 
 ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)

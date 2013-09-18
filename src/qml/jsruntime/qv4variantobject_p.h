@@ -87,7 +87,7 @@ struct VariantPrototype : VariantObject
 public:
     VariantPrototype(InternalClass *ic);
 
-    void init(ExecutionEngine *engine);
+    void init();
 
     static ReturnedValue method_preserve(SimpleCallContext *ctx);
     static ReturnedValue method_destroy(SimpleCallContext *ctx);

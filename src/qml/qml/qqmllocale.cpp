@@ -126,13 +126,13 @@ static bool isLocaleObject(const QV4::Value &val)
 
 void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), method_toLocaleString);
-    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
-    engine->dateClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleString"), method_fromLocaleString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleTimeString"), method_fromLocaleTimeString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleDateString"), method_fromLocaleDateString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("timeZoneUpdated"), method_timeZoneUpdated);
+    engine->dateClass->prototype->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->dateClass->prototype->defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
+    engine->dateClass->prototype->defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
+    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
+    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleTimeString"), method_fromLocaleTimeString);
+    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleDateString"), method_fromLocaleDateString);
+    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("timeZoneUpdated"), method_timeZoneUpdated);
 }
 
 QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::SimpleCallContext *ctx)
@@ -405,9 +405,9 @@ QV4::ReturnedValue QQmlDateExtension::method_timeZoneUpdated(QV4::SimpleCallCont
 
 void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->numberClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleString"), method_toLocaleString);
-    engine->numberClass->prototype->defineDefaultProperty(engine, QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
-    engine->numberCtor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromLocaleString"), method_fromLocaleString);
+    engine->numberClass->prototype->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->numberClass->prototype->defineDefaultProperty(QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
+    engine->numberCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
 }
 
 QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(QV4::SimpleCallContext *ctx)
@@ -692,31 +692,31 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     QV4::Scope scope(eng);
     QV4::Scoped<QV4::Object> o(scope, eng->newObject());
 
-    o->defineDefaultProperty(eng, QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("standaloneMonthName"), QQmlLocaleData::method_standaloneMonthName, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("dayName"), QQmlLocaleData::method_dayName, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("timeFormat"), QQmlLocaleData::method_timeFormat, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("monthName"), QQmlLocaleData::method_monthName, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("currencySymbol"), QQmlLocaleData::method_currencySymbol, 0);
-    o->defineDefaultProperty(eng, QStringLiteral("dateTimeFormat"), QQmlLocaleData::method_dateTimeFormat, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("name"), QQmlLocaleData::method_get_name, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("positiveSign"), QQmlLocaleData::method_get_positiveSign, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("uiLanguages"), QQmlLocaleData::method_get_uiLanguages, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("firstDayOfWeek"), QQmlLocaleData::method_get_firstDayOfWeek, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("pmText"), QQmlLocaleData::method_get_pmText, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("percent"), QQmlLocaleData::method_get_percent, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("textDirection"), QQmlLocaleData::method_get_textDirection, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("weekDays"), QQmlLocaleData::method_get_weekDays, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("negativeSign"), QQmlLocaleData::method_get_negativeSign, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("groupSeparator"), QQmlLocaleData::method_get_groupSeparator, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("amText"), QQmlLocaleData::method_get_amText, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, 0);
-    o->defineAccessorProperty(eng, QStringLiteral("exponential"), QQmlLocaleData::method_get_exponential, 0);
+    o->defineDefaultProperty(QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
+    o->defineDefaultProperty(QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);
+    o->defineDefaultProperty(QStringLiteral("standaloneMonthName"), QQmlLocaleData::method_standaloneMonthName, 0);
+    o->defineDefaultProperty(QStringLiteral("dayName"), QQmlLocaleData::method_dayName, 0);
+    o->defineDefaultProperty(QStringLiteral("timeFormat"), QQmlLocaleData::method_timeFormat, 0);
+    o->defineDefaultProperty(QStringLiteral("monthName"), QQmlLocaleData::method_monthName, 0);
+    o->defineDefaultProperty(QStringLiteral("currencySymbol"), QQmlLocaleData::method_currencySymbol, 0);
+    o->defineDefaultProperty(QStringLiteral("dateTimeFormat"), QQmlLocaleData::method_dateTimeFormat, 0);
+    o->defineAccessorProperty(QStringLiteral("name"), QQmlLocaleData::method_get_name, 0);
+    o->defineAccessorProperty(QStringLiteral("positiveSign"), QQmlLocaleData::method_get_positiveSign, 0);
+    o->defineAccessorProperty(QStringLiteral("uiLanguages"), QQmlLocaleData::method_get_uiLanguages, 0);
+    o->defineAccessorProperty(QStringLiteral("firstDayOfWeek"), QQmlLocaleData::method_get_firstDayOfWeek, 0);
+    o->defineAccessorProperty(QStringLiteral("pmText"), QQmlLocaleData::method_get_pmText, 0);
+    o->defineAccessorProperty(QStringLiteral("percent"), QQmlLocaleData::method_get_percent, 0);
+    o->defineAccessorProperty(QStringLiteral("textDirection"), QQmlLocaleData::method_get_textDirection, 0);
+    o->defineAccessorProperty(QStringLiteral("weekDays"), QQmlLocaleData::method_get_weekDays, 0);
+    o->defineAccessorProperty(QStringLiteral("negativeSign"), QQmlLocaleData::method_get_negativeSign, 0);
+    o->defineAccessorProperty(QStringLiteral("groupSeparator"), QQmlLocaleData::method_get_groupSeparator, 0);
+    o->defineAccessorProperty(QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, 0);
+    o->defineAccessorProperty(QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, 0);
+    o->defineAccessorProperty(QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, 0);
+    o->defineAccessorProperty(QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, 0);
+    o->defineAccessorProperty(QStringLiteral("amText"), QQmlLocaleData::method_get_amText, 0);
+    o->defineAccessorProperty(QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, 0);
+    o->defineAccessorProperty(QStringLiteral("exponential"), QQmlLocaleData::method_get_exponential, 0);
 
     prototype = o;
 }
@@ -842,7 +842,7 @@ QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 {
-    engine->stringClass->prototype->defineDefaultProperty(engine, QStringLiteral("localeCompare"), method_localeCompare);
+    engine->stringClass->prototype->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
 }
 
 QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)

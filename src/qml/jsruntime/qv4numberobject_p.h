@@ -61,7 +61,7 @@ struct NumberCtor: FunctionObject
 struct NumberPrototype: NumberObject
 {
     NumberPrototype(InternalClass *ic): NumberObject(ic) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
+    void init(ExecutionEngine *engine, const Value &ctor);
 
     static ReturnedValue method_toString(SimpleCallContext *ctx);
     static ReturnedValue method_toLocaleString(SimpleCallContext *ctx);

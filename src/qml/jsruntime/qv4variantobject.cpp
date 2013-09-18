@@ -144,12 +144,12 @@ VariantPrototype::VariantPrototype(InternalClass *ic)
 {
 }
 
-void VariantPrototype::init(ExecutionEngine *engine)
+void VariantPrototype::init()
 {
-    defineDefaultProperty(engine, QStringLiteral("preserve"), method_preserve, 0);
-    defineDefaultProperty(engine, QStringLiteral("destroy"), method_destroy, 0);
-    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
-    defineDefaultProperty(engine, QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(QStringLiteral("preserve"), method_preserve, 0);
+    defineDefaultProperty(QStringLiteral("destroy"), method_destroy, 0);
+    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
 }
 
 QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)

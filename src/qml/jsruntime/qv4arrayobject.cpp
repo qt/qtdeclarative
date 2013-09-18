@@ -91,33 +91,33 @@ ArrayPrototype::ArrayPrototype(InternalClass *ic)
 {
 }
 
-void ArrayPrototype::init(ExecutionContext *ctx, const Value &ctor)
+void ArrayPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("isArray"), method_isArray, 1);
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("concat"), method_concat, 1);
-    defineDefaultProperty(ctx, QStringLiteral("join"), method_join, 1);
-    defineDefaultProperty(ctx, QStringLiteral("pop"), method_pop, 0);
-    defineDefaultProperty(ctx, QStringLiteral("push"), method_push, 1);
-    defineDefaultProperty(ctx, QStringLiteral("reverse"), method_reverse, 0);
-    defineDefaultProperty(ctx, QStringLiteral("shift"), method_shift, 0);
-    defineDefaultProperty(ctx, QStringLiteral("slice"), method_slice, 2);
-    defineDefaultProperty(ctx, QStringLiteral("sort"), method_sort, 1);
-    defineDefaultProperty(ctx, QStringLiteral("splice"), method_splice, 2);
-    defineDefaultProperty(ctx, QStringLiteral("unshift"), method_unshift, 1);
-    defineDefaultProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 1);
-    defineDefaultProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
-    defineDefaultProperty(ctx, QStringLiteral("every"), method_every, 1);
-    defineDefaultProperty(ctx, QStringLiteral("some"), method_some, 1);
-    defineDefaultProperty(ctx, QStringLiteral("forEach"), method_forEach, 1);
-    defineDefaultProperty(ctx, QStringLiteral("map"), method_map, 1);
-    defineDefaultProperty(ctx, QStringLiteral("filter"), method_filter, 1);
-    defineDefaultProperty(ctx, QStringLiteral("reduce"), method_reduce, 1);
-    defineDefaultProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 1);
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("join"), method_join, 1);
+    defineDefaultProperty(QStringLiteral("pop"), method_pop, 0);
+    defineDefaultProperty(QStringLiteral("push"), method_push, 1);
+    defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);
+    defineDefaultProperty(QStringLiteral("shift"), method_shift, 0);
+    defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
+    defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
+    defineDefaultProperty(QStringLiteral("splice"), method_splice, 2);
+    defineDefaultProperty(QStringLiteral("unshift"), method_unshift, 1);
+    defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(QStringLiteral("every"), method_every, 1);
+    defineDefaultProperty(QStringLiteral("some"), method_some, 1);
+    defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
+    defineDefaultProperty(QStringLiteral("map"), method_map, 1);
+    defineDefaultProperty(QStringLiteral("filter"), method_filter, 1);
+    defineDefaultProperty(QStringLiteral("reduce"), method_reduce, 1);
+    defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
 }
 
 uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)

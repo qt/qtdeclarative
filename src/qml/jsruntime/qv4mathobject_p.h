@@ -49,7 +49,7 @@ namespace QV4 {
 
 struct MathObject: Object
 {
-    MathObject(ExecutionContext *ctx);
+    MathObject(ExecutionEngine *engine);
 
     static ReturnedValue method_abs(SimpleCallContext *context);
     static ReturnedValue method_acos(SimpleCallContext *context);

@@ -68,32 +68,32 @@ ReturnedValue NumberCtor::call(Managed *, CallData *callData)
     return Value::fromDouble(dbl).asReturnedValue();
 }
 
-void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
+void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
 
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
 
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine, QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString);
-    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
-    defineDefaultProperty(ctx, QStringLiteral("toFixed"), method_toFixed, 1);
-    defineDefaultProperty(ctx, QStringLiteral("toExponential"), method_toExponential);
-    defineDefaultProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString);
+    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf);
+    defineDefaultProperty(QStringLiteral("toFixed"), method_toFixed, 1);
+    defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential);
+    defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision);
 }
 
 inline Value thisNumberValue(ExecutionContext *ctx)

@@ -867,13 +867,13 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-JsonObject::JsonObject(ExecutionContext *context)
-    : Object(context->engine)
+JsonObject::JsonObject(ExecutionEngine *engine)
+    : Object(engine)
 {
     type = Type_JSONObject;
 
-    defineDefaultProperty(context, QStringLiteral("parse"), method_parse, 2);
-    defineDefaultProperty(context, QStringLiteral("stringify"), method_stringify, 3);
+    defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);
+    defineDefaultProperty(QStringLiteral("stringify"), method_stringify, 3);
 }
 
 

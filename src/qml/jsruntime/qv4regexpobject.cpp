@@ -157,10 +157,10 @@ void RegExpObject::init(ExecutionEngine *engine)
         p.replace('/', QLatin1String("\\/"));
     }
 
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("source")), Value::fromString(engine->newString(p)));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("global")), Value::fromBoolean(global));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("ignoreCase")), Value::fromBoolean(this->value->ignoreCase()));
-    defineReadonlyProperty(engine->newIdentifier(QStringLiteral("multiline")), Value::fromBoolean(this->value->multiLine()));
+    defineReadonlyProperty(QStringLiteral("source"), Value::fromString(engine->newString(p)));
+    defineReadonlyProperty(QStringLiteral("global"), Value::fromBoolean(global));
+    defineReadonlyProperty(QStringLiteral("ignoreCase"), Value::fromBoolean(this->value->ignoreCase()));
+    defineReadonlyProperty(QStringLiteral("multiline"), Value::fromBoolean(this->value->multiLine()));
 }
 
 
@@ -285,15 +285,15 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void RegExpPrototype::init(ExecutionContext *ctx, const Value &ctor)
+void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(2));
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("exec"), method_exec, 1);
-    defineDefaultProperty(ctx, QStringLiteral("test"), method_test, 1);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("compile"), method_compile, 2);
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(2));
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
+    defineDefaultProperty(QStringLiteral("test"), method_test, 1);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 
 ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)

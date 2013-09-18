@@ -259,17 +259,17 @@ public:
         : Object(engine)
     {
         vtbl = &static_vtbl;
-        defineAccessorProperty(engine, QStringLiteral("nodeName"), method_get_nodeName, 0);
-        defineAccessorProperty(engine, QStringLiteral("nodeValue"), method_get_nodeValue, 0);
-        defineAccessorProperty(engine, QStringLiteral("nodeType"), method_get_nodeType, 0);
+        defineAccessorProperty(QStringLiteral("nodeName"), method_get_nodeName, 0);
+        defineAccessorProperty(QStringLiteral("nodeValue"), method_get_nodeValue, 0);
+        defineAccessorProperty(QStringLiteral("nodeType"), method_get_nodeType, 0);
 
-        defineAccessorProperty(engine, QStringLiteral("parentNode"), method_get_parentNode, 0);
-        defineAccessorProperty(engine, QStringLiteral("childNodes"), method_get_childNodes, 0);
-        defineAccessorProperty(engine, QStringLiteral("firstChild"), method_get_firstChild, 0);
-        defineAccessorProperty(engine, QStringLiteral("lastChild"), method_get_lastChild, 0);
-        defineAccessorProperty(engine, QStringLiteral("previousSibling"), method_get_previousSibling, 0);
-        defineAccessorProperty(engine, QStringLiteral("nextSibling"), method_get_nextSibling, 0);
-        defineAccessorProperty(engine, QStringLiteral("attributes"), method_get_attributes, 0);
+        defineAccessorProperty(QStringLiteral("parentNode"), method_get_parentNode, 0);
+        defineAccessorProperty(QStringLiteral("childNodes"), method_get_childNodes, 0);
+        defineAccessorProperty(QStringLiteral("firstChild"), method_get_firstChild, 0);
+        defineAccessorProperty(QStringLiteral("lastChild"), method_get_lastChild, 0);
+        defineAccessorProperty(QStringLiteral("previousSibling"), method_get_previousSibling, 0);
+        defineAccessorProperty(QStringLiteral("nextSibling"), method_get_nextSibling, 0);
+        defineAccessorProperty(QStringLiteral("attributes"), method_get_attributes, 0);
     }
 
     static void initClass(ExecutionEngine *engine);
@@ -629,7 +629,7 @@ Value Element::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
-        p->defineAccessorProperty(engine, QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
+        p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
         d->elementPrototype = p;
         engine->v8Engine->freezeObject(d->elementPrototype.value());
     }
@@ -643,9 +643,9 @@ Value Attr::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
         p->setPrototype(NodePrototype::getProto(engine).asObject());
-        p->defineAccessorProperty(engine, QStringLiteral("name"), method_name, 0);
-        p->defineAccessorProperty(engine, QStringLiteral("value"), method_value, 0);
-        p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), method_ownerElement, 0);
+        p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
+        p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
+        p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
         d->attrPrototype = p;
         engine->v8Engine->freezeObject(d->attrPrototype.value());
     }
@@ -699,8 +699,8 @@ Value CharacterData::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
-        p->defineAccessorProperty(v4, QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("length"), method_length, 0);
+        p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
+        p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
         d->characterDataPrototype = p;
         v4->v8Engine->freezeObject(d->characterDataPrototype);
     }
@@ -732,8 +732,8 @@ Value Text::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(CharacterData::prototype(v4).asObject());
-        p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("wholeText"), method_wholeText, 0);
+        p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
+        p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
         d->textPrototype = p;
         v4->v8Engine->freezeObject(d->textPrototype);
     }
@@ -761,10 +761,10 @@ Value Document::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(NodePrototype::getProto(v4).asObject());
-        p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), method_xmlVersion, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("documentElement"), method_documentElement, 0);
+        p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, 0);
+        p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
+        p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
+        p->defineAccessorProperty(QStringLiteral("documentElement"), method_documentElement, 0);
         d->documentPrototype = p;
         v4->v8Engine->freezeObject(d->documentPrototype);
     }
@@ -1585,11 +1585,11 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         : FunctionObject(engine->rootContext, engine->newString(QStringLiteral("XMLHttpRequest")))
     {
         vtbl = &static_vtbl;
-        defineReadonlyProperty(engine, QStringLiteral("UNSENT"), Value::fromInt32(0));
-        defineReadonlyProperty(engine, QStringLiteral("OPENED"), Value::fromInt32(1));
-        defineReadonlyProperty(engine, QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
-        defineReadonlyProperty(engine, QStringLiteral("LOADING"), Value::fromInt32(3));
-        defineReadonlyProperty(engine, QStringLiteral("DONE"), Value::fromInt32(4));
+        defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
+        defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
+        defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
+        defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
+        defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
         if (!proto)
             setupProto();
         Scope scope(engine);
@@ -1653,26 +1653,26 @@ void QQmlXMLHttpRequestCtor::setupProto()
     proto = p.getPointer();
 
     // Methods
-    proto->defineDefaultProperty(v4, QStringLiteral("open"), method_open);
-    proto->defineDefaultProperty(v4, QStringLiteral("setRequestHeader"), method_setRequestHeader);
-    proto->defineDefaultProperty(v4, QStringLiteral("send"), method_send);
-    proto->defineDefaultProperty(v4, QStringLiteral("abort"), method_abort);
-    proto->defineDefaultProperty(v4, QStringLiteral("getResponseHeader"), method_getResponseHeader);
-    proto->defineDefaultProperty(v4, QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
+    proto->defineDefaultProperty(QStringLiteral("open"), method_open);
+    proto->defineDefaultProperty(QStringLiteral("setRequestHeader"), method_setRequestHeader);
+    proto->defineDefaultProperty(QStringLiteral("send"), method_send);
+    proto->defineDefaultProperty(QStringLiteral("abort"), method_abort);
+    proto->defineDefaultProperty(QStringLiteral("getResponseHeader"), method_getResponseHeader);
+    proto->defineDefaultProperty(QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
 
     // Read-only properties
-    proto->defineAccessorProperty(v4, QStringLiteral("readyState"), method_get_readyState, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("status"),method_get_status, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("statusText"),method_get_statusText, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("responseText"),method_get_responseText, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("responseXML"),method_get_responseXML, 0);
+    proto->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, 0);
+    proto->defineAccessorProperty(QStringLiteral("status"),method_get_status, 0);
+    proto->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, 0);
+    proto->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, 0);
+    proto->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
 
     // State values
-    proto->defineReadonlyProperty(v4, QStringLiteral("UNSENT"), Value::fromInt32(0));
-    proto->defineReadonlyProperty(v4, QStringLiteral("OPENED"), Value::fromInt32(1));
-    proto->defineReadonlyProperty(v4, QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
-    proto->defineReadonlyProperty(v4, QStringLiteral("LOADING"), Value::fromInt32(3));
-    proto->defineReadonlyProperty(v4, QStringLiteral("DONE"), Value::fromInt32(4));
+    proto->defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
+    proto->defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
+    proto->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
+    proto->defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
+    proto->defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
 }
 
 
@@ -1953,9 +1953,11 @@ void qt_rem_qmlxmlhttprequest(QV8Engine * /* engine */, void *d)
 void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    Scope scope(v4);
 
-    QQmlXMLHttpRequestCtor *ctor = new (v4->memoryManager) QQmlXMLHttpRequestCtor(v4);
-    v4->globalObject->defineReadonlyProperty(v4->newString(QStringLiteral("XMLHttpRequest")), Value::fromObject(ctor));
+    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4->memoryManager) QQmlXMLHttpRequestCtor(v4));
+    ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
+    v4->globalObject->defineReadonlyProperty(s, ctor.asValue());
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

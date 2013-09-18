@@ -67,7 +67,7 @@ struct SequencePrototype : public QV4::Object
 {
     SequencePrototype(QV4::InternalClass *ic);
 
-    void init(QV4::ExecutionEngine *engine);
+    void init();
 
     static ReturnedValue method_valueOf(QV4::SimpleCallContext *ctx)
     {

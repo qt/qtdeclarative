@@ -62,7 +62,7 @@ struct ObjectPrototype: Object
 {
     ObjectPrototype(InternalClass *ic) : Object(ic) {}
 
-    void init(ExecutionContext *ctx, const Value &ctor);
+    void init(ExecutionEngine *engine, const Value &ctor);
 
     static ReturnedValue method_getPrototypeOf(SimpleCallContext *ctx);
     static ReturnedValue method_getOwnPropertyDescriptor(SimpleCallContext *ctx);

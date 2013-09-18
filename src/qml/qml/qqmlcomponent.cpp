@@ -1407,11 +1407,11 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    proto->defineAccessorProperty(v4, QStringLiteral("onStatusChanged"),
+    proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),
                                   QmlIncubatorObject::method_get_statusChanged, QmlIncubatorObject::method_set_statusChanged);
-    proto->defineAccessorProperty(v4, QStringLiteral("status"), QmlIncubatorObject::method_get_status, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("object"), QmlIncubatorObject::method_get_object, 0);
-    proto->defineDefaultProperty(v4, QStringLiteral("forceCompletion"), QmlIncubatorObject::method_forceCompletion);
+    proto->defineAccessorProperty(QStringLiteral("status"), QmlIncubatorObject::method_get_status, 0);
+    proto->defineAccessorProperty(QStringLiteral("object"), QmlIncubatorObject::method_get_object, 0);
+    proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QmlIncubatorObject::method_forceCompletion);
 
     incubationProto = proto;
 }

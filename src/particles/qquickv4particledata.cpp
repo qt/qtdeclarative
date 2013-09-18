@@ -413,7 +413,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
 }
 
 #define REGISTER_ACCESSOR(PROTO, ENGINE, VARIABLE, NAME) \
-    PROTO ->defineAccessorProperty( ENGINE, QStringLiteral( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE )
+    PROTO ->defineAccessorProperty( QStringLiteral( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE )
 
 COLOR_GETTER_AND_SETTER(r, red)
 COLOR_GETTER_AND_SETTER(g, green)
@@ -456,9 +456,9 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> p(scope, v4->newObject());
 
-    p->defineDefaultProperty(v4, QStringLiteral("discard"), particleData_discard);
-    p->defineDefaultProperty(v4, QStringLiteral("lifeLeft"), particleData_lifeLeft);
-    p->defineDefaultProperty(v4, QStringLiteral("currentSize"), particleData_curSize);
+    p->defineDefaultProperty(QStringLiteral("discard"), particleData_discard);
+    p->defineDefaultProperty(QStringLiteral("lifeLeft"), particleData_lifeLeft);
+    p->defineDefaultProperty(QStringLiteral("currentSize"), particleData_curSize);
 
     REGISTER_ACCESSOR(p, v4, x, initialX);
     REGISTER_ACCESSOR(p, v4, y, initialY);

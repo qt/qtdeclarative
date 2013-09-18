@@ -240,8 +240,8 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
-    engine->functionClass->prototype->defineDefaultProperty(engine, QStringLiteral("connect"), method_connect);
-    engine->functionClass->prototype->defineDefaultProperty(engine, QStringLiteral("disconnect"), method_disconnect);
+    engine->functionClass->prototype->defineDefaultProperty(QStringLiteral("connect"), method_connect);
+    engine->functionClass->prototype->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const

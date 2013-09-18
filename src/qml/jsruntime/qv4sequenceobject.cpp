@@ -175,7 +175,7 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
-        init(engine);
+        init();
     }
 
     QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
@@ -187,12 +187,12 @@ public:
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
         loadReference();
-        init(engine);
+        init();
     }
 
-    void init(ExecutionEngine *engine)
+    void init()
     {
-        defineAccessorProperty(engine, QStringLiteral("length"), method_get_length, method_set_length);
+        defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     }
 
     QV4::Value containerGetIndexed(uint index, bool *hasProperty)
@@ -532,10 +532,10 @@ SequencePrototype::SequencePrototype(InternalClass *ic)
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
-void SequencePrototype::init(QV4::ExecutionEngine *engine)
+void SequencePrototype::init()
 {
-    defineDefaultProperty(engine, QStringLiteral("sort"), method_sort, 1);
-    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
+    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
 }
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)

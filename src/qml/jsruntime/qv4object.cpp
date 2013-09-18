@@ -221,45 +221,29 @@ void Object::defineDefaultProperty(const StringRef name, Value value)
     pd->value = value;
 }
 
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value value)
+void Object::defineDefaultProperty(const QString &name, Value value)
 {
-    Scope scope(context);
-    ScopedString s(scope, context->engine->newIdentifier(name));
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value)
+void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
-    Scope scope(engine);
-    ScopedString s(scope, engine->newIdentifier(name));
-    defineDefaultProperty(s, value);
-}
-
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
-{
-    Q_UNUSED(argumentCount);
-    Scope scope(context);
-    Scoped<String> s(scope, context->engine->newIdentifier(name));
-    Scoped<FunctionObject> function(scope, context->engine->newBuiltinFunction(context, s, code));
-    function->defineReadonlyProperty(context->engine->id_length, Value::fromInt32(argumentCount));
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s, code));
+    function->defineReadonlyProperty(e->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, function.asValue());
 }
 
-void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
-    Q_UNUSED(argumentCount);
-    Scope scope(engine);
-    Scoped<String> s(scope, engine->newIdentifier(name));
-    Scoped<FunctionObject> function(scope, engine->newBuiltinFunction(engine->rootContext, s, code));
-    function->defineReadonlyProperty(engine->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s, function.asValue());
-}
-
-void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
-                                    ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
-{
-    Scope scope(engine);
-    Scoped<String> s(scope, engine->newIdentifier(name));
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    Scoped<String> s(scope, e->newIdentifier(name));
     defineAccessorProperty(s, getter, setter);
 }
 
@@ -274,16 +258,17 @@ void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter
         p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
 }
 
-void Object::defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value)
+void Object::defineReadonlyProperty(const QString &name, Value value)
 {
-    defineReadonlyProperty(engine->newIdentifier(name), value);
+    QV4::ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    defineReadonlyProperty(s, value);
 }
 
-void Object::defineReadonlyProperty(String *name, Value value)
+void Object::defineReadonlyProperty(const StringRef name, Value value)
 {
-    Scope scope(engine());
-    ScopedString s(scope, name);
-    Property *pd = insertMember(s, Attr_ReadOnly);
+    Property *pd = insertMember(name, Attr_ReadOnly);
     pd->value = value;
 }
 

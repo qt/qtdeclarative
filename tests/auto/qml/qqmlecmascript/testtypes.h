@@ -1239,7 +1239,7 @@ public:
         QQmlData *otherDData = QQmlData::get(other);
         assert(otherDData);
 
-        thisObject->defineDefaultProperty(thisObject->engine(), QStringLiteral("autoTestStrongRef"), otherDData->jsWrapper.value());
+        thisObject->defineDefaultProperty(QStringLiteral("autoTestStrongRef"), otherDData->jsWrapper.value());
     }
 
     void setEngine(QQmlEngine* declarativeEngine)

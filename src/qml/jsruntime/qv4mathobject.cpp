@@ -50,38 +50,38 @@ using namespace QV4;
 
 static const double qt_PI = 2.0 * ::asin(1.0);
 
-MathObject::MathObject(ExecutionContext *ctx)
-    : Object(ctx->engine)
+MathObject::MathObject(ExecutionEngine *engine)
+    : Object(engine)
 {
     type = Type_MathObject;
 
-    defineReadonlyProperty(ctx->engine, QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("PI"), Value::fromDouble(qt_PI));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
-    defineReadonlyProperty(ctx->engine, QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
+    defineReadonlyProperty(QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
+    defineReadonlyProperty(QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
+    defineReadonlyProperty(QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
+    defineReadonlyProperty(QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
+    defineReadonlyProperty(QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
+    defineReadonlyProperty(QStringLiteral("PI"), Value::fromDouble(qt_PI));
+    defineReadonlyProperty(QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
+    defineReadonlyProperty(QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
 
-    defineDefaultProperty(ctx, QStringLiteral("abs"), method_abs, 1);
-    defineDefaultProperty(ctx, QStringLiteral("acos"), method_acos, 1);
-    defineDefaultProperty(ctx, QStringLiteral("asin"), method_asin, 0);
-    defineDefaultProperty(ctx, QStringLiteral("atan"), method_atan, 1);
-    defineDefaultProperty(ctx, QStringLiteral("atan2"), method_atan2, 2);
-    defineDefaultProperty(ctx, QStringLiteral("ceil"), method_ceil, 1);
-    defineDefaultProperty(ctx, QStringLiteral("cos"), method_cos, 1);
-    defineDefaultProperty(ctx, QStringLiteral("exp"), method_exp, 1);
-    defineDefaultProperty(ctx, QStringLiteral("floor"), method_floor, 1);
-    defineDefaultProperty(ctx, QStringLiteral("log"), method_log, 1);
-    defineDefaultProperty(ctx, QStringLiteral("max"), method_max, 2);
-    defineDefaultProperty(ctx, QStringLiteral("min"), method_min, 2);
-    defineDefaultProperty(ctx, QStringLiteral("pow"), method_pow, 2);
-    defineDefaultProperty(ctx, QStringLiteral("random"), method_random, 0);
-    defineDefaultProperty(ctx, QStringLiteral("round"), method_round, 1);
-    defineDefaultProperty(ctx, QStringLiteral("sin"), method_sin, 1);
-    defineDefaultProperty(ctx, QStringLiteral("sqrt"), method_sqrt, 1);
-    defineDefaultProperty(ctx, QStringLiteral("tan"), method_tan, 1);
+    defineDefaultProperty(QStringLiteral("abs"), method_abs, 1);
+    defineDefaultProperty(QStringLiteral("acos"), method_acos, 1);
+    defineDefaultProperty(QStringLiteral("asin"), method_asin, 0);
+    defineDefaultProperty(QStringLiteral("atan"), method_atan, 1);
+    defineDefaultProperty(QStringLiteral("atan2"), method_atan2, 2);
+    defineDefaultProperty(QStringLiteral("ceil"), method_ceil, 1);
+    defineDefaultProperty(QStringLiteral("cos"), method_cos, 1);
+    defineDefaultProperty(QStringLiteral("exp"), method_exp, 1);
+    defineDefaultProperty(QStringLiteral("floor"), method_floor, 1);
+    defineDefaultProperty(QStringLiteral("log"), method_log, 1);
+    defineDefaultProperty(QStringLiteral("max"), method_max, 2);
+    defineDefaultProperty(QStringLiteral("min"), method_min, 2);
+    defineDefaultProperty(QStringLiteral("pow"), method_pow, 2);
+    defineDefaultProperty(QStringLiteral("random"), method_random, 0);
+    defineDefaultProperty(QStringLiteral("round"), method_round, 1);
+    defineDefaultProperty(QStringLiteral("sin"), method_sin, 1);
+    defineDefaultProperty(QStringLiteral("sqrt"), method_sqrt, 1);
+    defineDefaultProperty(QStringLiteral("tan"), method_tan, 1);
 }
 
 /* copies the sign from y to x and returns the result */

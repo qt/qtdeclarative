@@ -701,63 +701,63 @@ ReturnedValue DateCtor::call(Managed *m, CallData *)
     return Value::fromString(m->engine()->current, ToString(t)).asReturnedValue();
 }
 
-void DatePrototype::init(ExecutionContext *ctx, const Value &ctor)
+void DatePrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(7));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(7));
     LocalTZA = getLocalTZA();
 
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("parse"), method_parse, 1);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
-    ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("now"), method_now, 0);
+    ctor.objectValue()->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
+    ctor.objectValue()->defineDefaultProperty(QStringLiteral("UTC"), method_UTC, 7);
+    ctor.objectValue()->defineDefaultProperty(QStringLiteral("now"), method_now, 0);
 
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getTime"), method_getTime, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getYear"), method_getYear, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getFullYear"), method_getFullYear, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getMonth"), method_getMonth, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getDate"), method_getDate, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCDate"), method_getUTCDate, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getDay"), method_getDay, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCDay"), method_getUTCDay, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getHours"), method_getHours, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCHours"), method_getUTCHours, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getMinutes"), method_getMinutes, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getSeconds"), method_getSeconds, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
-    defineDefaultProperty(ctx, QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
-    defineDefaultProperty(ctx, QStringLiteral("setTime"), method_setTime, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setSeconds"), method_setSeconds, 2);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
-    defineDefaultProperty(ctx, QStringLiteral("setMinutes"), method_setMinutes, 3);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
-    defineDefaultProperty(ctx, QStringLiteral("setHours"), method_setHours, 4);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCHours"), method_setUTCHours, 4);
-    defineDefaultProperty(ctx, QStringLiteral("setDate"), method_setDate, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCDate"), method_setUTCDate, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setMonth"), method_setMonth, 2);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
-    defineDefaultProperty(ctx, QStringLiteral("setYear"), method_setYear, 1);
-    defineDefaultProperty(ctx, QStringLiteral("setFullYear"), method_setFullYear, 3);
-    defineDefaultProperty(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
-    defineDefaultProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toISOString"), method_toISOString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("toJSON"), method_toJSON, 1);
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(QStringLiteral("toDateString"), method_toDateString, 0);
+    defineDefaultProperty(QStringLiteral("toTimeString"), method_toTimeString, 0);
+    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
+    defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
+    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(QStringLiteral("getTime"), method_getTime, 0);
+    defineDefaultProperty(QStringLiteral("getYear"), method_getYear, 0);
+    defineDefaultProperty(QStringLiteral("getFullYear"), method_getFullYear, 0);
+    defineDefaultProperty(QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
+    defineDefaultProperty(QStringLiteral("getMonth"), method_getMonth, 0);
+    defineDefaultProperty(QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
+    defineDefaultProperty(QStringLiteral("getDate"), method_getDate, 0);
+    defineDefaultProperty(QStringLiteral("getUTCDate"), method_getUTCDate, 0);
+    defineDefaultProperty(QStringLiteral("getDay"), method_getDay, 0);
+    defineDefaultProperty(QStringLiteral("getUTCDay"), method_getUTCDay, 0);
+    defineDefaultProperty(QStringLiteral("getHours"), method_getHours, 0);
+    defineDefaultProperty(QStringLiteral("getUTCHours"), method_getUTCHours, 0);
+    defineDefaultProperty(QStringLiteral("getMinutes"), method_getMinutes, 0);
+    defineDefaultProperty(QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
+    defineDefaultProperty(QStringLiteral("getSeconds"), method_getSeconds, 0);
+    defineDefaultProperty(QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
+    defineDefaultProperty(QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
+    defineDefaultProperty(QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
+    defineDefaultProperty(QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
+    defineDefaultProperty(QStringLiteral("setTime"), method_setTime, 1);
+    defineDefaultProperty(QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
+    defineDefaultProperty(QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
+    defineDefaultProperty(QStringLiteral("setSeconds"), method_setSeconds, 2);
+    defineDefaultProperty(QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
+    defineDefaultProperty(QStringLiteral("setMinutes"), method_setMinutes, 3);
+    defineDefaultProperty(QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
+    defineDefaultProperty(QStringLiteral("setHours"), method_setHours, 4);
+    defineDefaultProperty(QStringLiteral("setUTCHours"), method_setUTCHours, 4);
+    defineDefaultProperty(QStringLiteral("setDate"), method_setDate, 1);
+    defineDefaultProperty(QStringLiteral("setUTCDate"), method_setUTCDate, 1);
+    defineDefaultProperty(QStringLiteral("setMonth"), method_setMonth, 2);
+    defineDefaultProperty(QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
+    defineDefaultProperty(QStringLiteral("setYear"), method_setYear, 1);
+    defineDefaultProperty(QStringLiteral("setFullYear"), method_setFullYear, 3);
+    defineDefaultProperty(QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
+    defineDefaultProperty(QStringLiteral("toUTCString"), method_toUTCString, 0);
+    defineDefaultProperty(QStringLiteral("toGMTString"), method_toUTCString, 0);
+    defineDefaultProperty(QStringLiteral("toISOString"), method_toISOString, 0);
+    defineDefaultProperty(QStringLiteral("toJSON"), method_toJSON, 1);
 }
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)

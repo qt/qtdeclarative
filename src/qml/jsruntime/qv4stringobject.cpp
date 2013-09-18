@@ -184,29 +184,29 @@ void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
-    ctor.objectValue()->defineDefaultProperty(engine, QStringLiteral("fromCharCode"), method_fromCharCode, 1);
+    ctor.objectValue()->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
-    defineDefaultProperty(engine, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(engine, QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(engine, QStringLiteral("valueOf"), method_toString); // valueOf and toString are identical
-    defineDefaultProperty(engine, QStringLiteral("charAt"), method_charAt, 1);
-    defineDefaultProperty(engine, QStringLiteral("charCodeAt"), method_charCodeAt, 1);
-    defineDefaultProperty(engine, QStringLiteral("concat"), method_concat, 1);
-    defineDefaultProperty(engine, QStringLiteral("indexOf"), method_indexOf, 1);
-    defineDefaultProperty(engine, QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
-    defineDefaultProperty(engine, QStringLiteral("localeCompare"), method_localeCompare, 1);
-    defineDefaultProperty(engine, QStringLiteral("match"), method_match, 1);
-    defineDefaultProperty(engine, QStringLiteral("replace"), method_replace, 2);
-    defineDefaultProperty(engine, QStringLiteral("search"), method_search, 1);
-    defineDefaultProperty(engine, QStringLiteral("slice"), method_slice, 2);
-    defineDefaultProperty(engine, QStringLiteral("split"), method_split, 2);
-    defineDefaultProperty(engine, QStringLiteral("substr"), method_substr, 2);
-    defineDefaultProperty(engine, QStringLiteral("substring"), method_substring, 2);
-    defineDefaultProperty(engine, QStringLiteral("toLowerCase"), method_toLowerCase);
-    defineDefaultProperty(engine, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
-    defineDefaultProperty(engine, QStringLiteral("toUpperCase"), method_toUpperCase);
-    defineDefaultProperty(engine, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
-    defineDefaultProperty(engine, QStringLiteral("trim"), method_trim);
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString);
+    defineDefaultProperty(QStringLiteral("valueOf"), method_toString); // valueOf and toString are identical
+    defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
+    defineDefaultProperty(QStringLiteral("charCodeAt"), method_charCodeAt, 1);
+    defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
+    defineDefaultProperty(QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(QStringLiteral("replace"), method_replace, 2);
+    defineDefaultProperty(QStringLiteral("search"), method_search, 1);
+    defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
+    defineDefaultProperty(QStringLiteral("split"), method_split, 2);
+    defineDefaultProperty(QStringLiteral("substr"), method_substr, 2);
+    defineDefaultProperty(QStringLiteral("substring"), method_substring, 2);
+    defineDefaultProperty(QStringLiteral("toLowerCase"), method_toLowerCase);
+    defineDefaultProperty(QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
+    defineDefaultProperty(QStringLiteral("toUpperCase"), method_toUpperCase);
+    defineDefaultProperty(QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
+    defineDefaultProperty(QStringLiteral("trim"), method_trim);
 }
 
 static QString getThisString(ExecutionContext *ctx)

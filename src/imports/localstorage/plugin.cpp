@@ -446,23 +446,23 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     Scope scope(v4);
     {
         Scoped<Object> proto(scope, v4->newObject());
-        proto->defineDefaultProperty(v4, QStringLiteral("transaction"), qmlsqldatabase_transaction);
-        proto->defineDefaultProperty(v4, QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
-        proto->defineAccessorProperty(v4, QStringLiteral("version"), qmlsqldatabase_version, 0);
-        proto->defineDefaultProperty(v4, QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
+        proto->defineDefaultProperty(QStringLiteral("transaction"), qmlsqldatabase_transaction);
+        proto->defineDefaultProperty(QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
+        proto->defineAccessorProperty(QStringLiteral("version"), qmlsqldatabase_version, 0);
+        proto->defineDefaultProperty(QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
         databaseProto = proto;
     }
 
     {
         Scoped<Object> proto(scope, v4->newObject());
-        proto->defineDefaultProperty(v4, QStringLiteral("executeSql"), qmlsqldatabase_executeSql);
+        proto->defineDefaultProperty(QStringLiteral("executeSql"), qmlsqldatabase_executeSql);
         queryProto = proto;
     }
     {
         Scoped<Object> proto(scope, v4->newObject());
-        proto->defineDefaultProperty(v4, QStringLiteral("item"), qmlsqldatabase_rows_item);
-        proto->defineAccessorProperty(v4, QStringLiteral("length"), qmlsqldatabase_rows_length, 0);
-        proto->defineAccessorProperty(v4, QStringLiteral("forwardOnly"),
+        proto->defineDefaultProperty(QStringLiteral("item"), qmlsqldatabase_rows_item);
+        proto->defineAccessorProperty(QStringLiteral("length"), qmlsqldatabase_rows_length, 0);
+        proto->defineAccessorProperty(QStringLiteral("forwardOnly"),
                                       qmlsqldatabase_rows_forwardOnly, qmlsqldatabase_rows_setForwardOnly);
         rowsProto = proto;
     }

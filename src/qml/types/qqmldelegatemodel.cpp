@@ -1627,8 +1627,8 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    proto->defineAccessorProperty(v4, QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
+    proto->defineAccessorProperty(QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
+    proto->defineAccessorProperty(QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
     QV4::ScopedString s(scope);
     s = v4->newString(QStringLiteral("isUnresolved"));
     QV4::Property *p = proto->insertMember(s, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
@@ -3242,9 +3242,9 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    proto->defineAccessorProperty(v4, QStringLiteral("index"), QQmlDelegateModelGroupChange::method_get_index, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("count"), QQmlDelegateModelGroupChange::method_get_count, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("moveId"), QQmlDelegateModelGroupChange::method_get_moveId, 0);
+    proto->defineAccessorProperty(QStringLiteral("index"), QQmlDelegateModelGroupChange::method_get_index, 0);
+    proto->defineAccessorProperty(QStringLiteral("count"), QQmlDelegateModelGroupChange::method_get_count, 0);
+    proto->defineAccessorProperty(QStringLiteral("moveId"), QQmlDelegateModelGroupChange::method_get_moveId, 0);
     changeProto = proto;
 }
 

@@ -215,8 +215,8 @@ public:
         QV4::ExecutionEngine *v4 = data->v4;
         QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-        proto->defineAccessorProperty(v4, QStringLiteral("index"), get_index, 0);
-        proto->defineAccessorProperty(v4, QStringLiteral("hasModelChildren"), get_hasModelChildren, 0);
+        proto->defineAccessorProperty(QStringLiteral("index"), get_index, 0);
+        proto->defineAccessorProperty(QStringLiteral("hasModelChildren"), get_hasModelChildren, 0);
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
         for (iterator it = roleNames.constBegin(), end = roleNames.constEnd(); it != end; ++it) {
@@ -953,8 +953,8 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
 {
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
-    proto->defineAccessorProperty(v4, QStringLiteral("index"), get_index, 0);
-    proto->defineAccessorProperty(v4, QStringLiteral("modelData"),
+    proto->defineAccessorProperty(QStringLiteral("index"), get_index, 0);
+    proto->defineAccessorProperty(QStringLiteral("modelData"),
                                   QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
     listItemProto = proto;
 }

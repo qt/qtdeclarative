@@ -54,7 +54,7 @@ struct JsonObject : Object {
 private:
     typedef QSet<QV4::Object *> V4ObjectSet;
 public:
-    JsonObject(ExecutionContext *context);
+    JsonObject(ExecutionEngine *engine);
 
     static ReturnedValue method_parse(SimpleCallContext *ctx);
     static ReturnedValue method_stringify(SimpleCallContext *ctx);

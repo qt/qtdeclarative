@@ -136,7 +136,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 
     Scope scope(v4);
     Scoped<Object> o(scope, v4->newObject());
-    o->defineDefaultProperty(v4, QStringLiteral("toString"), method_toString, 1);
+    o->defineDefaultProperty(QStringLiteral("toString"), method_toString, 1);
     v4->qmlExtensions()->valueTypeWrapperPrototype = o.getPointer();
 }
 

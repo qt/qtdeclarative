@@ -113,7 +113,7 @@ struct RegExpCtor: FunctionObject
 struct RegExpPrototype: RegExpObject
 {
     RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
-    void init(ExecutionContext *ctx, const Value &ctor);
+    void init(ExecutionEngine *engine, const Value &ctor);
 
     static ReturnedValue method_exec(SimpleCallContext *ctx);
     static ReturnedValue method_test(SimpleCallContext *ctx);

@@ -105,48 +105,48 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     put(v4->newString("Asynchronous"), QV4::Value::fromInt32(0));
     put(v4->newString("Synchronous"), QV4::Value::fromInt32(1));
 
-    defineDefaultProperty(v4, QStringLiteral("include"), QV4Include::method_include);
-    defineDefaultProperty(v4, QStringLiteral("isQtObject"), method_isQtObject);
-    defineDefaultProperty(v4, QStringLiteral("rgba"), method_rgba);
-    defineDefaultProperty(v4, QStringLiteral("hsla"), method_hsla);
-    defineDefaultProperty(v4, QStringLiteral("colorEqual"), method_colorEqual);
-    defineDefaultProperty(v4, QStringLiteral("rect"), method_rect);
-    defineDefaultProperty(v4, QStringLiteral("point"), method_point);
-    defineDefaultProperty(v4, QStringLiteral("size"), method_size);
-    defineDefaultProperty(v4, QStringLiteral("font"), method_font);
+    defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
+    defineDefaultProperty(QStringLiteral("isQtObject"), method_isQtObject);
+    defineDefaultProperty(QStringLiteral("rgba"), method_rgba);
+    defineDefaultProperty(QStringLiteral("hsla"), method_hsla);
+    defineDefaultProperty(QStringLiteral("colorEqual"), method_colorEqual);
+    defineDefaultProperty(QStringLiteral("rect"), method_rect);
+    defineDefaultProperty(QStringLiteral("point"), method_point);
+    defineDefaultProperty(QStringLiteral("size"), method_size);
+    defineDefaultProperty(QStringLiteral("font"), method_font);
 
-    defineDefaultProperty(v4, QStringLiteral("vector2d"), method_vector2d);
-    defineDefaultProperty(v4, QStringLiteral("vector3d"), method_vector3d);
-    defineDefaultProperty(v4, QStringLiteral("vector4d"), method_vector4d);
-    defineDefaultProperty(v4, QStringLiteral("quaternion"), method_quaternion);
-    defineDefaultProperty(v4, QStringLiteral("matrix4x4"), method_matrix4x4);
+    defineDefaultProperty(QStringLiteral("vector2d"), method_vector2d);
+    defineDefaultProperty(QStringLiteral("vector3d"), method_vector3d);
+    defineDefaultProperty(QStringLiteral("vector4d"), method_vector4d);
+    defineDefaultProperty(QStringLiteral("quaternion"), method_quaternion);
+    defineDefaultProperty(QStringLiteral("matrix4x4"), method_matrix4x4);
 
-    defineDefaultProperty(v4, QStringLiteral("formatDate"), method_formatDate);
-    defineDefaultProperty(v4, QStringLiteral("formatTime"), method_formatTime);
-    defineDefaultProperty(v4, QStringLiteral("formatDateTime"), method_formatDateTime);
+    defineDefaultProperty(QStringLiteral("formatDate"), method_formatDate);
+    defineDefaultProperty(QStringLiteral("formatTime"), method_formatTime);
+    defineDefaultProperty(QStringLiteral("formatDateTime"), method_formatDateTime);
 
-    defineDefaultProperty(v4, QStringLiteral("openUrlExternally"), method_openUrlExternally);
-    defineDefaultProperty(v4, QStringLiteral("fontFamilies"), method_fontFamilies);
-    defineDefaultProperty(v4, QStringLiteral("md5"), method_md5);
-    defineDefaultProperty(v4, QStringLiteral("btoa"), method_btoa);
-    defineDefaultProperty(v4, QStringLiteral("atob"), method_atob);
-    defineDefaultProperty(v4, QStringLiteral("resolvedUrl"), method_resolvedUrl);
-    defineDefaultProperty(v4, QStringLiteral("locale"), method_locale);
-    defineDefaultProperty(v4, QStringLiteral("binding"), method_binding);
+    defineDefaultProperty(QStringLiteral("openUrlExternally"), method_openUrlExternally);
+    defineDefaultProperty(QStringLiteral("fontFamilies"), method_fontFamilies);
+    defineDefaultProperty(QStringLiteral("md5"), method_md5);
+    defineDefaultProperty(QStringLiteral("btoa"), method_btoa);
+    defineDefaultProperty(QStringLiteral("atob"), method_atob);
+    defineDefaultProperty(QStringLiteral("resolvedUrl"), method_resolvedUrl);
+    defineDefaultProperty(QStringLiteral("locale"), method_locale);
+    defineDefaultProperty(QStringLiteral("binding"), method_binding);
 
     if (qmlEngine) {
-        defineDefaultProperty(v4, QStringLiteral("lighter"), method_lighter);
-        defineDefaultProperty(v4, QStringLiteral("darker"), method_darker);
-        defineDefaultProperty(v4, QStringLiteral("tint"), method_tint);
-        defineDefaultProperty(v4, QStringLiteral("quit"), method_quit);
-        defineDefaultProperty(v4, QStringLiteral("createQmlObject"), method_createQmlObject);
-        defineDefaultProperty(v4, QStringLiteral("createComponent"), method_createComponent);
+        defineDefaultProperty(QStringLiteral("lighter"), method_lighter);
+        defineDefaultProperty(QStringLiteral("darker"), method_darker);
+        defineDefaultProperty(QStringLiteral("tint"), method_tint);
+        defineDefaultProperty(QStringLiteral("quit"), method_quit);
+        defineDefaultProperty(QStringLiteral("createQmlObject"), method_createQmlObject);
+        defineDefaultProperty(QStringLiteral("createComponent"), method_createComponent);
     }
 
-    defineAccessorProperty(v4, QStringLiteral("platform"), method_get_platform, 0);
-    defineAccessorProperty(v4, QStringLiteral("application"), method_get_application, 0);
+    defineAccessorProperty(QStringLiteral("platform"), method_get_platform, 0);
+    defineAccessorProperty(QStringLiteral("application"), method_get_application, 0);
 #ifndef QT_NO_IM
-    defineAccessorProperty(v4, QStringLiteral("inputMethod"), method_get_inputMethod, 0);
+    defineAccessorProperty(QStringLiteral("inputMethod"), method_get_inputMethod, 0);
 #endif
 }
 
@@ -1300,20 +1300,20 @@ ReturnedValue QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 QV4::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
     : Object(v4)
 {
-    defineDefaultProperty(v4, QStringLiteral("debug"), method_log);
-    defineDefaultProperty(v4, QStringLiteral("log"), method_log);
-    defineDefaultProperty(v4, QStringLiteral("info"), method_log);
-    defineDefaultProperty(v4, QStringLiteral("warn"), method_warn);
-    defineDefaultProperty(v4, QStringLiteral("error"), method_error);
-    defineDefaultProperty(v4, QStringLiteral("assert"), method_assert);
+    defineDefaultProperty(QStringLiteral("debug"), method_log);
+    defineDefaultProperty(QStringLiteral("log"), method_log);
+    defineDefaultProperty(QStringLiteral("info"), method_log);
+    defineDefaultProperty(QStringLiteral("warn"), method_warn);
+    defineDefaultProperty(QStringLiteral("error"), method_error);
+    defineDefaultProperty(QStringLiteral("assert"), method_assert);
 
-    defineDefaultProperty(v4, QStringLiteral("count"), method_count);
-    defineDefaultProperty(v4, QStringLiteral("profile"), method_profile);
-    defineDefaultProperty(v4, QStringLiteral("profileEnd"), method_profileEnd);
-    defineDefaultProperty(v4, QStringLiteral("time"), method_time);
-    defineDefaultProperty(v4, QStringLiteral("timeEnd"), method_timeEnd);
-    defineDefaultProperty(v4, QStringLiteral("trace"), method_trace);
-    defineDefaultProperty(v4, QStringLiteral("exception"), method_exception);
+    defineDefaultProperty(QStringLiteral("count"), method_count);
+    defineDefaultProperty(QStringLiteral("profile"), method_profile);
+    defineDefaultProperty(QStringLiteral("profileEnd"), method_profileEnd);
+    defineDefaultProperty(QStringLiteral("time"), method_time);
+    defineDefaultProperty(QStringLiteral("timeEnd"), method_timeEnd);
+    defineDefaultProperty(QStringLiteral("trace"), method_trace);
+    defineDefaultProperty(QStringLiteral("exception"), method_exception);
 }
 
 
@@ -1566,26 +1566,26 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     QV4::ExecutionEngine *v4 = globalObject->engine();
 
 #ifndef QT_NO_TRANSLATION
-    globalObject->defineDefaultProperty(v4, QStringLiteral("qsTranslate"), method_qsTranslate);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("QT_TRANSLATE_NOOP"), method_qsTranslateNoOp);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("qsTr"), method_qsTr);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("QT_TR_NOOP"), method_qsTrNoOp);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("qsTrId"), method_qsTrId);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("QT_TRID_NOOP"), method_qsTrIdNoOp);
+    globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), method_qsTranslate);
+    globalObject->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), method_qsTranslateNoOp);
+    globalObject->defineDefaultProperty(QStringLiteral("qsTr"), method_qsTr);
+    globalObject->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), method_qsTrNoOp);
+    globalObject->defineDefaultProperty(QStringLiteral("qsTrId"), method_qsTrId);
+    globalObject->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), method_qsTrIdNoOp);
 #endif
 
-    globalObject->defineDefaultProperty(v4, QStringLiteral("print"), ConsoleObject::method_log);
-    globalObject->defineDefaultProperty(v4, QStringLiteral("gc"), method_gc);
+    globalObject->defineDefaultProperty(QStringLiteral("print"), ConsoleObject::method_log);
+    globalObject->defineDefaultProperty(QStringLiteral("gc"), method_gc);
 
     Value console = QV4::Value::fromObject(new (v4->memoryManager) QV4::ConsoleObject(v4));
-    globalObject->defineDefaultProperty(v4, QStringLiteral("console"), console);
+    globalObject->defineDefaultProperty(QStringLiteral("console"), console);
 
     Value qt = QV4::Value::fromObject(new (v4->memoryManager) QV4::QtObject(v4, qmlEngine));
-    globalObject->defineDefaultProperty(v4, QStringLiteral("Qt"), qt);
+    globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension
     QV4::Object *stringProto = v4->stringClass->prototype;
-    stringProto->defineDefaultProperty(v4, QStringLiteral("arg"), method_string_arg);
+    stringProto->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
 }
 
 

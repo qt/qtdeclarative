@@ -267,17 +267,17 @@ FunctionPrototype::FunctionPrototype(InternalClass *ic)
 {
 }
 
-void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
+void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
 
-    defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(0));
-    defineDefaultProperty(ctx, QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(ctx, QStringLiteral("toString"), method_toString, 0);
-    defineDefaultProperty(ctx, QStringLiteral("apply"), method_apply, 2);
-    defineDefaultProperty(ctx, QStringLiteral("call"), method_call, 1);
-    defineDefaultProperty(ctx, QStringLiteral("bind"), method_bind, 1);
+    defineReadonlyProperty(engine->id_length, Value::fromInt32(0));
+    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
+    defineDefaultProperty(QStringLiteral("call"), method_call, 1);
+    defineDefaultProperty(QStringLiteral("bind"), method_bind, 1);
 
 }
 
