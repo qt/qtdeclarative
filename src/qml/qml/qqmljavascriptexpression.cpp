@@ -312,7 +312,8 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, e.value());
     if (!!errorObj && errorObj->asSyntaxError()) {
-        QV4::ScopedValue v(scope, errorObj->get(errorObj->engine()->newString("message")));
+        QV4::ScopedString m(scope, errorObj->engine()->newString("message"));
+        QV4::ScopedValue v(scope, errorObj->get(m));
         error.setDescription(v->toQStringNoThrow());
     } else {
         QV4::ScopedValue v(scope, e.value());

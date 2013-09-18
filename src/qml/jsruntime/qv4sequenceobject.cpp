@@ -535,7 +535,7 @@ SequencePrototype::SequencePrototype(InternalClass *ic)
 void SequencePrototype::init()
 {
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(engine()->id_valueOf, method_valueOf, 0);
 }
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)

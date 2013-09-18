@@ -322,7 +322,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(obj));
     ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
     obj->defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    obj->defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    obj->defineDefaultProperty(engine->id_toString, method_toString, 0);
     obj->defineDefaultProperty(QStringLiteral("message"), Value::fromString(engine, QString()));
 }
 
@@ -334,14 +334,15 @@ ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    ScopedValue name(scope, o->get(ctx->engine->newString(QString::fromLatin1("name"))));
+    ScopedValue name(scope, o->get(ctx->engine->id_name));
     QString qname;
     if (name->isUndefined())
         qname = QString::fromLatin1("Error");
     else
         qname = name->toQString();
 
-    ScopedValue message(scope, o->get(ctx->engine->newString(QString::fromLatin1("message"))));
+    ScopedString s(scope, ctx->engine->newString(QString::fromLatin1("message")));
+    ScopedValue message(scope, o->get(s));
     QString qmessage;
     if (!message->isUndefined())
         qmessage = message->toQString();

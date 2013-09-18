@@ -88,9 +88,9 @@ void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
 #endif
 
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString);
+    defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf);
+    defineDefaultProperty(engine->id_valueOf, method_valueOf);
     defineDefaultProperty(QStringLiteral("toFixed"), method_toFixed, 1);
     defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential);
     defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision);

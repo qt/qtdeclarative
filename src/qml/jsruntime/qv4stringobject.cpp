@@ -187,8 +187,8 @@ void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_toString); // valueOf and toString are identical
+    defineDefaultProperty(engine->id_toString, method_toString);
+    defineDefaultProperty(engine->id_valueOf, method_toString); // valueOf and toString are identical
     defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
     defineDefaultProperty(QStringLiteral("charCodeAt"), method_charCodeAt, 1);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
@@ -352,10 +352,10 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         context->throwTypeError();
 
     Scope scope(context);
-    String *s = context->thisObject.toString(context);
+    ScopedString s(scope, context->thisObject.toString(context));
 
-    Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
-    RegExpObject *rx = regexp.as<RegExpObject>();
+    ScopedValue regexp(scope, context->argumentCount ? context->arguments[0] : Value::undefinedValue());
+    Scoped<RegExpObject> rx(scope, regexp);
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
@@ -369,16 +369,17 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    Scoped<FunctionObject> exec(scope, context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0));
+    ScopedString execString(scope, context->engine->newString(QStringLiteral("exec")));
+    Scoped<FunctionObject> exec(scope, context->engine->regExpClass->prototype->get(execString));
 
     ScopedCallData callData(scope, 1);
-    callData->thisObject = Value::fromObject(rx);
-    callData->args[0] = Value::fromString(s);
+    callData->thisObject = rx;
+    callData->args[0] = s;
     if (!global)
         return exec->call(callData);
 
-    String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
-    rx->put(lastIndex, Value::fromInt32(0));
+    ScopedString lastIndex(scope, context->engine->newString(QStringLiteral("lastIndex")));
+    rx->put(lastIndex.getPointer(), Value::fromInt32(0));
     Scoped<ArrayObject> a(scope, context->engine->newArrayObject());
 
     double previousLastIndex = 0;
@@ -395,7 +396,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(lastIndex, Value::fromDouble(previousLastIndex));
+            rx->put(lastIndex.getPointer(), Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }

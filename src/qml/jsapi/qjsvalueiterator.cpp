@@ -179,12 +179,14 @@ QJSValue QJSValueIterator::value() const
     QV4::ExecutionContext *ctx = engine->current;
     try {
         QV4::ScopedValue v(scope);
-        if (d_ptr->currentName)
-            v = o->get(d_ptr->currentName);
-        else if (d_ptr->currentIndex != UINT_MAX)
+        if (d_ptr->currentName) {
+            QV4::ScopedString n(scope, d_ptr->currentName);
+            v = o->get(n);
+        } else if (d_ptr->currentIndex != UINT_MAX) {
             v = o->getIndexed(d_ptr->currentIndex);
-        else
+        } else {
             return QJSValue();
+        }
         return new QJSValuePrivate(engine, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);

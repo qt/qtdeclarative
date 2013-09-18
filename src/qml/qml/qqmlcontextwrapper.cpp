@@ -124,7 +124,7 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 }
 
 
-ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
@@ -207,7 +207,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     while (context) {
         // Search context properties
         if (context->propertyNames.count()) {
-            int propertyIdx = context->propertyNames.value(name);
+            int propertyIdx = context->propertyNames.value(name.getPointer());
 
             if (propertyIdx != -1) {
 
@@ -243,7 +243,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         if (scopeObject) {
             bool hasProp = false;
             QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject,
-                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp));
+                                                                               name.getPointer(), QV4::QObjectWrapper::CheckRevision, &hasProp));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -256,7 +256,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;

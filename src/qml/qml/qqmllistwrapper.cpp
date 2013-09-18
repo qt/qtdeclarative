@@ -98,14 +98,14 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)
         v4->current->throwTypeError();
 
-    if (name == v4->id_length && !w->object.isNull()) {
+    if (name->isEqualTo(v4->id_length) && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
         return Value::fromUInt32(count).asReturnedValue();
     }

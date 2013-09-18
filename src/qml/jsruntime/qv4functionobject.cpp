@@ -274,7 +274,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
 
     defineReadonlyProperty(engine->id_length, Value::fromInt32(0));
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(QStringLiteral("bind"), method_bind, 1);

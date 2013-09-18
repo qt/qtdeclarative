@@ -801,11 +801,11 @@ QJSValue QJSValue::property(const QString& name) const
         return QJSValue();
     QV4::Scope scope(engine);
 
-    Object *o = d->value.asObject();
+    ScopedObject o(scope, d->value);
     if (!o)
         return QJSValue();
 
-    String *s = engine->newString(name);
+    ScopedString s(scope, engine->newString(name));
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX)
         return property(idx);

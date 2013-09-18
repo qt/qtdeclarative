@@ -154,6 +154,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     id_name = newIdentifier(QStringLiteral("name"));
     id_index = newIdentifier(QStringLiteral("index"));
     id_input = newIdentifier(QStringLiteral("input"));
+    id_toString = newIdentifier(QStringLiteral("toString"));
+    id_valueOf = newIdentifier(QStringLiteral("valueOf"));
 
     ObjectPrototype *objectPrototype = new (memoryManager) ObjectPrototype(emptyClass);
     objectClass = emptyClass->changePrototype(objectPrototype);
@@ -714,6 +716,8 @@ void ExecutionEngine::markObjects()
     id_name->mark();
     id_index->mark();
     id_input->mark();
+    id_toString->mark();
+    id_valueOf->mark();
 
     objectCtor.mark();
     stringCtor.mark();

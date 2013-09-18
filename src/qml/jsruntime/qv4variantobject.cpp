@@ -148,8 +148,8 @@ void VariantPrototype::init()
 {
     defineDefaultProperty(QStringLiteral("preserve"), method_preserve, 0);
     defineDefaultProperty(QStringLiteral("destroy"), method_destroy, 0);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(engine()->id_valueOf, method_valueOf, 0);
+    defineDefaultProperty(engine()->id_toString, method_toString, 0);
 }
 
 QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)

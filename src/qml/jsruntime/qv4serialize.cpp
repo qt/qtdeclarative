@@ -269,13 +269,15 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
 
         QV4::ScopedValue val(scope);
         QV4::ScopedValue s(scope);
+        QV4::ScopedString str(scope);
         for (quint32 ii = 0; ii < length; ++ii) {
             s = properties->getIndexed(ii);
             serialize(data, s, engine);
 
             QV4::ExecutionContext *ctx = v4->current;
             try {
-                val = o->get(s->asString());
+                str = s->asString();
+                val = o->get(str);
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
             }

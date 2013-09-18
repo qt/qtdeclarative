@@ -68,8 +68,8 @@ void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
     ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf);
+    defineDefaultProperty(engine->id_toString, method_toString);
+    defineDefaultProperty(engine->id_valueOf, method_valueOf);
 }
 
 ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)

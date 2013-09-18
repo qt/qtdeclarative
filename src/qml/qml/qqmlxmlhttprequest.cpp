@@ -209,7 +209,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
@@ -240,7 +240,7 @@ public:
     static void destroy(Managed *that) {
         that->as<NodeList>()->~NodeList();
     }
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
@@ -890,7 +890,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     return Encode::undefined();
 }
 
-ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -944,7 +944,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Encode::undefined();
 }
 
-ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -1507,17 +1507,20 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         if (!o)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        Scoped<Object> thisObj(scope, o->get(v4->newString(QStringLiteral("ThisObject"))));
+        ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
+        Scoped<Object> thisObj(scope, o->get(s));
         if (!thisObj)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        Scoped<FunctionObject> callback(scope, thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))));
+        s = v4->newString(QStringLiteral("onreadystatechange"));
+        Scoped<FunctionObject> callback(scope, thisObj->get(s));
         if (!callback) {
             // not an error, but no onreadystatechange function to call.
             return;
         }
 
-        Scoped<Object> activationObject(scope, o->get(v4->newString(QStringLiteral("ActivationObject"))));
+        s = v4->newString(QStringLiteral("ActivationObject"));
+        Scoped<Object> activationObject(scope, o->get(s));
         if (!activationObject)
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
 

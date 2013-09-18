@@ -111,7 +111,7 @@ public:
 protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static ReturnedValue get(Managed *, String *, bool *);
+    static ReturnedValue get(Managed *, const StringRef, bool *);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);

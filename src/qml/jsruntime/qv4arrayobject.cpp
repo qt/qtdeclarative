@@ -97,7 +97,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, const Value &ctor)
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
@@ -137,11 +137,11 @@ ReturnedValue ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 
 ReturnedValue ArrayPrototype::method_toString(SimpleCallContext *ctx)
 {
-    QV4::Scope scope(ctx);
-    QV4::Object *o = ctx->thisObject.toObject(ctx);
-    ScopedValue v(scope, o->get(ctx->engine->newString("join")));
-    FunctionObject *f = v->asFunctionObject();
-    if (f) {
+    Scope scope(ctx);
+    ScopedObject o(scope, ctx->thisObject, ScopedObject::Convert);
+    ScopedString s(scope, ctx->engine->newString("join"));
+    ScopedFunctionObject f(scope, o->get(s));
+    if (!!f) {
         ScopedCallData d(scope, 0);
         d->thisObject = ctx->thisObject;
         return f->call(d);
@@ -223,7 +223,8 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
         //
         // crazy!
         //
-        ScopedValue r6(scope, self->get(ctx->engine->newString(QStringLiteral("0"))));
+        ScopedString name(scope, ctx->engine->newString(QStringLiteral("0")));
+        ScopedValue r6(scope, self->get(name));
         if (!r6->isNullOrUndefined())
             R = r6->toString(ctx)->toQString();
 
@@ -231,7 +232,7 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
         for (quint32 k = 1; k < r2; ++k) {
             R += r4;
 
-            String *name = Value::fromDouble(k).toString(ctx);
+            name = Value::fromDouble(k).toString(ctx);
             r12 = self->get(name);
 
             if (!r12->isNullOrUndefined())

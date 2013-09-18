@@ -81,7 +81,7 @@ public:
 
     QVariant toVariant() const;
 
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);

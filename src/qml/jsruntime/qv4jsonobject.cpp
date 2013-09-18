@@ -702,10 +702,10 @@ static QString quote(const QString &str)
 QString Stringify::Str(const QString &key, Value value)
 {
     Scope scope(ctx);
-    QString result;
 
     if (Object *o = value.asObject()) {
-        Scoped<FunctionObject> toJSON(scope, o->get(ctx->engine->newString(QStringLiteral("toJSON"))));
+        ScopedString s(scope, ctx->engine->newString(QStringLiteral("toJSON")));
+        Scoped<FunctionObject> toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
@@ -798,12 +798,14 @@ QString Stringify::JO(Object *o)
                 partial += member;
         }
     } else {
+        ScopedString s(scope);
         for (int i = 0; i < propertyList.size(); ++i) {
             bool exists;
-            ScopedValue v(scope, o->get(propertyList.at(i), &exists));
+            s = propertyList.at(i);
+            ScopedValue v(scope, o->get(s, &exists));
             if (!exists)
                 continue;
-            QString member = makeMember(propertyList.at(i)->toQString(), v);
+            QString member = makeMember(s->toQString(), v);
             if (!member.isEmpty())
                 partial += member;
         }

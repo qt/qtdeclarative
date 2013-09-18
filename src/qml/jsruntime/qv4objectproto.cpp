@@ -122,9 +122,9 @@ void ObjectPrototype::init(ExecutionEngine *v4, const Value &ctor)
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("keys"), method_keys, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(v4->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(v4->id_valueOf, method_valueOf, 0);
     defineDefaultProperty(QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 1);
     defineDefaultProperty(QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 1);
     defineDefaultProperty(QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 1);
@@ -399,12 +399,12 @@ ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
 ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Object *o = ctx->thisObject.toObject(ctx);
-    Scoped<FunctionObject> f(scope, o->get(ctx->engine->newString(QStringLiteral("toString"))));
+    ScopedObject o(scope, ctx->thisObject.toObject(ctx));
+    Scoped<FunctionObject> f(scope, o->get(ctx->engine->id_toString));
     if (!f)
         ctx->throwTypeError();
     ScopedCallData callData(scope, 0);
-    callData->thisObject = Value::fromObject(o);
+    callData->thisObject = o;
     return f->call(callData);
 }
 

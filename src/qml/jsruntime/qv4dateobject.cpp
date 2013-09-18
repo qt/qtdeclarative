@@ -712,13 +712,13 @@ void DatePrototype::init(ExecutionEngine *engine, const Value &ctor)
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("now"), method_now, 0);
 
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toDateString"), method_toDateString, 0);
     defineDefaultProperty(QStringLiteral("toTimeString"), method_toTimeString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
-    defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf, 0);
+    defineDefaultProperty(engine->id_valueOf, method_valueOf, 0);
     defineDefaultProperty(QStringLiteral("getTime"), method_getTime, 0);
     defineDefaultProperty(QStringLiteral("getYear"), method_getYear, 0);
     defineDefaultProperty(QStringLiteral("getFullYear"), method_getFullYear, 0);
@@ -1305,7 +1305,8 @@ ReturnedValue DatePrototype::method_toJSON(SimpleCallContext *ctx)
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         return Encode::null();
 
-    ScopedValue v(scope, O->objectValue()->get(ctx->engine->newString(QStringLiteral("toISOString"))));
+    ScopedString s(scope, ctx->engine->newString(QStringLiteral("toISOString")));
+    ScopedValue v(scope, O->objectValue()->get(s));
     FunctionObject *toIso = v->asFunctionObject();
 
     if (!toIso)

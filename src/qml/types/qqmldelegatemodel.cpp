@@ -3180,7 +3180,7 @@ public:
         return QV4::Value::fromObject(object).asReturnedValue();
     }
 
-    static QV4::ReturnedValue get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
+    static QV4::ReturnedValue get(QV4::Managed *m, const QV4::StringRef name, bool *hasProperty)
     {
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)

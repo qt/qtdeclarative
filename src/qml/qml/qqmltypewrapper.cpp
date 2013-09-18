@@ -112,7 +112,7 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
 }
 
 
-ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
@@ -158,7 +158,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
                 }
 
                 // check for property.
-                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                return QV4::QObjectWrapper::getQmlProperty(v4->current, context, qobjectSingleton, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, hasProperty);
             } else if (!siinfo->scriptApi(e).isUndefined()) {
                 QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -182,7 +182,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
             } else if (w->object) {
                 QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                    return QV4::QObjectWrapper::getQmlProperty(v4->current, context, ao, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
                 // Fall through to base implementation
             }
@@ -263,8 +263,10 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
 {
     // ### Implement more efficiently.
+    Scope scope(m->engine());
+    ScopedString n(scope, name);
     bool hasProperty = false;
-    const_cast<Managed*>(m)->get(name, &hasProperty);
+    const_cast<Managed*>(m)->get(n, &hasProperty);
     return hasProperty ? Attr_Data : Attr_Invalid;
 }
 

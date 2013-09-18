@@ -170,7 +170,8 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
 {
     Scope scope(ctx);
-    ScopedValue v(scope, get(name));
+    ScopedString n(scope, name);
+    ScopedValue v(scope, get(n));
     ScopedValue result(scope, op(v, rhs));
     put(name, result);
 }
@@ -194,7 +195,8 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index,
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
 {
     Scope scope(ctx);
-    ScopedValue v(scope, get(name));
+    ScopedString n(scope, name);
+    ScopedValue v(scope, get(n));
     ScopedValue result(scope, op(ctx, v, rhs));
     put(name, result);
 }
@@ -237,6 +239,15 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Si
     Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s, code));
     function->defineReadonlyProperty(e->id_length, Value::fromInt32(argumentCount));
     defineDefaultProperty(s, function.asValue());
+}
+
+void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, name, code));
+    function->defineReadonlyProperty(e->id_length, Value::fromInt32(argumentCount));
+    defineDefaultProperty(name, function.asValue());
 }
 
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
@@ -444,7 +455,7 @@ bool Object::__hasProperty__(uint index) const
     return false;
 }
 
-ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue Object::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
@@ -643,7 +654,7 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(String *name, bool *hasProperty)
+ReturnedValue Object::internalGet(const StringRef name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -653,7 +664,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 
     Object *o = this;
     while (o) {
-        uint idx = o->internalClass->find(name);
+        uint idx = o->internalClass->find(name.getPointer());
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
@@ -665,7 +676,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)

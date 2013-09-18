@@ -166,6 +166,7 @@ struct Q_QML_EXPORT Object: Managed {
     void defineDefaultProperty(const StringRef name, Value value);
     void defineDefaultProperty(const QString &name, Value value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
+    void defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
@@ -287,7 +288,7 @@ public:
     }
     void ensureMemberIndex(uint idx);
 
-    inline ReturnedValue get(String *name, bool *hasProperty = 0)
+    inline ReturnedValue get(const StringRef name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
@@ -309,7 +310,7 @@ public:
 protected:
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
@@ -323,7 +324,7 @@ protected:
 
 
 private:
-    ReturnedValue internalGet(String *name, bool *hasProperty);
+    ReturnedValue internalGet(const StringRef name, bool *hasProperty);
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(const StringRef name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);

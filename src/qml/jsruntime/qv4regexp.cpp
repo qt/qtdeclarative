@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qv4regexp_p.h"
-
 #include "qv4engine_p.h"
+#include "qv4scopedvalue_p.h"
 
 using namespace QV4;
 
@@ -136,7 +136,7 @@ void RegExp::markObjects(Managed *that)
 {
 }
 
-ReturnedValue RegExp::get(Managed *, String *, bool *)
+ReturnedValue RegExp::get(Managed *, const StringRef, bool *)
 {
     return Value::undefinedValue().asReturnedValue();
 }

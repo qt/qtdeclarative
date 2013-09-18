@@ -136,7 +136,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 
     Scope scope(v4);
     Scoped<Object> o(scope, v4->newObject());
-    o->defineDefaultProperty(QStringLiteral("toString"), method_toString, 1);
+    o->defineDefaultProperty(v4->id_toString, method_toString, 1);
     v4->qmlExtensions()->valueTypeWrapperPrototype = o.getPointer();
 }
 
@@ -264,7 +264,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     }
 }
 
-ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QmlValueTypeWrapper *r = m->as<QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -291,7 +291,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     {
         QQmlData *ddata = QQmlData::get(r->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name, 0, 0);
+            result = ddata->propertyCache->property(name.getPointer(), 0, 0);
         else
             result = QQmlPropertyCache::property(r->v8->engine(), r->type, name, 0, local);
     }
@@ -302,7 +302,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
         QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name, QV4::QObjectWrapper::IgnoreRevision);
+        return QV4::QObjectWrapper::getQmlProperty(v4->current, qmlContext, r->type, name.getPointer(), QV4::QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

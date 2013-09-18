@@ -226,6 +226,8 @@ struct Q_QML_EXPORT ExecutionEngine
     SafeString id_name;
     SafeString id_index;
     SafeString id_input;
+    SafeString id_toString;
+    SafeString id_valueOf;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
     QMap<quintptr, QV4::Function*> allFunctions;

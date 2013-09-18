@@ -561,8 +561,8 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     }
 
     ExecutionEngine *engine = object->internalClass->engine;
-    String *meth1 = engine->newString("toString");
-    String *meth2 = engine->newString("valueOf");
+    SafeString *meth1 = &engine->id_toString;
+    SafeString *meth2 = &engine->id_valueOf;
 
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
@@ -572,14 +572,14 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     ScopedCallData callData(scope, 0);
     callData->thisObject = Value::fromObject(object);
 
-    ScopedValue conv(scope, object->get(meth1));
+    ScopedValue conv(scope, object->get(*meth1));
     if (FunctionObject *o = conv->asFunctionObject()) {
         Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
             return r.asReturnedValue();
     }
 
-    conv = object->get(meth2);
+    conv = object->get(*meth2);
     if (FunctionObject *o = conv->asFunctionObject()) {
         Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
@@ -685,7 +685,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
         return o->getIndexed(idx);
     }
 
-    String *name = index->toString(ctx);
+    ScopedString name(scope, index->toString(ctx));
     return o->get(name);
 }
 
@@ -759,9 +759,10 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
     ctx->setProperty(name, *value);
 }
 
-ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *name)
+ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *n)
 {
     Scope scope(ctx);
+    ScopedString name(scope, n);
 
     Scoped<Object> o(scope, object);
     if (o)
@@ -967,9 +968,10 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String
     return o->call(callData);
 }
 
-ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_property(ExecutionContext *context, String *n, CallDataRef callData)
 {
     Scope scope(context);
+    ScopedString name(scope, n);
     Scoped<Object> baseObject(scope, callData->thisObject);
     if (!baseObject) {
         Q_ASSERT(!callData->thisObject.isEmpty());
@@ -1009,7 +1011,8 @@ ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef ind
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
 
-    Scoped<Object> o(scope, baseObject->get(index->toString(context)));
+    ScopedString s(scope, index->toString(context));
+    Scoped<Object> o(scope, baseObject->get(s));
     if (!o)
         context->throwTypeError();
 
@@ -1060,10 +1063,11 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
     return f->construct(callData);
 }
 
-ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *n, CallDataRef callData)
 {
     Scope scope(context);
-    Object *thisObject = base->toObject(context);
+    ScopedObject thisObject(scope, base->toObject(context));
+    ScopedString name(scope, n);
 
     Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
@@ -1112,10 +1116,11 @@ QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, String
     return __qmljs_builtin_typeof(context, prop);
 }
 
-QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *n)
 {
     Scope scope(context);
-    Object *obj = base->toObject(context);
+    ScopedObject obj(scope, base->toObject(context));
+    ScopedString name(scope, n);
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
 }
@@ -1123,8 +1128,8 @@ QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, cons
 QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, const ValueRef base, const ValueRef index)
 {
     Scope scope(context);
-    String *name = index->toString(context);
-    Object *obj = base->toObject(context);
+    ScopedString name(scope, index->toString(context));
+    ScopedObject obj(scope, base->toObject(context));
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
 }

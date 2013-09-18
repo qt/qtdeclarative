@@ -235,7 +235,7 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     vtbl = &static_vtbl;
 
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
-    m_toString = engine->newIdentifier(QStringLiteral("toString"));
+    m_toString = engine->id_toString;
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -257,7 +257,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     return result;
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, QObjectWrapper::RevisionMode revisionMode,
+ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *n, QObjectWrapper::RevisionMode revisionMode,
                                              bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(m_object)) {
@@ -267,6 +267,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     }
 
     QV4:Scope scope(ctx);
+    QV4::ScopedString name(scope, n);
 
     if (name->isEqualTo(m_destroy) || name->isEqualTo(m_toString)) {
         int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
@@ -277,13 +278,13 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     }
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(ctx->engine, qmlContext, name, revisionMode, &local);
+    QQmlPropertyData *result = findProperty(ctx->engine, qmlContext, name.getPointer(), revisionMode, &local);
 
     if (!result) {
         if (includeImports && name->startsWithUpper()) {
             // Check for attached properties
             if (qmlContext && qmlContext->imports) {
-                QQmlTypeNameCache::Result r = qmlContext->imports->query(name);
+                QQmlTypeNameCache::Result r = qmlContext->imports->query(name.getPointer());
 
                 if (hasProperty)
                     *hasProperty = true;
@@ -329,10 +330,10 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         } else if (result->isSignalHandler()) {
             QV4::QmlSignalHandler *handler = new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex);
 
-            QV4::String *connect = ctx->engine->newIdentifier(QStringLiteral("connect"));
-            QV4::String *disconnect = ctx->engine->newIdentifier(QStringLiteral("disconnect"));
-            handler->put(connect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(connect)));
-            handler->put(disconnect, QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(disconnect)));
+            QV4::ScopedString connect(scope, ctx->engine->newIdentifier(QStringLiteral("connect")));
+            QV4::ScopedString disconnect(scope, ctx->engine->newIdentifier(QStringLiteral("disconnect")));
+            handler->put(connect.getPointer(), QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(connect)));
+            handler->put(disconnect.getPointer(), QV4::Value::fromReturnedValue(ctx->engine->functionClass->prototype->get(disconnect)));
 
             return QV4::Value::fromObject(handler).asReturnedValue();
         } else {
@@ -596,12 +597,12 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, Q
     return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object)).asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->current, qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    return that->getQmlProperty(v4->current, qmlContext, name.getPointer(), IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, String *name, const Value &value)
@@ -638,6 +639,8 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
     *name = 0;
     *index = UINT_MAX;
 
+    QV4::Scope scope(m->engine());
+
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
     if (!that->m_object)
@@ -646,20 +649,22 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
     const QMetaObject *mo = that->m_object->metaObject();
     const int propertyCount = mo->propertyCount();
     if (it->arrayIndex < propertyCount) {
-        *name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
+        ScopedString n(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
+        *name = n.getPointer();
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(*name));
+        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(n));
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
     if (it->arrayIndex < propertyCount + methodCount) {
-        *name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
+        ScopedString n(scope, that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name())));
+        *name = n.getPointer();
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(*name));
+        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(n));
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attributes);

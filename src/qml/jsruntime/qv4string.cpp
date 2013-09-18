@@ -129,20 +129,19 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
-ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     Scope scope(m->engine());
-    ScopedString n(scope, name);
 
     String *that = static_cast<String *>(m);
     ExecutionEngine *v4 = m->engine();
-    if (name == v4->id_length) {
+    if (name->isEqualTo(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
         return Value::fromInt32(that->_text.length()).asReturnedValue();
     }
     PropertyAttributes attrs;
-    Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(n, &attrs);
+    Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;

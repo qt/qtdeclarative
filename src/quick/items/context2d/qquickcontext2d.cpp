@@ -1720,7 +1720,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleC
     QV8Engine *engine = ctx->engine->v8Engine;
 
     if (ctx->argumentCount == 2) {
-        QQuickContext2DStyle *pattern = new (v4->memoryManager) QQuickContext2DStyle(v4);
+        QV4::Scoped<QQuickContext2DStyle> pattern(scope, new (v4->memoryManager) QQuickContext2DStyle(v4));
 
         QColor color = engine->toVariant(ctx->arguments[0], qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
@@ -1734,7 +1734,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleC
             QImage patternTexture;
 
             if (QV4::Object *o = ctx->arguments[0].asObject()) {
-                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(ctx->engine->newString(QStringLiteral("data"))));
+                QV4::ScopedString s(scope, ctx->engine->newString(QStringLiteral("data")));
+                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s));
                 if (!!pixelData) {
                     patternTexture = pixelData->image;
                 }
@@ -1763,7 +1764,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::SimpleC
             }
         }
 
-        return QV4::Value::fromObject(pattern).asReturnedValue();
+        return pattern.asReturnedValue();
 
     }
     return QV4::Encode::undefined();

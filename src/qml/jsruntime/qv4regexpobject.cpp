@@ -207,8 +207,10 @@ QString RegExpObject::toString() const
 
 QString RegExpObject::source() const
 {
-    Value s = Value::fromReturnedValue(const_cast<RegExpObject *>(this)->get(internalClass->engine->newIdentifier(QStringLiteral("source"))));
-    return s.stringValue()->toQString();
+    Scope scope(engine());
+    ScopedString source(scope, scope.engine->newIdentifier(QStringLiteral("source")));
+    ScopedValue s(scope, const_cast<RegExpObject *>(this)->get(source));
+    return s->toQString();
 }
 
 uint RegExpObject::flags() const
@@ -292,7 +294,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
-    defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 
