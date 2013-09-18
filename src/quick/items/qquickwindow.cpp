@@ -53,6 +53,7 @@
 #include <QtQuick/private/qsgflashnode_p.h>
 
 #include <private/qsgrenderloop_p.h>
+#include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
@@ -319,6 +320,8 @@ void QQuickWindowPrivate::syncSceneGraph()
     QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
 
+    animationController->beforeNodeSync();
+
     emit q->beforeSynchronizing();
     if (!renderer) {
         forceUpdate(contentItem);
@@ -330,6 +333,8 @@ void QQuickWindowPrivate::syncSceneGraph()
     }
 
     updateDirtyNodes();
+
+    animationController->afterNodeSync();
 
     // Copy the current state of clearing from window into renderer.
     renderer->setClearColor(clearColor);
@@ -344,6 +349,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {
     QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickWindow);
+    animationController->advance();
     emit q->beforeRendering();
     int fboId = 0;
     const qreal devicePixelRatio = q->devicePixelRatio();
@@ -413,6 +419,9 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     context = windowManager->sceneGraphContext();
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(context->defaultSurfaceFormat());
+
+    animationController = new QQuickAnimatorController();
+    animationController->window = q;
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
@@ -990,6 +999,7 @@ QQuickWindow::~QQuickWindow()
 {
     Q_D(QQuickWindow);
 
+    d->animationController->deleteLater();
     d->windowManager->windowDestroyed(this);
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);

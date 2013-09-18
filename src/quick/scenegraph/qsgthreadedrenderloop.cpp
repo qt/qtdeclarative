@@ -55,6 +55,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 
 #include "qsgthreadedrenderloop_p.h"
+#include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qqmlprofilerservice_p.h>
 
@@ -328,8 +329,6 @@ public:
     QSGThreadedRenderLoop *wm;
     QOpenGLContext *gl;
     QSGContext *sg;
-
-    QEventLoop eventLoop;
 
     uint pendingUpdate;
     uint sleeping;
@@ -860,6 +859,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             ctx->moveToThread(m_thread);
             m_thread->gl = ctx;
         }
+
+        QQuickAnimatorController *controller = QQuickWindowPrivate::get(window)->animationController;
+        if (controller->thread() != m_thread)
+            controller->moveToThread(m_thread);
 
         m_thread->start();
 

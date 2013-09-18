@@ -71,6 +71,7 @@ QT_BEGIN_NAMESPACE
 
 //Make it easy to identify and customize the root item if needed
 
+class QQuickAnimatorController;
 class QSGRenderLoop;
 class QQuickDragGrabber;
 
@@ -197,6 +198,7 @@ public:
     QSGRenderer *renderer;
 
     QSGRenderLoop *windowManager;
+    QQuickAnimatorController *animationController;
 
     QColor clearColor;
 

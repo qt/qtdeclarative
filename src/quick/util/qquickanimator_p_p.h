@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,57 +39,59 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRenderLoop_P_H
-#define QSGRenderLoop_P_H
+#ifndef QQUICKANIMATOR_P_P_H
+#define QQUICKANIMATOR_P_P_H
 
-#include <QtGui/QImage>
-#include <private/qtquickglobal_p.h>
+#include "qquickanimator_p.h"
+#include "qquickanimation_p_p.h"
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-class QSGContext;
-class QAnimationDriver;
+class QQuickAnimatorJob;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
+class QQuickAnimatorPrivate : public QQuickAbstractAnimationPrivate
 {
-    Q_OBJECT
-
+    Q_DECLARE_PUBLIC(QQuickAnimator)
 public:
-    virtual ~QSGRenderLoop();
+    QQuickAnimatorPrivate()
+        : target(0)
+        , duration(250)
+        , from(0)
+        , to(0)
+        , isFromDefined(false)
+        , isToDefined(false)
+    {
+    }
 
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
+    QPointer<QQuickItem> target;
+    int duration;
+    QEasingCurve easing;
+    qreal from;
+    qreal to;
 
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
+    uint isFromDefined : 1;
+    uint isToDefined : 1;
 
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
+    void apply(QQuickAnimatorJob *job, const QString &propertyName, QQuickStateActions &actions, QQmlProperties &modified);
+};
 
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
+class QQuickRotationAnimatorPrivate : public QQuickAnimatorPrivate
+{
+public:
+    QQuickRotationAnimatorPrivate()
+        : direction(QQuickRotationAnimator::Numerical)
+    {
+    }
+    QQuickRotationAnimator::RotationDirection direction;
+};
 
-    virtual QAnimationDriver *animationDriver() const = 0;
-
-    virtual QSGContext *sceneGraphContext() const = 0;
-
-    virtual void releaseResources(QQuickWindow *window) = 0;
-
-    // ### make this less of a singleton
-    static QSGRenderLoop *instance();
-    static void setInstance(QSGRenderLoop *instance);
-
-    static bool useConsistentTiming();
-
-    virtual bool interleaveIncubation() const { return false; }
-
-Q_SIGNALS:
-    void timeToIncubate();
-
-private:
-    static QSGRenderLoop *s_instance;
+class QQuickUniformAnimatorPrivate : public QQuickAnimatorPrivate
+{
+public:
+    QString uniform;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGRenderLoop_P_H
+#endif // QQUICKANIMATOR_P_P_H

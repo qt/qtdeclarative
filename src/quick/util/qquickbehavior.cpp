@@ -49,6 +49,8 @@
 #include <private/qabstractanimationjob_p.h>
 #include <private/qquicktransition_p.h>
 
+#include <private/qquickanimatorjob_p.h>
+
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -186,14 +188,18 @@ void QQuickBehavior::write(const QVariant &value)
     if (d->animation->isRunning() && value == d->targetValue)
         return;
 
-    const QVariant &currentValue = d->property.read();
     d->targetValue = value;
 
-    if (d->animationInstance && d->animationInstance->duration() != -1
+    if (d->animationInstance
+            && (d->animationInstance->duration() != -1
+                || d->animationInstance->isRenderThreadProxy())
             && !d->animationInstance->isStopped()) {
         d->blockRunningChanged = true;
         d->animationInstance->stop();
     }
+    // Render thread animations use "stop" to synchronize the property back
+    // to the item, so we need to read the value after.
+    const QVariant &currentValue = d->property.read();
 
     QQuickStateOperation::ActionList actions;
     QQuickAction action;
@@ -205,6 +211,10 @@ void QQuickBehavior::write(const QVariant &value)
     QList<QQmlProperty> after;
     QAbstractAnimationJob *prev = d->animationInstance;
     d->animationInstance = d->animation->transition(actions, after, QQuickAbstractAnimation::Forward);
+
+    if (d->animationInstance && d->animation->threadingModel() == QQuickAbstractAnimation::RenderThread)
+        d->animationInstance = new QQuickAnimatorProxyJob(d->animationInstance, d->animation);
+
     if (prev && prev != d->animationInstance)
         delete prev;
 

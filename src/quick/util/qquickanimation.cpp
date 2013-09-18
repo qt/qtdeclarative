@@ -42,6 +42,8 @@
 #include "qquickanimation_p.h"
 #include "qquickanimation_p_p.h"
 
+#include "qquickanimatorjob_p.h"
+
 #include <private/qquickstatechangescript_p.h>
 #include <private/qqmlcontext_p.h>
 
@@ -171,8 +173,11 @@ void QQuickAbstractAnimationPrivate::commence()
         delete oldInstance;
 
     if (animationInstance) {
-        if (oldInstance != animationInstance)
+        if (oldInstance != animationInstance) {
+            if (q->threadingModel() == QQuickAbstractAnimation::RenderThread)
+                animationInstance = new QQuickAnimatorProxyJob(animationInstance, q);
             animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
+        }
         animationInstance->start();
         if (animationInstance->isStopped()) {
             running = false;
@@ -641,6 +646,11 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
         if (loopCount != 1)
             animationInstance->setLoopCount(loopCount);
     }
+}
+
+QQuickAbstractAnimation::ThreadingModel QQuickAbstractAnimation::threadingModel() const
+{
+    return GuiThread;
 }
 
 /*!
@@ -1713,6 +1723,21 @@ QQuickSequentialAnimation::~QQuickSequentialAnimation()
 {
 }
 
+QQuickAbstractAnimation::ThreadingModel QQuickSequentialAnimation::threadingModel() const
+{
+    Q_D(const QQuickAnimationGroup);
+
+    ThreadingModel style = AnyThread;
+    for (int i=0; i<d->animations.size(); ++i) {
+        ThreadingModel ces = d->animations.at(i)->threadingModel();
+        if (ces == GuiThread)
+            return GuiThread;
+        else if (ces == RenderThread)
+            style = RenderThread;
+    }
+    return style;
+}
+
 QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions &actions,
                                     QQmlProperties &modified,
                                     TransitionDirection direction,
@@ -1729,14 +1754,19 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
         from = d->animations.count() - 1;
     }
 
+    ThreadingModel execution = threadingModel();
+
     bool valid = d->defaultProperty.isValid();
     QAbstractAnimationJob* anim;
     for (int ii = from; ii < d->animations.count() && ii >= 0; ii += inc) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
-        if (anim)
+        if (anim) {
+            if (d->animations.at(ii)->threadingModel() == RenderThread && execution != RenderThread)
+                anim = new QQuickAnimatorProxyJob(anim, this);
             inc == -1 ? ag->prependAnimation(anim) : ag->appendAnimation(anim);
+        }
     }
 
     return initInstance(ag);
@@ -1782,6 +1812,23 @@ QQuickParallelAnimation::~QQuickParallelAnimation()
 {
 }
 
+QQuickAbstractAnimation::ThreadingModel QQuickParallelAnimation::threadingModel() const
+{
+    Q_D(const QQuickAnimationGroup);
+
+    ThreadingModel style = AnyThread;
+    for (int i=0; i<d->animations.size(); ++i) {
+        ThreadingModel ces = d->animations.at(i)->threadingModel();
+        if (ces == GuiThread)
+            return GuiThread;
+        else if (ces == RenderThread)
+            style = RenderThread;
+    }
+    return style;
+}
+
+
+
 QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &actions,
                                       QQmlProperties &modified,
                                       TransitionDirection direction,
@@ -1790,14 +1837,19 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
     Q_D(QQuickAnimationGroup);
     QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
 
+    ThreadingModel style = threadingModel();
+
     bool valid = d->defaultProperty.isValid();
     QAbstractAnimationJob* anim;
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
-        if (anim)
+        if (anim) {
+            if (d->animations.at(ii)->threadingModel() == RenderThread && style != RenderThread)
+                anim = new QQuickAnimatorProxyJob(anim, this);
             ag->appendAnimation(anim);
+        }
     }
     return initInstance(ag);
 }
@@ -2034,6 +2086,8 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     \qmlproperty real QtQuick2::PropertyAnimation::easing.overshoot
     \qmlproperty real QtQuick2::PropertyAnimation::easing.period
     \qmlproperty list<real> QtQuick2::PropertyAnimation::easing.bezierCurve
+
+//! propertyanimation.easing
     \brief Specifies the easing curve used for the animation
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -2235,6 +2289,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
 
     See the \l {qml/animation/easing}{easing} example for a demonstration of
     the different easing settings.
+//! propertyanimation.easing
 */
 QEasingCurve QQuickPropertyAnimation::easing() const
 {

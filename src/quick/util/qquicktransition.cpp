@@ -48,6 +48,8 @@
 #include "qquickanimation_p_p.h"
 #include "qquicktransitionmanager_p_p.h"
 
+#include <private/qquickanimatorjob_p.h>
+
 #include "private/qparallelanimationgroupjob_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -260,8 +262,11 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     QAbstractAnimationJob *anim = 0;
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction, defaultTarget);
-        if (anim)
+        if (anim) {
+            if (d->animations.at(i)->threadingModel() == QQuickAbstractAnimation::RenderThread)
+                anim = new QQuickAnimatorProxyJob(anim, d->animations.at(i));
             d->reversed ? group->prependAnimation(anim) : group->appendAnimation(anim);
+        }
         d->reversed ? --i : ++i;
     }
 

@@ -53,6 +53,7 @@
 #include "qquickstate_p_p.h"
 #include "qquicksystempalette_p.h"
 #include "qquicktransition_p.h"
+#include "qquickanimator_p.h"
 #include <qqmlinfo.h>
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qquickanimationcontroller_p.h>
@@ -90,6 +91,14 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickSystemPalette>("QtQuick",2,0,"SystemPalette");
     qmlRegisterType<QQuickTransition>("QtQuick",2,0,"Transition");
     qmlRegisterType<QQuickVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
+
+    qmlRegisterUncreatableType<QQuickAnimator>("QtQuick", 2, 2, "Animator", QQuickAbstractAnimation::tr("Animator is an abstract class"));
+    qmlRegisterType<QQuickXAnimator>("QtQuick", 2, 2, "XAnimator");
+    qmlRegisterType<QQuickYAnimator>("QtQuick", 2, 2, "YAnimator");
+    qmlRegisterType<QQuickScaleAnimator>("QtQuick", 2, 2, "ScaleAnimator");
+    qmlRegisterType<QQuickRotationAnimator>("QtQuick", 2, 2, "RotationAnimator");
+    qmlRegisterType<QQuickOpacityAnimator>("QtQuick", 2, 2, "OpacityAnimator");
+    qmlRegisterType<QQuickUniformAnimator>("QtQuick", 2, 2, "UniformAnimator");
 
     qmlRegisterType<QQuickStateOperation>();
 

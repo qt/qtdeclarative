@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,57 +39,32 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRenderLoop_P_H
-#define QSGRenderLoop_P_H
+import QtQuick 2.2
 
-#include <QtGui/QImage>
-#include <private/qtquickglobal_p.h>
+Rectangle {
+    id: box
+    gradient: Gradient {
+        GradientStop { position: 0.1; color: "red" }
+        GradientStop { position: 0.9; color: "blue" }
+    }
+    width: 100
+    height: 100
+    anchors.centerIn: parent
+    antialiasing: true
 
-QT_BEGIN_NAMESPACE
+    property int rotationChangeCounter: 0
+    onRotationChanged: ++rotationChangeCounter;
 
-class QQuickWindow;
-class QSGContext;
-class QAnimationDriver;
+    property int scaleChangeCounter: 0
+    onScaleChanged: ++scaleChangeCounter;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
-{
-    Q_OBJECT
+    property int opacityChangeCounter: 0
+    onOpacityChanged: ++opacityChangeCounter
 
-public:
-    virtual ~QSGRenderLoop();
+    property int xChangeCounter: 0;
+    onXChanged: ++xChangeCounter;
 
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
+    property int yChangeCounter: 0;
+    onYChanged: ++yChangeCounter;
 
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
-
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
-
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
-
-    virtual QAnimationDriver *animationDriver() const = 0;
-
-    virtual QSGContext *sceneGraphContext() const = 0;
-
-    virtual void releaseResources(QQuickWindow *window) = 0;
-
-    // ### make this less of a singleton
-    static QSGRenderLoop *instance();
-    static void setInstance(QSGRenderLoop *instance);
-
-    static bool useConsistentTiming();
-
-    virtual bool interleaveIncubation() const { return false; }
-
-Q_SIGNALS:
-    void timeToIncubate();
-
-private:
-    static QSGRenderLoop *s_instance;
-};
-
-QT_END_NAMESPACE
-
-#endif // QSGRenderLoop_P_H
+}

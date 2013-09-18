@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,57 +39,36 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRenderLoop_P_H
-#define QSGRenderLoop_P_H
+import QtQuick 2.2
+import QtTest 1.0
 
-#include <QtGui/QImage>
-#include <private/qtquickglobal_p.h>
+Item {
+    id: root;
+    width: 200
+    height: 200
 
-QT_BEGIN_NAMESPACE
+    TestCase {
+        id: testcase
+        name: "parallel"
+        when: !animation.running
+        function test_endresult() {
+            compare(box.rotationChangeCounter, 1);
+            compare(box.scaleChangeCounter, 1);
+            compare(box.scale, 2);
+            compare(box.rotation, 180);
+            var image = grabImage(root);
+            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
+            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
+        }
+    }
 
-class QQuickWindow;
-class QSGContext;
-class QAnimationDriver;
-
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
-{
-    Q_OBJECT
-
-public:
-    virtual ~QSGRenderLoop();
-
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
-
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
-
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
-
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
-
-    virtual QAnimationDriver *animationDriver() const = 0;
-
-    virtual QSGContext *sceneGraphContext() const = 0;
-
-    virtual void releaseResources(QQuickWindow *window) = 0;
-
-    // ### make this less of a singleton
-    static QSGRenderLoop *instance();
-    static void setInstance(QSGRenderLoop *instance);
-
-    static bool useConsistentTiming();
-
-    virtual bool interleaveIncubation() const { return false; }
-
-Q_SIGNALS:
-    void timeToIncubate();
-
-private:
-    static QSGRenderLoop *s_instance;
-};
-
-QT_END_NAMESPACE
-
-#endif // QSGRenderLoop_P_H
+    Box {
+        id: box
+        ParallelAnimation {
+            id: animation
+            ScaleAnimator { target: box; from: 1; to: 2.0; duration: 1000; }
+            RotationAnimator { target: box; from: 0; to: 180; duration: 1000; }
+            running: true
+        }
+    }
+}

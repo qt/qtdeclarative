@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,57 +39,78 @@
 **
 ****************************************************************************/
 
-#ifndef QSGRenderLoop_P_H
-#define QSGRenderLoop_P_H
+#ifndef QQUICKANIMATORCONTROLLER_P_H
+#define QQUICKANIMATORCONTROLLER_P_H
 
-#include <QtGui/QImage>
-#include <private/qtquickglobal_p.h>
+#include "qquickanimatorjob_p.h"
+#include <QtQuick/qsgnode.h>
+#include <QtQuick/qquickitem.h>
+
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-class QSGContext;
-class QAnimationDriver;
-
-class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
+class QQuickAnimatorController : public QObject, public QAnimationJobChangeListener
 {
     Q_OBJECT
 
 public:
-    virtual ~QSGRenderLoop();
 
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
+    enum EventType {
+        // GUI to RT events
+        StartAnimation = QEvent::User + 1,
+        StopAnimation,
+        DeleteAnimation,
 
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
+        // RT back to GUI events
+        AnimationFinished
+    };
 
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
+    class Event : public QEvent {
+    public:
+        Event(QAbstractAnimationJob *j, EventType type)
+            : QEvent(QEvent::Type(type))
+            , job(j)
+        {
+        }
+        QAbstractAnimationJob *job;
+    };
 
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
+    QQuickAnimatorController();
+    ~QQuickAnimatorController();
 
-    virtual QAnimationDriver *animationDriver() const = 0;
+    void advance();
+    void beforeNodeSync();
+    void afterNodeSync();
 
-    virtual QSGContext *sceneGraphContext() const = 0;
+    bool event(QEvent *);
 
-    virtual void releaseResources(QQuickWindow *window) = 0;
+    void startAnimation(QAbstractAnimationJob *job);
 
-    // ### make this less of a singleton
-    static QSGRenderLoop *instance();
-    static void setInstance(QSGRenderLoop *instance);
+    void animationStateChanged(QAbstractAnimationJob *job,
+                               QAbstractAnimationJob::State newState,
+                               QAbstractAnimationJob::State oldState);
 
-    static bool useConsistentTiming();
+public Q_SLOTS:
+    void animationsStarted();
+    void animationsStopped();
 
-    virtual bool interleaveIncubation() const { return false; }
+public:
+    QList<QAbstractAnimationJob *> starting;
+    QList<QAbstractAnimationJob *> stopped;
 
-Q_SIGNALS:
-    void timeToIncubate();
+    QSet<QAbstractAnimationJob *> activeRootAnimations;
+    QSet<QQuickAnimatorJob *> activeLeafAnimations;
 
-private:
-    static QSGRenderLoop *s_instance;
+    QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> transforms;
+
+    QQuickWindow *window;
+
+    QAnimationDriver *driver;
+
+    QMutex mutex;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGRenderLoop_P_H
+#endif // QQUICKANIMATORCONTROLLER_P_H

@@ -277,6 +277,8 @@ QAbstractAnimationJob::QAbstractAnimationJob()
     , m_isGroup(false)
     , m_disableUserControl(false)
     , m_hasCurrentTimeChangeListeners(false)
+    , m_isRenderThreadJob(false)
+    , m_isRenderThreadProxy(false)
 
 {
 }

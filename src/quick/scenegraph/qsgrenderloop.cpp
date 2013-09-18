@@ -124,6 +124,18 @@ public:
     bool eventPending;
 };
 
+bool QSGRenderLoop::useConsistentTiming()
+{
+    bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
+    // Enable fixed animation steps...
+    QByteArray fixed = qgetenv("QSG_FIXED_ANIMATION_STEP");
+    bool fixedAnimationSteps = bufferQueuing;
+    if (fixed == "no")
+        fixedAnimationSteps = false;
+    else if (fixed.length())
+        fixedAnimationSteps = true;
+    return fixedAnimationSteps;
+}
 
 QSGRenderLoop *QSGRenderLoop::instance()
 {
@@ -131,16 +143,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
         s_instance = QSGContext::createWindowManager();
 
-        bool bufferQueuing = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
-
-        // Enable fixed animation steps...
-        QByteArray fixed = qgetenv("QML_FIXED_ANIMATION_STEP");
-        bool fixedAnimationSteps = bufferQueuing;
-        if (fixed == "no")
-            fixedAnimationSteps = false;
-        else if (fixed.length())
-            fixedAnimationSteps = true;
-        if (fixedAnimationSteps)
+        if (useConsistentTiming())
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
 
         if (!s_instance) {

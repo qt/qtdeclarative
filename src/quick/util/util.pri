@@ -22,7 +22,10 @@ SOURCES += \
     $$PWD/qquickimageprovider.cpp \
     $$PWD/qquicksvgparser.cpp \
     $$PWD/qquickvaluetypes.cpp \
-    $$PWD/qquickglobal.cpp
+    $$PWD/qquickglobal.cpp \
+    $$PWD/qquickanimator.cpp \
+    $$PWD/qquickanimatorjob.cpp \
+    $$PWD/qquickanimatorcontroller.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
@@ -51,4 +54,8 @@ HEADERS += \
     $$PWD/qquickpathinterpolator_p.h \
     $$PWD/qquickimageprovider.h \
     $$PWD/qquicksvgparser_p.h \
-    $$PWD/qquickvaluetypes_p.h
+    $$PWD/qquickvaluetypes_p.h \
+    $$PWD/qquickanimator_p.h \
+    $$PWD/qquickanimator_p_p.h \
+    $$PWD/qquickanimatorjob_p.h \
+    $$PWD/qquickanimatorcontroller_p.h

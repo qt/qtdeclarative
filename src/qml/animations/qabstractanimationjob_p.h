@@ -113,6 +113,10 @@ public:
     QAbstractAnimationJob *nextSibling() const { return m_nextSibling; }
     QAbstractAnimationJob *previousSibling() const { return m_previousSibling; }
 
+    bool isGroup() const { return m_isGroup; }
+    bool isRenderThreadJob() const { return m_isRenderThreadJob; }
+    bool isRenderThreadProxy() const { return m_isRenderThreadProxy; }
+
 protected:
     virtual void updateCurrentTime(int) {}
     virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
@@ -157,6 +161,8 @@ protected:
     bool m_isGroup:1;
     bool m_disableUserControl:1;
     bool m_hasCurrentTimeChangeListeners:1;
+    bool m_isRenderThreadJob:1;
+    bool m_isRenderThreadProxy:1;
 
     friend class QQmlAnimationTimer;
     friend class QAnimationGroupJob;
