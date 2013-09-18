@@ -105,11 +105,22 @@ struct QObjectWrapper;
 // will return it in a register on all platforms.
 // It will be returned in rax on x64, [eax,edx] on x86 and [r0,r1] on arm
 typedef quint64 ReturnedValue;
-template<typename T> struct Scoped;
-template<typename T> struct Returned;
 struct CallData;
 struct ScopedValue;
 struct ValueRef;
+template<typename T> struct Scoped;
+typedef Scoped<String> ScopedString;
+typedef Scoped<Object> ScopedObject;
+typedef Scoped<FunctionObject> ScopedFunctionObject;
+template<typename T> struct Returned;
+typedef Returned<String> ReturnedString;
+typedef Returned<Object> ReturnedObject;
+typedef Returned<FunctionObject> ReturnedFunctionObject;
+template<typename T> struct Referenced;
+typedef Referenced<String> StringRef;
+typedef Referenced<Object> ObjectRef;
+typedef Referenced<FunctionObject> FunctionObjectRef;
+
 
 namespace Global {
     enum {

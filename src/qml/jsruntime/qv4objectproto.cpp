@@ -103,6 +103,9 @@ ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 
 void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
 {
+    ExecutionEngine *v4 = ctx->engine;
+    Scope scope(v4);
+
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_prototype, Value::fromObject(this));
     ctor.objectValue()->defineReadonlyProperty(ctx->engine->id_length, Value::fromInt32(1));
     ctor.objectValue()->defineDefaultProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
@@ -129,10 +132,10 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("__defineGetter__"), method_defineGetter, 2);
     defineDefaultProperty(ctx, QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
-    ExecutionEngine *v4 = ctx->engine;
+    Scoped<String> id_proto(scope, v4->id___proto__);
     Property *p = insertMember(v4->id___proto__, Attr_Accessor|Attr_NotEnumerable);
-    p->setGetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_get_proto)->getPointer());
-    p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto)->getPointer());
+    p->setGetter(v4->newBuiltinFunction(v4->rootContext, id_proto, method_get_proto)->getPointer());
+    p->setSetter(v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
 }
 
 ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)

@@ -411,6 +411,51 @@ private:
     Value *ptr;
 };
 
+
+template<typename T>
+struct Referenced {
+    // Important: Do NOT add a copy constructor to this class
+    // adding a copy constructor actually changes the calling convention, ie.
+    // is not even binary compatible. Adding it would break assumptions made
+    // in the jit'ed code.
+    Referenced(const Scoped<T> &v)
+        : ptr(v.ptr) {}
+    Referenced &operator=(const Referenced &o)
+    { *ptr = *o.ptr; return *this; }
+    Referenced &operator=(T *t)
+    { ptr->val = t->asReturnedValue(); return *this; }
+    Referenced &operator=(const Returned<T> *t) {
+        ptr->val = t->getPointer()->asReturnedValue();
+        return *this;
+    }
+
+    operator const T *() const {
+        return static_cast<T*>(ptr->managed());
+    }
+    const T *operator->() const {
+        return static_cast<T*>(ptr->managed());
+    }
+
+    operator T *() {
+        return static_cast<T*>(ptr->managed());
+    }
+    T *operator->() {
+        return static_cast<T*>(ptr->managed());
+    }
+
+    T *getPointer() {
+        return static_cast<T *>(ptr->managed());
+    }
+    ReturnedValue asReturnedValue() const { return ptr->val; }
+
+private:
+    Value *ptr;
+};
+
+typedef Referenced<String> StringRef;
+typedef Referenced<Object> ObjectRef;
+typedef Referenced<FunctionObject> FunctionObjectRef;
+
 template<typename T>
 inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
 {

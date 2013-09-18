@@ -44,12 +44,6 @@
 
 using namespace QV4;
 
-static ReturnedValue throwTypeError(SimpleCallContext *ctx)
-{
-    ctx->throwTypeError();
-    return Value::undefinedValue().asReturnedValue();
-}
-
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
 
 ArgumentsObject::ArgumentsObject(CallContext *context)
@@ -59,12 +53,12 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     type = Type_ArgumentsObject;
 
     Scope scope(context);
+    ExecutionEngine *v4 = context->engine;
 
     if (context->strictMode) {
-        internalClass = engine()->strictArgumentsObjectClass;
+        internalClass = v4->strictArgumentsObjectClass;
 
-        Scoped<FunctionObject> thrower(scope, context->engine->newBuiltinFunction(context, 0, throwTypeError));
-        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         assert(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
         assert(CallerPropertyIndex == internalClass->find(context->engine->id_caller));
         memberData[CalleePropertyIndex] = pd;

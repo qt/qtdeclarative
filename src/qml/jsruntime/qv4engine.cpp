@@ -79,6 +79,12 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
+static ReturnedValue throwTypeError(SimpleCallContext *ctx)
+{
+    ctx->throwTypeError();
+    return Value::undefinedValue().asReturnedValue();
+}
+
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     : memoryManager(new QV4::MemoryManager)
     , executableAllocator(new QV4::ExecutableAllocator)
@@ -287,6 +293,10 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(rootContext, QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
     globalObject->defineDefaultProperty(rootContext, QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject->defineDefaultProperty(rootContext, QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
+
+    Scope scope(this);
+    Scoped<String> name(scope, newString(QStringLiteral("thrower")));
+    thrower = newBuiltinFunction(rootContext, name, throwTypeError)->getPointer();
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -344,9 +354,9 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
+Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, StringRef name, ReturnedValue (*code)(SimpleCallContext *))
 {
-    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
+    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name.getPointer(), code);
     return f->asReturned<FunctionObject>();
 }
 
@@ -720,6 +730,8 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark();
     typeErrorCtor.mark();
     uRIErrorCtor.mark();
+
+    thrower->mark();
 
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects();

@@ -213,8 +213,6 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
-    MemoryManager::GCBlocker gcBlocker(f->engine()->memoryManager);
-
     ExecutionContext *ctx = f->engine()->current;
     QString arguments;
     QString body;
@@ -365,13 +363,6 @@ ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target.getPointer(), boundThis, boundArgs)->asReturnedValue();
 }
 
-
-static ReturnedValue throwTypeError(SimpleCallContext *ctx)
-{
-    ctx->throwTypeError();
-    return 0;
-}
-
 DEFINE_MANAGED_VTABLE(ScriptFunction);
 
 ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
@@ -387,7 +378,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     if (!scope)
         return;
 
-    MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
+    ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
     usesArgumentsObject = function->usesArgumentsObject();
@@ -400,9 +391,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     varList = function->locals.constData();
 
     if (scope->strictMode) {
-        Scope s(scope);
-        Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
-        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
         *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     }
@@ -484,7 +473,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     if (!scope)
         return;
 
-    MemoryManager::GCBlocker gcBlocker(scope->engine->memoryManager);
+    ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
     usesArgumentsObject = function->usesArgumentsObject();
@@ -497,9 +486,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     varList = function->locals.constData();
 
     if (scope->strictMode) {
-        Scope s(scope);
-        Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
-        Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+        Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
         *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
         *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     }
@@ -656,9 +643,9 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
         len = 0;
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
 
-    Scope s(scope);
-    Scoped<FunctionObject> thrower(s, scope->engine->newBuiltinFunction(scope, 0, throwTypeError));
-    Property pd = Property::fromAccessor(thrower.getPointer(), thrower.getPointer());
+    ExecutionEngine *v4 = scope->engine;
+
+    Property pd = Property::fromAccessor(v4->thrower, v4->thrower);
     *insertMember(scope->engine->id_arguments, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
     *insertMember(scope->engine->id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable) = pd;
 }
