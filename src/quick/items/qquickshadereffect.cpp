@@ -573,7 +573,9 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
        the shader.
     \li QPoint, QPointF, QSize, QSizeF -> vec2
     \li QVector3D -> vec3
-    \li QTransform -> mat4
+    \li QVector4D -> vec4
+    \li QTransform -> mat3
+    \li QMatrix4x4 -> mat4
     \li \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
        corner, and the color values are premultiplied.
     \endlist
