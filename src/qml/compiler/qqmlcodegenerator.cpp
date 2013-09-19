@@ -124,6 +124,8 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     this->pool = output->jsParserEngine.pool();
     this->jsGenerator = &output->jsGenerator;
 
+    emptyStringIndex = registerString(QString());
+
     sourceCode = code;
 
     accept(program->imports);
@@ -195,7 +197,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
     bool isType = lastId->name.unicode()->isUpper();
     if (isType) {
         int idx = defineQMLObject(node);
-        appendBinding(AST::SourceLocation(), registerString(QString()), idx);
+        appendBinding(AST::SourceLocation(), emptyStringIndex, idx);
     } else {
         int idx = defineQMLObject(/*qualfied type name id*/0, node->initializer);
         appendBinding(node->qualifiedTypeNameId, idx);
@@ -307,7 +309,7 @@ int QQmlCodeGenerator::defineQMLObject(AST::UiQualifiedId *qualifiedTypeNameId, 
     _object->location.line = loc.startLine;
     _object->location.column = loc.startColumn;
 
-    _object->idIndex = registerString(QString());
+    _object->idIndex = emptyStringIndex;
     _object->indexOfDefaultProperty = -1;
     _object->properties = New<PoolList<QmlProperty> >();
     _object->qmlSignals = New<PoolList<Signal> >();
@@ -347,7 +349,7 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
         uri = asString(node->importUri);
     }
 
-    import->qualifierIndex = registerString(QString());
+    import->qualifierIndex = emptyStringIndex;
 
     // Qualifier
     if (!node->importId.isNull()) {
@@ -414,6 +416,24 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
     _imports.append(import);
 
     return false;
+}
+
+static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
+{
+    if (node->kind == QQmlJS::AST::Node::Kind_IdentifierExpression) {
+        QString name =
+            static_cast<QQmlJS::AST::IdentifierExpression *>(node)->name.toString();
+        return QStringList() << name;
+    } else if (node->kind == QQmlJS::AST::Node::Kind_FieldMemberExpression) {
+        QQmlJS::AST::FieldMemberExpression *expr = static_cast<QQmlJS::AST::FieldMemberExpression *>(node);
+
+        QStringList rv = astNodeToStringList(expr->base);
+        if (rv.isEmpty())
+            return rv;
+        rv.append(expr->name.toString());
+        return rv;
+    }
+    return QStringList();
 }
 
 bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
@@ -507,7 +527,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             } else {
                 // the parameter is a known basic type
                 param->type = type->type;
-                param->customTypeNameIndex = registerString(QString());
+                param->customTypeNameIndex = emptyStringIndex;
             }
 
             param->nameIndex = registerString(p->name.toString());
@@ -595,7 +615,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         if (type >= QV4::CompiledData::Property::Custom)
             property->customTypeNameIndex = registerString(memberType.toString());
         else
-            property->customTypeNameIndex = registerString(QString());
+            property->customTypeNameIndex = emptyStringIndex;
 
         property->nameIndex = registerString(name.toString());
 
@@ -603,7 +623,31 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         property->location.line = loc.startLine;
         property->location.column = loc.startColumn;
 
-        if (node->statement)
+        property->aliasPropertyValueIndex = emptyStringIndex;
+
+        if (type == QV4::CompiledData::Property::Alias) {
+            if (!node->statement && !node->binding)
+                COMPILE_EXCEPTION(loc, tr("No property alias location"));
+
+            QStringList alias;
+            if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node->statement))
+                alias = astNodeToStringList(stmt->expression);
+
+            if (node->binding || alias.isEmpty())
+                COMPILE_EXCEPTION(loc, tr("Invalid alias location"));
+
+             if (alias.count() < 1 || alias.count() > 3)
+                COMPILE_EXCEPTION(loc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+
+             property->aliasIdValueIndex = registerString(alias.first());
+
+             QString propertyValue = alias.value(1);
+             if (alias.count() == 3) {
+                 propertyValue += QLatin1Char('.');
+                 propertyValue += alias.at(2);
+             }
+             property->aliasPropertyValueIndex = registerString(propertyValue);
+        } else if (node->statement)
             appendBinding(node->identifierToken, property->nameIndex, node->statement);
 
         _object->properties->append(property);

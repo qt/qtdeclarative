@@ -341,6 +341,7 @@ private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
     friend class QQmlPropertyCacheCreator;
+    friend class QQmlComponentAndAliasResolver;
 
     inline QQmlPropertyCache *copy(int reserve);
 

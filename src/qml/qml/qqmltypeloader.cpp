@@ -2281,28 +2281,12 @@ void QQmlTypeData::compile()
             }
         }
 
-        {
-            // Scan for anonymous components and determine their scopes.
-            QQmlAnonymousComponentResolver resolver(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes, m_compiledData->propertyCaches);
+        if (errors.isEmpty()) {
+            // Scan for components, determine their scopes and resolve aliases within the scope.
+            QQmlComponentAndAliasResolver resolver(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes, m_compiledData->propertyCaches,
+                                                   &m_compiledData->datas, &m_compiledData->objectIndexToIdForRoot, &m_compiledData->objectIndexToIdPerComponent);
             if (!resolver.resolve())
                 errors << resolver.errors;
-
-            for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
-                const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
-
-                QHash<int, int> *objectIndexToId = 0;
-                QHash<int, int>::ConstIterator componentIt = resolver.objectIndexToComponentIndex.find(i);
-                if (componentIt != resolver.objectIndexToComponentIndex.constEnd()) {
-                    int indexOfComponent = resolver.componentRoots[*componentIt];
-                    objectIndexToId = &m_compiledData->objectIndexToIdPerComponent[indexOfComponent];
-                } else
-                    objectIndexToId = &m_compiledData->objectIndexToIdForRoot;
-
-                const QString &id = qmlUnit->header.stringAt(obj->idIndex);
-                if (id.isEmpty())
-                    continue;
-                objectIndexToId->insert(i, objectIndexToId->count());
-            }
         }
 
         if (!errors.isEmpty()) {

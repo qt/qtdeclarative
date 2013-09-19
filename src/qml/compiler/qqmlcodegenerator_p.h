@@ -262,6 +262,7 @@ public:
     QString sourceCode;
     QUrl url;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
+    int emptyStringIndex;
     bool sanityCheckFunctionNames();
 };
 
@@ -291,7 +292,7 @@ struct PropertyResolver
         return cache->property(index);
     }
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision);
+    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0);
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
     QQmlPropertyData *signal(const QString &name, bool *notInRevision);

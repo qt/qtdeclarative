@@ -80,13 +80,16 @@ protected:
     QHash<int, QQmlCompiledData::TypeReference> *resolvedTypes;
 };
 
-class QQmlAnonymousComponentResolver : public QQmlCompilePass
+class QQmlComponentAndAliasResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
 public:
-    QQmlAnonymousComponentResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+    QQmlComponentAndAliasResolver(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
                                    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                   const QList<QQmlPropertyCache *> &propertyCaches);
+                                   const QList<QQmlPropertyCache *> &propertyCaches,
+                                   QList<QByteArray> *vmeMetaObjectData,
+                                   QHash<int, int> *objectIndexToIdForRoot,
+                                   QHash<int, QHash<int, int> > *objectIndexToIdPerComponent);
 
     bool resolve();
 
@@ -94,13 +97,19 @@ public:
     QHash<int, int> objectIndexToComponentIndex;
 
 protected:
-    bool recordComponentSubTree(int objectIndex);
+    bool collectIdsAndAliases(int objectIndex);
+    bool resolveAliases();
 
     int _componentIndex;
-    QSet<int> _ids;
+    QHash<int, int> _idToObjectIndex;
+    QHash<int, int> *_objectIndexToIdInScope;
+    QList<int> _objectsWithAliases;
 
     const QHash<int, QQmlCompiledData::TypeReference> resolvedTypes;
     const QList<QQmlPropertyCache *> propertyCaches;
+    QList<QByteArray> *vmeMetaObjectData;
+    QHash<int, int> *objectIndexToIdForRoot;
+    QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
 };
 
 class QmlObjectCreator : public QQmlCompilePass
