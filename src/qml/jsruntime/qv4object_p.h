@@ -101,9 +101,6 @@ struct SyntaxErrorPrototype;
 struct TypeErrorPrototype;
 struct URIErrorPrototype;
 
-typedef Value (*PropertyEnumeratorFunction)(Object *object);
-typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
-
 struct Q_QML_EXPORT Object: Managed {
     Q_MANAGED
     uint memberDataAlloc;
@@ -157,10 +154,10 @@ struct Q_QML_EXPORT Object: Managed {
 
     void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
 
-    void inplaceBinOp(ExecutionContext *, BinOp op, String *name, const ValueRef rhs);
-    void inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs);
-    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs);
-    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs);
+    void inplaceBinOp(ExecutionContext *, BinOp op, const StringRef name, const ValueRef rhs);
+    void inplaceBinOpValue(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs);
+    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const StringRef name, const ValueRef rhs);
+    void inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(const StringRef name, Value value);

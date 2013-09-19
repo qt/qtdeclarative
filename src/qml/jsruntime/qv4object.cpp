@@ -169,16 +169,15 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
-    ScopedString n(scope, name);
-    ScopedValue v(scope, get(n));
+    ScopedValue v(scope, get(name));
     ScopedValue result(scope, op(v, rhs));
-    put(n, result);
+    put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
+void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
 {
     Scope scope(ctx);
     uint idx = index->asArrayIndex();
@@ -189,21 +188,19 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index,
         putIndexed(idx, result);
         return;
     }
-    String *name = index->toString(ctx);
-    assert(name);
+    ScopedString name(scope, index->toString(ctx));
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
+void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
-    ScopedString n(scope, name);
-    ScopedValue v(scope, get(n));
+    ScopedValue v(scope, get(name));
     ScopedValue result(scope, op(ctx, v, rhs));
-    put(n, result);
+    put(name, result);
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
+void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
 {
     Scope scope(ctx);
     uint idx = index->asArrayIndex();
@@ -214,8 +211,7 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef
         putIndexed(idx, result);
         return;
     }
-    String *name = index->toString(ctx);
-    assert(name);
+    ScopedString name(scope, index->toString(ctx));
     inplaceBinOp(ctx, op, name, rhs);
 }
 
