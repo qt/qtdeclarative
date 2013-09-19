@@ -434,7 +434,7 @@ bool Object::__hasProperty__(const StringRef name) const
 
     const Object *o = this;
     while (o) {
-        if (!o->query(name.getPointer()).isEmpty())
+        if (!o->query(name).isEmpty())
             return true;
         o = o->prototype();
     }
@@ -477,14 +477,14 @@ void Object::putIndexed(Managed *m, uint index, const ValueRef value)
     static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
-PropertyAttributes Object::query(const Managed *m, String *name)
+PropertyAttributes Object::query(const Managed *m, StringRef name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return queryIndexed(m, idx);
 
     const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass->find(name);
+    idx = o->internalClass->find(name.getPointer());
     if (idx < UINT_MAX)
         return o->internalClass->propertyData[idx];
 
@@ -508,7 +508,7 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool Object::deleteProperty(Managed *m, String *name)
+bool Object::deleteProperty(Managed *m, const StringRef name)
 {
     return static_cast<Object *>(m)->internalDeleteProperty(name);
 }
@@ -874,7 +874,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(String *name)
+bool Object::internalDeleteProperty(const StringRef name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)

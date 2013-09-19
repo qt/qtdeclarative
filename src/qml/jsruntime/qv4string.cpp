@@ -189,7 +189,7 @@ void String::putIndexed(Managed *m, uint index, const ValueRef value)
     o->putIndexed(index, value);
 }
 
-PropertyAttributes String::query(const Managed *m, String *name)
+PropertyAttributes String::query(const Managed *m, StringRef name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -203,7 +203,7 @@ PropertyAttributes String::queryIndexed(const Managed *m, uint index)
     return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
-bool String::deleteProperty(Managed *, String *)
+bool String::deleteProperty(Managed *, const StringRef)
 {
     return false;
 }

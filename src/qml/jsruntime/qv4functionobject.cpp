@@ -130,20 +130,18 @@ ReturnedValue FunctionObject::newInstance()
     return construct(callData);
 }
 
-bool FunctionObject::hasInstance(Managed *that, const Value &value)
+bool FunctionObject::hasInstance(Managed *that, const ValueRef value)
 {
-    FunctionObject *f = static_cast<FunctionObject *>(that);
+    Scope scope(that->engine());
+    ScopedFunctionObject f(scope, static_cast<FunctionObject *>(that));
 
-    Object *v = value.asObject();
+    ScopedObject v(scope, value);
     if (!v)
         return false;
 
-    ExecutionContext *ctx = f->engine()->current;
-    QV4::Scope scope(ctx);
-
-    Scoped<Object> o(scope, f->get(ctx->engine->id_prototype));
+    Scoped<Object> o(scope, f->get(scope.engine->id_prototype));
     if (!o)
-        ctx->throwTypeError();
+        scope.engine->current->throwTypeError();
 
     while (v) {
         v = v->prototype();
@@ -677,7 +675,7 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     return f->target->construct(callData);
 }
 
-bool BoundFunction::hasInstance(Managed *that, const Value &value)
+bool BoundFunction::hasInstance(Managed *that, const ValueRef value)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     return FunctionObject::hasInstance(f->target, value);

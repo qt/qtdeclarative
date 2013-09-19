@@ -171,7 +171,7 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::hasInstance(Managed *m, const Value &)
+bool Managed::hasInstance(Managed *m, const ValueRef)
 {
     m->engine()->current->throwTypeError();
 }
@@ -202,6 +202,11 @@ bool Managed::isEqualTo(Managed *, Managed *)
     return false;
 }
 
+bool Managed::hasInstance(const ValueRef v)
+{
+    return vtbl->hasInstance(this, v);
+}
+
 ReturnedValue Managed::get(const StringRef name, bool *hasProperty)
 {
     return vtbl->get(this, name, hasProperty);
@@ -225,4 +230,14 @@ void Managed::setLookup(Lookup *l, const ValueRef v)
 void Managed::putIndexed(uint index, const ValueRef value)
 {
     vtbl->putIndexed(this, index, value);
+}
+
+PropertyAttributes Managed::query(StringRef name) const
+{
+    return vtbl->query(this, name);
+}
+
+bool Managed::deleteProperty(const StringRef name)
+{
+    return vtbl->deleteProperty(this, name);
 }

@@ -263,13 +263,17 @@ ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef bas
 
 ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, String *name)
 {
-    Object *obj = base->toObject(ctx);
-    return Value::fromBoolean(obj->deleteProperty(name)).asReturnedValue();
+    Scope scope(ctx);
+    ScopedObject obj(scope, base->toObject(ctx));
+    ScopedString n(scope, name);
+    return Encode(obj->deleteProperty(n));
 }
 
 ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
 {
-    return Value::fromBoolean(ctx->deleteProperty(name)).asReturnedValue();
+    Scope scope(ctx);
+    ScopedString n(scope, name);
+    return Encode(ctx->deleteProperty(n));
 }
 
 QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -296,7 +300,7 @@ QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left
     if (!o)
         ctx->throwTypeError();
 
-    bool r = o->hasInstance(*left);
+    bool r = o->hasInstance(left);
     return Value::fromBoolean(r).asReturnedValue();
 }
 

@@ -131,9 +131,9 @@ protected:
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static PropertyAttributes query(const Managed *m, String *name);
+    static PropertyAttributes query(const Managed *m, StringRef name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *, String *);
+    static bool deleteProperty(Managed *, const StringRef);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
 };

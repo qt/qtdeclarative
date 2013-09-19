@@ -146,7 +146,7 @@ struct Q_QML_EXPORT ExecutionContext
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyNoThrow(String *name);
     ReturnedValue getPropertyAndBase(String *name, Object **base);
-    bool deleteProperty(String *name);
+    bool deleteProperty(const StringRef name);
 
     void mark();
 

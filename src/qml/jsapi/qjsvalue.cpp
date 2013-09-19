@@ -957,12 +957,13 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 */
 bool QJSValue::deleteProperty(const QString &name)
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *engine = d->engine;
+    Scope scope(engine);
+    ScopedObject o(scope, d->value.asObject());
     if (!o)
         return false;
 
-    ExecutionEngine *engine = d->engine;
-    String *s = engine->newString(name);
+    ScopedString s(scope, engine->newString(name));
     return o->deleteProperty(s);
 }
 

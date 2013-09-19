@@ -621,7 +621,7 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     }
 }
 
-PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
+PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     ExecutionEngine *engine = that->engine();

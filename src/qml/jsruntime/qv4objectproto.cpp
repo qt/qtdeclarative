@@ -420,7 +420,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
     Scoped<Object> O(scope, ctx->thisObject, Scoped<Object>::Convert);
     bool r = O->__getOwnProperty__(P) != 0;
     if (!r)
-        r = !O->query(P.getPointer()).isEmpty();
+        r = !O->query(P).isEmpty();
     return Encode(r);
 }
 

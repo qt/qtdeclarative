@@ -286,16 +286,15 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 }
 
 
-bool ExecutionContext::deleteProperty(String *name)
+bool ExecutionContext::deleteProperty(const StringRef name)
 {
     Scope scope(this);
-    ScopedString n(scope, name);
     bool hasWith = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
             hasWith = true;
             WithContext *w = static_cast<WithContext *>(ctx);
-            if (w->withObject->__hasProperty__(n))
+            if (w->withObject->__hasProperty__(name))
                 return w->withObject->deleteProperty(name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
@@ -312,11 +311,11 @@ bool ExecutionContext::deleteProperty(String *name)
                     if (f->formalParameterList[i]->isEqualTo(name))
                         return false;
             }
-            if (c->activation && c->activation->__hasProperty__(n))
+            if (c->activation && c->activation->__hasProperty__(name))
                 return c->activation->deleteProperty(name);
         } else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            if (g->global->__hasProperty__(n))
+            if (g->global->__hasProperty__(name))
                 return g->global->deleteProperty(name);
         }
     }

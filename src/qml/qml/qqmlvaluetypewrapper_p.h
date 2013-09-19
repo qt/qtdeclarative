@@ -87,7 +87,7 @@ public:
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
-    static PropertyAttributes query(const Managed *, String *name);
+    static PropertyAttributes query(const Managed *, StringRef name);
 
     static QV4::ReturnedValue method_toString(SimpleCallContext *ctx);
 

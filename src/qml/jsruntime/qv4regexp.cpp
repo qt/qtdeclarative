@@ -154,7 +154,7 @@ void RegExp::putIndexed(Managed *m, uint index, const ValueRef value)
 {
 }
 
-PropertyAttributes RegExp::query(const Managed *m, String *name)
+PropertyAttributes RegExp::query(const Managed *m, StringRef name)
 {
     return Attr_Invalid;
 }
@@ -164,7 +164,7 @@ PropertyAttributes RegExp::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool RegExp::deleteProperty(Managed *, String *)
+bool RegExp::deleteProperty(Managed *, const StringRef)
 {
     return false;
 }

@@ -96,14 +96,14 @@ struct ManagedVTable
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
-    bool (*hasInstance)(Managed *, const Value &value);
+    bool (*hasInstance)(Managed *, const ValueRef value);
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, const StringRef name, const ValueRef value);
     void (*putIndexed)(Managed *, uint index, const ValueRef value);
-    PropertyAttributes (*query)(const Managed *, String *name);
+    PropertyAttributes (*query)(const Managed *, StringRef name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
-    bool (*deleteProperty)(Managed *m, String *name);
+    bool (*deleteProperty)(Managed *m, const StringRef name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
@@ -258,22 +258,18 @@ public:
         *reinterpret_cast<Managed **>(this) = m;
     }
 
-    inline bool hasInstance(const Value &v) {
-        return vtbl->hasInstance(this, v);
-    }
+    bool hasInstance(const ValueRef v);
     ReturnedValue construct(CallData *d);
     ReturnedValue call(CallData *d);
     ReturnedValue get(const StringRef name, bool *hasProperty = 0);
     ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
     void put(const StringRef name, const ValueRef value);
     void putIndexed(uint index, const ValueRef value);
-    PropertyAttributes query(String *name) const
-    { return vtbl->query(this, name); }
+    PropertyAttributes query(StringRef name) const;
     PropertyAttributes queryIndexed(uint index) const
     { return vtbl->queryIndexed(this, index); }
 
-    bool deleteProperty(String *name)
-    { return vtbl->deleteProperty(this, name); }
+    bool deleteProperty(const StringRef name);
     bool deleteIndexedProperty(uint index)
     { return vtbl->deleteIndexedProperty(this, index); }
     ReturnedValue getLookup(Lookup *l)
@@ -286,7 +282,7 @@ public:
     { return vtbl->advanceIterator(this, it, name, index, attributes); }
 
     static void destroy(Managed *that) { that->_data = 0; }
-    static bool hasInstance(Managed *that, const Value &value);
+    static bool hasInstance(Managed *that, const ValueRef value);
     static ReturnedValue construct(Managed *m, CallData *d);
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue getLookup(Managed *m, Lookup *);

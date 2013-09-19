@@ -137,7 +137,7 @@ protected:
     FunctionObject(InternalClass *ic);
 
     static void markObjects(Managed *that);
-    static bool hasInstance(Managed *that, const Value &value);
+    static bool hasInstance(Managed *that, const ValueRef value);
     static void destroy(Managed *that)
     { static_cast<FunctionObject*>(that)->~FunctionObject(); }
 };
@@ -234,7 +234,7 @@ struct BoundFunction: FunctionObject {
 
     static void destroy(Managed *);
     static void markObjects(Managed *that);
-    static bool hasInstance(Managed *that, const Value &value);
+    static bool hasInstance(Managed *that, const ValueRef value);
 };
 
 }

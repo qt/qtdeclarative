@@ -202,7 +202,7 @@ bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
+PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, StringRef name)
 {
     const QmlValueTypeWrapper *r = m->as<const QmlValueTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -214,9 +214,9 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
     {
         QQmlData *ddata = QQmlData::get(r->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name, 0, 0);
+            result = ddata->propertyCache->property(name.getPointer(), 0, 0);
         else
-            result = QQmlPropertyCache::property(r->v8->engine(), r->type, name, 0, local);
+            result = QQmlPropertyCache::property(r->v8->engine(), r->type, name.getPointer(), 0, local);
     }
     return result ? Attr_Data : Attr_Invalid;
 }

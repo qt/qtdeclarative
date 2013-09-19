@@ -84,7 +84,7 @@ public:
 
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
-    static PropertyAttributes query(const Managed *, String *name);
+    static PropertyAttributes query(const Managed *, StringRef name);
     static void destroy(Managed *that);
 
 private:

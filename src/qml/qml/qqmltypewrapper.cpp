@@ -260,7 +260,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     }
 }
 
-PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
+PropertyAttributes QmlTypeWrapper::query(const Managed *m, StringRef name)
 {
     // ### Implement more efficiently.
     Scope scope(m->engine());
