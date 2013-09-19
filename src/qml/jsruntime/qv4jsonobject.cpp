@@ -81,7 +81,7 @@ private:
     ReturnedValue parseArray();
     bool parseMember(Object *o);
     bool parseString(QString *string);
-    bool parseValue(Value *val);
+    bool parseValue(ValueRef val);
     bool parseNumber(Value *val);
 
     ExecutionContext *context;
@@ -313,8 +313,8 @@ ReturnedValue JsonParser::parseArray()
     } else {
         uint index = 0;
         while (1) {
-            Value val;
-            if (!parseValue(&val))
+            ScopedValue val(scope);
+            if (!parseValue(val))
                 return Encode::undefined();
             array->arraySet(index, val);
             QChar token = nextToken();
@@ -343,7 +343,7 @@ value = false / null / true / object / array / number / string
 
 */
 
-bool JsonParser::parseValue(Value *val)
+bool JsonParser::parseValue(ValueRef val)
 {
     BEGIN << "parse Value" << *json;
 

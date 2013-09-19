@@ -186,10 +186,10 @@ struct Q_QML_EXPORT Object: Managed {
         return idx;
     }
 
-    uint allocArrayValue(Value v) {
+    uint allocArrayValue(const ValueRef v) {
         uint idx = allocArrayValue();
         Property *pd = &arrayData[idx];
-        pd->value = v;
+        pd->value = *v;
         return idx;
     }
     void freeArrayValue(int idx) {
@@ -228,7 +228,7 @@ public:
     Property *arrayInsert(uint index, PropertyAttributes attributes = Attr_Data);
 
     void arraySet(uint index, const Property *pd);
-    void arraySet(uint index, Value value);
+    void arraySet(uint index, ValueRef value);
 
     uint propertyIndexFromArrayIndex(uint index) const
     {
@@ -261,7 +261,7 @@ public:
 
     void markArrayObjects() const;
 
-    void push_back(Value v);
+    void push_back(const ValueRef v);
 
     SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
     SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
@@ -397,13 +397,13 @@ inline void Object::setArrayLengthUnchecked(uint l)
     }
 }
 
-inline void Object::push_back(Value v)
+inline void Object::push_back(const ValueRef v)
 {
     uint idx = arrayLength();
     if (!sparseArray) {
         if (idx >= arrayAlloc)
             arrayReserve(idx + 1);
-        arrayData[idx].value = v;
+        arrayData[idx].value = *v;
         arrayDataLen = idx + 1;
     } else {
         uint idx = allocArrayValue(v);
@@ -445,10 +445,10 @@ inline Property *Object::arrayInsert(uint index, PropertyAttributes attributes) 
     return pd;
 }
 
-inline void Object::arraySet(uint index, Value value)
+inline void Object::arraySet(uint index, ValueRef value)
 {
     Property *pd = arrayInsert(index);
-    pd->value = value;
+    pd->value = *value;
 }
 
 inline void Object::arraySet(uint index, const Property *pd)

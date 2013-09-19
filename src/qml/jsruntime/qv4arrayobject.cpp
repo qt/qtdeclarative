@@ -164,7 +164,7 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     if (instance) {
         result->copyArrayData(instance.getPointer());
     } else {
-        result->arraySet(0, thisObject.asValue());
+        result->arraySet(0, thisObject);
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
@@ -284,17 +284,15 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         for (uint i = 0; i < ctx->argumentCount; ++i) {
-            Value v = ctx->arguments[i];
-
             if (!instance->sparseArray) {
                 if (len >= instance->arrayAlloc)
                     instance->arrayReserve(len + 1);
-                instance->arrayData[len].value = v;
+                instance->arrayData[len].value = ctx->arguments[i];
                 if (instance->arrayAttributes)
                     instance->arrayAttributes[len] = Attr_Data;
                 instance->arrayDataLen = len + 1;
             } else {
-                uint i = instance->allocArrayValue(v);
+                uint i = instance->allocArrayValue(ctx->arguments[i]);
                 instance->sparseArray->push_back(i, len);
             }
             ++len;

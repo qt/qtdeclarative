@@ -861,7 +861,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
         return;
     }
 
-    arraySet(index, *value);
+    arraySet(index, value);
     return;
 
   reject:
@@ -1110,13 +1110,15 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, c
 void Object::copyArrayData(Object *other)
 {
     Q_ASSERT(isArrayObject());
+    Scope scope(engine());
 
     if (other->protoHasArray() || other->hasAccessorProperty) {
         uint len = other->arrayLength();
         Q_ASSERT(len);
 
+        ScopedValue v(scope);
         for (uint i = 0; i < len; ++i) {
-            arraySet(i, Value::fromReturnedValue(other->getIndexed(i)));
+            arraySet(i, (v = other->getIndexed(i)));
         }
     } else {
         arrayReserve(other->arrayDataLen);

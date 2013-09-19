@@ -634,7 +634,8 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
 
     if (separatorValue->isUndefined()) {
         if (limitValue->isUndefined()) {
-            array->push_back(Value::fromString(ctx, text));
+            ScopedString s(scope, ctx->engine->newString(text));
+            array->push_back(s);
             return array.asReturnedValue();
         }
         return Value::fromString(ctx, text.left(limitValue->toInteger())).asReturnedValue();
@@ -653,6 +654,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
         }
     }
 
+    ScopedString s(scope);
     if (!!re) {
         uint offset = 0;
         uint* matchOffsets = (uint*)alloca(re->value->captureCount() * 2 * sizeof(uint));
@@ -661,7 +663,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
             if (result == JSC::Yarr::offsetNoMatch)
                 break;
 
-            array->push_back(Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset)));
+            array->push_back((s = Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset))));
             offset = qMax(offset + 1, matchOffsets[1]);
 
             if (array->arrayLength() >= limit)
@@ -670,31 +672,31 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
             for (int i = 1; i < re->value->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
-                array->push_back(Value::fromString(ctx, text.mid(start, end - start)));
+                array->push_back((s = Value::fromString(ctx, text.mid(start, end - start))));
                 if (array->arrayLength() >= limit)
                     break;
             }
         }
         if (array->arrayLength() < limit)
-            array->push_back(Value::fromString(ctx, text.mid(offset)));
+            array->push_back((s = Value::fromString(ctx, text.mid(offset))));
     } else {
         QString separator = separatorValue->toString(ctx)->toQString();
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
-                array->push_back(Value::fromString(ctx, text.mid(i, 1)));
+                array->push_back((s = Value::fromString(ctx, text.mid(i, 1))));
             return array.asReturnedValue();
         }
 
         int start = 0;
         int end;
         while ((end = text.indexOf(separator, start)) != -1) {
-            array->push_back(Value::fromString(ctx, text.mid(start, end - start)));
+            array->push_back((s = Value::fromString(ctx, text.mid(start, end - start))));
             start = end + separator.size();
             if (array->arrayLength() >= limit)
                 break;
         }
         if (array->arrayLength() < limit && start != -1)
-            array->push_back(Value::fromString(ctx, text.mid(start)));
+            array->push_back((s = Value::fromString(ctx, text.mid(start))));
     }
     return array.asReturnedValue();
 }
