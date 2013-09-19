@@ -299,7 +299,14 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
 {
     loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    return Pointer(reg, id * sizeof(QV4::String*));
+    return Pointer(reg, id * sizeof(QV4::SafeString));
+}
+
+void Assembler::loadStringRef(RegisterID reg, const QString &string)
+{
+    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, runtimeStrings)), reg);
+    const int id = _isel->registerString(string);
+    addPtr(TrustedImmPtr(id * sizeof(QV4::SafeString)), reg);
 }
 
 template <typename Result, typename Source>
@@ -782,7 +789,7 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        QV4::String *exceptionVarName, ValueRef exceptionVar)
+                        QV4::StringRef exceptionVarName, ValueRef exceptionVar)
 {
     exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
@@ -983,8 +990,6 @@ void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp
     _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
     Pointer destAddr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
 #if QT_POINTER_SIZE == 8
-    _as->or64(Assembler::TrustedImm64(quint64(QV4::Value::Managed_Type) << QV4::Value::Tag_Shift),
-              Assembler::ReturnValueRegister);
     _as->store64(Assembler::ReturnValueRegister, destAddr);
 #else
     _as->store32(Assembler::ReturnValueRegister, destAddr);

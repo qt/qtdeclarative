@@ -250,30 +250,30 @@ ReturnedValue __qmljs_init_closure(ExecutionContext *ctx, int functionId)
 
 ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef base, const ValueRef index)
 {
-    if (Object *o = base->asObject()) {
+    Scope scope(ctx);
+    ScopedObject o(scope, base);
+    if (o) {
         uint n = index->asArrayIndex();
         if (n < UINT_MAX) {
             return Value::fromBoolean(o->deleteIndexedProperty(n)).asReturnedValue();
         }
     }
 
-    String *name = index->toString(ctx);
+    ScopedString name(scope, index->toString(ctx));
     return __qmljs_delete_member(ctx, base, name);
 }
 
-ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, String *name)
+ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, const StringRef name)
 {
     Scope scope(ctx);
     ScopedObject obj(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    return Encode(obj->deleteProperty(n));
+    return Encode(obj->deleteProperty(name));
 }
 
-ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
+ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, const StringRef name)
 {
     Scope scope(ctx);
-    ScopedString n(scope, name);
-    return Encode(ctx->deleteProperty(n));
+    return Encode(ctx->deleteProperty(name));
 }
 
 QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -314,7 +314,7 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
     return Value::fromBoolean(r).asReturnedValue();
 }
 
-static void inplaceBitOp(ExecutionContext *ctx, String *name, const ValueRef value, BinOp op)
+static void inplaceBitOp(ExecutionContext *ctx, const StringRef name, const ValueRef value, BinOp op)
 {
     Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
@@ -323,22 +323,22 @@ static void inplaceBitOp(ExecutionContext *ctx, String *name, const ValueRef val
 }
 
 
-void __qmljs_inplace_bit_and_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_bit_and_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_bit_and);
 }
 
-void __qmljs_inplace_bit_or_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_bit_or_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_bit_or);
 }
 
-void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_bit_xor);
 }
 
-void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_add_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
@@ -346,37 +346,37 @@ void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const ValueRe
     ctx->setProperty(name, result);
 }
 
-void __qmljs_inplace_sub_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_sub_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_sub);
 }
 
-void __qmljs_inplace_mul_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_mul_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_mul);
 }
 
-void __qmljs_inplace_div_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_div_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_div);
 }
 
-void __qmljs_inplace_mod_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_mod_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_mod);
 }
 
-void __qmljs_inplace_shl_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_shl_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_shl);
 }
 
-void __qmljs_inplace_shr_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_shr_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_shr);
 }
 
-void __qmljs_inplace_ushr_name(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_inplace_ushr_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     inplaceBitOp(ctx, name, value, __qmljs_ushr);
 }
@@ -447,92 +447,81 @@ void __qmljs_inplace_ushr_element(ExecutionContext *ctx, const ValueRef base, co
     obj->inplaceBinOpValue(ctx, __qmljs_ushr, index, rhs);
 }
 
-void __qmljs_inplace_bit_and_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_bit_and_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_bit_and, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_bit_and, name, rhs);
 }
 
-void __qmljs_inplace_bit_or_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_bit_or_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_bit_or, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_bit_or, name, rhs);
 }
 
-void __qmljs_inplace_bit_xor_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_bit_xor_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_bit_xor, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_bit_xor, name, rhs);
 }
 
-void __qmljs_inplace_add_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_add_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_add, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_add, name, rhs);
 }
 
-void __qmljs_inplace_sub_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_sub_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_sub, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_sub, name, rhs);
 }
 
-void __qmljs_inplace_mul_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_mul_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_mul, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_mul, name, rhs);
 }
 
-void __qmljs_inplace_div_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_div_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_div, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_div, name, rhs);
 }
 
-void __qmljs_inplace_mod_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_mod_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_mod, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_mod, name, rhs);
 }
 
-void __qmljs_inplace_shl_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_shl_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_shl, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_shl, name, rhs);
 }
 
-void __qmljs_inplace_shr_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_shr_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_shr, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_shr, name, rhs);
 }
 
-void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const ValueRef base, String *name, const ValueRef rhs)
+void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, base->toObject(ctx));
-    ScopedString n(scope, name);
-    o->inplaceBinOp(ctx, __qmljs_ushr, n, rhs);
+    o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
 }
 
 double __qmljs_string_to_number(const QString &string)
@@ -669,12 +658,11 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     } // switch
 }
 
-void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value)
+void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef value)
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
-    ScopedString n(scope, name);
-    o->put(n, value);
+    o->put(name, value);
 }
 
 ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index)
@@ -782,15 +770,14 @@ ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator
 }
 
 
-void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const ValueRef value)
+void __qmljs_set_activation_property(ExecutionContext *ctx, const StringRef name, const ValueRef value)
 {
     ctx->setProperty(name, value);
 }
 
-ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *n)
+ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, const StringRef name)
 {
     Scope scope(ctx);
-    ScopedString name(scope, n);
 
     Scoped<Object> o(scope, object);
     if (o)
@@ -805,7 +792,7 @@ ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object,
     return o->get(name);
 }
 
-ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
+ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, const StringRef name)
 {
     return ctx->getProperty(name);
 }
@@ -970,7 +957,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
 }
 
 
-ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const StringRef name, CallDataRef callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(context);
@@ -996,10 +983,9 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String
     return o->call(callData);
 }
 
-ReturnedValue __qmljs_call_property(ExecutionContext *context, String *n, CallDataRef callData)
+ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef name, CallDataRef callData)
 {
     Scope scope(context);
-    ScopedString name(scope, n);
     Scoped<Object> baseObject(scope, callData->thisObject);
     if (!baseObject) {
         Q_ASSERT(!callData->thisObject.isEmpty());
@@ -1071,7 +1057,7 @@ ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint in
 }
 
 
-ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, const StringRef name, CallDataRef callData)
 {
     Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
@@ -1091,11 +1077,10 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
     return f->construct(callData);
 }
 
-ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *n, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, const StringRef name, CallDataRef callData)
 {
     Scope scope(context);
     ScopedObject thisObject(scope, base->toObject(context));
-    ScopedString name(scope, n);
 
     Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
@@ -1137,18 +1122,17 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
     return Value::fromString(res).asReturnedValue();
 }
 
-QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, const StringRef name)
 {
     Scope scope(context);
     ScopedValue prop(scope, context->getPropertyNoThrow(name));
     return __qmljs_builtin_typeof(context, prop);
 }
 
-QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *n)
+QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, const StringRef name)
 {
     Scope scope(context);
     ScopedObject obj(scope, base->toObject(context));
-    ScopedString name(scope, n);
     ScopedValue prop(scope, obj->get(name));
     return __qmljs_builtin_typeof(context, prop);
 }
@@ -1168,9 +1152,9 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionCon
     return ctx->newWithContext(obj);
 }
 
-ExecutionContext *__qmljs_builtin_push_catch_scope(String *exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->newCatchContext(exceptionVarName, *exceptionValue);
+    return ctx->newCatchContext(exceptionVarName.getPointer(), *exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
@@ -1178,19 +1162,19 @@ ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
     return ctx->engine->popContext();
 }
 
-void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, String *name)
+void __qmljs_builtin_declare_var(ExecutionContext *ctx, bool deletable, const StringRef name)
 {
     ctx->createMutableBinding(name, deletable);
 }
 
-void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef object, String *name, ValueRef val)
+void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, ValueRef val)
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->asObject());
     assert(o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(ScopedString(scope, name), Attr_Data);
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx) : o->insertMember(name, Attr_Data);
     pd->value = val ? *val : Value::undefinedValue();
 }
 
@@ -1220,14 +1204,14 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
     return a.asReturnedValue();
 }
 
-void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef getter, const ValueRef setter)
+void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef getter, const ValueRef setter)
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->asObject());
     Q_ASSERT(!!o);
 
     uint idx = name->asArrayIndex();
-    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(ScopedString(scope, name), Attr_Accessor);
+    Property *pd = (idx != UINT_MAX) ? o->arrayInsert(idx, Attr_Accessor) : o->insertMember(name, Attr_Accessor);
     pd->setGetter(getter ? getter->asFunctionObject() : 0);
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }

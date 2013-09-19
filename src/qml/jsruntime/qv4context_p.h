@@ -86,7 +86,7 @@ struct Q_QML_EXPORT ExecutionContext
     ExecutionContext *parent;
     ExecutionContext *outer;
     Lookup *lookups;
-    String **runtimeStrings;
+    SafeString *runtimeStrings;
     CompiledData::CompilationUnit *compilationUnit;
     const CompiledData::Function *compiledFunction;
     ExecutionContext *next; // used in the GC
@@ -128,7 +128,7 @@ struct Q_QML_EXPORT ExecutionContext
     String * const *variables() const;
     unsigned int variableCount() const;
 
-    void createMutableBinding(String *name, bool deletable);
+    void createMutableBinding(const StringRef name, bool deletable);
 
     void Q_NORETURN throwError(const QV4::ValueRef value);
     void Q_NORETURN throwError(const QString &message);
@@ -142,10 +142,10 @@ struct Q_QML_EXPORT ExecutionContext
     void Q_NORETURN throwURIError(Value msg);
     void Q_NORETURN throwUnimplemented(const QString &message);
 
-    void setProperty(String *name, const ValueRef value);
-    ReturnedValue getProperty(String *name);
-    ReturnedValue getPropertyNoThrow(String *name);
-    ReturnedValue getPropertyAndBase(String *name, Object **base);
+    void setProperty(const StringRef name, const ValueRef value);
+    ReturnedValue getProperty(const StringRef name);
+    ReturnedValue getPropertyNoThrow(const StringRef name);
+    ReturnedValue getPropertyAndBase(const StringRef name, Object **base);
     bool deleteProperty(const StringRef name);
 
     void mark();

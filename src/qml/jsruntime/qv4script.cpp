@@ -228,7 +228,7 @@ ReturnedValue Script::run()
         Lookup *oldLookups = scope->lookups;
         CompiledData::CompilationUnit * const oldCompilationUnit = scope->compilationUnit;
         const CompiledData::Function * const oldCompiledFunction = scope->compiledFunction;
-        String ** const oldRuntimeStrings = scope->runtimeStrings;
+        SafeString * const oldRuntimeStrings = scope->runtimeStrings;
 
         scope->strictMode = vmFunction->isStrict();
         scope->lookups = vmFunction->compilationUnit->runtimeLookups;

@@ -408,7 +408,7 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
 
     CompiledData::CompilationUnit * const oldCompilationUnit = ctx->compilationUnit;
     const CompiledData::Function * const oldCompiledFunction = ctx->compiledFunction;
-    String ** const oldRuntimeStrings = ctx->runtimeStrings;
+    SafeString * const oldRuntimeStrings = ctx->runtimeStrings;
     ctx->compilationUnit = function->compilationUnit;
     ctx->compiledFunction = function->compiledFunction;
     ctx->runtimeStrings = function->compilationUnit->runtimeStrings;

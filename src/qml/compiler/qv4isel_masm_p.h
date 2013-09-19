@@ -440,6 +440,7 @@ public:
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
+    void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(V4IR::Temp *t) const
     {
         Q_ASSERT(t->kind == V4IR::Temp::StackSlot);
@@ -512,8 +513,7 @@ public:
     void loadArgumentInRegister(PointerToString temp, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
-        Pointer addr = loadStringAddress(dest, temp.string);
-        loadPtr(addr, dest);
+        loadStringRef(dest, temp.string);
     }
 
     void loadArgumentInRegister(Reference temp, RegisterID dest, int argumentNumber)
@@ -694,8 +694,7 @@ public:
     void loadArgumentOnStack(PointerToString temp, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
-        Pointer ptr = loadStringAddress(ScratchRegister, temp.string);
-        loadPtr(ptr, ScratchRegister);
+        loadStringRef(ScratchRegister, temp.string);
         poke(ScratchRegister, StackSlot);
     }
 

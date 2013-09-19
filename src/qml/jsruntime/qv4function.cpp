@@ -60,7 +60,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , codeData(0)
         , codeSize(_codeSize)
 {
-    name = compilationUnit->runtimeStrings[compiledFunction->nameIndex];
+    name = compilationUnit->runtimeStrings[compiledFunction->nameIndex].asString();
 
     formals.resize(compiledFunction->nFormals);
     const quint32 *formalsIndices = compiledFunction->formalsTable();

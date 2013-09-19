@@ -75,7 +75,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     assert(!runtimeStrings);
     assert(data);
-    runtimeStrings = (QV4::String**)malloc(data->stringTableSize * sizeof(QV4::String*));
+    runtimeStrings = (QV4::SafeString *)malloc(data->stringTableSize * sizeof(QV4::SafeString));
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
@@ -110,7 +110,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->classList[i] = 0;
             l->level = -1;
             l->index = UINT_MAX;
-            l->name = runtimeStrings[compiledLookups[i].nameIndex];
+            l->name = runtimeStrings[compiledLookups[i].nameIndex].asString();
         }
     }
 
@@ -122,7 +122,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
             QV4::InternalClass *klass = engine->objectClass;
             for (int j = 0; j < memberCount; ++j, ++member)
-                klass = klass->addMember(runtimeStrings[member->nameOffset], member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
+                klass = klass->addMember(runtimeStrings[member->nameOffset].asString(), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
 
             runtimeClasses[i] = klass;
         }
@@ -162,7 +162,7 @@ void CompilationUnit::unlink()
 void CompilationUnit::markObjects()
 {
     for (int i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i]->mark();
+        runtimeStrings[i].mark();
     for (int i = 0; i < data->regexpTableSize; ++i)
         runtimeRegularExpressions[i].mark();
     for (int i = 0; i < runtimeFunctions.count(); ++i)
