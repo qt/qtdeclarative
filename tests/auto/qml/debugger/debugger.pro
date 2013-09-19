@@ -3,8 +3,6 @@ TEMPLATE = subdirs
 PUBLICTESTS += \
     qqmlenginedebugservice \
 #    qqmldebugjs \
-    qqmlinspector \
-    qqmlprofilerservice \
     qpacketprotocol \
 #    qv8profilerservice \
 #    qdebugmessageservice \
@@ -13,6 +11,12 @@ PUBLICTESTS += \
 PRIVATETESTS += \
     qqmldebugclient \
     qqmldebugservice
+
+!mac {
+PUBLICTESTS += \
+    qqmlinspector \
+    qqmlprofilerservice
+}
 
 SUBDIRS += $$PUBLICTESTS
 
