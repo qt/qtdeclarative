@@ -65,15 +65,7 @@ namespace {
 
 CompilationUnit::~CompilationUnit()
 {
-    if (engine)
-        engine->compilationUnits.erase(engine->compilationUnits.find(this));
-    if (ownsData)
-        free(data);
-    free(runtimeStrings);
-    delete [] runtimeLookups;
-    delete [] runtimeRegularExpressions;
-    free(runtimeClasses);
-    qDeleteAll(runtimeFunctions);
+    unlink();
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -145,6 +137,26 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 #endif
 
     return runtimeFunctions[data->indexOfRootFunction];
+}
+
+void CompilationUnit::unlink()
+{
+    if (engine)
+        engine->compilationUnits.erase(engine->compilationUnits.find(this));
+    engine = 0;
+    if (ownsData)
+        free(data);
+    data = 0;
+    free(runtimeStrings);
+    runtimeStrings = 0;
+    delete [] runtimeLookups;
+    runtimeLookups = 0;
+    delete [] runtimeRegularExpressions;
+    runtimeRegularExpressions = 0;
+    free(runtimeClasses);
+    runtimeClasses = 0;
+    qDeleteAll(runtimeFunctions);
+    runtimeFunctions.clear();
 }
 
 void CompilationUnit::markObjects()

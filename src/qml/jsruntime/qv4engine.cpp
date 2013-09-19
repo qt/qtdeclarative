@@ -296,6 +296,12 @@ ExecutionEngine::~ExecutionEngine()
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;
     delete memoryManager;
+
+    QSet<QV4::CompiledData::CompilationUnit*> remainingUnits;
+    qSwap(compilationUnits, remainingUnits);
+    foreach (QV4::CompiledData::CompilationUnit *unit, remainingUnits)
+        unit->unlink();
+
     delete m_qmlExtensions;
     emptyClass->destroy();
     delete bumperPointerAllocator;

@@ -468,6 +468,7 @@ struct Q_QML_EXPORT CompilationUnit
 //    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
+    void unlink();
 
     virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int /*functionIndex*/) { return 0; }
 
