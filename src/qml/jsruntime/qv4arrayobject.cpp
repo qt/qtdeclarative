@@ -159,23 +159,17 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
 
-    if (ArrayObject *instance = ctx->thisObject.asArrayObject()) {
-        result->copyArrayData(instance);
-    } else if (ctx->thisObject.isString()) {
-        QString v = ctx->thisObject.stringValue()->toQString();
-        result->arraySet(0, Value::fromString(ctx, v));
-    } else if (ctx->thisObject.asStringObject()) {
-        QString v = ctx->thisObject.toString(ctx)->toQString();
-        result->arraySet(0, Value::fromString(ctx, v));
+    ScopedObject thisObject(scope, ctx->thisObject.toObject(ctx));
+    ScopedArrayObject instance(scope, thisObject);
+    if (instance) {
+        result->copyArrayData(instance.getPointer());
     } else {
-        Object *instance = ctx->thisObject.toObject(ctx);
-        result->arraySet(0, Value::fromObject(instance));
+        result->arraySet(0, thisObject.asValue());
     }
 
     for (uint i = 0; i < ctx->argumentCount; ++i) {
         if (ArrayObject *elt = ctx->arguments[i].asArrayObject())
             result->arrayConcat(elt);
-
         else
             result->arraySet(getLength(ctx, result.getPointer()), ctx->arguments[i]);
     }
