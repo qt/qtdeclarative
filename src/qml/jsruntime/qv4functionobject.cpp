@@ -71,10 +71,36 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(FunctionObject);
 
-FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool createProto)
+FunctionObject::FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto)
     : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
     , scope(scope)
-    , name(name)
+    , formalParameterList(0)
+    , varList(0)
+    , formalParameterCount(0)
+    , varCount(0)
+    , function(0)
+{
+     init(name, createProto);
+}
+
+FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
+    : Object(createProto ? scope->engine->functionWithProtoClass : scope->engine->functionClass)
+    , scope(scope)
+    , formalParameterList(0)
+    , varList(0)
+    , formalParameterCount(0)
+    , varCount(0)
+    , function(0)
+{
+    Scope s(scope);
+    ScopedValue protectThis(s, this);
+    ScopedString n(s, s.engine->newString(name));
+    init(n, createProto);
+}
+
+FunctionObject::FunctionObject(InternalClass *ic)
+    : Object(ic)
+    , scope(ic->engine->rootContext)
     , formalParameterList(0)
     , varList(0)
     , formalParameterCount(0)
@@ -82,6 +108,26 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool creat
     , function(0)
 {
     vtbl = &static_vtbl;
+    name = (QV4::String *)0;
+
+    type = Type_FunctionObject;
+    needsActivation = false;
+    usesArgumentsObject = false;
+    strictMode = false;
+}
+
+FunctionObject::~FunctionObject()
+{
+    if (function)
+        function->compilationUnit->deref();
+}
+
+void FunctionObject::init(const StringRef n, bool createProto)
+{
+    vtbl = &static_vtbl;
+
+    Scope s(engine());
+    ScopedValue protectThis(s, this);
 
     type = Type_FunctionObject;
     needsActivation = true;
@@ -91,36 +137,19 @@ FunctionObject::FunctionObject(ExecutionContext *scope, String *name, bool creat
      assert(scope->next != (ExecutionContext *)0x1);
 #endif
 
-     if (createProto) {
-         Scope s(scope);
-         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
-         proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
-         memberData[Index_Prototype].value = proto.asValue();
-     }
+    if (createProto) {
+        Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
+        proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
+        memberData[Index_Prototype].value = proto.asValue();
+    }
 
-     if (name)
-         defineReadonlyProperty(scope->engine->id_name, Value::fromString(name));
-}
-
-FunctionObject::FunctionObject(InternalClass *ic)
-    : Object(ic)
-    , scope(ic->engine->rootContext)
-    , name(name)
-    , formalParameterList(0)
-    , varList(0)
-    , formalParameterCount(0)
-    , varCount(0)
-    , function(0)
-{
-    vtbl = &static_vtbl;
-
-    type = Type_FunctionObject;
-}
-
-FunctionObject::~FunctionObject()
-{
-    if (function)
-        function->compilationUnit->deref();
+    if (n) {
+        name = n;
+        ScopedValue v(s, n.asReturnedValue());
+        defineReadonlyProperty(scope->engine->id_name, v);
+    } else {
+        name = (QV4::String *)0;
+    }
 }
 
 ReturnedValue FunctionObject::newInstance()
@@ -177,7 +206,7 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
 void FunctionObject::markObjects(Managed *that)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
-    if (o->name)
+    if (o->name.managed())
         o->name->mark();
     // these are marked in VM::Function:
 //    for (uint i = 0; i < formalParameterCount; ++i)
@@ -202,7 +231,7 @@ FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Fun
 DEFINE_MANAGED_VTABLE(FunctionCtor);
 
 FunctionCtor::FunctionCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Function")))
+    : FunctionObject(scope, QStringLiteral("Function"))
 {
     vtbl = &static_vtbl;
 }
@@ -367,6 +396,10 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     : FunctionObject(scope, function->name, true)
 {
     vtbl = &static_vtbl;
+
+    Scope s(scope);
+    ScopedValue protectThis(s, this);
+
     this->function = function;
     this->function->compilationUnit->ref();
     Q_ASSERT(function);
@@ -462,6 +495,10 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     : FunctionObject(scope, function->name, true)
 {
     vtbl = &static_vtbl;
+
+    Scope s(scope);
+    ScopedValue protectThis(s, this);
+
     this->function = function;
     this->function->compilationUnit->ref();
     Q_ASSERT(function);
@@ -554,7 +591,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
 DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
@@ -635,6 +672,10 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
+
+    Scope s(scope);
+    ScopedValue protectThis(s, this);
+
     int len = Value::fromReturnedValue(target->get(scope->engine->id_length)).toUInt32();
     len -= boundArgs.size();
     if (len < 0)

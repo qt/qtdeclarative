@@ -81,7 +81,7 @@ struct InternalClass;
 struct Lookup;
 
 struct Function {
-    String *name;
+    SafeString name;
 
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;

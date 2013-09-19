@@ -51,7 +51,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(NumberCtor);
 
 NumberCtor::NumberCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Number")))
+    : FunctionObject(scope, QStringLiteral("Number"))
 {
     vtbl = &static_vtbl;
 }

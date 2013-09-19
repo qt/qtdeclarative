@@ -652,7 +652,7 @@ QDateTime DateObject::toQDateTime() const
 DEFINE_MANAGED_VTABLE(DateCtor);
 
 DateCtor::DateCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Date")))
+    : FunctionObject(scope, QStringLiteral("Date"))
 {
     vtbl = &static_vtbl;
 }

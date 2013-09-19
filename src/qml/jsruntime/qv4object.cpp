@@ -1440,6 +1440,8 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)
 {
     init(engine);
+    Scope scope(engine);
+    ScopedValue protectThis(scope, this);
 
     // Converts a QStringList to JS.
     // The result is a new Array object with length equal to the length

@@ -49,7 +49,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ArrayCtor);
 
 ArrayCtor::ArrayCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Array")))
+    : FunctionObject(scope, QStringLiteral("Array"))
 {
     vtbl = &static_vtbl;
 }

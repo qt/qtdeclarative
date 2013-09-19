@@ -72,9 +72,8 @@ using namespace QV4;
 
 struct Print: FunctionObject
 {
-    Print(ExecutionContext *scope): FunctionObject(scope) {
+    Print(ExecutionContext *scope): FunctionObject(scope, QStringLiteral("print")) {
         vtbl = &static_vtbl;
-        name = scope->engine->newString("print");
     }
 
     static ReturnedValue call(Managed *, CallData *callData)
@@ -97,10 +96,9 @@ DEFINE_MANAGED_VTABLE(Print);
 struct GC: public FunctionObject
 {
     GC(ExecutionContext* scope)
-        : FunctionObject(scope)
+        : FunctionObject(scope, QStringLiteral("gc"))
     {
         vtbl = &static_vtbl;
-        name = scope->engine->newString("gc");
     }
     static ReturnedValue call(Managed *m, CallData *)
     {

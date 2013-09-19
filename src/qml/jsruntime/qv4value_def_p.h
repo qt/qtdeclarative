@@ -366,6 +366,7 @@ struct Safe : public Value
 {
     Safe &operator =(T *t);
     Safe &operator =(const Scoped<T> &v);
+    Safe &operator =(const Referenced<T> &v);
     Safe &operator =(Returned<T> *t);
     Safe &operator =(const Safe<T> &t);
 

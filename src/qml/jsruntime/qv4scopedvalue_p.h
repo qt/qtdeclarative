@@ -54,7 +54,7 @@ namespace QV4 {
 struct ScopedValue;
 
 struct Scope {
-    Scope(ExecutionContext *ctx)
+    explicit Scope(ExecutionContext *ctx)
         : engine(ctx->engine)
 #ifndef QT_NO_DEBUG
         , size(0)
@@ -63,14 +63,17 @@ struct Scope {
         mark = ctx->engine->jsStackTop;
     }
 
-    Scope(ExecutionEngine *e)
+    explicit Scope(ExecutionEngine *e)
         : engine(e)
     {
         mark = e->jsStackTop;
     }
 
     ~Scope() {
+#ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
+        memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
+#endif
         engine->jsStackTop = mark;
     }
 
@@ -103,6 +106,15 @@ struct ScopedValue
 #endif
     }
 
+    ScopedValue(const Scope &scope, Managed *m)
+    {
+        ptr = scope.engine->jsStackTop++;
+        ptr->val = m->asReturnedValue();
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
     ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
@@ -124,6 +136,11 @@ struct ScopedValue
 
     ScopedValue &operator=(const Value &v) {
         *ptr = v;
+        return *this;
+    }
+
+    ScopedValue &operator=(Managed *m) {
+        ptr->val = m->asReturnedValue();
         return *this;
     }
 
@@ -595,6 +612,13 @@ template<typename T>
 inline Safe<T> &Safe<T>::operator=(Returned<T> *t)
 {
     val = t->getPointer()->asReturnedValue();
+    return *this;
+}
+
+template<typename T>
+inline Safe<T> &Safe<T>::operator =(const Referenced<T> &v)
+{
+    val = v.asReturnedValue();
     return *this;
 }
 

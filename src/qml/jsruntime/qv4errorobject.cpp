@@ -78,6 +78,10 @@ ErrorObject::ErrorObject(InternalClass *ic)
 {
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
+
+    Scope scope(engine());
+    ScopedValue protectThis(scope, this);
+
     defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
 }
 
@@ -88,6 +92,10 @@ ErrorObject::ErrorObject(InternalClass *ic, const Value &message, ErrorType t)
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
+
+    Scope scope(engine());
+    ScopedValue protectThis(scope, this);
+
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message.isUndefined())
@@ -108,8 +116,11 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     type = Type_ErrorObject;
     vtbl = &static_vtbl;
     subtype = t;
-    defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
+    Scope scope(engine());
+    ScopedValue protectThis(scope, this);
+
+    defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
     defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
 
     stackTrace = ic->engine->stackTrace();
@@ -229,12 +240,12 @@ DEFINE_MANAGED_VTABLE(TypeErrorCtor);
 DEFINE_MANAGED_VTABLE(URIErrorCtor);
 
 ErrorCtor::ErrorCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("Error")))
+    : FunctionObject(scope, QStringLiteral("Error"))
 {
     vtbl = &static_vtbl;
 }
 
-ErrorCtor::ErrorCtor(ExecutionContext *scope, String *name)
+ErrorCtor::ErrorCtor(ExecutionContext *scope, const QString &name)
     : FunctionObject(scope, name)
 {
     vtbl = &static_vtbl;
@@ -251,7 +262,7 @@ ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
 }
 
 EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("EvalError"))
+    : ErrorCtor(scope, QStringLiteral("EvalError"))
 {
     vtbl = &static_vtbl;
 }
@@ -263,7 +274,7 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 }
 
 RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("RangeError"))
+    : ErrorCtor(scope, QStringLiteral("RangeError"))
 {
     vtbl = &static_vtbl;
 }
@@ -274,7 +285,7 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 }
 
 ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("ReferenceError"))
+    : ErrorCtor(scope, QStringLiteral("ReferenceError"))
 {
     vtbl = &static_vtbl;
 }
@@ -285,7 +296,7 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 }
 
 SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("SyntaxError"))
+    : ErrorCtor(scope, QStringLiteral("SyntaxError"))
 {
     vtbl = &static_vtbl;
 }
@@ -296,7 +307,7 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 }
 
 TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("TypeError"))
+    : ErrorCtor(scope, QStringLiteral("TypeError"))
 {
     vtbl = &static_vtbl;
 }
@@ -307,7 +318,7 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 }
 
 URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
-    : ErrorCtor(scope, scope->engine->newIdentifier("URIError"))
+    : ErrorCtor(scope, QStringLiteral("URIError"))
 {
     vtbl = &static_vtbl;
 }

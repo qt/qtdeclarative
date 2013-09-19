@@ -1585,9 +1585,12 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     Q_MANAGED
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
-        : FunctionObject(engine->rootContext, engine->newString(QStringLiteral("XMLHttpRequest")))
+        : FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
     {
         vtbl = &static_vtbl;
+        Scope scope(engine);
+        ScopedValue protectThis(scope, this);
+
         defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
         defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
         defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
@@ -1595,7 +1598,6 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
         if (!proto)
             setupProto();
-        Scope scope(engine);
         ScopedString s(scope, engine->id_prototype);
         defineDefaultProperty(s, Value::fromObject(proto));
     }

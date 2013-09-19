@@ -116,7 +116,7 @@ struct ErrorCtor: FunctionObject
 {
     Q_MANAGED
     ErrorCtor(ExecutionContext *scope);
-    ErrorCtor(ExecutionContext *scope, String *name);
+    ErrorCtor(ExecutionContext *scope, const QString &name);
 
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);

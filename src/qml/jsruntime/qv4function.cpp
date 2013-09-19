@@ -53,8 +53,7 @@ using namespace QV4;
 
 Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
                    ReturnedValue (*codePtr)(ExecutionContext *, const uchar *), quint32 _codeSize)
-        : name(0)
-        , compiledFunction(function)
+        : compiledFunction(function)
         , compilationUnit(unit)
         , codePtr(codePtr)
         , codeData(0)
@@ -81,8 +80,8 @@ Function::~Function()
 
 void Function::mark()
 {
-    if (name)
-        name->mark();
+    if (name.asManaged())
+        name.asManaged()->mark();
     for (int i = 0; i < formals.size(); ++i)
         formals.at(i)->mark();
     for (int i = 0; i < locals.size(); ++i)

@@ -143,6 +143,8 @@ void RegExpObject::init(ExecutionEngine *engine)
     type = Type_RegExpObject;
 
     Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
     Property *lastIndexProperty = insertMember(lastIndex, Attr_NotEnumerable|Attr_NotConfigurable);
     lastIndexProperty->value = Value::fromInt32(0);
@@ -228,7 +230,7 @@ uint RegExpObject::flags() const
 DEFINE_MANAGED_VTABLE(RegExpCtor);
 
 RegExpCtor::RegExpCtor(ExecutionContext *scope)
-    : FunctionObject(scope, scope->engine->newIdentifier(QStringLiteral("RegExp")))
+    : FunctionObject(scope, QStringLiteral("RegExp"))
 {
     vtbl = &static_vtbl;
 }

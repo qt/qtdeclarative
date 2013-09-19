@@ -80,6 +80,7 @@ struct MemoryManager::Data
     bool gcBlocked;
     bool scribble;
     bool aggressiveGC;
+    bool exactGC;
     ExecutionEngine *engine;
     quintptr *stackTop;
 
@@ -113,6 +114,11 @@ struct MemoryManager::Data
         memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
+        exactGC = !qgetenv("MM_EXACT_GC").isEmpty();
+        if (aggressiveGC)
+            qDebug() << "Using aggressive garbage collection";
+        if (exactGC)
+            qDebug() << "Using exact garbage collection";
     }
 
     ~Data()
@@ -293,8 +299,10 @@ void MemoryManager::mark()
 #  endif // CPU
 #endif // COMPILER
 
-    collectFromStack();
     collectFromJSStack();
+
+    if (!m_d->exactGC)
+        collectFromStack();
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -573,12 +581,7 @@ void MemoryManager::collectFromStack() const
     assert(i == m_d->heapChunks.count() * 2);
 
     for (; current < m_d->stackTop; ++current) {
-        char* genericPtr =
-#if QT_POINTER_SIZE == 8
-                reinterpret_cast<char *>((*current) & ~(quint64(Value::Type_Mask) << Value::Tag_Shift));
-#else
-                reinterpret_cast<char *>(*current);
-#endif
+        char* genericPtr = reinterpret_cast<char *>(*current);
 
         if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
             continue;

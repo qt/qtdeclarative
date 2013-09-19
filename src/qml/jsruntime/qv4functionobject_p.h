@@ -106,15 +106,18 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
 
     ExecutionContext *scope;
-    String *name;
+    SafeString name;
     String * const *formalParameterList;
     String * const *varList;
     unsigned int formalParameterCount;
     unsigned int varCount;
     Function *function;
 
-    FunctionObject(ExecutionContext *scope, String *name = 0, bool createProto = false);
+    FunctionObject(ExecutionContext *scope, const StringRef name, bool createProto = false);
+    FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     ~FunctionObject();
+
+    void init(const StringRef name, bool createProto);
 
     ReturnedValue newInstance();
 
@@ -171,7 +174,7 @@ struct BuiltinFunction: FunctionObject {
     Q_MANAGED
     ReturnedValue (*code)(SimpleCallContext *);
 
-    BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *));
+    BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *));
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -185,7 +188,7 @@ struct IndexedBuiltinFunction: FunctionObject
     uint index;
 
     IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(SimpleCallContext *ctx, uint index))
-        : FunctionObject(scope, /*name*/0)
+        : FunctionObject(scope)
         , code(code)
         , index(index)
     {
