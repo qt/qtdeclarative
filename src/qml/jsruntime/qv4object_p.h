@@ -45,12 +45,12 @@
 #include "qv4runtime_p.h"
 #include "qv4engine_p.h"
 #include "qv4context_p.h"
-#include "qv4sparsearray_p.h"
 #include "qv4string_p.h"
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4internalclass_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4sparsearray_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -147,12 +147,14 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionContext *ctx, const QString &name, const ValueRef value);
 
-    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
+    static ReturnedValue getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs);
     ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
-        return getValue(Value::fromObject(const_cast<Object *>(this)), p, attrs);
+        Scope scope(this->engine());
+        ScopedValue t(scope, Value::fromObject(const_cast<Object *>(this)));
+        return getValue(t, p, attrs);
     }
 
-    void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
+    void putValue(Property *pd, PropertyAttributes attrs, const ValueRef value);
 
     void inplaceBinOp(ExecutionContext *, BinOp op, const StringRef name, const ValueRef rhs);
     void inplaceBinOpValue(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs);
@@ -267,7 +269,7 @@ public:
     SparseArrayNode *sparseArrayEnd() { return sparseArray ? sparseArray->end() : 0; }
 
     void arrayConcat(const ArrayObject *other);
-    void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayDataLen);
+    void arraySort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint arrayDataLen);
     ReturnedValue arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
 
     void arrayReserve(uint n);
@@ -349,14 +351,14 @@ protected:
 
 struct BooleanObject: Object {
     Value value;
-    BooleanObject(ExecutionEngine *engine, const Value &value): Object(engine->booleanClass), value(value) { type = Type_BooleanObject; }
+    BooleanObject(ExecutionEngine *engine, const ValueRef value): Object(engine->booleanClass), value(*value) { type = Type_BooleanObject; }
 protected:
     BooleanObject(InternalClass *ic): Object(ic), value(Value::fromBoolean(false)) { type = Type_BooleanObject; }
 };
 
 struct NumberObject: Object {
     Value value;
-    NumberObject(ExecutionEngine *engine, const Value &value): Object(engine->numberClass), value(value) { type = Type_NumberObject; }
+    NumberObject(ExecutionEngine *engine, const ValueRef value): Object(engine->numberClass), value(*value) { type = Type_NumberObject; }
 protected:
     NumberObject(InternalClass *ic): Object(ic), value(Value::fromInt32(0)) { type = Type_NumberObject; }
 };

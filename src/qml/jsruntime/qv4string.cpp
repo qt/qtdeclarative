@@ -131,10 +131,10 @@ void String::destroy(Managed *that)
 
 ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
 {
-    Scope scope(m->engine());
-
-    String *that = static_cast<String *>(m);
     ExecutionEngine *v4 = m->engine();
+    Scope scope(v4);
+    ScopedString that(scope, static_cast<String *>(m));
+
     if (name->isEqualTo(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
@@ -149,13 +149,15 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return v4->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
+    return v4->stringClass->prototype->getValue(that, pd, attrs);
 }
 
 ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    String *that = static_cast<String *>(m);
-    ExecutionEngine *engine = that->engine();
+    ExecutionEngine *engine = m->engine();
+    Scope scope(engine);
+    ScopedString that(scope, static_cast<String *>(m));
+
     if (index < that->_text.length()) {
         if (hasProperty)
             *hasProperty = true;
@@ -170,7 +172,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return engine->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
+    return engine->stringClass->prototype->getValue(that, pd, attrs);
 }
 
 void String::put(Managed *m, const StringRef name, const ValueRef value)

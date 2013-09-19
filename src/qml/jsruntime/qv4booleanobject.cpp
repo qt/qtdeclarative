@@ -53,8 +53,10 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
+    Scope scope(m->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    return Encode(m->engine()->newBooleanObject(Value::fromBoolean(n)));
+    ScopedValue b(scope, QV4::Value::fromBoolean(n));
+    return Encode(m->engine()->newBooleanObject(b));
 }
 
 ReturnedValue BooleanCtor::call(Managed *, CallData *callData)

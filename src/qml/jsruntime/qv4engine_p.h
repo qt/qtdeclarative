@@ -274,8 +274,8 @@ struct Q_QML_EXPORT ExecutionEngine
     String *newIdentifier(const QString &text);
 
     Returned<Object> *newStringObject(const Value &value);
-    Returned<Object> *newNumberObject(const Value &value);
-    Returned<Object> *newBooleanObject(const Value &value);
+    Returned<Object> *newNumberObject(const ValueRef value);
+    Returned<Object> *newBooleanObject(const ValueRef value);
 
     Returned<ArrayObject> *newArrayObject(int count = 0);
     Returned<ArrayObject> *newArrayObject(const QStringList &list);

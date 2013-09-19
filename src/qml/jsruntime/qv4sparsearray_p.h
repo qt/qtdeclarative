@@ -45,6 +45,7 @@
 #include "qv4global_p.h"
 #include <QtCore/qmap.h>
 #include "qv4value_p.h"
+#include "qv4scopedvalue_p.h"
 #include "qv4property_p.h"
 #include <assert.h>
 
@@ -63,15 +64,15 @@ struct SparseArray;
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionContext *context, Object *thisObject, const Value &comparefn)
+    inline ArrayElementLessThan(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn)
         : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
 
     bool operator()(const Property &v1, const Property &v2) const;
 
 private:
     ExecutionContext *m_context;
-    Object *thisObject;
-    Value m_comparefn;
+    ObjectRef thisObject;
+    const ValueRef m_comparefn;
 };
 
 

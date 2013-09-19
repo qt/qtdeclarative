@@ -129,7 +129,7 @@ void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef valu
     put(n, value);
 }
 
-ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
+ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
         return p->value.asReturnedValue();
@@ -139,17 +139,17 @@ ReturnedValue Object::getValue(const Value &thisObject, const Property *p, Prope
 
     Scope scope(getter->engine());
     ScopedCallData callData(scope, 0);
-    callData->thisObject = thisObject;
+    callData->thisObject = *thisObject;
     return getter->call(callData);
 }
 
-void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
+void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef value)
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
             Scope scope(pd->set->engine());
             ScopedCallData callData(scope, 1);
-            callData->args[0] = value;
+            callData->args[0] = *value;
             callData->thisObject = Value::fromObject(this);
             pd->set->call(callData);
             return;
@@ -160,7 +160,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
     if (!attrs.isWritable())
         goto reject;
 
-    pd->value = value;
+    pd->value = *value;
     return;
 
   reject:
@@ -558,7 +558,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], *value);
+            o->putValue(o->memberData + idx, o->internalClass->propertyData[idx], value);
             return;
         }
     }
@@ -1223,7 +1223,7 @@ void Object::arrayConcat(const ArrayObject *other)
     setArrayLengthUnchecked(newLen);
 }
 
-void Object::arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint len)
+void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint len)
 {
     if (!arrayDataLen)
         return;
@@ -1256,7 +1256,7 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
         }
     }
 
-    if (!(comparefn.isUndefined() || comparefn.asObject()))
+    if (!(comparefn->isUndefined() || comparefn->asObject()))
         context->throwTypeError();
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);

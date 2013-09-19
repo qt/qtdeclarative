@@ -399,13 +399,13 @@ Returned<Object> *ExecutionEngine::newStringObject(const Value &value)
     return object->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newNumberObject(const Value &value)
+Returned<Object> *ExecutionEngine::newNumberObject(const ValueRef value)
 {
     NumberObject *object = new (memoryManager) NumberObject(this, value);
     return object->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newBooleanObject(const Value &value)
+Returned<Object> *ExecutionEngine::newBooleanObject(const ValueRef value)
 {
     Object *object = new (memoryManager) BooleanObject(this, value);
     return object->asReturned<Object>();

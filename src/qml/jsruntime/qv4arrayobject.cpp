@@ -440,7 +440,7 @@ ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
     uint len = getLength(ctx, instance.getPointer());
 
     ScopedValue comparefn(scope, ctx->argument(0));
-    instance->arraySort(ctx, instance.getPointer(), comparefn, len);
+    instance->arraySort(ctx, instance, comparefn, len);
     return ctx->thisObject.asReturnedValue();
 }
 

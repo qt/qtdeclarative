@@ -295,7 +295,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
     PropertyAttributes attrs;
     Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
     if (pd) {
-        wrapper->putValue(pd, attrs, *value);
+        wrapper->putValue(pd, attrs, value);
         return;
     }
 

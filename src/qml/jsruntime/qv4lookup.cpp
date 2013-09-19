@@ -131,7 +131,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
                 l->getter = Lookup::primitiveGetterAccessor0;
             else if (l->level == 1)
                 l->getter = Lookup::primitiveGetterAccessor1;
-            return proto->getValue(*object, p, attrs);
+            return proto->getValue(object, p, attrs);
         }
     }
 

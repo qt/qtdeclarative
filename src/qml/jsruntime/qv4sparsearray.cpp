@@ -55,19 +55,21 @@ using namespace QV4;
 
 bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) const
 {
+    Scope scope(m_context);
 
     if (p1.value.isUndefined())
         return false;
     if (p2.value.isUndefined())
         return true;
-    if (Object *o = m_comparefn.asObject()) {
+    ScopedObject o(scope, m_comparefn);
+    if (o) {
         Scope scope(o->engine());
         ScopedValue result(scope);
         ScopedCallData callData(scope, 2);
         callData->thisObject = Value::undefinedValue();
         callData->args[0] = p1.value;
         callData->args[1] = p2.value;
-        result = __qmljs_call_value(m_context, QV4::ValueRef::fromRawValue(&m_comparefn), callData);
+        result = __qmljs_call_value(m_context, m_comparefn, callData);
 
         return result->toNumber() <= 0;
     }

@@ -619,13 +619,13 @@ Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRe
     case Value::Null_Type:
         ctx->throwTypeError();
     case Value::Boolean_Type:
-        return ctx->engine->newBooleanObject(*value);
+        return ctx->engine->newBooleanObject(value);
     case Value::Managed_Type:
         Q_ASSERT(value->isString());
         return ctx->engine->newStringObject(*value);
     case Value::Integer_Type:
     default: // double
-        return ctx->engine->newNumberObject(*value);
+        return ctx->engine->newNumberObject(value);
     }
 }
 
