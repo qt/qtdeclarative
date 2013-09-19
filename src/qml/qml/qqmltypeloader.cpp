@@ -1978,6 +1978,7 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
+    // --- old compiler:
     for (int ii = 0; !isError() && ii < m_types.count(); ++ii) {
         const TypeReference &type = m_types.at(ii);
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
@@ -1994,6 +1995,25 @@ void QQmlTypeData::done()
             setError(errors);
         }
     }
+    // --- new compiler:
+    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+         !isError() && it != end; ++it) {
+        const TypeReference &type = *it;
+        Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
+        if (type.typeData && type.typeData->isError()) {
+            QString typeName = parsedQML->jsGenerator.strings.at(it.key());
+
+            QList<QQmlError> errors = type.typeData->errors();
+            QQmlError error;
+            error.setUrl(finalUrl());
+            error.setLine(type.location.line);
+            error.setColumn(type.location.column);
+            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
+            errors.prepend(error);
+            setError(errors);
+        }
+    }
+    // ---
 
     // Compile component
     if (!isError()) 
