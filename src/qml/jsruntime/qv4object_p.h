@@ -462,6 +462,11 @@ inline Object *value_cast(const Value &v) {
 }
 
 template<>
+inline ArrayObject *value_cast(const Value &v) {
+    return v.asArrayObject();
+}
+
+template<>
 inline ReturnedValue value_convert<Object>(ExecutionContext *ctx, const Value &v)
 {
     return v.toObject(ctx)->asReturnedValue();
