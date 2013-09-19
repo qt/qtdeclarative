@@ -556,7 +556,6 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_get)) {
         ScopedValue get(scope, o->get(ctx->engine->id_get));
         FunctionObject *f = get->asFunctionObject();
-        qDebug() << "get" << (void *)get.asReturnedValue() << f;
         if (f) {
             desc->setGetter(f);
         } else if (get->isUndefined()) {
