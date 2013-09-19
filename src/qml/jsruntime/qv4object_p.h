@@ -294,7 +294,7 @@ public:
     { return vtbl->getIndexed(this, idx, hasProperty); }
     inline void put(const StringRef name, const ValueRef v)
     { vtbl->put(this, name, v); }
-    inline void putIndexed(uint idx, const Value &v)
+    inline void putIndexed(uint idx, const ValueRef v)
     { vtbl->putIndexed(this, idx, v); }
     using Managed::get;
     using Managed::getIndexed;
@@ -313,7 +313,7 @@ protected:
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
-    static void putIndexed(Managed *m, uint index, const Value &value);
+    static void putIndexed(Managed *m, uint index, const ValueRef value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
@@ -327,7 +327,7 @@ private:
     ReturnedValue internalGet(const StringRef name, bool *hasProperty);
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(const StringRef name, const ValueRef value);
-    void internalPutIndexed(uint index, const Value &value);
+    void internalPutIndexed(uint index, const ValueRef value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);
 

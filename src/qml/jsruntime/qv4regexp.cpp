@@ -150,7 +150,7 @@ void RegExp::put(Managed *m, const StringRef name, const ValueRef value)
 {
 }
 
-void RegExp::putIndexed(Managed *m, uint index, const Value &value)
+void RegExp::putIndexed(Managed *m, uint index, const ValueRef value)
 {
 }
 

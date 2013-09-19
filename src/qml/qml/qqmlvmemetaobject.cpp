@@ -73,9 +73,13 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
     if (m_target && m_index >= 0) {
         if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isUndefined()) {
             // Set the var property to NULL
-            QV4::ArrayObject *a = m_target->varProperties.value().asArrayObject();
-            if (a)
-                a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::Value::nullValue());
+            QV4::ExecutionEngine *v4 = m_target->varProperties.engine();
+            if (v4) {
+                QV4::Scope scope(v4);
+                QV4::ScopedArrayObject a(scope, m_target->varProperties.value().asArrayObject());
+                if (a)
+                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Value::nullValue()));
+            }
         }
 
         m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
@@ -1029,7 +1033,9 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
 
-    if (QV4::Object *o = value.asObject()) {
+    QV4::ScopedValue v(scope, value);
+    QV4::ScopedObject o(scope, v);
+    if (o) {
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
         if (QV4::VariantObject *v = o->as<QV4::VariantObject>()) {
@@ -1051,7 +1057,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     }
 
     // Write the value and emit change signal as appropriate.
-    varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, value);
+    varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, v);
     activate(object, methodOffset() + id, 0);
 }
 

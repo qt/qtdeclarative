@@ -134,31 +134,31 @@ static QString convertElementToString(bool element)
         return QStringLiteral("false");
 }
 
-template <typename ElementType> ElementType convertValueToElement(const QV4::Value &value);
+template <typename ElementType> ElementType convertValueToElement(const QV4::ValueRef value);
 
-template <> QString convertValueToElement(const QV4::Value &value)
+template <> QString convertValueToElement(const QV4::ValueRef value)
 {
-    return value.toQStringNoThrow();
+    return value->toQString();
 }
 
-template <> int convertValueToElement(const QV4::Value &value)
+template <> int convertValueToElement(const QV4::ValueRef value)
 {
-    return value.toInt32();
+    return value->toInt32();
 }
 
-template <> QUrl convertValueToElement(const QV4::Value &value)
+template <> QUrl convertValueToElement(const QV4::ValueRef value)
 {
-    return QUrl(value.toQStringNoThrow());
+    return QUrl(value->toQString());
 }
 
-template <> qreal convertValueToElement(const QV4::Value &value)
+template <> qreal convertValueToElement(const QV4::ValueRef value)
 {
-    return value.toNumber();
+    return value->toNumber();
 }
 
-template <> bool convertValueToElement(const QV4::Value &value)
+template <> bool convertValueToElement(const ValueRef value)
 {
-    return value.toBoolean();
+    return value->toBoolean();
 }
 
 template <typename Container>
@@ -223,7 +223,7 @@ public:
         return QV4::Value::undefinedValue();
     }
 
-    void containerPutIndexed(uint index, const QV4::Value &value)
+    void containerPutIndexed(uint index, const QV4::ValueRef value)
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
@@ -455,10 +455,12 @@ public:
 
     static QVariant toVariant(QV4::ArrayObject *array)
     {
+        QV4::Scope scope(array->engine());
         Container result;
         quint32 length = array->arrayLength();
+        QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i)
-            result << convertValueToElement<typename Container::value_type>(QV4::Value::fromReturnedValue(array->getIndexed(i)));
+            result << convertValueToElement<typename Container::value_type>((v = array->getIndexed(i)));
         return QVariant::fromValue(result);
     }
 
@@ -488,7 +490,7 @@ private:
 
     static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
     { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty).asReturnedValue(); }
-    static void putIndexed(Managed *that, uint index, const QV4::Value &value)
+    static void putIndexed(Managed *that, uint index, const QV4::ValueRef value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }

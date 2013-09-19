@@ -100,7 +100,7 @@ struct ManagedVTable
     ReturnedValue (*get)(Managed *, const StringRef name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, const StringRef name, const ValueRef value);
-    void (*putIndexed)(Managed *, uint index, const Value &value);
+    void (*putIndexed)(Managed *, uint index, const ValueRef value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
@@ -266,8 +266,7 @@ public:
     ReturnedValue get(const StringRef name, bool *hasProperty = 0);
     ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
     void put(const StringRef name, const ValueRef value);
-    void putIndexed(uint index, const Value &value)
-    { vtbl->putIndexed(this, index, value); }
+    void putIndexed(uint index, const ValueRef value);
     PropertyAttributes query(String *name) const
     { return vtbl->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const

@@ -181,7 +181,7 @@ void String::put(Managed *m, const StringRef name, const ValueRef value)
     o->put(name, value);
 }
 
-void String::putIndexed(Managed *m, uint index, const Value &value)
+void String::putIndexed(Managed *m, uint index, const ValueRef value)
 {
     Scope scope(m->engine());
     String *that = static_cast<String *>(m);

@@ -221,3 +221,8 @@ void Managed::setLookup(Lookup *l, const ValueRef v)
 {
     vtbl->setLookup(this, l, v);
 }
+
+void Managed::putIndexed(uint index, const ValueRef value)
+{
+    vtbl->putIndexed(this, index, value);
+}

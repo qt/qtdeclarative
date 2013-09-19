@@ -959,7 +959,7 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
                 qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Value::fromInt32(error.column())));
                 qmlerror->put((s = v4->newString("fileName")), (v = Value::fromString(v4->newString(error.url().toString()))));
                 qmlerror->put((s = v4->newString("message")), (v = Value::fromString(v4->newString(error.description()))));
-                qmlerrors->putIndexed(ii, qmlerror.asValue());
+                qmlerrors->putIndexed(ii, qmlerror);
             }
 
             Scoped<Object> errorObject(scope, v4->newErrorObject(Value::fromString(v4->newString(errorstr))));

@@ -472,7 +472,7 @@ void Object::put(Managed *m, const StringRef name, const ValueRef value)
     static_cast<Object *>(m)->internalPut(name, value);
 }
 
-void Object::putIndexed(Managed *m, uint index, const Value &value)
+void Object::putIndexed(Managed *m, uint index, const ValueRef value)
 {
     static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
@@ -723,7 +723,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return putIndexed(idx, *value);
+        return putIndexed(idx, value);
 
     name->makeIdentifier();
 
@@ -801,7 +801,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
     }
 }
 
-void Object::internalPutIndexed(uint index, const Value &value)
+void Object::internalPutIndexed(uint index, const ValueRef value)
 {
     Property *pd = 0;
     PropertyAttributes attrs;
@@ -832,7 +832,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
         } else if (!attrs.isWritable())
             goto reject;
         else
-            pd->value = value;
+            pd->value = *value;
         return;
     } else if (!prototype()) {
         if (!extensible)
@@ -859,13 +859,13 @@ void Object::internalPutIndexed(uint index, const Value &value)
 
         Scope scope(engine());
         ScopedCallData callData(scope, 1);
-        callData->args[0] = value;
+        callData->args[0] = *value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);
         return;
     }
 
-    arraySet(index, value);
+    arraySet(index, *value);
     return;
 
   reject:

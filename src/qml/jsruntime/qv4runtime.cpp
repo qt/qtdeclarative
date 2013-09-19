@@ -727,7 +727,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
                 return;
             }
         }
-        o->putIndexed(idx, *value);
+        o->putIndexed(idx, value);
         return;
     }
 

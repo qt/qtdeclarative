@@ -114,7 +114,7 @@ protected:
     static ReturnedValue get(Managed *, const StringRef, bool *);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
-    static void putIndexed(Managed *m, uint index, const Value &value);
+    static void putIndexed(Managed *m, uint index, const ValueRef value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *, String *);
