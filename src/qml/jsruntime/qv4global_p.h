@@ -62,6 +62,8 @@ inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
 inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
+#define qOffsetOf(s, m) ((size_t)((((char *)&(((s *)64)->m)) - 64)))
+
 #if defined(Q_OS_QNX)
 #include <math.h>
 #undef isnan

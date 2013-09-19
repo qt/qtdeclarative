@@ -267,23 +267,23 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     int scope = t->scope;
     RegisterID context = ContextRegister;
     if (scope) {
-        loadPtr(Address(ContextRegister, offsetof(ExecutionContext, outer)), ScratchRegister);
+        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext, outer)), ScratchRegister);
         --scope;
         context = ScratchRegister;
         while (scope) {
-            loadPtr(Address(context, offsetof(ExecutionContext, outer)), context);
+            loadPtr(Address(context, qOffsetOf(ExecutionContext, outer)), context);
             --scope;
         }
     }
     switch (t->kind) {
     case V4IR::Temp::Formal:
     case V4IR::Temp::ScopedFormal: {
-        loadPtr(Address(context, offsetof(CallContext, arguments)), reg);
+        loadPtr(Address(context, qOffsetOf(CallContext, arguments)), reg);
         offset = t->index * sizeof(Value);
     } break;
     case V4IR::Temp::Local:
     case V4IR::Temp::ScopedLocal: {
-        loadPtr(Address(context, offsetof(CallContext, locals)), reg);
+        loadPtr(Address(context, qOffsetOf(CallContext, locals)), reg);
         offset = t->index * sizeof(Value);
     } break;
     case V4IR::Temp::StackSlot: {
@@ -297,7 +297,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
 
 Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, runtimeStrings)), reg);
+    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
 }
@@ -653,10 +653,10 @@ void InstructionSelection::run(int functionIndex)
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
-    _as->loadPtr(Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
     _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
-    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         V4IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
@@ -946,11 +946,11 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
 #if defined(VALUE_FITS_IN_REGISTER)
-    _as->load64(Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)),
+    _as->load64(Pointer(Assembler::ContextRegister, qOffsetOf(ExecutionContext, thisObject)),
                 Assembler::ReturnValueRegister);
     _as->storeReturnValue(temp);
 #else
-    _as->copyValue(temp, Pointer(Assembler::ContextRegister, offsetof(ExecutionContext, thisObject)));
+    _as->copyValue(temp, Pointer(Assembler::ContextRegister, qOffsetOf(ExecutionContext, thisObject)));
 #endif
 }
 
@@ -1004,7 +1004,7 @@ void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::T
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(temp, index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
+        generateLookupCall(temp, index, qOffsetOf(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
         return;
     }
     generateFunctionCall(temp, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToString(*name->id));
@@ -1027,7 +1027,7 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(target, index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(base), Assembler::Void);
+        generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), Assembler::PointerToValue(base), Assembler::Void);
     } else {
         generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister,
                              Assembler::PointerToValue(base), Assembler::PointerToString(name));
@@ -1039,7 +1039,7 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
 {
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
-        generateLookupCall(Assembler::Void, index, offsetof(QV4::Lookup, setter),
+        generateLookupCall(Assembler::Void, index, qOffsetOf(QV4::Lookup, setter),
                            Assembler::PointerToValue(targetBase),
                            Assembler::PointerToValue(source));
     } else {
@@ -1719,11 +1719,11 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         } else {
             Address temp = _as->loadTempAddress(Assembler::ScratchRegister, t);
             Address tag = temp;
-            tag.offset += offsetof(QV4::Value, tag);
+            tag.offset += qOffsetOf(QV4::Value, tag);
             Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type));
 
             Address data = temp;
-            data.offset += offsetof(QV4::Value, int_32);
+            data.offset += qOffsetOf(QV4::Value, int_32);
             _as->load32(data, Assembler::ReturnValueRegister);
             Assembler::Jump testBoolean = _as->jump();
 
@@ -1856,8 +1856,8 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
-    _as->loadPtr(Address(Assembler::ContextRegister, offsetof(ExecutionContext, engine)), Assembler::ScratchRegister);
-    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
+    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     _as->leaveStandardStackFrame();
     _as->ret();
@@ -1887,11 +1887,11 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
         ++argc;
     }
 
-    Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
+    Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
     _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type), p);
-    p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
+    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
     _as->store32(Assembler::TrustedImm32(argc), p);
-    p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
+    p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
     if (!thisObject)
         _as->storeValue(QV4::Value::undefinedValue(), p);
     else

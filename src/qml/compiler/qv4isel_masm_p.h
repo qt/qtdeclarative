@@ -1456,7 +1456,7 @@ private:
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        _as->loadPtr(Assembler::Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, lookups)),
+        _as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lookups)),
                      Assembler::ReturnValueRegister);
 
         Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));

@@ -310,7 +310,7 @@ struct Scoped
 struct ScopedCallData {
     ScopedCallData(Scope &scope, int argc)
     {
-        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value);
         ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));
         ptr->tag = QV4::Value::Integer_Type;
         ptr->argc = argc;

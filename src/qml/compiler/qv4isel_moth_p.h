@@ -157,7 +157,7 @@ private:
 
     int scratchTempIndex() const { return _function->tempCount; }
     int callDataStart() const { return scratchTempIndex() + 1; }
-    int outgoingArgumentTempStart() const { return callDataStart() + offsetof(QV4::CallData, args)/sizeof(QV4::Value); }
+    int outgoingArgumentTempStart() const { return callDataStart() + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value); }
     int frameSize() const { return outgoingArgumentTempStart() + _function->maxNumberOfArguments; }
 
     template <int Instr>

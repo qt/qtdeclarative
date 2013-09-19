@@ -74,10 +74,10 @@
 #  define NAME_MAX _POSIX_SYMLINK_MAX
 #endif
 
-// LSB has a broken version of offsetof that can't be used at compile time
+// LSB has a broken version of qOffsetOf that can't be used at compile time
 // https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3462
-#undef offsetof
-#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#undef qOffsetOf
+#define qOffsetOf(TYPE, MEMBER) __builtin_qOffsetOf (TYPE, MEMBER)
 #endif
 
 // #define DATABLOB_DEBUG
