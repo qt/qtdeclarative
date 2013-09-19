@@ -132,17 +132,18 @@
     hour, if DST is currently in effect, while it was not for the time specified, or
     vice versa.
 
-    \sa {QtQuick2::Locale}{Locale}
+    \sa {QtQml2::Locale}{Locale}
 */
 
 /*!
-    \qmlmethod string Date::toLocaleString(locale,format)
+    \qmlmethod string Date::toLocaleString(locale, format)
 
     Converts the Date to a string containing the date and time
     suitable for the specified \a locale
     in the specified \a format.
 
-    If the format is not specified Locale.LongFormat will be used.
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
 
     If \a locale is not specified, the default locale will be used.
 
@@ -158,12 +159,13 @@
 */
 
 /*!
-    \qmlmethod string Date::toLocaleDateString(locale,format)
+    \qmlmethod string Date::toLocaleDateString(locale, format)
 
     Converts the Date to a string containing the date suitable for the specified \a locale
     in the specified \a format.
 
-    If the format is not specified Locale.LongFormat will be used.
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
 
     If \a locale is not specified, the default locale will be used.
 
@@ -179,12 +181,13 @@
 */
 
 /*!
-    \qmlmethod string Date::toLocaleTimeString(locale,format)
+    \qmlmethod string Date::toLocaleTimeString(locale, format)
 
     Converts the Date to a string containing the time suitable for the specified \a locale
     in the specified \a format.
 
-    If the format is not specified Locale.LongFormat will be used.
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
 
     If \a locale is not specified, the default locale will be used.
 
@@ -200,10 +203,97 @@
 */
 
 /*!
+    \qmlmethod string Date::fromLocaleString(locale, dateTimeString, format)
+
+    Converts the datetime string \a dateTimeString to a \l {QtQml2::Date}{Date}
+    object using \a locale and \a format.
+
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
+
+    If \a locale is not specified, the default locale will be used.
+
+    The following example shows a datetime being parsed from a datetime string
+    in a certain format using the default locale:
+    \code
+    import QtQml 2.0
+
+    QtObject {
+        property var locale: Qt.locale()
+        property string dateTimeString: "Tue 2013-09-17 10:56:06"
+
+        Component.onCompleted: {
+            print(Date.fromLocaleString(locale, dateTimeString, "ddd yyyy-MM-dd hh:mm:ss"));
+        }
+    }
+    \endcode
+*/
+
+/*!
+    \qmlmethod string Date::fromLocaleDateString(locale, dateString, format)
+
+    Converts the date string \a dateString to a \l {QtQml2::Date}{Date} object
+    using \a locale and \a format.
+
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
+
+    If \a locale is not specified, the default locale will be used.
+
+    The following example shows the current date first being formatted as a date
+    string using the default locale and format, then parsed back again in the
+    same manner:
+    \code
+    import QtQml 2.0
+
+    QtObject {
+        property var locale: Qt.locale()
+        property date currentDate: new Date()
+        property string dateString
+
+        Component.onCompleted: {
+            dateString = currentDate.toLocaleDateString();
+            print(Date.fromLocaleDateString(dateString));
+        }
+    }
+    \endcode
+*/
+
+/*!
+    \qmlmethod string Date::fromLocaleTimeString(locale, timeString, format)
+
+    Converts the time string \a timeString to a \l {QtQml2::Date}{Date} object
+    using \a locale and \a format.
+
+    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    be used.
+
+    If \a locale is not specified, the default locale will be used.
+
+    The following example shows the current time first being formatted as a time
+    string using the default locale and a short format, then parsed back again
+    in the same manner:
+    \code
+    import QtQuick 2.0
+
+    QtObject {
+        property var locale: Qt.locale()
+        property date currentTime: new Date()
+        property string timeString
+
+        Component.onCompleted: {
+            timeString = currentTime.toLocaleTimeString(locale, Locale.ShortFormat);
+            print(Date.fromLocaleTimeString(locale, timeString, Locale.ShortFormat));
+        }
+    }
+    \endcode
+*/
+
+/*!
     \qmlmethod string Date::timeZoneUpdated()
 
     Informs the JS engine that the system's timezone has been changed, which is necessary
-    for the correct manipulation of date/time data.
+    for the correct manipulation of datetime data.
 
     JS stores Date objects in UTC time; all access to and from Date components in local
     time involves the application of the current offset from UTC.  If the current offset

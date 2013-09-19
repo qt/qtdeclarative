@@ -3,6 +3,8 @@ TARGET = tst_qquicktrailemitter
 SOURCES += tst_qquicktrailemitter.cpp
 macx:CONFIG -= app_bundle
 
+win32-msvc2012:CONFIG += insignificant_test # QTBUG-33421
+
 include (../../shared/util.pri)
 TESTDATA = data/*
 

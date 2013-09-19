@@ -33,7 +33,7 @@
     The QML Number object extends the JS Number object with
     locale aware functions.
 
-    \sa {QtQuick2::Locale}{Locale}
+    \sa {QtQml2::Locale}{Locale}
 */
 
 /*!
