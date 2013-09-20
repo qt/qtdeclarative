@@ -77,6 +77,14 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
                             // be larger, as for example on ARM we append the exception handling table.
 };
 
+struct RelativeCall {
+    JSC::MacroAssembler::Address addr;
+
+    explicit RelativeCall(const JSC::MacroAssembler::Address &addr)
+        : addr(addr)
+    {}
+};
+
 class Assembler : public JSC::MacroAssembler
 {
 public:
@@ -430,6 +438,11 @@ public:
 
     void callAbsolute(const char* /*functionName*/, Address addr) {
         call(addr);
+    }
+
+    void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
+    {
+        call(relativeCall.addr);
     }
 
     void registerBlock(V4IR::BasicBlock*, V4IR::BasicBlock *nextBlock);
@@ -886,6 +899,8 @@ public:
         loadArgumentOnStackOrRegister<3>(arg4);
         loadArgumentOnStackOrRegister<2>(arg3);
         loadArgumentOnStackOrRegister<1>(arg2);
+
+        prepareRelativeCall(function, this);
         loadArgumentOnStackOrRegister<0>(arg1);
 
         callAbsolute(functionName, function);
@@ -1259,9 +1274,9 @@ public:
 
         // it's not in signed int range, so load it as a double, and truncate it down
         loadDouble(addr, FPGpr0);
-        static const QV4::Value magic = QV4::Value::fromDouble(double(INT_MAX) + 1);
-        ImplicitAddress magicAddr = constantTable().loadValueAddress(magic, scratchReg);
-        subDouble(Address(magicAddr.base, magicAddr.offset), FPGpr0);
+        static const double magic = double(INT_MAX) + 1;
+        move(TrustedImmPtr(&magic), scratchReg);
+        subDouble(Address(scratchReg, 0), FPGpr0);
         Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
         canNeverHappen.link(this);
         or32(TrustedImm32(1 << 31), scratchReg);
@@ -1308,6 +1323,13 @@ private:
     };
     QVector<CodeLineNumerMapping> codeLineNumberMappings;
 };
+
+template <typename T> inline void prepareRelativeCall(const T &, Assembler *){}
+template <> inline void prepareRelativeCall(const RelativeCall &relativeCall, Assembler *as)
+{
+    as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lookups)),
+                relativeCall.addr.base);
+}
 
 class Q_QML_EXPORT InstructionSelection:
         protected V4IR::IRDecoder,
@@ -1477,15 +1499,13 @@ private:
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        _as->loadPtr(Assembler::Address(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lookups)),
-                     Assembler::ReturnValueRegister);
-
         Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
 
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
 
-         _as->generateFunctionCallImp(retval, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
+         _as->generateFunctionCallImp(retval, "lookup getter/setter",
+                                      RelativeCall(getterSetter), lookupAddr, arg1, arg2);
     }
 
     template <typename Arg1>

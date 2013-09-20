@@ -1842,6 +1842,9 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
             if (t->type == V4IR::DoubleType) {
                 _as->moveDoubleTo64((Assembler::FPRegisterID) t->index,
                                     Assembler::ReturnValueRegister);
+                _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask),
+                          Assembler::ScratchRegister);
+                _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
             } else if (t->type == V4IR::UInt32Type) {
                 Address tmp = addressForArgument(0);
                 _as->storeUInt32((Assembler::RegisterID) t->index, Pointer(tmp));
@@ -2056,26 +2059,10 @@ void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
 
     switch (oper) {
     case V4IR::OpAdd:
-        if (V4IR::Const *c = rightSource->asConst()) {
-            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
-            Assembler::ImplicitAddress addr =
-                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
-            _as->addDouble(Address(addr.base, addr.offset), targetReg);
-            break;
-        }
-
         _as->addDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
                        targetReg);
         break;
     case V4IR::OpMul:
-        if (V4IR::Const *c = rightSource->asConst()) {
-            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
-            Assembler::ImplicitAddress addr =
-                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
-            _as->mulDouble(Address(addr.base, addr.offset), targetReg);
-            break;
-        }
-
         _as->mulDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
                        targetReg);
         break;
@@ -2088,15 +2075,16 @@ void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
                 _as->subDouble(Assembler::FPGpr0, targetReg);
                 break;
             }
-        }
-#endif
-        if (V4IR::Const *c = rightSource->asConst()) {
+        } else if (rightSource->asConst() && targetReg == Assembler::FPGpr0) {
+            Q_ASSERT(leftSource->asTemp());
+            Q_ASSERT(leftSource->asTemp()->kind == V4IR::Temp::PhysicalRegister);
             _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
-            Assembler::ImplicitAddress addr =
-                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
-            _as->subDouble(Address(addr.base, addr.offset), targetReg);
+            Assembler::FPRegisterID reg = (Assembler::FPRegisterID) leftSource->asTemp()->index;
+            _as->moveDouble(_as->toDoubleRegister(rightSource, reg), reg);
+            _as->subDouble(reg, targetReg);
             break;
         }
+#endif
 
         _as->subDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
                        targetReg);
@@ -2110,16 +2098,16 @@ void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
                 _as->divDouble(Assembler::FPGpr0, targetReg);
                 break;
             }
-        }
-#endif
-        if (V4IR::Const *c = rightSource->asConst()) {
+        } else if (rightSource->asConst() && targetReg == Assembler::FPGpr0) {
+            Q_ASSERT(leftSource->asTemp());
+            Q_ASSERT(leftSource->asTemp()->kind == V4IR::Temp::PhysicalRegister);
             _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
-            Assembler::ImplicitAddress addr =
-                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
-            _as->divDouble(Address(addr.base, addr.offset), targetReg);
+            Assembler::FPRegisterID reg = (Assembler::FPRegisterID) leftSource->asTemp()->index;
+            _as->moveDouble(_as->toDoubleRegister(rightSource, reg), reg);
+            _as->divDouble(reg, targetReg);
             break;
         }
-
+#endif
         _as->divDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
                        targetReg);
         break;
