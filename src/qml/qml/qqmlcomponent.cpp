@@ -896,10 +896,6 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     enginePriv->referenceScarceResources();
     QObject *rv = 0;
     if (enginePriv->useNewCompiler) {
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-        if (cc->compilationUnit && !cc->compilationUnit->engine)
-            cc->compilationUnit->linkToEngine(v4);
-
         state.creator = new QmlObjectCreator(context, cc);
         rv = state.creator->create(start);
         if (!rv)

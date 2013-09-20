@@ -486,6 +486,10 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , _vmeMetaObject(0)
     , _qmlContext(0)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    if (compiledData->compilationUnit && !compiledData->compilationUnit->engine)
+        compiledData->compilationUnit->linkToEngine(v4);
+
 }
 
 QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
