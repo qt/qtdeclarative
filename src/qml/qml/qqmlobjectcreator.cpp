@@ -1159,10 +1159,18 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlType *type = typeRef.type;
         if (type) {
             instance = type->create();
+            if (!instance) {
+                recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
+                return 0;
+            }
         } else {
             Q_ASSERT(typeRef.component);
             QmlObjectCreator subCreator(context, typeRef.component);
             instance = subCreator.create();
+            if (!instance) {
+                errors += subCreator.errors;
+                return 0;
+            }
         }
         // ### use no-event variant
         if (parent)
