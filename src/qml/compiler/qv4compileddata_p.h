@@ -445,6 +445,7 @@ struct Q_QML_EXPORT CompilationUnit
         , ownsData(false)
         , runtimeStrings(0)
         , runtimeLookups(0)
+        , runtimeRegularExpressions(0)
         , runtimeClasses(0)
     {}
     virtual ~CompilationUnit();

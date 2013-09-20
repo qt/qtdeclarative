@@ -65,7 +65,8 @@ namespace {
 
 CompilationUnit::~CompilationUnit()
 {
-    engine->compilationUnits.erase(engine->compilationUnits.find(this));
+    if (engine)
+        engine->compilationUnits.erase(engine->compilationUnits.find(this));
     if (ownsData)
         free(data);
     free(runtimeStrings);
