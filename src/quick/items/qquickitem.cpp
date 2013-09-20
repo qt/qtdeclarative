@@ -7348,7 +7348,7 @@ void QQuickItemLayer::setFormat(QQuickShaderEffectSource::Format f)
 
 
 /*!
-    \qmlproperty enumeration QtQuick2::Item::layer.sourceRect
+    \qmlproperty rect QtQuick2::Item::layer.sourceRect
 
     This property defines the rectangular area of the item that should be
     rendered into the texture. The source rectangle can be larger than
