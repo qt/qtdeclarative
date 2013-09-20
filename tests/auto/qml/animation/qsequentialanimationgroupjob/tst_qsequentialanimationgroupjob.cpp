@@ -73,6 +73,7 @@ private slots:
     void startGroupWithRunningChild();
     void zeroDurationAnimation();
     void stopUncontrolledAnimations();
+    void uncontrolledWithLoops();
     void finishWithUncontrolledAnimation();
     void addRemoveAnimation();
     void currentAnimation();
@@ -1612,6 +1613,50 @@ void tst_QSequentialAnimationGroupJob::pauseResume()
 
     anim->removeAnimationChangeListener(&spy, QAbstractAnimationJob::StateChange);
 }
+
+
+void tst_QSequentialAnimationGroupJob::uncontrolledWithLoops()
+{
+    QSequentialAnimationGroupJob group;
+
+    TestAnimation *plain = new TestAnimation(100);
+    TestAnimation *loopsForever = new TestAnimation();
+    UncontrolledAnimation *notTimeBased = new UncontrolledAnimation();
+
+    loopsForever->setLoopCount(-1);
+
+    group.appendAnimation(plain);
+    group.appendAnimation(loopsForever);
+    group.appendAnimation(notTimeBased);
+
+    StateChangeListener listener;
+    group.addAnimationChangeListener(&listener, QAbstractAnimationJob::CurrentLoop);
+    group.setLoopCount(2);
+
+    group.start();
+
+    QCOMPARE(group.currentLoop(), 0);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(plain->state(), QAbstractAnimationJob::Running);
+
+    QTRY_COMPARE(loopsForever->state(), QAbstractAnimationJob::Running);
+    loopsForever->stop();
+    QTRY_COMPARE(notTimeBased->state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(notTimeBased->state(), QAbstractAnimationJob::Stopped); // Stops on its own after 250ms
+
+    QTRY_COMPARE(group.currentLoop(), 1);
+
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(plain->state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(plain->state(), QAbstractAnimationJob::Stopped);
+    QTRY_COMPARE(loopsForever->state(), QAbstractAnimationJob::Running);
+    loopsForever->stop();
+    QTRY_COMPARE(notTimeBased->state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(notTimeBased->state(), QAbstractAnimationJob::Stopped);
+
+    QTRY_COMPARE(group.state(), QAbstractAnimationJob::Stopped);
+}
+
 
 QTEST_MAIN(tst_QSequentialAnimationGroupJob)
 #include "tst_qsequentialanimationgroupjob.moc"

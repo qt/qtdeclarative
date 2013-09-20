@@ -185,7 +185,6 @@ bool QQuickAnimatorProxyJob::event(QEvent *e)
     if ((uint) e->type() == QQuickAnimatorController::AnimationFinished) {
         // Update the duration of this proxy to the current time and stop it so
         // that parent animations can progress gracefully
-        m_duration = m_currentTime;
         stop();
         return true;
     }

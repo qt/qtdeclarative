@@ -269,6 +269,7 @@ QAbstractAnimationJob::QAbstractAnimationJob()
     , m_currentTime(0)
     , m_currentLoop(0)
     , m_uncontrolledFinishTime(-1)
+    , m_currentLoopStartTime(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
     , m_wasDeleted(0)
@@ -304,6 +305,14 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
         m_group->removeAnimation(this);
 }
 
+void QAbstractAnimationJob::fireTopLevelAnimationLoopChanged()
+{
+    m_uncontrolledFinishTime = -1;
+    if (m_group)
+        m_currentLoopStartTime = 0;
+    topLevelAnimationLoopChanged();
+}
+
 void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
 {
     if (m_state == newState)
@@ -324,6 +333,11 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
         //behaves: changing the state or changing the current value
         m_totalCurrentTime = m_currentTime = (m_direction == Forward) ?
             0 : (m_loopCount == -1 ? duration() : totalDuration());
+
+        // Reset uncontrolled finish time and currentLoopStartTime for this run.
+        m_uncontrolledFinishTime = -1;
+        if (!m_group)
+            m_currentLoopStartTime = m_totalCurrentTime;
     }
 
     m_state = newState;
@@ -341,7 +355,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
 
     //starting an animation qualifies as a top level loop change
     if (newState == Running && oldState == Stopped && !m_group)
-        topLevelAnimationLoopChanged();
+        fireTopLevelAnimationLoopChanged();
 
     RETURN_IF_DELETED(updateState(newState, oldState));
 
@@ -430,30 +444,49 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
     msecs = qMax(msecs, 0);
     // Calculate new time and loop.
     int dura = duration();
-    int totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : dura * m_loopCount);
-    if (totalDura != -1)
-        msecs = qMin(totalDura, msecs);
-    m_totalCurrentTime = msecs;
-
-    // Update new values.
+    int totalDura;
     int oldLoop = m_currentLoop;
-    m_currentLoop = ((dura <= 0) ? 0 : (msecs / dura));
-    if (m_currentLoop == m_loopCount) {
-        //we're at the end
-        m_currentTime = qMax(0, dura);
-        m_currentLoop = qMax(0, m_loopCount - 1);
+
+    if (dura < 0 && m_direction == Forward)  {
+        totalDura = -1;
+        if (m_uncontrolledFinishTime >= 0 && msecs >= m_uncontrolledFinishTime) {
+            msecs = m_uncontrolledFinishTime;
+            if (m_currentLoop == m_loopCount - 1) {
+                totalDura = m_uncontrolledFinishTime;
+            } else {
+                ++m_currentLoop;
+                m_currentLoopStartTime = msecs;
+                m_uncontrolledFinishTime = -1;
+            }
+        }
+        m_totalCurrentTime = msecs;
+        m_currentTime = msecs - m_currentLoopStartTime;
     } else {
-        if (m_direction == Forward) {
-            m_currentTime = (dura <= 0) ? msecs : (msecs % dura);
+        totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : dura * m_loopCount);
+        if (totalDura != -1)
+            msecs = qMin(totalDura, msecs);
+        m_totalCurrentTime = msecs;
+
+        // Update new values.
+        m_currentLoop = ((dura <= 0) ? 0 : (msecs / dura));
+        if (m_currentLoop == m_loopCount) {
+            //we're at the end
+            m_currentTime = qMax(0, dura);
+            m_currentLoop = qMax(0, m_loopCount - 1);
         } else {
-            m_currentTime = (dura <= 0) ? msecs : ((msecs - 1) % dura) + 1;
-            if (m_currentTime == dura)
-                --m_currentLoop;
+            if (m_direction == Forward) {
+                m_currentTime = (dura <= 0) ? msecs : (msecs % dura);
+            } else {
+                m_currentTime = (dura <= 0) ? msecs : ((msecs - 1) % dura) + 1;
+                if (m_currentTime == dura)
+                    --m_currentLoop;
+            }
         }
     }
 
+
     if (m_currentLoop != oldLoop && !m_group)   //### verify Running as well?
-        topLevelAnimationLoopChanged();
+        fireTopLevelAnimationLoopChanged();
 
     RETURN_IF_DELETED(updateCurrentTime(m_currentTime));
 

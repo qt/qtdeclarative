@@ -1921,6 +1921,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     //check for new from every top-level loop (when the top level animation is started and all subsequent loops)
     if (fromSourced)
         *fromSourced = false;
+    QAbstractAnimationJob::topLevelAnimationLoopChanged();
 }
 
 /*!

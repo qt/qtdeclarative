@@ -216,11 +216,20 @@ void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimatio
         return;
 
     int maxDuration = 0;
-    for (QAbstractAnimationJob *job = firstChild(); job; job = job->nextSibling())
+    bool running = false;
+    for (QAbstractAnimationJob *job = firstChild(); job; job = job->nextSibling()) {
+        if (job->state() == Running)
+            running = true;
         maxDuration = qMax(maxDuration, job->totalDuration());
+    }
 
-    if (m_currentTime >= maxDuration)
+    setUncontrolledAnimationFinishTime(this, qMax(maxDuration, currentTime()));
+
+    if (!running
+            && ((m_direction == Forward && m_currentLoop == m_loopCount -1)
+                || m_direction == Backward && m_currentLoop == 0)) {
         stop();
+    }
 }
 
 QT_END_NAMESPACE
