@@ -1611,9 +1611,10 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         QList<QObject *> &list = *qlistPtr;
         QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
-        array->arrayDataLen = list.count();
-        for (int ii = 0; ii < list.count(); ++ii)
+        for (int ii = 0; ii < list.count(); ++ii) {
             array->arrayData[ii].value = Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, list.at(ii)));
+            array->arrayDataLen = ii + 1;
+        }
         array->setArrayLengthUnchecked(list.count());
         return array.asReturnedValue();
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {

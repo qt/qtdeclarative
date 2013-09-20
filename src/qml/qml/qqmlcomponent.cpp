@@ -1244,12 +1244,13 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap.isUndefined()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4engine, QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject()));
+        QV4::ScopedValue f(scope, QV4::Script::evaluate(v4engine, QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject()));
+        Q_ASSERT(f->asFunctionObject());
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = QV4::Value::fromObject(v4engine->globalObject);
         callData->args[0] = object;
         callData->args[1] = valuemap;
-        f->call(callData);
+        f->asFunctionObject()->call(callData);
     }
 
     d->completeCreate();

@@ -90,6 +90,8 @@ inline ExecutionEngine *Value::engine() const {
 }
 
 inline void Value::mark() const {
+    if (!val)
+        return;
     Managed *m = asManaged();
     if (m)
         m->mark();

@@ -187,9 +187,10 @@ static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringLi
     QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
-    a->arrayDataLen = len;
-    for (int ii = 0; ii < len; ++ii)
+    for (int ii = 0; ii < len; ++ii) {
         a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
+        a->arrayDataLen = ii + 1;
+    }
     a->setArrayLengthUnchecked(len);
     return a.asReturnedValue();
 }
@@ -201,9 +202,10 @@ static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariant
     QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
-    a->arrayDataLen = len;
-    for (int ii = 0; ii < len; ++ii)
+    for (int ii = 0; ii < len; ++ii) {
         a->arrayData[ii].value = QV4::Value::fromReturnedValue(engine->fromVariant(list.at(ii)));
+        a->arrayDataLen = ii + 1;
+    }
     a->setArrayLengthUnchecked(len);
     return a.asReturnedValue();
 }
@@ -314,9 +316,10 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
             QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
             a->arrayReserve(list.count());
-            a->arrayDataLen = list.count();
-            for (int ii = 0; ii < list.count(); ++ii)
+            for (int ii = 0; ii < list.count(); ++ii) {
                 a->arrayData[ii].value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii)));
+                a->arrayDataLen = ii + 1;
+            }
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
         } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
@@ -524,9 +527,10 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
     QV4::Scope scope(m_v4Engine);
     QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
-    a->arrayDataLen = lst.size();
-    for (int i = 0; i < lst.size(); i++)
+    for (int i = 0; i < lst.size(); i++) {
         a->arrayData[i].value = QV4::Value::fromReturnedValue(variantToJS(lst.at(i)));
+        a->arrayDataLen = i + 1;
+    }
     a->setArrayLengthUnchecked(lst.size());
     return a.asReturnedValue();
 }

@@ -562,9 +562,11 @@ QV4::ReturnedValue QQmlLocaleData::method_get_uiLanguages(QV4::SimpleCallContext
     QStringList langs = locale.uiLanguages();
     QV4::Scoped<QV4::ArrayObject> result(scope, ctx->engine->newArrayObject());
     result->arrayReserve(langs.size());
-    result->arrayDataLen = langs.size();
-    for (int i = 0; i < langs.size(); ++i)
+    for (int i = 0; i < langs.size(); ++i) {
         result->arrayData[i].value = QV4::Value::fromString(ctx, langs.at(i));
+        result->arrayDataLen = i + 1;
+    }
+
     result->setArrayLengthUnchecked(langs.size());
 
     return result.asReturnedValue();

@@ -92,6 +92,9 @@ FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, boo
     , varCount(0)
     , function(0)
 {
+    // set the name to something here, so that a gc run a few lines below doesn't crash on it
+    this->name = scope->engine->id_undefined;
+
     Scope s(scope);
     ScopedValue protectThis(s, this);
     ScopedString n(s, s.engine->newString(name));
@@ -108,7 +111,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , function(0)
 {
     vtbl = &static_vtbl;
-    name = (QV4::String *)0;
+    name = engine()->id_undefined;
 
     type = Type_FunctionObject;
     needsActivation = false;
@@ -125,6 +128,7 @@ FunctionObject::~FunctionObject()
 void FunctionObject::init(const StringRef n, bool createProto)
 {
     vtbl = &static_vtbl;
+    name = n;
 
     Scope s(engine());
     ScopedValue protectThis(s, this);
@@ -143,13 +147,8 @@ void FunctionObject::init(const StringRef n, bool createProto)
         memberData[Index_Prototype].value = proto.asValue();
     }
 
-    if (n) {
-        name = n;
-        ScopedValue v(s, n.asReturnedValue());
-        defineReadonlyProperty(scope->engine->id_name, v);
-    } else {
-        name = (QV4::String *)0;
-    }
+    ScopedValue v(s, n.asReturnedValue());
+    defineReadonlyProperty(scope->engine->id_name, v);
 }
 
 ReturnedValue FunctionObject::newInstance()

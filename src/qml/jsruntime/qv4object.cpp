@@ -1202,11 +1202,11 @@ void Object::arrayConcat(const ArrayObject *other)
             ensureArrayAttributes();
             std::fill(arrayAttributes + arrayDataLen, arrayAttributes + oldSize, PropertyAttributes());
         }
-        arrayDataLen = oldSize + other->arrayDataLen;
         if (other->arrayAttributes) {
-            for (int i = 0; i < arrayDataLen; ++i) {
+            for (int i = 0; i < other->arrayDataLen; ++i) {
                 bool exists;
                 arrayData[oldSize + i].value = Value::fromReturnedValue(const_cast<ArrayObject *>(other)->getIndexed(i, &exists));
+                arrayDataLen = oldSize + i + 1;
                 if (arrayAttributes)
                     arrayAttributes[oldSize + i] = Attr_Data;
                 if (!exists) {
@@ -1215,6 +1215,7 @@ void Object::arrayConcat(const ArrayObject *other)
                 }
             }
         } else {
+            arrayDataLen = oldSize + other->arrayDataLen;
             memcpy(arrayData + oldSize, other->arrayData, other->arrayDataLen*sizeof(Property));
             if (arrayAttributes)
                 std::fill(arrayAttributes + oldSize, arrayAttributes + oldSize + other->arrayDataLen, PropertyAttributes(Attr_Data));
@@ -1449,9 +1450,10 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     // elements converted to JS Strings.
     int len = list.count();
     arrayReserve(len);
-    for (int ii = 0; ii < len; ++ii)
+    for (int ii = 0; ii < len; ++ii) {
         arrayData[ii].value = Value::fromString(engine->newString(list.at(ii)));
-    arrayDataLen = len;
+        arrayDataLen = ii + 1;
+    }
     setArrayLengthUnchecked(len);
 }
 

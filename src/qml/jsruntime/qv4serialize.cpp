@@ -385,10 +385,10 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         int sequenceType = value->integerValue();
         Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(seqLength);
-        array->arrayDataLen = seqLength;
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
             array->arrayData[ii].value = value;
+            array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);
         QVariant seqVariant = QV4::SequencePrototype::toVariant(array.asValue(), sequenceType, &succeeded);

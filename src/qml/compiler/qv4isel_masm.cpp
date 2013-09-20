@@ -75,6 +75,7 @@ CompilationUnit::~CompilationUnit()
 void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
 {
     runtimeFunctions.resize(data->functionTableSize);
+    runtimeFunctions.fill(0);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 

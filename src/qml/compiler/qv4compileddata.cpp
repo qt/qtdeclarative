@@ -76,10 +76,14 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     assert(!runtimeStrings);
     assert(data);
     runtimeStrings = (QV4::SafeString *)malloc(data->stringTableSize * sizeof(QV4::SafeString));
+    // memset the strings to 0 in case a GC run happens while we're within the loop below
+    memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::SafeString));
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
+    // memset the regexps to 0 in case a GC run happens while we're within the loop below
+    memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::Value));
     for (int i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
         int flags = 0;
@@ -166,7 +170,8 @@ void CompilationUnit::markObjects()
     for (int i = 0; i < data->regexpTableSize; ++i)
         runtimeRegularExpressions[i].mark();
     for (int i = 0; i < runtimeFunctions.count(); ++i)
-        runtimeFunctions[i]->mark();
+        if (runtimeFunctions[i])
+            runtimeFunctions[i]->mark();
 }
 
 QString Binding::valueAsString(const Unit *unit) const

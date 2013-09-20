@@ -333,8 +333,8 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
         array->arrayData[i].value = (start != -1 && end != -1) ? Value::fromString(ctx, s.mid(start, end - start)) : Value::undefinedValue();
+        array->arrayDataLen = i + 1;
     }
-    array->arrayDataLen = len;
     array->setArrayLengthUnchecked(len);
 
     array->memberData[Index_ArrayIndex].value = Value::fromInt32(result);
