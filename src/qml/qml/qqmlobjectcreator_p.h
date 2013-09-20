@@ -118,7 +118,7 @@ public:
 private:
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *scopeObjectForJavaScript);
 
     void setupBindings();
     bool setPropertyValue(QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);

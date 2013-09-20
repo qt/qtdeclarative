@@ -970,7 +970,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
         QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
-        if (!populateInstance(binding->value.objectIndex, qmlObject, cache))
+        if (!populateInstance(binding->value.objectIndex, qmlObject, cache, _qobject))
             return false;
         return true;
     }
@@ -1002,7 +1002,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             valueType->read(_qobject, property->coreIndex);
 
             QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(valueType);
-            if (!populateInstance(binding->value.objectIndex, valueType, cache))
+            if (!populateInstance(binding->value.objectIndex, valueType, cache, _qobject))
                 return false;
 
             valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
@@ -1187,7 +1187,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
         Q_ASSERT(!cache.isNull());
 
-        if (!populateInstance(index, instance, cache))
+        if (!populateInstance(index, instance, cache, _qobject))
             return 0;
     }
 
@@ -1239,9 +1239,12 @@ void QmlObjectCreator::finalize()
     }
 }
 
-bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache)
+bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *scopeObjectForJavaScript)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+
+    if (!scopeObjectForJavaScript)
+        scopeObjectForJavaScript = instance;
 
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
@@ -1273,7 +1276,7 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
-    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject));
+    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, scopeObjectForJavaScript));
     QV4::QmlBindingWrapper *qmlBindingWrapper = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject->asObject());
     QV4::ScopedValue qmlScopeFunction(valueScope, QV4::Value::fromObject(qmlBindingWrapper));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
