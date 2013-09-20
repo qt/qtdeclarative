@@ -59,6 +59,8 @@
 #include <QtGui/qvector3d.h>
 #include <QtQml/private/qqmlglobal_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 static const char *globalProgramName = 0;
@@ -503,7 +505,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        QString tmp = value.toQString();
+        QString tmp = value.toQStringNoThrow();
         if (value.asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else
@@ -625,7 +627,7 @@ static QBenchmarkResult qMedian(const QList<QBenchmarkResult> &container)
         return container.at(0);
 
     QList<QBenchmarkResult> containerCopy = container;
-    qSort(containerCopy);
+    std::sort(containerCopy.begin(), containerCopy.end());
 
     const int middle = count / 2;
 

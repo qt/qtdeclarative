@@ -91,14 +91,14 @@ public:
     virtual void setTitle(const QString &t) = 0;
     void setQmlImplementation(QObject* obj);
     bool isWindow() const { return m_hasNativeWindows; }
-    void setX(int arg);
-    void setY(int arg);
-    void setWidth(int arg);
-    void setHeight(int arg);
 
 public Q_SLOTS:
     void open() { setVisible(true); }
     void close() { setVisible(false); }
+    void setX(int arg);
+    void setY(int arg);
+    void setWidth(int arg);
+    void setHeight(int arg);
 
 Q_SIGNALS:
     void visibilityChanged();
@@ -110,8 +110,8 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void decorationLoaded();
-    void accept();
-    void reject();
+    virtual void accept();
+    virtual void reject();
     void visibleChanged(bool v);
     void windowGeometryChanged();
 
@@ -130,6 +130,8 @@ protected: // variables for pure-QML implementations only
     QQuickItem *m_contentItem;
     QQuickItem *m_windowDecoration;
     bool m_hasNativeWindows;
+    QRect m_sizeAspiration;
+    bool m_hasAspiredPosition;
 
     static QQmlComponent *m_decorationComponent;
 

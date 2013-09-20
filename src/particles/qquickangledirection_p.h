@@ -74,7 +74,7 @@ public:
         return m_magnitudeVariation;
     }
 
-signals:
+Q_SIGNALS:
 
     void angleChanged(qreal arg);
 
@@ -84,12 +84,12 @@ signals:
 
     void magnitudeVariationChanged(qreal arg);
 
-public slots:
+public Q_SLOTS:
 void setAngle(qreal arg)
 {
     if (m_angle != arg) {
         m_angle = arg;
-        emit angleChanged(arg);
+        Q_EMIT angleChanged(arg);
     }
 }
 
@@ -97,7 +97,7 @@ void setMagnitude(qreal arg)
 {
     if (m_magnitude != arg) {
         m_magnitude = arg;
-        emit magnitudeChanged(arg);
+        Q_EMIT magnitudeChanged(arg);
     }
 }
 
@@ -105,7 +105,7 @@ void setAngleVariation(qreal arg)
 {
     if (m_angleVariation != arg) {
         m_angleVariation = arg;
-        emit angleVariationChanged(arg);
+        Q_EMIT angleVariationChanged(arg);
     }
 }
 
@@ -113,7 +113,7 @@ void setMagnitudeVariation(qreal arg)
 {
     if (m_magnitudeVariation != arg) {
         m_magnitudeVariation = arg;
-        emit magnitudeVariationChanged(arg);
+        Q_EMIT magnitudeVariationChanged(arg);
     }
 }
 

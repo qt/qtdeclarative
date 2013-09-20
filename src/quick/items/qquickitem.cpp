@@ -76,6 +76,7 @@
 # include <QtGui/qcursor.h>
 #endif
 
+#include <algorithm>
 #include <float.h>
 
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
@@ -2449,7 +2450,7 @@ QList<QQuickItem *> QQuickItemPrivate::paintOrderChildItems() const
     }
     if (haveZ) {
         sortedChildItems = new QList<QQuickItem*>(childItems);
-        qStableSort(sortedChildItems->begin(), sortedChildItems->end(), itemZOrder_sort);
+        std::stable_sort(sortedChildItems->begin(), sortedChildItems->end(), itemZOrder_sort);
         return *sortedChildItems;
     }
 
@@ -3871,7 +3872,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
         }
 
         if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQString()
+            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
@@ -3945,7 +3946,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
         }
 
         if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapToItem() given argument \"" << item.toQString()
+            qmlInfo(this) << "mapToItem() given argument \"" << item.toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }

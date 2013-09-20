@@ -51,13 +51,11 @@ namespace QV4 {
 
 struct BooleanCtor: FunctionObject
 {
+    Q_MANAGED
     BooleanCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct BooleanPrototype: BooleanObject
@@ -65,8 +63,8 @@ struct BooleanPrototype: BooleanObject
     BooleanPrototype(InternalClass *ic): BooleanObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_valueOf(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
 };
 
 

@@ -58,6 +58,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include "../../../../src/imports/xmllistmodel/qqmlxmllistmodel_p.h"
 
+#include <algorithm>
+
 typedef QPair<int, int> QQuickXmlListRange;
 typedef QList<QVariantList> QQmlXmlModelData;
 
@@ -608,7 +610,7 @@ void tst_qquickxmllistmodel::useKeys()
     }
 
     QList<int> roles = model->roleNames().keys();
-    qSort(roles);
+    std::sort(roles.begin(), roles.end());
     for (int i=0; i<model->rowCount(); i++) {
         QModelIndex index = model->index(i, 0);
         for (int j=0; j<roles.count(); j++)
@@ -759,7 +761,7 @@ void tst_qquickxmllistmodel::noKeysValueChanges()
     model->setProperty("xml",xml);
 
     QList<int> roles = model->roleNames().keys();
-    qSort(roles);
+    std::sort(roles.begin(), roles.end());
     // wait for the new xml data to be set, and verify no signals were emitted
     QTRY_VERIFY(model->data(model->index(0, 0), roles.at(2)).toString() != QLatin1String("Football"));
     QCOMPARE(model->data(model->index(0, 0), roles.at(2)).toString(), QLatin1String("AussieRules"));
@@ -860,21 +862,21 @@ void tst_qquickxmllistmodel::threading()
         for (int i=0; i<dataCount; i++) {
             QModelIndex index = m1->index(i, 0);
             QList<int> roles = m1->roleNames().keys();
-            qSort(roles);
+            std::sort(roles.begin(), roles.end());
             QCOMPARE(m1->data(index, roles.at(0)).toString(), QString("A" + QString::number(i)));
             QCOMPARE(m1->data(index, roles.at(1)).toString(), QString("1" + QString::number(i)));
             QCOMPARE(m1->data(index, roles.at(2)).toString(), QString("Football"));
 
             index = m2->index(i, 0);
             roles = m2->roleNames().keys();
-            qSort(roles);
+            std::sort(roles.begin(), roles.end());
             QCOMPARE(m2->data(index, roles.at(0)).toString(), QString("B" + QString::number(i)));
             QCOMPARE(m2->data(index, roles.at(1)).toString(), QString("2" + QString::number(i)));
             QCOMPARE(m2->data(index, roles.at(2)).toString(), QString("Athletics"));
 
             index = m3->index(i, 0);
             roles = m3->roleNames().keys();
-            qSort(roles);
+            std::sort(roles.begin(), roles.end());
             QCOMPARE(m3->data(index, roles.at(0)).toString(), QString("C" + QString::number(i)));
             QCOMPARE(m3->data(index, roles.at(1)).toString(), QString("3" + QString::number(i)));
             QCOMPARE(m3->data(index, roles.at(2)).toString(), QString("Curling"));

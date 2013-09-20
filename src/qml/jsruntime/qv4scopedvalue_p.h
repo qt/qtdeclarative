@@ -79,61 +79,73 @@ struct ScopedValueArray {
 
 struct ScopedValue;
 
-struct ValueScope {
-    ValueScope(ExecutionContext *ctx)
+struct Scope {
+    Scope(ExecutionContext *ctx)
         : engine(ctx->engine)
+#ifndef QT_NO_DEBUG
+        , size(0)
+#endif
     {
         mark = ctx->engine->jsStackTop;
     }
 
-    ValueScope(ExecutionEngine *e)
+    Scope(ExecutionEngine *e)
         : engine(e)
     {
         mark = e->jsStackTop;
     }
 
-    ~ValueScope() {
+    ~Scope() {
         Q_ASSERT(engine->jsStackTop >= mark);
         engine->jsStackTop = mark;
     }
 
     ExecutionEngine *engine;
     Value *mark;
+#ifndef QT_NO_DEBUG
+    mutable int size;
+#endif
 };
 
 struct ScopedValue;
 struct ValueRef;
 
-struct ReturnedValue
-{
-    ReturnedValue(const Value &v)
-        : v(v) {}
-    // no destructor
-
-
-private:
-    friend struct ValueRef;
-    friend struct ScopedValue;
-    QV4::Value v;
-};
-
 struct ScopedValue
 {
-    ScopedValue(const ValueScope &scope)
+    ScopedValue(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
-    ScopedValue(const ValueScope &scope, const Value &v)
+    ScopedValue(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
         *ptr = v;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
-    ScopedValue(const ValueScope &scope, const ReturnedValue &v)
+    ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
-        *ptr = v.v;
+        ptr->val = v;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
+    template<typename T>
+    ScopedValue(const Scope &scope, Returned<T> *t)
+    {
+        ptr = scope.engine->jsStackTop++;
+        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Value::undefinedValue();
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
     }
 
     ScopedValue &operator=(const Value &v) {
@@ -142,7 +154,13 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(const ReturnedValue &v) {
-        *ptr = v.v;
+        ptr->val = v;
+        return *this;
+    }
+
+    template<typename T>
+    ScopedValue &operator=(Returned<T> *t) {
+        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Value::undefinedValue();
         return *this;
     }
 
@@ -155,32 +173,149 @@ struct ScopedValue
         return ptr;
     }
 
+    const Value *operator->() const {
+        return ptr;
+    }
+
     operator const Value &() const {
         return *ptr;
+    }
+
+    ReturnedValue asReturnedValue() const { return ptr->val; }
+
+    Value *ptr;
+};
+
+template<typename T>
+struct Scoped
+{
+    inline void setPointer(Managed *p) {
+#if QT_POINTER_SIZE == 8
+        ptr->val = (quint64)p;
+#else
+        *ptr = p ? QV4::Value::fromManaged(p) : QV4::Value::undefinedValue();
+#endif
+    }
+
+    Scoped(const Scope &scope)
+    {
+        ptr = scope.engine->jsStackTop++;
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
+    // ### GC FIX casting below to be safe
+    Scoped(const Scope &scope, const Value &v)
+    {
+        ptr = scope.engine->jsStackTop++;
+        setPointer(T::cast(v));
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
+    Scoped(const Scope &scope, const ValueRef &v);
+
+    Scoped(const Scope &scope, T *t)
+    {
+        ptr = scope.engine->jsStackTop++;
+        setPointer(t);
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+    template<typename X>
+    Scoped(const Scope &scope, Returned<X> *x)
+    {
+        ptr = scope.engine->jsStackTop++;
+        setPointer(Returned<T>::getPointer(x));
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
+    Scoped(const Scope &scope, const ReturnedValue &v)
+    {
+        ptr = scope.engine->jsStackTop++;
+        setPointer(T::cast(QV4::Value::fromReturnedValue(v)));
+#ifndef QT_NO_DEBUG
+        ++scope.size;
+#endif
+    }
+
+    Scoped<T> &operator=(const Value &v) {
+        setPointer(T::cast(v));
+        return *this;
+    }
+
+    Scoped<T> &operator=(const ValueRef &v);
+
+    Scoped<T> &operator=(const ReturnedValue &v) {
+        setPointer(T::cast(QV4::Value::fromReturnedValue(v)));
+        return *this;
+    }
+
+    Scoped<T> &operator=(const Scoped<T> &other) {
+        *ptr = *other.ptr;
+        return *this;
+    }
+
+    Scoped<T> &operator=(T *t) {
+        setPointer(t);
+        return *this;
+    }
+
+    template<typename X>
+    Scoped<T> &operator=(Returned<X> *x) {
+        setPointer(Returned<T>::getPointer(x));
+        return *this;
+    }
+
+
+    T *operator->() {
+        return static_cast<T *>(ptr->managed());
+    }
+
+    bool operator!() const {
+        return !ptr->managed();
+    }
+    operator bool() const {
+        return ptr->managed();
+    }
+
+    T *getPointer() {
+        return static_cast<T *>(ptr->managed());
+    }
+
+    Value asValue() const {
+#if QT_POINTER_SIZE == 8
+        return ptr->val ? *ptr : QV4::Value::undefinedValue();
+#else
+        return *ptr;
+#endif
+    }
+
+    ReturnedValue asReturnedValue() const {
+#if QT_POINTER_SIZE == 8
+        return ptr->val ? ptr->val : Value::undefinedValue().asReturnedValue();
+#else
+        return ptr->val;
+#endif
     }
 
     Value *ptr;
 };
 
 struct ScopedCallData {
-    ScopedCallData(ExecutionEngine *e, int argc)
-        : engine(e)
-        // ### this check currently won't work because of exceptions
-#ifndef QT_NO_DEBUG
-        , size(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value))
-#endif
+    ScopedCallData(Scope &scope, int argc)
     {
-        ptr = reinterpret_cast<CallData *>(e->stackPush(qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value)));
-        ptr->tag = 0;
+        int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+        ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));
+        ptr->tag = QV4::Value::Integer_Type;
         ptr->argc = argc;
-    }
-
-    ~ScopedCallData() {
 #ifndef QT_NO_DEBUG
-        engine->stackPop(size);
-        Q_ASSERT((void *)engine->jsStackTop == (void *)ptr);
-#else
-        engine->jsStackTop = reinterpret_cast<Value *>(ptr);
+        scope.size += size;
 #endif
     }
 
@@ -192,16 +327,14 @@ struct ScopedCallData {
         return ptr;
     }
 
-
-    ExecutionEngine *engine;
-#ifndef QT_NO_DEBUG
-    int size;
-#endif
     CallData *ptr;
 };
 
 struct ValueRef {
     ValueRef(const ScopedValue &v)
+        : ptr(v.ptr) {}
+    template <typename T>
+    ValueRef(const Scoped<T> &v)
         : ptr(v.ptr) {}
     ValueRef(const PersistentValue &v)
         : ptr(&v.d->value) {}
@@ -218,7 +351,7 @@ struct ValueRef {
     ValueRef &operator=(const Value &v)
     { *ptr = v; return *this; }
     ValueRef &operator=(const ReturnedValue &v) {
-        *ptr = v.v;
+        ptr->val = v;
         return *this;
     }
 
@@ -242,11 +375,31 @@ struct ValueRef {
     static const ValueRef fromRawValue(const Value *v) {
         return ValueRef(const_cast<Value *>(v));
     }
+
+    ReturnedValue asReturnedValue() const { return ptr->val; }
+
     // ### get rid of this one!
     ValueRef(Value *v) { ptr = v; }
 private:
     Value *ptr;
 };
+
+template<typename T>
+inline Scoped<T>::Scoped(const Scope &scope, const ValueRef &v)
+{
+    ptr = scope.engine->jsStackTop++;
+    setPointer(T::cast(*v.operator ->()));
+#ifndef QT_NO_DEBUG
+    ++scope.size;
+#endif
+}
+
+template<typename T>
+inline Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
+{
+    setPointer(T::cast(*v.operator ->()));
+    return *this;
+}
 
 
 struct CallDataRef {
@@ -278,6 +431,47 @@ struct CallDataRef {
 
 private:
     CallData *ptr;
+};
+
+struct Encode : private Value {
+    static ReturnedValue undefined() {
+        return quint64(Undefined_Type) << Tag_Shift;
+    }
+    static ReturnedValue null() {
+        return quint64(_Null_Type) << Tag_Shift;
+    }
+
+    Encode(bool b) {
+        tag = _Boolean_Type;
+        int_32 = b;
+    }
+    Encode(double d) {
+        setDouble(d);
+    }
+    Encode(int i) {
+        tag = _Integer_Type;
+        int_32 = i;
+    }
+    Encode(uint i) {
+        if (i <= INT_MAX) {
+            tag = _Integer_Type;
+            int_32 = i;
+        } else {
+            setDouble(i);
+        }
+    }
+    Encode(ReturnedValue v) {
+        val = v;
+    }
+
+    template<typename T>
+    Encode(Returned<T> *t) {
+        val = t->getPointer()->asReturnedValue();
+    }
+
+    operator ReturnedValue() const {
+        return val;
+    }
 };
 
 }

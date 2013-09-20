@@ -105,6 +105,7 @@ typedef Value (*PropertyEnumeratorFunction)(Object *object);
 typedef PropertyAttributes (*PropertyQueryFunction)(const Object *object, String *name);
 
 struct Q_QML_EXPORT Object: Managed {
+    Q_MANAGED
     uint memberDataAlloc;
     Property *memberData;
 
@@ -149,8 +150,8 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionContext *ctx, const QString &name, const Value &value);
 
-    static Value getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
-    Value getValue(const Property *p, PropertyAttributes attrs) const {
+    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
+    ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
         return getValue(Value::fromObject(const_cast<Object *>(this)), p, attrs);
     }
 
@@ -165,10 +166,10 @@ struct Q_QML_EXPORT Object: Managed {
     void defineDefaultProperty(String *name, Value value);
     void defineDefaultProperty(ExecutionContext *context, const QString &name, Value value);
     void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value value);
-    void defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int count = 0);
-    void defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value (*code)(SimpleCallContext *), int count = 0);
-    void defineAccessorProperty(ExecutionEngine *engine, const QString &name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *));
-    void defineAccessorProperty(String *name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *));
+    void defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
+    void defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int count = 0);
+    void defineAccessorProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
+    void defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(ExecutionEngine *engine, const QString &name, Value value);
     void defineReadonlyProperty(String *name, Value value);
@@ -176,6 +177,10 @@ struct Q_QML_EXPORT Object: Managed {
     Property *insertMember(String *s, PropertyAttributes attributes);
 
     inline ExecutionEngine *engine() const { return internalClass->engine; }
+
+    static Object *cast(const Value &v) {
+        return v.asObject();
+    }
 
     // Array handling
 
@@ -197,7 +202,7 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void freeArrayValue(int idx) {
         Property &pd = arrayData[idx];
-        pd.value.tag = Value::_Empty_Type;
+        pd.value.tag = Value::Empty_Type;
         pd.value.int_32 = arrayFreeList;
         arrayFreeList = idx;
         if (arrayAttributes)
@@ -271,13 +276,14 @@ public:
 
     void arrayConcat(const ArrayObject *other);
     void arraySort(ExecutionContext *context, Object *thisObject, const Value &comparefn, uint arrayDataLen);
-    Value arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
+    ReturnedValue arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
 
     void arrayReserve(uint n);
     void ensureArrayAttributes();
 
     inline bool protoHasArray() {
-        Object *p = this;
+        Scope scope(engine());
+        Scoped<Object> p(scope, this);
 
         while ((p = p->prototype()))
             if (p->arrayDataLen)
@@ -287,9 +293,9 @@ public:
     }
     void ensureMemberIndex(uint idx);
 
-    inline Value get(String *name, bool *hasProperty = 0)
+    inline ReturnedValue get(String *name, bool *hasProperty = 0)
     { return vtbl->get(this, name, hasProperty); }
-    inline Value getIndexed(uint idx, bool *hasProperty = 0)
+    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
     { return vtbl->getIndexed(this, idx, hasProperty); }
     inline void put(String *name, const Value &v)
     { vtbl->put(this, name, v); }
@@ -307,25 +313,24 @@ public:
     using Managed::setLookup;
     using Managed::advanceIterator;
 protected:
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
-    static Value get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static void getLookup(Managed *m, Lookup *l, Value *result);
+    static ReturnedValue getLookup(Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
 
 
 private:
-    Value internalGet(String *name, bool *hasProperty);
-    Value internalGetIndexed(uint index, bool *hasProperty);
+    ReturnedValue internalGet(String *name, bool *hasProperty);
+    ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
     void internalPut(String *name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
@@ -344,7 +349,7 @@ struct ForEachIteratorObject: Object {
         type = Type_ForeachIteratorObject;
     }
 
-    Value nextPropertyName() { return it.nextPropertyNameAsString(); }
+    ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
     static void markObjects(Managed *that);
@@ -365,6 +370,7 @@ protected:
 };
 
 struct ArrayObject: Object {
+    Q_MANAGED
     enum {
         LengthPropertyIndex = 0
     };

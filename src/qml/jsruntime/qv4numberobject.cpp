@@ -56,16 +56,16 @@ NumberCtor::NumberCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value NumberCtor::construct(Managed *m, CallData *callData)
+ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromObject(m->engine()->newNumberObject(Value::fromDouble(dbl)));
+    return Encode(m->engine()->newNumberObject(Value::fromDouble(dbl)));
 }
 
-Value NumberCtor::call(Managed *, CallData *callData)
+ReturnedValue NumberCtor::call(Managed *, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromDouble(dbl);
+    return Value::fromDouble(dbl).asReturnedValue();
 }
 
 void NumberPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -106,7 +106,7 @@ inline Value thisNumberValue(ExecutionContext *ctx)
     return n->value;
 }
 
-Value NumberPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
     double num = thisNumberValue(ctx).asDouble();
 
@@ -116,13 +116,13 @@ Value NumberPrototype::method_toString(SimpleCallContext *ctx)
         if (radix < 2 || radix > 36) {
             ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
-            return Value::undefinedValue();
+            return Encode::undefined();
         }
 
         if (std::isnan(num)) {
-            return Value::fromString(ctx, QStringLiteral("NaN"));
+            return Value::fromString(ctx, QStringLiteral("NaN")).asReturnedValue();
         } else if (qIsInf(num)) {
-            return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+            return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity")).asReturnedValue();
         }
 
         if (radix != 10) {
@@ -152,28 +152,28 @@ Value NumberPrototype::method_toString(SimpleCallContext *ctx)
             }
             if (negative)
                 str.prepend(QLatin1Char('-'));
-            return Value::fromString(ctx, str);
+            return Value::fromString(ctx, str).asReturnedValue();
         }
     }
 
     String *str = Value::fromDouble(num).toString(ctx);
-    return Value::fromString(str);
+    return Value::fromString(str).asReturnedValue();
 }
 
-Value NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Value v = thisNumberValue(ctx);
 
     String *str = v.toString(ctx);
-    return Value::fromString(str);
+    return Value::fromString(str).asReturnedValue();
 }
 
-Value NumberPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    return thisNumberValue(ctx);
+    return thisNumberValue(ctx).asReturnedValue();
 }
 
-Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 {
     double v = thisNumberValue(ctx).asDouble();
 
@@ -196,11 +196,11 @@ Value NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     else if (v < 1.e21)
         str = QString::number(v, 'f', int (fdigits));
     else
-        return __qmljs_string_from_number(ctx, v);
-    return Value::fromString(ctx, str);
+        return __qmljs_string_from_number(ctx, v)->asReturnedValue();
+    return Value::fromString(ctx, str).asReturnedValue();
 }
 
-Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
     double d = thisNumberValue(ctx).asDouble();
 
@@ -220,12 +220,12 @@ Value NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(d, fdigits, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result);
+    return Value::fromString(ctx, result).asReturnedValue();
 }
 
-Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     ScopedValue v(scope, thisNumberValue(ctx));
 
@@ -244,5 +244,5 @@ Value NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result);
+    return Value::fromString(ctx, result).asReturnedValue();
 }

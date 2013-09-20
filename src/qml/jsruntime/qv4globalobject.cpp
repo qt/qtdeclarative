@@ -354,14 +354,15 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
 }
 
-Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
+ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
 {
     if (argc < 1)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     ExecutionContext *parentContext = engine()->current;
     ExecutionEngine *engine = parentContext->engine;
     ExecutionContext *ctx = parentContext;
+    Scope scope(ctx);
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
@@ -370,7 +371,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     }
 
     if (!args[0].isString())
-        return args[0];
+        return args[0].asReturnedValue();
 
     const QString code = args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
@@ -382,7 +383,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     Function *function = script.function();
     if (!function)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     strictMode = function->isStrict() || (ctx->strictMode);
 
@@ -391,7 +392,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
 
     if (strictMode) {
         FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
-        ScopedCallData callData(ctx->engine, 0);
+        ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->thisObject;
         return e->call(callData);
     }
@@ -412,7 +413,7 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     ctx->compiledFunction = function->compiledFunction;
     ctx->runtimeStrings = function->compilationUnit->runtimeStrings;
 
-    Value result = Value::undefinedValue();
+    ScopedValue result(scope);
     try {
         result = function->code(ctx, function->codeData);
     } catch (Exception &ex) {
@@ -435,11 +436,11 @@ Value EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool d
     while (engine->current != parentContext)
         engine->popContext();
 
-    return result;
+    return result.asReturnedValue();
 }
 
 
-Value EvalFunction::call(Managed *that, CallData *callData)
+ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
     // ### const_cast
@@ -464,7 +465,7 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-Value GlobalFunctions::method_parseInt(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *context)
 {
     Value string = context->argument(0);
     Value radix = context->argument(1);
@@ -486,7 +487,7 @@ Value GlobalFunctions::method_parseInt(SimpleCallContext *context)
     bool stripPrefix = true; // 7
     if (R) { // 8
         if (R < 2 || R > 36)
-            return Value::fromDouble(std::numeric_limits<double>::quiet_NaN()); // 8a
+            return Encode(std::numeric_limits<double>::quiet_NaN()); // 8a
         if (R != 16)
             stripPrefix = false; // 8b
     } else { // 9
@@ -503,13 +504,13 @@ Value GlobalFunctions::method_parseInt(SimpleCallContext *context)
     // 11: Z is progressively built below
     // 13: this is handled by the toInt function
     if (pos == end) // 12
-        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN());
+        return Encode(std::numeric_limits<double>::quiet_NaN());
     bool overflow = false;
     qint64 v_overflow;
     unsigned overflow_digit_count = 0;
     int d = toInt(*pos++, R);
     if (d == -1)
-        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN());
+        return Encode(std::numeric_limits<double>::quiet_NaN());
     qint64 v = d;
     while (pos != end) {
         d = toInt(*pos++, R);
@@ -536,14 +537,14 @@ Value GlobalFunctions::method_parseInt(SimpleCallContext *context)
     if (overflow) {
         double result = (double) v_overflow * pow(R, overflow_digit_count);
         result += v;
-        return Value::fromDouble(sign * result);
+        return Encode(sign * result);
     } else {
-        return Value::fromDouble(sign * (double) v); // 15
+        return Encode(sign * (double) v); // 15
     }
 }
 
 // parseFloat [15.1.2.3]
-Value GlobalFunctions::method_parseFloat(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *context)
 {
     Value string = context->argument(0);
 
@@ -554,47 +555,47 @@ Value GlobalFunctions::method_parseFloat(SimpleCallContext *context)
     // 4:
     if (trimmed.startsWith(QLatin1String("Infinity"))
             || trimmed.startsWith(QLatin1String("+Infinity")))
-        return Value::fromDouble(Q_INFINITY);
+        return Encode(Q_INFINITY);
     if (trimmed.startsWith("-Infinity"))
-        return Value::fromDouble(-Q_INFINITY);
+        return Encode(-Q_INFINITY);
     QByteArray ba = trimmed.toLatin1();
     bool ok;
     const char *begin = ba.constData();
     const char *end = 0;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin == 0)
-        return Value::fromDouble(std::numeric_limits<double>::quiet_NaN()); // 3
+        return Encode(std::numeric_limits<double>::quiet_NaN()); // 3
     else
-        return Value::fromDouble(d);
+        return Encode(d);
 }
 
 /// isNaN [15.1.2.4]
-Value GlobalFunctions::method_isNaN(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *context)
 {
     const Value &v = context->argument(0);
     if (v.integerCompatible())
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     double d = v.toNumber();
-    return Value::fromBoolean(std::isnan(d));
+    return Encode((bool)std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]
-Value GlobalFunctions::method_isFinite(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *context)
 {
     const Value &v = context->argument(0);
     if (v.integerCompatible())
-        return Value::fromBoolean(true);
+        return Encode(true);
 
     double d = v.toNumber();
-    return Value::fromBoolean(std::isfinite(d));
+    return Encode((bool)std::isfinite(d));
 }
 
 /// decodeURI [15.1.3.1]
-Value GlobalFunctions::method_decodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
 {
     if (context->argumentCount == 0)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     QString uriString = context->arguments[0].toString(context)->toQString();
     bool ok;
@@ -602,14 +603,14 @@ Value GlobalFunctions::method_decodeURI(SimpleCallContext *context)
     if (!ok)
         context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(context, out).asReturnedValue();
 }
 
 /// decodeURIComponent [15.1.3.2]
-Value GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
 {
     if (context->argumentCount == 0)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     QString uriString = context->arguments[0].toString(context)->toQString();
     bool ok;
@@ -617,14 +618,14 @@ Value GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
     if (!ok)
         context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(context, out).asReturnedValue();
 }
 
 /// encodeURI [15.1.3.3]
-Value GlobalFunctions::method_encodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
 {
     if (context->argumentCount == 0)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     QString uriString = context->arguments[0].toString(context)->toQString();
     bool ok;
@@ -632,14 +633,14 @@ Value GlobalFunctions::method_encodeURI(SimpleCallContext *context)
     if (!ok)
         context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(context, out).asReturnedValue();
 }
 
 /// encodeURIComponent [15.1.3.4]
-Value GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
 {
     if (context->argumentCount == 0)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     QString uriString = context->arguments[0].toString(context)->toQString();
     bool ok;
@@ -647,23 +648,23 @@ Value GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
     if (!ok)
         context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
 
-    return Value::fromString(context, out);
+    return Value::fromString(context, out).asReturnedValue();
 }
 
-Value GlobalFunctions::method_escape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
 {
     if (!context->argumentCount)
-        return Value::fromString(context, QStringLiteral("undefined"));
+        return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
     QString str = context->argument(0).toString(context)->toQString();
-    return Value::fromString(context, escape(str));
+    return Value::fromString(context, escape(str)).asReturnedValue();
 }
 
-Value GlobalFunctions::method_unescape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
 {
     if (!context->argumentCount)
-        return Value::fromString(context, QStringLiteral("undefined"));
+        return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
     QString str = context->argument(0).toString(context)->toQString();
-    return Value::fromString(context, unescape(str));
+    return Value::fromString(context, unescape(str)).asReturnedValue();
 }

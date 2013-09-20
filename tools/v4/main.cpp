@@ -77,16 +77,16 @@ struct Print: FunctionObject
         name = scope->engine->newString("print");
     }
 
-    static Value call(Managed *, CallData *callData)
+    static ReturnedValue call(Managed *, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
-            QString s = callData->args[i].toQString();
+            QString s = callData->args[i].toQStringNoThrow();
             if (i)
                 std::cout << ' ';
             std::cout << qPrintable(s);
         }
         std::cout << std::endl;
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
 
     static const ManagedVTable static_vtbl;
@@ -102,10 +102,10 @@ struct GC: public FunctionObject
         vtbl = &static_vtbl;
         name = scope->engine->newString("gc");
     }
-    static Value call(Managed *m, CallData *)
+    static ReturnedValue call(Managed *m, CallData *)
     {
         m->engine()->memoryManager->runGC();
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
 
     static const ManagedVTable static_vtbl;
@@ -117,11 +117,13 @@ DEFINE_MANAGED_VTABLE(GC);
 
 static void showException(QV4::ExecutionContext *ctx, const QV4::Exception &exception)
 {
-    QV4::ErrorObject *e = exception.value().asErrorObject();
+    QV4::Scope scope(ctx);
+    QV4::ScopedValue ex(scope, exception.value());
+    QV4::ErrorObject *e = ex->asErrorObject();
     if (!e) {
-        std::cerr << "Uncaught exception: " << qPrintable(exception.value().toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(ex->toString(ctx)->toQString()) << std::endl;
     } else {
-        std::cerr << "Uncaught exception: " << qPrintable(e->get(ctx->engine->newString(QStringLiteral("message")), 0).toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(QV4::Value::fromReturnedValue(e->get(ctx->engine->newString(QStringLiteral("message")), 0)).toString(ctx)->toQString()) << std::endl;
     }
 
     foreach (const QV4::ExecutionEngine::StackFrame &frame, exception.stackTrace()) {
@@ -187,6 +189,7 @@ int main(int argc, char *argv[])
         QV4::ExecutionEngine vm(iSelFactory);
 
         QV4::ExecutionContext *ctx = vm.rootContext;
+        QV4::Scope scope(ctx);
 
         QV4::Object *globalObject = vm.globalObject;
         QV4::Object *print = new (ctx->engine->memoryManager) builtins::Print(ctx);
@@ -204,10 +207,10 @@ int main(int argc, char *argv[])
                     QV4::Script script(ctx, code, fn);
                     script.parseAsBinding = runAsQml;
                     script.parse();
-                    QV4::Value result = script.run();
-                    if (!result.isUndefined()) {
+                    QV4::ScopedValue result(scope, script.run());
+                    if (!result->isUndefined()) {
                         if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                            std::cout << "exit value: " << qPrintable(result.toString(ctx)->toQString()) << std::endl;
+                            std::cout << "exit value: " << qPrintable(result->toString(ctx)->toQString()) << std::endl;
                     }
                 } catch (QV4::Exception& ex) {
                     ex.accept(ctx);

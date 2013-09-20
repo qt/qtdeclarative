@@ -54,7 +54,7 @@
 #include <QQmlExpression>
 #include <QQmlIncubationController>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlabstracturlinterceptor_p.h>
+#include <QQmlAbstractUrlInterceptor>
 
 class tst_qqmlengine : public QQmlDataTest
 {

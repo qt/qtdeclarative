@@ -13,6 +13,7 @@ qtHaveModule(widgets): PUBLICTESTS += nodes
 !qtHaveModule(concurrent): PUBLICTESTS -= qquickpixmapcache
 
 PRIVATETESTS += \
+    nokeywords \
     qquickanimations \
     qquickapplication \
     qquickbehaviors \

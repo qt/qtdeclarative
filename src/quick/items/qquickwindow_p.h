@@ -191,7 +191,7 @@ public:
     void updateEffectiveOpacityRoot(QQuickItem *, qreal);
     void updateDirtyNode(QQuickItem *);
 
-    void fireFrameSwapped() { emit q_func()->frameSwapped(); }
+    void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
 
     QSGContext *context;
     QSGRenderer *renderer;
@@ -221,7 +221,7 @@ public:
 
     static bool defaultAlphaBuffer;
 
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

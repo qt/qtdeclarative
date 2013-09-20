@@ -94,7 +94,7 @@ public:
     static QV8ProfilerService *instance();
     static void initialize();
 
-public slots:
+public Q_SLOTS:
     void startProfiling(const QString &title);
     void stopProfiling(const QString &title);
     void takeSnapshot();

@@ -74,7 +74,7 @@ public:
     InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
-    virtual void run(V4IR::Function *function);
+    virtual void run(int functionIndex);
 
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
@@ -93,14 +93,6 @@ protected:
     virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result);
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);

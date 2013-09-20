@@ -1,9 +1,16 @@
-!wince*:!ios:!if(win*:isEqual(QT_ARCH, "x86_64")): DEFINES += V4_ENABLE_JIT ENABLE_YARR_JIT=1
-else: DEFINES += ENABLE_YARR_JIT=0
+
+
+wince*: CONFIG += disable_jit
+ios: CONFIG += disable_jit
+if(win*:isEqual(QT_ARCH, "x86_64")): CONFIG += disable_jit
+equals(ANDROID_TARGET_ARCH, armeabi): CONFIG += disable_jit
+
+disable_jit: DEFINES += ENABLE_YARR_JIT=0
+else: DEFINES += V4_ENABLE_JIT ENABLE_YARR_JIT=1
 
 # On Qt/Android/ARM release builds are thumb and debug builds arm,
 # but we'll force the JIT to always generate thumb2
-android:isEqual(QT_ARCH, "arm") {
+contains(DEFINES, V4_ENABLE_JIT):android:isEqual(QT_ARCH, "arm") {
     DEFINES += WTF_CPU_ARM_THUMB2
 }
 

@@ -58,15 +58,17 @@ struct Q_QML_EXPORT Exception {
 
     void partiallyUnwindContext(ExecutionContext *catchingContext);
 
-    Value value() const { return exception; }
+    ReturnedValue value() const { return exception.value().asReturnedValue(); }
 
     ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
+    ExecutionEngine *engine() const { return e; }
 
 private:
     void *operator new(size_t, void *p) { return p; }
 
     explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
 
+    ExecutionEngine *e;
     ExecutionContext *throwingContext;
     bool accepted;
     PersistentValue exception;

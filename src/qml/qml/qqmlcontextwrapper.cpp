@@ -73,15 +73,15 @@ QmlContextWrapper::~QmlContextWrapper()
         context->destroy();
 }
 
-QV4::Value QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
+ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
-QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
+ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
@@ -92,27 +92,27 @@ QV4::Value QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 
     QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, context, 0);
     w->isNullWrapper = true;
-    return Value::fromObject(w);
+    return Value::fromObject(w).asReturnedValue();
 }
 
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
 {
-    QV4::Object *qmlglobal = v4->qmlContextObject();
-    if (!qmlglobal)
-        return 0;
+    Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
 
-    QmlContextWrapper *c = qmlglobal->as<QmlContextWrapper>();
-    return c ? c->getContext() : 0;
+    return !!c ? c->getContext() : 0;
 }
 
 QQmlContextData *QmlContextWrapper::getContext(const Value &value)
 {
-    Object *o = value.asObject();
-    QmlContextWrapper *c = o ? o->as<QmlContextWrapper>() : 0;
-    if (!c)
+    QV4::ExecutionEngine *v4 = value.engine();
+    if (!v4)
         return 0;
 
-    return c ? c->getContext():0;
+    Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> c(scope, value.as<QmlContextWrapper>());
+
+    return !!c ? c->getContext():0;
 }
 
 void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
@@ -124,21 +124,22 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 }
 
 
-Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
-    QmlContextWrapper *resource = m->as<QmlContextWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
+    QV4::Scope scope(v4);
+    QmlContextWrapper *resource = m->as<QmlContextWrapper>();
     if (!resource)
         v4->current->throwTypeError();
 
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
     bool hasProp;
-    QV4::Value result = v4->globalObject->get(name, &hasProp);
+    QV4::ScopedValue result(scope, v4->globalObject->get(name, &hasProp));
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
-        return result;
+        return result.asReturnedValue();
     }
 
     if (resource->isNullWrapper)
@@ -151,7 +152,7 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
-        return result;
+        return result.asReturnedValue();
     }
 
     // Its possible we could delay the calculation of the "actual" context (in the case
@@ -162,7 +163,7 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (!context) {
         if (hasProperty)
             *hasProperty = true;
-        return result;
+        return result.asReturnedValue();
     }
 
     // Search type (attached property/enum/imported scripts) names
@@ -187,9 +188,9 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
             if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value();
+                    return context->importedScripts.at(index).value().asReturnedValue();
                 else
-                    return QV4::Value::undefinedValue();
+                    return QV4::Value::undefinedValue().asReturnedValue();
             } else if (r.type) {
                 return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {
@@ -241,11 +242,12 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
-            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->current, context, scopeObject,
+                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result;
+                return result.asReturnedValue();
             }
         }
         scopeObject = 0;
@@ -254,11 +256,11 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            QV4::Value result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            result = QV4::QObjectWrapper::getQmlProperty(v4->current, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result;
+                return result.asReturnedValue();
             }
         }
 
@@ -267,13 +269,14 @@ Value QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     expressionContext->unresolvedNames = true;
 
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 {
-    QmlContextWrapper *wrapper = m->as<QmlContextWrapper>();
     ExecutionEngine *v4 = m->engine();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
     if (!wrapper)
         v4->current->throwTypeError();
 
@@ -281,7 +284,8 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (wrapper && wrapper->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
-            v4->current->throwError(Value::fromString(v4->current->engine->newString(error)));
+            Scoped<String> e(scope, v4->current->engine->newString(error));
+            v4->current->throwError(e);
         }
 
         Object::put(m, name, value);

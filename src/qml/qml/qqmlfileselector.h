@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Research In Motion.
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -38,29 +38,34 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//Private API for 5.1 (at least)
-#ifndef QQMLABSTRACTURLINTERCEPTOR_H
-#define QQMLABSTRACTURLINTERCEPTOR_H
 
-#include <QtCore/qurl.h>
+#ifndef QQMLFILESELECTOR_H
+#define QQMLFILESELECTOR_H
+
+#include <QtCore/QObject>
+#include <QtCore/QUrl>
+#include <QtQml/QQmlAbstractUrlInterceptor>
+#include <qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QQmlAbstractUrlInterceptor
+class QFileSelector;
+class QQmlFileSelectorPrivate;
+class Q_QML_EXPORT QQmlFileSelector : public QObject, public QQmlAbstractUrlInterceptor
 {
-    Q_FLAGS(InterceptionPoint)
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QQmlFileSelector)
 public:
-    enum DataType { //Matches QQmlDataBlob::Type
-        QmlFile = 0,
-        JavaScriptFile = 1,
-        QmldirFile = 2,
-        UrlString = 0x1000
-    };
+    QQmlFileSelector(QObject* parent=0);
+    void setSelector(QFileSelector *selector);
 
-    QQmlAbstractUrlInterceptor() {}
-    virtual ~QQmlAbstractUrlInterceptor() {}
-    virtual QUrl intercept(const QUrl &path, DataType type) = 0;
+protected:
+    virtual QUrl intercept(const QUrl &path, DataType type);
+
+private:
+    Q_DISABLE_COPY(QQmlFileSelector)
 };
 
 QT_END_NAMESPACE
+
 #endif

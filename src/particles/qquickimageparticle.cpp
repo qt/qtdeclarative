@@ -1113,8 +1113,8 @@ void QQuickImageParticle::setBypassOptimizations(bool arg)
         m_bypassOptimizations = arg;
         emit bypassOptimizationsChanged(arg);
     }
-    if (perfLevel < 9999)
-        reset();
+    // Applies regardless of perfLevel
+    reset();
 }
 
 void QQuickImageParticle::setEntryEffect(EntryEffect arg)

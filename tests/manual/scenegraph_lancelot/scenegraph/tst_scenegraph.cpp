@@ -47,6 +47,7 @@
 #include <QtCore/QProcess>
 #include <QtGui/QImage>
 
+#include <algorithm>
 
 QString blockify(const QByteArray& s)
 {
@@ -167,7 +168,7 @@ void tst_Scenegraph::setupTestSuite(const QByteArray& filter)
         }
     }
 
-    qSort(itemFiles);
+    std::sort(itemFiles.begin(), itemFiles.end());
     foreach (const QString &filePath, itemFiles) {
         QByteArray itemName = filePath.mid(testSuitePath.length() + 1).toLatin1();
         QBaselineTest::newRow(itemName, checksumFileOrDir(filePath)) << filePath;

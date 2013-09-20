@@ -51,24 +51,24 @@ struct MathObject: Object
 {
     MathObject(ExecutionContext *ctx);
 
-    static Value method_abs(SimpleCallContext *context);
-    static Value method_acos(SimpleCallContext *context);
-    static Value method_asin(SimpleCallContext *context);
-    static Value method_atan(SimpleCallContext *context);
-    static Value method_atan2(SimpleCallContext *context);
-    static Value method_ceil(SimpleCallContext *context);
-    static Value method_cos(SimpleCallContext *context);
-    static Value method_exp(SimpleCallContext *context);
-    static Value method_floor(SimpleCallContext *context);
-    static Value method_log(SimpleCallContext *context);
-    static Value method_max(SimpleCallContext *context);
-    static Value method_min(SimpleCallContext *context);
-    static Value method_pow(SimpleCallContext *context);
-    static Value method_random(SimpleCallContext *context);
-    static Value method_round(SimpleCallContext *context);
-    static Value method_sin(SimpleCallContext *context);
-    static Value method_sqrt(SimpleCallContext *context);
-    static Value method_tan(SimpleCallContext *context);
+    static ReturnedValue method_abs(SimpleCallContext *context);
+    static ReturnedValue method_acos(SimpleCallContext *context);
+    static ReturnedValue method_asin(SimpleCallContext *context);
+    static ReturnedValue method_atan(SimpleCallContext *context);
+    static ReturnedValue method_atan2(SimpleCallContext *context);
+    static ReturnedValue method_ceil(SimpleCallContext *context);
+    static ReturnedValue method_cos(SimpleCallContext *context);
+    static ReturnedValue method_exp(SimpleCallContext *context);
+    static ReturnedValue method_floor(SimpleCallContext *context);
+    static ReturnedValue method_log(SimpleCallContext *context);
+    static ReturnedValue method_max(SimpleCallContext *context);
+    static ReturnedValue method_min(SimpleCallContext *context);
+    static ReturnedValue method_pow(SimpleCallContext *context);
+    static ReturnedValue method_random(SimpleCallContext *context);
+    static ReturnedValue method_round(SimpleCallContext *context);
+    static ReturnedValue method_sin(SimpleCallContext *context);
+    static ReturnedValue method_sqrt(SimpleCallContext *context);
+    static ReturnedValue method_tan(SimpleCallContext *context);
 };
 
 }

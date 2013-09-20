@@ -209,6 +209,7 @@ private slots:
     void assignSequenceTypes();
     void sequenceSort_data();
     void sequenceSort();
+    void dateParse();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -310,6 +311,18 @@ private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(QQmlContextData *ctxt);
     QQmlEngine engine;
+
+    // When calling into JavaScript, the specific type of the return value can differ if that return
+    // value is a number. This is not only the case for non-integral numbers, or numbers that do not
+    // fit into the (signed) integer range, but it also depends on which optimizations are run. So,
+    // to check if the return value is of a number type, use this method instead of checking against
+    // a specific userType.
+    static bool isJSNumberType(int userType)
+    {
+        return userType == (int) QVariant::Int
+                || userType == (int) QVariant::UInt
+                || userType == (int) QVariant::Double;
+    }
 };
 
 // The JavaScriptCore GC marks the C stack. To try to ensure that there is
@@ -2256,12 +2269,13 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
 
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return false;
-        QV4::ScopedCallData d(ctx->engine, 1);
+        QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
         function->call(d);
@@ -2282,14 +2296,16 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     program.inheritContext = true;
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
+
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return false;
-        QV4::ValueScope scope(ctx);
+
         QV4::ScopedValue value(scope);
         QV4::ScopedValue res(scope, result);
-        QV4::ScopedCallData d(ctx->engine, 1);
+        QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
         value = function->call(d);
@@ -2307,16 +2323,18 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::Scope scope(ctx);
+
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     program.inheritContext = true;
     try {
-        QV4::FunctionObject *function = program.run().asFunctionObject();
+        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
             return QV4::Value::emptyValue();
-        QV4::ScopedCallData d(ctx->engine, 1);
+        QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
-        QV4::Value value = function->call(d);
+        QV4::ScopedValue value(scope, function->call(d));
         return value;
     } catch (QV4::Exception &e) {
         e.accept(ctx);
@@ -2338,8 +2356,9 @@ void tst_qqmlecmascript::callQtInvokables()
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
     
     QV8Engine *engine = ep->v8engine();
+    QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o);
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
 
     // Non-existent methods
     o->reset();
@@ -2433,7 +2452,7 @@ void tst_qqmlecmascript::callQtInvokables()
     {
     QV4::Value ret = EVALUATE("object.method_NoArgs_QScriptValue()");
     QVERIFY(ret.isString());
-    QCOMPARE(ret.toQString(), QString("Hello world"));
+    QCOMPARE(ret.toQStringNoThrow(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);
@@ -3885,7 +3904,8 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             scriptContext = QV4::QmlContextWrapper::getContext(qmlglobal);
 
             {
-                QV4::Value temporaryScope = QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0);
+                QV4::Scope scope(QV8Engine::getV4((engine)));
+                QV4::ScopedValue temporaryScope(scope, QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0));
                 Q_UNUSED(temporaryScope)
             }
 
@@ -4687,8 +4707,8 @@ void tst_qqmlecmascript::propertyVarCpp()
     QVERIFY(object->setProperty("varProperty", QVariant::fromValue(10)));
     QCOMPARE(object->property("varBound"), QVariant(15));
     QCOMPARE(object->property("intBound"), QVariant(15));
-    QCOMPARE(object->property("varProperty").userType(), (int)QVariant::Int);
-    QCOMPARE(object->property("varBound").userType(), (int)QVariant::Int);
+    QVERIFY(isJSNumberType(object->property("varProperty").userType()));
+    QVERIFY(isJSNumberType(object->property("varBound").userType()));
     // assign string to property var that current has bool assigned
     QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::Bool);
     QVERIFY(object->setProperty("varProperty2", QVariant(QLatin1String("randomString"))));
@@ -4967,9 +4987,9 @@ void tst_qqmlecmascript::propertyVarInheritance()
     {
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        QV4::Value tmp = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
+        QV4::Value tmp = QV4::Value::fromReturnedValue(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
         icoCanaryHandle = tmp;
-        tmp = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
+        tmp = QV4::Value::fromReturnedValue(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
         ccoCanaryHandle = tmp;
         tmp = QV4::Value::nullValue();
         QVERIFY(!icoCanaryHandle.isEmpty());
@@ -5013,7 +5033,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        QV4::Value tmp = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
+        QV4::Value tmp = QV4::Value::fromReturnedValue(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle = tmp;
         tmp = QV4::Value::nullValue();
         QVERIFY(!childObjectVarArrayValueHandle.isEmpty());
@@ -6621,7 +6641,7 @@ void tst_qqmlecmascript::qtbug_22843()
     QQmlComponent component(&engine, testFileUrl(fileName));
     QString url = component.url().toString();
     QString warning1 = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
-    QString warning2 = url + QLatin1String(":5: TypeError: Property 'func' of object NaN is not a function");
+    QString warning2 = url + QLatin1String(":5: TypeError: Cannot call method 'func' of undefined");
 
     qRegisterMetaType<QList<QQmlError> >("QList<QQmlError>");
     QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
@@ -7183,6 +7203,25 @@ void tst_qqmlecmascript::sequenceSort()
     QVERIFY(q.toBool() == true);
 
     delete object;
+}
+
+void tst_qqmlecmascript::dateParse()
+{
+    QQmlComponent component(&engine, testFileUrl("date.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, "test_is_invalid_jsDateTime", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+    QMetaObject::invokeMethod(object, "test_is_invalid_qtDateTime", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+
 }
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()

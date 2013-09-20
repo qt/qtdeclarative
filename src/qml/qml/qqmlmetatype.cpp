@@ -112,12 +112,15 @@ class QQmlTypeModulePrivate
 {
 public:
     QQmlTypeModulePrivate() 
-    : minMinorVersion(INT_MAX), maxMinorVersion(0) {}
+    : minMinorVersion(INT_MAX), maxMinorVersion(0), locked(false) {}
+
+    static QQmlTypeModulePrivate* get(QQmlTypeModule* q) { return q->d; }
 
     QQmlMetaTypeData::VersionedUri uri;
 
     int minMinorVersion;
     int maxMinorVersion;
+    bool locked;
 
     void add(QQmlType *);
 
@@ -1126,7 +1129,7 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 }
 
 // NOTE: caller must hold a QWriteLocker on "data"
-bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data, const char *uri, const QString &typeName)
+bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data, const char *uri, const QString &typeName, int majorVersion = -1)
 {
     if (!typeName.isEmpty()) {
         int typeNameLen = typeName.length();
@@ -1157,6 +1160,18 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
                                                             "Cannot install %1 '%2' into protected namespace '%3'"));
                 data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace));
                 return false;
+            }
+        } else if (majorVersion >= 0) {
+            QQmlMetaTypeData::VersionedUri versionedUri;
+            versionedUri.uri = nameSpace;
+            versionedUri.majorVersion = majorVersion;
+            if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
+                if (QQmlTypeModulePrivate::get(qqtm)->locked){
+                    QString failure(QCoreApplication::translate("qmlRegisterType",
+                                                                "Cannot install %1 '%2' into protected module '%3' version '%4'"));
+                    data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
+                    return false;
+                }
             }
         }
     }
@@ -1206,7 +1221,7 @@ int registerType(const QQmlPrivate::RegisterType &type)
     QWriteLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString elementName = QString::fromUtf8(type.elementName);
-    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName))
+    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.versionMajor))
         return -1;
 
     int index = data->types.count();
@@ -1226,7 +1241,7 @@ int registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
     QWriteLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString typeName = QString::fromUtf8(type.typeName);
-    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName))
+    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.versionMajor))
         return -1;
 
     int index = data->types.count();
@@ -1248,7 +1263,7 @@ int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
     bool fileImport = false;
     if (*(type.uri) == '\0')
         fileImport = true;
-    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?0:type.uri, typeName))
+    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?0:type.uri, typeName, type.versionMajor))
         return -1;
 
     int index = data->types.count();
@@ -1282,6 +1297,23 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerCompositeType(*reinterpret_cast<RegisterCompositeType *>(data));
     }
     return -1;
+}
+
+//From qqml.h
+bool qmlProtectModule(const char *uri, int majVersion)
+{
+    QWriteLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlMetaTypeData::VersionedUri versionedUri;
+    versionedUri.uri = QString::fromUtf8(uri);
+    versionedUri.majorVersion = majVersion;
+
+    if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)) {
+        QQmlTypeModulePrivate::get(qqtm)->locked = true;
+        return true;
+    }
+    return false;
 }
 
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri)
@@ -1338,6 +1370,22 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
             return true;
     }
 
+    return false;
+}
+
+/*
+    Returns true if a module \a uri of this version is installed and locked;
+*/
+bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
+{
+    QReadLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlMetaTypeData::VersionedUri versionedUri;
+    versionedUri.uri = uri;
+    versionedUri.majorVersion = majVersion;
+    if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0))
+        return QQmlTypeModulePrivate::get(qqtm)->locked;
     return false;
 }
 

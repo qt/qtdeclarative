@@ -244,12 +244,13 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         } else {
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
+            QV4::Scope scope(ep->v4engine());
+
             ep->referenceScarceResources();
 
             bool isUndefined = false;
 
-            QV4::Value result =
-                    QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
+            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined));
 
             trace.event("writing binding result");
 
@@ -285,12 +286,12 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 QVariant QQmlBinding::evaluate()
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
+    QV4::Scope scope(ep->v4engine());
     ep->referenceScarceResources();
 
     bool isUndefined = false;
 
-    QV4::Value result =
-            QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined);
+    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined));
 
     ep->dereferenceScarceResources();
 

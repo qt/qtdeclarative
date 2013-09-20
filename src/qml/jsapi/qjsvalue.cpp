@@ -57,13 +57,13 @@
 #include <private/qv4exception_p.h>
 #include <private/qv4scopedvalue_p.h>
 
-QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
+QV4::ReturnedValue QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
 {
     if (!this->engine)
         this->engine = e;
     else if (this->engine != e) {
         qWarning("JSValue can't be reassigned to another engine.");
-        return QV4::Value::emptyValue();
+        return QV4::Value::emptyValue().asReturnedValue();
     }
     if (value.asString() == &string) {
         value = QV4::Value::fromString(engine->newString(string.toQString()));
@@ -74,7 +74,7 @@ QV4::Value QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
         if (next)
             next->prev = &this->next;
     }
-    return value;
+    return value.asReturnedValue();
 }
 
 /*!
@@ -360,7 +360,7 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    return d->value.toQString();
+    return d->value.toQStringNoThrow();
 }
 
 /*!
@@ -506,17 +506,18 @@ QJSValue QJSValue::call(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    ScopedCallData callData(engine, args.length());
+    Scope scope(engine);
+    ScopedCallData callData(scope, args.length());
     callData->thisObject = Value::fromObject(engine->globalObject);
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = QV4::Value::fromReturnedValue(args.at(i).d->getValue(engine));
     }
 
-    Value result;
+    ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
     try {
         result = f->call(callData);
@@ -556,23 +557,24 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
 
     ExecutionEngine *engine = d->engine;
     assert(engine);
+    Scope scope(engine);
 
     if (!instance.d->checkEngine(engine)) {
         qWarning("QJSValue::call() failed: cannot call function with thisObject created in a different engine");
         return QJSValue();
     }
 
-    ScopedCallData callData(engine, args.size());
-    callData->thisObject = instance.d->getValue(engine);
+    ScopedCallData callData(scope, args.size());
+    callData->thisObject = QV4::Value::fromReturnedValue(instance.d->getValue(engine));
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = QV4::Value::fromReturnedValue(args.at(i).d->getValue(engine));
     }
 
-    Value result;
+    ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
     try {
         result = f->call(callData);
@@ -611,16 +613,17 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     ExecutionEngine *engine = d->engine;
     assert(engine);
 
-    ScopedCallData callData(engine, args.size());
+    Scope scope(engine);
+    ScopedCallData callData(scope, args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = args.at(i).d->getValue(engine);
+        callData->args[i] = QV4::Value::fromReturnedValue(args.at(i).d->getValue(engine));
     }
 
-    Value result;
+    ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
     try {
         result = f->construct(callData);
@@ -660,12 +663,17 @@ QJSEngine* QJSValue::engine() const
 */
 QJSValue QJSValue::prototype() const
 {
-    Object *o = d->value.asObject();
+    QV4::ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+    QV4::Scope scope(engine);
+    Scoped<Object> o(scope, d->value.asObject());
     if (!o)
         return QJSValue();
-    if (!o->prototype())
+    Scoped<Object> p(scope, o->prototype());
+    if (!p)
         return QJSValue(NullValue);
-    return new QJSValuePrivate(o->internalClass->engine, Value::fromObject(o->prototype()));
+    return new QJSValuePrivate(o->internalClass->engine, p.asValue());
 }
 
 /*!
@@ -788,11 +796,15 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
 */
 QJSValue QJSValue::property(const QString& name) const
 {
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+    QV4::Scope scope(engine);
+
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX)
@@ -800,13 +812,14 @@ QJSValue QJSValue::property(const QString& name) const
 
     s->makeIdentifier();
     QV4::ExecutionContext *ctx = engine->current;
+    QV4::ScopedValue result(scope);
     try {
-        QV4::Value v = o->get(s);
-        return new QJSValuePrivate(engine, v);
+        result = o->get(s);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
-        return new QJSValuePrivate(engine, e.value());
+        result = e.value();
     }
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -823,19 +836,24 @@ QJSValue QJSValue::property(const QString& name) const
 */
 QJSValue QJSValue::property(quint32 arrayIndex) const
 {
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return QJSValue();
+
+    QV4::Scope scope(engine);
     Object *o = d->value.asObject();
     if (!o)
         return QJSValue();
 
-    ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
+    QV4::ScopedValue result(scope);
     try {
-        QV4::Value v = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
-        return new QJSValuePrivate(engine, v);
+        result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
-        return new QJSValuePrivate(engine, e.value());
+        result = e.value();
     }
+    return new QJSValuePrivate(engine, result);
 }
 
 /*!
@@ -851,7 +869,12 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 */
 void QJSValue::setProperty(const QString& name, const QJSValue& value)
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return;
+    Scope scope(engine);
+
+    Scoped<Object> o(scope, d->value);
     if (!o)
         return;
 
@@ -860,7 +883,6 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    ExecutionEngine *engine = d->engine;
     String *s = engine->newString(name);
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
@@ -871,7 +893,8 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     QV4::ExecutionContext *ctx = engine->current;
     s->makeIdentifier();
     try {
-        o->put(s, value.d->getValue(engine));
+        QV4::ScopedValue v(scope, value.d->getValue(engine));
+        o->put(s, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
@@ -891,17 +914,22 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
 */
 void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *engine = d->engine;
+    if (!engine)
+        return;
+    Scope scope(engine);
+
+    Scoped<Object> o(scope, d->value);
     if (!o)
         return;
 
-    ExecutionEngine *engine = d->engine;
     QV4::ExecutionContext *ctx = engine->current;
+    QV4::ScopedValue v(scope, value.d->getValue(engine));
     try {
         if (arrayIndex != UINT_MAX)
-            o->putIndexed(arrayIndex, value.d->getValue(engine));
+            o->putIndexed(arrayIndex, v);
         else
-            o->put(engine->id_uintMax, value.d->getValue(engine));
+            o->put(engine->id_uintMax, v);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }

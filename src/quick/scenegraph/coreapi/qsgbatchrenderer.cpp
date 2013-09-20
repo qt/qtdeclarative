@@ -46,6 +46,8 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 
+#include <algorithm>
+
 #ifndef GL_DOUBLE
    #define GL_DOUBLE 0x140A
 #endif
@@ -364,7 +366,7 @@ void Updater::visitTransformNode(Node *n)
     QSGTransformNode *tn = static_cast<QSGTransformNode *>(n->sgNode);
 
     if (n->isBatchRoot) {
-        if (m_added > 0 && m_roots.size() > 0)
+        if (m_added > 0 && m_roots.last())
             renderer->registerBatchRoot(n, m_roots.last());
         tn->setCombinedMatrix(m_rootMatrices.last() * *m_combined_matrix_stack.last() * tn->matrix());
 
@@ -1256,9 +1258,9 @@ void Renderer::buildRenderListsForTaggedRoots()
     qsg_addBackOrphanedElements(m_tmpAlphaElements, m_alphaRenderList);
 
     if (m_opaqueRenderList.size())
-        qSort(&m_opaqueRenderList.first(), &m_opaqueRenderList.last() + 1, qsg_sort_element_decreasing_order);
+        std::sort(&m_opaqueRenderList.first(), &m_opaqueRenderList.last() + 1, qsg_sort_element_decreasing_order);
     if (m_alphaRenderList.size())
-        qSort(&m_alphaRenderList.first(), &m_alphaRenderList.last() + 1, qsg_sort_element_increasing_order);
+        std::sort(&m_alphaRenderList.first(), &m_alphaRenderList.last() + 1, qsg_sort_element_increasing_order);
 
 }
 
@@ -1284,7 +1286,7 @@ void Renderer::buildRenderListsFromScratch()
  */
 void Renderer::cleanupBatches(QDataBuffer<Batch *> *batches) {
     if (batches->size()) {
-        qSort(&batches->first(), &batches->last() + 1, qsg_sort_batch_is_valid);
+        std::sort(&batches->first(), &batches->last() + 1, qsg_sort_batch_is_valid);
         int count = 0;
         while (count < batches->size() && batches->at(count)->first)
             ++count;
@@ -2149,11 +2151,11 @@ void Renderer::render()
     // Then sort opaque batches so that we're drawing the batches with the highest
     // order first, maximizing the benefit of front-to-back z-ordering.
     if (m_opaqueBatches.size())
-        qSort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
+        std::sort(&m_opaqueBatches.first(), &m_opaqueBatches.last() + 1, qsg_sort_batch_decreasing_order);
 
     // Sort alpha batches back to front so that they render correctly.
     if (m_alphaBatches.size())
-        qSort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
+        std::sort(&m_alphaBatches.first(), &m_alphaBatches.last() + 1, qsg_sort_batch_increasing_order);
 
     m_zRange = 1.0 / (m_nextRenderOrder);
 

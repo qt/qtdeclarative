@@ -93,7 +93,7 @@ Q_SIGNALS:
     void primaryOrientationChanged();
     void orientationChanged();
 
-protected slots:
+protected Q_SLOTS:
     void screenChanged(QScreen*);
 
 private:

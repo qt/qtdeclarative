@@ -48,6 +48,8 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4unwindhelper_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -94,7 +96,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
-        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags)->getPointer();
         runtimeRegularExpressions[i] = QV4::Value::fromObject(obj);
     }
 
@@ -138,7 +140,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 #if 0
     runtimeFunctionsSortedByAddress.resize(runtimeFunctions.size());
     memcpy(runtimeFunctionsSortedByAddress.data(), runtimeFunctions.data(), runtimeFunctions.size() * sizeof(QV4::Function*));
-    qSort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
+    std::sort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
 #endif
 
     return runtimeFunctions[data->indexOfRootFunction];

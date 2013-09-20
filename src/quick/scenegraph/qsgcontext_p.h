@@ -130,10 +130,10 @@ public:
     static QSGRenderLoop *createWindowManager();
 
 
-public slots:
+public Q_SLOTS:
     void textureFactoryDestroyed(QObject *o);
 
-signals:
+Q_SIGNALS:
     void initialized();
     void invalidated();
 };

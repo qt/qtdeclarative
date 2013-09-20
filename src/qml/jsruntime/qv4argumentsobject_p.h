@@ -50,32 +50,29 @@ namespace QV4 {
 
 struct ArgumentsGetterFunction: FunctionObject
 {
+    Q_MANAGED
     uint index;
 
     ArgumentsGetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
 
-    static Value call(Managed *that, CallData *d);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue call(Managed *that, CallData *d);
 };
 
 struct ArgumentsSetterFunction: FunctionObject
 {
+    Q_MANAGED
     uint index;
 
     ArgumentsSetterFunction(ExecutionContext *scope, uint index)
         : FunctionObject(scope), index(index) { vtbl = &static_vtbl; }
 
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 
 struct ArgumentsObject: Object {
+    Q_MANAGED
     CallContext *context;
     QVector<Value> mappedArguments;
     ArgumentsObject(CallContext *context);
@@ -90,7 +87,6 @@ struct ArgumentsObject: Object {
 
     static void markObjects(Managed *that);
 protected:
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *);
 };
 

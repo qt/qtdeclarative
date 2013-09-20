@@ -42,9 +42,10 @@
 #ifndef QQUICKCLIPNODE_P_H
 #define QQUICKCLIPNODE_P_H
 
+#include <private/qtquickglobal_p.h>
 #include <QtQuick/qsgnode.h>
 
-class QQuickDefaultClipNode : public QSGClipNode
+class Q_QUICK_PRIVATE_EXPORT QQuickDefaultClipNode : public QSGClipNode
 {
 public:
     QQuickDefaultClipNode(const QRectF &);

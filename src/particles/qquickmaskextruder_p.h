@@ -62,14 +62,14 @@ public:
         return m_source;
     }
 
-signals:
+Q_SIGNALS:
 
     void sourceChanged(QUrl arg);
 
-public slots:
+public Q_SLOTS:
     void setSource(QUrl arg);
 
-private slots:
+private Q_SLOTS:
     void startMaskLoading();
     void finishMaskLoading();
 

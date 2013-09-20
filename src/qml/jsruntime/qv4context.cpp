@@ -363,6 +363,7 @@ void ExecutionContext::mark()
 
 void ExecutionContext::setProperty(String *name, const Value& value)
 {
+    Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
             Object *w = static_cast<WithContext *>(ctx)->withObject;
@@ -398,17 +399,21 @@ void ExecutionContext::setProperty(String *name, const Value& value)
             }
         }
     }
-    if (strictMode || name->isEqualTo(engine->id_this))
-        throwReferenceError(Value::fromString(name));
+    if (strictMode || name->isEqualTo(engine->id_this)) {
+        Scoped<String> n(scope, name);
+        throwReferenceError(n);
+    }
     engine->globalObject->put(name, value);
 }
 
-Value ExecutionContext::getProperty(String *name)
+ReturnedValue ExecutionContext::getProperty(String *name)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -417,9 +422,9 @@ Value ExecutionContext::getProperty(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -428,7 +433,7 @@ Value ExecutionContext::getProperty(String *name)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -437,40 +442,43 @@ Value ExecutionContext::getProperty(String *name)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
-                    return v;
+                    return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
-    throwReferenceError(Value::fromString(name));
-    return Value::undefinedValue();
+    Scoped<String> n(scope, name);
+    throwReferenceError(n);
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value ExecutionContext::getPropertyNoThrow(String *name)
+ReturnedValue ExecutionContext::getPropertyNoThrow(String *name)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -479,9 +487,9 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -490,7 +498,7 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -499,40 +507,42 @@ Value ExecutionContext::getPropertyNoThrow(String *name)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty)
-                    return v;
+                    return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
+ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object **base)
 {
+    Scope scope(this);
+    ScopedValue v(scope);
     *base = 0;
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
-        return thisObject;
+        return thisObject.asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -541,10 +551,10 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             Object *w = static_cast<WithContext *>(ctx)->withObject;
             hasWith = true;
             bool hasProperty = false;
-            Value v = w->get(name, &hasProperty);
+            v = w->get(name, &hasProperty);
             if (hasProperty) {
                 *base = w;
-                return v;
+                return v.asReturnedValue();
             }
             continue;
         }
@@ -553,7 +563,7 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue;
+                return c->exceptionValue.asReturnedValue();
         }
 
         else if (ctx->type >= Type_CallContext) {
@@ -562,102 +572,119 @@ Value ExecutionContext::getPropertyAndBase(String *name, Object **base)
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i];
+                        return c->locals[i].asReturnedValue();
                 for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
                     if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->arguments[i];
+                        return c->arguments[i].asReturnedValue();
             }
             if (c->activation) {
                 bool hasProperty = false;
-                Value v = c->activation->get(name, &hasProperty);
+                v = c->activation->get(name, &hasProperty);
                 if (hasProperty) {
                     if (ctx->type == Type_QmlContext)
                         *base = c->activation;
-                    return v;
+                    return v.asReturnedValue();
                 }
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function);
+                return Value::fromObject(c->function).asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
             GlobalContext *g = static_cast<GlobalContext *>(ctx);
             bool hasProperty = false;
-            Value v = g->global->get(name, &hasProperty);
+            v = g->global->get(name, &hasProperty);
             if (hasProperty)
-                return v;
+                return v.asReturnedValue();
         }
     }
-    throwReferenceError(Value::fromString(name));
-    return Value::undefinedValue();
+    Scoped<String> n(scope, name);
+    throwReferenceError(n);
+    return Value::undefinedValue().asReturnedValue();
 }
 
 
-void ExecutionContext::throwError(const Value &value)
+void ExecutionContext::throwError(const ValueRef value)
 {
-    ValueScope scope(this);
-    ScopedValue v(scope, value);
-    __qmljs_throw(this, v);
+    __qmljs_throw(this, value);
 }
 
 void ExecutionContext::throwError(const QString &message)
 {
-    Value v = Value::fromString(this, message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
+    Scope scope(this);
+    ScopedValue v(scope, Value::fromString(this, message));
+    v = engine->newErrorObject(v);
+    throwError(v);
 }
 
 void ExecutionContext::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
 {
-    Object *error = engine->newSyntaxErrorObject(message, fileName, line, column);
-    throwError(Value::fromObject(error));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newSyntaxErrorObject(message, fileName, line, column));
+    throwError(error);
 }
 
 void ExecutionContext::throwSyntaxError(const QString &message)
 {
-    Object *error = engine->newSyntaxErrorObject(message);
-    throwError(Value::fromObject(error));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newSyntaxErrorObject(message));
+    throwError(error);
 }
 
 void ExecutionContext::throwTypeError()
 {
-    throwError(Value::fromObject(engine->newTypeErrorObject(QStringLiteral("Type error"))));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newTypeErrorObject(QStringLiteral("Type error")));
+    throwError(error);
 }
 
 void ExecutionContext::throwTypeError(const QString &message)
 {
-    throwError(Value::fromObject(engine->newTypeErrorObject(message)));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newTypeErrorObject(message));
+    throwError(error);
 }
 
 void ExecutionContext::throwUnimplemented(const QString &message)
 {
-    Value v = Value::fromString(this, QStringLiteral("Unimplemented ") + message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
+    Scope scope(this);
+    ScopedValue v(scope, Value::fromString(this, QStringLiteral("Unimplemented ") + message));
+    v = engine->newErrorObject(v);
+    throwError(v);
 }
 
-void ExecutionContext::throwReferenceError(Value value)
+void ExecutionContext::throwReferenceError(const ValueRef value)
 {
-    String *s = value.toString(this);
+    Scope scope(this);
+    Scoped<String> s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(msg)));
+    Scoped<Object> error(scope, engine->newReferenceErrorObject(msg));
+    throwError(error);
 }
 
 void ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
 {
+    Scope scope(this);
     QString msg = message + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newReferenceErrorObject(msg, fileName, line, column)));
+    Scoped<Object> error(scope, engine->newReferenceErrorObject(msg, fileName, line, column));
+    throwError(error);
 }
 
 void ExecutionContext::throwRangeError(Value value)
 {
-    String *s = value.toString(this);
+    Scope scope(this);
+    Scoped<String> s(scope, value.toString(this));
     QString msg = s->toQString() + QStringLiteral(" out of range");
-    throwError(Value::fromObject(engine->newRangeErrorObject(msg)));
+    Scoped<Object> error(scope, engine->newRangeErrorObject(msg));
+    throwError(error);
 }
 
 void ExecutionContext::throwURIError(Value msg)
 {
-    throwError(Value::fromObject(engine->newURIErrorObject(msg)));
+    Scope scope(this);
+    Scoped<Object> error(scope, engine->newURIErrorObject(msg));
+    throwError(error);
 }
 
 void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)

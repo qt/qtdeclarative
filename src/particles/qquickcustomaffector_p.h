@@ -98,7 +98,7 @@ public:
     }
 
 
-signals:
+Q_SIGNALS:
     void affectParticles(QQmlV4Handle particles, qreal dt);
 
     void positionChanged(QQuickDirection * arg);
@@ -109,12 +109,12 @@ signals:
 
     void relativeChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
     void setPosition(QQuickDirection * arg)
     {
         if (m_position != arg) {
             m_position = arg;
-            emit positionChanged(arg);
+            Q_EMIT positionChanged(arg);
         }
     }
 
@@ -122,7 +122,7 @@ public slots:
     {
         if (m_velocity != arg) {
             m_velocity = arg;
-            emit velocityChanged(arg);
+            Q_EMIT velocityChanged(arg);
         }
     }
 
@@ -130,7 +130,7 @@ public slots:
     {
         if (m_acceleration != arg) {
             m_acceleration = arg;
-            emit accelerationChanged(arg);
+            Q_EMIT accelerationChanged(arg);
         }
     }
 
@@ -138,7 +138,7 @@ public slots:
     {
         if (m_relative != arg) {
             m_relative = arg;
-            emit relativeChanged(arg);
+            Q_EMIT relativeChanged(arg);
         }
     }
 

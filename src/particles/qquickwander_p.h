@@ -97,7 +97,7 @@ public:
 
 protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
-signals:
+Q_SIGNALS:
 
     void xVarianceChanged(qreal arg);
 
@@ -108,12 +108,12 @@ signals:
 
     void affectedParameterChanged(AffectableParameters arg);
 
-public slots:
+public Q_SLOTS:
 void setXVariance(qreal arg)
 {
     if (m_xVariance != arg) {
         m_xVariance = arg;
-        emit xVarianceChanged(arg);
+        Q_EMIT xVarianceChanged(arg);
     }
 }
 
@@ -121,7 +121,7 @@ void setYVariance(qreal arg)
 {
     if (m_yVariance != arg) {
         m_yVariance = arg;
-        emit yVarianceChanged(arg);
+        Q_EMIT yVarianceChanged(arg);
     }
 }
 
@@ -129,7 +129,7 @@ void setPace(qreal arg)
 {
     if (m_pace != arg) {
         m_pace = arg;
-        emit paceChanged(arg);
+        Q_EMIT paceChanged(arg);
     }
 }
 
@@ -138,7 +138,7 @@ void setAffectedParameter(AffectableParameters arg)
 {
     if (m_affectedParameter != arg) {
         m_affectedParameter = arg;
-        emit affectedParameterChanged(arg);
+        Q_EMIT affectedParameterChanged(arg);
     }
 }
 

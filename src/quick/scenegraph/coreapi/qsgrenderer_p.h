@@ -134,7 +134,7 @@ public:
     void setClearMode(ClearMode mode) { m_clear_mode = mode; }
     ClearMode clearMode() const { return m_clear_mode; }
 
-signals:
+Q_SIGNALS:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 
 protected:

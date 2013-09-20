@@ -41,6 +41,8 @@
 
 #include "qv4regalloc_p.h"
 
+#include <algorithm>
+
 //#define DEBUG_REGALLOC
 
 namespace {
@@ -101,6 +103,13 @@ public:
     }
 
     QList<Use> uses(const Temp &t) const { return _uses[t]; }
+    bool useMustHaveReg(const Temp &t, int position) {
+        foreach (const Use &use, uses(t))
+            if (use.pos == position)
+                return use.mustHaveRegister();
+        return false;
+    }
+
     int def(const Temp &t) const {
         Q_ASSERT(_defs[t].isValid());
         return _defs[t].defStmt;
@@ -130,7 +139,7 @@ public:
 
         qout << "RegAllocInfo:" << endl << "Defs/uses:" << endl;
         QList<Temp> temps = _defs.keys();
-        qSort(temps);
+        std::sort(temps.begin(), temps.end());
         foreach (const Temp &t, temps) {
             t.dump(qout);
             qout << " def at " << _defs[t].defStmt << " ("
@@ -158,7 +167,7 @@ public:
         QList<Temp> hinted = _hints.keys();
         if (hinted.isEmpty())
             qout << "\t(none)" << endl;
-        qSort(hinted);
+        std::sort(hinted.begin(), hinted.end());
         foreach (const Temp &t, hinted) {
             qout << "\t";
             t.dump(qout);
@@ -183,14 +192,6 @@ protected: // IRDecoder
     virtual void callBuiltinDeleteSubscript(V4IR::Temp *, V4IR::Expr *, V4IR::Temp *) {}
     virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostDecrementValue(V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementMember(V4IR::Temp *, const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *, V4IR::Temp *, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementName(const QString &, V4IR::Temp *) {}
-    virtual void callBuiltinPostIncrementValue(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinThrow(V4IR::Expr *) {}
     virtual void callBuiltinFinishTry() {}
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
@@ -419,6 +420,13 @@ protected: // IRDecoder
     virtual void binop(AluOp oper, Expr *leftSource, Expr *rightSource, Temp *target)
     {
         bool needsCall = true;
+
+        if (leftSource->type == DoubleType && rightSource->type == DoubleType) {
+            if (oper == OpMul || oper == OpAdd || oper == OpDiv || oper == OpSub
+                    || (oper >= OpGt && oper <= OpStrictNotEqual)) {
+                needsCall = false;
+            }
+        }
 
 #if 0 // TODO: change masm to generate code
         switch (leftSource->type) {
@@ -750,143 +758,6 @@ private:
         }
     }
 
-    class MoveMapping
-    {
-        struct Move {
-            Expr *from;
-            Temp *to;
-            bool needsSwap;
-
-            Move(Expr *from, Temp *to)
-                : from(from), to(to), needsSwap(false)
-            {}
-
-            bool operator==(const Move &other) const
-            { return from == other.from && to == other.to; }
-        };
-
-        QList<Move> _moves;
-
-        int isUsedAsSource(Expr *e) const
-        {
-            if (Temp *t = e->asTemp())
-                for (int i = 0, ei = _moves.size(); i != ei; ++i)
-                    if (Temp *from = _moves[i].from->asTemp())
-                        if (*from == *t)
-                            return i;
-
-            return -1;
-        }
-
-    public:
-        void add(Expr *from, Temp *to) {
-            if (Temp *t = from->asTemp())
-                if (*t == *to)
-                    return;
-
-            Move m(from, to);
-            if (_moves.contains(m))
-                return;
-            _moves.append(m);
-        }
-
-        void order()
-        {
-            QList<Move> todo = _moves;
-            QList<Move> output;
-            output.reserve(_moves.size());
-            QList<Move> delayed;
-            delayed.reserve(_moves.size());
-
-            while (!todo.isEmpty()) {
-                const Move m = todo.first();
-                todo.removeFirst();
-                schedule(m, todo, delayed, output);
-            }
-
-            Q_ASSERT(todo.isEmpty());
-            Q_ASSERT(delayed.isEmpty());
-            qSwap(_moves, output);
-#if !defined(QT_NO_DEBUG)
-            int swapCount = 0;
-            foreach (const Move &m, _moves)
-                if (m.needsSwap)
-                    ++swapCount;
-            Q_ASSERT(output.size() == _moves.size() + swapCount);
-#endif
-        }
-
-#ifdef DEBUG_REGALLOC
-        void dump() const
-        {
-            QTextStream os(stdout, QIODevice::WriteOnly);
-            os << "Move mapping has " << _moves.size() << " moves..." << endl;
-            foreach (const Move &m, _moves) {
-                os << "\t";
-                m.to->dump(os);
-                if (m.needsSwap)
-                    os << " <-> ";
-                else
-                    os << " <-- ";
-                m.from->dump(os);
-                os << endl;
-            }
-        }
-#endif // DEBUG_REGALLOC
-
-        void insertMoves(BasicBlock *predecessor, Function *function) const
-        {
-            int predecessorInsertionPoint = predecessor->statements.size() - 1;
-            foreach (const Move &m, _moves) {
-                V4IR::Move *move = function->New<V4IR::Move>();
-                move->init(m.to, m.from, OpInvalid);
-                move->swap = m.needsSwap;
-                predecessor->statements.insert(predecessorInsertionPoint++, move);
-            }
-        }
-
-    private:
-        enum Action { NormalMove, NeedsSwap };
-        Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output) const
-        {
-            int useIdx = isUsedAsSource(m.to);
-            if (useIdx != -1) {
-                const Move &dependency = _moves[useIdx];
-                if (!output.contains(dependency)) {
-                    if (delayed.contains(dependency)) {
-                        // we have a cycle! Break it by using the scratch register
-                        delayed+=m;
-#ifdef DEBUG_REGALLOC
-                        QTextStream out(stderr, QIODevice::WriteOnly);
-                        out<<"we have a cycle! temps:" << endl;
-                        foreach (const Move &m, delayed) {
-                            out<<"\t";
-                            m.to->dump(out);
-                            out<<" <- ";
-                            m.from->dump(out);
-                            out<<endl;
-                        }
-#endif
-                        delayed.removeOne(m);
-                        return NeedsSwap;
-                    } else {
-                        delayed.append(m);
-                        todo.removeOne(dependency);
-                        Action action = schedule(dependency, todo, delayed, output);
-                        delayed.removeOne(m);
-                        Move mm(m);
-                        mm.needsSwap = action == NeedsSwap;
-                        output.append(mm);
-                        return action;
-                    }
-                }
-            }
-
-            output.append(m);
-            return NormalMove;
-        }
-    };
-
     void resolveEdge(BasicBlock *predecessor, BasicBlock *successor)
     {
 #ifdef DEBUG_REGALLOC
@@ -909,6 +780,7 @@ private:
         Q_ASSERT(successorStart > 0);
 
         foreach (const LifeTimeInterval &it, _liveAtStart[successor]) {
+            bool lifeTimeHole = false;
             if (it.end() < successorStart)
                 continue;
             Expr *moveFrom = 0;
@@ -953,15 +825,18 @@ private:
                                                   predIt.temp().type);
                         } else {
                             int spillSlot = _assignedSpillSlots.value(predIt.temp(), -1);
-                            Q_ASSERT(spillSlot != -1);
-                            moveFrom = createTemp(Temp::StackSlot, spillSlot, predIt.temp().type);
+                            if (spillSlot == -1)
+                                lifeTimeHole = true;
+                            else
+                                moveFrom = createTemp(Temp::StackSlot, spillSlot, predIt.temp().type);
                         }
                         break;
                     }
                 }
             }
             if (!moveFrom) {
-                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval());
+                Q_ASSERT(!_info->isPhiTarget(it.temp()) || it.isSplitFromInterval() || lifeTimeHole);
+                Q_UNUSED(lifeTimeHole);
 #if !defined(QT_NO_DEBUG)
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
@@ -976,7 +851,8 @@ private:
             Temp *moveTo;
             if (it.reg() == LifeTimeInterval::Invalid || !it.covers(successorStart)) {
                 int spillSlot = _assignedSpillSlots.value(it.temp(), -1);
-                Q_ASSERT(spillSlot != -1); // TODO: check isStructurallyValidLanguageTag
+                if (spillSlot == -1)
+                    continue; // it has a life-time hole here.
                 moveTo = createTemp(Temp::StackSlot, spillSlot, it.temp().type);
             } else {
                 moveTo = createTemp(Temp::PhysicalRegister, platformRegister(it), it.temp().type);
@@ -1116,7 +992,7 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
         QTextStream qout(stdout, QIODevice::WriteOnly);
         qout << "Ranges:" << endl;
         QList<LifeTimeInterval> handled = _unhandled;
-        qSort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
+        std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, handled) {
             r.dump(qout);
             qout << endl;
@@ -1139,7 +1015,7 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
     dump();
 #endif // DEBUG_REGALLOC
 
-    qSort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
+    std::sort(_handled.begin(), _handled.end(), LifeTimeInterval::lessThan);
     ResolutionPhase(_handled, function, _info.data(), _assignedSpillSlots, _normalRegisters, _fpRegisters).run();
 
     function->tempCount = QSet<int>::fromList(_assignedSpillSlots.values()).size();
@@ -1188,7 +1064,7 @@ void RegisterAllocator::prepareRanges()
         if (_fixedFPRegisterRanges[fpReg].isValid())
             _active.append(_fixedFPRegisterRanges[fpReg]);
 
-    qSort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
+    std::sort(_active.begin(), _active.end(), LifeTimeInterval::lessThan);
 }
 
 void RegisterAllocator::linearScan()
@@ -1419,6 +1295,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         QTextStream out(stderr, QIODevice::WriteOnly);
         out << "*** splitting current for range ";current.dump(out);out<<endl;
 #endif // DEBUG_REGALLOC
+        Q_ASSERT(!_info->useMustHaveReg(current.temp(), position));
         split(current, position + 1, true);
         _inactive.append(current);
     } else {
@@ -1609,7 +1486,7 @@ void RegisterAllocator::dump() const
     {
         qout << "Ranges:" << endl;
         QList<LifeTimeInterval> handled = _handled;
-        qSort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
+        std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
         foreach (const LifeTimeInterval &r, handled) {
             r.dump(qout);
             qout << endl;
@@ -1621,7 +1498,7 @@ void RegisterAllocator::dump() const
         QList<Temp> temps = _assignedSpillSlots.keys();
         if (temps.isEmpty())
             qout << "\t(none)" << endl;
-        qSort(temps);
+        std::sort(temps.begin(), temps.end());
         foreach (const Temp &t, temps) {
             qout << "\t";
             t.dump(qout);

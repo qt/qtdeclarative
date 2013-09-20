@@ -1,7 +1,8 @@
 <RCC>
     <qresource prefix="/demos/samegame">
         <file>samegame.qml</file>
-        <file>settings.js</file>
+        <file>content/settings.js</file>
+        <file>content/+blackberry/settings.js</file>
         <file>content/gfx/text-p1-won.png</file>
         <file>content/gfx/background-puzzle.png</file>
         <file>content/gfx/background.png</file>

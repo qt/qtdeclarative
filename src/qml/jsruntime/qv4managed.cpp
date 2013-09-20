@@ -176,19 +176,20 @@ bool Managed::hasInstance(Managed *m, const Value &)
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::construct(Managed *m, CallData *)
+ReturnedValue Managed::construct(Managed *m, CallData *)
 {
     m->engine()->current->throwTypeError();
 }
 
-Value Managed::call(Managed *m, CallData *)
+ReturnedValue Managed::call(Managed *m, CallData *)
 {
     m->engine()->current->throwTypeError();
 }
 
-void Managed::getLookup(Managed *m, Lookup *, Value *)
+ReturnedValue Managed::getLookup(Managed *m, Lookup *)
 {
     m->engine()->current->throwTypeError();
+    return 0;
 }
 
 void Managed::setLookup(Managed *m, Lookup *, const Value &)
@@ -201,12 +202,12 @@ bool Managed::isEqualTo(Managed *, Managed *)
     return false;
 }
 
-Value Managed::get(String *name, bool *hasProperty)
+ReturnedValue Managed::get(String *name, bool *hasProperty)
 {
     return vtbl->get(this, name, hasProperty);
 }
 
-Value Managed::getIndexed(uint index, bool *hasProperty)
+ReturnedValue Managed::getIndexed(uint index, bool *hasProperty)
 {
     return vtbl->getIndexed(this, index, hasProperty);
 }

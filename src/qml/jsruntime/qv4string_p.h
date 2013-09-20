@@ -52,6 +52,7 @@ struct ExecutionEngine;
 struct Identifier;
 
 struct Q_QML_EXPORT String : public Managed {
+    Q_MANAGED
     enum StringType {
         StringType_Unknown,
         StringType_Regular,
@@ -119,6 +120,10 @@ struct Q_QML_EXPORT String : public Managed {
         return _text.length();
     }
 
+    static String *cast(const Value &v) {
+        return v.asString();
+    }
+
     QString _text;
     mutable Identifier *identifier;
     mutable uint stringHash;
@@ -126,8 +131,8 @@ struct Q_QML_EXPORT String : public Managed {
 
 protected:
     static void destroy(Managed *);
-    static Value get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
@@ -135,8 +140,6 @@ protected:
     static bool deleteProperty(Managed *, String *);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
-
-    static const ManagedVTable static_vtbl;
 };
 
 }

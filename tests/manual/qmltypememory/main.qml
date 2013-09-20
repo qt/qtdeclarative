@@ -51,4 +51,5 @@ QtObject {
     property TestType tt //No object, although it should be properly parented if there were one
     property TestTypeCpp tt2 //No object, although it should be properly parented if there were one
     property TestTypePlugin tt3
+    property Item it
 }

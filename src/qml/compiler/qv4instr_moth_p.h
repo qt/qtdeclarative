@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(MoveTemp, moveTemp) \
+    F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
@@ -81,14 +82,6 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
-    F(CallBuiltinPostIncMember, callBuiltinPostIncMember) \
-    F(CallBuiltinPostIncSubscript, callBuiltinPostIncSubscript) \
-    F(CallBuiltinPostIncName, callBuiltinPostIncName) \
-    F(CallBuiltinPostIncValue, callBuiltinPostIncValue) \
-    F(CallBuiltinPostDecMember, callBuiltinPostDecMember) \
-    F(CallBuiltinPostDecSubscript, callBuiltinPostDecSubscript) \
-    F(CallBuiltinPostDecName, callBuiltinPostDecName) \
-    F(CallBuiltinPostDecValue, callBuiltinPostDecValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CallBuiltinDefineGetterSetter, callBuiltinDefineGetterSetter) \
     F(CallBuiltinDefineProperty, callBuiltinDefineProperty) \
@@ -236,6 +229,11 @@ union Instr
         Param source;
         Param result;
     };
+    struct instr_swapTemps {
+        MOTH_INSTR_HEADER
+        Param left;
+        Param right;
+    };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
         int value;
@@ -379,50 +377,6 @@ union Instr
         Param value;
         Param result;
     };
-    struct instr_callBuiltinPostIncMember {
-        MOTH_INSTR_HEADER
-        Param base;
-        int member;
-        Param result;
-    };
-    struct instr_callBuiltinPostIncSubscript {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        Param result;
-    };
-    struct instr_callBuiltinPostIncName {
-        MOTH_INSTR_HEADER
-        int name;
-        Param result;
-    };
-    struct instr_callBuiltinPostIncValue {
-        MOTH_INSTR_HEADER
-        Param value;
-        Param result;
-    };
-    struct instr_callBuiltinPostDecMember {
-        MOTH_INSTR_HEADER
-        Param base;
-        int member;
-        Param result;
-    };
-    struct instr_callBuiltinPostDecSubscript {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        Param result;
-    };
-    struct instr_callBuiltinPostDecName {
-        MOTH_INSTR_HEADER
-        int name;
-        Param result;
-    };
-    struct instr_callBuiltinPostDecValue {
-        MOTH_INSTR_HEADER
-        Param value;
-        Param result;
-    };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
         int varName;
@@ -557,6 +511,7 @@ union Instr
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_moveTemp moveTemp;
+    instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_storeName storeName;
@@ -583,14 +538,6 @@ union Instr
     instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
-    instr_callBuiltinPostIncMember callBuiltinPostIncMember;
-    instr_callBuiltinPostIncSubscript callBuiltinPostIncSubscript;
-    instr_callBuiltinPostIncName callBuiltinPostIncName;
-    instr_callBuiltinPostIncValue callBuiltinPostIncValue;
-    instr_callBuiltinPostDecMember callBuiltinPostDecMember;
-    instr_callBuiltinPostDecSubscript callBuiltinPostDecSubscript;
-    instr_callBuiltinPostDecName callBuiltinPostDecName;
-    instr_callBuiltinPostDecValue callBuiltinPostDecValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_callBuiltinDefineGetterSetter callBuiltinDefineGetterSetter;
     instr_callBuiltinDefineProperty callBuiltinDefineProperty;

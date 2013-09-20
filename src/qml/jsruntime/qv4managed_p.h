@@ -61,10 +61,25 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
+template <typename T>
+struct Returned : private T
+{
+    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
+    T *getPointer() { return this; }
+    template<typename X>
+    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
+    template<typename X>
+    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
+    using T::asReturnedValue;
+};
+
 #define Q_MANAGED \
     public: \
         Q_MANAGED_CHECK \
-        static const QV4::ManagedVTable static_vtbl;
+        static const QV4::ManagedVTable static_vtbl; \
+        template <typename T> \
+        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
+
 
 struct GCDeletable
 {
@@ -91,21 +106,21 @@ struct CallData
 
 struct ManagedVTable
 {
-    Value (*call)(Managed *, CallData *data);
-    Value (*construct)(Managed *, CallData *data);
+    ReturnedValue (*call)(Managed *, CallData *data);
+    ReturnedValue (*construct)(Managed *, CallData *data);
     void (*markObjects)(Managed *);
     void (*destroy)(Managed *);
     void (*collectDeletables)(Managed *, GCDeletable **deletable);
     bool (*hasInstance)(Managed *, const Value &value);
-    Value (*get)(Managed *, String *name, bool *hasProperty);
-    Value (*getIndexed)(Managed *, uint index, bool *hasProperty);
+    ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
+    ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    void (*getLookup)(Managed *m, Lookup *l, Value *result);
+    ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     bool (*isEqualTo)(Managed *m, Managed *other);
     Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
@@ -162,6 +177,7 @@ const QV4::ManagedVTable classname::static_vtbl =    \
 
 struct Q_QML_EXPORT Managed
 {
+    Q_MANAGED
 private:
     void *operator new(size_t);
     Managed(const Managed &other);
@@ -210,6 +226,9 @@ public:
 
     template <typename T>
     T *as() {
+        // ### FIXME:
+        if (!this)
+            return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(this));
 #endif
@@ -217,10 +236,21 @@ public:
     }
     template <typename T>
     const T *as() const {
+        // ### FIXME:
+        if (!this)
+            return 0;
 #if !defined(QT_NO_QOBJECT_CHECK)
         reinterpret_cast<T *>(this)->qt_check_for_QMANAGED_macro(*reinterpret_cast<T *>(const_cast<Managed *>(this)));
 #endif
         return vtbl == &T::static_vtbl ? static_cast<const T *>(this) : 0;
+    }
+
+    template<typename T>
+    static T *cast(const Value &v) {
+        return v.as<T>();
+    }
+    static Managed *cast(const Value &v) {
+        return v.asManaged();
     }
 
     ArrayObject *asArrayObject() { return type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
@@ -252,10 +282,10 @@ public:
     inline bool hasInstance(const Value &v) {
         return vtbl->hasInstance(this, v);
     }
-    Value construct(CallData *d);
-    Value call(CallData *d);
-    Value get(String *name, bool *hasProperty = 0);
-    Value getIndexed(uint index, bool *hasProperty = 0);
+    ReturnedValue construct(CallData *d);
+    ReturnedValue call(CallData *d);
+    ReturnedValue get(String *name, bool *hasProperty = 0);
+    ReturnedValue getIndexed(uint index, bool *hasProperty = 0);
     void put(String *name, const Value &value)
     { vtbl->put(this, name, value); }
     void putIndexed(uint index, const Value &value)
@@ -269,8 +299,8 @@ public:
     { return vtbl->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtbl->deleteIndexedProperty(this, index); }
-    void getLookup(Lookup *l, Value *result)
-    { vtbl->getLookup(this, l, result); }
+    ReturnedValue getLookup(Lookup *l)
+    { return vtbl->getLookup(this, l); }
     void setLookup(Lookup *l, const Value &v)
     { vtbl->setLookup(this, l, v); }
 
@@ -281,15 +311,17 @@ public:
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const Value &value);
-    static Value construct(Managed *m, CallData *d);
-    static Value call(Managed *m, CallData *);
-    static void getLookup(Managed *m, Lookup *, Value *);
+    static ReturnedValue construct(Managed *m, CallData *d);
+    static ReturnedValue call(Managed *m, CallData *);
+    static ReturnedValue getLookup(Managed *m, Lookup *);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static bool isEqualTo(Managed *m, Managed *other);
 
     uint internalType() const {
         return type;
     }
+
+    ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
     union {
         uint _data;
@@ -311,9 +343,6 @@ public:
     };
 
 protected:
-
-    static const ManagedVTable static_vtbl;
-
     const ManagedVTable *vtbl;
 public:
     InternalClass *internalClass;
@@ -324,10 +353,12 @@ private:
     friend struct ObjectIterator;
 };
 
-// ### Not a good placement
-template<typename T>
-inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
-
+inline ReturnedValue Managed::construct(CallData *d) {
+    return vtbl->construct(this, d);
+}
+inline ReturnedValue Managed::call(CallData *d) {
+    return vtbl->call(this, d);
+}
 
 }
 

@@ -71,13 +71,13 @@ public:
         if (target == m_target)
             return;
         m_target = target;
-        emit targetChanged();
+        Q_EMIT targetChanged();
     }
     void resetTarget() {
         if (!m_target)
             return;
         m_target = 0;
-        emit targetChanged();
+        Q_EMIT targetChanged();
     }
 
     qreal minimumScale() const { return m_minScale; }
@@ -85,14 +85,14 @@ public:
         if (s == m_minScale)
             return;
         m_minScale = s;
-        emit minimumScaleChanged();
+        Q_EMIT minimumScaleChanged();
     }
     qreal maximumScale() const { return m_maxScale; }
     void setMaximumScale(qreal s) {
         if (s == m_maxScale)
             return;
         m_maxScale = s;
-        emit maximumScaleChanged();
+        Q_EMIT maximumScaleChanged();
     }
 
     qreal minimumRotation() const { return m_minRotation; }
@@ -100,14 +100,14 @@ public:
         if (r == m_minRotation)
             return;
         m_minRotation = r;
-        emit minimumRotationChanged();
+        Q_EMIT minimumRotationChanged();
     }
     qreal maximumRotation() const { return m_maxRotation; }
     void setMaximumRotation(qreal r) {
         if (r == m_maxRotation)
             return;
         m_maxRotation = r;
-        emit maximumRotationChanged();
+        Q_EMIT maximumRotationChanged();
     }
 
     enum Axis { NoDrag=0x00, XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
@@ -116,7 +116,7 @@ public:
         if (a == m_axis)
             return;
         m_axis = a;
-        emit dragAxisChanged();
+        Q_EMIT dragAxisChanged();
     }
 
     qreal xmin() const { return m_xmin; }
@@ -124,28 +124,28 @@ public:
         if (x == m_xmin)
             return;
         m_xmin = x;
-        emit minimumXChanged();
+        Q_EMIT minimumXChanged();
     }
     qreal xmax() const { return m_xmax; }
     void setXmax(qreal x) {
         if (x == m_xmax)
             return;
         m_xmax = x;
-        emit maximumXChanged();
+        Q_EMIT maximumXChanged();
     }
     qreal ymin() const { return m_ymin; }
     void setYmin(qreal y) {
         if (y == m_ymin)
             return;
         m_ymin = y;
-        emit minimumYChanged();
+        Q_EMIT minimumYChanged();
     }
     qreal ymax() const { return m_ymax; }
     void setYmax(qreal y) {
         if (y == m_ymax)
             return;
         m_ymax = y;
-        emit maximumYChanged();
+        Q_EMIT maximumYChanged();
     }
 
     bool active() const { return m_active; }
@@ -153,10 +153,10 @@ public:
         if (a == m_active)
             return;
         m_active = a;
-        emit activeChanged();
+        Q_EMIT activeChanged();
     }
 
-signals:
+Q_SIGNALS:
     void targetChanged();
     void minimumScaleChanged();
     void maximumScaleChanged();
@@ -283,7 +283,7 @@ protected:
                                  const QRectF &oldGeometry);
     virtual void itemChange(ItemChange change, const ItemChangeData& value);
 
-private slots:
+private Q_SLOTS:
     void setTouchEventsEnabledForWindow(QWindow *window);
 
 private:

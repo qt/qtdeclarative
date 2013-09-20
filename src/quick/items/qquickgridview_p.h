@@ -126,7 +126,7 @@ public:
     void setView(QQuickGridView *view) {
         if (view != m_view) {
             m_view = view;
-            emit viewChanged();
+            Q_EMIT viewChanged();
         }
     }
 

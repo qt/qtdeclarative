@@ -214,7 +214,7 @@ protected:
 
     QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
 
-private slots:
+private Q_SLOTS:
     void requestFinished();
 
 private:

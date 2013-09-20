@@ -186,7 +186,7 @@ public:
 
     static QQuickViewTransitionAttached *qmlAttachedProperties(QObject *);
 
-signals:
+Q_SIGNALS:
     void indexChanged();
     void itemChanged();
     void destinationChanged();

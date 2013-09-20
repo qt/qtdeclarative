@@ -181,7 +181,7 @@ public:
 
     int m_nextId;
 
-    static QV4::Value sendMessage(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_sendMessage(QV4::SimpleCallContext *ctx);
 
 signals:
     void stopThread();
@@ -228,13 +228,14 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
         "}); "\
     "})"
 
+    QV4::Scope scope(m_v4Engine);
     onmessage = QV4::Script(m_v4Engine->rootContext, CALL_ONMESSAGE_SCRIPT).run();
     QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
-    QV4::FunctionObject *createsendconstructor = createsendscript.run().asFunctionObject();
+    QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
 
     QV4::Value function = QV4::Value::fromObject(m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, m_v4Engine->newString(QStringLiteral("sendMessage")),
-                                                          QQuickWorkerScriptEnginePrivate::sendMessage));
-    QV4::ScopedCallData callData(m_v4Engine, 1);
+                                                          QQuickWorkerScriptEnginePrivate::method_sendMessage));
+    QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
     createsend = createsendconstructor->call(callData);
@@ -244,10 +245,12 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 QV4::Value QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
     QV4::FunctionObject *f = createsend.value().asFunctionObject();
-    QV4::Value v = QV4::Value::undefinedValue();
-    QV4::ExecutionContext *ctx = f->internalClass->engine->current;
+    QV4::ExecutionContext *ctx = f->engine()->current;
+    QV4::Scope scope(ctx->engine);
+
+    QV4::ScopedValue v(scope);
     try {
-        QV4::ScopedCallData callData(m_v4Engine, 1);
+        QV4::ScopedCallData callData(scope, 1);
         callData->args[0] = QV4::Value::fromInt32(id);
         callData->thisObject = global();
         v = f->call(callData);
@@ -275,7 +278,7 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::SimpleCallContext *ctx)
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
@@ -286,12 +289,12 @@ QV4::Value QQuickWorkerScriptEnginePrivate::sendMessage(QV4::SimpleCallContext *
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
     if (!script)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     if (script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 // Requires handle scope and context scope
@@ -346,13 +349,14 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::Value value = QV4::Serialize::deserialize(data, workerEngine);
-
     QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
     QV4::ExecutionContext *ctx = f->internalClass->engine->current;
+    QV4::Scope scope(ctx);
+
+    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
     try {
-        QV4::ScopedCallData callData(ctx->engine, 2);
+        QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = workerEngine->global();
         callData->args[0] = script->object.value();
         callData->args[1] = value;
@@ -721,7 +725,8 @@ bool QQuickWorkerScript::event(QEvent *event)
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
-            QV4::Value value = QV4::Serialize::deserialize(workerEvent->data(), v8engine);
+            QV4::Scope scope(QV8Engine::getV4(v8engine));
+            QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), v8engine));
             emit message(QQmlV4Handle(value));
         }
         return true;

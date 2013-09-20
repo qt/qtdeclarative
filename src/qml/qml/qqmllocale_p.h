@@ -58,13 +58,13 @@ public:
     static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
-    static QV4::Value toLocaleString(QV4::SimpleCallContext *ctx);
-    static QV4::Value toLocaleTimeString(QV4::SimpleCallContext *ctx);
-    static QV4::Value toLocaleDateString(QV4::SimpleCallContext *ctx);
-    static QV4::Value fromLocaleString(QV4::SimpleCallContext *ctx);
-    static QV4::Value fromLocaleTimeString(QV4::SimpleCallContext *ctx);
-    static QV4::Value fromLocaleDateString(QV4::SimpleCallContext *ctx);
-    static QV4::Value timeZoneUpdated(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toLocaleTimeString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toLocaleDateString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_fromLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_fromLocaleTimeString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_fromLocaleDateString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_timeZoneUpdated(QV4::SimpleCallContext *ctx);
 };
 
 
@@ -74,9 +74,9 @@ public:
     static void registerExtension(QV4::ExecutionEngine *engine);
 
 private:
-    static QV4::Value toLocaleString(QV4::SimpleCallContext *ctx);
-    static QV4::Value fromLocaleString(QV4::SimpleCallContext *ctx);
-    static QV4::Value toLocaleCurrencyString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_fromLocaleString(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toLocaleCurrencyString(QV4::SimpleCallContext *ctx);
 };
 
 
@@ -118,14 +118,14 @@ public:
         Saturday = Qt::Saturday
     };
 
-    static QV4::Value locale(QV8Engine *v8engine, const QString &lang);
+    static QV4::ReturnedValue locale(QV8Engine *v8engine, const QString &lang);
 
     static void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
 
 private:
     QQmlLocale();
 
-    static QV4::Value localeCompare(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_localeCompare(QV4::SimpleCallContext *ctx);
 };
 
 

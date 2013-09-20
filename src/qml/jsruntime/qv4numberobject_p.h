@@ -51,13 +51,11 @@ namespace QV4 {
 
 struct NumberCtor: FunctionObject
 {
+    Q_MANAGED
     NumberCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, CallData *callData);
-    static Value call(Managed *, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *that, CallData *callData);
+    static ReturnedValue call(Managed *, CallData *callData);
 };
 
 struct NumberPrototype: NumberObject
@@ -65,12 +63,12 @@ struct NumberPrototype: NumberObject
     NumberPrototype(InternalClass *ic): NumberObject(ic) {}
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_toLocaleString(SimpleCallContext *ctx);
-    static Value method_valueOf(SimpleCallContext *ctx);
-    static Value method_toFixed(SimpleCallContext *ctx);
-    static Value method_toExponential(SimpleCallContext *ctx);
-    static Value method_toPrecision(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_toLocaleString(SimpleCallContext *ctx);
+    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
+    static ReturnedValue method_toFixed(SimpleCallContext *ctx);
+    static ReturnedValue method_toExponential(SimpleCallContext *ctx);
+    static ReturnedValue method_toPrecision(SimpleCallContext *ctx);
 };
 
 

@@ -48,15 +48,16 @@ AbstractColorDialog {
     property bool _valueSet: true // guard to prevent binding loops
     function _setControlsFromColor() {
         _valueSet = false
-        hueSlider.value = root.hue
-        saturationSlider.value = root.saturation
-        lightnessSlider.value = root.lightness
-        alphaSlider.value = root.alpha
-        crosshairs.x = root.lightness * paletteMap.width
-        crosshairs.y = (1.0 - root.saturation) * paletteMap.height
+        hueSlider.value = root.currentHue
+        saturationSlider.value = root.currentSaturation
+        lightnessSlider.value = root.currentLightness
+        alphaSlider.value = root.currentAlpha
+        crosshairs.x = root.currentLightness * paletteMap.width
+        crosshairs.y = (1.0 - root.currentSaturation) * paletteMap.height
         _valueSet = true
     }
-    onColorChanged: _setControlsFromColor()
+    onCurrentColorChanged: _setControlsFromColor()
+    onSelectionAccepted: root.color = root.currentColor
 
     Rectangle {
         id: content
@@ -204,7 +205,7 @@ AbstractColorDialog {
             ColorSlider {
                 id: hueSlider
                 value: 0.5
-                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
+                onValueChanged: if (_valueSet) root.currentColor = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Hue")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -225,7 +226,7 @@ AbstractColorDialog {
                 id: saturationSlider
                 visible: !content.usePaletteMap
                 value: 0.5
-                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
+                onValueChanged: if (_valueSet) root.currentColor = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Saturation")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -241,7 +242,7 @@ AbstractColorDialog {
                 id: lightnessSlider
                 visible: !content.usePaletteMap
                 value: 0.5
-                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
+                onValueChanged: if (_valueSet) root.currentColor = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Luminosity")
                 trackDelegate: Rectangle {
                     rotation: -90
@@ -259,7 +260,7 @@ AbstractColorDialog {
                 minimum: 0.0
                 maximum: 1.0
                 value: 1.0
-                onValueChanged: if (_valueSet) root.color = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
+                onValueChanged: if (_valueSet) root.currentColor = Qt.hsla(hueSlider.value, saturationSlider.value, lightnessSlider.value, alphaSlider.value)
                 text: qsTr("Alpha")
                 visible: root.showAlphaChannel
                 trackDelegate: Item {
@@ -296,9 +297,9 @@ AbstractColorDialog {
                 spacing: content.spacing
                 TextField {
                     id: colorField
-                    text: root.color
+                    text: root.currentColor.toString()
                     anchors.verticalCenter: parent.verticalCenter
-                    onAccepted:  root.color = text
+                    onAccepted:  root.currentColor = text
                     Component.onCompleted: width = implicitWidth + 10
                 }
                 Image {

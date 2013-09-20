@@ -108,7 +108,7 @@ public:
         return m_randomStart;
     }
 
-signals:
+Q_SIGNALS:
     void durationChanged(int arg);
 
     void nameChanged(QString arg);
@@ -121,12 +121,12 @@ signals:
 
     void randomStartChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
     void setDuration(int arg)
     {
         if (m_duration != arg) {
             m_duration = arg;
-            emit durationChanged(arg);
+            Q_EMIT durationChanged(arg);
         }
     }
 
@@ -134,7 +134,7 @@ public slots:
     {
         if (m_name != arg) {
             m_name = arg;
-            emit nameChanged(arg);
+            Q_EMIT nameChanged(arg);
         }
     }
 
@@ -142,7 +142,7 @@ public slots:
     {
         if (m_to != arg) {
             m_to = arg;
-            emit toChanged(arg);
+            Q_EMIT toChanged(arg);
         }
     }
 
@@ -150,7 +150,7 @@ public slots:
     {
         if (m_durationVariation != arg) {
             m_durationVariation = arg;
-            emit durationVariationChanged(arg);
+            Q_EMIT durationVariationChanged(arg);
         }
     }
 
@@ -158,7 +158,7 @@ public slots:
     {
         if (m_randomStart != arg) {
             m_randomStart = arg;
-            emit randomStartChanged(arg);
+            Q_EMIT randomStartChanged(arg);
         }
     }
 
@@ -214,17 +214,17 @@ public:
 
     int stateCount() {return m_states.count();}
 private:
-signals:
+Q_SIGNALS:
 
     void globalGoalChanged(QString arg);
     void stateChanged(int idx);
 
-public slots:
+public Q_SLOTS:
     void setGlobalGoal(QString arg)
     {
         if (m_globalGoal != arg) {
             m_globalGoal = arg;
-            emit globalGoalChanged(arg);
+            Q_EMIT globalGoalChanged(arg);
         }
     }
 

@@ -127,7 +127,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineDefaultProperty(ic->engine, QStringLiteral("message"), Value::fromString(ic->engine->newString(message)));
 }
 
-Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
+ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
 {
     ErrorObject *This = ctx->thisObject.asErrorObject();
     if (!This)
@@ -148,7 +148,7 @@ Value ErrorObject::method_get_stack(SimpleCallContext *ctx)
         }
         This->stack = ctx->engine->newString(trace);
     }
-    return Value::fromString(This->stack);
+    return Value::fromString(This->stack).asReturnedValue();
 }
 
 void ErrorObject::markObjects(Managed *that)
@@ -240,12 +240,12 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope, String *name)
     vtbl = &static_vtbl;
 }
 
-Value ErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(m->engine()->newErrorObject(callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Encode(m->engine()->newErrorObject(callData->argc ? callData->args[0] : Value::undefinedValue()));
 }
 
-Value ErrorCtor::call(Managed *that, CallData *callData)
+ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
 {
     return that->construct(callData);
 }
@@ -256,9 +256,10 @@ EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value EvalErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) EvalErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) EvalErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()))
+            .asReturnedValue();
 }
 
 RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
@@ -267,9 +268,9 @@ RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value RangeErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) RangeErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) RangeErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
 }
 
 ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
@@ -278,9 +279,9 @@ ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ReferenceErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) ReferenceErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) ReferenceErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
 }
 
 SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
@@ -289,9 +290,9 @@ SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value SyntaxErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) SyntaxErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) SyntaxErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
 }
 
 TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
@@ -300,9 +301,9 @@ TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value TypeErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) TypeErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) TypeErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
 }
 
 URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
@@ -311,9 +312,9 @@ URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value URIErrorCtor::construct(Managed *m, CallData *callData)
+ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
 {
-    return Value::fromObject(new (m->engine()->memoryManager) URIErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue()));
+    return Value::fromObject(new (m->engine()->memoryManager) URIErrorObject(m->engine(), callData->argc ? callData->args[0] : Value::undefinedValue())).asReturnedValue();
 }
 
 void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *obj)
@@ -325,9 +326,9 @@ void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *ob
     obj->defineDefaultProperty(engine, QStringLiteral("message"), Value::fromString(engine, QString()));
 }
 
-Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     Object *o = ctx->thisObject.asObject();
     if (!o)
@@ -338,12 +339,12 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
     if (name->isUndefined())
         qname = QString::fromLatin1("Error");
     else
-        qname = __qmljs_to_string(name, ctx).stringValue()->toQString();
+        qname = name->toQString();
 
     ScopedValue message(scope, o->get(ctx->engine->newString(QString::fromLatin1("message"))));
     QString qmessage;
     if (!message->isUndefined())
-        qmessage = __qmljs_to_string(message, ctx).stringValue()->toQString();
+        qmessage = message->toQString();
 
     QString str;
     if (qname.isEmpty()) {
@@ -354,5 +355,5 @@ Value ErrorPrototype::method_toString(SimpleCallContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    return Value::fromString(ctx, str);
+    return Value::fromString(ctx, str).asReturnedValue();
 }

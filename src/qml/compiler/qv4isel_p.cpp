@@ -83,8 +83,8 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool gener
     Function *rootFunction = irModule->rootFunction;
     if (!rootFunction)
         return 0;
-    foreach (V4IR::Function *f, irModule->functions)
-        run(f);
+    for (int i = 0; i < irModule->functions.size(); ++i)
+        run(i);
 
     QV4::CompiledData::CompilationUnit *unit = backendCompileStep();
     if (generateUnitData) {
@@ -285,40 +285,6 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         } else if (call->args->expr->asTemp()){
             // TODO: should throw in strict mode
             callBuiltinDeleteValue(result);
-            return;
-        }
-    } break;
-
-    case V4IR::Name::builtin_postincrement: {
-        if (V4IR::Member *m = call->args->expr->asMember()) {
-            callBuiltinPostIncrementMember(m->base->asTemp(), *m->name, result);
-            return;
-        } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
-            callBuiltinPostIncrementSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
-            return;
-        } else if (V4IR::Name *n = call->args->expr->asName()) {
-            callBuiltinPostIncrementName(*n->id, result);
-            return;
-        } else if (V4IR::Temp *arg = call->args->expr->asTemp()){
-            assert(arg != 0);
-            callBuiltinPostIncrementValue(arg, result);
-            return;
-        }
-    } break;
-
-    case V4IR::Name::builtin_postdecrement: {
-        if (V4IR::Member *m = call->args->expr->asMember()) {
-            callBuiltinPostDecrementMember(m->base->asTemp(), *m->name, result);
-            return;
-        } else if (V4IR::Subscript *ss = call->args->expr->asSubscript()) {
-            callBuiltinPostDecrementSubscript(ss->base->asTemp(), ss->index->asTemp(), result);
-            return;
-        } else if (V4IR::Name *n = call->args->expr->asName()) {
-            callBuiltinPostDecrementName(*n->id, result);
-            return;
-        } else if (V4IR::Temp *arg = call->args->expr->asTemp()){
-            assert(arg != 0);
-            callBuiltinPostDecrementValue(arg, result);
             return;
         }
     } break;

@@ -288,6 +288,7 @@ void QPacketProtocol::send(const QPacket & p)
     d->sendingPackets.append(sendSize);
     qint32 sendSize32 = sendSize;
     qint64 writeBytes = d->dev->write((char *)&sendSize32, sizeof(qint32));
+    Q_UNUSED(writeBytes);
     Q_ASSERT(writeBytes == sizeof(qint32));
     writeBytes = d->dev->write(p.b);
     Q_ASSERT(writeBytes == p.b.size());

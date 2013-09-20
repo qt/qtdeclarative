@@ -79,24 +79,25 @@ ObjectCtor::ObjectCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value ObjectCtor::construct(Managed *that, CallData *callData)
+ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
 {
-    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     ExecutionEngine *v4 = that->engine();
+    Scope scope(v4);
+    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         Object *obj = v4->newObject();
-        Value proto = ctor->get(v4->id_prototype);
-        if (proto.isObject())
-            obj->setPrototype(proto.objectValue());
-        return Value::fromObject(obj);
+        Scoped<Object> proto(scope, ctor->get(v4->id_prototype));
+        if (!!proto)
+            obj->setPrototype(proto.getPointer());
+        return Value::fromObject(obj).asReturnedValue();
     }
-    return __qmljs_to_object(v4->current, ValueRef(&callData->args[0]));
+    return Value::fromReturnedValue(__qmljs_to_object(v4->current, ValueRef(&callData->args[0]))).asReturnedValue();
 }
 
-Value ObjectCtor::call(Managed *m, CallData *callData)
+ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 {
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
-        return Value::fromObject(m->engine()->newObject());
+        return Value::fromObject(m->engine()->newObject()).asReturnedValue();
     return __qmljs_to_object(m->engine()->current, ValueRef(&callData->args[0]));
 }
 
@@ -134,17 +135,17 @@ void ObjectPrototype::init(ExecutionContext *ctx, const Value &ctor)
     p->setSetter(v4->newBuiltinFunction(v4->rootContext, v4->id___proto__, method_set_proto));
 }
 
-Value ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
 {
     Value o = ctx->argument(0);
     if (! o.isObject())
         ctx->throwTypeError();
 
     Object *p = o.objectValue()->prototype();
-    return p ? Value::fromObject(p) : Value::nullValue();
+    return p ? Value::fromObject(p).asReturnedValue() : Encode::null();
 }
 
-Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -156,17 +157,17 @@ Value ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
     return fromPropertyDescriptor(ctx, desc, attrs);
 }
 
-Value ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
+ReturnedValue ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
 {
     Object *O = context->argumentCount ? context->arguments[0].asObject() : 0;
     if (!O)
         context->throwTypeError();
 
     ArrayObject *array = getOwnPropertyNames(context->engine, context->arguments[0]);
-    return Value::fromObject(array);
+    return Value::fromObject(array).asReturnedValue();
 }
 
-Value ObjectPrototype::method_create(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject() && !O.isNull())
@@ -181,10 +182,10 @@ Value ObjectPrototype::method_create(SimpleCallContext *ctx)
         method_defineProperties(ctx);
     }
 
-    return objValue;
+    return objValue.asReturnedValue();
 }
 
-Value ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -200,10 +201,10 @@ Value ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
     if (!O.objectValue()->__defineOwnProperty__(ctx, name, pd, attrs))
         ctx->throwTypeError();
 
-    return O;
+    return O.asReturnedValue();
 }
 
-Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
 {
     Value O = ctx->argument(0);
     if (!O.isObject())
@@ -221,7 +222,7 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
             break;
         Property n;
         PropertyAttributes nattrs;
-        toPropertyDescriptor(ctx, o->getValue(pd, attrs), &n, &nattrs);
+        toPropertyDescriptor(ctx, Value::fromReturnedValue(o->getValue(pd, attrs)), &n, &nattrs);
         bool ok;
         if (name)
             ok = O.objectValue()->__defineOwnProperty__(ctx, name, n, nattrs);
@@ -231,10 +232,10 @@ Value ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
             ctx->throwTypeError();
     }
 
-    return O;
+    return O.asReturnedValue();
 }
 
-Value ObjectPrototype::method_seal(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_seal(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -250,10 +251,10 @@ Value ObjectPrototype::method_seal(SimpleCallContext *ctx)
             o->arrayAttributes[i].setConfigurable(false);
     }
 
-    return ctx->argument(0);
+    return ctx->argument(0).asReturnedValue();
 }
 
-Value ObjectPrototype::method_freeze(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_freeze(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
@@ -270,169 +271,171 @@ Value ObjectPrototype::method_freeze(SimpleCallContext *ctx)
         if (o->arrayAttributes[i].isData())
             o->arrayAttributes[i].setWritable(false);
     }
-    return ctx->argument(0);
+    return ctx->argument(0).asReturnedValue();
 }
 
-Value ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     o->extensible = false;
-    return ctx->argument(0);
+    return ctx->argument(0).asReturnedValue();
 }
 
-Value ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     if (o->internalClass != o->internalClass->sealed())
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     if (!o->arrayDataLen)
-        return Value::fromBoolean(true);
+        return Encode(true);
 
     if (!o->arrayAttributes)
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     for (uint i = 0; i < o->arrayDataLen; ++i) {
         if (!o->arrayAttributes[i].isGeneric())
             if (o->arrayAttributes[i].isConfigurable())
-                return Value::fromBoolean(false);
+                return Encode(false);
     }
 
-    return Value::fromBoolean(true);
+    return Encode(true);
 }
 
-Value ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
     if (o->extensible)
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     if (o->internalClass != o->internalClass->frozen())
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     if (!o->arrayDataLen)
-        return Value::fromBoolean(true);
+        return Encode(true);
 
     if (!o->arrayAttributes)
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     for (uint i = 0; i < o->arrayDataLen; ++i) {
         if (!o->arrayAttributes[i].isGeneric())
             if (o->arrayAttributes[i].isConfigurable() || o->arrayAttributes[i].isWritable())
-                return Value::fromBoolean(false);
+                return Encode(false);
     }
 
-    return Value::fromBoolean(true);
+    return Encode(true);
 }
 
-Value ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
     Object *o = ctx->argument(0).objectValue();
-    return Value::fromBoolean(o->extensible);
+    return Encode((bool)o->extensible);
 }
 
-Value ObjectPrototype::method_keys(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
 {
     if (!ctx->argument(0).isObject())
         ctx->throwTypeError();
 
+    Scope scope(ctx);
     Object *o = ctx->argument(0).objectValue();
 
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
     ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+    ScopedValue name(scope);
     while (1) {
-        Value name = it.nextPropertyNameAsString();
-        if (name.isNull())
+        name = it.nextPropertyNameAsString();
+        if (name->isNull())
             break;
         a->push_back(name);
     }
 
-    return Value::fromObject(a);
+    return a.asReturnedValue();
 }
 
-Value ObjectPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
 {
     if (ctx->thisObject.isUndefined()) {
-        return Value::fromString(ctx, QStringLiteral("[object Undefined]"));
+        return Value::fromString(ctx, QStringLiteral("[object Undefined]")).asReturnedValue();
     } else if (ctx->thisObject.isNull()) {
-        return Value::fromString(ctx, QStringLiteral("[object Null]"));
+        return Value::fromString(ctx, QStringLiteral("[object Null]")).asReturnedValue();
     } else {
-        Value obj = __qmljs_to_object(ctx, ValueRef(&ctx->thisObject));
+        Value obj = Value::fromReturnedValue(__qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
         QString className = obj.objectValue()->className();
-        return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className));
+        return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className)).asReturnedValue();
     }
 }
 
-Value ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     Object *o = ctx->thisObject.toObject(ctx);
-    Value ts = o->get(ctx->engine->newString(QStringLiteral("toString")));
-    FunctionObject *f = ts.asFunctionObject();
+    Scoped<FunctionObject> f(scope, o->get(ctx->engine->newString(QStringLiteral("toString"))));
     if (!f)
         ctx->throwTypeError();
-    ScopedCallData callData(ctx->engine, 0);
+    ScopedCallData callData(scope, 0);
     callData->thisObject = Value::fromObject(o);
     return f->call(callData);
 }
 
-Value ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    return Value::fromObject(ctx->thisObject.toObject(ctx));
+    return Value::fromObject(ctx->thisObject.toObject(ctx)).asReturnedValue();
 }
 
-Value ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
 {
     String *P = ctx->argument(0).toString(ctx);
     Object *O = ctx->thisObject.toObject(ctx);
     bool r = O->__getOwnProperty__(P) != 0;
     if (!r)
         r = !O->query(P).isEmpty();
-    return Value::fromBoolean(r);
+    return Encode(r);
 }
 
-Value ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
 {
     Value V = ctx->argument(0);
     if (! V.isObject())
-        return Value::fromBoolean(false);
+        return Encode(false);
 
     Object *O = ctx->thisObject.toObject(ctx);
     Object *proto = V.objectValue()->prototype();
     while (proto) {
         if (O == proto)
-            return Value::fromBoolean(true);
+            return Encode(true);
         proto = proto->prototype();
     }
-    return Value::fromBoolean(false);
+    return Encode(false);
 }
 
-Value ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
 {
     String *p = ctx->argument(0).toString(ctx);
 
     Object *o = ctx->thisObject.toObject(ctx);
     PropertyAttributes attrs;
     o->__getOwnProperty__(p, &attrs);
-    return Value::fromBoolean(attrs.isEnumerable());
+    return Encode(attrs.isEnumerable());
 }
 
-Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount < 2)
         ctx->throwTypeError();
@@ -445,16 +448,16 @@ Value ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.asObject();
     if (!o) {
         if (!ctx->thisObject.isUndefined())
-            return Value::undefinedValue();
+            return Encode::undefined();
         o = ctx->engine->globalObject;
     }
 
     Property pd = Property::fromAccessor(f, 0);
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 {
     if (ctx->argumentCount < 2)
         ctx->throwTypeError();
@@ -467,25 +470,25 @@ Value ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
     Object *o = ctx->thisObject.asObject();
     if (!o) {
         if (!ctx->thisObject.isUndefined())
-            return Value::undefinedValue();
+            return Encode::undefined();
         o = ctx->engine->globalObject;
     }
 
     Property pd = Property::fromAccessor(0, f);
     o->__defineOwnProperty__(ctx, prop, pd, Attr_Accessor);
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
 
-    return Value::fromObject(o->prototype());
+    return Value::fromObject(o->prototype()).asReturnedValue();
 }
 
-Value ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
 {
     Object *o = ctx->thisObject.asObject();
     if (!o)
@@ -505,7 +508,7 @@ Value ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
     }
     if (!ok)
         ctx->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
 void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs)
@@ -513,6 +516,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (!v.isObject())
         ctx->throwTypeError();
 
+    Scope scope(ctx);
     Object *o = v.objectValue();
 
     attrs->clear();
@@ -520,17 +524,17 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     desc->setSetter(0);
 
     if (o->__hasProperty__(ctx->engine->id_enumerable))
-        attrs->setEnumerable(o->get(ctx->engine->id_enumerable).toBoolean());
+        attrs->setEnumerable(Value::fromReturnedValue(o->get(ctx->engine->id_enumerable)).toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_configurable))
-        attrs->setConfigurable(o->get(ctx->engine->id_configurable).toBoolean());
+        attrs->setConfigurable(Value::fromReturnedValue(o->get(ctx->engine->id_configurable)).toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_get)) {
-        Value get = o->get(ctx->engine->id_get);
-        FunctionObject *f = get.asFunctionObject();
+        ScopedValue get(scope, o->get(ctx->engine->id_get));
+        FunctionObject *f = get->asFunctionObject();
         if (f) {
             desc->setGetter(f);
-        } else if (get.isUndefined()) {
+        } else if (get->isUndefined()) {
             desc->setGetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
@@ -539,11 +543,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     }
 
     if (o->__hasProperty__(ctx->engine->id_set)) {
-        Value set = o->get(ctx->engine->id_set);
-        FunctionObject *f = set.asFunctionObject();
+        ScopedValue set(scope, o->get(ctx->engine->id_set));
+        FunctionObject *f = set->asFunctionObject();
         if (f) {
             desc->setSetter(f);
-        } else if (set.isUndefined()) {
+        } else if (set->isUndefined()) {
             desc->setSetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
@@ -554,7 +558,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_writable)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        attrs->setWritable(o->get(ctx->engine->id_writable).toBoolean());
+        attrs->setWritable(Value::fromReturnedValue(o->get(ctx->engine->id_writable)).toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Value::undefinedValue();
     }
@@ -562,7 +566,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_value)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        desc->value = o->get(ctx->engine->id_value);
+        desc->value = Value::fromReturnedValue(o->get(ctx->engine->id_value));
         attrs->setType(PropertyAttributes::Data);
     }
 
@@ -571,10 +575,10 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
 }
 
 
-Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs)
+ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs)
 {
     if (!desc)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     ExecutionEngine *engine = ctx->engine;
 //    Let obj be the result of creating a new object as if by the expression new Object() where Object is the standard built-in constructor with that name.
@@ -597,23 +601,25 @@ Value ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Prope
     pd.value = Value::fromBoolean(attrs.isConfigurable());
     o->__defineOwnProperty__(ctx, engine->newString(QStringLiteral("configurable")), pd, Attr_Data);
 
-    return Value::fromObject(o);
+    return Value::fromObject(o).asReturnedValue();
 }
 
 
 ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
 {
-    ArrayObject *array = v4->newArrayObject();
+    Scope scope(v4);
+    Scoped<ArrayObject> array(scope, v4->newArrayObject());
     Object *O = o.asObject();
     if (!O)
-        return array;
+        return array.getPointer();
 
     ObjectIterator it(O, ObjectIterator::NoFlags);
+    ScopedValue name(scope);
     while (1) {
-        Value name = it.nextPropertyNameAsString();
-        if (name.isNull())
+        name = it.nextPropertyNameAsString();
+        if (name->isNull())
             break;
         array->push_back(name);
     }
-    return array;
+    return array.getPointer();
 }

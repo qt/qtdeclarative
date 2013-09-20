@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.2
 import "../../shared"
 
 TabSet {
@@ -53,6 +53,18 @@ TabSet {
 
     ColorDialogs {
         property string title: "Color Dialog"
+        anchors.fill: parent
+        color: "#e3e3e3" // to match tab.png
+    }
+
+    FontDialogs {
+        property string title: "Font Dialog"
+        anchors.fill: parent
+        color: "#e3e3e3" // to match tab.png
+    }
+
+    MessageDialogs {
+        property string title: "Message Dialog"
         anchors.fill: parent
         color: "#e3e3e3" // to match tab.png
     }

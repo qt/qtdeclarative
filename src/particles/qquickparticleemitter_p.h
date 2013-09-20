@@ -118,7 +118,7 @@ public:
     qreal velocityFromMovement() const { return m_velocity_from_movement; }
     void setVelocityFromMovement(qreal s);
     virtual void componentComplete();
-signals:
+Q_SIGNALS:
     void emitParticles(QQmlV4Handle particles);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
@@ -149,7 +149,7 @@ signals:
 
     void startTimeChanged(int arg);
 
-public slots:
+public Q_SLOTS:
     void pulse(int milliseconds);
     void burst(int num);
     void burst(int num, qreal x, qreal y);
@@ -160,7 +160,7 @@ public slots:
     {
         if (m_particlesPerSecond != arg) {
             m_particlesPerSecond = arg;
-            emit particlesPerSecondChanged(arg);
+            Q_EMIT particlesPerSecondChanged(arg);
         }
     }
 
@@ -168,7 +168,7 @@ public slots:
     {
         if (m_particleDuration != arg) {
             m_particleDuration = arg;
-            emit particleDurationChanged(arg);
+            Q_EMIT particleDurationChanged(arg);
         }
     }
 
@@ -178,7 +178,7 @@ public slots:
             m_system = arg;
             if (m_system)
                 m_system->registerParticleEmitter(this);
-            emit systemChanged(arg);
+            Q_EMIT systemChanged(arg);
         }
     }
 
@@ -186,7 +186,7 @@ public slots:
     {
         if (m_group != arg) {
             m_group = arg;
-            emit groupChanged(arg);
+            Q_EMIT groupChanged(arg);
         }
     }
 
@@ -194,14 +194,14 @@ public slots:
     {
         if (m_particleDurationVariation != arg) {
             m_particleDurationVariation = arg;
-            emit particleDurationVariationChanged(arg);
+            Q_EMIT particleDurationVariationChanged(arg);
         }
     }
     void setExtruder(QQuickParticleExtruder* arg)
     {
         if (m_extruder != arg) {
             m_extruder = arg;
-            emit extruderChanged(arg);
+            Q_EMIT extruderChanged(arg);
         }
     }
 
@@ -209,7 +209,7 @@ public slots:
     {
         if (m_particleSize != arg) {
             m_particleSize = arg;
-            emit particleSizeChanged(arg);
+            Q_EMIT particleSizeChanged(arg);
         }
     }
 
@@ -217,7 +217,7 @@ public slots:
     {
         if (m_particleEndSize != arg) {
             m_particleEndSize = arg;
-            emit particleEndSizeChanged(arg);
+            Q_EMIT particleEndSizeChanged(arg);
         }
     }
 
@@ -225,7 +225,7 @@ public slots:
     {
         if (m_particleSizeVariation != arg) {
             m_particleSizeVariation = arg;
-            emit particleSizeVariationChanged(arg);
+            Q_EMIT particleSizeVariationChanged(arg);
         }
     }
 
@@ -233,7 +233,7 @@ public slots:
     {
         if (m_velocity != arg) {
             m_velocity = arg;
-            emit velocityChanged(arg);
+            Q_EMIT velocityChanged(arg);
         }
     }
 
@@ -241,7 +241,7 @@ public slots:
     {
         if (m_acceleration != arg) {
             m_acceleration = arg;
-            emit accelerationChanged(arg);
+            Q_EMIT accelerationChanged(arg);
         }
     }
 
@@ -251,7 +251,7 @@ public slots:
     {
         if (m_startTime != arg) {
             m_startTime = arg;
-            emit startTimeChanged(arg);
+            Q_EMIT startTimeChanged(arg);
         }
     }
 

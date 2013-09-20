@@ -82,7 +82,7 @@ QV4Include::~QV4Include()
     delete m_reply; m_reply = 0;
 }
 
-QV4::Value QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
+QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 {
 
     // XXX It seems inefficient to create this object from scratch each time.
@@ -94,7 +94,7 @@ QV4::Value QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
 
     o->put(v4->newString("status"), QV4::Value::fromInt32(status));
 
-    return QV4::Value::fromObject(o);
+    return QV4::Value::fromObject(o).asReturnedValue();
 }
 
 void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
@@ -104,8 +104,9 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
         return;
 
     QV4::ExecutionContext *ctx = f->engine()->current;
+    QV4::Scope scope(ctx);
     try {
-        QV4::ScopedCallData callData(ctx->engine, 1);
+        QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = QV4::Value::fromObject(f->engine()->globalObject);
         callData->args[0] = status;
         f->call(callData);
@@ -114,9 +115,9 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     }
 }
 
-QV4::Value QV4Include::result()
+QV4::ReturnedValue QV4Include::result()
 {
-    return m_resultObject.value();
+    return m_resultObject.value().asReturnedValue();
 }
 
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
@@ -148,7 +149,8 @@ void QV4Include::finished()
         QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        QV4::Object *o = m_resultObject.value().asObject();
+        QV4::Scope scope(v4);
+        QV4::Scoped<QV4::Object> o(scope, m_resultObject.value());
         try {
             script.parse();
             script.run();
@@ -156,7 +158,8 @@ void QV4Include::finished()
         } catch (QV4::Exception &e) {
             e.accept(ctx);
             o->put(v4->newString("status"), QV4::Value::fromInt32(Exception));
-            o->put(v4->newString("exception"), e.value());
+            QV4::ScopedValue ex(scope, e.value());
+            o->put(v4->newString("exception"), ex);
         }
     } else {
         m_resultObject.value().asObject()->put(v4->newString("status"), QV4::Value::fromInt32(NetworkError));
@@ -171,19 +174,20 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
 {
     if (!ctx->argumentCount)
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
 
     QV4::ExecutionEngine *v4 = ctx->engine;
+    QV4::Scope scope(v4);
     QV8Engine *engine = v4->v8Engine;
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(v4);
 
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQString()));
+    QUrl url(ctx->engine->resolvedUrl(ctx->arguments[0].toQStringNoThrow()));
 
     QV4::Value callbackFunction = QV4::Value::undefinedValue();
     if (ctx->argumentCount >= 2 && ctx->arguments[1].asFunctionObject())
@@ -191,12 +195,12 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
-    QV4::Value result = QV4::Value::undefinedValue();
+    QV4::ScopedValue result(scope);
+    QV4::Scoped<QV4::Object> qmlcontextobject(scope, v4->qmlContextObject());
 
     if (localFile.isEmpty()) {
-
         QV4Include *i = new QV4Include(url, engine, context,
-                                       QV4::Value::fromObject(v4->qmlContextObject()),
+                                       qmlcontextobject.asValue(),
                                        callbackFunction);
         result = i->result();
 
@@ -209,8 +213,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
             QString code = QString::fromUtf8(data);
             QQmlScript::Parser::extractPragmas(code);
 
-            QV4::Object *qmlglobal = v4->qmlContextObject();
-            QV4::Script script(v4, qmlglobal, code, url.toString());
+            QV4::Script script(v4, qmlcontextobject.getPointer(), code, url.toString());
 
             QV4::ExecutionContext *ctx = v4->current;
             try {
@@ -220,7 +223,8 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
             } catch (QV4::Exception &e) {
                 e.accept(ctx);
                 result = resultValue(v4, Exception);
-                result.asObject()->put(v4->newString("exception"), e.value());
+                QV4::ScopedValue ex(scope, e.value());
+                result->asObject()->put(v4->newString("exception"), ex);
             }
         } else {
             result = resultValue(v4, NetworkError);
@@ -229,7 +233,7 @@ QV4::Value QV4Include::include(QV4::SimpleCallContext *ctx)
         callback(callbackFunction, result);
     }
 
-    return result;
+    return result.asReturnedValue();
 }
 
 QT_END_NAMESPACE

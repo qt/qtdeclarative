@@ -261,7 +261,7 @@ struct Q_QML_EXPORT ExecutionEngine
     void pushContext(SimpleCallContext *context);
     ExecutionContext *popContext();
 
-    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
+    FunctionObject *newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *));
     BoundFunction *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
 
     Object *newObject();
@@ -270,35 +270,35 @@ struct Q_QML_EXPORT ExecutionEngine
     String *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Object *newStringObject(const Value &value);
-    Object *newNumberObject(const Value &value);
-    Object *newBooleanObject(const Value &value);
+    Returned<Object> *newStringObject(const Value &value);
+    Returned<Object> *newNumberObject(const Value &value);
+    Returned<Object> *newBooleanObject(const Value &value);
 
-    ArrayObject *newArrayObject(int count = 0);
-    ArrayObject *newArrayObject(const QStringList &list);
-    ArrayObject *newArrayObject(InternalClass *ic);
+    Returned<ArrayObject> *newArrayObject(int count = 0);
+    Returned<ArrayObject> *newArrayObject(const QStringList &list);
+    Returned<ArrayObject> *newArrayObject(InternalClass *ic);
 
-    DateObject *newDateObject(const Value &value);
-    DateObject *newDateObject(const QDateTime &dt);
+    Returned<DateObject> *newDateObject(const Value &value);
+    Returned<DateObject> *newDateObject(const QDateTime &dt);
 
-    RegExpObject *newRegExpObject(const QString &pattern, int flags);
-    RegExpObject *newRegExpObject(RegExp* re, bool global);
-    RegExpObject *newRegExpObject(const QRegExp &re);
+    Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
+    Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
+    Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
-    Object *newErrorObject(const Value &value);
-    Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
-    Object *newSyntaxErrorObject(const QString &message);
-    Object *newReferenceErrorObject(const QString &message);
-    Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
-    Object *newTypeErrorObject(const QString &message);
-    Object *newRangeErrorObject(const QString &message);
-    Object *newURIErrorObject(Value message);
+    Returned<Object> *newErrorObject(const Value &value);
+    Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
+    Returned<Object> *newSyntaxErrorObject(const QString &message);
+    Returned<Object> *newReferenceErrorObject(const QString &message);
+    Returned<Object> *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
+    Returned<Object> *newTypeErrorObject(const QString &message);
+    Returned<Object> *newRangeErrorObject(const QString &message);
+    Returned<Object> *newURIErrorObject(Value message);
 
-    Object *newVariantObject(const QVariant &v);
+    Returned<Object> *newVariantObject(const QVariant &v);
 
-    Object *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
 
-    Object *qmlContextObject() const;
+    Returned<Object> *qmlContextObject() const;
 
     struct StackFrame {
         QString source;

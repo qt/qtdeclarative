@@ -70,8 +70,8 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
 
-    static QV4::Value qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
-    static QV4::Value urlScope(QV8Engine *e, const QUrl &);
+    static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
+    static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
 
     static QQmlContextData *callingContext(ExecutionEngine *v4);
     static void takeContextOwnership(const QV4::Value &qmlglobal);
@@ -82,7 +82,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     void setReadOnly(bool b) { readOnly = b; }
 
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void destroy(Managed *that);
 

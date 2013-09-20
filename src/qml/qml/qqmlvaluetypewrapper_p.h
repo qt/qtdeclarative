@@ -76,20 +76,20 @@ protected:
 
 public:
 
-    static Value create(QV8Engine *v8, QObject *, int, QQmlValueType *);
-    static Value create(QV8Engine *v8, const QVariant &, QQmlValueType *);
+    static ReturnedValue create(QV8Engine *v8, QObject *, int, QQmlValueType *);
+    static ReturnedValue create(QV8Engine *v8, const QVariant &, QQmlValueType *);
 
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);
 
 
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes query(const Managed *, String *name);
 
-    static QV4::Value method_toString(SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_toString(SimpleCallContext *ctx);
 
     QV8Engine *v8;
     ObjectType objectType;

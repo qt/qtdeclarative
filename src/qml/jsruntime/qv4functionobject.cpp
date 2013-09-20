@@ -63,6 +63,7 @@
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
+#include <algorithm>
 #include "qv4alloca_p.h"
 
 using namespace QV4;
@@ -121,9 +122,10 @@ FunctionObject::~FunctionObject()
         function->compilationUnit->deref();
 }
 
-Value FunctionObject::newInstance()
+ReturnedValue FunctionObject::newInstance()
 {
-    ScopedCallData callData(engine(), 0);
+    Scope scope(engine());
+    ScopedCallData callData(scope, 0);
     return construct(callData);
 }
 
@@ -136,7 +138,9 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
         return false;
 
     ExecutionContext *ctx = f->engine()->current;
-    Object *o = f->get(ctx->engine->id_prototype).asObject();
+    QV4::Scope scope(ctx);
+
+    Scoped<Object> o(scope, f->get(ctx->engine->id_prototype));
     if (!o)
         ctx->throwTypeError();
 
@@ -145,29 +149,30 @@ bool FunctionObject::hasInstance(Managed *that, const Value &value)
 
         if (! v)
             break;
-        else if (o == v)
+        else if (o.getPointer() == v)
             return true;
     }
 
     return false;
 }
 
-Value FunctionObject::construct(Managed *that, CallData *)
+ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
     FunctionObject *f = static_cast<FunctionObject *>(that);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->get(v4->id_prototype);
-    if (proto.isObject())
-        ic = v4->emptyClass->changePrototype(proto.objectValue());
+    Scoped<Object> proto(scope, f->get(v4->id_prototype));
+    if (!!proto)
+        ic = v4->emptyClass->changePrototype(proto.getPointer());
     Object *obj = v4->newObject(ic);
-    return Value::fromObject(obj);
+    return Value::fromObject(obj).asReturnedValue();
 }
 
-Value FunctionObject::call(Managed *, CallData *)
+ReturnedValue FunctionObject::call(Managed *, CallData *)
 {
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
 void FunctionObject::markObjects(Managed *that)
@@ -204,7 +209,7 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 }
 
 // 15.3.2
-Value FunctionCtor::construct(Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
     MemoryManager::GCBlocker gcBlocker(f->engine()->memoryManager);
@@ -249,11 +254,11 @@ Value FunctionCtor::construct(Managed *that, CallData *callData)
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return Value::fromObject(FunctionObject::creatScriptFunction(v4->rootContext, vmf));
+    return Value::fromObject(FunctionObject::creatScriptFunction(v4->rootContext, vmf)).asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-Value FunctionCtor::call(Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::call(Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }
@@ -277,17 +282,18 @@ void FunctionPrototype::init(ExecutionContext *ctx, const Value &ctor)
 
 }
 
-Value FunctionPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
     FunctionObject *fun = ctx->thisObject.asFunctionObject();
     if (!fun)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, QStringLiteral("function() { [code] }"));
+    return Value::fromString(ctx, QStringLiteral("function() { [code] }")).asReturnedValue();
 }
 
-Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
@@ -302,18 +308,18 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
         len = 0;
         if (!arg.isNullOrUndefined()) {
             ctx->throwTypeError();
-            return Value::undefinedValue();
+            return Encode::undefined();
         }
     } else {
         len = ArrayPrototype::getLength(ctx, arr);
     }
 
-    ScopedCallData callData(ctx->engine, len);
+    ScopedCallData callData(scope, len);
 
     if (len) {
         if (arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = arr->getIndexed(i);
+                callData->args[i] = Value::fromReturnedValue(arr->getIndexed(i));
         } else {
             int alen = qMin(len, arr->arrayDataLen);
             for (quint32 i = 0; i < alen; ++i)
@@ -327,23 +333,25 @@ Value FunctionPrototype::method_apply(SimpleCallContext *ctx)
     return o->call(callData);
 }
 
-Value FunctionPrototype::method_call(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     Value thisArg = ctx->argument(0);
 
     FunctionObject *o = ctx->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    ScopedCallData callData(ctx->engine, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount)
-        qCopy(ctx->arguments + 1,
-              ctx->arguments + ctx->argumentCount, callData->args);
+    ScopedCallData callData(scope, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
+    if (ctx->argumentCount) {
+        std::copy(ctx->arguments + 1,
+                  ctx->arguments + ctx->argumentCount, callData->args);
+    }
     callData->thisObject = thisArg;
     return o->call(callData);
 }
 
-Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
     FunctionObject *target = ctx->thisObject.asFunctionObject();
     if (!target)
@@ -356,14 +364,14 @@ Value FunctionPrototype::method_bind(SimpleCallContext *ctx)
 
 
     BoundFunction *f = ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs);
-    return Value::fromObject(f);
+    return Value::fromObject(f).asReturnedValue();
 }
 
 
-static Value throwTypeError(SimpleCallContext *ctx)
+static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue();
+    return 0;
 }
 
 DEFINE_MANAGED_VTABLE(ScriptFunction);
@@ -401,11 +409,11 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     }
 }
 
-Value ScriptFunction::construct(Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -417,27 +425,28 @@ Value ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = Value::fromObject(obj);
     ExecutionContext *ctx = context->newCallContext(f, callData);
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
+    CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
 
-    CHECK_JS_STACK(f->scope);
-    if (result.isObject())
-        return result;
-    return Value::fromObject(obj);
+    if (result->isObject())
+        return result.asReturnedValue();
+    return Value::fromObject(obj).asReturnedValue();
 }
 
-Value ScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     void *stackSpace;
     ExecutionContext *context = f->engine()->current;
+    Scope scope(context);
     CallContext *ctx = context->newCallContext(f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -448,16 +457,17 @@ Value ScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
-    ctx->engine->popContext();
     CHECK_JS_STACK(f->scope);
-    return result;
+    ctx->engine->popContext();
+    return result.asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
@@ -495,11 +505,11 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     }
 }
 
-Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
+ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
 
     InternalClass *ic = v4->objectClass;
     Value proto = f->memberData[Index_Prototype].value;
@@ -512,27 +522,28 @@ Value SimpleScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = Value::fromObject(obj);
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
+    CHECK_JS_STACK(f->scope);
     ctx->engine->popContext();
 
-    CHECK_JS_STACK(f->scope);
-    if (result.isObject())
-        return result;
-    return Value::fromObject(obj);
+    if (result->isObject())
+        return result.asReturnedValue();
+    return Value::fromObject(obj).asReturnedValue();
 }
 
-Value SimpleScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-    SAVE_JS_STACK(f->scope);
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = f->engine()->current;
+    Scope scope(context);
     ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -543,24 +554,25 @@ Value SimpleScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    Value result;
+    ScopedValue result(scope);
+    SAVE_JS_STACK(f->scope);
     try {
         result = f->function->code(ctx, f->function->codeData);
     } catch (Exception &ex) {
         ex.partiallyUnwindContext(context);
         throw;
     }
-    ctx->engine->popContext();
     CHECK_JS_STACK(f->scope);
-    return result;
+    ctx->engine->popContext();
+    return result.asReturnedValue();
 }
 
 
 
 
-DEFINE_MANAGED_VTABLE(BuiltinFunctionOld);
+DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
-BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
@@ -568,16 +580,17 @@ BuiltinFunctionOld::BuiltinFunctionOld(ExecutionContext *scope, String *name, Va
     isBuiltinFunction = true;
 }
 
-Value BuiltinFunctionOld::construct(Managed *f, CallData *)
+ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
     f->engine()->current->throwTypeError();
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value BuiltinFunctionOld::call(Managed *that, CallData *callData)
+ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 {
-    BuiltinFunctionOld *f = static_cast<BuiltinFunctionOld *>(that);
+    BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
+    Scope scope(v4);
     ExecutionContext *context = v4->current;
 
     SimpleCallContext ctx;
@@ -589,7 +602,7 @@ Value BuiltinFunctionOld::call(Managed *that, CallData *callData)
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 
-    Value result;
+    ScopedValue result(scope);
     try {
         result = f->code(&ctx);
     } catch (Exception &ex) {
@@ -598,14 +611,15 @@ Value BuiltinFunctionOld::call(Managed *that, CallData *callData)
     }
 
     context->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
-Value IndexedBuiltinFunction::call(Managed *that, CallData *callData)
+ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
     ExecutionContext *context = v4->current;
+    Scope scope(v4);
 
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
@@ -616,7 +630,7 @@ Value IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.argumentCount = callData->argc;
     v4->pushContext(&ctx);
 
-    Value result;
+    ScopedValue result(scope);
     try {
         result = f->code(&ctx, f->index);
     } catch (Exception &ex) {
@@ -625,7 +639,7 @@ Value IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     }
 
     context->engine->popContext();
-    return result;
+    return result.asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
@@ -639,7 +653,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
-    int len = target->get(scope->engine->id_length).toUInt32();
+    int len = Value::fromReturnedValue(target->get(scope->engine->id_length)).toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
@@ -656,21 +670,23 @@ void BoundFunction::destroy(Managed *that)
     static_cast<BoundFunction *>(that)->~BoundFunction();
 }
 
-Value BoundFunction::call(Managed *that, CallData *dd)
+ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
+    Scope scope(f->scope->engine);
 
-    ScopedCallData callData(f->scope->engine, f->boundArgs.size() + dd->argc);
+    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->call(callData);
 }
 
-Value BoundFunction::construct(Managed *that, CallData *dd)
+ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
-    ScopedCallData callData(f->scope->engine, f->boundArgs.size() + dd->argc);
+    Scope scope(f->scope->engine);
+    ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
     return f->target->construct(callData);

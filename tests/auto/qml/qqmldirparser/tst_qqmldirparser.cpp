@@ -48,6 +48,8 @@
 #include <private/qqmldirparser_p.h>
 #include <QDebug>
 
+#include <algorithm>
+
 // Test the parsing of qmldir files
 
 class tst_qqmldirparser : public QQmlDataTest
@@ -104,7 +106,7 @@ namespace {
         foreach (const QQmlDirParser::Component &c, components.values())
             rv.append(toString(c));
 
-        qSort(rv);
+        std::sort(rv.begin(), rv.end());
         return rv;
     }
 

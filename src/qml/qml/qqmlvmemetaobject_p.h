@@ -164,10 +164,10 @@ public:
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
-    QV4::Value vmeMethod(int index);
+    QV4::ReturnedValue vmeMethod(int index);
     quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, QV4::PersistentValue function);
-    QV4::Value vmeProperty(int index);
+    QV4::ReturnedValue vmeProperty(int index);
     void setVMEProperty(int index, const QV4::Value &v);
 
     void connectAliasSignal(int index, bool indexInSignalRange);
@@ -217,9 +217,9 @@ public:
     QQmlPropertyValueInterceptor *interceptors;
 
     QV4::PersistentValue *v8methods;
-    QV4::Value method(int);
+    QV4::ReturnedValue method(int);
 
-    QV4::Value readVarProperty(int);
+    QV4::ReturnedValue readVarProperty(int);
     void writeVarProperty(int, const QV4::Value &);
     QVariant readPropertyAsVariant(int);
     void writeProperty(int, const QVariant &);

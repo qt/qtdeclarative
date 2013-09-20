@@ -138,7 +138,7 @@ public:
     void setIndex(int idx) {
         if (m_index != idx) {
             m_index = idx;
-            emit indexChanged();
+            Q_EMIT indexChanged();
         }
     }
 

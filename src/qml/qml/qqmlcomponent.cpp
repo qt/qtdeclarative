@@ -1114,11 +1114,11 @@ class QmlIncubatorObject : public QV4::Object, public QQmlIncubator
 public:
     QmlIncubatorObject(QV8Engine *engine, IncubationMode = Asynchronous);
 
-    static QV4::Value method_get_statusChanged(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_set_statusChanged(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_get_status(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_get_object(QV4::SimpleCallContext *ctx);
-    static QV4::Value method_forceCompletion(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_statusChanged(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_set_statusChanged(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_status(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_get_object(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_forceCompletion(QV4::SimpleCallContext *ctx);
 
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
@@ -1228,6 +1228,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     QV8Engine *v8engine = args->engine();
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    QV4::Scope scope(v4engine);
 
     QQmlContext *ctxt = creationContext();
     if (!ctxt) ctxt = d->engine->rootContext();
@@ -1241,17 +1242,17 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     QQmlComponent_setQmlParent(rv, parent);
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(v4engine, rv);
-    Q_ASSERT(object.asObject());
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, rv));
+    Q_ASSERT(object->isObject());
 
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Value f = QV4::Script::evaluate(v4engine, QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject());
-        QV4::ScopedCallData callData(v4engine, 2);
+        QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4engine, QString::fromLatin1(INITIALPROPERTIES_SOURCE), args->qmlGlobal().asObject()));
+        QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = QV4::Value::fromObject(v4engine->globalObject);
         callData->args[0] = object;
         callData->args[1] = valuemap;
-        f.asFunctionObject()->call(callData);
+        f->call(callData);
     }
 
     d->completeCreate();
@@ -1387,18 +1388,20 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    QV4::Scope scope(v4engine);
 
-    QV4::Value object = QV4::QObjectWrapper::wrap(v4engine, toCreate);
-    Q_ASSERT(object.asObject());
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
+    Q_ASSERT(object->asObject());
 
     if (!valuemap.isEmpty()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
-        QV4::Value f = QV4::Script::evaluate(QV8Engine::getV4(v8engine), QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
-        QV4::ScopedCallData callData(v4engine, 2);
+        QV4::Scoped<QV4::FunctionObject>  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
+                                                                    QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject()));
+        QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = QV4::Value::fromObject(v4engine->globalObject);
         callData->args[0] = object;
         callData->args[1] = valuemap;
-        f.asFunctionObject()->call(callData);
+        f->call(callData);
     }
 }
 
@@ -1424,7 +1427,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
     incubationProto = QV4::Value::fromObject(proto);
 }
 
-QV4::Value QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
@@ -1433,7 +1436,7 @@ QV4::Value QmlIncubatorObject::method_get_object(QV4::SimpleCallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->engine, o->object());
 }
 
-QV4::Value QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
@@ -1441,35 +1444,35 @@ QV4::Value QmlIncubatorObject::method_forceCompletion(QV4::SimpleCallContext *ct
 
     o->forceCompletion();
 
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
-QV4::Value QmlIncubatorObject::method_get_status(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_status(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
         ctx->throwTypeError();
 
-    return QV4::Value::fromUInt32(o->status());
+    return QV4::Encode(o->status());
 }
 
-QV4::Value QmlIncubatorObject::method_get_statusChanged(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_get_statusChanged(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o)
         ctx->throwTypeError();
 
-    return o->m_statusChanged;
+    return o->m_statusChanged.asReturnedValue();
 }
 
-QV4::Value QmlIncubatorObject::method_set_statusChanged(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QmlIncubatorObject::method_set_statusChanged(QV4::SimpleCallContext *ctx)
 {
     QmlIncubatorObject *o = ctx->thisObject.as<QmlIncubatorObject>();
     if (!o || ctx->argumentCount < 1)
         ctx->throwTypeError();
 
     o->m_statusChanged = ctx->arguments[0];
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 QQmlComponentExtension::~QQmlComponentExtension()
@@ -1481,6 +1484,10 @@ QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, IncubationMode m)
 {
     v8 = engine;
     vtbl = &static_vtbl;
+
+    valuemap = QV4::Value::undefinedValue();
+    qmlGlobal = QV4::Value::undefinedValue();
+    m_statusChanged = QV4::Value::undefinedValue();
 }
 
 void QmlIncubatorObject::setInitialState(QObject *o)
@@ -1491,13 +1498,14 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QQmlComponentExtension *e = componentExtension(v8);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
+        QV4::Scope scope(v4);
 
-        QV4::Value f = QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject());
-        QV4::ScopedCallData callData(v4, 2);
+        QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal.asObject()));
+        QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = QV4::Value::fromObject(v4->globalObject);
-        callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);
+        callData->args[0] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, o));
         callData->args[1] = valuemap;
-        f.asFunctionObject()->call(callData);
+        f->call(callData);
     }
 }
 
@@ -1529,8 +1537,9 @@ void QmlIncubatorObject::statusChanged(Status s)
 
     if (QV4::FunctionObject *f = callback.asFunctionObject()) {
         QV4::ExecutionContext *ctx = f->engine()->current;
+        QV4::Scope scope(ctx);
         try {
-            QV4::ScopedCallData callData(ctx->engine, 1);
+            QV4::ScopedCallData callData(scope, 1);
             callData->thisObject = QV4::Value::fromObject(this);
             callData->args[0] = QV4::Value::fromUInt32(s);
             f->call(callData);

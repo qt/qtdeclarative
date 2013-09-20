@@ -56,7 +56,7 @@ struct QmlBindingWrapper : FunctionObject {
 
     QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
 
-    static Value call(Managed *that, CallData *);
+    static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m);
 
 private:
@@ -88,13 +88,13 @@ struct Q_QML_EXPORT Script {
     bool parseAsBinding;
 
     void parse();
-    Value run();
-    Value qmlBinding();
+    ReturnedValue run();
+    ReturnedValue qmlBinding();
 
     Function *function();
 
 
-    static Value evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
+    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
 };
 
 }

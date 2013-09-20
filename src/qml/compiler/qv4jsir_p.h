@@ -311,8 +311,6 @@ struct Name: Expr {
         builtin_invalid,
         builtin_typeof,
         builtin_delete,
-        builtin_postincrement, // TODO: remove
-        builtin_postdecrement, // TODO: remove
         builtin_throw,
         builtin_finish_try,
         builtin_foreach_iterator_object,
@@ -380,7 +378,7 @@ struct Temp: Expr {
 };
 
 inline bool operator==(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
-{ return t1.index == t2.index && t1.scope == t2.scope && t1.kind == t2.kind; }
+{ return t1.index == t2.index && t1.scope == t2.scope && t1.kind == t2.kind && t1.type == t2.type; }
 
 inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
 { return t.index ^ (t.kind | (t.scope << 3)) ^ seed; }

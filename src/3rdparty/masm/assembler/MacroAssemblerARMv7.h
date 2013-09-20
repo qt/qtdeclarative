@@ -941,6 +941,12 @@ public:
         m_assembler.vdiv(dest, op1, op2);
     }
 
+    void divDouble(Address src, FPRegisterID dest)
+    {
+        loadDouble(src, fpTempRegister);
+        divDouble(fpTempRegister, dest);
+    }
+
     void subDouble(FPRegisterID src, FPRegisterID dest)
     {
         m_assembler.vsub(dest, dest, src);

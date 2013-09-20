@@ -338,9 +338,9 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *))
+FunctionObject *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *))
 {
-    BuiltinFunctionOld *f = new (memoryManager) BuiltinFunctionOld(scope, name, code);
+    BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
     return f;
 }
 
@@ -375,25 +375,25 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Object *ExecutionEngine::newStringObject(const Value &value)
+Returned<Object> *ExecutionEngine::newStringObject(const Value &value)
 {
     StringObject *object = new (memoryManager) StringObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newNumberObject(const Value &value)
+Returned<Object> *ExecutionEngine::newNumberObject(const Value &value)
 {
     NumberObject *object = new (memoryManager) NumberObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newBooleanObject(const Value &value)
+Returned<Object> *ExecutionEngine::newBooleanObject(const Value &value)
 {
     Object *object = new (memoryManager) BooleanObject(this, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(int count)
+Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
 {
     ArrayObject *object = new (memoryManager) ArrayObject(this);
 
@@ -402,35 +402,35 @@ ArrayObject *ExecutionEngine::newArrayObject(int count)
             object->arrayReserve(count);
         object->setArrayLengthUnchecked(count);
     }
-    return object;
+    return object->asReturned<ArrayObject>();
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
+Returned<ArrayObject> *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     ArrayObject *object = new (memoryManager) ArrayObject(this, list);
-    return object;
+    return object->asReturned<ArrayObject>();
 }
 
-ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic)
+Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
 {
     ArrayObject *object = new (memoryManager) ArrayObject(ic);
-    return object;
+    return object->asReturned<ArrayObject>();
 }
 
 
-DateObject *ExecutionEngine::newDateObject(const Value &value)
+Returned<DateObject> *ExecutionEngine::newDateObject(const Value &value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
-    return object;
+    return object->asReturned<DateObject>();
 }
 
-DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
+Returned<DateObject> *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     DateObject *object = new (memoryManager) DateObject(this, dt);
-    return object;
+    return object->asReturned<DateObject>();
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & QQmlJS::V4IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
@@ -443,72 +443,81 @@ RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags
     return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
-    return object;
+    return object->asReturned<RegExpObject>();
 }
 
-RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re);
-    return object;
+    return object->asReturned<RegExpObject>();
 }
 
-Object *ExecutionEngine::newErrorObject(const Value &value)
+Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
 {
     ErrorObject *object = new (memoryManager) ErrorObject(errorClass, value);
-    return object;
+    return object->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
+Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    return new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    Object *error = new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    return error->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
+Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    return new (memoryManager) SyntaxErrorObject(this, message, fileName, line, column);
+    Object *error = new (memoryManager) SyntaxErrorObject(this, message, fileName, line, column);
+    return error->asReturned<Object>();
 }
 
 
-Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
+Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
-    return new (memoryManager) ReferenceErrorObject(this, message);
+    Object *o = new (memoryManager) ReferenceErrorObject(this, message);
+    return o->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
+Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
 {
-    return new (memoryManager) ReferenceErrorObject(this, message, fileName, lineNumber, columnNumber);
+    Object *o = new (memoryManager) ReferenceErrorObject(this, message, fileName, lineNumber, columnNumber);
+    return o->asReturned<Object>();
 }
 
 
-Object *ExecutionEngine::newTypeErrorObject(const QString &message)
+Returned<Object> *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
-    return new (memoryManager) TypeErrorObject(this, message);
+    Object *o = new (memoryManager) TypeErrorObject(this, message);
+    return o->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newRangeErrorObject(const QString &message)
+Returned<Object> *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
-    return new (memoryManager) RangeErrorObject(this, message);
+    Object *o = new (memoryManager) RangeErrorObject(this, message);
+    return o->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newURIErrorObject(Value message)
+Returned<Object> *ExecutionEngine::newURIErrorObject(Value message)
 {
-    return new (memoryManager) URIErrorObject(this, message);
+    Object *o = new (memoryManager) URIErrorObject(this, message);
+    return o->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newVariantObject(const QVariant &v)
+Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    return new (memoryManager) VariantObject(this, v);
+    Object *o = new (memoryManager) VariantObject(this, v);
+    return o->asReturned<Object>();
 }
 
-Object *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
+Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
 {
-    return new (memoryManager) ForEachIteratorObject(ctx, o);
+    Object *obj = new (memoryManager) ForEachIteratorObject(ctx, o);
+    return obj->asReturned<Object>();
 }
 
-Object *ExecutionEngine::qmlContextObject() const
+Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
     ExecutionContext *ctx = current;
 
@@ -525,7 +534,7 @@ Object *ExecutionEngine::qmlContextObject() const
     if (ctx->type != ExecutionContext::Type_QmlContext)
         return 0;
 
-    return static_cast<CallContext *>(ctx)->activation;
+    return static_cast<CallContext *>(ctx)->activation->asReturned<Object>();
 }
 
 namespace {

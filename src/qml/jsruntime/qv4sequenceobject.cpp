@@ -48,6 +48,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -136,7 +138,7 @@ template <typename ElementType> ElementType convertValueToElement(const QV4::Val
 
 template <> QString convertValueToElement(const QV4::Value &value)
 {
-    return value.toQString();
+    return value.toQStringNoThrow();
 }
 
 template <> int convertValueToElement(const QV4::Value &value)
@@ -146,7 +148,7 @@ template <> int convertValueToElement(const QV4::Value &value)
 
 template <> QUrl convertValueToElement(const QV4::Value &value)
 {
-    return QUrl(value.toQString());
+    return QUrl(value.toQStringNoThrow());
 }
 
 template <> qreal convertValueToElement(const QV4::Value &value)
@@ -352,12 +354,13 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Managed *fun = this->m_compareFn.asManaged();
-            ScopedCallData callData(fun->engine(), 2);
+            Scope scope(fun->engine());
+            ScopedCallData callData(scope, 2);
             callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);
             callData->thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
-            QV4::Value result = fun->call(callData);
-            return result.toNumber() < 0;
+            QV4::ScopedValue result(scope, fun->call(callData));
+            return result->toNumber() < 0;
         }
 
     private:
@@ -376,17 +379,17 @@ public:
         if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
             QV4::Value compareFn = ctx->arguments[0];
             CompareFunctor cf(ctx, compareFn);
-            qSort(m_container.begin(), m_container.end(), cf);
+            std::sort(m_container.begin(), m_container.end(), cf);
         } else {
             DefaultCompareFunctor cf;
-            qSort(m_container.begin(), m_container.end(), cf);
+            std::sort(m_container.begin(), m_container.end(), cf);
         }
 
         if (m_isReference)
             storeReference();
     }
 
-    static QV4::Value method_get_length(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
     {
         QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
         if (!This)
@@ -394,13 +397,13 @@ public:
 
         if (This->m_isReference) {
             if (!This->m_object)
-                return QV4::Value::fromInt32(0);
+                return QV4::Encode(0);
             This->loadReference();
         }
-        return QV4::Value::fromInt32(This->m_container.count());
+        return QV4::Encode(This->m_container.count());
     }
 
-    static QV4::Value method_set_length(QV4::SimpleCallContext* ctx)
+    static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
     {
         QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
         if (!This)
@@ -410,19 +413,19 @@ public:
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         }
         /* Read the sequence from the QObject property if we're a reference */
         if (This->m_isReference) {
             if (!This->m_object)
-                return QV4::Value::undefinedValue();
+                return QV4::Encode::undefined();
             This->loadReference();
         }
         /* Determine whether we need to modify the sequence */
         qint32 newCount = static_cast<qint32>(newLength);
         qint32 count = This->m_container.count();
         if (newCount == count) {
-            return QV4::Value::undefinedValue();
+            return QV4::Encode::undefined();
         } else if (newCount > count) {
             /* according to ECMA262r3 we need to insert */
             /* undefined values increasing length to newLength. */
@@ -444,7 +447,7 @@ public:
             /* write back.  already checked that object is non-null, so skip that check here. */
             This->storeReference();
         }
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     }
 
     QVariant toVariant() const
@@ -455,7 +458,7 @@ public:
         Container result;
         quint32 length = array->arrayLength();
         for (quint32 i = 0; i < length; ++i)
-            result << convertValueToElement<typename Container::value_type>(array->getIndexed(i));
+            result << convertValueToElement<typename Container::value_type>(QV4::Value::fromReturnedValue(array->getIndexed(i)));
         return QVariant::fromValue(result);
     }
 
@@ -483,8 +486,8 @@ private:
     int m_propertyIndex;
     bool m_isReference;
 
-    static QV4::Value getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
+    static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
+    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty).asReturnedValue(); }
     static void putIndexed(Managed *that, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
@@ -535,14 +538,14 @@ void SequencePrototype::init(QV4::ExecutionEngine *engine)
     defineDefaultProperty(engine, QStringLiteral("valueOf"), method_valueOf, 0);
 }
 
-QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
     QV4::Object *o = ctx->thisObject.asObject();
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
     if (ctx->argumentCount >= 2)
-        return ctx->thisObject;
+        return ctx->thisObject.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -552,7 +555,7 @@ QV4::Value SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->thisObject;
+    return ctx->thisObject.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -568,36 +571,38 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex); \
-        return QV4::Value::fromObject(obj); \
+        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex))); \
+        return obj.asReturnedValue(); \
     } else
 
-QV4::Value SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
+ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
 {
+    QV4::Scope scope(engine);
     // This function is called when the property is a QObject Q_PROPERTY of
     // the given sequence type.  Internally we store a typed-sequence
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Value::undefinedValue(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_REFERENCE_SEQUENCE
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Object *obj = new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()); \
-        return QV4::Value::fromObject(obj); \
+        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()))); \
+        return obj.asReturnedValue(); \
     } else
 
-QV4::Value SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded)
+ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded)
 {
+    QV4::Scope scope(engine);
     // This function is called when assigning a sequence value to a normal JS var
     // in a JS block.  Internally, we store a sequence of the specified type.
     // Access and mutation is extremely fast since it will not need to modify any
     // QObject property.
     int sequenceType = v.userType();
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Value::undefinedValue(); }
+    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_COPY_SEQUENCE
 

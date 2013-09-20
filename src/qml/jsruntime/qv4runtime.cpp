@@ -67,6 +67,126 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+#ifdef QV4_COUNT_RUNTIME_FUNCTIONS
+struct RuntimeCounters::Data {
+    enum Type {
+        None = 0,
+        Undefined = 1,
+        Null = 2,
+        Boolean = 3,
+        Integer = 4,
+        Managed = 5,
+        Double = 7
+    };
+
+    static const char *pretty(Type t) {
+        switch (t) {
+        case None: return "";
+        case Undefined: return "Undefined";
+        case Null: return "Null";
+        case Boolean: return "Boolean";
+        case Integer: return "Integer";
+        case Managed: return "Managed";
+        case Double: return "Double";
+        default: return "Unknown";
+        }
+    }
+
+    static unsigned mangle(unsigned tag) {
+        switch (tag) {
+        case Value::Undefined_Type: return Undefined;
+        case Value::Null_Type: return Null;
+        case Value::Boolean_Type: return Boolean;
+        case Value::Integer_Type: return Integer;
+        case Value::Managed_Type: return Managed;
+        default: return Double;
+        }
+    }
+
+    static unsigned mangle(unsigned tag1, unsigned tag2) {
+        return (mangle(tag1) << 3) | mangle(tag2);
+    }
+
+    static void unmangle(unsigned signature, Type &tag1, Type &tag2) {
+        tag1 = Type((signature >> 3) & 7);
+        tag2 = Type(signature & 7);
+    }
+
+    typedef QVector<quint64> Counters;
+    QHash<const char *, Counters> counters;
+
+    inline void count(const char *func, unsigned tag) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[mangle(tag)] += 1;
+    }
+
+    inline void count(const char *func, unsigned tag1, unsigned tag2) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[mangle(tag1, tag2)] += 1;
+    }
+
+    struct Line {
+        const char *func;
+        Type tag1, tag2;
+        quint64 count;
+
+        static bool less(const Line &line1, const Line &line2) {
+            return line1.count > line2.count;
+        }
+    };
+
+    void dump() const {
+        QList<Line> lines;
+        foreach (const char *func, counters.keys()) {
+            const Counters &fCount = counters[func];
+            for (int i = 0, ei = fCount.size(); i != ei; ++i) {
+                quint64 count = fCount[i];
+                if (!count)
+                    continue;
+                Line line;
+                line.func = func;
+                unmangle(i, line.tag1, line.tag2);
+                line.count = count;
+                lines.append(line);
+            }
+        }
+        qSort(lines.begin(), lines.end(), Line::less);
+        qDebug() << "Counters:";
+        foreach (const Line &line, lines)
+            qDebug("%10ld | %s | %s | %s", line.count, line.func, pretty(line.tag1), pretty(line.tag2));
+    }
+};
+
+RuntimeCounters *RuntimeCounters::instance = 0;
+static RuntimeCounters runtimeCountersInstance;
+RuntimeCounters::RuntimeCounters()
+    : d(new Data)
+{
+    if (!instance)
+        instance = this;
+}
+
+RuntimeCounters::~RuntimeCounters()
+{
+    d->dump();
+}
+
+void RuntimeCounters::count(const char *func, uint tag)
+{
+    d->count(func, tag);
+}
+
+void RuntimeCounters::count(const char *func, uint tag1, uint tag2)
+{
+    d->count(func, tag1, tag2);
+}
+
+#endif // QV4_COUNT_RUNTIME_FUNCTIONS
+
 void __qmljs_numberToString(QString *result, double num, int radix)
 {
     Q_ASSERT(result);
@@ -120,47 +240,41 @@ void __qmljs_numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-void __qmljs_init_closure(ExecutionContext *ctx, ValueRef result, int functionId)
+ReturnedValue __qmljs_init_closure(ExecutionContext *ctx, int functionId)
 {
     QV4::Function *clos = ctx->compilationUnit->runtimeFunctions[functionId];
-    assert(clos);
-    *result = Value::fromObject(FunctionObject::creatScriptFunction(ctx, clos));
+    Q_ASSERT(clos);
+    FunctionObject *f = FunctionObject::creatScriptFunction(ctx, clos);
+    return f->asReturnedValue();
 }
 
-void __qmljs_delete_subscript(ExecutionContext *ctx, ValueRef result, const ValueRef base, const ValueRef index)
+ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef base, const ValueRef index)
 {
     if (Object *o = base->asObject()) {
         uint n = index->asArrayIndex();
         if (n < UINT_MAX) {
-            Value res = Value::fromBoolean(o->deleteIndexedProperty(n));
-            if (result)
-                *result = res;
-            return;
+            return Value::fromBoolean(o->deleteIndexedProperty(n)).asReturnedValue();
         }
     }
 
     String *name = index->toString(ctx);
-    __qmljs_delete_member(ctx, result, base, name);
+    return __qmljs_delete_member(ctx, base, name);
 }
 
-void __qmljs_delete_member(ExecutionContext *ctx, ValueRef result, const ValueRef base, String *name)
+ReturnedValue __qmljs_delete_member(ExecutionContext *ctx, const ValueRef base, String *name)
 {
     Object *obj = base->toObject(ctx);
-    Value res = Value::fromBoolean(obj->deleteProperty(name));
-    if (result)
-        *result = res;
+    return Value::fromBoolean(obj->deleteProperty(name)).asReturnedValue();
 }
 
-void __qmljs_delete_name(ExecutionContext *ctx, ValueRef result, String *name)
+ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, String *name)
 {
-    Value res = Value::fromBoolean(ctx->deleteProperty(name));
-    if (result)
-        *result = res;
+    return Value::fromBoolean(ctx->deleteProperty(name)).asReturnedValue();
 }
 
-void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
 
     ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
     ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
@@ -169,40 +283,37 @@ void __qmljs_add_helper(ExecutionContext *ctx, ValueRef result, const ValueRef l
             pleft = __qmljs_to_string(pleft, ctx);
         if (!pright->isString())
             pright = __qmljs_to_string(pright, ctx);
-        String *string = __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue());
-        *result = Value::fromString(string);
-        return;
+        return __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue())->asReturnedValue();
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
-    *result = Value::fromDouble(x + y);
+    return Value::fromDouble(x + y).asReturnedValue();
 }
 
-void __qmljs_instanceof(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     Object *o = right->asObject();
     if (!o)
         ctx->throwTypeError();
 
     bool r = o->hasInstance(*left);
-    *result = Value::fromBoolean(r);
+    return Value::fromBoolean(r).asReturnedValue();
 }
 
-void __qmljs_in(ExecutionContext *ctx, ValueRef result, const ValueRef left, const ValueRef right)
+QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     if (!right->isObject())
         ctx->throwTypeError();
     String *s = left->toString(ctx);
     bool r = right->objectValue()->__hasProperty__(s);
-    *result = Value::fromBoolean(r);
+    return Value::fromBoolean(r).asReturnedValue();
 }
 
 static void inplaceBitOp(ExecutionContext *ctx, String *name, const ValueRef value, BinOp op)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope);
-    op(result, lhs, value);
+    ScopedValue result(scope, op(lhs, value));
     ctx->setProperty(name, result);
 }
 
@@ -224,10 +335,9 @@ void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, String *name, const Val
 
 void __qmljs_inplace_add_name(ExecutionContext *ctx, String *name, const ValueRef value)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope);
-    __qmljs_add(ctx, result, lhs, value);
+    ScopedValue result(scope, __qmljs_add(ctx, lhs, value));
     ctx->setProperty(name, result);
 }
 
@@ -419,15 +529,15 @@ double __qmljs_string_to_number(const QString &string)
     return d;
 }
 
-Value __qmljs_string_from_number(ExecutionContext *ctx, double number)
+Returned<String> *__qmljs_string_from_number(ExecutionContext *ctx, double number)
 {
     QString qstr;
     __qmljs_numberToString(&qstr, number, 10);
     String *string = ctx->engine->newString(qstr);
-    return Value::fromString(string);
+    return string->asReturned<String>();
 }
 
-String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
+Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
 {
     const QString &a = first->toQString();
     const QString &b = second->toQString();
@@ -437,10 +547,10 @@ String *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *seco
     data += a.length();
     memcpy(data, b.constData(), b.length()*sizeof(QChar));
 
-    return ctx->engine->newString(newStr);
+    return ctx->engine->newString(newStr)->asReturned<String>();
 }
 
-Value __qmljs_object_default_value(Object *object, int typeHint)
+ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
         if (object->asDateObject())
@@ -457,27 +567,26 @@ Value __qmljs_object_default_value(Object *object, int typeHint)
         qSwap(meth1, meth2);
 
     ExecutionContext *ctx = engine->current;
+    Scope scope(ctx);
+    ScopedCallData callData(scope, 0);
+    callData->thisObject = Value::fromObject(object);
 
-    Value conv = object->get(meth1);
-    if (FunctionObject *o = conv.asFunctionObject()) {
-        ScopedCallData callData(engine, 0);
-        callData->thisObject = Value::fromObject(object);
-        Value r = o->call(callData);
+    ScopedValue conv(scope, object->get(meth1));
+    if (FunctionObject *o = conv->asFunctionObject()) {
+        Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
-            return r;
+            return r.asReturnedValue();
     }
 
     conv = object->get(meth2);
-    if (FunctionObject *o = conv.asFunctionObject()) {
-        ScopedCallData callData(engine, 0);
-        callData->thisObject = Value::fromObject(object);
-        Value r = o->call(callData);
+    if (FunctionObject *o = conv->asFunctionObject()) {
+        Value r = Value::fromReturnedValue(o->call(callData));
         if (r.isPrimitive())
-            return r;
+            return r.asReturnedValue();
     }
 
     ctx->throwTypeError();
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 Bool __qmljs_to_boolean(const ValueRef value)
@@ -486,7 +595,7 @@ Bool __qmljs_to_boolean(const ValueRef value)
 }
 
 
-Object *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
+Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
 {
     assert(!value->isObject());
     switch (value->type()) {
@@ -495,42 +604,40 @@ Object *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRef value)
         ctx->throwTypeError();
     case Value::Boolean_Type:
         return ctx->engine->newBooleanObject(*value);
-    case Value::String_Type:
+    case Value::Managed_Type:
+        Q_ASSERT(value->isString());
         return ctx->engine->newStringObject(*value);
-        break;
-    case Value::Object_Type:
-        Q_UNREACHABLE();
     case Value::Integer_Type:
     default: // double
         return ctx->engine->newNumberObject(*value);
     }
 }
 
-String *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
+Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:
-        return ctx->engine->id_undefined;
+    case Value::Empty_Type:
+        return ctx->engine->id_undefined->asReturned<String>();
     case Value::Null_Type:
-        return ctx->engine->id_null;
+        return ctx->engine->id_null->asReturned<String>();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine->id_true;
+            return ctx->engine->id_true->asReturned<String>();
         else
-            return ctx->engine->id_false;
-    case Value::String_Type:
-        return value->stringValue();
-    case Value::Object_Type: {
-        Value prim = __qmljs_to_primitive(value, STRING_HINT);
-        if (prim.isPrimitive())
-            return __qmljs_convert_to_string(ctx, ValueRef(&prim));
-        else
-            ctx->throwTypeError();
-    }
+            return ctx->engine->id_false->asReturned<String>();
+    case Value::Managed_Type:
+        if (value->isString())
+            return value->stringValue()->asReturned<String>();
+        {
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(value, STRING_HINT));
+            return __qmljs_convert_to_string(ctx, prim);
+        }
     case Value::Integer_Type:
-        return __qmljs_string_from_number(ctx, value->int_32).stringValue();
+        return __qmljs_string_from_number(ctx, value->int_32);
     default: // double
-        return __qmljs_string_from_number(ctx, value->doubleValue()).stringValue();
+        return __qmljs_string_from_number(ctx, value->doubleValue());
     } // switch
 }
 
@@ -540,28 +647,25 @@ void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, String *
     o->put(name, *value);
 }
 
-void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef object, const ValueRef index)
+ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index)
 {
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
 
-    Object *o = object->asObject();
+    Scoped<Object> o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
                 if (idx >= (uint)str->toQString().length()) {
-                    if (result)
-                        *result = Value::undefinedValue();
-                    return;
+                    return Value::undefinedValue().asReturnedValue();
                 }
                 const QString s = str->toQString().mid(idx, 1);
-                if (result)
-                    *result = Value::fromString(ctx, s);
-                return;
+                return Value::fromString(ctx, s).asReturnedValue();
             }
         }
 
         if (object->isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQString()).arg(object->toQString());
+            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
             ctx->throwTypeError(message);
         }
 
@@ -572,26 +676,20 @@ void __qmljs_get_element(ExecutionContext *ctx, ValueRef result, const ValueRef 
         uint pidx = o->propertyIndexFromArrayIndex(idx);
         if (pidx < UINT_MAX) {
             if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
-                if (result)
-                    *result = o->arrayData[pidx].value;
-                return;
+                return o->arrayData[pidx].value.asReturnedValue();
             }
         }
 
-        Value res = o->getIndexed(idx);
-        if (result)
-            *result = res;
-        return;
+        return o->getIndexed(idx);
     }
 
     String *name = index->toString(ctx);
-    Value res = o->get(name);
-    if (result)
-        *result = res;
+    return o->get(name);
 }
 
 void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value)
 {
+    Scope scope(ctx);
     Object *o = object->toObject(ctx);
 
     uint idx = index->asArrayIndex();
@@ -618,7 +716,7 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
                     return;
                 }
 
-                ScopedCallData callData(ctx->engine, 1);
+                ScopedCallData callData(scope, 1);
                 callData->thisObject = Value::fromObject(o);
                 callData->args[0] = *value;
                 setter->call(callData);
@@ -633,23 +731,24 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
     o->put(name, *value);
 }
 
-void __qmljs_foreach_iterator_object(ExecutionContext *ctx, ValueRef result, const ValueRef in)
+ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const ValueRef in)
 {
-    Object *o = 0;
+    Scope scope(ctx);
+    Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
-        o = in->toObject(ctx);
-    Object *it = ctx->engine->newForEachIteratorObject(ctx, o);
-    *result = Value::fromObject(it);
+        o = in;
+    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o.getPointer()));
+    return it.asReturnedValue();
 }
 
-void __qmljs_foreach_next_property_name(ValueRef result, const ValueRef foreach_iterator)
+ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator)
 {
-    assert(foreach_iterator->isObject());
+    Q_ASSERT(foreach_iterator->isObject());
 
     ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator->objectValue());
-    assert(it->as<ForEachIteratorObject>());
+    Q_ASSERT(it->as<ForEachIteratorObject>());
 
-    *result = it->nextPropertyName();
+    return it->nextPropertyName();
 }
 
 
@@ -658,33 +757,31 @@ void __qmljs_set_activation_property(ExecutionContext *ctx, String *name, const 
     ctx->setProperty(name, *value);
 }
 
-void __qmljs_get_property(ExecutionContext *ctx, ValueRef result, const ValueRef object, String *name)
+ReturnedValue __qmljs_get_property(ExecutionContext *ctx, const ValueRef object, String *name)
 {
-    Value res;
-    Managed *m = object->asManaged();
-    if (m) {
-        res = m->get(name);
-    } else {
-        if (object->isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQString());
-            ctx->throwTypeError(message);
-        }
+    Scope scope(ctx);
 
-        m = __qmljs_convert_to_object(ctx, object);
-        res = m->get(name);
+    Scoped<Object> o(scope, object);
+    if (o)
+        return o->get(name);
+
+    if (object->isNullOrUndefined()) {
+        QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object->toQStringNoThrow());
+        ctx->throwTypeError(message);
     }
-    if (result)
-        *result = res;
+
+    o = __qmljs_convert_to_object(ctx, object);
+    return o->get(name);
 }
 
-void __qmljs_get_activation_property(ExecutionContext *ctx, ValueRef result, String *name)
+ReturnedValue __qmljs_get_activation_property(ExecutionContext *ctx, String *name)
 {
-    *result = ctx->getProperty(name);
+    return ctx->getProperty(name);
 }
 
 uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
 {
-    Q_ASSERT(x->type() != y->type());
+    Q_ASSERT(x->type() != y->type() || (x->isManaged() && (x->isString() != y->isString())));
 
     if (x->isNumber() && y->isNumber())
         return x->asDouble() == y->asDouble();
@@ -705,11 +802,13 @@ uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
         Value ny = Value::fromDouble((double) y->booleanValue());
         return __qmljs_cmp_eq(x, ValueRef(&ny));
     } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-        Value py = __qmljs_to_primitive(y, PREFERREDTYPE_HINT);
-        return __qmljs_cmp_eq(x, ValueRef(&py));
+        Scope scope(y->objectValue()->engine());
+        ScopedValue py(scope, __qmljs_to_primitive(y, PREFERREDTYPE_HINT));
+        return __qmljs_cmp_eq(x, py);
     } else if (x->isObject() && (y->isNumber() || y->isString())) {
-        Value px = __qmljs_to_primitive(x, PREFERREDTYPE_HINT);
-        return __qmljs_cmp_eq(ValueRef(&px), y);
+        Scope scope(x->objectValue()->engine());
+        ScopedValue px(scope, __qmljs_to_primitive(x, PREFERREDTYPE_HINT));
+        return __qmljs_cmp_eq(px, y);
     }
 
     return false;
@@ -721,7 +820,7 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
 
     if (x->rawValue() == y->rawValue())
         // NaN != NaN
-        return (x->tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+        return !x->isNaN();
 
     if (x->isNumber())
         return y->isNumber() && x->asDouble() == y->asDouble();
@@ -730,181 +829,244 @@ Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y)
     return false;
 }
 
-
-void __qmljs_call_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r)
 {
-    Q_ASSERT(callData->thisObject.isUndefined());
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() > r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() > r->doubleValue();
+    if (l->isString() && r->isString())
+        return r->stringValue()->compare(l->stringValue());
 
-    Lookup *l = context->lookups + index;
-    Value v;
-    l->globalGetter(l, context, &v);
-    FunctionObject *o = v.asFunctionObject();
-    if (!o)
-        context->throwTypeError();
-
-    if (o == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
-        if (result)
-            *result = res;
-        return;
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::Scope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_gt(pl, pr);
     }
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl > dr;
+}
+
+QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() < r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() < r->doubleValue();
+    if (l->isString() && r->isString())
+        return l->stringValue()->compare(r->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::Scope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_lt(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl < dr;
+}
+
+QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() >= r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() >= r->doubleValue();
+    if (l->isString() && r->isString())
+        return !l->stringValue()->compare(r->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::Scope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_ge(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl >= dr;
+}
+
+QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r)
+{
+    TRACE2(l, r);
+    if (QV4::Value::integerCompatible(*l, *r))
+        return l->integerValue() <= r->integerValue();
+    if (QV4::Value::bothDouble(*l, *r))
+        return l->doubleValue() <= r->doubleValue();
+    if (l->isString() && r->isString())
+        return !r->stringValue()->compare(l->stringValue());
+
+    if (l->isObject() || r->isObject()) {
+        QV4::ExecutionEngine *e = (l->isObject() ? l->objectValue() : r->objectValue())->engine();
+        QV4::Scope scope(e);
+        QV4::ScopedValue pl(scope, __qmljs_to_primitive(l, QV4::NUMBER_HINT));
+        QV4::ScopedValue pr(scope, __qmljs_to_primitive(r, QV4::NUMBER_HINT));
+        return __qmljs_cmp_le(pl, pr);
+    }
+
+    double dl = __qmljs_to_number(l);
+    double dr = __qmljs_to_number(r);
+    return dl <= dr;
 }
 
 
-void __qmljs_call_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
+    Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
 
+    Lookup *l = context->lookups + index;
+    Scoped<FunctionObject> o(scope, l->globalGetter(l, context));
+    if (!o)
+        context->throwTypeError();
+
+    if (o.getPointer() == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
+        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData->thisObject, callData->args, callData->argc, true);
+
+    return o->call(callData);
+}
+
+
+ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
+{
+    Q_ASSERT(callData->thisObject.isUndefined());
+    Scope scope(context);
+
     Object *base;
-    Value func = context->getPropertyAndBase(name, &base);
+    ScopedValue func(scope, context->getPropertyAndBase(name, &base));
     if (base)
         callData->thisObject = Value::fromObject(base);
 
-    FunctionObject *o = func.asFunctionObject();
+    FunctionObject *o = func->asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
         if (base)
-            objectAsString = Value::fromObject(base).toQString();
+            objectAsString = Value::fromObject(base).toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         context->throwTypeError(msg);
     }
 
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        Value res = static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
-        if (result)
-            *result = res;
-        return;
+        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
     }
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_call_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
-    Managed *baseObject = callData->thisObject.asManaged();
+    Scope scope(context);
+    Scoped<Object> baseObject(scope, callData->thisObject);
     if (!baseObject) {
-        if (callData->thisObject.isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQString());
+        if (callData->thisObject.isNullOrUndefined() || callData->thisObject.isEmpty()) {
+            QString message = QStringLiteral("Cannot call method '%1' of %2").arg(name->toQString()).arg(callData->thisObject.toQStringNoThrow());
             context->throwTypeError(message);
         }
 
         baseObject = __qmljs_convert_to_object(context, ValueRef(&callData->thisObject));
-        callData->thisObject = Value::fromObject(static_cast<Object *>(baseObject));
+        callData->thisObject = baseObject.asValue();
     }
 
-    FunctionObject *o = baseObject->get(name).asFunctionObject();
+    Scoped<FunctionObject> o(scope, baseObject->get(name));
     if (!o) {
-        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQString());
+        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         context->throwTypeError(error);
     }
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
-    Value func;
+    Scope scope(context);
 
     Lookup *l = context->lookups + index;
-    l->getter(l, &func, callData->thisObject);
-
-    Object *o = func.asObject();
+    Scoped<Object> o(scope, l->getter(l, callData->thisObject));
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_element(ExecutionContext *context, ValueRef result, const ValueRef index, CallDataRef callData)
+ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
+    Scope scope(context);
     Object *baseObject = callData->thisObject.toObject(context);
     callData->thisObject = Value::fromObject(baseObject);
 
-    Object *o = baseObject->get(index->toString(context)).asObject();
+    Scoped<Object> o(scope, baseObject->get(index->toString(context)));
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
-void __qmljs_call_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
+ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
     Object *o = func->asObject();
     if (!o)
         context->throwTypeError();
 
-    Value res = o->call(callData);
-    if (result)
-        *result = res;
+    return o->call(callData);
 }
 
 
-void __qmljs_construct_global_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData)
+ReturnedValue __qmljs_construct_global_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
+    Scope scope(context);
     Q_ASSERT(callData->thisObject.isUndefined());
 
-    Value func;
-
     Lookup *l = context->lookups + index;
-    l->globalGetter(l, context, &func);
-
-    Object *f = func.asObject();
+    Scoped<Object> f(scope, l->globalGetter(l, context));
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
 
-void __qmljs_construct_activation_property(ExecutionContext *context, ValueRef result, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, String *name, CallDataRef callData)
 {
-    Value func = context->getProperty(name);
-    Object *f = func.asObject();
+    Scope scope(context);
+    ScopedValue func(scope, context->getProperty(name));
+    Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
-void __qmljs_construct_value(ExecutionContext *context, ValueRef result, const ValueRef func, CallDataRef callData)
+ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
     Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
-void __qmljs_construct_property(ExecutionContext *context, ValueRef result, const ValueRef base, String *name, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, String *name, CallDataRef callData)
 {
+    Scope scope(context);
     Object *thisObject = base->toObject(context);
 
-    Value func = thisObject->get(name);
-    Object *f = func.asObject();
+    Scoped<Object> f(scope, thisObject->get(name));
     if (!f)
         context->throwTypeError();
 
-    Value res = f->construct(callData);
-    if (result)
-        *result = res;
+    return f->construct(callData);
 }
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
@@ -912,10 +1074,8 @@ void __qmljs_throw(ExecutionContext *context, const ValueRef value)
     Exception::throwException(context, *value);
 }
 
-void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueRef value)
+ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
 {
-    if (!result)
-        return;
     String *res = 0;
     switch (value->type()) {
     case Value::Undefined_Type:
@@ -927,11 +1087,10 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueR
     case Value::Boolean_Type:
         res = ctx->engine->id_boolean;
         break;
-    case Value::String_Type:
-        res = ctx->engine->id_string;
-        break;
-    case Value::Object_Type:
-        if (value->objectValue()->asFunctionObject())
+    case Value::Managed_Type:
+        if (value->isString())
+            res = ctx->engine->id_string;
+        else if (value->objectValue()->asFunctionObject())
             res = ctx->engine->id_function;
         else
             res = ctx->engine->id_object; // ### implementation-defined
@@ -940,201 +1099,31 @@ void __qmljs_builtin_typeof(ExecutionContext *ctx, ValueRef result, const ValueR
         res = ctx->engine->id_number;
         break;
     }
-    *result = Value::fromString(res);
+    return Value::fromString(res).asReturnedValue();
 }
 
-void __qmljs_builtin_typeof_name(ExecutionContext *context, ValueRef result, String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, String *name)
 {
-    ValueScope scope(context);
-    ScopedValue res(scope);
+    Scope scope(context);
     ScopedValue prop(scope, context->getPropertyNoThrow(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
+    return __qmljs_builtin_typeof(context, prop);
 }
 
-void __qmljs_builtin_typeof_member(ExecutionContext *context, ValueRef result, const ValueRef base,
-                                   String *name)
+QV4::ReturnedValue __qmljs_builtin_typeof_member(ExecutionContext *context, const ValueRef base, String *name)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     Object *obj = base->toObject(context);
-    ScopedValue res(scope);
     ScopedValue prop(scope, obj->get(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
+    return __qmljs_builtin_typeof(context, prop);
 }
 
-void __qmljs_builtin_typeof_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
+QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, const ValueRef base, const ValueRef index)
 {
-    ValueScope scope(context);
+    Scope scope(context);
     String *name = index->toString(context);
     Object *obj = base->toObject(context);
-    ScopedValue res(scope);
     ScopedValue prop(scope, obj->get(name));
-    __qmljs_builtin_typeof(context, res, prop);
-    if (result)
-        *result = res;
-}
-
-void __qmljs_builtin_post_increment(ValueRef result, ValueRef val)
-{
-    if (val->isInteger() && val->integerValue() < INT_MAX) {
-        if (result)
-            *result = *val;
-        val->int_32 += 1;
-        return;
-    }
-
-    double d = val->toNumber();
-    *val = Value::fromDouble(d + 1);
-    if (result)
-        *result = Value::fromDouble(d);
-}
-
-void __qmljs_builtin_post_increment_name(ExecutionContext *context, ValueRef result, String *name)
-{
-    Value v = context->getProperty(name);
-
-    if (v.isInteger() && v.integerValue() < INT_MAX) {
-        if (result)
-            *result = v;
-        v.int_32 += 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d + 1);
-    }
-
-    context->setProperty(name, v);
-}
-
-void __qmljs_builtin_post_increment_member(ExecutionContext *context, ValueRef result, const ValueRef base, String *name)
-{
-    Object *o = base->toObject(context);
-
-    Value v = o->get(name);
-
-    if (v.isInteger() && v.integerValue() < INT_MAX) {
-        if (result)
-            *result = v;
-        v.int_32 += 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d + 1);
-    }
-
-    o->put(name, v);
-}
-
-void __qmljs_builtin_post_increment_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
-{
-    Object *o = base->toObject(context);
-
-    uint idx = index->asArrayIndex();
-
-    if (idx == UINT_MAX) {
-        String *s = index->toString(context);
-        return __qmljs_builtin_post_increment_member(context, result, base, s);
-    }
-
-    Value v = o->getIndexed(idx);
-
-    if (v.isInteger() && v.integerValue() < INT_MAX) {
-        if (result)
-            *result = v;
-        v.int_32 += 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d + 1);
-    }
-
-    o->putIndexed(idx, v);
-}
-
-void __qmljs_builtin_post_decrement(ValueRef result, ValueRef val)
-{
-    if (val->isInteger() && val->integerValue() > INT_MIN) {
-        if (result)
-            *result = *val;
-        val->int_32 -= 1;
-        return;
-    }
-
-    double d = val->toNumber();
-    *val = Value::fromDouble(d - 1);
-    if (result)
-        *result = Value::fromDouble(d);
-}
-
-void __qmljs_builtin_post_decrement_name(ExecutionContext *context, ValueRef result, String *name)
-{
-    Value v = context->getProperty(name);
-
-    if (v.isInteger() && v.integerValue() > INT_MIN) {
-        if (result)
-            *result = v;
-        v.int_32 -= 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d - 1);
-    }
-
-    context->setProperty(name, v);
-}
-
-void __qmljs_builtin_post_decrement_member(ExecutionContext *context, ValueRef result, const ValueRef base, String *name)
-{
-    Object *o = base->toObject(context);
-
-    Value v = o->get(name);
-
-    if (v.isInteger() && v.integerValue() > INT_MIN) {
-        if (result)
-            *result = v;
-        v.int_32 -= 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d - 1);
-    }
-
-    o->put(name, v);
-}
-
-void __qmljs_builtin_post_decrement_element(ExecutionContext *context, ValueRef result, const ValueRef base, const ValueRef index)
-{
-    Object *o = base->toObject(context);
-
-    uint idx = index->asArrayIndex();
-
-    if (idx == UINT_MAX) {
-        String *s = index->toString(context);
-        return __qmljs_builtin_post_decrement_member(context, result, base, s);
-    }
-
-    Value v = o->getIndexed(idx);
-
-    if (v.isInteger() && v.integerValue() > INT_MIN) {
-        if (result)
-            *result = v;
-        v.int_32 -= 1;
-    } else {
-        double d = v.toNumber();
-        if (result)
-            *result = Value::fromDouble(d);
-        v = Value::fromDouble(d - 1);
-    }
-
-    o->putIndexed(idx, v);
+    return __qmljs_builtin_typeof(context, prop);
 }
 
 ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionContext *ctx)
@@ -1168,9 +1157,10 @@ void __qmljs_builtin_define_property(ExecutionContext *ctx, const ValueRef objec
     pd->value = val ? *val : Value::undefinedValue();
 }
 
-void __qmljs_builtin_define_array(ExecutionContext *ctx, ValueRef array, Value *values, uint length)
+ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values, uint length)
 {
-    ArrayObject *a = ctx->engine->newArrayObject();
+    Scope scope(ctx);
+    Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
     // ### FIXME: We need to allocate the array data to avoid crashes other places
     // This should rather be done when required
@@ -1190,7 +1180,7 @@ void __qmljs_builtin_define_array(ExecutionContext *ctx, ValueRef array, Value *
         }
         a->setArrayLengthUnchecked(length);
     }
-    *array = Value::fromObject(a);
+    return a.asReturnedValue();
 }
 
 void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef getter, const ValueRef setter)
@@ -1204,7 +1194,7 @@ void __qmljs_builtin_define_getter_setter(ExecutionContext *ctx, const ValueRef 
     pd->setSetter(setter ? setter->asFunctionObject() : 0);
 }
 
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, ValueRef result, const QV4::Value *args, int classId)
+ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId)
 {
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Object *o = ctx->engine->newObject(klass);
@@ -1220,44 +1210,58 @@ void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, ValueRef 
         }
     }
 
-    *result = Value::fromObject(o);
+    return Value::fromObject(o).asReturnedValue();
 }
 
-void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, ValueRef result)
+QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx)
 {
     assert(ctx->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
     ArgumentsObject *args = new (c->engine->memoryManager) ArgumentsObject(c);
-    *result = Value::fromObject(args);
+    return Value::fromObject(args).asReturnedValue();
 }
 
-void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value)
+QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     if (value->isInteger())
-        *result = Value::fromInt32(value->integerValue() + 1);
+        return Value::fromInt32(value->integerValue() + 1).asReturnedValue();
     else {
         double d = value->toNumber();
-        *result = Value::fromDouble(d + 1);
+        return Value::fromDouble(d + 1).asReturnedValue();
     }
 }
 
-void __qmljs_decrement(QV4::ValueRef result, const QV4::ValueRef value)
+QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     if (value->isInteger())
-        *result = Value::fromInt32(value->integerValue() - 1);
+        return Value::fromInt32(value->integerValue() - 1).asReturnedValue();
     else {
         double d = value->toNumber();
-        *result = Value::fromDouble(d - 1);
+        return Value::fromDouble(d - 1).asReturnedValue();
     }
 }
 
-void __qmljs_value_to_double(double *result, const ValueRef value)
+QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
 {
-    *result = value->toNumber();
+    if (value->isString())
+        return value.asReturnedValue();
+    return __qmljs_convert_to_string(ctx, value)->asReturnedValue();
+}
+
+QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
+{
+    if (value->isObject())
+        return value.asReturnedValue();
+    return Encode(__qmljs_convert_to_object(ctx, value));
+}
+
+ReturnedValue __qmljs_value_to_double(const ValueRef value)
+{
+    return Encode(value->toNumber());
 }
 
 int __qmljs_value_to_int32(const ValueRef value)
@@ -1280,14 +1284,14 @@ unsigned __qmljs_double_to_uint32(const double &d)
     return Value::toUInt32(d);
 }
 
-void __qmljs_value_from_string(ValueRef result, String *string)
+ReturnedValue __qmljs_value_from_string(String *string)
 {
-    *result = Value::fromString(string);
+    return Value::fromString(string).asReturnedValue();
 }
 
-void __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, ValueRef result, int id)
+ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
 {
-    *result = ctx->compilationUnit->runtimeRegularExpressions[id];
+    return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
 }
 
 } // namespace QV4

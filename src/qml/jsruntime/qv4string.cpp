@@ -129,42 +129,42 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
-Value String::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
     ExecutionEngine *v4 = m->engine();
     if (name == v4->id_length) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromInt32(that->_text.length());
+        return Value::fromInt32(that->_text.length()).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = true;
     return v4->stringClass->prototype->getValue(Value::fromString(that), pd, attrs);
 }
 
-Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     String *that = static_cast<String *>(m);
     ExecutionEngine *engine = that->engine();
     if (index < that->_text.length()) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromString(engine->newString(that->toQString().mid(index, 1)));
+        return Value::fromString(engine->newString(that->toQString().mid(index, 1))).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = engine->stringClass->prototype->__getPropertyDescriptor__(index, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = true;
@@ -173,15 +173,17 @@ Value String::getIndexed(Managed *m, uint index, bool *hasProperty)
 
 void String::put(Managed *m, String *name, const Value &value)
 {
+    Scope scope(m->engine());
     String *that = static_cast<String *>(m);
-    Object *o = that->engine()->newStringObject(Value::fromString(that));
+    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
     o->put(name, value);
 }
 
 void String::putIndexed(Managed *m, uint index, const Value &value)
 {
+    Scope scope(m->engine());
     String *that = static_cast<String *>(m);
-    Object *o = m->engine()->newStringObject(Value::fromString(that));
+    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
     o->putIndexed(index, value);
 }
 
@@ -213,6 +215,8 @@ bool String::isEqualTo(Managed *t, Managed *o)
 {
     if (t == o)
         return true;
+
+    Q_ASSERT(t->type == Type_String && o->type == Type_String);
     String *that = static_cast<String *>(t);
     String *other = static_cast<String *>(o);
     if (that->hashValue() != other->hashValue())

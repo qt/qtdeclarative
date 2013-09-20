@@ -86,6 +86,7 @@ private slots:
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }
     void dragging();
+    void dragThreshold();
     void invalidDrag_data() { rejectedButton_data(); }
     void invalidDrag();
     void setDragOnPressed();
@@ -235,6 +236,20 @@ void tst_QQuickMouseArea::dragProperties()
 
     drag->setFilterChildren(true);
     QCOMPARE(filterChildrenSpy.count(), 1);
+
+    // threshold
+    QCOMPARE(int(drag->threshold()), qApp->styleHints()->startDragDistance());
+    QSignalSpy thresholdSpy(drag, SIGNAL(thresholdChanged()));
+    drag->setThreshold(0.0);
+    QCOMPARE(drag->threshold(), 0.0);
+    QCOMPARE(thresholdSpy.count(), 1);
+    drag->setThreshold(99);
+    QCOMPARE(thresholdSpy.count(), 2);
+    drag->setThreshold(99);
+    QCOMPARE(thresholdSpy.count(), 2);
+    drag->resetThreshold();
+    QCOMPARE(int(drag->threshold()), qApp->styleHints()->startDragDistance());
+    QCOMPARE(thresholdSpy.count(), 3);
 }
 
 void tst_QQuickMouseArea::resetDrag()
@@ -318,6 +333,61 @@ void tst_QQuickMouseArea::dragging()
     QCOMPARE(blackRect->y(), 61.0);
 }
 
+
+void tst_QQuickMouseArea::dragThreshold()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != 0);
+
+    QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseRegion->drag();
+
+    drag->setThreshold(5);
+
+    mouseRegion->setAcceptedButtons(Qt::LeftButton);
+    QQuickItem *blackRect = window.rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+    QVERIFY(!drag->active());
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+    QTest::mouseMove(&window, QPoint(100, 102), 50);
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 100), 50);
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 104), 50);
+    QTest::mouseMove(&window, QPoint(100, 105), 50);
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 106), 50);
+    QTest::mouseMove(&window, QPoint(100, 108), 50);
+    QVERIFY(drag->active());
+    QTest::mouseMove(&window, QPoint(100, 116), 50);
+    QTest::mouseMove(&window, QPoint(100, 122), 50);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(blackRect->x(), 50.0);
+    QTRY_COMPARE(blackRect->y(), 66.0);
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(122,122));
+    QTRY_VERIFY(!drag->active());
+
+    // Immediate drag threshold
+    drag->setThreshold(0);
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseMove(&window, QPoint(100, 122), 50);
+    QVERIFY(!drag->active());
+    QTest::mouseMove(&window, QPoint(100, 123), 50);
+    QVERIFY(drag->active());
+    QTest::mouseMove(&window, QPoint(100, 124), 50);
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 124));
+    QTRY_VERIFY(!drag->active());
+    drag->resetThreshold();
+}
 void tst_QQuickMouseArea::invalidDrag()
 {
     QFETCH(Qt::MouseButtons, acceptedButtons);

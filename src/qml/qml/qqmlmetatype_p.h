@@ -113,6 +113,7 @@ public:
     static StringConverter customStringConverter(int);
 
     static bool isAnyModule(const QString &uri);
+    static bool isLockedModule(const QString &uri, int majorVersion);
     static bool isModule(const QString &module, int versionMajor, int versionMinor);
     static QQmlTypeModule *typeModule(const QString &uri, int majorVersion);
 
@@ -227,7 +228,7 @@ private:
         CompositeType = 3
     };
     friend QString registrationTypeString(RegistrationType);
-    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &);
+    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
     friend int registerType(const QQmlPrivate::RegisterType &);
     friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
@@ -262,6 +263,7 @@ private:
     friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
+    friend class QQmlTypeModulePrivate;
 
     QQmlTypeModule();
     ~QQmlTypeModule();

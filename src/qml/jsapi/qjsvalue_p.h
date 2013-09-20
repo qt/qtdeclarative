@@ -88,7 +88,7 @@ public:
         value = QV4::Value::fromString(&string);
     }
 
-    QV4::Value getValue(QV4::ExecutionEngine *e);
+    QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
 

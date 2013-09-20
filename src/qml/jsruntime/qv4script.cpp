@@ -75,19 +75,19 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     scope->engine->popContext();
 }
 
-Value QmlBindingWrapper::call(Managed *that, CallData *)
+ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 {
     ExecutionEngine *engine = that->engine();
+    Scope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
 
     CallContext *ctx = This->qmlContext;
     std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
     engine->pushContext(ctx);
-    Value result = This->function->code(ctx, This->function->codeData);
+    ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
     engine->popContext();
 
-    return result;
-
+    return result.asReturnedValue();
 }
 
 void QmlBindingWrapper::markObjects(Managed *m)
@@ -141,6 +141,7 @@ void Script::parse()
     parsed = true;
 
     ExecutionEngine *v4 = scope->engine;
+    Scope valueScope(v4);
 
     MemoryManager::GCBlocker gcBlocker(v4->memoryManager);
 
@@ -188,19 +189,22 @@ void Script::parse()
         compilationUnitHolder = Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
     }
 
-    if (!vmFunction)
+    if (!vmFunction) {
         // ### FIX file/line number
-        v4->current->throwError(QV4::Value::fromObject(v4->newSyntaxErrorObject("Syntax error")));
+        Scoped<Object> error(valueScope, v4->newSyntaxErrorObject("Syntax error"));
+        v4->current->throwError(error);
+    }
 }
 
-Value Script::run()
+ReturnedValue Script::run()
 {
     if (!parsed)
         parse();
     if (!vmFunction)
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     QV4::ExecutionEngine *engine = scope->engine;
+    QV4::Scope valueScope(engine);
 
     if (qml.isEmpty()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
@@ -217,7 +221,7 @@ Value Script::run()
         scope->compiledFunction = vmFunction->compiledFunction;
         scope->runtimeStrings = vmFunction->compilationUnit->runtimeStrings;
 
-        QV4::Value result;
+        QV4::ScopedValue result(valueScope);
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
         } catch (Exception &e) {
@@ -234,11 +238,11 @@ Value Script::run()
         scope->compiledFunction = oldCompiledFunction;
         scope->runtimeStrings = oldRuntimeStrings;
 
-        return result;
+        return result.asReturnedValue();
 
     } else {
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject());
-        ScopedCallData callData(scope->engine, 0);
+        ScopedCallData callData(valueScope, 0);
         callData->thisObject = Value::undefinedValue();
         return f->call(callData);
     }
@@ -251,25 +255,25 @@ Function *Script::function()
     return vmFunction;
 }
 
-Value Script::qmlBinding()
+ReturnedValue Script::qmlBinding()
 {
     if (!parsed)
         parse();
     QV4::ExecutionEngine *v4 = scope->engine;
-    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject()));
+    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qml.value().asObject())).asReturnedValue();
 }
 
-QV4::Value Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
+QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
 {
+    QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());
 
     QV4::ExecutionContext *ctx = engine->current;
-    QV4::Value result = QV4::Value::undefinedValue();
     try {
         qmlScript.parse();
-        result = qmlScript.run();
+        return qmlScript.run();
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
-    return result;
+    return Encode::undefined();
 }

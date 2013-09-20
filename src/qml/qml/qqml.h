@@ -441,6 +441,9 @@ using namespace QtQml;
 #pragma clang diagnostic pop
 #endif
 
+//The C++ version of protected namespaces in qmldir
+Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
+
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
 {

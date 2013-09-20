@@ -54,6 +54,7 @@
 #include <cmath>
 #include <iostream>
 #include <cassert>
+#include <algorithm>
 
 #ifdef CONST
 #undef CONST
@@ -61,6 +62,7 @@
 
 #define QV4_NO_LIVENESS
 #undef SHOW_SSA
+#undef DEBUG_MOVEMAPPING
 
 QT_USE_NAMESPACE
 
@@ -423,7 +425,7 @@ public:
     VariableCollector(Function *function)
         : variablesCanEscape(function->variablesCanEscape())
     {
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
         qout << "Variables collected:" << endl;
 #endif // SHOW_SSA
 
@@ -436,7 +438,7 @@ public:
             }
         }
 
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
         qout << "Non-locals:" << endl;
         foreach (const Temp &nonLocal, nonLocals) {
             qout << "\t";
@@ -499,7 +501,7 @@ protected:
 
         if (Temp *t = s->target->asTemp()) {
             if (isCollectable(t)) {
-#ifdef SHOW_SSA
+#if defined(SHOW_SSA)
                 qout << '\t';
                 t->dump(qout);
                 qout << " -> L" << currentBB->index << endl;
@@ -511,6 +513,8 @@ protected:
                 // For semi-pruned SSA:
                 killed.insert(*t);
             }
+        } else {
+            s->target->accept(this);
         }
     }
 
@@ -1041,15 +1045,19 @@ public:
             _worklist.removeFirst();
 
             if (_defUses.useCount(v) == 0) {
-//                qDebug()<<"-"<<v<<"has no uses...";
+#if defined(SHOW_SSA)
+                qout<<"- ";v.dump(qout);qout<<" has no uses..."<<endl;
+#endif
                 Stmt *s = _defUses.defStmt(v);
                 if (!s) {
                     _defUses.removeDef(v);
                 } else if (!hasSideEffect(s)) {
-#ifdef SHOW_SSA
-                    qout<<"-- defining stmt for";
+#if defined(SHOW_SSA)
+                    qout<<"-- defining stmt for ";
                     v.dump(qout);
-                    qout<<"has no side effect"<<endl;
+                    qout<<" has no side effect: ";
+                    s->dump(qout);
+                    qout<<endl;
 #endif
                     QVector<Stmt *> &stmts = _defUses.defStmtBlock(v)->statements;
                     int idx = stmts.indexOf(s);
@@ -1063,11 +1071,6 @@ public:
                 }
             }
         }
-
-#ifdef SHOW_SSA
-        qout<<"******************* After dead-code elimination:";
-        _defUses.dump();
-#endif
     }
 
 private:
@@ -1204,7 +1207,74 @@ public:
                 }
             }
         }
+
+        PropagateTempTypes(_tempTypes).run(function);
     }
+
+private:
+    class PropagateTempTypes: public StmtVisitor, ExprVisitor
+    {
+    public:
+        PropagateTempTypes(const QHash<Temp, int> &tempTypes)
+            : _tempTypes(tempTypes)
+        {}
+
+        void run(Function *function)
+        {
+            foreach (BasicBlock *bb, function->basicBlocks)
+                foreach (Stmt *s, bb->statements)
+                    s->accept(this);
+        }
+
+    protected:
+        virtual void visitConst(Const *e) {}
+        virtual void visitString(String *) {}
+        virtual void visitRegExp(RegExp *) {}
+        virtual void visitName(Name *) {}
+        virtual void visitTemp(Temp *e) { e->type = (Type) _tempTypes[*e]; }
+        virtual void visitClosure(Closure *) {}
+        virtual void visitConvert(Convert *e) { e->expr->accept(this); }
+        virtual void visitUnop(Unop *e) { e->expr->accept(this); }
+        virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
+
+        virtual void visitCall(Call *e) {
+            e->base->accept(this);
+            for (ExprList *it = e->args; it; it = it->next)
+                it->expr->accept(this);
+        }
+        virtual void visitNew(New *e) {
+            e->base->accept(this);
+            for (ExprList *it = e->args; it; it = it->next)
+                it->expr->accept(this);
+        }
+        virtual void visitSubscript(Subscript *e) {
+            e->base->accept(this);
+            e->index->accept(this);
+        }
+
+        virtual void visitMember(Member *e) {
+            e->base->accept(this);
+        }
+
+        virtual void visitExp(Exp *s) {s->expr->accept(this);}
+        virtual void visitMove(Move *s) {
+            s->source->accept(this);
+            s->target->accept(this);
+        }
+
+        virtual void visitJump(Jump *) {}
+        virtual void visitCJump(CJump *s) { s->cond->accept(this); }
+        virtual void visitRet(Ret *s) { s->expr->accept(this); }
+        virtual void visitTry(Try *s) { s->exceptionVar->accept(this); }
+        virtual void visitPhi(Phi *s) {
+            s->targetTemp->accept(this);
+            foreach (Expr *e, s->d->incoming)
+                e->accept(this);
+        }
+
+    private:
+        QHash<Temp, int> _tempTypes;
+    };
 
 private:
     bool run(Stmt *s) {
@@ -1244,24 +1314,20 @@ private:
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
-            if (isAlwaysAnObject(t)) {
-                e->type = ObjectType;
-            } else {
-                e->type = (Type) ty;
-
-                if (_tempTypes[*t] != ty) {
-                    _tempTypes[*t] = ty;
+            if (isAlwaysAnObject(t))
+                ty = ObjectType;
+            if (_tempTypes[*t] != ty) {
+                _tempTypes[*t] = ty;
 
 #if defined(SHOW_SSA)
-                    foreach (Stmt *s, _defUses.uses(*t)) {
-                        qout << "Pushing back dependent stmt: ";
-                        s->dump(qout);
-                        qout << endl;
-                    }
+                foreach (Stmt *s, _defUses.uses(*t)) {
+                    qout << "Pushing back dependent stmt: ";
+                    s->dump(qout);
+                    qout << endl;
+                }
 #endif
 
-                    _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
-                }
+                _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
             }
         } else {
             e->type = (Type) ty;
@@ -1896,6 +1962,19 @@ inline Temp *isSameTempPhi(Phi *phi)
     return 0;
 }
 
+static Expr *clone(Expr *e, Function *function) {
+    if (Temp *t = e->asTemp()) {
+        return CloneExpr::cloneTemp(t, function);
+    } else if (Const *c = e->asConst()) {
+        return CloneExpr::cloneConst(c, function);
+    } else if (Name *n = e->asName()) {
+        return CloneExpr::cloneName(n, function);
+    } else {
+        Q_UNREACHABLE();
+        return e;
+    }
+}
+
 class ExprReplacer: public StmtVisitor, public ExprVisitor
 {
     DefUsesCalculator &_defUses;
@@ -1969,22 +2048,9 @@ protected:
     }
 
 private:
-    Expr *clone(Expr *e) const {
-        if (Temp *t = e->asTemp()) {
-            return CloneExpr::cloneTemp(t, _function);
-        } else if (Const *c = e->asConst()) {
-            return CloneExpr::cloneConst(c, _function);
-        } else if (Name *n = e->asName()) {
-            return CloneExpr::cloneName(n, _function);
-        } else {
-            Q_UNIMPLEMENTED();
-            return e;
-        }
-    }
-
     void check(Expr *&e) {
         if (equals(e, _toReplace))
-            e = clone(_replacement);
+            e = clone(_replacement, _function);
         else
             e->accept(this);
     }
@@ -2209,7 +2275,6 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 *ref[s] = 0;
                 continue;
             }
-
         } else  if (Move *m = s->asMove()) {
             if (Temp *t = unescapableTemp(m->target, variablesCanEscape)) {
                 // constant propagation:
@@ -2217,13 +2282,13 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     if (c->type & NumberType || c->type == BoolType) {
                         // TODO: when propagating other constants, e.g. undefined, the other
                         // optimization passes have to be changed to cope with them.
-//                        qout<<"propagating constant from ";s->dump(qout);qout<<" info:"<<endl;
                         W += replaceUses(t, c);
                         defUses.removeDef(*t);
                         *ref[s] = 0;
                     }
                     continue;
                 }
+
 #if defined(PROPAGATE_THIS)
                 if (Name *n = m->source->asName()) {
                     qout<<"propagating constant from ";s->dump(qout);qout<<" info:"<<endl;
@@ -2233,6 +2298,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
 #endif
+
                 // copy propagation:
                 if (Temp *t2 = unescapableTemp(m->source, variablesCanEscape)) {
                     QVector<Stmt *> newT2Uses = replaceUses(t, t2);
@@ -2363,6 +2429,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
             }
+
         } else if (CJump *cjump = s->asCJump()) {
             if (Const *c = cjump->cond->asConst()) {
                 // Note: this assumes that there are no critical edges! Meaning, we can safely purge
@@ -2512,7 +2579,7 @@ public:
             range.setTemp(i.key());
             _sortedRanges.append(range);
         }
-        qSort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
+        std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
     }
 
     QList<LifeTimeInterval> ranges() const { return _sortedRanges; }
@@ -2529,7 +2596,7 @@ public:
         foreach (BasicBlock *bb, _liveIn.keys()) {
             qout << "L" << bb->index <<" live-in: ";
             QList<Temp> live = QList<Temp>::fromSet(_liveIn.value(bb));
-            qSort(live);
+            std::sort(live.begin(), live.end());
             for (int i = 0; i < live.size(); ++i) {
                 if (i > 0) qout << ", ";
                 live[i].dump(qout);
@@ -2707,7 +2774,7 @@ void Optimizer::run()
     // Number all basic blocks, so we have nice numbers in the dumps:
     for (int i = 0; i < function->basicBlocks.size(); ++i)
         function->basicBlocks[i]->index = i;
-    showMeTheCode(function);
+//    showMeTheCode(function);
 
     cleanupBasicBlocks(function);
 
@@ -2719,6 +2786,7 @@ void Optimizer::run()
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
     if (!function->hasTry && !function->hasWith && doSSA) {
+//        qout << "SSA for " << *function->name << endl;
 //        qout << "Starting edge splitting..." << endl;
         splitCriticalEdges(function);
 //        showMeTheCode(function);
@@ -2763,83 +2831,62 @@ void Optimizer::run()
         checkCriticalEdges(function->basicBlocks);
 #endif
 
-//        qout << "Finished." << endl;
+//        qout << "Finished SSA." << endl;
         inSSA = true;
     } else {
         inSSA = false;
     }
 }
 
-namespace {
-void insertMove(Function *function, BasicBlock *basicBlock, Temp *target, Expr *source) {
-    if (target->type != source->type) {
-        if (source->asConst()) {
-            const int idx = function->tempCount++;
-
-            Temp *tmp = function->New<Temp>();
-            tmp->init(Temp::VirtualRegister, idx, 0);
-
-            Move *s = function->New<Move>();
-            s->init(tmp, source, OpInvalid);
-            basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
-
-            tmp = function->New<Temp>();
-            tmp->init(Temp::VirtualRegister, idx, 0);
-            source = tmp;
-        }
-        source = basicBlock->CONVERT(source, target->type);
-    }
-
-    Move *s = function->New<Move>();
-    s->init(target, source, OpInvalid);
-    basicBlock->statements.insert(basicBlock->statements.size() - 1, s);
-}
-}
-
-/*
- * Quick function to convert out of SSA, so we can put the stuff through the ISel phases. This
- * has to be replaced by a phase in the specific ISel back-ends and do register allocation at the
- * same time. That way the huge number of redundant moves generated by this function are eliminated.
- */
 void Optimizer::convertOutOfSSA() {
-    // We assume that edge-splitting is already done.
+    if (!inSSA)
+        return;
+
+    // There should be no critical edges at this point.
+
     foreach (BasicBlock *bb, function->basicBlocks) {
-        QVector<Stmt *> &stmts = bb->statements;
-        while (!stmts.isEmpty()) {
-            Stmt *s = stmts.first();
-            if (Phi *phi = s->asPhi()) {
-                stmts.removeFirst();
-                for (int i = 0, ei = phi->d->incoming.size(); i != ei; ++i)
-                    insertMove(function, bb->in[i], phi->targetTemp, phi->d->incoming[i]);
+        const int id = bb->statements.last()->id;
+        MoveMapping moves;
+
+        foreach (BasicBlock *successor, bb->out) {
+            const int inIdx = successor->in.indexOf(bb);
+            Q_ASSERT(inIdx >= 0);
+            foreach (Stmt *s, successor->statements) {
+                if (Phi *phi = s->asPhi()) {
+                    moves.add(clone(phi->d->incoming[inIdx], function),
+                              clone(phi->targetTemp, function)->asTemp(), id);
+                } else {
+                    break;
+                }
+            }
+        }
+
+    #if defined(DEBUG_MOVEMAPPING)
+        QTextStream os(stdout, QIODevice::WriteOnly);
+        os << "Move mapping for function ";
+        if (function->name)
+            os << *function->name;
+        else
+            os << (void *) function;
+        os << " on basic-block L" << bb->index << ":" << endl;
+        moves.dump();
+    #endif // DEBUG_MOVEMAPPING
+
+        moves.order();
+
+        moves.insertMoves(bb, function);
+    }
+
+    foreach (BasicBlock *bb, function->basicBlocks) {
+        while (!bb->statements.isEmpty()) {
+            if (Phi *phi = bb->statements.first()->asPhi()) {
                 phi->destroyData();
+                bb->statements.removeFirst();
             } else {
                 break;
             }
         }
     }
-}
-
-QList<Optimizer::SSADeconstructionMove> Optimizer::ssaDeconstructionMoves(BasicBlock *basicBlock) const
-{
-    QList<SSADeconstructionMove> moves;
-
-    foreach (BasicBlock *outEdge, basicBlock->out) {
-        int inIdx = outEdge->in.indexOf(basicBlock);
-        Q_ASSERT(inIdx >= 0);
-        foreach (Stmt *s, outEdge->statements) {
-            if (Phi *phi = s->asPhi()) {
-                SSADeconstructionMove m;
-                m.phi = phi;
-                m.source = phi->d->incoming[inIdx];
-                m.target = phi->targetTemp;
-                moves.append(m);
-            } else {
-                break;
-            }
-        }
-    }
-
-    return moves;
 }
 
 QList<LifeTimeInterval> Optimizer::lifeRanges() const
@@ -2855,4 +2902,153 @@ QList<LifeTimeInterval> Optimizer::lifeRanges() const
 void Optimizer::showMeTheCode(Function *function)
 {
     ::showMeTheCode(function);
+}
+
+static inline bool overlappingStorage(const Temp &t1, const Temp &t2)
+{
+    // This is the same as the operator==, but for one detail: memory locations are not sensitive
+    // to types, and neither are general-purpose registers.
+
+    if (t1.scope != t2.scope)
+        return false;
+    if (t1.index != t2.index)
+        return false; // different position, where-ever that may (physically) be.
+    if (t1.kind != t2.kind)
+        return false; // formal/local/(physical-)register/stack do never overlap
+    if (t1.kind != Temp::PhysicalRegister) // Other than registers, ...
+        return t1.kind == t2.kind; // ... everything else overlaps: any memory location can hold everything.
+
+    // So now the index is the same, and we know that both stored in a register. If both are
+    // floating-point registers, they are the same. Or, if both are non-floating-point registers,
+    // generally called general-purpose registers, they are also the same.
+    return (t1.type == DoubleType && t2.type == DoubleType)
+            || (t1.type != DoubleType && t2.type != DoubleType);
+}
+
+int MoveMapping::isUsedAsSource(Expr *e) const
+{
+    if (Temp *t = e->asTemp())
+        for (int i = 0, ei = _moves.size(); i != ei; ++i)
+            if (Temp *from = _moves[i].from->asTemp())
+                if (overlappingStorage(*from, *t))
+                    return i;
+
+    return -1;
+}
+
+void MoveMapping::add(Expr *from, Temp *to, int id) {
+    if (Temp *t = from->asTemp()) {
+        if (overlappingStorage(*t, *to)) {
+            // assignments like fp1 = fp1 or var{&1} = double{&1} can safely be skipped.
+#if defined(DEBUG_MOVEMAPPING)
+            QTextStream os(stderr, QIODevice::WriteOnly);
+            os << "Skipping ";
+            to->dump(os);
+            os << " <- ";
+            from->dump(os);
+            os << endl;
+#endif // DEBUG_MOVEMAPPING
+            return;
+        }
+    }
+
+    Move m(from, to, id);
+    if (_moves.contains(m))
+        return;
+    _moves.append(m);
+}
+
+void MoveMapping::order()
+{
+    QList<Move> todo = _moves;
+    QList<Move> output, swaps;
+    output.reserve(_moves.size());
+    QList<Move> delayed;
+    delayed.reserve(_moves.size());
+
+    while (!todo.isEmpty()) {
+        const Move m = todo.first();
+        todo.removeFirst();
+        schedule(m, todo, delayed, output, swaps);
+    }
+
+    output += swaps;
+
+    Q_ASSERT(todo.isEmpty());
+    Q_ASSERT(delayed.isEmpty());
+    qSwap(_moves, output);
+}
+
+void MoveMapping::insertMoves(BasicBlock *predecessor, Function *function) const
+{
+    int predecessorInsertionPoint = predecessor->statements.size() - 1;
+    foreach (const Move &m, _moves) {
+        V4IR::Move *move = function->New<V4IR::Move>();
+        move->init(m.to, m.from, OpInvalid);
+        move->id = m.id;
+        move->swap = m.needsSwap;
+        predecessor->statements.insert(predecessorInsertionPoint++, move);
+    }
+}
+
+void MoveMapping::dump() const
+{
+#if defined(DEBUG_MOVEMAPPING)
+    QTextStream os(stdout, QIODevice::WriteOnly);
+    os << "Move mapping has " << _moves.size() << " moves..." << endl;
+    foreach (const Move &m, _moves) {
+        os << "\t";
+        m.to->dump(os);
+        if (m.needsSwap)
+            os << " <-> ";
+        else
+            os << " <-- ";
+        m.from->dump(os);
+        os << endl;
+    }
+#endif // DEBUG_MOVEMAPPING
+}
+
+MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
+                                          QList<Move> &output, QList<Move> &swaps) const
+{
+    int useIdx = isUsedAsSource(m.to);
+    if (useIdx != -1) {
+        const Move &dependency = _moves[useIdx];
+        if (!output.contains(dependency)) {
+            if (delayed.contains(dependency)) {
+                // We have a cycle! Break it by swapping instead of assigning.
+#if defined(DEBUG_MOVEMAPPING)
+                delayed+=m;
+                QTextStream out(stderr, QIODevice::WriteOnly);
+                out<<"we have a cycle! temps:" << endl;
+                foreach (const Move &m, delayed) {
+                    out<<"\t";
+                    m.to->dump(out);
+                    out<<" <- ";
+                    m.from->dump(out);
+                    out<<endl;
+                }
+                delayed.removeOne(m);
+#endif // DEBUG_MOVEMAPPING
+                return NeedsSwap;
+            } else {
+                delayed.append(m);
+                todo.removeOne(dependency);
+                Action action = schedule(dependency, todo, delayed, output, swaps);
+                delayed.removeOne(m);
+                Move mm(m);
+                if (action == NeedsSwap) {
+                    mm.needsSwap = true;
+                    swaps.append(mm);
+                } else {
+                    output.append(mm);
+                }
+                return action;
+            }
+        }
+    }
+
+    output.append(m);
+    return NormalMove;
 }

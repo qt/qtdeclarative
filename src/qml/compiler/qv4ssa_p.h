@@ -118,17 +118,6 @@ public:
 class Optimizer
 {
 public:
-    struct SSADeconstructionMove
-    {
-        Stmt *phi;
-        Expr *source;
-        Temp *target;
-
-        bool needsConversion() const
-        { return target->type != source->type; }
-    };
-
-public:
     Optimizer(Function *function)
         : function(function)
         , inSSA(false)
@@ -142,8 +131,6 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
 
-    QList<SSADeconstructionMove> ssaDeconstructionMoves(BasicBlock *basicBlock) const;
-
     QList<LifeTimeInterval> lifeRanges() const;
 
     static void showMeTheCode(Function *function);
@@ -152,6 +139,39 @@ private:
     Function *function;
     bool inSSA;
     QHash<BasicBlock *, BasicBlock *> startEndLoops;
+};
+
+class MoveMapping
+{
+    struct Move {
+        Expr *from;
+        Temp *to;
+        int id;
+        bool needsSwap;
+
+        Move(Expr *from, Temp *to, int id)
+            : from(from), to(to), id(id), needsSwap(false)
+        {}
+
+        bool operator==(const Move &other) const
+        { return from == other.from && to == other.to; }
+    };
+
+    QList<Move> _moves;
+
+    int isUsedAsSource(Expr *e) const;
+
+public:
+    void add(Expr *from, Temp *to, int id = 0);
+    void order();
+    void insertMoves(BasicBlock *predecessor, Function *function) const;
+
+    void dump() const;
+
+private:
+    enum Action { NormalMove, NeedsSwap };
+    Action schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed, QList<Move> &output,
+                    QList<Move> &swaps) const;
 };
 
 } // V4IR namespace

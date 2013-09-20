@@ -36,7 +36,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <elf.h>
-#define HWCAP_VFP·      (1 << 6)
+#define HWCAP_VFP      (1 << 6)
 #endif
 
 namespace JSC {

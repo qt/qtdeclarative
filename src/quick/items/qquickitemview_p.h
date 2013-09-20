@@ -209,7 +209,7 @@ public:
     virtual qreal originX() const;
     virtual qreal originY() const;
 
-signals:
+Q_SIGNALS:
     void modelChanged();
     void delegateChanged();
     void countChanged();
@@ -254,7 +254,7 @@ protected:
     virtual qreal minXExtent() const;
     virtual qreal maxXExtent() const;
 
-protected slots:
+protected Q_SLOTS:
     void destroyRemoved();
     void createdItem(int index, QObject *item);
     virtual void initItem(int index, QObject *item);
@@ -288,7 +288,7 @@ public:
     void setIsCurrentItem(bool c) {
         if (m_isCurrent != c) {
             m_isCurrent = c;
-            emit currentItemChanged();
+            Q_EMIT currentItemChanged();
         }
     }
 
@@ -296,7 +296,7 @@ public:
     void setDelayRemove(bool delay) {
         if (m_delayRemove != delay) {
             m_delayRemove = delay;
-            emit delayRemoveChanged();
+            Q_EMIT delayRemoveChanged();
         }
     }
 
@@ -304,7 +304,7 @@ public:
     void setSection(const QString &sect) {
         if (m_section != sect) {
             m_section = sect;
-            emit sectionChanged();
+            Q_EMIT sectionChanged();
         }
     }
 
@@ -312,7 +312,7 @@ public:
     void setPrevSection(const QString &sect) {
         if (m_prevSection != sect) {
             m_prevSection = sect;
-            emit prevSectionChanged();
+            Q_EMIT prevSectionChanged();
         }
     }
 
@@ -320,14 +320,14 @@ public:
     void setNextSection(const QString &sect) {
         if (m_nextSection != sect) {
             m_nextSection = sect;
-            emit nextSectionChanged();
+            Q_EMIT nextSectionChanged();
         }
     }
 
-    void emitAdd() { emit add(); }
-    void emitRemove() { emit remove(); }
+    void emitAdd() { Q_EMIT add(); }
+    void emitRemove() { Q_EMIT remove(); }
 
-signals:
+Q_SIGNALS:
     void currentItemChanged();
     void delayRemoveChanged();
 

@@ -56,8 +56,10 @@ Item {
     Component.onCompleted: setZOrders()
 
     function setZOrders() {
-        for (var i = 0; i < stack.children.length; ++i)
+        for (var i = 0; i < stack.children.length; ++i) {
             stack.children[i].z = (i == current ? 1 : 0)
+            stack.children[i].enabled = (i == current)
+        }
     }
 
     Row {

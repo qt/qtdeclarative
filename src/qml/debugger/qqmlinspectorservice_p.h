@@ -80,7 +80,7 @@ protected:
     virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &);
 
-private slots:
+private Q_SLOTS:
     void processMessage(const QByteArray &message);
     void updateState();
 

@@ -58,6 +58,7 @@
 #include <QtCore/private/qmetaobject_p.h>
 
 #include <iostream>
+#include <algorithm>
 
 #include "qmlstreamwriter.h"
 
@@ -139,6 +140,9 @@ public:
 */
 static QHash<QByteArray, QSet<const QQmlType *> > qmlTypesByCppName;
 
+// No different versioning possible for a composite type.
+static QMap<QString, const QQmlType * > qmlTypesByCompositeName;
+
 static QHash<QByteArray, QByteArray> cppToId;
 
 /* Takes a C++ type name, such as Qt::LayoutDirection or QString and
@@ -190,8 +194,9 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
             if (ty->isExtendedType())
                 extensions[ty->typeName()].insert(ty->metaObject()->className());
             collectReachableMetaObjects(ty, &metas);
+        } else {
+            qmlTypesByCompositeName[ty->elementName()] = ty;
         }
-        // TODO actually handle composite types
     }
 
     // Adjust exports of the base object if there are extensions.
@@ -249,7 +254,16 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
 
             if (ty->isSingleton()) {
                 QQmlType::SingletonInstanceInfo *siinfo = ty->singletonInstanceInfo();
+                if (!siinfo) {
+                    qWarning() << "Internal error, " << tyName
+                               << "(" << QString::fromUtf8(ty->typeName()) << ")"
+                               << " is singleton, but has no singletonInstanceInfo";
+                    continue;
+                }
                 if (siinfo->qobjectCallback) {
+                    if (verbose)
+                        qDebug() << "Trying to get singleton for " << tyName
+                                 << " (" << siinfo->typeName  << ")";
                     siinfo->init(engine);
                     collectReachableMetaObjects(object, &metas);
                     object = siinfo->qobjectApi(engine);
@@ -258,15 +272,22 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
                     continue; // we don't handle QJSValue singleton types.
                 }
             } else {
+                if (verbose)
+                    qDebug() << "Trying to create object " << tyName
+                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
                 object = ty->create();
             }
 
             inObjectInstantiation.clear();
 
-            if (object)
+            if (object) {
+                if (verbose)
+                    qDebug() << "Got " << tyName
+                             << " (" << QString::fromUtf8(ty->typeName())  << ")";
                 collectReachableMetaObjects(object, &metas);
-            else
+            } else {
                 qWarning() << "Could not create" << tyName;
+            }
         }
     }
 
@@ -287,73 +308,27 @@ public:
         relocatableModuleUri = uri;
     }
 
-    void dump(const QMetaObject *meta)
+    const QString getExportString(QString qmlTyName, int majorVersion, int minorVersion)
     {
-        qml->writeStartObject("Component");
-
-        QByteArray id = convertToId(meta);
-        qml->writeScriptBinding(QLatin1String("name"), enquote(id));
-
-        for (int index = meta->classInfoCount() - 1 ; index >= 0 ; --index) {
-            QMetaClassInfo classInfo = meta->classInfo(index);
-            if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
-                qml->writeScriptBinding(QLatin1String("defaultProperty"), enquote(QLatin1String(classInfo.value())));
-                break;
-            }
+        if (qmlTyName.startsWith(relocatableModuleUri + QLatin1Char('/'))) {
+            qmlTyName.remove(0, relocatableModuleUri.size() + 1);
         }
-
-        if (meta->superClass())
-            qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
-
-        QSet<const QQmlType *> qmlTypes = qmlTypesByCppName.value(meta->className());
-        if (!qmlTypes.isEmpty()) {
-            QHash<QString, const QQmlType *> exports;
-
-            foreach (const QQmlType *qmlTy, qmlTypes) {
-                QString qmlTyName = qmlTy->qmlTypeName();
-                if (qmlTyName.startsWith(relocatableModuleUri + QLatin1Char('/'))) {
-                    qmlTyName.remove(0, relocatableModuleUri.size() + 1);
-                }
-                if (qmlTyName.startsWith("./")) {
-                    qmlTyName.remove(0, 2);
-                }
-                if (qmlTyName.startsWith("/")) {
-                    qmlTyName.remove(0, 1);
-                }
-                const QString exportString = enquote(
-                            QString("%1 %2.%3").arg(
-                                qmlTyName,
-                                QString::number(qmlTy->majorVersion()),
-                                QString::number(qmlTy->minorVersion())));
-                exports.insert(exportString, qmlTy);
-            }
-
-            // ensure exports are sorted and don't change order when the plugin is dumped again
-            QStringList exportStrings = exports.keys();
-            qSort(exportStrings);
-            qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
-
-            // write meta object revisions
-            QStringList metaObjectRevisions;
-            foreach (const QString &exportString, exportStrings) {
-                int metaObjectRevision = exports[exportString]->metaObjectRevision();
-                metaObjectRevisions += QString::number(metaObjectRevision);
-            }
-            qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
-
-            if (const QMetaObject *attachedType = (*qmlTypes.begin())->attachedPropertiesType()) {
-                // Can happen when a type is registered that returns itself as attachedPropertiesType()
-                // because there is no creatable type to attach to.
-                if (attachedType != meta) {
-                    qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
-                                                convertToId(attachedType)));
-                }
-            }
+        if (qmlTyName.startsWith("./")) {
+            qmlTyName.remove(0, 2);
         }
+        if (qmlTyName.startsWith("/")) {
+            qmlTyName.remove(0, 1);
+        }
+        const QString exportString = enquote(
+                    QString("%1 %2.%3").arg(
+                        qmlTyName,
+                        QString::number(majorVersion),
+                        QString::number(minorVersion)));
+        return exportString;
+    }
 
-        for (int index = meta->enumeratorOffset(); index < meta->enumeratorCount(); ++index)
-            dump(meta->enumerator(index));
-
+    void writeMetaContent(const QMetaObject *meta)
+    {
         QSet<QString> implicitSignals;
         for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
             const QMetaProperty &property = meta->property(index);
@@ -391,6 +366,131 @@ public:
             for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
                 dump(meta->method(index), implicitSignals);
         }
+    }
+
+    QString getPrototypeNameForCompositeType(const QMetaObject *metaObject, QSet<QByteArray> &defaultReachableNames)
+    {
+        QString prototypeName;
+        if (!defaultReachableNames.contains(metaObject->className())) {
+            const QMetaObject *superMetaObject = metaObject->superClass();
+            if (!superMetaObject)
+                prototypeName = "QObject";
+            else
+                prototypeName = getPrototypeNameForCompositeType(superMetaObject, defaultReachableNames);
+        } else {
+            prototypeName = convertToId(metaObject->className());
+        }
+        return prototypeName;
+    }
+
+    void dumpComposite(QQmlEngine *engine, const QQmlType *compositeType, QSet<QByteArray> &defaultReachableNames)
+    {
+        QQmlComponent e(engine, compositeType->sourceUrl());
+        QObject *object = e.create();
+
+        if (!object)
+            return;
+
+        qml->writeStartObject("Component");
+
+        const QMetaObject *mainMeta = object->metaObject();
+
+        // Get C++ base class name for the composite type
+        QString prototypeName = getPrototypeNameForCompositeType(mainMeta, defaultReachableNames);
+        qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
+
+        QString qmlTyName = compositeType->qmlTypeName();
+        // name should be unique
+        qml->writeScriptBinding(QLatin1String("name"), enquote(qmlTyName));
+        const QString exportString = getExportString(qmlTyName, compositeType->majorVersion(), compositeType->minorVersion());
+        qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
+        qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
+
+        for (int index = mainMeta->classInfoCount() - 1 ; index >= 0 ; --index) {
+            QMetaClassInfo classInfo = mainMeta->classInfo(index);
+            if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
+                qml->writeScriptBinding(QLatin1String("defaultProperty"), enquote(QLatin1String(classInfo.value())));
+                break;
+            }
+        }
+
+        QSet<const QMetaObject *> metas;
+        QSet<const QMetaObject *> candidatesComposite;
+        collectReachableMetaObjects(mainMeta, &candidatesComposite);
+
+        // Also eliminate meta objects with the same classname.
+        // This is required because extended objects seem not to share
+        // a single meta object instance.
+        foreach (const QMetaObject *mo, candidatesComposite) {
+            if (!defaultReachableNames.contains(mo->className()))
+                metas.insert(mo);
+        }
+
+        // put the metaobjects into a map so they are always dumped in the same order
+        QMap<QString, const QMetaObject *> nameToMeta;
+        foreach (const QMetaObject *meta, metas)
+            nameToMeta.insert(convertToId(meta), meta);
+
+        foreach (const QMetaObject *meta, nameToMeta)
+            writeMetaContent(meta);
+
+        qml->writeEndObject();
+    }
+
+    void dump(const QMetaObject *meta)
+    {
+        qml->writeStartObject("Component");
+
+        QByteArray id = convertToId(meta);
+        qml->writeScriptBinding(QLatin1String("name"), enquote(id));
+
+        for (int index = meta->classInfoCount() - 1 ; index >= 0 ; --index) {
+            QMetaClassInfo classInfo = meta->classInfo(index);
+            if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
+                qml->writeScriptBinding(QLatin1String("defaultProperty"), enquote(QLatin1String(classInfo.value())));
+                break;
+            }
+        }
+
+        if (meta->superClass())
+            qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
+
+        QSet<const QQmlType *> qmlTypes = qmlTypesByCppName.value(meta->className());
+        if (!qmlTypes.isEmpty()) {
+            QHash<QString, const QQmlType *> exports;
+
+            foreach (const QQmlType *qmlTy, qmlTypes) {
+                const QString exportString = getExportString(qmlTy->qmlTypeName(), qmlTy->majorVersion(), qmlTy->minorVersion());
+                exports.insert(exportString, qmlTy);
+            }
+
+            // ensure exports are sorted and don't change order when the plugin is dumped again
+            QStringList exportStrings = exports.keys();
+            std::sort(exportStrings.begin(), exportStrings.end());
+            qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
+
+            // write meta object revisions
+            QStringList metaObjectRevisions;
+            foreach (const QString &exportString, exportStrings) {
+                int metaObjectRevision = exports[exportString]->metaObjectRevision();
+                metaObjectRevisions += QString::number(metaObjectRevision);
+            }
+            qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
+
+            if (const QMetaObject *attachedType = (*qmlTypes.begin())->attachedPropertiesType()) {
+                // Can happen when a type is registered that returns itself as attachedPropertiesType()
+                // because there is no creatable type to attach to.
+                if (attachedType != meta) {
+                    qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
+                                                convertToId(attachedType)));
+                }
+            }
+        }
+
+        for (int index = meta->enumeratorOffset(); index < meta->enumeratorCount(); ++index)
+            dump(meta->enumerator(index));
+
+        writeMetaContent(meta);
 
         qml->writeEndObject();
     }
@@ -461,7 +561,7 @@ private:
     void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
-            if (meth.access() != QMetaMethod::Protected)
+            if (meth.access() != QMetaMethod::Public)
                 return; // nothing to do.
         } else if (meth.access() != QMetaMethod::Public) {
             return; // nothing to do.
@@ -543,7 +643,7 @@ void sigSegvHandler(int) {
 void printUsage(const QString &appName)
 {
     qWarning() << qPrintable(QString(
-                                 "Usage: %1 [-v] [-noinstantiate] [-[non]relocatable] module.uri version [module/import/path]\n"
+                                 "Usage: %1 [-v] [-noinstantiate] [-defaultplatform] [-[non]relocatable] module.uri version [module/import/path]\n"
                                  "       %1 [-v] [-noinstantiate] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
                                  "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
@@ -570,7 +670,17 @@ int main(int argc, char *argv[])
 #endif
 
     // don't require a window manager even though we're a QGuiApplication
-    qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
+    bool requireWindowManager = false;
+    for (int index = 1; index < argc; ++index) {
+        if (QString::fromLocal8Bit(argv[index]) == "--defaultplatform"
+                || QString::fromLocal8Bit(argv[index]) == "-defaultplatform") {
+            requireWindowManager = true;
+            break;
+        }
+    }
+
+    if (!requireWindowManager)
+        qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
 
     QGuiApplication app(argc, argv);
     const QStringList args = app.arguments();
@@ -612,6 +722,9 @@ int main(int argc, char *argv[])
                 action = Builtins;
             } else if (arg == QLatin1String("-v")) {
                 verbose = true;
+            } else if (arg == QLatin1String("--defaultplatform")
+                       || arg == QLatin1String("-defaultplatform")) {
+                continue;
             } else {
                 qWarning() << "Invalid argument: " << arg;
                 return EXIT_INVALIDARGUMENTS;
@@ -672,6 +785,7 @@ int main(int argc, char *argv[])
     // add some otherwise unreachable QMetaObjects
     defaultReachable.insert(&QQuickMouseEvent::staticMetaObject);
     // QQuickKeyEvent, QQuickPinchEvent, QQuickDropEvent are not exported
+    QSet<QByteArray> defaultReachableNames;
 
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;
@@ -723,7 +837,6 @@ int main(int argc, char *argv[])
         // Also eliminate meta objects with the same classname.
         // This is required because extended objects seem not to share
         // a single meta object instance.
-        QSet<QByteArray> defaultReachableNames;
         foreach (const QMetaObject *mo, defaultReachable)
             defaultReachableNames.insert(QByteArray(mo->className()));
         foreach (const QMetaObject *mo, candidates) {
@@ -746,8 +859,9 @@ int main(int argc, char *argv[])
               "// This file describes the plugin-supplied types contained in the library.\n"
               "// It is used for QML tooling purposes only.\n"
               "//\n"
-              "// This file was auto-generated with the command '%1'.\n"
-              "\n").arg(args.join(QLatin1String(" "))));
+              "// This file was auto-generated by:\n"
+              "// '%1 %2'\n"
+              "\n").arg(QFileInfo(args.at(0)).fileName()).arg(QStringList(args.mid(1)).join(QLatin1String(" "))));
     qml.writeStartObject("Module");
 
     // put the metaobjects into a map so they are always dumped in the same order
@@ -761,6 +875,8 @@ int main(int argc, char *argv[])
     foreach (const QMetaObject *meta, nameToMeta) {
         dumper.dump(meta);
     }
+    foreach (const QQmlType *compositeType, qmlTypesByCompositeName)
+        dumper.dumpComposite(&engine, compositeType, defaultReachableNames);
 
     // define QEasingCurve as an extension of QQmlEasingValueType, this way
     // properties using the QEasingCurve type get useful type information.

@@ -77,7 +77,7 @@ public:
 
     QV4::ExecutionEngine *v4Engine() { return QV8Engine::getV4(this); }
 
-    typedef QV4::Value (*InjectedFunction)(QV4::SimpleCallContext*);
+    typedef QV4::ReturnedValue (*InjectedFunction)(QV4::SimpleCallContext*);
 
     Q_INVOKABLE void injectFunction(const QString &functionName, TestEngine::InjectedFunction injectedFunction)
     {
@@ -261,10 +261,10 @@ void tst_qv4debugger::addBreakPointWhilePaused()
     QCOMPARE(state.lineNumber, 2);
 }
 
-static QV4::Value someCall(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue someCall(QV4::SimpleCallContext *ctx)
 {
     ctx->engine->debugger->removeBreakPoint("removeBreakPointForNextInstruction", 2);
-    return QV4::Value::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 void tst_qv4debugger::removeBreakPointForNextInstruction()

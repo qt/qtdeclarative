@@ -57,17 +57,35 @@
 
 //#include <wtf/MathExtras.h>
 
-#ifdef DO_TRACE_INSTR
-#  define TRACE1(x) fprintf(stderr, "    %s\n", __FUNCTION__);
-#  define TRACE2(x, y) fprintf(stderr, "    %s\n", __FUNCTION__);
+QT_BEGIN_NAMESPACE
+
+#undef QV4_COUNT_RUNTIME_FUNCTIONS
+
+namespace QV4 {
+
+#ifdef QV4_COUNT_RUNTIME_FUNCTIONS
+class RuntimeCounters
+{
+public:
+    RuntimeCounters();
+    ~RuntimeCounters();
+
+    static RuntimeCounters *instance;
+
+    void count(const char *func, uint tag);
+    void count(const char *func, uint tag1, uint tag2);
+
+private:
+    struct Data;
+    Data *d;
+};
+
+#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type());
+#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type(), y.type());
 #else
 #  define TRACE1(x)
 #  define TRACE2(x, y)
-#endif // TRACE1
-
-QT_BEGIN_NAMESPACE
-
-namespace QV4 {
+#endif // QV4_COUNT_RUNTIME_FUNCTIONS
 
 enum TypeHint {
     PREFERREDTYPE_HINT,
@@ -91,30 +109,20 @@ struct ExecutionEngine;
 struct InternalClass;
 
 // context
-void __qmljs_call_activation_property(QV4::ExecutionContext *, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
-void __qmljs_call_property(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
-void __qmljs_call_property_lookup(ExecutionContext *context, ValueRef result, uint index, CallDataRef callData);
-void __qmljs_call_element(ExecutionContext *context, ValueRef result, const ValueRef index, CallDataRef callData);
-void __qmljs_call_value(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef func, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_activation_property(QV4::ExecutionContext *, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_property(QV4::ExecutionContext *context, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_call_value(QV4::ExecutionContext *context, const QV4::ValueRef func, CallDataRef callData);
 
-void __qmljs_construct_activation_property(QV4::ExecutionContext *, QV4::ValueRef result, QV4::String *name, CallDataRef callData);
-void __qmljs_construct_property(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name, CallDataRef callData);
-void __qmljs_construct_value(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef func, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_activation_property(QV4::ExecutionContext *, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_property(QV4::ExecutionContext *context, const QV4::ValueRef base, QV4::String *name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_value(QV4::ExecutionContext *context, const QV4::ValueRef func, CallDataRef callData);
 
-void __qmljs_builtin_typeof(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef val);
-void __qmljs_builtin_typeof_name(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name);
-void __qmljs_builtin_typeof_member(QV4::ExecutionContext* context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_builtin_typeof_element(QV4::ExecutionContext* context, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-
-void __qmljs_builtin_post_increment(QV4::ValueRef result, QV4::ValueRef val);
-void __qmljs_builtin_post_increment_name(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name);
-void __qmljs_builtin_post_increment_member(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_builtin_post_increment_element(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-
-void __qmljs_builtin_post_decrement(QV4::ValueRef result, QV4::ValueRef val);
-void __qmljs_builtin_post_decrement_name(QV4::ExecutionContext *context, QV4::ValueRef result, QV4::String *name);
-void __qmljs_builtin_post_decrement_member(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_builtin_post_decrement_element(QV4::ExecutionContext *context, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
+QV4::ReturnedValue __qmljs_builtin_typeof(QV4::ExecutionContext *ctx, const QV4::ValueRef val);
+QV4::ReturnedValue __qmljs_builtin_typeof_name(QV4::ExecutionContext *context, QV4::String *name);
+QV4::ReturnedValue __qmljs_builtin_typeof_member(QV4::ExecutionContext* context, const QV4::ValueRef base, QV4::String *name);
+QV4::ReturnedValue __qmljs_builtin_typeof_element(QV4::ExecutionContext* context, const QV4::ValueRef base, const QV4::ValueRef index);
 
 void Q_NORETURN __qmljs_builtin_rethrow(QV4::ExecutionContext *context);
 QV4::ExecutionContext *__qmljs_builtin_push_with_scope(const QV4::ValueRef o, QV4::ExecutionContext *ctx);
@@ -122,101 +130,101 @@ QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(QV4::String *exceptionVa
 QV4::ExecutionContext *__qmljs_builtin_pop_scope(QV4::ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, QV4::String *name);
 void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, QV4::ValueRef val);
-void __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::ValueRef array, QV4::Value *values, uint length);
+QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4::Value *values, uint length);
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, const QV4::ValueRef getter, const QV4::ValueRef setter);
-void __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::Value *args, int classId);
-void __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx, QV4::ValueRef result);
+QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId);
+QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx);
 
-void __qmljs_value_from_string(QV4::ValueRef result, QV4::String *string);
-void __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, QV4::ValueRef result, int id);
+QV4::ReturnedValue __qmljs_value_from_string(QV4::String *string);
+QV4::ReturnedValue __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, int id);
 
 // constructors
-void __qmljs_init_closure(QV4::ExecutionContext *ctx, QV4::ValueRef result, int functionId);
+QV4::ReturnedValue __qmljs_init_closure(QV4::ExecutionContext *ctx, int functionId);
 
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);
-QV4::Value __qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
-QV4::String *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
+Returned<String> *__qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
+Returned<String> *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
 
 // objects
-Q_QML_EXPORT QV4::Value __qmljs_object_default_value(QV4::Object *object, int typeHint);
+Q_QML_EXPORT ReturnedValue __qmljs_object_default_value(QV4::Object *object, int typeHint);
 void __qmljs_set_activation_property(QV4::ExecutionContext *ctx, QV4::String *name, const QV4::ValueRef value);
 void __qmljs_set_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name, const QV4::ValueRef value);
-void __qmljs_get_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef object, QV4::String *name);
-void __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::ValueRef result, QV4::String *name);
+QV4::ReturnedValue __qmljs_get_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, QV4::String *name);
+QV4::ReturnedValue __qmljs_get_activation_property(QV4::ExecutionContext *ctx, QV4::String *name);
 
-void __qmljs_call_global_lookup(QV4::ExecutionContext *context, QV4::ValueRef result, uint index, CallDataRef callData);
-void __qmljs_construct_global_lookup(QV4::ExecutionContext *context, QV4::ValueRef result, uint index, CallDataRef callData);
+ReturnedValue __qmljs_call_global_lookup(QV4::ExecutionContext *context, uint index, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_global_lookup(QV4::ExecutionContext *context, uint index, CallDataRef callData);
 
 
-void __qmljs_get_element(QV4::ExecutionContext *ctx, QV4::ValueRef retval, const QV4::ValueRef object, const QV4::ValueRef index);
+QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index);
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
 // For each
-void __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef in);
-void __qmljs_foreach_next_property_name(QV4::ValueRef result, const ValueRef foreach_iterator);
+QV4::ReturnedValue __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, const QV4::ValueRef in);
+QV4::ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator);
 
 // type conversion and testing
-QV4::Value __qmljs_to_primitive(const ValueRef value, int typeHint);
+QV4::ReturnedValue __qmljs_to_primitive(const ValueRef value, int typeHint);
 Q_QML_EXPORT QV4::Bool __qmljs_to_boolean(const QV4::ValueRef value);
 double __qmljs_to_number(const QV4::ValueRef value);
-QV4::Value __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
-Q_QML_EXPORT QV4::String *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
+QV4::ReturnedValue __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
+Q_QML_EXPORT Returned<String> *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 void __qmljs_numberToString(QString *result, double num, int radix = 10);
-QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
-QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
+ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
+Returned<Object> *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
 
 QV4::Bool __qmljs_equal_helper(const ValueRef x, const ValueRef y);
 Q_QML_EXPORT QV4::Bool __qmljs_strict_equal(const ValueRef x, const ValueRef y);
 
 // unary operators
-typedef void (*UnaryOpName)(QV4::ValueRef, const QV4::ValueRef);
-void __qmljs_uplus(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_uminus(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_compl(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_not(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_increment(QV4::ValueRef result, const QV4::ValueRef value);
-void __qmljs_decrement(QV4::ValueRef result, const QV4::ValueRef value);
+typedef QV4::ReturnedValue (*UnaryOpName)(const QV4::ValueRef);
+QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value);
+QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value);
 
-Q_QML_EXPORT void __qmljs_value_to_double(double *result, const ValueRef value);
+Q_QML_EXPORT ReturnedValue __qmljs_value_to_double(const ValueRef value);
 Q_QML_EXPORT int __qmljs_value_to_int32(const ValueRef value);
 Q_QML_EXPORT int __qmljs_double_to_int32(const double &d);
 Q_QML_EXPORT unsigned __qmljs_value_to_uint32(const ValueRef value);
 Q_QML_EXPORT unsigned __qmljs_double_to_uint32(const double &d);
 
-void __qmljs_delete_subscript(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef base, const QV4::ValueRef index);
-void __qmljs_delete_member(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef base, QV4::String *name);
-void __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::ValueRef result, QV4::String *name);
+QV4::ReturnedValue __qmljs_delete_subscript(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index);
+ReturnedValue __qmljs_delete_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, QV4::String *name);
+ReturnedValue __qmljs_delete_name(QV4::ExecutionContext *ctx, QV4::String *name);
 
 void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::ValueRef value);
 
 // binary operators
-typedef void (*BinOp)(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-typedef void (*BinOpContext)(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
+typedef QV4::ReturnedValue (*BinOp)(const QV4::ValueRef left, const QV4::ValueRef right);
+typedef QV4::ReturnedValue (*BinOpContext)(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 
-void __qmljs_instanceof(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_in(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_add(ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_bit_or(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_bit_xor(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_bit_and(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_sub(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_mul(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_div(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_mod(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_shl(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_shr(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_ushr(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_gt(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_lt(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_ge(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_le(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_eq(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_ne(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_se(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
-void __qmljs_sne(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_instanceof(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_add(ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_sub(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_mul(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_div(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_mod(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_shl(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_gt(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_lt(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_ge(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_le(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_eq(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_ne(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_se(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_sne(const QV4::ValueRef left, const QV4::ValueRef right);
 
-void __qmljs_add_helper(QV4::ExecutionContext *ctx, QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_add_helper(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 
 
 typedef void (*InplaceBinOpName)(QV4::ExecutionContext *ctx, QV4::String *name, const QV4::ValueRef value);
@@ -259,10 +267,10 @@ void __qmljs_inplace_shr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef 
 void __qmljs_inplace_ushr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, QV4::String *name, const QV4::ValueRef rhs);
 
 typedef QV4::Bool (*CmpOp)(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef left, const QV4::ValueRef right);
-QV4::Bool __qmljs_cmp_le(const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef l, const QV4::ValueRef r);
+QV4::Bool __qmljs_cmp_le(const QV4::ValueRef l, const QV4::ValueRef r);
 QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::Bool __qmljs_cmp_ne(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::Bool __qmljs_cmp_se(const QV4::ValueRef left, const QV4::ValueRef right);
@@ -273,11 +281,11 @@ QV4::Bool __qmljs_cmp_instanceof(QV4::ExecutionContext *ctx, const QV4::ValueRef
 QV4::Bool __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 
 // type conversion and testing
-inline QV4::Value __qmljs_to_primitive(const QV4::ValueRef value, int typeHint)
+inline ReturnedValue __qmljs_to_primitive(const QV4::ValueRef value, int typeHint)
 {
     QV4::Object *o = value->asObject();
     if (!o)
-        return *value;
+        return value.asReturnedValue();
     return __qmljs_object_default_value(o, typeHint);
 }
 
@@ -286,210 +294,174 @@ inline double __qmljs_to_number(const ValueRef value)
     return value->toNumber();
 }
 
-inline QV4::Value __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
-{
-    if (value->isString())
-        return *value;
-    return QV4::Value::fromString(__qmljs_convert_to_string(ctx, value));
-}
-
-inline QV4::Value __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
-{
-    if (value->isObject())
-        return *value;
-    return QV4::Value::fromObject(__qmljs_convert_to_object(ctx, value));
-}
-
-
-inline void __qmljs_uplus(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    result = value;
-    if (result->tryIntegerConversion())
-        return;
+    if (value->integerCompatible())
+        return Encode(value->int_32);
 
-    double n = __qmljs_to_number(value);
-    *result = QV4::Value::fromDouble(n);
+    double n = value->toNumber();
+    return Encode(n);
 }
 
-inline void __qmljs_uminus(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     // +0 != -0, so we need to convert to double when negating 0
     if (value->isInteger() && value->integerValue())
-        *result = QV4::Value::fromInt32(-value->integerValue());
+        return QV4::Value::fromInt32(-value->integerValue()).asReturnedValue();
     else {
         double n = __qmljs_to_number(value);
-        *result = QV4::Value::fromDouble(-n);
+        return QV4::Value::fromDouble(-n).asReturnedValue();
     }
 }
 
-inline void __qmljs_compl(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_compl(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     int n;
-    if (value->isConvertibleToInt())
+    if (value->integerCompatible())
         n = value->int_32;
     else
-        n = QV4::Value::toInt32(__qmljs_to_number(value));
+        n = value->toInt32();
 
-    *result = QV4::Value::fromInt32(~n);
+    return Encode((int)~n);
 }
 
-inline void __qmljs_not(QV4::ValueRef result, const QV4::ValueRef value)
+inline QV4::ReturnedValue __qmljs_not(const QV4::ValueRef value)
 {
     TRACE1(value);
 
     bool b = value->toBoolean();
-    *result = QV4::Value::fromBoolean(!b);
+    return Encode(!b);
 }
 
 // binary operators
-inline void __qmljs_bit_or(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = QV4::Value::fromInt32(left->integerValue() | right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return QV4::Value::fromInt32(left->integerValue() | right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
-    *result = QV4::Value::fromInt32(lval | rval);
+    int lval = left->toInt32();
+    int rval = right->toInt32();
+    return QV4::Value::fromInt32(lval | rval).asReturnedValue();
 }
 
-inline void __qmljs_bit_xor(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = QV4::Value::fromInt32(left->integerValue() ^ right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return QV4::Value::fromInt32(left->integerValue() ^ right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
-    *result = QV4::Value::fromInt32(lval ^ rval);
+    int lval = left->toInt32();
+    int rval = right->toInt32();
+    return QV4::Value::fromInt32(lval ^ rval).asReturnedValue();
 }
 
-inline void __qmljs_bit_and(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = QV4::Value::fromInt32(left->integerValue() & right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return QV4::Value::fromInt32(left->integerValue() & right->integerValue()).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    int rval = QV4::Value::toInt32(__qmljs_to_number(right));
-    *result = QV4::Value::fromInt32(lval & rval);
+    int lval = left->toInt32();
+    int rval = right->toInt32();
+    return QV4::Value::fromInt32(lval & rval).asReturnedValue();
 }
 
-inline void __qmljs_add(QV4::ExecutionContext *ctx, ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_add(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = add_int32(left->integerValue(), right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return add_int32(left->integerValue(), right->integerValue()).asReturnedValue();
 
-    if (QV4::Value::bothDouble(*left, *right)) {
-        *result = QV4::Value::fromDouble(left->doubleValue() + right->doubleValue());
-        return;
-    }
+    if (QV4::Value::bothDouble(*left, *right))
+        return QV4::Value::fromDouble(left->doubleValue() + right->doubleValue()).asReturnedValue();
 
-    __qmljs_add_helper(ctx, result, left, right);
+    return __qmljs_add_helper(ctx, left, right);
 }
 
-inline void __qmljs_sub(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_sub(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = sub_int32(left->integerValue(), right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return sub_int32(left->integerValue(), right->integerValue()).asReturnedValue();
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
-    *result = QV4::Value::fromDouble(lval - rval);
+    return QV4::Value::fromDouble(lval - rval).asReturnedValue();
 }
 
-inline void __qmljs_mul(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_mul(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = mul_int32(left->integerValue(), right->integerValue());
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return mul_int32(left->integerValue(), right->integerValue()).asReturnedValue();
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
-    *result = QV4::Value::fromDouble(lval * rval);
+    return QV4::Value::fromDouble(lval * rval).asReturnedValue();
 }
 
-inline void __qmljs_div(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_div(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
-    *result = QV4::Value::fromDouble(lval / rval);
+    return QV4::Value::fromDouble(lval / rval).asReturnedValue();
 }
 
-inline void __qmljs_mod(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_mod(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right) && right->integerValue() != 0) {
         int intRes = left->integerValue() % right->integerValue();
-        if (intRes != 0 || left->integerValue() >= 0) {
-            *result = QV4::Value::fromInt32(intRes);
-            return;
-        }
+        if (intRes != 0 || left->integerValue() >= 0)
+            return QV4::Value::fromInt32(intRes).asReturnedValue();
     }
 
     double lval = __qmljs_to_number(left);
     double rval = __qmljs_to_number(right);
-    *result = QV4::Value::fromDouble(std::fmod(lval, rval));
+    return QV4::Value::fromDouble(std::fmod(lval, rval)).asReturnedValue();
 }
 
-inline void __qmljs_shl(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_shl(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = QV4::Value::fromInt32(left->integerValue() << ((uint(right->integerValue()) & 0x1f)));
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return QV4::Value::fromInt32(left->integerValue() << ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
-    *result = QV4::Value::fromInt32(lval << rval);
+    int lval = left->toInt32();
+    unsigned rval = right->toUInt32() & 0x1f;
+    return QV4::Value::fromInt32(lval << rval).asReturnedValue();
 }
 
-inline void __qmljs_shr(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (QV4::Value::integerCompatible(*left, *right)) {
-        *result = QV4::Value::fromInt32(left->integerValue() >> ((uint(right->integerValue()) & 0x1f)));
-        return;
-    }
+    if (QV4::Value::integerCompatible(*left, *right))
+        return QV4::Value::fromInt32(left->integerValue() >> ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
 
-    int lval = QV4::Value::toInt32(__qmljs_to_number(left));
-    unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
-    *result = QV4::Value::fromInt32(lval >> rval);
+    int lval = left->toInt32();
+    unsigned rval = right->toUInt32() & 0x1f;
+    return QV4::Value::fromInt32(lval >> rval).asReturnedValue();
 }
 
-inline void __qmljs_ushr(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
@@ -497,168 +469,88 @@ inline void __qmljs_ushr(QV4::ValueRef result, const QV4::ValueRef left, const Q
     if (QV4::Value::integerCompatible(*left, *right)) {
         res = uint(left->integerValue()) >> (uint(right->integerValue()) & 0x1f);
     } else {
-        unsigned lval = QV4::Value::toUInt32(__qmljs_to_number(left));
-        unsigned rval = QV4::Value::toUInt32(__qmljs_to_number(right)) & 0x1f;
+        unsigned lval = left->toUInt32();
+        unsigned rval = right->toUInt32() & 0x1f;
         res = lval >> rval;
     }
 
     if (res > INT_MAX)
-        *result = QV4::Value::fromDouble(res);
+        return QV4::Value::fromDouble(res).asReturnedValue();
     else
-        *result = QV4::Value::fromInt32(res);
+        return QV4::Value::fromInt32(res).asReturnedValue();
 }
 
-inline void __qmljs_gt(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_gt(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_gt(left, right));
+    return QV4::Value::fromBoolean(__qmljs_cmp_gt(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_lt(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_lt(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_lt(left, right));
+    return QV4::Value::fromBoolean(__qmljs_cmp_lt(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_ge(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_ge(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_ge(left, right));
+    return QV4::Value::fromBoolean(__qmljs_cmp_ge(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_le(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_le(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_le(left, right));
+    return QV4::Value::fromBoolean(__qmljs_cmp_le(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_eq(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_eq(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(__qmljs_cmp_eq(left, right));
+    return QV4::Value::fromBoolean(__qmljs_cmp_eq(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_ne(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_ne(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    *result = QV4::Value::fromBoolean(!__qmljs_cmp_eq(left, right));
+    return QV4::Value::fromBoolean(!__qmljs_cmp_eq(left, right)).asReturnedValue();
 }
 
-inline void __qmljs_se(QV4::ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_se(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
     bool r = __qmljs_strict_equal(left, right);
-    *result = QV4::Value::fromBoolean(r);
+    return QV4::Value::fromBoolean(r).asReturnedValue();
 }
 
-inline void __qmljs_sne(ValueRef result, const QV4::ValueRef left, const QV4::ValueRef right)
+inline QV4::ReturnedValue __qmljs_sne(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
     bool r = ! __qmljs_strict_equal(left, right);
-    *result = QV4::Value::fromBoolean(r);
-}
-
-inline QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() > right->integerValue();
-
-    // Safe, as l & r are primitive values
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() > r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return r.stringValue()->compare(l.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl > dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() < right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() < r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return l.stringValue()->compare(r.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl < dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_ge(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() >= right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() >= r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return !l.stringValue()->compare(r.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl >= dr;
-    }
-}
-
-inline QV4::Bool __qmljs_cmp_le(const QV4::ValueRef left, const QV4::ValueRef right)
-{
-    TRACE2(left, right);
-    if (QV4::Value::integerCompatible(*left, *right))
-        return left->integerValue() <= right->integerValue();
-
-    QV4::Value l = __qmljs_to_primitive(left, QV4::NUMBER_HINT);
-    QV4::Value r = __qmljs_to_primitive(right, QV4::NUMBER_HINT);
-
-    if (QV4::Value::bothDouble(l, r)) {
-        return l.doubleValue() <= r.doubleValue();
-    } else if (l.isString() && r.isString()) {
-        return !r.stringValue()->compare(l.stringValue());
-    } else {
-        double dl = __qmljs_to_number(ValueRef(&l));
-        double dr = __qmljs_to_number(ValueRef(&r));
-        return dl <= dr;
-    }
+    return QV4::Value::fromBoolean(r).asReturnedValue();
 }
 
 inline QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    if (left->val == right->val)
+    if (left->rawValue() == right->rawValue())
         // NaN != NaN
-        return (left->tag & QV4::Value::NotDouble_Mask) != QV4::Value::NaN_Mask;
+        return !left->isNaN();
 
     if (left->type() == right->type()) {
-        if (left->isManaged())
+        if (!left->isManaged())
+            return false;
+        if (left->isString() == right->isString())
             return left->managed()->isEqualTo(right->managed());
-        return false;
     }
 
     return __qmljs_equal_helper(left, right);
@@ -689,18 +581,18 @@ inline QV4::Bool __qmljs_cmp_instanceof(QV4::ExecutionContext *ctx, const QV4::V
 {
     TRACE2(left, right);
 
-    QV4::Value v;
-    __qmljs_instanceof(ctx, &v, left, right);
-    return v.booleanValue();
+    Scope scope(ctx);
+    QV4::ScopedValue v(scope, __qmljs_instanceof(ctx, left, right));
+    return v->booleanValue();
 }
 
 inline uint __qmljs_cmp_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    QV4::Value v;
-    __qmljs_in(ctx, &v, left, right);
-    return v.booleanValue();
+    Scope scope(ctx);
+    QV4::ScopedValue v(scope, __qmljs_in(ctx, left, right));
+    return v->booleanValue();
 }
 
 } // namespace QV4

@@ -78,11 +78,11 @@ public:
 
     QVariant toVariant() const;
 
-    static QV4::Value create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
-    static QV4::Value create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);
+    static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *, TypeNameMode = IncludeEnums);
 
 
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void destroy(Managed *that);

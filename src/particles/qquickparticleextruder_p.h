@@ -57,8 +57,8 @@ public:
     virtual QPointF extrude(const QRectF &);
     virtual bool contains(const QRectF &bounds, const QPointF &point);
 
-signals:
-public slots:
+Q_SIGNALS:
+public Q_SLOTS:
 protected:
 };
 

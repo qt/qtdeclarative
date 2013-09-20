@@ -56,6 +56,7 @@
 
 #include <ctype.h> // for toupper
 #include <limits.h>
+#include <algorithm>
 
 #ifdef Q_CC_MSVC
 // nonstandard extension used : zero-sized array in struct/union.
@@ -1507,8 +1508,8 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
     Q_ASSERT(properties.count() == propertyIndexCache.count());
     Q_ASSERT(methods.count() == methodIndexCache.count());
 
-    qSort(properties.begin(), properties.end(), Sort::lt);
-    qSort(methods.begin(), methods.end(), Sort::lt);
+    std::sort(properties.begin(), properties.end(), Sort::lt);
+    std::sort(methods.begin(), methods.end(), Sort::lt);
 
     for (int ii = 0; ii < properties.count(); ++ii) {
         QQmlPropertyData *data = properties.at(ii).second;

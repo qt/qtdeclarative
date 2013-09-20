@@ -72,7 +72,7 @@ struct ErrorObject: Object {
     ExecutionEngine::StackTrace stackTrace;
     String *stack;
 
-    static Value method_get_stack(SimpleCallContext *ctx);
+    static ReturnedValue method_get_stack(SimpleCallContext *ctx);
     static void markObjects(Managed *that);
     static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
@@ -93,11 +93,9 @@ struct ReferenceErrorObject: ErrorObject {
 };
 
 struct SyntaxErrorObject: ErrorObject {
+    Q_MANAGED
     SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
-
-protected:
-    static const ManagedVTable static_vtbl;
 };
 
 struct TypeErrorObject: ErrorObject {
@@ -111,74 +109,60 @@ struct URIErrorObject: ErrorObject {
 
 struct ErrorCtor: FunctionObject
 {
+    Q_MANAGED
     ErrorCtor(ExecutionContext *scope);
     ErrorCtor(ExecutionContext *scope, String *name);
 
-    static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     EvalErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     RangeErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     ReferenceErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     SyntaxErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     TypeErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
+    Q_MANAGED
     URIErrorCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
 };
 
 
@@ -189,7 +173,7 @@ struct ErrorPrototype: ErrorObject
     void init(ExecutionEngine *engine, const Value &ctor) { init(engine, ctor, this); }
 
     static void init(ExecutionEngine *engine, const Value &ctor, Object *obj);
-    static Value method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
 };
 
 struct EvalErrorPrototype: ErrorObject

@@ -153,12 +153,14 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
     }
 
     if (QV4::ArrayObject *a = value.asArrayObject()) {
+        QV4::Scope scope(a->engine());
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
             uint32_t length = a->arrayLength();
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
             for (uint32_t ii = 0; ii < length; ++ii) {
-                QV4::Value arrayItem = a->getIndexed(ii);
-                if (QV4::QObjectWrapper *qobjectWrapper = arrayItem.as<QV4::QObjectWrapper>()) {
+                qobjectWrapper = a->getIndexed(ii);
+                if (!!qobjectWrapper) {
                     list << qobjectWrapper->object();
                 } else {
                     list << 0;
@@ -179,44 +181,46 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
     return toBasicVariant(value);
 }
 
-static QV4::Value arrayFromStringList(QV8Engine *engine, const QStringList &list)
+static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject();
+    QV4::Scope scope(e);
+    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
     a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
         a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
     a->setArrayLengthUnchecked(len);
-    return QV4::Value::fromObject(a);
+    return a.asReturnedValue();
 }
 
-static QV4::Value arrayFromVariantList(QV8Engine *engine, const QVariantList &list)
+static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariantList &list)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
-    QV4::ArrayObject *a = e->newArrayObject();
+    QV4::Scope scope(e);
+    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
     a->arrayDataLen = len;
     for (int ii = 0; ii < len; ++ii)
-        a->arrayData[ii].value = engine->fromVariant(list.at(ii));
+        a->arrayData[ii].value = QV4::Value::fromReturnedValue(engine->fromVariant(list.at(ii)));
     a->setArrayLengthUnchecked(len);
-    return QV4::Value::fromObject(a);
+    return a.asReturnedValue();
 }
 
-static QV4::Value objectFromVariantMap(QV8Engine *engine, const QVariantMap &map)
+static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariantMap &map)
 {
     QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
     QV4::Object *o = e->newObject();
     for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
-        o->put(e->newString(iter.key()), engine->fromVariant(iter.value()));
-    return QV4::Value::fromObject(o);
+        o->put(e->newString(iter.key()), QV4::Value::fromReturnedValue(engine->fromVariant(iter.value())));
+    return QV4::Value::fromObject(o).asReturnedValue();
 }
 
 Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
-QV4::Value QV8Engine::fromVariant(const QVariant &variant)
+QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
 {
     int type = variant.userType();
     const void *ptr = variant.constData();
@@ -225,49 +229,50 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
         switch (QMetaType::Type(type)) {
             case QMetaType::UnknownType:
             case QMetaType::Void:
-                return QV4::Value::undefinedValue();
+                return QV4::Encode::undefined();
             case QMetaType::Bool:
-                return QV4::Value::fromBoolean(*reinterpret_cast<const bool*>(ptr));
+                return QV4::Encode(*reinterpret_cast<const bool*>(ptr));
             case QMetaType::Int:
-                return QV4::Value::fromInt32(*reinterpret_cast<const int*>(ptr));
+                return QV4::Encode(*reinterpret_cast<const int*>(ptr));
             case QMetaType::UInt:
-                return QV4::Value::fromUInt32(*reinterpret_cast<const uint*>(ptr));
+                return QV4::Encode(*reinterpret_cast<const uint*>(ptr));
             case QMetaType::LongLong:
-                return QV4::Value::fromDouble(*reinterpret_cast<const qlonglong*>(ptr));
+                return QV4::Encode((double)*reinterpret_cast<const qlonglong*>(ptr));
             case QMetaType::ULongLong:
-                return QV4::Value::fromDouble(*reinterpret_cast<const qulonglong*>(ptr));
+                return QV4::Encode((double)*reinterpret_cast<const qulonglong*>(ptr));
             case QMetaType::Double:
-                return QV4::Value::fromDouble(*reinterpret_cast<const double*>(ptr));
+                return QV4::Encode(*reinterpret_cast<const double*>(ptr));
             case QMetaType::QString:
-                return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr));
+                return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr)).asReturnedValue();
             case QMetaType::Float:
-                return QV4::Value::fromDouble(*reinterpret_cast<const float*>(ptr));
+                return QV4::Encode(*reinterpret_cast<const float*>(ptr));
             case QMetaType::Short:
-                return QV4::Value::fromInt32(*reinterpret_cast<const short*>(ptr));
+                return QV4::Encode((int)*reinterpret_cast<const short*>(ptr));
             case QMetaType::UShort:
-                return QV4::Value::fromUInt32(*reinterpret_cast<const unsigned short*>(ptr));
+                return QV4::Encode((int)*reinterpret_cast<const unsigned short*>(ptr));
             case QMetaType::Char:
-                return QV4::Value::fromInt32(*reinterpret_cast<const char*>(ptr));
+                return QV4::Encode((int)*reinterpret_cast<const char*>(ptr));
             case QMetaType::UChar:
-                return QV4::Value::fromUInt32(*reinterpret_cast<const unsigned char*>(ptr));
+                return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(ptr));
             case QMetaType::QChar:
-                return QV4::Value::fromInt32((*reinterpret_cast<const QChar*>(ptr)).unicode());
+                return QV4::Encode((int)(*reinterpret_cast<const QChar*>(ptr)).unicode());
             case QMetaType::QDateTime:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
+                return QV4::Encode(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
+                return QV4::Encode(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr))));
             case QMetaType::QTime:
-            return QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
+            return QV4::Encode(m_v4Engine->newDateObject(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
-                return QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
+                return QV4::Encode(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
                 return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
-                QV4::Value retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
+                QV4::Scope scope(m_v4Engine);
+                QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded));
                 if (succeeded)
-                    return retn;
+                    return retn.asReturnedValue();
                 return arrayFromStringList(this, *reinterpret_cast<const QStringList *>(ptr));
                 }
             case QMetaType::QVariantList:
@@ -288,13 +293,14 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
         if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
             return QV4::QmlValueTypeWrapper::create(this, variant, vt);
     } else {
+        QV4::Scope scope(m_v4Engine);
         if (type == qMetaTypeId<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
             QDLRP *p = QDLRP::get((QQmlListReference*)ptr);
             if (p->object) {
                 return QV4::QmlListWrapper::create(this, p->property, p->propertyType);
             } else {
-                return QV4::Value::nullValue();
+                return QV4::Encode::null();
             }
         } else if (type == qMetaTypeId<QJSValue>()) {
             const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
@@ -304,13 +310,13 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
-            QV4::ArrayObject *a = m_v4Engine->newArrayObject();
+            QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
             a->arrayReserve(list.count());
             a->arrayDataLen = list.count();
             for (int ii = 0; ii < list.count(); ++ii)
-                a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
+                a->arrayData[ii].value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii)));
             a->setArrayLengthUnchecked(list.count());
-            return QV4::Value::fromObject(a);
+            return a.asReturnedValue();
         } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
             return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
         }
@@ -321,9 +327,9 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
             return QV4::QObjectWrapper::wrap(m_v4Engine, obj);
 
         bool succeeded = false;
-        QV4::Value retn = QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded);
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(m_v4Engine, variant, &succeeded));
         if (succeeded)
-            return retn;
+            return retn.asReturnedValue();
 
         if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
             return QV4::QmlValueTypeWrapper::create(this, variant, vt);
@@ -333,7 +339,7 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
     //    + QObjectList
     //    + QList<int>
 
-    return QV4::Value::fromObject(m_v4Engine->newVariantObject(variant));
+    return QV4::Encode(m_v4Engine->newVariantObject(variant));
 }
 
 QNetworkAccessManager *QV8Engine::networkAccessManager()
@@ -381,11 +387,15 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
     if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
         return re->toQRegExp();
     if (QV4::ArrayObject *a = value.asArrayObject()) {
+        QV4::Scope scope(a->engine());
+        QV4::ScopedValue v(scope);
         QVariantList rv;
 
         int length = a->arrayLength();
-        for (int ii = 0; ii < length; ++ii)
-            rv << toVariant(a->getIndexed(ii), -1);
+        for (int ii = 0; ii < length; ++ii) {
+            v = a->getIndexed(ii);
+            rv << toVariant(v, -1);
+        }
         return rv;
     }
     if (!value.asFunctionObject())
@@ -398,6 +408,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
 
 void QV8Engine::initializeGlobal()
 {
+    QV4::Scope scope(m_v4Engine);
     QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
@@ -434,16 +445,17 @@ void QV8Engine::initializeGlobal()
                       "    }"\
                       "})"
 
-        QV4::Value result = QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0);
-        Q_ASSERT(result.asFunctionObject());
-        m_freezeObject = result;
+        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
+        Q_ASSERT(!!result);
+        m_freezeObject = result.asValue();
 #undef FREEZE_SOURCE
     }
 }
 
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
-    QV4::ScopedCallData callData(m_v4Engine, 1);
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = value;
     callData->thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
     m_freezeObject.value().asFunctionObject()->call(callData);
@@ -505,15 +517,16 @@ QV4::Value QV8Engine::global()
 // The result is a new Array object with length equal to the length
 // of the QVariantList, and the elements being the QVariantList's
 // elements converted to JS, recursively.
-QV4::Value QV8Engine::variantListToJS(const QVariantList &lst)
+QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 {
-    QV4::ArrayObject *a = m_v4Engine->newArrayObject();
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
     a->arrayDataLen = lst.size();
     for (int i = 0; i < lst.size(); i++)
-        a->arrayData[i].value = variantToJS(lst.at(i));
+        a->arrayData[i].value = QV4::Value::fromReturnedValue(variantToJS(lst.at(i)));
     a->setArrayLengthUnchecked(lst.size());
-    return QV4::Value::fromObject(a);
+    return a.asReturnedValue();
 }
 
 // Converts a JS Array object to a QVariantList.
@@ -533,9 +546,12 @@ QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
 
     visitedObjects.insert(a);
 
+    QV4::Scope scope(a->engine());
+    QV4::ScopedValue v(scope);
+
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
-        QV4::Value v = a->getIndexed(i);
+        v = a->getIndexed(i);
         result.append(variantFromJS(v, visitedObjects));
     }
 
@@ -548,15 +564,15 @@ QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
 // The result is a new Object object with property names being
 // the keys of the QVariantMap, and values being the values of
 // the QVariantMap converted to JS, recursively.
-QV4::Value QV8Engine::variantMapToJS(const QVariantMap &vmap)
+QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 {
     QV4::Object *o = m_v4Engine->newObject();
     QVariantMap::const_iterator it;
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
         QV4::Property *p = o->insertMember(m_v4Engine->newIdentifier(it.key()), QV4::Attr_Data);
-        p->value = variantToJS(it.value());
+        p->value = QV4::Value::fromReturnedValue(variantToJS(it.value()));
     }
-    return QV4::Value::fromObject(o);
+    return QV4::Value::fromObject(o).asReturnedValue();
 }
 
 // Converts a JS Object to a QVariantMap.
@@ -577,17 +593,19 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
         // empty object (and no error is thrown).
         return result;
     }
+    QV4::Scope scope(o->engine());
 
     visitedObjects.insert(o);
 
     QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
     while (1) {
         QV4::Value v;
-        QV4::Value name = it.nextPropertyNameAsString(&v);
-        if (name.isNull())
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
             break;
 
-        QString key = name.toQString();
+        QString key = name->toQStringNoThrow();
         result.insert(key, variantFromJS(v, visitedObjects));
     }
 
@@ -597,96 +615,85 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
 
 // Converts the meta-type defined by the given type and data to JS.
 // Returns the value if conversion succeeded, an empty handle otherwise.
-QV4::Value QV8Engine::metaTypeToJS(int type, const void *data)
+QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
 {
     Q_ASSERT(data != 0);
-    QV4::Value result;
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
     case QMetaType::UnknownType:
     case QMetaType::Void:
-        return QV4::Value::undefinedValue();
+        return QV4::Encode::undefined();
     case QMetaType::Bool:
-        return QV4::Value::fromBoolean(*reinterpret_cast<const bool*>(data));
+        return QV4::Encode(*reinterpret_cast<const bool*>(data));
     case QMetaType::Int:
-        return QV4::Value::fromInt32(*reinterpret_cast<const int*>(data));
+        return QV4::Encode(*reinterpret_cast<const int*>(data));
     case QMetaType::UInt:
-        return QV4::Value::fromUInt32(*reinterpret_cast<const uint*>(data));
+        return QV4::Encode(*reinterpret_cast<const uint*>(data));
     case QMetaType::LongLong:
-        return QV4::Value::fromDouble(double(*reinterpret_cast<const qlonglong*>(data)));
+        return QV4::Encode(double(*reinterpret_cast<const qlonglong*>(data)));
     case QMetaType::ULongLong:
 #if defined(Q_OS_WIN) && defined(_MSC_FULL_VER) && _MSC_FULL_VER <= 12008804
 #pragma message("** NOTE: You need the Visual Studio Processor Pack to compile support for 64bit unsigned integers.")
-        return QV4::Value::fromDouble(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
+        return QV4::Encode(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
 #elif defined(Q_CC_MSVC) && !defined(Q_CC_MSVC_NET)
-        return QV4::Value::fromDouble(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
+        return QV4::Encode(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
 #else
-        return QV4::Value::fromDouble(double(*reinterpret_cast<const qulonglong*>(data)));
+        return QV4::Encode(double(*reinterpret_cast<const qulonglong*>(data)));
 #endif
     case QMetaType::Double:
-        return QV4::Value::fromDouble(*reinterpret_cast<const double*>(data));
+        return QV4::Encode(*reinterpret_cast<const double*>(data));
     case QMetaType::QString:
-        return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(data));
+        return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(data)).asReturnedValue();
     case QMetaType::Float:
-        return QV4::Value::fromDouble(*reinterpret_cast<const float*>(data));
+        return QV4::Encode(*reinterpret_cast<const float*>(data));
     case QMetaType::Short:
-        return QV4::Value::fromInt32(*reinterpret_cast<const short*>(data));
+        return QV4::Encode((int)*reinterpret_cast<const short*>(data));
     case QMetaType::UShort:
-        return QV4::Value::fromUInt32(*reinterpret_cast<const unsigned short*>(data));
+        return QV4::Encode((int)*reinterpret_cast<const unsigned short*>(data));
     case QMetaType::Char:
-        return QV4::Value::fromInt32(*reinterpret_cast<const char*>(data));
+        return QV4::Encode((int)*reinterpret_cast<const char*>(data));
     case QMetaType::UChar:
-        return QV4::Value::fromUInt32(*reinterpret_cast<const unsigned char*>(data));
+        return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(data));
     case QMetaType::QChar:
-        return QV4::Value::fromUInt32((*reinterpret_cast<const QChar*>(data)).unicode());
+        return QV4::Encode((int)(*reinterpret_cast<const QChar*>(data)).unicode());
     case QMetaType::QStringList:
-        result = QV4::Value::fromObject(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
-        break;
+        return QV4::Encode(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
     case QMetaType::QVariantList:
-        result = variantListToJS(*reinterpret_cast<const QVariantList *>(data));
-        break;
+        return variantListToJS(*reinterpret_cast<const QVariantList *>(data));
     case QMetaType::QVariantMap:
-        result = variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
-        break;
+        return variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
     case QMetaType::QDateTime:
-        result = QV4::Value::fromObject(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
-        break;
+        return QV4::Encode(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
     case QMetaType::QDate:
-        result = QV4::Value::fromObject(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
-        break;
+        return QV4::Encode(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
     case QMetaType::QRegExp:
-        result = QV4::Value::fromObject(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
-        break;
+        return QV4::Encode(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
     case QMetaType::QObjectStar:
-        result = QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(data));
-        break;
+        return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(data));
     case QMetaType::QVariant:
-        result = variantToJS(*reinterpret_cast<const QVariant*>(data));
-        break;
+        return variantToJS(*reinterpret_cast<const QVariant*>(data));
     case QMetaType::QJsonValue:
-        result = QV4::JsonObject::fromJsonValue(m_v4Engine, *reinterpret_cast<const QJsonValue *>(data));
-        break;
+        return QV4::JsonObject::fromJsonValue(m_v4Engine, *reinterpret_cast<const QJsonValue *>(data));
     case QMetaType::QJsonObject:
-        result = QV4::JsonObject::fromJsonObject(m_v4Engine, *reinterpret_cast<const QJsonObject *>(data));
-        break;
+        return QV4::JsonObject::fromJsonObject(m_v4Engine, *reinterpret_cast<const QJsonObject *>(data));
     case QMetaType::QJsonArray:
-        result = QV4::JsonObject::fromJsonArray(m_v4Engine, *reinterpret_cast<const QJsonArray *>(data));
-        break;
+        return QV4::JsonObject::fromJsonArray(m_v4Engine, *reinterpret_cast<const QJsonArray *>(data));
     default:
         if (type == qMetaTypeId<QJSValue>()) {
             return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->getValue(m_v4Engine);
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
-                return QV4::Value::nullValue();
+                return QV4::Encode::null();
             } else {
                 // Fall back to wrapping in a QVariant.
-                result = QV4::Value::fromObject(m_v4Engine->newVariantObject(QVariant(type, data)));
+                return QV4::Encode(m_v4Engine->newVariantObject(QVariant(type, data)));
             }
         }
     }
-    return result;
+    Q_UNREACHABLE();
+    return 0;
 }
 
 // Converts a JS value to a meta-type.
@@ -863,7 +870,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
 }
 
 // Converts a QVariant to JS.
-QV4::Value QV8Engine::variantToJS(const QVariant &value)
+QV4::ReturnedValue QV8Engine::variantToJS(const QVariant &value)
 {
     return metaTypeToJS(value.userType(), value.constData());
 }

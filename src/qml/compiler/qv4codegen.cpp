@@ -61,9 +61,6 @@
 #undef CONST
 #endif
 
-#define QV4_NO_LIVENESS
-#undef SHOW_SSA
-
 using namespace QQmlJS;
 using namespace AST;
 

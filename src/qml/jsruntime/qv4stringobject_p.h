@@ -68,13 +68,11 @@ protected:
 
 struct StringCtor: FunctionObject
 {
+    Q_MANAGED
     StringCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *m, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *m, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct StringPrototype: StringObject
@@ -82,26 +80,26 @@ struct StringPrototype: StringObject
     StringPrototype(InternalClass *ic): StringObject(ic) {}
     void init(ExecutionEngine *engine, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *context);
-    static Value method_charAt(SimpleCallContext *context);
-    static Value method_charCodeAt(SimpleCallContext *context);
-    static Value method_concat(SimpleCallContext *context);
-    static Value method_indexOf(SimpleCallContext *context);
-    static Value method_lastIndexOf(SimpleCallContext *context);
-    static Value method_localeCompare(SimpleCallContext *context);
-    static Value method_match(SimpleCallContext *context);
-    static Value method_replace(SimpleCallContext *ctx);
-    static Value method_search(SimpleCallContext *ctx);
-    static Value method_slice(SimpleCallContext *ctx);
-    static Value method_split(SimpleCallContext *ctx);
-    static Value method_substr(SimpleCallContext *context);
-    static Value method_substring(SimpleCallContext *context);
-    static Value method_toLowerCase(SimpleCallContext *ctx);
-    static Value method_toLocaleLowerCase(SimpleCallContext *ctx);
-    static Value method_toUpperCase(SimpleCallContext *ctx);
-    static Value method_toLocaleUpperCase(SimpleCallContext *ctx);
-    static Value method_fromCharCode(SimpleCallContext *context);
-    static Value method_trim(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *context);
+    static ReturnedValue method_charAt(SimpleCallContext *context);
+    static ReturnedValue method_charCodeAt(SimpleCallContext *context);
+    static ReturnedValue method_concat(SimpleCallContext *context);
+    static ReturnedValue method_indexOf(SimpleCallContext *context);
+    static ReturnedValue method_lastIndexOf(SimpleCallContext *context);
+    static ReturnedValue method_localeCompare(SimpleCallContext *context);
+    static ReturnedValue method_match(SimpleCallContext *context);
+    static ReturnedValue method_replace(SimpleCallContext *ctx);
+    static ReturnedValue method_search(SimpleCallContext *ctx);
+    static ReturnedValue method_slice(SimpleCallContext *ctx);
+    static ReturnedValue method_split(SimpleCallContext *ctx);
+    static ReturnedValue method_substr(SimpleCallContext *context);
+    static ReturnedValue method_substring(SimpleCallContext *context);
+    static ReturnedValue method_toLowerCase(SimpleCallContext *ctx);
+    static ReturnedValue method_toLocaleLowerCase(SimpleCallContext *ctx);
+    static ReturnedValue method_toUpperCase(SimpleCallContext *ctx);
+    static ReturnedValue method_toLocaleUpperCase(SimpleCallContext *ctx);
+    static ReturnedValue method_fromCharCode(SimpleCallContext *context);
+    static ReturnedValue method_trim(SimpleCallContext *ctx);
 };
 
 }

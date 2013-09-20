@@ -44,10 +44,10 @@
 
 using namespace QV4;
 
-static Value throwTypeError(SimpleCallContext *ctx)
+static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(ArgumentsObject);
@@ -106,6 +106,7 @@ void ArgumentsObject::destroy(Managed *that)
 
 bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)
 {
+    Scope scope(ctx);
     uint pidx = propertyIndexFromArrayIndex(index);
     Property *pd = arrayData + pidx;
     Property map;
@@ -130,7 +131,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
-            ScopedCallData callData(ctx->engine, 1);
+            ScopedCallData callData(scope, 1);
             callData->thisObject = Value::fromObject(this);
             callData->args[0] = desc.value;
             map.setter()->call(callData);
@@ -148,7 +149,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
 
 DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
 
-Value ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
+ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
     ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
     Object *that = callData->thisObject.asObject();
@@ -159,12 +160,12 @@ Value ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
         getter->engine()->current->throwTypeError();
 
     assert(g->index < o->context->argumentCount);
-    return o->context->argument(g->index);
+    return o->context->argument(g->index).asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
 
-Value ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
+ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {
     ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
     Object *that = callData->thisObject.asObject();
@@ -176,7 +177,7 @@ Value ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 
     assert(s->index < o->context->argumentCount);
     o->context->arguments[s->index] = callData->argc ? callData->args[0] : Value::undefinedValue();
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void ArgumentsObject::markObjects(Managed *that)

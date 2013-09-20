@@ -81,7 +81,7 @@ public:
 
     virtual bool interleaveIncubation() const { return false; }
 
-signals:
+Q_SIGNALS:
     void timeToIncubate();
 
 private:

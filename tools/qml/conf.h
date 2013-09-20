@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Research In Motion.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,70 +38,62 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef CONF_H
+#define CONF_H
 
-#ifndef QV8DEBUGSERVICE_P_H
-#define QV8DEBUGSERVICE_P_H
+#include <QtQml>
+#include <QObject>
+#include <QUrl>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmldebugservice_p.h"
-#ifdef Q_OS_WINCE
-#  ifdef DebugBreak
-#    undef DebugBreak
-#  endif
-#endif
-#include <private/qv8debug_p.h>
-
-QT_BEGIN_NAMESPACE
-
-
-class QV8Engine;
-class QV8DebugServicePrivate;
-
-class QV8DebugService : public QQmlDebugService
+class PartialScene : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QUrl container READ container WRITE setContainer NOTIFY containerChanged)
+    Q_PROPERTY(QString itemType READ itemType WRITE setItemType NOTIFY itemTypeChanged)
 public:
-    QV8DebugService(QObject *parent = 0);
-    ~QV8DebugService();
+    PartialScene(QObject *parent = 0) : QObject(parent)
+    {}
 
-    static QV8DebugService *instance();
-    static void addEngine(const QV8Engine *engine);
-    static void removeEngine(const QV8Engine *engine);
+    const QUrl container() const { return m_container; }
+    const QString itemType() const { return m_itemType; }
 
-    void debugMessageHandler(const QString &message);
+    void setContainer(const QUrl &a) {
+        if (a==m_container)
+            return;
+        m_container = a;
+        emit containerChanged();
+    }
+    void setItemType(const QString &a) {
+        if (a==m_itemType)
+            return;
+        m_itemType = a;
+        emit itemTypeChanged();
+    }
 
-    void signalEmitted(const QString &signal);
-
-public slots:
-    void processDebugMessages();
-
-private slots:
-    void scheduledDebugBreak(bool schedule);
-    void sendDebugMessage(const QString &message);
-    void init();
-
-protected:
-    void stateChanged(State newState);
-    void messageReceived(const QByteArray &);
-
-private:
-    void setEngine(const QV8Engine *engine);
+signals:
+    void containerChanged();
+    void itemTypeChanged();
 
 private:
-    Q_DISABLE_COPY(QV8DebugService)
-    Q_DECLARE_PRIVATE(QV8DebugService)
+    QUrl m_container;
+    QString m_itemType;
 };
 
-QT_END_NAMESPACE
+class Config : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<PartialScene> sceneCompleters READ sceneCompleters)
+    Q_CLASSINFO("DefaultProperty", "sceneCompleters")
+public:
+    Config (QObject* parent=0) : QObject(parent)
+    {}
 
-#endif // QV8DEBUGSERVICE_P_H
+    QQmlListProperty<PartialScene> sceneCompleters()
+    {
+        return QQmlListProperty<PartialScene>(this, completers);
+    }
+
+    QList<PartialScene*> completers;
+};
+
+#endif

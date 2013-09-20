@@ -41,12 +41,19 @@
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlextensionplugin.h>
+#include "qquickmessagedialog_p.h"
+#include "qquickabstractmessagedialog_p.h"
+#include "qquickmessageattached_p.h"
+#include "qquickplatformmessagedialog_p.h"
 #include "qquickfiledialog_p.h"
 #include "qquickabstractfiledialog_p.h"
 #include "qquickplatformfiledialog_p.h"
 #include "qquickcolordialog_p.h"
 #include "qquickabstractcolordialog_p.h"
 #include "qquickplatformcolordialog_p.h"
+#include "qquickfontdialog_p.h"
+#include "qquickabstractfontdialog_p.h"
+#include "qquickplatformfontdialog_p.h"
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
@@ -65,7 +72,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQuick.Dialogs 1.0
+    import QtQuick.Dialogs 1.1
     \endcode
 */
 
@@ -98,6 +105,15 @@ public:
         // possible to instantiate it from Qt Quick.
         // Otherwise fall back to a pure-QML implementation.
 
+        // MessageDialog
+        qmlRegisterUncreatableType<QQuickMessageAttached>(uri, 1, 1, "Message", QQuickMessageAttached::tr("Message can only be used via the attached property."));
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::MessageDialog))
+            qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickMessageDialog>(widgetsDir, qmlDir, "MessageDialog", uri, hasTopLevelWindows, 1, 1);
+
         // FileDialog
 #ifndef PURE_QML_ONLY
         if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FileDialog))
@@ -113,6 +129,14 @@ public:
         else
 #endif
             registerWidgetOrQmlImplementation<QQuickColorDialog>(widgetsDir, qmlDir, "ColorDialog", uri, hasTopLevelWindows, 1, 0);
+
+        // FontDialog
+#ifndef PURE_QML_ONLY
+        if (QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(QPlatformTheme::FontDialog))
+            qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 1, "FontDialog");
+        else
+#endif
+            registerWidgetOrQmlImplementation<QQuickFontDialog>(widgetsDir, qmlDir, "FontDialog", uri, hasTopLevelWindows, 1, 1);
     }
 
 protected:
@@ -122,7 +146,10 @@ protected:
         //qDebug() << Q_FUNC_INFO << qmlDir << qmlName << uri;
         bool needQml = true;
 
-#ifndef PURE_QML_ONLY
+#ifdef PURE_QML_ONLY
+        Q_UNUSED(widgetsDir)
+        Q_UNUSED(hasTopLevelWindows)
+#else
         // If there is a qmldir and we have a QApplication instance (as opposed to a
         // widget-free QGuiApplication), assume that the widget-based dialog will work.
         if (hasTopLevelWindows && widgetsDir.exists("qmldir") &&

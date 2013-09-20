@@ -157,6 +157,9 @@ class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
     Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
+    // Note, threshold was added in QtQuick 2.2 but REVISION is not supported (or needed) for grouped
+    // properties See QTBUG-33179
+    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged RESET resetThreshold)
     //### consider drag and drop
 
 public:
@@ -182,6 +185,10 @@ public:
     qreal ymax() const;
     void setYmax(qreal);
 
+    qreal threshold() const;
+    void setThreshold(qreal);
+    void resetThreshold();
+
     bool active() const;
     void setActive(bool);
 
@@ -199,6 +206,7 @@ Q_SIGNALS:
     void maximumYChanged();
     void activeChanged();
     void filterChildrenChanged();
+    void thresholdChanged();
 
 private:
     QQuickItem *_target;
@@ -209,6 +217,7 @@ private:
     qreal _ymax;
     bool _active : 1;
     bool _filterChildren: 1;
+    qreal _threshold;
     Q_DISABLE_COPY(QQuickDrag)
 };
 

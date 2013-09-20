@@ -48,44 +48,9 @@
 
 using namespace QV4;
 
-int Value::toInt32() const
-{
-    if (isConvertibleToInt())
-        return int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = toNumber();
-
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
-
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Value::toInt32(d);
-}
-
-unsigned int Value::toUInt32() const
-{
-    if (isConvertibleToInt())
-        return (unsigned) int_32;
-    double d;
-    if (isDouble())
-        d = dbl;
-    else
-        d = toNumber();
-
-    const double D32 = 4294967296.0;
-    if (d >= 0 && d < D32)
-        return static_cast<uint>(d);
-    return toUInt32(d);
-}
-
 int Value::toUInt16() const
 {
-    if (isConvertibleToInt())
+    if (integerCompatible())
         return (ushort)(uint)integerValue();
 
     double number = toNumber();
@@ -111,41 +76,39 @@ int Value::toUInt16() const
 
 double Value::toInteger() const
 {
-    if (isConvertibleToInt())
+    if (integerCompatible())
         return int_32;
 
     return Value::toInteger(toNumber());
 }
 
-double Value::toNumber() const
+double Value::toNumberImpl() const
 {
-    QV4::Value v = *this;
-
-  redo:
-    switch (v.type()) {
+    switch (type()) {
     case QV4::Value::Undefined_Type:
         return std::numeric_limits<double>::quiet_NaN();
+    case QV4::Value::Managed_Type:
+        if (isString())
+            return __qmljs_string_to_number(stringValue()->toQString());
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), NUMBER_HINT));
+            return prim->toNumber();
+        }
     case QV4::Value::Null_Type:
-        return 0;
     case QV4::Value::Boolean_Type:
-        return (v.booleanValue() ? 1. : 0.);
     case QV4::Value::Integer_Type:
-        return v.int_32;
-    case QV4::Value::String_Type:
-        return __qmljs_string_to_number(v.toQString());
-    case QV4::Value::Object_Type: {
-        v = __qmljs_to_primitive(ValueRef::fromRawValue(this), QV4::NUMBER_HINT);
-        goto redo;
-    }
     default: // double
-        return v.doubleValue();
+        Q_UNREACHABLE();
     }
 }
 
-QString Value::toQString() const
+QString Value::toQStringNoThrow() const
 {
     switch (type()) {
     case Value::Undefined_Type:
+    case Value::Empty_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
         return QStringLiteral("null");
@@ -154,28 +117,64 @@ QString Value::toQString() const
             return QStringLiteral("true");
         else
             return QStringLiteral("false");
-    case Value::String_Type:
-        return stringValue()->toQString();
-    case Value::Object_Type: {
-        ExecutionContext *ctx = objectValue()->internalClass->engine->current;
-        ValueScope scope(ctx);
-        try {
-            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
-            if (prim->isPrimitive())
-                return prim->toQString();
-        } catch (Exception &e) {
-            e.accept(ctx);
+    case Value::Managed_Type:
+        if (isString())
+            return stringValue()->toQString();
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
             try {
-                ScopedValue ex(scope, e.value());
-                ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
                 if (prim->isPrimitive())
-                    return prim->toQString();
-            } catch(Exception &e) {
+                    return prim->toQStringNoThrow();
+            } catch (Exception &e) {
                 e.accept(ctx);
+                try {
+                    ScopedValue ex(scope, e.value());
+                    ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                    if (prim->isPrimitive())
+                        return prim->toQStringNoThrow();
+                } catch(Exception &e) {
+                    e.accept(ctx);
+                }
             }
+            return QString();
         }
-        return QString();
+    case Value::Integer_Type: {
+        QString str;
+        __qmljs_numberToString(&str, (double)int_32, 10);
+        return str;
     }
+    default: { // double
+        QString str;
+        __qmljs_numberToString(&str, doubleValue(), 10);
+        return str;
+    }
+    } // switch
+}
+
+QString Value::toQString() const
+{
+    switch (type()) {
+    case Value::Undefined_Type:
+    case Value::Empty_Type:
+        return QStringLiteral("undefined");
+    case Value::Null_Type:
+        return QStringLiteral("null");
+    case Value::Boolean_Type:
+        if (booleanValue())
+            return QStringLiteral("true");
+        else
+            return QStringLiteral("false");
+    case Value::Managed_Type:
+        if (isString())
+            return stringValue()->toQString();
+        {
+            ExecutionContext *ctx = objectValue()->internalClass->engine->current;
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            return prim->toQString();
+        }
     case Value::Integer_Type: {
         QString str;
         __qmljs_numberToString(&str, (double)int_32, 10);
@@ -194,10 +193,10 @@ bool Value::sameValue(Value other) const {
         return true;
     if (isString() && other.isString())
         return stringValue()->isEqualTo(other.stringValue());
-    if (isInteger())
-        return int_32 ? (double(int_32) == other.dbl) : (other.val == 0);
-    if (other.isInteger())
-        return other.int_32 ? (dbl == double(other.int_32)) : (val == 0);
+    if (isInteger() && other.isDouble())
+        return int_32 ? (double(int_32) == other.doubleValue()) : (other.val == 0);
+    if (isDouble() && other.isInteger())
+        return other.int_32 ? (doubleValue() == double(other.int_32)) : (val == 0);
     return false;
 }
 
@@ -273,25 +272,24 @@ String *Value::toString(ExecutionContext *ctx) const
 {
     if (isString())
         return stringValue();
-    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this));
+    return __qmljs_convert_to_string(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
 Object *Value::toObject(ExecutionContext *ctx) const
 {
     if (isObject())
         return objectValue();
-    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this));
-}
-
-
-Value Value::property(ExecutionContext *ctx, String *name) const
-{
-    return isObject() ? objectValue()->get(name) : undefinedValue();
+    return __qmljs_convert_to_object(ctx, ValueRef::fromRawValue(this))->getPointer();
 }
 
 
 PersistentValue::PersistentValue(const Value &val)
     : d(new PersistentValuePrivate(val))
+{
+}
+
+PersistentValue::PersistentValue(ReturnedValue val)
+    : d(new PersistentValuePrivate(Value::fromReturnedValue(val)))
 {
 }
 
@@ -325,6 +323,16 @@ PersistentValue &PersistentValue::operator =(const Value &other)
         return *this;
     }
     d = d->detach(other);
+    return *this;
+}
+
+PersistentValue &PersistentValue::operator =(const ReturnedValue &other)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(Value::fromReturnedValue(other));
+        return *this;
+    }
+    d = d->detach(Value::fromReturnedValue(other));
     return *this;
 }
 

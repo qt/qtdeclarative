@@ -660,12 +660,13 @@ void QQuickCanvasItem::updatePolish()
         QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
         d->animationCallbacks.clear();
 
-        foreach (int key, animationCallbacks.keys()) {
-            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
-            QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
+        QV4::Scope scope(v4);
+        QV4::ScopedCallData callData(scope, 1);
+        callData->thisObject = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, this));
 
-            QV4::ScopedCallData callData(v4, 1);
-            callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+        foreach (int key, animationCallbacks.keys()) {
+            QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
             callData->args[0] = QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
             f->call(callData);
         }
@@ -750,7 +751,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
         return;
     }
 
-    QString contextId = (*args)[0].toQString();
+    QString contextId = (*args)[0].toQStringNoThrow();
 
     if (d->context != 0) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {

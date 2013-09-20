@@ -51,7 +51,7 @@
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
 #include <private/qqmlprofilerservice_p.h>
-#include <private/qv8debugservice_p.h>
+#include <private/qv4debugservice_p.h>
 #include "qqmlinfo.h"
 
 #include <private/qv4value_p.h>
@@ -115,7 +115,7 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        return m_v8function.value().toQString();
+        return m_v8function.value().toQStringNoThrow();
     } else {
         return m_expression;
     }
@@ -194,7 +194,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             //    for several cases (such as QVariant type and QObject-derived types)
             //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
             if (type == QMetaType::QVariant) {
-                args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
+                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(*((QVariant *)a[ii + 1])));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
                 args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
@@ -204,9 +204,9 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                     args[ii] = QV4::Value::nullValue();
                 else
-                    args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                    args[ii] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1])));
             } else {
-                args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
+                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(QVariant(type, a[ii + 1])));
             }
         }
 
@@ -330,7 +330,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         return;
 
     if (QQmlDebugService::isDebuggingEnabled())
-        QV8DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->m_index).methodSignature()));
+        QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->m_index).methodSignature()));
 
     QQmlHandlingSignalProfiler prof(s->m_expression);
 

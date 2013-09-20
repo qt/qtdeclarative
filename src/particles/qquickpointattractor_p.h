@@ -98,7 +98,7 @@ public:
         return m_proportionalToDistance;
     }
 
-signals:
+Q_SIGNALS:
 
     void strengthChanged(qreal arg);
 
@@ -110,12 +110,12 @@ signals:
 
     void proportionalToDistanceChanged(Proportion arg);
 
-public slots:
+public Q_SLOTS:
 void setStrength(qreal arg)
 {
     if (m_strength != arg) {
         m_strength = arg;
-        emit strengthChanged(arg);
+        Q_EMIT strengthChanged(arg);
     }
 }
 
@@ -123,7 +123,7 @@ void setPointX(qreal arg)
 {
     if (m_x != arg) {
         m_x = arg;
-        emit pointXChanged(arg);
+        Q_EMIT pointXChanged(arg);
     }
 }
 
@@ -131,14 +131,14 @@ void setPointY(qreal arg)
 {
     if (m_y != arg) {
         m_y = arg;
-        emit pointYChanged(arg);
+        Q_EMIT pointYChanged(arg);
     }
 }
 void setAffectedParameter(AffectableParameters arg)
 {
     if (m_physics != arg) {
         m_physics = arg;
-        emit affectedParameterChanged(arg);
+        Q_EMIT affectedParameterChanged(arg);
     }
 }
 
@@ -146,7 +146,7 @@ void setProportionalToDistance(Proportion arg)
 {
     if (m_proportionalToDistance != arg) {
         m_proportionalToDistance = arg;
-        emit proportionalToDistanceChanged(arg);
+        Q_EMIT proportionalToDistanceChanged(arg);
     }
 }
 

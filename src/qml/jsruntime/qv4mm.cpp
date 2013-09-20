@@ -55,6 +55,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 #include "qv4alloca_p.h"
 
 #ifdef V4_USE_VALGRIND
@@ -215,7 +216,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         allocation.memory = PageAllocation::allocate(allocSize, OSAllocator::JSGCHeapPages);
         allocation.chunkSize = size;
         m_d->heapChunks.append(allocation);
-        qSort(m_d->heapChunks);
+        std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
         memset(chunk, 0, allocation.memory.size());
@@ -581,7 +582,7 @@ void MemoryManager::collectFromStack() const
 
         if (genericPtr < *heapChunkBoundaries || genericPtr > *(heapChunkBoundariesEnd - 1))
             continue;
-        int index = qLowerBound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
+        int index = std::lower_bound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
         assert(index >= 0 && index < m_d->heapChunks.count() * 2);
         if (index & 1) {

@@ -578,10 +578,11 @@ QObject *QmlObjectCreator::create(int index, QObject *parent)
         _ddata->propertyCache->addref();
     }
 
-    QV4::Value scopeObject = QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject);
+    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::ScopedValue scopeObject(scope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobject));
 
-    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(scopeObject.asObject());
-    setupFunctions(scopeObject.asObject());
+    QVector<QQmlAbstractBinding*> dynamicBindings = setupBindings(scopeObject->asObject());
+    setupFunctions(scopeObject->asObject());
 
     // ### do this later when requested
     for (int i = 0; i < dynamicBindings.count(); ++i) {

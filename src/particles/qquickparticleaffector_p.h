@@ -92,7 +92,7 @@ public:
         return m_whenCollidingWith;
     }
 
-signals:
+Q_SIGNALS:
 
     void systemChanged(QQuickParticleSystem* arg);
 
@@ -108,13 +108,13 @@ signals:
 
     void whenCollidingWithChanged(QStringList arg);
 
-public slots:
+public Q_SLOTS:
 void setSystem(QQuickParticleSystem* arg)
 {
     if (m_system != arg) {
         m_system = arg;
         m_system->registerParticleAffector(this);
-        emit systemChanged(arg);
+        Q_EMIT systemChanged(arg);
     }
 }
 
@@ -123,7 +123,7 @@ void setGroups(QStringList arg)
     if (m_groups != arg) {
         m_groups = arg;
         m_updateIntSet = true;
-        emit groupsChanged(arg);
+        Q_EMIT groupsChanged(arg);
     }
 }
 
@@ -131,7 +131,7 @@ void setEnabled(bool arg)
 {
     if (m_enabled != arg) {
         m_enabled = arg;
-        emit enabledChanged(arg);
+        Q_EMIT enabledChanged(arg);
     }
 }
 
@@ -140,7 +140,7 @@ void setOnceOff(bool arg)
     if (m_onceOff != arg) {
         m_onceOff = arg;
         m_needsReset = true;
-        emit onceChanged(arg);
+        Q_EMIT onceChanged(arg);
     }
 }
 
@@ -148,7 +148,7 @@ void setShape(QQuickParticleExtruder* arg)
 {
     if (m_shape != arg) {
         m_shape = arg;
-        emit shapeChanged(arg);
+        Q_EMIT shapeChanged(arg);
     }
 }
 
@@ -156,10 +156,10 @@ void setWhenCollidingWith(QStringList arg)
 {
     if (m_whenCollidingWith != arg) {
         m_whenCollidingWith = arg;
-        emit whenCollidingWithChanged(arg);
+        Q_EMIT whenCollidingWithChanged(arg);
     }
 }
-public slots:
+public Q_SLOTS:
     void updateOffsets();
 
 protected:

@@ -66,18 +66,18 @@ public:
 protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
 
-signals:
+Q_SIGNALS:
 
     void factorChanged(qreal arg);
     void thresholdChanged(qreal arg);
 
-public slots:
+public Q_SLOTS:
 
     void setFactor(qreal arg)
     {
         if (m_factor != arg) {
             m_factor = arg;
-            emit factorChanged(arg);
+            Q_EMIT factorChanged(arg);
         }
     }
 
@@ -85,7 +85,7 @@ public slots:
     {
         if (m_threshold != arg) {
             m_threshold = arg;
-            emit thresholdChanged(arg);
+            Q_EMIT thresholdChanged(arg);
         }
     }
 

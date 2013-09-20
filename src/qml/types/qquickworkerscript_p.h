@@ -99,10 +99,10 @@ public:
     QUrl source() const;
     void setSource(const QUrl &);
 
-public slots:
+public Q_SLOTS:
     void sendMessage(QQmlV4Function*);
 
-signals:
+Q_SIGNALS:
     void sourceChanged();
     void message(const QQmlV4Handle &messageObject);
 

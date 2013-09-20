@@ -59,7 +59,23 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-QV4::Object *__qmljs_convert_to_object(QV4::ExecutionContext *ctx, const QV4::Value &value);
+inline bool Value::isString() const
+{
+    if (!isManaged())
+        return false;
+    return managed() && managed()->type == Managed::Type_String;
+}
+inline bool Value::isObject() const
+{
+    if (!isManaged())
+        return false;
+    return managed() && managed()->type != Managed::Type_String;
+}
+
+inline bool Value::isPrimitive() const
+{
+    return !isObject();
+}
 
 inline Managed *Value::asManaged() const
 {
@@ -83,9 +99,9 @@ inline Value Value::undefinedValue()
 {
     Value v;
 #if QT_POINTER_SIZE == 8
-    v.val = quint64(_Undefined_Type) << Tag_Shift;
+    v.val = quint64(Undefined_Type) << Tag_Shift;
 #else
-    v.tag = _Undefined_Type;
+    v.tag = Undefined_Type;
     v.int_32 = 0;
 #endif
     return v;
@@ -106,7 +122,7 @@ inline Value Value::nullValue()
 inline Value Value::emptyValue()
 {
     Value v;
-    v.tag = Value::_Empty_Type;
+    v.tag = Value::Empty_Type;
     v.uint_32 = 0;
     return v;
 }
@@ -123,7 +139,7 @@ inline Value Value::fromBoolean(Bool b)
 inline Value Value::fromDouble(double d)
 {
     Value v;
-    v.dbl = d;
+    v.setDouble(d);
     return v;
 }
 
@@ -142,7 +158,7 @@ inline Value Value::fromUInt32(uint i)
         v.tag = _Integer_Type;
         v.int_32 = (int)i;
     } else {
-        v.dbl = i;
+        v.setDouble(i);
     }
     return v;
 }
@@ -151,10 +167,9 @@ inline Value Value::fromString(String *s)
 {
     Value v;
 #if QT_POINTER_SIZE == 8
-    v.val = (quint64)s;
-    v.val |= quint64(_String_Type) << Tag_Shift;
+    v.s = s;
 #else
-    v.tag = _String_Type;
+    v.tag = Managed_Type;
     v.s = s;
 #endif
     return v;
@@ -164,14 +179,61 @@ inline Value Value::fromObject(Object *o)
 {
     Value v;
 #if QT_POINTER_SIZE == 8
-    v.val = (quint64)o;
-    v.val |= quint64(_Object_Type) << Tag_Shift;
+    v.o = o;
 #else
-    v.tag = _Object_Type;
+    v.tag = Managed_Type;
     v.o = o;
 #endif
     return v;
 }
+
+inline Value Value::fromManaged(Managed *m)
+{
+    if (!m)
+        return QV4::Value::undefinedValue();
+    Value v;
+#if QT_POINTER_SIZE == 8
+    v.m = m;
+#else
+    v.tag = Managed_Type;
+    v.m = m;
+#endif
+    return v;
+}
+
+inline double Value::toNumber() const
+{
+    if (integerCompatible())
+        return int_32;
+    if (isDouble())
+        return doubleValue();
+    return toNumberImpl();
+}
+
+inline int Value::toInt32() const
+{
+    if (integerCompatible())
+        return int_32;
+    double d;
+    if (isDouble())
+        d = doubleValue();
+    else
+        d = toNumberImpl();
+
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((d >= -D31 && d < D31))
+        return static_cast<int>(d);
+
+    return Value::toInt32(d);
+}
+
+inline unsigned int Value::toUInt32() const
+{
+    return (unsigned int)toInt32();
+}
+
 
 inline bool Value::toBoolean() const
 {
@@ -182,9 +244,9 @@ inline bool Value::toBoolean() const
     case Value::Boolean_Type:
     case Value::Integer_Type:
         return (bool)int_32;
-    case Value::String_Type:
-        return stringValue()->toQString().length() > 0;
-    case Value::Object_Type:
+    case Value::Managed_Type:
+        if (isString())
+            return stringValue()->toQString().length() > 0;
         return true;
     default: // double
         return doubleValue() && !std::isnan(doubleValue());
@@ -197,8 +259,9 @@ inline uint Value::asArrayIndex() const
         return (uint)int_32;
     if (!isDouble())
         return UINT_MAX;
-    uint idx = (uint)dbl;
-    if (idx != dbl)
+    double d = doubleValue();
+    uint idx = (uint)d;
+    if (idx != d)
         return UINT_MAX;
     return idx;
 }
@@ -206,11 +269,12 @@ inline uint Value::asArrayIndex() const
 inline uint Value::asArrayLength(bool *ok) const
 {
     *ok = true;
-    if (isConvertibleToInt() && int_32 >= 0)
+    if (integerCompatible() && int_32 >= 0)
         return (uint)int_32;
     if (isDouble()) {
-        uint idx = (uint)dbl;
-        if ((double)idx != dbl) {
+        double d = doubleValue();
+        uint idx = (uint)d;
+        if (idx != d) {
             *ok = false;
             return UINT_MAX;
         }
@@ -275,13 +339,8 @@ inline ErrorObject *Value::asErrorObject() const
     return isObject() ? managed()->asErrorObject() : 0;
 }
 
-// ###
-inline Value Managed::construct(CallData *d) {
-    return vtbl->construct(this, d);
-}
-inline Value Managed::call(CallData *d) {
-    return vtbl->call(this, d);
-}
+template<typename T>
+inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
 
 struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate
 {
@@ -311,10 +370,13 @@ class Q_QML_EXPORT PersistentValue
 {
 public:
     PersistentValue() : d(0) {}
+
     PersistentValue(const Value &val);
+    PersistentValue(ReturnedValue val);
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const Value &other);
+    PersistentValue &operator =(const ReturnedValue &other);
     ~PersistentValue();
 
     Value value() const {

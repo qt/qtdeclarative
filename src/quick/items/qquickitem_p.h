@@ -197,7 +197,7 @@ public:
     void updateOpacity();
     void updateZ();
 
-signals:
+Q_SIGNALS:
     void enabledChanged(bool enabled);
     void sizeChanged(const QSize &size);
     void mipmapChanged(bool mipmap);
@@ -526,7 +526,7 @@ public:
 
     void emitChildrenRectChanged(const QRectF &rect) {
         Q_Q(QQuickItem);
-        emit q->childrenRectChanged(rect);
+        Q_EMIT q->childrenRectChanged(rect);
     }
 
     QPointF computeTransformOrigin() const;
@@ -759,7 +759,7 @@ public:
         Q_D(QQuickKeysAttached);
         if (enabled != d->enabled) {
             d->enabled = enabled;
-            emit enabledChanged();
+            Q_EMIT enabledChanged();
         }
     }
 

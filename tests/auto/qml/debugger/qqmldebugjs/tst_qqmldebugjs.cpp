@@ -129,6 +129,7 @@ const char *UNCAUGHT = "uncaught";
 //const char *PAUSE = "pause";
 //const char *RESUME = "resume";
 
+const char *ENABLE_DEBUG= "-enable-debugger";//flag needed for debugger with qml binary
 const char *BLOCKMODE = "-qmljsdebugger=port:3771,3800,block";
 const char *NORMALMODE = "-qmljsdebugger=port:3771,3800";
 const char *TEST_QMLFILE = "test.qml";
@@ -1009,13 +1010,13 @@ void tst_QQmlDebugJS::cleanupTestCase()
 bool tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode)
 {
     connection = new QQmlDebugConnection();
-    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml", this);
     client = new QJSDebugClient(connection);
 
     if (blockMode)
-        process->start(QStringList() << QLatin1String(BLOCKMODE) << testFile(qmlFile));
+        process->start(QStringList() << QLatin1String(ENABLE_DEBUG) << QLatin1String(BLOCKMODE) << testFile(qmlFile));
     else
-        process->start(QStringList() << QLatin1String(NORMALMODE) << testFile(qmlFile));
+        process->start(QStringList() << QLatin1String(ENABLE_DEBUG) << QLatin1String(NORMALMODE) << testFile(qmlFile));
 
     if (!process->waitForSessionStart()) {
         qDebug() << "could not launch application, or did not get 'Waiting for connection'.";

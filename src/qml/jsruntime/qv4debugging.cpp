@@ -46,6 +46,8 @@
 #include "qv4instr_moth_p.h"
 #include <iostream>
 
+#include <algorithm>
+
 using namespace QV4;
 using namespace QV4::Debugging;
 
@@ -207,14 +209,16 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
 {
     using namespace QV4;
     using namespace std;
+
+    Scope scope(ctx);
+
     cout << prefix << "tag: " << hex << v.tag << dec << endl << prefix << "\t-> ";
     switch (v.type()) {
-    case Value::Undefined_Type: cout << "Undefined" << endl; return;
-    case Value::Null_Type: cout << "Null" << endl; return;
+    case Value::Undefined_Type: cout << "Undefined"; return;
+    case Value::Null_Type: cout << "Null"; return;
     case Value::Boolean_Type: cout << "Boolean"; break;
     case Value::Integer_Type: cout << "Integer"; break;
-    case Value::Object_Type: cout << "Object"; break;
-    case Value::String_Type: cout << "String"; break;
+    case Value::Managed_Type: cout << v.managed()->className().toUtf8().data(); break;
     default: cout << "UNKNOWN" << endl; return;
     }
     cout << endl;
@@ -269,11 +273,12 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
 
     cout << prefix << "properties:" << endl;
     ForEachIteratorObject it(ctx, o);
-    for (Value name = it.nextPropertyName(); !name.isNull(); name = it.nextPropertyName()) {
-        cout << prefix << "\t\"" << qPrintable(name.stringValue()->toQString()) << "\"" << endl;
+    QV4::ScopedValue name(scope);
+    for (name = it.nextPropertyName(); !name->isNull(); name = it.nextPropertyName()) {
+        cout << prefix << "\t\"" << qPrintable(name->stringValue()->toQString()) << "\"" << endl;
         PropertyAttributes attrs;
-        Property *d = o->__getOwnProperty__(name.stringValue(), &attrs);
-        Value pval = o->getValue(d, attrs);
+        Property *d = o->__getOwnProperty__(name->stringValue(), &attrs);
+        Value pval = Value::fromReturnedValue(o->getValue(d, attrs));
         cout << prefix << "\tvalue:" << endl;
         realDumpValue(pval, ctx, prefix + "\t");
     }
@@ -331,7 +336,7 @@ void Debugger::BreakPoints::add(const QString &fileName, int lineNumber)
     QList<int> &lines = (*this)[fileName];
     if (!lines.contains(lineNumber)) {
         lines.append(lineNumber);
-        qSort(lines);
+        std::sort(lines.begin(), lines.end());
     }
 }
 

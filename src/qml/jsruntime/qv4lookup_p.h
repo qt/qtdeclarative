@@ -55,8 +55,8 @@ namespace QV4 {
 struct Lookup {
     enum { Size = 4 };
     union {
-        void (*getter)(Lookup *l, Value *result, const Value &object);
-        void (*globalGetter)(Lookup *l, ExecutionContext *ctx, Value *result);
+        ReturnedValue (*getter)(Lookup *l, const Value &object);
+        ReturnedValue (*globalGetter)(Lookup *l, ExecutionContext *ctx);
         void (*setter)(Lookup *l, const Value &object, const Value &v);
     };
     union {
@@ -72,27 +72,27 @@ struct Lookup {
     uint index;
     String *name;
 
-    static void getterGeneric(Lookup *l, Value *result, const Value &object);
-    static void getter0(Lookup *l, Value *result, const Value &object);
-    static void getter1(Lookup *l, Value *result, const Value &object);
-    static void getter2(Lookup *l, Value *result, const Value &object);
-    static void getterAccessor0(Lookup *l, Value *result, const Value &object);
-    static void getterAccessor1(Lookup *l, Value *result, const Value &object);
-    static void getterAccessor2(Lookup *l, Value *result, const Value &object);
+    static ReturnedValue getterGeneric(Lookup *l, const Value &object);
+    static ReturnedValue getter0(Lookup *l, const Value &object);
+    static ReturnedValue getter1(Lookup *l, const Value &object);
+    static ReturnedValue getter2(Lookup *l, const Value &object);
+    static ReturnedValue getterAccessor0(Lookup *l, const Value &object);
+    static ReturnedValue getterAccessor1(Lookup *l, const Value &object);
+    static ReturnedValue getterAccessor2(Lookup *l, const Value &object);
 
-    static void primitiveGetter0(Lookup *l, Value *result, const Value &object);
-    static void primitiveGetter1(Lookup *l, Value *result, const Value &object);
-    static void primitiveGetterAccessor0(Lookup *l, Value *result, const Value &object);
-    static void primitiveGetterAccessor1(Lookup *l, Value *result, const Value &object);
-    static void stringLengthGetter(Lookup *l, Value *result, const Value &object);
+    static ReturnedValue primitiveGetter0(Lookup *l, const Value &object);
+    static ReturnedValue primitiveGetter1(Lookup *l, const Value &object);
+    static ReturnedValue primitiveGetterAccessor0(Lookup *l, const Value &object);
+    static ReturnedValue primitiveGetterAccessor1(Lookup *l, const Value &object);
+    static ReturnedValue stringLengthGetter(Lookup *l, const Value &object);
 
-    static void globalGetterGeneric(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetter0(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetter1(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetter2(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetterAccessor0(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetterAccessor1(Lookup *l, ExecutionContext *ctx, Value *result);
-    static void globalGetterAccessor2(Lookup *l, ExecutionContext *ctx, Value *result);
+    static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetter0(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetter1(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetter2(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetterAccessor0(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionContext *ctx);
 
     static void setterGeneric(Lookup *l, const Value &object, const Value &value);
     static void setter0(Lookup *l, const Value &object, const Value &value);

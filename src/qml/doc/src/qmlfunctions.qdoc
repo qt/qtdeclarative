@@ -413,3 +413,28 @@
   Returns non-zero if the registration was sucessful.
 */
 
+/*!
+  \fn int qmlProtectModule(const QString &uri, int versionMajor);
+  \relates QQmlEngine
+
+  This function protects a module from having types registered into it. This
+  can be used to prevent other plugins from injecting types into your module.
+  It can also be a performance improvement, as it allows the engine to skip
+  checking for the possibility of new types or plugins when this import is
+  reached.
+
+  The performance benefit is primarily seen when registering application
+  specific types from within the application instead of through a plugin.
+  Using qmlProtectModule allows the engine to skip checking for a plugin when
+  that uri is imported, which can be noticeable with slow file systems.
+
+  After this function is called, any attempt to register C++ types into this
+  uri, major version combination will lead to a runtime error. Call this after
+  you have registered all of your types with the engine.
+
+  #include <QtQml> to use this function.
+
+  Returns true if the module was found and locked, otherwise returns false.
+  The module must contain exported types in order to be found.
+*/
+

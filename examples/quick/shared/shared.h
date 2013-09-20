@@ -40,7 +40,8 @@
 #include <QDir>
 #include <QGuiApplication>
 #include <QQmlEngine>
-#include <QQuickView>
+#include <QQmlFileSelector>
+#include <QQuickView> //Not using QQmlApplicationEngine because many examples don't have a Window{}
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
     QGuiApplication app(argc,argv);\
@@ -49,6 +50,7 @@
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
     view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
+    view.engine()->setUrlInterceptor(new QQmlFileSelector(&view));\
     view.setSource(QUrl("qrc:///" #NAME ".qml")); \
     view.setResizeMode(QQuickView::SizeRootObjectToView);\
     if (QGuiApplication::platformName() == QLatin1String("qnx") || \

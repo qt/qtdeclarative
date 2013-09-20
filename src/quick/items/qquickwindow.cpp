@@ -298,6 +298,8 @@ void forcePolishHelper(QQuickItem *item)
 void QQuickWindow::forcePolish()
 {
     Q_D(QQuickWindow);
+    if (!screen())
+        return;
     forcePolishHelper(d->contentItem);
 }
 
@@ -1710,9 +1712,14 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     // a single stationary press on an item shouldn't cause an event
     if (matchingNewPoints.isEmpty()) {
         bool stationaryOnly = true;
-        Q_FOREACH (QTouchEvent::TouchPoint tp, matchingPoints)
-            if (tp.state() != Qt::TouchPointStationary)
+
+        foreach (const QTouchEvent::TouchPoint &tp, matchingPoints) {
+            if (tp.state() != Qt::TouchPointStationary) {
                 stationaryOnly = false;
+                break;
+            }
+        }
+
         if (stationaryOnly)
             matchingPoints.clear();
     }
@@ -2077,13 +2084,13 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     return false;
 }
 
-bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold)
 {
     QStyleHints *styleHints = qApp->styleHints();
     int caps = QGuiApplicationPrivate::mouseEventCaps(event);
     bool dragVelocityLimitAvailable = (caps & QTouchDevice::Velocity)
         && styleHints->startDragVelocity();
-    bool overThreshold = qAbs(d) > styleHints->startDragDistance();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
     if (dragVelocityLimitAvailable) {
         QVector2D velocityVec = QGuiApplicationPrivate::mouseEventVelocity(event);
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();

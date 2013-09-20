@@ -64,20 +64,20 @@ public:
     }
 protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
-signals:
+Q_SIGNALS:
 
     void magnitudeChanged(qreal arg);
 
     void angleChanged(qreal arg);
 
-public slots:
+public Q_SLOTS:
 void setAcceleration(qreal arg)
 {
     qWarning() << "Gravity::acceleration has been renamed Gravity::magnitude";
     if (m_magnitude != arg) {
         m_magnitude = arg;
         m_needRecalc = true;
-        emit magnitudeChanged(arg);
+        Q_EMIT magnitudeChanged(arg);
     }
 }
 
@@ -86,7 +86,7 @@ void setMagnitude(qreal arg)
     if (m_magnitude != arg) {
         m_magnitude = arg;
         m_needRecalc = true;
-        emit magnitudeChanged(arg);
+        Q_EMIT magnitudeChanged(arg);
     }
 }
 
@@ -95,7 +95,7 @@ void setAngle(qreal arg)
     if (m_angle != arg) {
         m_angle = arg;
         m_needRecalc = true;
-        emit angleChanged(arg);
+        Q_EMIT angleChanged(arg);
     }
 }
 

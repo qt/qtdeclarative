@@ -66,11 +66,11 @@ class Serialize {
 public:
 
     static QByteArray serialize(const Value &, QV8Engine *);
-    static Value deserialize(const QByteArray &, QV8Engine *);
+    static ReturnedValue deserialize(const QByteArray &, QV8Engine *);
 
 private:
     static void serialize(QByteArray &, const Value &, QV8Engine *);
-    static Value deserialize(const char *&, QV8Engine *);
+    static ReturnedValue deserialize(const char *&, QV8Engine *);
 };
 
 }

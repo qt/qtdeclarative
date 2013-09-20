@@ -70,8 +70,10 @@ using namespace QV4;
 
 #ifndef QT_NO_XMLSTREAMREADER
 
-#define V4THROW_REFERENCE(string) \
-    ctx->throwError(Value::fromObject(ctx->engine->newReferenceErrorObject(QStringLiteral(string))))
+#define V4THROW_REFERENCE(string) { \
+        Scoped<Object> error(scope, ctx->engine->newReferenceErrorObject(QStringLiteral(string))); \
+        ctx->throwError(error); \
+    }
 
 QT_BEGIN_NAMESPACE
 
@@ -100,9 +102,11 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
 static Value constructMeObject(const Value &thisObj, QV8Engine *e)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(e);
+    Scope scope(v4);
     Object *meObj = v4->newObject();
     meObj->put(v4->newString(QStringLiteral("ThisObject")), thisObj);
-    meObj->put(v4->newString(QStringLiteral("ActivationObject")), QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
+    ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
+    meObj->put(v4->newString(QStringLiteral("ActivationObject")), v);
     return Value::fromObject(meObj);
 }
 
@@ -204,8 +208,8 @@ public:
     static void destroy(Managed *that) {
         that->as<NamedNodeMap>()->~NamedNodeMap();
     }
-    static Value get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     QList<NodeImpl *> list; // Only used in NamedNodeMap
     NodeImpl *d;
@@ -235,8 +239,8 @@ public:
     static void destroy(Managed *that) {
         that->as<NodeList>()->~NodeList();
     }
-    static Value get(Managed *m, String *name, bool *hasProperty);
-    static Value getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
     static Value create(QV8Engine *, NodeImpl *);
@@ -270,17 +274,17 @@ public:
     static void initClass(ExecutionEngine *engine);
 
     // JS API
-    static Value method_get_nodeName(SimpleCallContext *ctx);
-    static Value method_get_nodeValue(SimpleCallContext *ctx);
-    static Value method_get_nodeType(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nodeName(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nodeValue(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nodeType(SimpleCallContext *ctx);
 
-    static Value method_get_parentNode(SimpleCallContext *ctx);
-    static Value method_get_childNodes(SimpleCallContext *ctx);
-    static Value method_get_firstChild(SimpleCallContext *ctx);
-    static Value method_get_lastChild(SimpleCallContext *ctx);
-    static Value method_get_previousSibling(SimpleCallContext *ctx);
-    static Value method_get_nextSibling(SimpleCallContext *ctx);
-    static Value method_get_attributes(SimpleCallContext *ctx);
+    static ReturnedValue method_get_parentNode(SimpleCallContext *ctx);
+    static ReturnedValue method_get_childNodes(SimpleCallContext *ctx);
+    static ReturnedValue method_get_firstChild(SimpleCallContext *ctx);
+    static ReturnedValue method_get_lastChild(SimpleCallContext *ctx);
+    static ReturnedValue method_get_previousSibling(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nextSibling(SimpleCallContext *ctx);
+    static ReturnedValue method_get_attributes(SimpleCallContext *ctx);
 
     //static Value ownerDocument(SimpleCallContext *ctx);
     //static Value namespaceURI(SimpleCallContext *ctx);
@@ -343,10 +347,10 @@ class Attr : public Node
 {
 public:
     // JS API
-    static Value name(SimpleCallContext *ctx);
+    static ReturnedValue method_name(SimpleCallContext *ctx);
 //    static Value specified(SimpleCallContext *);
-    static Value value(SimpleCallContext *ctx);
-    static Value ownerElement(SimpleCallContext *ctx);
+    static ReturnedValue method_value(SimpleCallContext *ctx);
+    static ReturnedValue method_ownerElement(SimpleCallContext *ctx);
 //    static Value schemaTypeInfo(SimpleCallContext *);
 //    static Value isId(SimpleCallContext *c);
 
@@ -358,7 +362,7 @@ class CharacterData : public Node
 {
 public:
     // JS API
-    static Value length(SimpleCallContext *ctx);
+    static ReturnedValue method_length(SimpleCallContext *ctx);
 
     // C++ API
     static Value prototype(ExecutionEngine *v4);
@@ -368,8 +372,8 @@ class Text : public CharacterData
 {
 public:
     // JS API
-    static Value isElementContentWhitespace(SimpleCallContext *ctx);
-    static Value wholeText(SimpleCallContext *ctx);
+    static ReturnedValue method_isElementContentWhitespace(SimpleCallContext *ctx);
+    static ReturnedValue method_wholeText(SimpleCallContext *ctx);
 
     // C++ API
     static Value prototype(ExecutionEngine *);
@@ -386,14 +390,14 @@ class Document : public Node
 {
 public:
     // JS API
-    static Value xmlVersion(SimpleCallContext *ctx);
-    static Value xmlEncoding(SimpleCallContext *ctx);
-    static Value xmlStandalone(SimpleCallContext *ctx);
-    static Value documentElement(SimpleCallContext *ctx);
+    static ReturnedValue method_xmlVersion(SimpleCallContext *ctx);
+    static ReturnedValue method_xmlEncoding(SimpleCallContext *ctx);
+    static ReturnedValue method_xmlStandalone(SimpleCallContext *ctx);
+    static ReturnedValue method_documentElement(SimpleCallContext *ctx);
 
     // C++ API
     static Value prototype(ExecutionEngine *);
-    static Value load(QV8Engine *engine, const QByteArray &data);
+    static ReturnedValue load(QV8Engine *engine, const QByteArray &data);
 };
 
 }
@@ -408,7 +412,7 @@ void NodeImpl::release()
     document->release();
 }
 
-Value NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -429,10 +433,10 @@ Value NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
         name = r->d->name;
         break;
     }
-    return Value::fromString(ctx->engine->newString(name));
+    return Value::fromString(ctx->engine->newString(name)).asReturnedValue();
 }
 
-Value NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -445,33 +449,21 @@ Value NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
         r->d->type == NodeImpl::Entity ||
         r->d->type == NodeImpl::EntityReference ||
         r->d->type == NodeImpl::Notation)
-        return Value::nullValue();
+        return Encode::null();
 
-    return Value::fromString(ctx->engine->newString(r->d->data));
+    return Value::fromString(ctx->engine->newString(r->d->data)).asReturnedValue();
 }
 
-Value NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
         ctx->throwTypeError();
 
-    return Value::fromInt32(r->d->type);
+    return Encode(r->d->type);
 }
 
-Value NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
-{
-    Node *r = ctx->thisObject.as<Node>();
-    if (!r)
-        ctx->throwTypeError();
-
-    QV8Engine *engine = ctx->engine->v8Engine;
-
-    if (r->d->parent) return Node::create(engine, r->d->parent);
-    else return Value::nullValue();
-}
-
-Value NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -479,10 +471,13 @@ Value NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return NodeList::create(engine, r->d);
+    if (r->d->parent)
+        return Node::create(engine, r->d->parent).asReturnedValue();
+    else
+        return Encode::null();
 }
 
-Value NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -490,11 +485,10 @@ Value NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (r->d->children.isEmpty()) return Value::nullValue();
-    else return Node::create(engine, r->d->children.first());
+    return NodeList::create(engine, r->d).asReturnedValue();
 }
 
-Value NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -502,11 +496,13 @@ Value NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (r->d->children.isEmpty()) return Value::nullValue();
-    else return Node::create(engine, r->d->children.last());
+    if (r->d->children.isEmpty())
+        return Encode::null();
+    else
+        return Node::create(engine, r->d->children.first()).asReturnedValue();
 }
 
-Value NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -514,19 +510,36 @@ Value NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (!r->d->parent) return Value::nullValue();
+    if (r->d->children.isEmpty())
+        return Encode::null();
+    else
+        return Node::create(engine, r->d->children.last()).asReturnedValue();
+}
+
+ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
+{
+    Node *r = ctx->thisObject.as<Node>();
+    if (!r)
+        ctx->throwTypeError();
+
+    QV8Engine *engine = ctx->engine->v8Engine;
+
+    if (!r->d->parent)
+        return Encode::null();
 
     for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
         if (r->d->parent->children.at(ii) == r->d) {
-            if (ii == 0) return Value::nullValue();
-            else return Node::create(engine, r->d->parent->children.at(ii - 1));
+            if (ii == 0)
+                return Encode::null();
+            else
+                return Node::create(engine, r->d->parent->children.at(ii - 1)).asReturnedValue();
         }
     }
 
-    return Value::nullValue();
+    return Encode::null();
 }
 
-Value NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -534,19 +547,22 @@ Value NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (!r->d->parent) return Value::nullValue();
+    if (!r->d->parent)
+        return Encode::null();
 
     for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
         if (r->d->parent->children.at(ii) == r->d) {
-            if ((ii + 1) == r->d->parent->children.count()) return Value::nullValue();
-            else return Node::create(engine, r->d->parent->children.at(ii + 1)); 
+            if ((ii + 1) == r->d->parent->children.count())
+                return Encode::null();
+            else
+                return Node::create(engine, r->d->parent->children.at(ii + 1)).asReturnedValue();
         }
     }
 
-    return Value::nullValue();
+    return Encode::null();
 }
 
-Value NodePrototype::method_get_attributes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
     if (!r)
@@ -555,9 +571,9 @@ Value NodePrototype::method_get_attributes(SimpleCallContext *ctx)
     QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->type != NodeImpl::Element)
-        return Value::nullValue();
+        return Encode::null();
     else
-        return NamedNodeMap::create(engine, r->d, r->d->attributes);
+        return NamedNodeMap::create(engine, r->d, r->d->attributes).asReturnedValue();
 }
 
 Value NodePrototype::getProto(ExecutionEngine *v4)
@@ -624,49 +640,53 @@ Value Attr::prototype(ExecutionEngine *engine)
     if (d->attrPrototype.isEmpty()) {
         Object *p = engine->newObject();
         p->setPrototype(NodePrototype::getProto(engine).asObject());
-        p->defineAccessorProperty(engine, QStringLiteral("name"), name, 0);
-        p->defineAccessorProperty(engine, QStringLiteral("value"), value, 0);
-        p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), ownerElement, 0);
+        p->defineAccessorProperty(engine, QStringLiteral("name"), method_name, 0);
+        p->defineAccessorProperty(engine, QStringLiteral("value"), method_value, 0);
+        p->defineAccessorProperty(engine, QStringLiteral("ownerElement"), method_ownerElement, 0);
         d->attrPrototype = Value::fromObject(p);
         engine->v8Engine->freezeObject(d->attrPrototype.value());
     }
     return d->attrPrototype.value();
 }
 
-Value Attr::name(SimpleCallContext *ctx)
+ReturnedValue Attr::method_name(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return engine->toString(r->d->name);
+    return engine->toString(r->d->name).asReturnedValue();
 }
 
-Value Attr::value(SimpleCallContext *ctx)
+ReturnedValue Attr::method_value(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return engine->toString(r->d->data);
+    return engine->toString(r->d->data).asReturnedValue();
 }
 
-Value Attr::ownerElement(SimpleCallContext *ctx)
+ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return Node::create(engine, r->d->parent);
+    return Node::create(engine, r->d->parent).asReturnedValue();
 }
 
-Value CharacterData::length(SimpleCallContext *ctx)
+ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
     Q_UNUSED(engine)
-    return Value::fromInt32(r->d->data.length());
+    return Encode(r->d->data.length());
 }
 
 Value CharacterData::prototype(ExecutionEngine *v4)
@@ -676,28 +696,29 @@ Value CharacterData::prototype(ExecutionEngine *v4)
         Object *p = v4->newObject();
         p->setPrototype(NodePrototype::getProto(v4).asObject());
         p->defineAccessorProperty(v4, QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("length"), length, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("length"), method_length, 0);
         d->characterDataPrototype = Value::fromObject(p);
         v4->v8Engine->freezeObject(d->characterDataPrototype);
     }
     return d->characterDataPrototype.value();
 }
 
-Value Text::isElementContentWhitespace(SimpleCallContext *ctx)
+ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r) return Encode::undefined();
 
-    return Value::fromBoolean(r->d->data.trimmed().isEmpty());
+    return Encode(r->d->data.trimmed().isEmpty());
 }
 
-Value Text::wholeText(SimpleCallContext *ctx)
+ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r) return Value::undefinedValue();
+    if (!r)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return engine->toString(r->d->data);
+    return engine->toString(r->d->data).asReturnedValue();
 }
 
 Value Text::prototype(ExecutionEngine *v4)
@@ -706,8 +727,8 @@ Value Text::prototype(ExecutionEngine *v4)
     if (d->textPrototype.isEmpty()) {
         Object *p = v4->newObject();
         p->setPrototype(CharacterData::prototype(v4).asObject());
-        p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), isElementContentWhitespace, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("wholeText"), wholeText, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("wholeText"), method_wholeText, 0);
         d->textPrototype = Value::fromObject(p);
         v4->v8Engine->freezeObject(d->textPrototype);
     }
@@ -733,17 +754,17 @@ Value Document::prototype(ExecutionEngine *v4)
     if (d->documentPrototype.isEmpty()) {
         Object *p = v4->newObject();
         p->setPrototype(NodePrototype::getProto(v4).asObject());
-        p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), xmlVersion, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), xmlEncoding, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), xmlStandalone, 0);
-        p->defineAccessorProperty(v4, QStringLiteral("documentElement"), documentElement, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("xmlVersion"), method_xmlVersion, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
+        p->defineAccessorProperty(v4, QStringLiteral("documentElement"), method_documentElement, 0);
         d->documentPrototype = Value::fromObject(p);
         v4->v8Engine->freezeObject(d->documentPrototype);
     }
     return d->documentPrototype.value();
 }
 
-Value Document::load(QV8Engine *engine, const QByteArray &data)
+ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
 {
     Q_ASSERT(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
@@ -823,12 +844,12 @@ Value Document::load(QV8Engine *engine, const QByteArray &data)
     if (!document || reader.hasError()) {
         if (document)
             document->release();
-        return Value::nullValue();
+        return Encode::null();
     }
 
     Object *instance = new (v4->memoryManager) Node(v4, document);
     instance->setPrototype(Document::prototype(v4).asObject());
-    return Value::fromObject(instance);
+    return Value::fromObject(instance).asReturnedValue();
 }
 
 Node::Node(const Node &o)
@@ -843,7 +864,7 @@ bool Node::isNull() const
     return d == 0;
 }
 
-Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
@@ -855,14 +876,14 @@ Value NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
     if ((int)index < r->list.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->list.at(index));
+        return Node::create(engine, r->list.at(index)).asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
@@ -871,7 +892,7 @@ Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 
     name->makeIdentifier();
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->list.count());
+        return Value::fromInt32(r->list.count()).asReturnedValue();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -880,13 +901,13 @@ Value NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
         if (r->list.at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
-            return Node::create(engine, r->list.at(ii));
+            return Node::create(engine, r->list.at(ii)).asReturnedValue();
         }
     }
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
 Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
@@ -897,7 +918,7 @@ Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeIm
     return Value::fromObject(instance);
 }
 
-Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -909,14 +930,14 @@ Value NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     if ((int)index < r->d->children.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->d->children.at(index));
+        return Node::create(engine, r->d->children.at(index)).asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value NodeList::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
@@ -926,7 +947,7 @@ Value NodeList::get(Managed *m, String *name, bool *hasProperty)
     name->makeIdentifier();
 
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->d->children.count());
+        return Value::fromInt32(r->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }
 
@@ -938,40 +959,44 @@ Value NodeList::create(QV8Engine *engine, NodeImpl *data)
     return Value::fromObject(instance);
 }
 
-Value Document::documentElement(SimpleCallContext *ctx)
+ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r || r->d->type != NodeImpl::Document) return Value::undefinedValue();
+    if (!r || r->d->type != NodeImpl::Document)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
+    return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root).asReturnedValue();
 }
 
-Value Document::xmlStandalone(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r || r->d->type != NodeImpl::Document) return Value::undefinedValue();
+    if (!r || r->d->type != NodeImpl::Document)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
     Q_UNUSED(engine)
-    return Value::fromBoolean(static_cast<DocumentImpl *>(r->d)->isStandalone);
+    return Encode(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
-Value Document::xmlVersion(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r || r->d->type != NodeImpl::Document) return Value::undefinedValue();
+    if (!r || r->d->type != NodeImpl::Document)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
+    return engine->toString(static_cast<DocumentImpl *>(r->d)->version).asReturnedValue();
 }
 
-Value Document::xmlEncoding(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlEncoding(SimpleCallContext *ctx)
 {
     Node *r = ctx->thisObject.as<Node>();
-    if (!r || r->d->type != NodeImpl::Document) return Value::undefinedValue();
+    if (!r || r->d->type != NodeImpl::Document)
+        return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return engine->toString(static_cast<DocumentImpl *>(r->d)->encoding);
+    return engine->toString(static_cast<DocumentImpl *>(r->d)->encoding).asReturnedValue();
 }
 
 class QQmlXMLHttpRequest : public QObject
@@ -1461,29 +1486,30 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 {
     ExecutionContext *ctx = v4->current;
+    QV4::Scope scope(v4);
     try {
         Object *o = me.asObject();
         if (!o)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        Object *thisObj = o->get(v4->newString(QStringLiteral("ThisObject"))).asObject();
+        Scoped<Object> thisObj(scope, o->get(v4->newString(QStringLiteral("ThisObject"))));
         if (!thisObj)
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
 
-        FunctionObject *callback = thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))).asFunctionObject();
+        Scoped<FunctionObject> callback(scope, thisObj->get(v4->newString(QStringLiteral("onreadystatechange"))));
         if (!callback) {
             // not an error, but no onreadystatechange function to call.
             return;
         }
 
-        Value activationObject = o->get(v4->newString(QStringLiteral("ActivationObject")));
-        if (!activationObject.asObject())
+        Scoped<Object> activationObject(scope, o->get(v4->newString(QStringLiteral("ActivationObject"))));
+        if (!activationObject)
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
 
-        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
+        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject.asValue());
         if (callingContext) {
-            QV4::ScopedCallData callData(v4, 0);
-            callData->thisObject = activationObject;
+            QV4::ScopedCallData callData(scope, 0);
+            callData->thisObject = activationObject.asValue();
             callback->call(callData);
         }
 
@@ -1564,7 +1590,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (c->proto)
             c->proto->mark();
     }
-    static Value construct(Managed *that, QV4::CallData *)
+    static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
         QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
         if (!ctor)
@@ -1574,27 +1600,27 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         QQmlXMLHttpRequestWrapper *w = new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r);
         w->setPrototype(ctor->proto);
-        return Value::fromObject(w);
+        return Value::fromObject(w).asReturnedValue();
     }
 
-    static Value call(Managed *, QV4::CallData *) {
-        return Value::undefinedValue();
+    static ReturnedValue call(Managed *, QV4::CallData *) {
+        return Value::undefinedValue().asReturnedValue();
     }
 
     void setupProto();
 
-    static Value method_open(SimpleCallContext *ctx);
-    static Value method_setRequestHeader(SimpleCallContext *ctx);
-    static Value method_send(SimpleCallContext *ctx);
-    static Value method_abort(SimpleCallContext *ctx);
-    static Value method_getResponseHeader(SimpleCallContext *ctx);
-    static Value method_getAllResponseHeaders(SimpleCallContext *ctx);
+    static ReturnedValue method_open(SimpleCallContext *ctx);
+    static ReturnedValue method_setRequestHeader(SimpleCallContext *ctx);
+    static ReturnedValue method_send(SimpleCallContext *ctx);
+    static ReturnedValue method_abort(SimpleCallContext *ctx);
+    static ReturnedValue method_getResponseHeader(SimpleCallContext *ctx);
+    static ReturnedValue method_getAllResponseHeaders(SimpleCallContext *ctx);
 
-    static Value method_get_readyState(SimpleCallContext *ctx);
-    static Value method_get_status(SimpleCallContext *ctx);
-    static Value method_get_statusText(SimpleCallContext *ctx);
-    static Value method_get_responseText(SimpleCallContext *ctx);
-    static Value method_get_responseXML(SimpleCallContext *ctx);
+    static ReturnedValue method_get_readyState(SimpleCallContext *ctx);
+    static ReturnedValue method_get_status(SimpleCallContext *ctx);
+    static ReturnedValue method_get_statusText(SimpleCallContext *ctx);
+    static ReturnedValue method_get_responseText(SimpleCallContext *ctx);
+    static ReturnedValue method_get_responseXML(SimpleCallContext *ctx);
 
 
     Object *proto;
@@ -1632,8 +1658,9 @@ void QQmlXMLHttpRequestCtor::setupProto()
 
 
 // XMLHttpRequest methods
-Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1645,7 +1672,7 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     QV8Engine *engine = ctx->engine->v8Engine;
 
     // Argument 0 - Method
-    QString method = ctx->arguments[0].toQString().toUpper();
+    QString method = ctx->arguments[0].toQStringNoThrow().toUpper();
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
@@ -1654,7 +1681,7 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl(ctx->arguments[1].toQString());
+    QUrl url = QUrl(ctx->arguments[1].toQStringNoThrow());
 
     if (url.isRelative()) 
         url = engine->callingContext()->resolvedUrl(url);
@@ -1666,9 +1693,9 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     // Argument 3/4 - user/pass (optional)
     QString username, password;
     if (ctx->argumentCount > 3)
-        username = ctx->arguments[3].toQString();
+        username = ctx->arguments[3].toQStringNoThrow();
     if (ctx->argumentCount > 4)
-        password = ctx->arguments[4].toQString();
+        password = ctx->arguments[4].toQStringNoThrow();
 
     // Clear the fragment (if any)
     url.setFragment(QString());
@@ -1677,11 +1704,13 @@ Value QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(constructMeObject(ctx->thisObject, engine), method, url);
+    return r->open(constructMeObject(ctx->thisObject, engine), method, url).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1693,8 +1722,8 @@ Value QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
     if (r->readyState() != QQmlXMLHttpRequest::Opened || r->sendFlag())
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    QString name = ctx->arguments[0].toQString();
-    QString value = ctx->arguments[1].toQString();
+    QString name = ctx->arguments[0].toQStringNoThrow();
+    QString value = ctx->arguments[1].toQStringNoThrow();
 
     // ### Check that name and value are well formed
 
@@ -1719,15 +1748,17 @@ Value QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
         nameUpper == QLatin1String("VIA") ||
         nameUpper.startsWith(QLatin1String("PROXY-")) ||
         nameUpper.startsWith(QLatin1String("SEC-"))) 
-        return Value::undefinedValue();
+        return Encode::undefined();
 
     r->addHeader(name, value);
 
-    return Value::undefinedValue();
+    return Encode::undefined();
 }
 
-Value QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1741,23 +1772,27 @@ Value QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 
     QByteArray data;
     if (ctx->argumentCount > 0)
-        data = ctx->arguments[0].toQString().toUtf8();
+        data = ctx->arguments[0].toQStringNoThrow().toUtf8();
 
-    return r->send(constructMeObject(ctx->thisObject, engine), data);
+    return r->send(constructMeObject(ctx->thisObject, engine), data).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    return r->abort(constructMeObject(ctx->thisObject, ctx->engine->v8Engine));
+    return r->abort(constructMeObject(ctx->thisObject, ctx->engine->v8Engine)).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1773,11 +1808,13 @@ Value QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->header(ctx->arguments[0].toQString()));
+    return engine->toString(r->header(ctx->arguments[0].toQStringNoThrow())).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1793,22 +1830,26 @@ Value QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ct
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->headers());
+    return engine->toString(r->headers()).asReturnedValue();
 }
 
 // XMLHttpRequest properties
-Value QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    return Value::fromUInt32(r->readyState());
+    return Encode(r->readyState());
 }
 
-Value QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1819,13 +1860,15 @@ Value QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
-        return Value::fromInt32(0);
+        return Encode(0);
     else
-        return Value::fromInt32(r->replyStatus());
+        return Encode(r->replyStatus());
 }
 
-Value QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1838,13 +1881,15 @@ Value QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
-        return engine->toString(QString());
+        return engine->toString(QString()).asReturnedValue();
     else
-        return engine->toString(r->replyStatusText());
+        return engine->toString(r->replyStatusText()).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1854,13 +1899,15 @@ Value QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
         r->readyState() != QQmlXMLHttpRequest::Done)
-        return engine->toString(QString());
+        return engine->toString(QString()).asReturnedValue();
     else 
-        return engine->toString(r->responseBody());
+        return engine->toString(r->responseBody()).asReturnedValue();
 }
 
-Value QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
+
     QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
@@ -1869,7 +1916,7 @@ Value QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
     if (!r->receivedXml() ||
         (r->readyState() != QQmlXMLHttpRequest::Loading &&
          r->readyState() != QQmlXMLHttpRequest::Done)) {
-        return Value::nullValue();
+        return Encode::null();
     } else {
         return Document::load(ctx->engine->v8Engine, r->rawResponseBody());
     }

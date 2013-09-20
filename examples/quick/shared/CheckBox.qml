@@ -49,6 +49,7 @@ Item {
     property alias text: label.text
     property bool checked
     property alias pressed: mouseArea.pressed
+    property alias row: row
     signal clicked
 
     SystemPalette { id: palette }

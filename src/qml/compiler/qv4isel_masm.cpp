@@ -79,8 +79,8 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (Value (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
-                                                           codeRefs[i].size());
+                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress(),
+                                                           codeSizes[i]);
         runtimeFunctions[i] = runtimeFunction;
     }
 
@@ -167,6 +167,13 @@ protected:
     virtual void visitTry(V4IR::Try *s) { s->exceptionVar->accept(this); }
     virtual void visitPhi(V4IR::Phi *) { Q_UNREACHABLE(); }
 };
+
+inline bool isPregOrConst(V4IR::Expr *e)
+{
+    if (V4IR::Temp *t = e->asTemp())
+        return t->kind == V4IR::Temp::PhysicalRegister;
+    return e->asConst() != 0;
+}
 } // anonymous namespace
 
 /* Platform/Calling convention/Architecture specific section */
@@ -283,7 +290,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
         return stackSlotPointer(t);
     } break;
     default:
-        Q_UNIMPLEMENTED();
+        Q_UNREACHABLE();
     }
     return Pointer(reg, offset);
 }
@@ -312,26 +319,33 @@ void Assembler::copyValue(Result result, Source source)
 template <typename Result>
 void Assembler::copyValue(Result result, V4IR::Expr* source)
 {
-#ifdef VALUE_FITS_IN_REGISTER
-    if (source->type == V4IR::DoubleType) {
+    if (source->type == V4IR::BoolType) {
+        RegisterID reg = toInt32Register(source, ScratchRegister);
+        storeBool(reg, result);
+    } else if (source->type == V4IR::SInt32Type) {
+        RegisterID reg = toInt32Register(source, ScratchRegister);
+        storeInt32(reg, result);
+    } else if (source->type == V4IR::UInt32Type) {
+        RegisterID reg = toUInt32Register(source, ScratchRegister);
+        storeUInt32(reg, result);
+    } else if (source->type == V4IR::DoubleType) {
         storeDouble(toDoubleRegister(source), result);
-    } else {
+    } else if (V4IR::Temp *temp = source->asTemp()) {
+#ifdef VALUE_FITS_IN_REGISTER
         // Use ReturnValueRegister as "scratch" register because loadArgument
         // and storeArgument are functions that may need a scratch register themselves.
         loadArgumentInRegister(source, ReturnValueRegister, 0);
         storeReturnValue(result);
-    }
 #else
-    if (V4IR::Temp *temp = source->asTemp()) {
         loadDouble(temp, FPGpr0);
         storeDouble(FPGpr0, result);
+#endif
     } else if (V4IR::Const *c = source->asConst()) {
         QV4::Value v = convertToValue(c);
         storeValue(v, result);
     } else {
-        assert(! "not implemented");
+        Q_UNREACHABLE();
     }
-#endif
 }
 
 
@@ -458,10 +472,10 @@ void Assembler::recordLineNumber(int lineNumber)
 }
 
 
-JSC::MacroAssemblerCodeRef Assembler::link()
+JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
-#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     Label endOfCode = label();
+#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
     // Let the ARM exception table follow right after that
     for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
         nop();
@@ -512,8 +526,9 @@ JSC::MacroAssemblerCodeRef Assembler::link()
     }
     _constTable.finalize(linkBuffer, _isel);
 
+    *codeSize = linkBuffer.offsetOf(endOfCode);
 #if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
-    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), linkBuffer.offsetOf(endOfCode));
+    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), *codeSize);
 #endif
 
     JSC::MacroAssemblerCodeRef codeRef;
@@ -576,6 +591,8 @@ InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocat
     , _as(0)
 {
     compilationUnit = new CompilationUnit;
+    compilationUnit->codeRefs.resize(module->functions.size());
+    compilationUnit->codeSizes.resize(module->functions.size());
 }
 
 InstructionSelection::~InstructionSelection()
@@ -583,8 +600,9 @@ InstructionSelection::~InstructionSelection()
     delete _as;
 }
 
-void InstructionSelection::run(V4IR::Function *function)
+void InstructionSelection::run(int functionIndex)
 {
+    V4IR::Function *function = irModule->functions[functionIndex];
     QVector<Lookup> lookups;
     QSet<V4IR::BasicBlock*> reentryBlocks;
     qSwap(_function, function);
@@ -592,8 +610,10 @@ void InstructionSelection::run(V4IR::Function *function)
 
     V4IR::Optimizer opt(_function);
     opt.run();
-    if (opt.isInSSA()) {
+
 #if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))
+    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
+    if (opt.isInSSA() && withRegisterAllocator) {
         static const QVector<int> intRegisters = QVector<int>()
                 << JSC::X86Registers::edi
                 << JSC::X86Registers::esi
@@ -611,12 +631,12 @@ void InstructionSelection::run(V4IR::Function *function)
                 << JSC::X86Registers::xmm6
                 << JSC::X86Registers::xmm7;
         RegisterAllocator(intRegisters, fpRegisters).run(_function, opt);
-#else
-        // No register allocator available for this platform, so:
-        opt.convertOutOfSSA();
-        ConvertTemps().toStackSlots(_function);
+    } else
 #endif
-    } else {
+    {
+        if (opt.isInSSA())
+            // No register allocator available for this platform, or env. var was set, so:
+            opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
     }
     V4IR::Optimizer::showMeTheCode(_function);
@@ -626,18 +646,10 @@ void InstructionSelection::run(V4IR::Function *function)
 
     _as->enterStandardStackFrame();
 
-    int contextPointer = 0;
-#if !defined(RETURN_VALUE_IN_REGISTER)
-    // When the return VM value doesn't fit into a register, then
-    // the caller provides a pointer for storage as first argument.
-    // That shifts the index the context pointer argument by one.
-    contextPointer++;
-#endif
-
 #ifdef ARGUMENTS_IN_REGISTERS
-    _as->move(_as->registerForArgument(contextPointer), Assembler::ContextRegister);
+    _as->move(_as->registerForArgument(0), Assembler::ContextRegister);
 #else
-    _as->loadPtr(addressForArgument(contextPointer), Assembler::ContextRegister);
+    _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
@@ -669,8 +681,8 @@ void InstructionSelection::run(V4IR::Function *function)
         }
     }
 
-    JSC::MacroAssemblerCodeRef codeRef =_as->link();
-    codeRefs[_function] = codeRef;
+    JSC::MacroAssemblerCodeRef codeRef =_as->link(&compilationUnit->codeSizes[functionIndex]);
+    compilationUnit->codeRefs[functionIndex] = codeRef;
 
     qSwap(_function, function);
     qSwap(_reentryBlocks, reentryBlocks);
@@ -690,10 +702,6 @@ void *InstructionSelection::addConstantTable(QVector<Value> *values)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->codeRefs.resize(irModule->functions.size());
-    int i = 0;
-    foreach (V4IR::Function *irFunction, irModule->functions)
-        compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     return compilationUnit;
 }
 
@@ -703,13 +711,13 @@ void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateFunctionCall(Assembler::Void, __qmljs_call_global_lookup,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_global_lookup,
+                             Assembler::ContextRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateFunctionCall(Assembler::Void, __qmljs_call_activation_property,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_activation_property,
+                             Assembler::ContextRegister,
                              Assembler::PointerToString(*func->id),
                              baseAddressForCallData());
     }
@@ -718,106 +726,52 @@ void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *
 void InstructionSelection::callBuiltinTypeofMember(V4IR::Expr *base, const QString &name,
                                                    V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(base),
-                         Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_builtin_typeof_member, Assembler::ContextRegister,
+                         Assembler::PointerToValue(base), Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(V4IR::Expr *base, V4IR::Expr *index,
                                                       V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_element,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_builtin_typeof_element,
+                         Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_builtin_typeof_name, Assembler::ContextRegister,
+                         Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinTypeofValue(V4IR::Expr *value, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_typeof, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
+    generateFunctionCall(result, __qmljs_builtin_typeof, Assembler::ContextRegister,
+                         Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_delete_member, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index,
                                                       V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_subscript, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::PointerToValue(index));
+    generateFunctionCall(result, __qmljs_delete_subscript, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_delete_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
+    generateFunctionCall(result, __qmljs_delete_name, Assembler::ContextRegister,
+                         Assembler::PointerToString(name));
 }
 
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     _as->storeValue(Value::fromBoolean(false), result);
-}
-
-void InstructionSelection::callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_member,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
-                         Assembler::PointerToValue(base), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_element,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
-                         Assembler::Reference(base), Assembler::PointerToValue(index));
-}
-
-void InstructionSelection::callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_increment,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
-}
-
-void InstructionSelection::callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_member, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base),
-                         Assembler::Reference(index));
-}
-
-void InstructionSelection::callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement_name, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToString(name));
-}
-
-void InstructionSelection::callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result)
-{
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_post_decrement,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
@@ -828,9 +782,9 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 
 typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        QV4::String *exceptionVarName, Value *exceptionVar)
+                        QV4::String *exceptionVarName, ValueRef exceptionVar)
 {
-    *exceptionVar = Value::undefinedValue();
+    exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
     Value *jsStackTop = context->engine->jsStackTop;
     try {
@@ -838,16 +792,16 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
     } catch (Exception& ex) {
         context->engine->jsStackTop = jsStackTop;
         ex.accept(context);
-        *exceptionVar = ex.value();
+        exceptionVar = ex.value();
         try {
-            QV4::ValueScope scope(context);
+            QV4::Scope scope(context);
             QV4::ScopedValue exception(scope, ex.value());
             ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exception, context);
             addressToContinueAt = catchBody(catchContext, localsPtr);
             context = __qmljs_builtin_pop_scope(catchContext);
         } catch (Exception& ex) {
             context->engine->jsStackTop = jsStackTop;
-            *exceptionVar = ex.value();
+            exceptionVar = ex.value();
             ex.accept(context);
             addressToContinueAt = catchBody(context, localsPtr);
         }
@@ -885,7 +839,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4I
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateFunctionCall(Assembler::Void, __qmljs_foreach_iterator_object, Assembler::ContextRegister, Assembler::PointerToValue(result), Assembler::Reference(arg));
+    generateFunctionCall(result, __qmljs_foreach_iterator_object, Assembler::ContextRegister, Assembler::Reference(arg));
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result)
@@ -893,7 +847,7 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateFunctionCall(Assembler::Void, __qmljs_foreach_next_property_name, Assembler::PointerToValue(result), Assembler::Reference(arg));
+    generateFunctionCall(result, __qmljs_foreach_next_property_name, Assembler::Reference(arg));
 }
 
 void InstructionSelection::callBuiltinPushWithScope(V4IR::Temp *arg)
@@ -930,7 +884,8 @@ void InstructionSelection::callBuiltinDefineProperty(V4IR::Temp *object, const Q
     Q_ASSERT(value->asTemp() || value->asConst());
 
     generateFunctionCall(Assembler::Void, __qmljs_builtin_define_property,
-                         Assembler::ContextRegister, Assembler::Reference(object), Assembler::PointerToString(name),
+                         Assembler::ContextRegister, Assembler::Reference(object),
+                         Assembler::PointerToString(name),
                          Assembler::PointerToValue(value));
 }
 
@@ -939,9 +894,8 @@ void InstructionSelection::callBuiltinDefineArray(V4IR::Temp *result, V4IR::Expr
     Q_ASSERT(result);
 
     int length = prepareVariableArguments(args);
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_array, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), baseAddressForCallArguments(),
-                         Assembler::TrustedImm32(length));
+    generateFunctionCall(result, __qmljs_builtin_define_array, Assembler::ContextRegister,
+                         baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
 void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args)
@@ -969,15 +923,13 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         it = it->next;
     }
 
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), baseAddressForCallArguments(),
-                         Assembler::TrustedImm32(classId));
+    generateFunctionCall(result, __qmljs_builtin_define_object_literal, Assembler::ContextRegister,
+                         baseAddressForCallArguments(), Assembler::TrustedImm32(classId));
 }
 
 void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_builtin_setup_arguments_object, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result));
+    generateFunctionCall(result, __qmljs_builtin_setup_arguments_object, Assembler::ContextRegister);
 }
 
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
@@ -985,8 +937,8 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
     Q_ASSERT(value);
 
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_call_value, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(value),
+    generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister,
+                         Assembler::Reference(value),
                          baseAddressForCallData());
 }
 
@@ -1018,7 +970,7 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
             _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32),
                       (Assembler::RegisterID) targetTemp->index);
         } else {
-            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
         }
     } else {
         _as->storeValue(convertToValue(sourceConst), targetTemp);
@@ -1027,27 +979,39 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_value_from_string, Assembler::PointerToValue(targetTemp), Assembler::PointerToString(str));
+    Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
+    _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
+    Pointer destAddr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
+#if QT_POINTER_SIZE == 8
+    _as->or64(Assembler::TrustedImm64(quint64(QV4::Value::Managed_Type) << QV4::Value::Tag_Shift),
+              Assembler::ReturnValueRegister);
+    _as->store64(Assembler::ReturnValueRegister, destAddr);
+#else
+    _as->store32(Assembler::ReturnValueRegister, destAddr);
+    destAddr.offset += 4;
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Managed_Type), destAddr);
+#endif
 }
 
 void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
 {
     int id = registerRegExp(sourceRegexp);
-    generateFunctionCall(Assembler::Void, __qmljs_lookup_runtime_regexp, Assembler::ContextRegister, Assembler::PointerToValue(targetTemp), Assembler::TrustedImm32(id));
+    generateFunctionCall(targetTemp, __qmljs_lookup_runtime_regexp, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
     if (useFastLookups && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
-        generateLookupCall(index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::PointerToValue(temp));
+        generateLookupCall(temp, index, offsetof(QV4::Lookup, globalGetter), Assembler::ContextRegister, Assembler::Void);
         return;
     }
-    generateFunctionCall(Assembler::Void, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToValue(temp), Assembler::PointerToString(*name->id));
+    generateFunctionCall(temp, __qmljs_get_activation_property, Assembler::ContextRegister, Assembler::PointerToString(*name->id));
 }
 
 void InstructionSelection::setActivationProperty(V4IR::Expr *source, const QString &targetName)
 {
+    // ### should use a lookup call here
     generateFunctionCall(Assembler::Void, __qmljs_set_activation_property,
                          Assembler::ContextRegister, Assembler::PointerToString(targetName), Assembler::PointerToValue(source));
 }
@@ -1055,19 +1019,17 @@ void InstructionSelection::setActivationProperty(V4IR::Expr *source, const QStri
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
     int id = irModule->functions.indexOf(closure->value);
-    generateFunctionCall(Assembler::Void, __qmljs_init_closure, Assembler::ContextRegister, Assembler::PointerToValue(target), Assembler::TrustedImm32(id));
+    generateFunctionCall(target, __qmljs_init_closure, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target)
 {
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateLookupCall(index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(target),
-                           Assembler::PointerToValue(base));
+        generateLookupCall(target, index, offsetof(QV4::Lookup, getter), Assembler::PointerToValue(base), Assembler::Void);
     } else {
-        generateFunctionCall(Assembler::Void, __qmljs_get_property, Assembler::ContextRegister,
-                             Assembler::PointerToValue(target), Assembler::PointerToValue(base),
-                             Assembler::PointerToString(name));
+        generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister,
+                             Assembler::PointerToValue(base), Assembler::PointerToString(name));
     }
 }
 
@@ -1076,7 +1038,7 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
 {
     if (useFastLookups) {
         uint index = registerSetterLookup(targetName);
-        generateLookupCall(index, offsetof(QV4::Lookup, setter),
+        generateLookupCall(Assembler::Void, index, offsetof(QV4::Lookup, setter),
                            Assembler::PointerToValue(targetBase),
                            Assembler::PointerToValue(source));
     } else {
@@ -1088,9 +1050,8 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_get_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(target), Assembler::PointerToValue(base),
-                         Assembler::PointerToValue(index));
+    generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex)
@@ -1115,19 +1076,18 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
                           (Assembler::RegisterID) targetTemp->index);
             return;
         } else {
-            Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, targetTemp);
             switch (sourceTemp->type) {
             case V4IR::DoubleType:
-                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, addr);
+                _as->storeDouble((Assembler::FPRegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::SInt32Type:
-                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::UInt32Type:
-                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeUInt32((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             case V4IR::BoolType:
-                _as->storeBool((Assembler::RegisterID) sourceTemp->index, addr);
+                _as->storeBool((Assembler::RegisterID) sourceTemp->index, targetTemp);
                 break;
             default:
                 Q_ASSERT(!"Unreachable");
@@ -1164,10 +1124,10 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
 
 void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    Q_ASSERT(sourceTemp->type == targetTemp->type);
-
     if (sourceTemp->kind == V4IR::Temp::PhysicalRegister) {
         if (targetTemp->kind == V4IR::Temp::PhysicalRegister) {
+            Q_ASSERT(sourceTemp->type == targetTemp->type);
+
             if (sourceTemp->type == V4IR::DoubleType) {
                 _as->moveDouble((Assembler::FPRegisterID) targetTemp->index, Assembler::FPGpr0);
                 _as->moveDouble((Assembler::FPRegisterID) sourceTemp->index,
@@ -1181,11 +1141,14 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         }
     } else if (sourceTemp->kind == V4IR::Temp::StackSlot) {
         if (targetTemp->kind == V4IR::Temp::StackSlot) {
-            Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
+            // Note: a swap for two stack-slots can involve different types.
 #if CPU(X86_64)
+            _as->load64(_as->stackSlotPointer(targetTemp), Assembler::ReturnValueRegister);
             _as->load64(_as->stackSlotPointer(sourceTemp), Assembler::ScratchRegister);
             _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(targetTemp));
+            _as->store64(Assembler::ReturnValueRegister, _as->stackSlotPointer(sourceTemp));
 #else
+            Assembler::FPRegisterID tReg = _as->toDoubleRegister(targetTemp);
             Assembler::Pointer sAddr = _as->stackSlotPointer(sourceTemp);
             Assembler::Pointer tAddr = _as->stackSlotPointer(targetTemp);
             _as->load32(sAddr, Assembler::ScratchRegister);
@@ -1194,14 +1157,43 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
             tAddr.offset += 4;
             _as->load32(sAddr, Assembler::ScratchRegister);
             _as->store32(Assembler::ScratchRegister, tAddr);
-#endif
             _as->storeDouble(tReg, _as->stackSlotPointer(sourceTemp));
+#endif
             return;
         }
     }
 
-    // FIXME: TODO!
-    Q_UNIMPLEMENTED();
+    V4IR::Temp *stackTemp = sourceTemp->kind == V4IR::Temp::StackSlot ? sourceTemp : targetTemp;
+    V4IR::Temp *registerTemp = sourceTemp->kind == V4IR::Temp::PhysicalRegister ? sourceTemp
+                                                                                : targetTemp;
+    Assembler::Pointer addr = _as->stackSlotPointer(stackTemp);
+    if (registerTemp->type == V4IR::DoubleType) {
+        _as->loadDouble(addr, Assembler::FPGpr0);
+        _as->storeDouble((Assembler::FPRegisterID) registerTemp->index, addr);
+        _as->moveDouble(Assembler::FPGpr0, (Assembler::FPRegisterID) registerTemp->index);
+    } else if (registerTemp->type == V4IR::UInt32Type) {
+        _as->toUInt32Register(addr, Assembler::ScratchRegister);
+        _as->storeUInt32((Assembler::RegisterID) registerTemp->index, addr);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
+    } else {
+        _as->load32(addr, Assembler::ScratchRegister);
+        _as->store32((Assembler::RegisterID) registerTemp->index, addr);
+        addr.offset += 4;
+        QV4::Value tag;
+        switch (registerTemp->type) {
+        case V4IR::BoolType:
+            tag = QV4::Value::fromBoolean(false);
+            break;
+        case V4IR::SInt32Type:
+            tag = QV4::Value::fromInt32(0);
+            break;
+        default:
+            tag = QV4::Value::undefinedValue();
+            Q_UNREACHABLE();
+        }
+        _as->store32(Assembler::TrustedImm32(tag.tag), addr);
+        _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
+    }
 }
 
 #define setOp(op, opName, operation) \
@@ -1225,32 +1217,131 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     } // switch
 
     if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op,
-                                     Assembler::PointerToValue(targetTemp),
+        _as->generateFunctionCallImp(targetTemp, opName, op,
                                      Assembler::PointerToValue(sourceTemp));
         storeTarget(0, targetTemp);
     }
 }
 
+static inline Assembler::FPRegisterID getFreeFPReg(V4IR::Expr *shouldNotOverlap, int hint)
+{
+    if (V4IR::Temp *t = shouldNotOverlap->asTemp())
+        if (t->type == V4IR::DoubleType)
+            if (t->kind == V4IR::Temp::PhysicalRegister)
+                if (t->index == hint)
+                    return Assembler::FPRegisterID(hint + 1);
+    return Assembler::FPRegisterID(hint);
+}
+
+Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
+{
+    Assembler::Jump done;
+
+    // Try preventing a call for a few common binary operations. This is used in two cases:
+    // - no register allocation was performed (not available for the platform, or the IR was
+    //   not transformed into SSA)
+    // - type inference found that either or both operands can be of non-number type, and the
+    //   register allocator will have prepared for a call (meaning: all registers that do not
+    //   hold operands are spilled to the stack, which makes them available here)
+    // Note: FPGPr0 can still not be used, because uint32->double conversion uses it as a scratch
+    //       register.
+    switch (oper) {
+    case V4IR::OpAdd: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->addDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpMul: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->mulDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpSub: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->subDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    case V4IR::OpDiv: {
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
+        Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
+
+        _as->divDouble(rReg, lReg);
+        _as->storeDouble(lReg, target);
+        done = _as->jump();
+
+        if (leftIsNoDbl.isSet())
+            leftIsNoDbl.link(_as);
+        if (rightIsNoDbl.isSet())
+            rightIsNoDbl.link(_as);
+    } break;
+    default:
+        break;
+    }
+
+    return done;
+}
+
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
+    if (oper != V4IR:: OpMod
+            && leftSource->type == V4IR::DoubleType && rightSource->type == V4IR::DoubleType
+            && isPregOrConst(leftSource) && isPregOrConst(rightSource)) {
+        doubleBinop(oper, leftSource, rightSource, target);
+        return;
+    }
+
+    Assembler::Jump done = genInlineBinop(oper, leftSource, rightSource, target);
+
     const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
     if (info.fallbackImplementation) {
-        _as->generateFunctionCallImp(Assembler::Void, info.name, info.fallbackImplementation,
-                                     Assembler::PointerToValue(target),
+        _as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
         storeTarget(0, target);
     } else if (info.contextImplementation) {
-        _as->generateFunctionCallImp(Assembler::Void, info.name, info.contextImplementation,
+        _as->generateFunctionCallImp(target, info.name, info.contextImplementation,
                                      Assembler::ContextRegister,
-                                     Assembler::PointerToValue(target),
                                      Assembler::PointerToValue(leftSource),
                                      Assembler::PointerToValue(rightSource));
         storeTarget(1, target);
     } else {
         assert(!"unreachable");
     }
+
+    if (done.isSet())
+        done.link(_as);
 }
 
 void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
@@ -1344,14 +1435,14 @@ void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateFunctionCall(Assembler::Void, __qmljs_call_property_lookup,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
+        generateFunctionCall(result, __qmljs_call_property_lookup,
+                             Assembler::ContextRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else
     {
-        generateFunctionCall(Assembler::Void, __qmljs_call_property, Assembler::ContextRegister,
-                             Assembler::PointerToValue(result), Assembler::PointerToString(name),
+        generateFunctionCall(result, __qmljs_call_property, Assembler::ContextRegister,
+                             Assembler::PointerToString(name),
                              baseAddressForCallData());
     }
 }
@@ -1362,8 +1453,8 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
     assert(base != 0);
 
     int argc = prepareCallData(args, base);
-    generateFunctionCall(Assembler::Void, __qmljs_call_element, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::PointerToValue(index),
+    generateFunctionCall(result, __qmljs_call_element, Assembler::ContextRegister,
+                         Assembler::PointerToValue(index),
                          baseAddressForCallData());
 }
 
@@ -1422,22 +1513,30 @@ void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *t
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
+#if QT_POINTER_SIZE == 8
+        _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+        Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                              Assembler::TrustedImm32(0));
+#else
         _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
         Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                               Assembler::TrustedImm32(Value::NotDouble_Mask));
+#endif
 
-        generateFunctionCall(Assembler::Void, __qmljs_value_to_double,
-                             Assembler::PointerToValue(target),
-                             Assembler::PointerToValue(source));
-        storeTarget(0, target);
+        generateFunctionCall(target, __qmljs_value_to_double, Assembler::PointerToValue(source));
         Assembler::Jump noDoubleDone = _as->jump();
 
         // it is a double:
         isDbl.link(_as);
         Assembler::Pointer addr2 = _as->loadTempAddress(Assembler::ScratchRegister, source);
         if (target->kind == V4IR::Temp::StackSlot) {
+#if QT_POINTER_SIZE == 8
+            _as->load64(addr2, Assembler::ScratchRegister);
+            _as->store64(Assembler::ScratchRegister, _as->stackSlotPointer(target));
+#else
             _as->loadDouble(addr2, Assembler::FPGpr0);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+#endif
         } else {
             _as->loadDouble(addr2, (Assembler::FPRegisterID) target->index);
         }
@@ -1569,15 +1668,14 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateFunctionCall(Assembler::Void, __qmljs_construct_global_lookup,
-                             Assembler::ContextRegister, Assembler::PointerToValue(result),
-                             Assembler::TrustedImm32(index),
-                             baseAddressForCallData());
+        generateFunctionCall(result, __qmljs_construct_global_lookup,
+                             Assembler::ContextRegister,
+                             Assembler::TrustedImm32(index), baseAddressForCallData());
         return;
     }
 
-    generateFunctionCall(Assembler::Void, __qmljs_construct_activation_property,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_construct_activation_property,
+                         Assembler::ContextRegister,
                          Assembler::PointerToString(*func->id),
                          baseAddressForCallData());
 }
@@ -1586,8 +1684,8 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_property, Assembler::ContextRegister,
-                         Assembler::PointerToValue(result), Assembler::Reference(base), Assembler::PointerToString(name),
+    generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister,
+                         Assembler::Reference(base), Assembler::PointerToString(name),
                          baseAddressForCallData());
 }
 
@@ -1596,8 +1694,8 @@ void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *arg
     assert(value != 0);
 
     int argc = prepareCallData(args, 0);
-    generateFunctionCall(Assembler::Void, __qmljs_construct_value,
-                         Assembler::ContextRegister, Assembler::PointerToValue(result),
+    generateFunctionCall(result, __qmljs_construct_value,
+                         Assembler::ContextRegister,
                          Assembler::Reference(value),
                          baseAddressForCallData());
 }
@@ -1650,6 +1748,10 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         _as->jumpToBlock(_block, s->iffalse);
         return;
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
+        if (b->left->type == V4IR::DoubleType && b->right->type == V4IR::DoubleType
+                && visitCJumpDouble(b->op, b->left, b->right, s->iftrue, s->iffalse))
+            return;
+
         CmpOp op = 0;
         CmpOpContext opContext = 0;
         const char *opName = 0;
@@ -1688,31 +1790,37 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         _as->jumpToBlock(_block, s->iffalse);
         return;
     }
-    Q_UNIMPLEMENTED();
-    assert(!"TODO");
+    Q_UNREACHABLE();
 }
 
 void InstructionSelection::visitRet(V4IR::Ret *s)
 {
     if (V4IR::Temp *t = s->expr->asTemp()) {
-#if defined(RETURN_VALUE_IN_REGISTER)
 #if CPU(X86)
        Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
        _as->load32(addr, JSC::X86Registers::eax);
        addr.offset += 4;
        _as->load32(addr, JSC::X86Registers::edx);
+#elif CPU(ARM)
+        Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+        _as->load32(addr, JSC::ARMRegisters::r0);
+        addr.offset += 4;
+        _as->load32(addr, JSC::ARMRegisters::r1);
 #else
         if (t->kind == V4IR::Temp::PhysicalRegister) {
             if (t->type == V4IR::DoubleType) {
                 _as->moveDoubleTo64((Assembler::FPRegisterID) t->index,
                                     Assembler::ReturnValueRegister);
+            } else if (t->type == V4IR::UInt32Type) {
+                Address tmp = addressForArgument(0);
+                _as->storeUInt32((Assembler::RegisterID) t->index, Pointer(tmp));
+                _as->load64(tmp, Assembler::ReturnValueRegister);
             } else {
                 _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index,
                                        Assembler::ReturnValueRegister);
                 QV4::Value upper;
                 switch (t->type) {
                 case V4IR::SInt32Type:
-                case V4IR::UInt32Type:
                     upper = QV4::Value::fromInt32(0);
                     break;
                 case V4IR::BoolType:
@@ -1720,7 +1828,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
                     break;
                 default:
                     upper = QV4::Value::undefinedValue();
-                    Q_UNIMPLEMENTED();
+                    Q_UNREACHABLE();
                 }
                 _as->or64(Assembler::TrustedImm64(((int64_t) upper.tag) << 32),
                           Assembler::ReturnValueRegister);
@@ -1729,25 +1837,18 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
             _as->copyValue(Assembler::ReturnValueRegister, t);
         }
 #endif
-#else
-        _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
-        _as->copyValue(Address(Assembler::ReturnValueRegister, 0), t);
-#endif
     } else if (V4IR::Const *c = s->expr->asConst()) {
         QV4::Value retVal = convertToValue(c);
-#if defined(RETURN_VALUE_IN_REGISTER)
 #if CPU(X86)
         _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
         _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
+#elif CPU(ARM)
+        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
+        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
 #else
         _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
 #endif
-#else // !RETURN_VALUE_IN_REGISTER
-        _as->loadPtr(addressForArgument(0), Assembler::ReturnValueRegister);
-        _as->storeValue(retVal, Assembler::Address(Assembler::ReturnValueRegister));
-#endif
     } else {
-        Q_UNIMPLEMENTED();
         Q_UNREACHABLE();
         Q_UNUSED(s);
     }
@@ -1758,14 +1859,6 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, offsetof(ExecutionEngine, jsStackTop)));
 
     _as->leaveStandardStackFrame();
-#if !defined(ARGUMENTS_IN_REGISTERS) && !defined(RETURN_VALUE_IN_REGISTER)
-    // Emulate ret(n) instruction
-    // Pop off return address into scratch register ...
-    _as->pop(Assembler::ScratchRegister);
-    // ... and overwrite the invisible argument with
-    // the return address.
-    _as->poke(Assembler::ScratchRegister);
-#endif
     _as->ret();
 }
 
@@ -1794,7 +1887,7 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     }
 
     Pointer p = _as->stackLayout().callDataAddress(offsetof(CallData, tag));
-    _as->store32(Assembler::TrustedImm32(0), p);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, argc));
     _as->store32(Assembler::TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(offsetof(CallData, thisObject));
@@ -1854,4 +1947,197 @@ void Assembler::ConstantTable::finalize(JSC::LinkBuffer &linkBuffer, Instruction
 
     foreach (DataLabelPtr label, _toPatch)
         linkBuffer.patch(label, tablePtr);
+}
+
+// Try to load the source expression into the destination FP register. This assumes that two
+// general purpose (integer) registers are available: the ScratchRegister and the
+// ReturnValueRegister. It returns a Jump if no conversion can be performed.
+Assembler::Jump InstructionSelection::genTryDoubleConversion(V4IR::Expr *src,
+                                                             Assembler::FPRegisterID dest)
+{
+    switch (src->type) {
+    case V4IR::DoubleType:
+        _as->moveDouble(_as->toDoubleRegister(src, dest), dest);
+        return Assembler::Jump();
+    case V4IR::SInt32Type:
+        _as->convertInt32ToDouble(_as->toInt32Register(src, Assembler::ScratchRegister),
+                                  dest);
+        return Assembler::Jump();
+    case V4IR::UInt32Type:
+#if CPU(X86_64) || CPU(X86)
+        _as->convertUInt32ToDouble(_as->toUInt32Register(src, Assembler::ScratchRegister),
+                                   dest, Assembler::ReturnValueRegister);
+#else
+        Q_ASSERT(!"Not supported on this platform!");
+#endif
+        return Assembler::Jump();
+    case V4IR::BoolType:
+        // TODO?
+        return _as->jump();
+    default:
+        break;
+    }
+
+    V4IR::Temp *sourceTemp = src->asTemp();
+    Q_ASSERT(sourceTemp);
+
+    // It's not a number type, so it cannot be in a register.
+    Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister || sourceTemp->type == V4IR::BoolType);
+
+    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, sourceTemp);
+    tagAddr.offset += 4;
+    _as->load32(tagAddr, Assembler::ScratchRegister);
+
+    // check if it's an int32:
+    Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::_Integer_Type));
+    _as->convertInt32ToDouble(_as->toInt32Register(src, Assembler::ScratchRegister), dest);
+    Assembler::Jump intDone = _as->jump();
+
+    // not an int, check if it's a double:
+    isNoInt.link(_as);
+#if QT_POINTER_SIZE == 8
+    _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = _as->branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(0));
+#else
+    _as->and32(Assembler::TrustedImm32(Value::NotDouble_Mask), Assembler::ScratchRegister);
+    Assembler::Jump isNoDbl = _as->branch32(Assembler::Equal, Assembler::ScratchRegister,
+                                            Assembler::TrustedImm32(Value::NotDouble_Mask));
+#endif
+    _as->toDoubleRegister(src, dest);
+    intDone.link(_as);
+
+    return isNoDbl;
+}
+
+void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
+                                       V4IR::Expr *rightSource, V4IR::Temp *target)
+{
+    Q_ASSERT(leftSource->asConst() == 0 || rightSource->asConst() == 0);
+    Q_ASSERT(isPregOrConst(leftSource));
+    Q_ASSERT(isPregOrConst(rightSource));
+    Assembler::FPRegisterID targetReg;
+    if (target->kind == V4IR::Temp::PhysicalRegister)
+        targetReg = (Assembler::FPRegisterID) target->index;
+    else
+        targetReg = Assembler::FPGpr0;
+
+    switch (oper) {
+    case V4IR::OpAdd:
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->addDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->addDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpMul:
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->mulDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->mulDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpSub:
+#if CPU(X86) || CPU(X86_64)
+        if (V4IR::Temp *rightTemp = rightSource->asTemp()) {
+            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+                _as->moveDouble(targetReg, Assembler::FPGpr0);
+                _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+                _as->subDouble(Assembler::FPGpr0, targetReg);
+                break;
+            }
+        }
+#endif
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->subDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->subDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    case V4IR::OpDiv:
+#if CPU(X86) || CPU(X86_64)
+        if (V4IR::Temp *rightTemp = rightSource->asTemp()) {
+            if (rightTemp->kind == V4IR::Temp::PhysicalRegister && rightTemp->index == targetReg) {
+                _as->moveDouble(targetReg, Assembler::FPGpr0);
+                _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+                _as->divDouble(Assembler::FPGpr0, targetReg);
+                break;
+            }
+        }
+#endif
+        if (V4IR::Const *c = rightSource->asConst()) {
+            _as->moveDouble(_as->toDoubleRegister(leftSource, targetReg), targetReg);
+            Assembler::ImplicitAddress addr =
+                    _as->constantTable().loadValueAddress(c, Assembler::ScratchRegister);
+            _as->divDouble(Address(addr.base, addr.offset), targetReg);
+            break;
+        }
+
+        _as->divDouble(_as->toDoubleRegister(leftSource), _as->toDoubleRegister(rightSource),
+                       targetReg);
+        break;
+    default: {
+        Q_ASSERT(target->type == V4IR::BoolType);
+        Assembler::Jump trueCase = branchDouble(oper, leftSource, rightSource);
+        _as->storeBool(false, target);
+        Assembler::Jump done = _as->jump();
+        trueCase.link(_as);
+        _as->storeBool(true, target);
+        done.link(_as);
+    } return;
+    }
+
+    if (target->kind != V4IR::Temp::PhysicalRegister)
+        _as->storeDouble(Assembler::FPGpr0, target);
+}
+
+Assembler::Jump InstructionSelection::branchDouble(V4IR::AluOp op, V4IR::Expr *left,
+                                                   V4IR::Expr *right)
+{
+    Q_ASSERT(isPregOrConst(left));
+    Q_ASSERT(isPregOrConst(right));
+    Q_ASSERT(left->asConst() == 0 || right->asConst() == 0);
+
+    Assembler::DoubleCondition cond;
+    switch (op) {
+    case V4IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
+    case V4IR::OpLt: cond = Assembler::DoubleLessThan; break;
+    case V4IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
+    case V4IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
+    case V4IR::OpEqual:
+    case V4IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
+    case V4IR::OpNotEqual:
+    case V4IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
+    default:
+        Q_UNREACHABLE();
+    }
+    return _as->branchDouble(cond, _as->toDoubleRegister(left), _as->toDoubleRegister(right));
+}
+
+bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
+                                            V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
+{
+    if (!isPregOrConst(left) || !isPregOrConst(right))
+        return false;
+
+    Assembler::Jump target = branchDouble(op, left, right);
+    _as->addPatch(iftrue, target);
+    _as->jumpToBlock(_block, iffalse);
+    return true;
 }

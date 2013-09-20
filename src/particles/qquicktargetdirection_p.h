@@ -99,7 +99,7 @@ public:
         return m_targetItem;
     }
 
-signals:
+Q_SIGNALS:
 
     void targetXChanged(qreal arg);
 
@@ -115,12 +115,12 @@ signals:
 
     void targetItemChanged(QQuickItem* arg);
 
-public slots:
+public Q_SLOTS:
     void setTargetX(qreal arg)
     {
         if (m_targetX != arg) {
             m_targetX = arg;
-            emit targetXChanged(arg);
+            Q_EMIT targetXChanged(arg);
         }
     }
 
@@ -128,7 +128,7 @@ public slots:
     {
         if (m_targetY != arg) {
             m_targetY = arg;
-            emit targetYChanged(arg);
+            Q_EMIT targetYChanged(arg);
         }
     }
 
@@ -136,7 +136,7 @@ public slots:
     {
         if (m_targetVariation != arg) {
             m_targetVariation = arg;
-            emit targetVariationChanged(arg);
+            Q_EMIT targetVariationChanged(arg);
         }
     }
 
@@ -144,7 +144,7 @@ public slots:
     {
         if (m_magnitude != arg) {
             m_magnitude = arg;
-            emit magnitudeChanged(arg);
+            Q_EMIT magnitudeChanged(arg);
         }
     }
 
@@ -152,7 +152,7 @@ public slots:
     {
         if (m_proportionalMagnitude != arg) {
             m_proportionalMagnitude = arg;
-            emit proprotionalMagnitudeChanged(arg);
+            Q_EMIT proprotionalMagnitudeChanged(arg);
         }
     }
 
@@ -160,7 +160,7 @@ public slots:
     {
         if (m_magnitudeVariation != arg) {
             m_magnitudeVariation = arg;
-            emit magnitudeVariationChanged(arg);
+            Q_EMIT magnitudeVariationChanged(arg);
         }
     }
 
@@ -168,7 +168,7 @@ public slots:
     {
         if (m_targetItem != arg) {
             m_targetItem = arg;
-            emit targetItemChanged(arg);
+            Q_EMIT targetItemChanged(arg);
         }
     }
 

@@ -90,7 +90,7 @@ public:
         return m_emissionExtruder;
     }
 
-signals:
+Q_SIGNALS:
     void emitFollowParticles(QQmlV4Handle particles, QQmlV4Handle followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
@@ -103,20 +103,20 @@ signals:
 
     void emissionShapeChanged(QQuickParticleExtruder* arg);
 
-public slots:
+public Q_SLOTS:
 
     void setParticlesPerParticlePerSecond(int arg)
     {
         if (m_particlesPerParticlePerSecond != arg) {
             m_particlesPerParticlePerSecond = arg;
-            emit particlesPerParticlePerSecondChanged(arg);
+            Q_EMIT particlesPerParticlePerSecondChanged(arg);
         }
     }
     void setEmitterXVariation(qreal arg)
     {
         if (m_emitterXVariation != arg) {
             m_emitterXVariation = arg;
-            emit emitterXVariationChanged(arg);
+            Q_EMIT emitterXVariationChanged(arg);
         }
     }
 
@@ -124,7 +124,7 @@ public slots:
     {
         if (m_emitterYVariation != arg) {
             m_emitterYVariation = arg;
-            emit emitterYVariationChanged(arg);
+            Q_EMIT emitterYVariationChanged(arg);
         }
     }
 
@@ -132,7 +132,7 @@ public slots:
     {
         if (m_follow != arg) {
             m_follow = arg;
-            emit followChanged(arg);
+            Q_EMIT followChanged(arg);
         }
     }
 
@@ -140,11 +140,11 @@ public slots:
     {
         if (m_emissionExtruder != arg) {
             m_emissionExtruder = arg;
-            emit emissionShapeChanged(arg);
+            Q_EMIT emissionShapeChanged(arg);
         }
     }
 
-private slots:
+private Q_SLOTS:
     void recalcParticlesPerSecond();
 
 private:

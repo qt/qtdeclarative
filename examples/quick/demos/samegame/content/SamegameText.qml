@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../settings.js" as Settings
+import "settings.js" as Settings
 
 Text {
     font.pixelSize: Settings.fontPixelSize;

@@ -160,24 +160,24 @@ StringCtor::StringCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value StringCtor::construct(Managed *m, CallData *callData)
+ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
 {
     Value value;
     if (callData->argc)
         value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
-    return Value::fromObject(m->engine()->newStringObject(value));
+    return Encode(m->engine()->newStringObject(value));
 }
 
-Value StringCtor::call(Managed *m, CallData *callData)
+ReturnedValue StringCtor::call(Managed *m, CallData *callData)
 {
     Value value;
     if (callData->argc)
         value = Value::fromString(callData->args[0].toString(m->engine()->current));
     else
         value = Value::fromString(m->engine()->current, QString());
-    return value;
+    return value.asReturnedValue();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
@@ -237,18 +237,18 @@ static QString getThisString(ExecutionContext *context, Value thisObject)
     return str->toQString();
 }
 
-Value StringPrototype::method_toString(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_toString(SimpleCallContext *context)
 {
     if (context->thisObject.isString())
-        return context->thisObject;
+        return context->thisObject.asReturnedValue();
 
     StringObject *o = context->thisObject.asStringObject();
     if (!o)
         context->throwTypeError();
-    return o->value;
+    return o->value.asReturnedValue();
 }
 
-Value StringPrototype::method_charAt(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
 {
     const QString str = getThisString(context, context->thisObject);
 
@@ -260,10 +260,10 @@ Value StringPrototype::method_charAt(SimpleCallContext *context)
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    return Value::fromString(context, result);
+    return Value::fromString(context, result).asReturnedValue();
 }
 
-Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_charCodeAt(SimpleCallContext *context)
 {
     const QString str = getThisString(context, context->thisObject);
 
@@ -273,14 +273,14 @@ Value StringPrototype::method_charCodeAt(SimpleCallContext *context)
 
 
     if (pos >= 0 && pos < str.length())
-        return Value::fromInt32(str.at(pos).unicode());
+        return Encode(str.at(pos).unicode());
 
-    return Value::fromDouble(qSNaN());
+    return Encode(qSNaN());
 }
 
-Value StringPrototype::method_concat(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
 {
-    ValueScope scope(context);
+    Scope scope(context);
 
     QString value = getThisString(context, context->thisObject);
 
@@ -291,10 +291,10 @@ Value StringPrototype::method_concat(SimpleCallContext *context)
         value += v->stringValue()->toQString();
     }
 
-    return Value::fromString(context, value);
+    return Value::fromString(context, value).asReturnedValue();
 }
 
-Value StringPrototype::method_indexOf(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_indexOf(SimpleCallContext *context)
 {
     QString value = getThisString(context, context->thisObject);
 
@@ -310,20 +310,18 @@ Value StringPrototype::method_indexOf(SimpleCallContext *context)
     if (! value.isEmpty())
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    return Value::fromDouble(index);
+    return Encode(index);
 }
 
-Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 {
-    ValueScope scope(context);
+    Scope scope(context);
 
     const QString value = getThisString(context, context->thisObject);
 
     QString searchString;
-    if (context->argumentCount) {
-        Value v = __qmljs_to_string(ValueRef(&context->arguments[0]), context);
-        searchString = v.stringValue()->toQString();
-    }
+    if (context->argumentCount)
+        searchString = context->arguments[0].toQString();
 
     ScopedValue posArg(scope, context->argumentCount > 1 ? context->arguments[1] : Value::undefinedValue());
     double position = __qmljs_to_number(posArg);
@@ -336,31 +334,32 @@ Value StringPrototype::method_lastIndexOf(SimpleCallContext *context)
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     if (searchString.isNull() && pos == 0)
-        return Value::fromDouble(-1);
+        return Encode(-1);
     int index = value.lastIndexOf(searchString, pos);
-    return Value::fromDouble(index);
+    return Encode(index);
 }
 
-Value StringPrototype::method_localeCompare(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
 {
     const QString value = getThisString(context, context->thisObject);
     const QString that = (context->argumentCount ? context->arguments[0] : Value::undefinedValue()).toString(context)->toQString();
-    return Value::fromDouble(QString::localeAwareCompare(value, that));
+    return Encode(QString::localeAwareCompare(value, that));
 }
 
-Value StringPrototype::method_match(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
 {
     if (context->thisObject.isUndefined() || context->thisObject.isNull())
         context->throwTypeError();
 
+    Scope scope(context);
     String *s = context->thisObject.toString(context);
 
     Value regexp = context->argumentCount ? context->arguments[0] : Value::undefinedValue();
     RegExpObject *rx = regexp.as<RegExpObject>();
     if (!rx) {
-        ScopedCallData callData(context->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        rx = context->engine->regExpCtor.asFunctionObject()->construct(callData).as<RegExpObject>();
+        rx = Value::fromReturnedValue(context->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
     }
 
     if (!rx)
@@ -370,9 +369,9 @@ Value StringPrototype::method_match(SimpleCallContext *context)
     bool global = rx->global;
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    FunctionObject *exec = context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0).asFunctionObject();
+    Scoped<FunctionObject> exec(scope, context->engine->regExpClass->prototype->get(context->engine->newString(QStringLiteral("exec")), 0));
 
-    ScopedCallData callData(context->engine, 1);
+    ScopedCallData callData(scope, 1);
     callData->thisObject = Value::fromObject(rx);
     callData->args[0] = Value::fromString(s);
     if (!global)
@@ -380,30 +379,34 @@ Value StringPrototype::method_match(SimpleCallContext *context)
 
     String *lastIndex = context->engine->newString(QStringLiteral("lastIndex"));
     rx->put(lastIndex, Value::fromInt32(0));
-    ArrayObject *a = context->engine->newArrayObject();
+    Scoped<ArrayObject> a(scope, context->engine->newArrayObject());
 
     double previousLastIndex = 0;
     uint n = 0;
+    ScopedValue result(scope);
+    ScopedValue matchStr(scope);
+    ScopedValue index(scope);
     while (1) {
-        Value result = exec->call(callData);
-        if (result.isNull())
+        result = exec->call(callData);
+        if (result->isNull())
             break;
-        assert(result.isObject());
-        double thisIndex = rx->get(lastIndex, 0).toInteger();
+        assert(result->isObject());
+        index = rx->get(lastIndex, 0);
+        double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
             rx->put(lastIndex, Value::fromDouble(previousLastIndex));
         } else {
             previousLastIndex = thisIndex;
         }
-        Value matchStr = result.objectValue()->getIndexed(0);
+        matchStr = result->objectValue()->getIndexed(0);
         a->arraySet(n, matchStr);
         ++n;
     }
     if (!n)
-        return Value::nullValue();
+        return Encode::null();
 
-    return Value::fromObject(a);
+    return a.asReturnedValue();
 
 }
 
@@ -452,8 +455,9 @@ static void appendReplacementString(QString *result, const QString &input, const
     }
 }
 
-Value StringPrototype::method_replace(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();
@@ -509,9 +513,10 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
 
     QString result;
     Value replaceValue = ctx->argument(1);
+    ScopedValue replacement(scope);
     if (FunctionObject* searchCallback = replaceValue.asFunctionObject()) {
         result.reserve(string.length() + 10*numStringMatches);
-        ScopedCallData callData(ctx->engine, numCaptures + 2);
+        ScopedCallData callData(scope, numCaptures + 2);
         callData->thisObject = Value::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
@@ -530,9 +535,9 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
             callData->args[numCaptures] = Value::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = Value::fromString(ctx, string);
 
-            Value replacement = searchCallback->call(callData);
+            replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
-            result += replacement.toString(ctx)->toQString();
+            result += replacement->toString(ctx)->toQString();
             lastEnd = matchEnd;
         }
         result += string.midRef(lastEnd);
@@ -558,33 +563,34 @@ Value StringPrototype::method_replace(SimpleCallContext *ctx)
     if (matchOffsets != _matchOffsets)
         free(matchOffsets);
 
-    return Value::fromString(ctx, result);
+    return Value::fromString(ctx, result).asReturnedValue();
 }
 
-Value StringPrototype::method_search(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject.asStringObject())
         string = thisString->value.stringValue()->toQString();
     else
         string = ctx->thisObject.toString(ctx)->toQString();
 
-    Value regExpValue = ctx->argument(0);
-    RegExpObject *regExp = regExpValue.as<RegExpObject>();
+    ScopedValue regExpValue(scope, ctx->argument(0));
+    RegExpObject *regExp = regExpValue->as<RegExpObject>();
     if (!regExp) {
-        ScopedCallData callData(ctx->engine, 1);
+        ScopedCallData callData(scope, 1);
         callData->args[0] = regExpValue;
         regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
-        regExp = regExpValue.as<RegExpObject>();
+        regExp = regExpValue->as<RegExpObject>();
     }
     uint* matchOffsets = (uint*)alloca(regExp->value->captureCount() * 2 * sizeof(uint));
     uint result = regExp->value->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
-        return Value::fromInt32(-1);
-    return Value::fromUInt32(result);
+        return Encode(-1);
+    return Encode(result);
 }
 
-Value StringPrototype::method_slice(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
 {
     const QString text = getThisString(ctx);
     const double length = text.length();
@@ -607,11 +613,12 @@ Value StringPrototype::method_slice(SimpleCallContext *ctx)
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    return Value::fromString(ctx, text.mid(intStart, count));
+    return Value::fromString(ctx, text.mid(intStart, count)).asReturnedValue();
 }
 
-Value StringPrototype::method_split(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     QString text;
     if (StringObject *thisObject = ctx->thisObject.asStringObject())
         text = thisObject->value.stringValue()->toQString();
@@ -621,21 +628,20 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
     Value separatorValue = ctx->argumentCount > 0 ? ctx->argument(0) : Value::undefinedValue();
     Value limitValue = ctx->argumentCount > 1 ? ctx->argument(1) : Value::undefinedValue();
 
-    ArrayObject* array = ctx->engine->newArrayObject();
-    Value result = Value::fromObject(array);
+    Scoped<ArrayObject> array(scope, ctx->engine->newArrayObject());
 
     if (separatorValue.isUndefined()) {
         if (limitValue.isUndefined()) {
             array->push_back(Value::fromString(ctx, text));
-            return result;
+            return array.asReturnedValue();
         }
-        return Value::fromString(ctx, text.left(limitValue.toInteger()));
+        return Value::fromString(ctx, text.left(limitValue.toInteger())).asReturnedValue();
     }
 
     uint limit = limitValue.isUndefined() ? UINT_MAX : limitValue.toUInt32();
 
     if (limit == 0)
-        return result;
+        return array.asReturnedValue();
 
     if (RegExpObject* re = separatorValue.as<RegExpObject>()) {
         if (re->value->pattern().isEmpty()) {
@@ -673,7 +679,7 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
                 array->push_back(Value::fromString(ctx, text.mid(i, 1)));
-            return result;
+            return array.asReturnedValue();
         }
 
         int start = 0;
@@ -687,10 +693,10 @@ Value StringPrototype::method_split(SimpleCallContext *ctx)
         if (array->arrayLength() < limit && start != -1)
             array->push_back(Value::fromString(ctx, text.mid(start)));
     }
-    return result;
+    return array.asReturnedValue();
 }
 
-Value StringPrototype::method_substr(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
 {
     const QString value = getThisString(context, context->thisObject);
 
@@ -710,10 +716,10 @@ Value StringPrototype::method_substr(SimpleCallContext *context)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(length);
-    return Value::fromString(context, value.mid(x, y));
+    return Value::fromString(context, value.mid(x, y)).asReturnedValue();
 }
 
-Value StringPrototype::method_substring(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
 {
     QString value = getThisString(context, context->thisObject);
     int length = value.length();
@@ -748,32 +754,32 @@ Value StringPrototype::method_substring(SimpleCallContext *context)
 
     qint32 x = (int)start;
     qint32 y = (int)(end - start);
-    return Value::fromString(context, value.mid(x, y));
+    return Value::fromString(context, value.mid(x, y)).asReturnedValue();
 }
 
-Value StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
-    return Value::fromString(ctx, value.toLower());
+    return Value::fromString(ctx, value.toLower()).asReturnedValue();
 }
 
-Value StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
 {
     return method_toLowerCase(ctx);
 }
 
-Value StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
-    return Value::fromString(ctx, value.toUpper());
+    return Value::fromString(ctx, value.toUpper()).asReturnedValue();
 }
 
-Value StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
 {
     return method_toUpperCase(ctx);
 }
 
-Value StringPrototype::method_fromCharCode(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_fromCharCode(SimpleCallContext *context)
 {
     QString str(context->argumentCount, Qt::Uninitialized);
     QChar *ch = str.data();
@@ -781,15 +787,15 @@ Value StringPrototype::method_fromCharCode(SimpleCallContext *context)
         *ch = QChar(context->arguments[i].toUInt16());
         ++ch;
     }
-    return Value::fromString(context, str);
+    return Value::fromString(context, str).asReturnedValue();
 }
 
-Value StringPrototype::method_trim(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_trim(SimpleCallContext *ctx)
 {
     if (ctx->thisObject.isNull() || ctx->thisObject.isUndefined())
         ctx->throwTypeError();
 
-    QString s = __qmljs_to_string(ValueRef(&ctx->thisObject), ctx).stringValue()->toQString();
+    QString s = ctx->thisObject.toQString();
     const QChar *chars = s.constData();
     int start, end;
     for (start = 0; start < s.length(); ++start) {
@@ -801,5 +807,5 @@ Value StringPrototype::method_trim(SimpleCallContext *ctx)
             break;
     }
 
-    return Value::fromString(ctx, QString(chars + start, end - start + 1));
+    return Value::fromString(ctx, QString(chars + start, end - start + 1)).asReturnedValue();
 }

@@ -78,7 +78,7 @@ public:
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator() const { return jsGenerator; }
 
 protected:
-    virtual void run(V4IR::Function *function) = 0;
+    virtual void run(int functionIndex) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
     bool useFastLookups;
@@ -118,14 +118,6 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result) = 0;
-    virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result) = 0;
     virtual void callBuiltinThrow(V4IR::Expr *arg) = 0;
     virtual void callBuiltinFinishTry() = 0;
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result) = 0;

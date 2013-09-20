@@ -63,10 +63,10 @@ QmlListWrapper::~QmlListWrapper()
 {
 }
 
-Value QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId, int propType)
+ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId, int propType)
 {
     if (!object || propId == -1)
-        return Value::nullValue();
+        return Encode::null();
 
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
@@ -75,10 +75,10 @@ Value QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId, int pro
     r->propertyType = propType;
     void *args[] = { &r->property, 0 };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
-    return Value::fromObject(r);
+    return Value::fromObject(r).asReturnedValue();
 }
 
-Value QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType)
+ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
 
@@ -86,7 +86,7 @@ Value QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &pro
     r->object = prop.object;
     r->property = prop;
     r->propertyType = propType;
-    return Value::fromObject(r);
+    return Value::fromObject(r).asReturnedValue();
 }
 
 QVariant QmlListWrapper::toVariant() const
@@ -98,7 +98,7 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
@@ -107,7 +107,7 @@ Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 
     if (name == v4->id_length && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
-        return Value::fromUInt32(count);
+        return Value::fromUInt32(count).asReturnedValue();
     }
 
     uint idx = name->asArrayIndex();
@@ -117,7 +117,7 @@ Value QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
     return Object::get(m, name, hasProperty);
 }
 
-Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
@@ -128,7 +128,7 @@ Value QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
     if (index < count && w->property.at)
         return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
 
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void QmlListWrapper::put(Managed *m, String *name, const Value &value)
@@ -156,7 +156,7 @@ Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
             *attrs = QV4::Attr_Data;
         *index = it->arrayIndex;
         ++it->arrayIndex;
-        it->tmpDynamicProperty.value = QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index));
+        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index)));
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attrs);

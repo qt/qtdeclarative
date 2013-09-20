@@ -136,14 +136,14 @@ void RegExp::markObjects(Managed *that)
 {
 }
 
-Value RegExp::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue RegExp::get(Managed *, String *, bool *)
 {
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value RegExp::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue RegExp::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void RegExp::put(Managed *m, String *name, const Value &value)

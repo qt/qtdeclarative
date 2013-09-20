@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick.Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,30 +39,62 @@
 **
 ****************************************************************************/
 
-#ifndef QSGPATHSIMPLIFIER_P_H
-#define QSGPATHSIMPLIFIER_P_H
+#ifndef QQUICKWRITINGSYSTEMLISTMODEL_P_H
+#define QQUICKWRITINGSYSTEMLISTMODEL_P_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtGui/qpainterpath.h>
-#include <QtGui/private/qdatabuffer_p.h>
-#include <QtGui/private/qvectorpath_p.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/QAbstractListModel>
+#include <QtQml/qqmlparserstatus.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-// The returned vertices are in 8:8 fixed point format. The path is assumed to be in the range (-128, 128)x(-128, 128).
-void qSimplifyPath(const QVectorPath &path, QDataBuffer<QPoint> &vertices, QDataBuffer<quint32> &indices, const QTransform &matrix = QTransform());
-void qSimplifyPath(const QPainterPath &path, QDataBuffer<QPoint> &vertices, QDataBuffer<quint32> &indices, const QTransform &matrix = QTransform());
+class QModelIndex;
+
+class QQuickWritingSystemListModelPrivate;
+
+class QQuickWritingSystemListModel : public QAbstractListModel, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+    Q_PROPERTY(QStringList writingSystems READ writingSystems NOTIFY writingSystemsChanged)
+
+    Q_PROPERTY(int count READ count NOTIFY rowCountChanged)
+
+public:
+    QQuickWritingSystemListModel(QObject *parent = 0);
+    ~QQuickWritingSystemListModel();
+
+    enum Roles {
+        WritingSystemNameRole = Qt::UserRole + 1,
+        WritingSystemSampleRole = Qt::UserRole + 2
+    };
+
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    virtual QHash<int, QByteArray> roleNames() const;
+
+    int count() const { return rowCount(QModelIndex()); }
+
+    QStringList writingSystems() const;
+
+    Q_INVOKABLE QJSValue get(int index) const;
+
+    virtual void classBegin();
+    virtual void componentComplete();
+
+Q_SIGNALS:
+    void writingSystemsChanged();
+    void rowCountChanged() const;
+
+private:
+    Q_DISABLE_COPY(QQuickWritingSystemListModel)
+    Q_DECLARE_PRIVATE(QQuickWritingSystemListModel)
+    QScopedPointer<QQuickWritingSystemListModelPrivate> d_ptr;
+
+};
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QQUICKWRITINGSYSTEMLISTMODEL_P_H

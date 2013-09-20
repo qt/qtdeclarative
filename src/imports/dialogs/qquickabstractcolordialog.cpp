@@ -109,6 +109,15 @@ void QQuickAbstractColorDialog::setColor(QColor arg)
         m_color = arg;
         emit colorChanged();
     }
+    setCurrentColor(arg);
+}
+
+void QQuickAbstractColorDialog::setCurrentColor(QColor currentColor)
+{
+    if (m_currentColor != currentColor) {
+        m_currentColor = currentColor;
+        emit currentColorChanged();
+    }
 }
 
 void QQuickAbstractColorDialog::setShowAlphaChannel(bool arg)

@@ -73,6 +73,8 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
     QList<QVector<QV4::Value> > constantValues;
+    QVector<int> codeSizes; // corresponding to the endOfCode labels. MacroAssemblerCodeRef's size may
+                            // be larger, as for example on ARM we append the exception handling table.
 };
 
 class Assembler : public JSC::MacroAssembler
@@ -85,13 +87,6 @@ public:
 
 #undef VALUE_FITS_IN_REGISTER
 #undef ARGUMENTS_IN_REGISTERS
-
-#if OS(WINDOWS)
-    // Returned in EAX:EDX pair
-#define RETURN_VALUE_IN_REGISTER
-#else
-#undef RETURN_VALUE_IN_REGISTER
-#endif
 
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
@@ -123,7 +118,6 @@ public:
 
 #define VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
-#define RETURN_VALUE_IN_REGISTER
 #define HAVE_ALU_OPS_WITH_MEM_OPERAND 1
 
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
@@ -177,7 +171,6 @@ public:
 
 #undef VALUE_FITS_IN_REGISTER
 #define ARGUMENTS_IN_REGISTERS
-#undef RETURN_VALUE_IN_REGISTER
 #undef HAVE_ALU_OPS_WITH_MEM_OPERAND
 
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
@@ -249,21 +242,32 @@ public:
         {}
     };
 
-    // Stack layout:
+    // V4 uses two stacks: one stack with QV4::Value items, which is checked by the garbage
+    // collector, and one stack used by the native C/C++/ABI code. This C++ stack is not scanned
+    // by the garbage collector, so if any JS object needs to be retained, it should be put on the
+    // JS stack.
+    //
+    // The "saved reg arg X" are on the C++ stack is used to store values in registers that need to
+    // be passed by reference to native functions. It is fine to use the C++ stack, because only
+    // non-object values can be stored in registers.
+    //
+    // Stack layout for the C++ stack:
     //   return address
-    //   old FP                    <- FP, LocalsRegister
+    //   old FP                     <- FP
     //   callee saved reg n
     //   ...
     //   callee saved reg 0
-    //   function call argument n
+    //   saved reg arg 0
+    //   ...
+    //   saved reg arg n            <- SP
+    //
+    // Stack layout for the JS stack:
+    //   function call argument n   <- LocalsRegister
     //   ...
     //   function call argument 0
     //   local 0
     //   ...
     //   local n
-    //   saved const arg 0
-    //   ...
-    //   saved const arg n         <- SP
     class StackLayout
     {
     public:
@@ -271,21 +275,27 @@ public:
             : calleeSavedRegCount(Assembler::calleeSavedRegisterCount + 1)
             , maxOutgoingArgumentCount(function->maxNumberOfArguments)
             , localCount(function->tempCount)
-            , savedConstCount(maxArgCountForBuiltins)
+            , savedRegCount(maxArgCountForBuiltins)
         {
 #if 0 // debug code
             qDebug("calleeSavedRegCount.....: %d",calleeSavedRegCount);
             qDebug("maxOutgoingArgumentCount: %d",maxOutgoingArgumentCount);
             qDebug("localCount..............: %d",localCount);
             qDebug("savedConstCount.........: %d",savedConstCount);
-            qDebug("argumentAddressForCall(0) = 0x%x / -0x%x", argumentAddressForCall(0).offset, -argumentAddressForCall(0).offset);
-            if (localCount)qDebug("local(0) = 0x%x / -0x%x", stackSlotPointer(0).offset, -stackSlotPointer(0).offset);
-            qDebug("savedReg(0) = 0x%x", savedRegPointer(0).offset);
-            qDebug("savedReg(1) = 0x%x", savedRegPointer(1).offset);
-            qDebug("savedReg(2) = 0x%x", savedRegPointer(2).offset);
-            qDebug("savedReg(3) = 0x%x", savedRegPointer(3).offset);
-            qDebug("savedReg(4) = 0x%x", savedRegPointer(4).offset);
-            qDebug("savedReg(5) = 0x%x", savedRegPointer(5).offset);
+            for (int i = 0; i < maxOutgoingArgumentCount; ++i)
+                qDebug("argumentAddressForCall(%d) = 0x%x / -0x%x", i,
+                       argumentAddressForCall(i).offset, -argumentAddressForCall(i).offset);
+            for (int i = 0; i < localCount; ++i)
+                qDebug("local(%d) = 0x%x / -0x%x", i, stackSlotPointer(i).offset,
+                       -stackSlotPointer(i).offset);
+            qDebug("savedReg(0) = 0x%x / -0x%x", savedRegPointer(0).offset, -savedRegPointer(0).offset);
+            qDebug("savedReg(1) = 0x%x / -0x%x", savedRegPointer(1).offset, -savedRegPointer(1).offset);
+            qDebug("savedReg(2) = 0x%x / -0x%x", savedRegPointer(2).offset, -savedRegPointer(2).offset);
+            qDebug("savedReg(3) = 0x%x / -0x%x", savedRegPointer(3).offset, -savedRegPointer(3).offset);
+            qDebug("savedReg(4) = 0x%x / -0x%x", savedRegPointer(4).offset, -savedRegPointer(4).offset);
+            qDebug("savedReg(5) = 0x%x / -0x%x", savedRegPointer(5).offset, -savedRegPointer(5).offset);
+
+            qDebug("callDataAddress(0) = 0x%x", callDataAddress(0).offset);
 #endif
         }
 
@@ -295,7 +305,7 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedConstCount);
+            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedRegCount);
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
@@ -338,11 +348,10 @@ public:
         Address savedRegPointer(int offset) const
         {
             Q_ASSERT(offset >= 0);
-            Q_ASSERT(offset < savedConstCount);
+            Q_ASSERT(offset < savedRegCount);
 
-            Address addr = argumentAddressForCall(0);
-            addr.offset -= sizeof(QV4::Value) * (offset + localCount + 1);
-            return addr;
+            const int off = offset * sizeof(QV4::Value);
+            return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
         }
 
         int calleeSavedRegisterSpace() const
@@ -362,7 +371,7 @@ public:
 
         /// used by built-ins to save arguments (e.g. constants) to the stack when they need to be
         /// passed by reference.
-        int savedConstCount;
+        int savedRegCount;
     };
 
     class ConstantTable
@@ -596,6 +605,23 @@ public:
     {
         store64(ReturnValueRegister, dest);
     }
+#elif defined(Q_PROCESSOR_X86)
+    void storeReturnValue(const Pointer &dest)
+    {
+        Pointer destination = dest;
+        store32(JSC::X86Registers::eax, destination);
+        destination.offset += 4;
+        store32(JSC::X86Registers::edx, destination);
+    }
+#elif defined(Q_PROCESSOR_ARM)
+    void storeReturnValue(const Pointer &dest)
+    {
+        Pointer destination = dest;
+        store32(JSC::ARMRegisters::r0, destination);
+        destination.offset += 4;
+        store32(JSC::ARMRegisters::r1, destination);
+    }
+#endif
 
     void storeReturnValue(V4IR::Temp *temp)
     {
@@ -604,7 +630,6 @@ public:
         Pointer addr = loadTempAddress(ScratchRegister, temp);
         storeReturnValue(addr);
     }
-#endif
 
     void storeReturnValue(VoidType)
     {
@@ -692,24 +717,66 @@ public:
         poke(TrustedImmPtr(name), StackSlot);
     }
 
-    using JSC::MacroAssembler::loadDouble;
     void loadDouble(V4IR::Temp* temp, FPRegisterID dest)
     {
+        if (temp->kind == V4IR::Temp::PhysicalRegister) {
+            moveDouble((FPRegisterID) temp->index, dest);
+            return;
+        }
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         loadDouble(ptr, dest);
     }
 
-    using JSC::MacroAssembler::storeDouble;
     void storeDouble(FPRegisterID source, V4IR::Temp* temp)
     {
+        if (temp->kind == V4IR::Temp::PhysicalRegister) {
+            moveDouble(source, (FPRegisterID) temp->index);
+            return;
+        }
+#if QT_POINTER_SIZE == 8
+        moveDoubleTo64(source, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        Pointer ptr = loadTempAddress(ScratchRegister, temp);
+        store64(ReturnValueRegister, ptr);
+#else
         Pointer ptr = loadTempAddress(ScratchRegister, temp);
         storeDouble(source, ptr);
+#endif
     }
+#if QT_POINTER_SIZE == 8
+    // We need to (de)mangle the double
+    void loadDouble(Address addr, FPRegisterID dest)
+    {
+        load64(addr, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        move64ToDouble(ReturnValueRegister, dest);
+    }
+
+    void storeDouble(FPRegisterID source, Address addr)
+    {
+        moveDoubleTo64(source, ReturnValueRegister);
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        store64(ReturnValueRegister, addr);
+    }
+#else
+    using JSC::MacroAssembler::loadDouble;
+    using JSC::MacroAssembler::storeDouble;
+#endif
 
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
     template <typename Result>
     void copyValue(Result result, V4IR::Expr* source);
+
+    void storeValue(QV4::Value value, RegisterID destination)
+    {
+        Q_UNUSED(value);
+        Q_UNUSED(destination);
+        Q_UNREACHABLE();
+    }
 
     void storeValue(QV4::Value value, Address destination)
     {
@@ -1027,15 +1094,18 @@ public:
         store32(TrustedImm32(QV4::Value::fromBoolean(0).tag), addr);
     }
 
+    void storeBool(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+    }
+
     void storeBool(RegisterID reg, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
             move(reg, (RegisterID) target->index);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            Pointer addr = stackSlotPointer(target);
-            storeBool(reg, addr);
         } else {
-            Q_UNIMPLEMENTED();
+            Pointer addr = loadTempAddress(ScratchRegister, target);
+            storeBool(reg, addr);
         }
     }
 
@@ -1047,6 +1117,11 @@ public:
             move(trustedValue, ScratchRegister);
             storeBool(ScratchRegister, target);
         }
+    }
+
+    void storeInt32(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
     }
 
     void storeInt32(RegisterID reg, Pointer addr)
@@ -1066,26 +1141,48 @@ public:
         }
     }
 
+    void storeUInt32(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+    }
+
     void storeUInt32(RegisterID reg, Pointer addr)
     {
+        // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
 #if CPU(X86_64) | CPU(X86)
-        Q_ASSERT(reg != ScratchRegister);
         Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
-        convertUInt32ToDouble(reg, FPGpr0, ScratchRegister);
+        convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
         storeDouble(FPGpr0, addr);
         Jump done = jump();
         intRange.link(this);
         storeInt32(reg, addr);
         done.link(this);
 #else
-        Q_ASSERT(!"Not supported on this platform!");
+        Q_ASSERT(!"Not tested on this platform!");
 #endif
+    }
+
+    void storeUInt32(RegisterID reg, V4IR::Temp *target)
+    {
+        if (target->kind == V4IR::Temp::PhysicalRegister) {
+            move(reg, (RegisterID) target->index);
+        } else {
+            Pointer addr = loadTempAddress(ScratchRegister, target);
+            storeUInt32(reg, addr);
+        }
     }
 
     FPRegisterID toDoubleRegister(V4IR::Expr *e, FPRegisterID target = FPGpr0)
     {
         if (V4IR::Const *c = e->asConst()) {
-            loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+#if QT_POINTER_SIZE == 8
+            load64(constantTable().loadValueAddress(c, ScratchRegister), ReturnValueRegister);
+            move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+            xor64(ScratchRegister, ReturnValueRegister);
+            move64ToDouble(ReturnValueRegister, target);
+#else
+            JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
+#endif
             return target;
         }
 
@@ -1094,8 +1191,7 @@ public:
         if (t->kind == V4IR::Temp::PhysicalRegister)
             return (FPRegisterID) t->index;
 
-        Q_ASSERT(t->kind == V4IR::Temp::StackSlot);
-        loadDouble(loadTempAddress(ScratchRegister, t), target);
+        loadDouble(t, target);
         return target;
     }
 
@@ -1137,11 +1233,30 @@ public:
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
     {
+        // The UInt32 representation in QV4::Value is really convoluted. See also storeUInt32.
+        Pointer tagAddr = addr;
+        tagAddr.offset += 4;
+        load32(tagAddr, scratchReg);
+        Jump inIntRange = branch32(Equal, scratchReg, TrustedImm32(QV4::Value::_Integer_Type));
+
+        // it's not in signed int range, so load it as a double, and truncate it down
+        loadDouble(addr, FPGpr0);
+        static const QV4::Value magic = QV4::Value::fromDouble(double(INT_MAX) + 1);
+        ImplicitAddress magicAddr = constantTable().loadValueAddress(magic, scratchReg);
+        subDouble(Address(magicAddr.base, magicAddr.offset), FPGpr0);
+        Jump canNeverHappen = branchTruncateDoubleToUint32(FPGpr0, scratchReg);
+        canNeverHappen.link(this);
+        or32(TrustedImm32(1 << 31), scratchReg);
+        Jump done = jump();
+
+        inIntRange.link(this);
         load32(addr, scratchReg);
+
+        done.link(this);
         return scratchReg;
     }
 
-    JSC::MacroAssemblerCodeRef link();
+    JSC::MacroAssemblerCodeRef link(int *codeSize);
 
     void recordLineNumber(int lineNumber);
 
@@ -1184,7 +1299,7 @@ public:
     InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
-    virtual void run(V4IR::Function *function);
+    virtual void run(int functionIndex);
 
     void *addConstantTable(QVector<QV4::Value> *values);
 protected:
@@ -1199,14 +1314,6 @@ protected:
     virtual void callBuiltinDeleteSubscript(V4IR::Temp *base, V4IR::Expr *index, V4IR::Temp *result);
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostDecrementValue(V4IR::Temp *value, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementMember(V4IR::Temp *base, const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementSubscript(V4IR::Temp *base, V4IR::Temp *index, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementName(const QString &name, V4IR::Temp *result);
-    virtual void callBuiltinPostIncrementValue(V4IR::Temp *value, V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
     virtual void callBuiltinFinishTry();
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
@@ -1272,6 +1379,15 @@ protected:
     virtual void visitRet(V4IR::Ret *);
     virtual void visitTry(V4IR::Try *);
 
+    Assembler::Jump genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest);
+    Assembler::Jump genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
+                                   V4IR::Expr *rightSource, V4IR::Temp *target);
+    void doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
+                     V4IR::Temp *target);
+    Assembler::Jump branchDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
+    bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
+                          V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+
 private:
     void convertTypeSlowPath(V4IR::Temp *source, V4IR::Temp *target);
     void convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *target);
@@ -1283,12 +1399,10 @@ private:
         if (target->kind == V4IR::Temp::PhysicalRegister) {
             _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                       (Assembler::FPRegisterID) target->index);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
+        } else {
             _as->convertInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                       Assembler::FPGpr0);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
-        } else {
-            Q_UNIMPLEMENTED();
         }
     }
 
@@ -1339,8 +1453,8 @@ private:
     int prepareVariableArguments(V4IR::ExprList* args);
     int prepareCallData(V4IR::ExprList* args, V4IR::Expr *thisObject);
 
-    template <typename Arg1, typename Arg2>
-    void generateLookupCall(uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
+    template <typename Retval, typename Arg1, typename Arg2>
+    void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
         _as->loadPtr(Assembler::Address(Assembler::ContextRegister, offsetof(QV4::ExecutionContext, lookups)),
                      Assembler::ReturnValueRegister);
@@ -1350,7 +1464,7 @@ private:
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
 
-         _as->generateFunctionCallImp(Assembler::Void, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
+         _as->generateFunctionCallImp(retval, "lookup getter/setter", getterSetter, lookupAddr, arg1, arg2);
     }
 
     template <typename Arg1>
@@ -1387,7 +1501,6 @@ private:
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 
     CompilationUnit *compilationUnit;
-    QHash<V4IR::Function*, JSC::MacroAssemblerCodeRef> codeRefs;
 };
 
 class Q_QML_EXPORT ISelFactory: public EvalISelFactory

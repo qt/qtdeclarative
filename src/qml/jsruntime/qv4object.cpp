@@ -127,15 +127,16 @@ void Object::put(ExecutionContext *ctx, const QString &name, const Value &value)
     put(ctx->engine->newString(name), value);
 }
 
-Value Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
+ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
-        return p->value;
+        return p->value.asReturnedValue();
     FunctionObject *getter = p->getter();
     if (!getter)
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
 
-    ScopedCallData callData(getter->engine(), 0);
+    Scope scope(getter->engine());
+    ScopedCallData callData(scope, 0);
     callData->thisObject = thisObject;
     return getter->call(callData);
 }
@@ -144,7 +145,8 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 {
     if (attrs.isAccessor()) {
         if (pd->set) {
-            ScopedCallData callData(pd->set->engine(), 1);
+            Scope scope(pd->set->engine());
+            ScopedCallData callData(scope, 1);
             callData->args[0] = value;
             callData->thisObject = Value::fromObject(this);
             pd->set->call(callData);
@@ -167,22 +169,20 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, String *name, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue v(scope, get(name));
-    ScopedValue result(scope);
-    op(result, v, rhs);
+    ScopedValue result(scope, op(v, rhs));
     put(name, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope);
-        op(result, v, rhs);
+        ScopedValue result(scope, op(v, rhs));
         putIndexed(idx, result);
         return;
     }
@@ -193,22 +193,20 @@ void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const ValueRef index,
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, String *name, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     ScopedValue v(scope, get(name));
-    ScopedValue result(scope);
-    op(ctx, result, v, rhs);
+    ScopedValue result(scope, op(ctx, v, rhs));
     put(name, result);
 }
 
 void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
 {
-    ValueScope scope(ctx);
+    Scope scope(ctx);
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         bool hasProperty = false;
         ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope);
-        op(ctx, result, v, rhs);
+        ScopedValue result(scope, op(ctx, v, rhs));
         putIndexed(idx, result);
         return;
     }
@@ -233,7 +231,7 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
     defineDefaultProperty(engine->newIdentifier(name), value);
 }
 
-void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(ExecutionContext *context, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = context->engine->newIdentifier(name);
@@ -242,7 +240,7 @@ void Object::defineDefaultProperty(ExecutionContext *context, const QString &nam
     defineDefaultProperty(s, Value::fromObject(function));
 }
 
-void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, Value (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
 {
     Q_UNUSED(argumentCount);
     String *s = engine->newIdentifier(name);
@@ -252,13 +250,13 @@ void Object::defineDefaultProperty(ExecutionEngine *engine, const QString &name,
 }
 
 void Object::defineAccessorProperty(ExecutionEngine *engine, const QString &name,
-                                    Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+                                    ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     String *s = engine->newString(name);
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(String *name, Value (*getter)(SimpleCallContext *), Value (*setter)(SimpleCallContext *))
+void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
 {
     ExecutionEngine *v4 = engine();
     Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
@@ -451,12 +449,12 @@ bool Object::__hasProperty__(uint index) const
     return false;
 }
 
-Value Object::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGet(name, hasProperty);
 }
 
-Value Object::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
@@ -512,7 +510,7 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-void Object::getLookup(Managed *m, Lookup *l, Value *result)
+ReturnedValue Object::getLookup(Managed *m, Lookup *l)
 {
     Object *o = static_cast<Object *>(m);
     PropertyAttributes attrs;
@@ -525,9 +523,7 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getter1;
             else if (l->level == 2)
                 l->getter = Lookup::getter2;
-            if (result)
-                *result = p->value;
-            return;
+            return p->value.asReturnedValue();
         } else {
             if (l->level == 0)
                 l->getter = Lookup::getterAccessor0;
@@ -535,16 +531,10 @@ void Object::getLookup(Managed *m, Lookup *l, Value *result)
                 l->getter = Lookup::getterAccessor1;
             else if (l->level == 2)
                 l->getter = Lookup::getterAccessor2;
-            if (result)
-                *result = p->value;
-            Value res = o->getValue(p, attrs);
-            if (result)
-                *result = res;
-            return;
+            return o->getValue(p, attrs);
         }
-    } else if (result) {
-        *result = Value::undefinedValue();
     }
+    return Value::undefinedValue().asReturnedValue();
 }
 
 void Object::setLookup(Managed *m, Lookup *l, const Value &value)
@@ -656,7 +646,7 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
 }
 
 // Section 8.12.3
-Value Object::internalGet(String *name, bool *hasProperty)
+ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -678,10 +668,10 @@ Value Object::internalGet(String *name, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
-Value Object::internalGetIndexed(uint index, bool *hasProperty)
+ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 {
     Property *pd = 0;
     PropertyAttributes attrs = Attr_Data;
@@ -714,7 +704,7 @@ Value Object::internalGetIndexed(uint index, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue();
+    return Value::undefinedValue().asReturnedValue();
 }
 
 
@@ -778,7 +768,8 @@ void Object::internalPut(String *name, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ScopedCallData callData(engine(), 1);
+        Scope scope(engine());
+        ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);
@@ -856,7 +847,8 @@ void Object::internalPutIndexed(uint index, const Value &value)
     if (pd && attrs.isAccessor()) {
         assert(pd->setter() != 0);
 
-        ScopedCallData callData(engine(), 1);
+        Scope scope(engine());
+        ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = Value::fromObject(this);
         pd->setter()->call(callData);
@@ -1116,7 +1108,7 @@ void Object::copyArrayData(Object *other)
         Q_ASSERT(len);
 
         for (uint i = 0; i < len; ++i) {
-            arraySet(i, other->getIndexed(i));
+            arraySet(i, Value::fromReturnedValue(other->getIndexed(i)));
         }
     } else {
         arrayReserve(other->arrayDataLen);
@@ -1135,9 +1127,9 @@ void Object::copyArrayData(Object *other)
 }
 
 
-Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
+ReturnedValue Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
-    ValueScope scope(engine());
+    Scope scope(engine());
     ScopedValue value(scope);
 
     if (o->protoHasArray() || o->arrayAttributes) {
@@ -1146,13 +1138,13 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
             bool exists;
             value = o->getIndexed(i, &exists);
             if (exists && __qmljs_strict_equal(value, ValueRef(&v)))
-                return Value::fromDouble(i);
+                return Encode(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
             if (__qmljs_strict_equal(value, ValueRef(&v)))
-                return Value::fromDouble(n->key());
+                return Encode(n->key());
         }
     } else {
         if ((int) endIndex > arrayDataLen)
@@ -1164,12 +1156,12 @@ Value Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionCont
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
                 value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
                 if (__qmljs_strict_equal(value, ValueRef(&v)))
-                    return Value::fromDouble(pd - arrayData);
+                    return Encode((uint)(pd - arrayData));
             }
             ++pd;
         }
     }
-    return Value::fromInt32(-1);
+    return Encode(-1);
 }
 
 void Object::arrayConcat(const ArrayObject *other)
@@ -1204,7 +1196,7 @@ void Object::arrayConcat(const ArrayObject *other)
         if (other->arrayAttributes) {
             for (int i = 0; i < arrayDataLen; ++i) {
                 bool exists;
-                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(i, &exists);
+                arrayData[oldSize + i].value = Value::fromReturnedValue(const_cast<ArrayObject *>(other)->getIndexed(i, &exists));
                 if (arrayAttributes)
                     arrayAttributes[oldSize + i] = Attr_Data;
                 if (!exists) {
@@ -1244,11 +1236,11 @@ void Object::arraySort(ExecutionContext *context, Object *thisObject, const Valu
                 while (--len > i)
                     if (!arrayAttributes[len].isGeneric())
                         break;
-                arrayData[i].value = getValue(arrayData + len, arrayAttributes[len]);
+                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + len, arrayAttributes[len]));
                 arrayAttributes[i] = Attr_Data;
                 arrayAttributes[len].clear();
             } else if (arrayAttributes[i].isAccessor()) {
-                arrayData[i].value = getValue(arrayData + i, arrayAttributes[i]);
+                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + i, arrayAttributes[i]));
                 arrayAttributes[i] = Attr_Data;
             }
         }
@@ -1380,7 +1372,7 @@ bool Object::setArrayLength(uint newLen) {
                             arrayAttributes[it->value].clear();
                         }
                     }
-                    pd.value.tag = Value::_Empty_Type;
+                    pd.value.tag = Value::Empty_Type;
                     pd.value.int_32 = arrayFreeList;
                     arrayFreeList = it->value;
                     bool brk = (it == begin);
@@ -1432,6 +1424,8 @@ void Object::markArrayObjects() const
     }
 }
 
+DEFINE_MANAGED_VTABLE(ArrayObject);
+
 ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     : Object(engine->arrayClass)
 {
@@ -1460,10 +1454,14 @@ QStringList ArrayObject::toQStringList() const
     QStringList result;
 
     QV4::ExecutionEngine *engine = internalClass->engine;
+    Scope scope(engine);
+    ScopedValue v(scope);
 
     uint32_t length = arrayLength();
-    for (uint32_t i = 0; i < length; ++i)
-        result.append(const_cast<ArrayObject *>(this)->getIndexed(i).toString(engine->current)->toQString());
+    for (uint32_t i = 0; i < length; ++i) {
+        v = const_cast<ArrayObject *>(this)->getIndexed(i);
+        result.append(v->toString(engine->current)->toQString());
+    }
     return result;
 }
 

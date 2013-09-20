@@ -93,6 +93,7 @@ struct InternalClass;
 struct Lookup;
 
 struct Q_QML_EXPORT FunctionObject: Object {
+    Q_MANAGED
     // Used with Managed::subType
     enum FunctionType {
         RegularFunction = 0,
@@ -115,15 +116,19 @@ struct Q_QML_EXPORT FunctionObject: Object {
     FunctionObject(ExecutionContext *scope, String *name = 0, bool createProto = false);
     ~FunctionObject();
 
-    Value newInstance();
+    ReturnedValue newInstance();
 
-    static Value construct(Managed *that, CallData *);
-    static Value call(Managed *that, CallData *d);
-    inline Value construct(CallData *callData) {
+    static ReturnedValue construct(Managed *that, CallData *);
+    static ReturnedValue call(Managed *that, CallData *d);
+    inline ReturnedValue construct(CallData *callData) {
         return vtbl->construct(this, callData);
     }
-    inline Value call(CallData *callData) {
+    inline ReturnedValue call(CallData *callData) {
         return vtbl->call(this, callData);
+    }
+
+    static FunctionObject *cast(const Value &v) {
+        return v.asFunctionObject();
     }
 
     static FunctionObject *creatScriptFunction(ExecutionContext *scope, Function *function);
@@ -131,7 +136,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
 protected:
     FunctionObject(InternalClass *ic);
 
-    static const ManagedVTable static_vtbl;
     static void markObjects(Managed *that);
     static bool hasInstance(Managed *that, const Value &value);
     static void destroy(Managed *that)
@@ -140,13 +144,11 @@ protected:
 
 struct FunctionCtor: FunctionObject
 {
+    Q_MANAGED
     FunctionCtor(ExecutionContext *scope);
 
-    static Value construct(Managed *that, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *that, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct FunctionPrototype: FunctionObject
@@ -154,32 +156,30 @@ struct FunctionPrototype: FunctionObject
     FunctionPrototype(InternalClass *ic);
     void init(ExecutionContext *ctx, const Value &ctor);
 
-    static Value method_toString(SimpleCallContext *ctx);
-    static Value method_apply(SimpleCallContext *ctx);
-    static Value method_call(SimpleCallContext *ctx);
-    static Value method_bind(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(SimpleCallContext *ctx);
+    static ReturnedValue method_apply(SimpleCallContext *ctx);
+    static ReturnedValue method_call(SimpleCallContext *ctx);
+    static ReturnedValue method_bind(SimpleCallContext *ctx);
 };
 
-struct BuiltinFunctionOld: FunctionObject {
-    Value (*code)(SimpleCallContext *);
+struct BuiltinFunction: FunctionObject {
+    Q_MANAGED
+    ReturnedValue (*code)(SimpleCallContext *);
 
-    BuiltinFunctionOld(ExecutionContext *scope, String *name, Value (*code)(SimpleCallContext *));
+    BuiltinFunction(ExecutionContext *scope, String *name, ReturnedValue (*code)(SimpleCallContext *));
 
-    static Value construct(Managed *, CallData *);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *, CallData *);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct IndexedBuiltinFunction: FunctionObject
 {
     Q_MANAGED
 
-    Value (*code)(SimpleCallContext *ctx, uint index);
+    ReturnedValue (*code)(SimpleCallContext *ctx, uint index);
     uint index;
 
-    IndexedBuiltinFunction(ExecutionContext *scope, uint index, Value (*code)(SimpleCallContext *ctx, uint index))
+    IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(SimpleCallContext *ctx, uint index))
         : FunctionObject(scope, /*name*/0)
         , code(code)
         , index(index)
@@ -188,37 +188,34 @@ struct IndexedBuiltinFunction: FunctionObject
         isBuiltinFunction = true;
     }
 
-    static Value construct(Managed *m, CallData *)
+    static ReturnedValue construct(Managed *m, CallData *)
     {
         m->engine()->current->throwTypeError();
-        return Value::undefinedValue();
+        return Value::undefinedValue().asReturnedValue();
     }
 
-    static Value call(Managed *that, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 
 struct ScriptFunction: FunctionObject {
+    Q_MANAGED
     ScriptFunction(ExecutionContext *scope, Function *function);
 
-    static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct SimpleScriptFunction: FunctionObject {
+    Q_MANAGED
     SimpleScriptFunction(ExecutionContext *scope, Function *function);
 
-    static Value construct(Managed *, CallData *callData);
-    static Value call(Managed *that, CallData *callData);
-
-protected:
-    static const ManagedVTable static_vtbl;
+    static ReturnedValue construct(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *that, CallData *callData);
 };
 
 struct BoundFunction: FunctionObject {
+    Q_MANAGED
     FunctionObject *target;
     Value boundThis;
     QVector<Value> boundArgs;
@@ -227,10 +224,9 @@ struct BoundFunction: FunctionObject {
     ~BoundFunction() {}
 
 
-    static Value construct(Managed *, CallData *d);
-    static Value call(Managed *that, CallData *dd);
+    static ReturnedValue construct(Managed *, CallData *d);
+    static ReturnedValue call(Managed *that, CallData *dd);
 
-    static const ManagedVTable static_vtbl;
     static void destroy(Managed *);
     static void markObjects(Managed *that);
     static bool hasInstance(Managed *that, const Value &value);

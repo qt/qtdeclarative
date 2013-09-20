@@ -51,16 +51,16 @@ BooleanCtor::BooleanCtor(ExecutionContext *scope)
     vtbl = &static_vtbl;
 }
 
-Value BooleanCtor::construct(Managed *m, CallData *callData)
+ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    return Value::fromObject(m->engine()->newBooleanObject(Value::fromBoolean(n)));
+    return Encode(m->engine()->newBooleanObject(Value::fromBoolean(n)));
 }
 
-Value BooleanCtor::call(Managed *, CallData *callData)
+ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
 {
     bool value = callData->argc ? callData->args[0].toBoolean() : 0;
-    return Value::fromBoolean(value);
+    return Encode(value);
 }
 
 void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
@@ -72,7 +72,7 @@ void BooleanPrototype::init(ExecutionContext *ctx, const Value &ctor)
     defineDefaultProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
-Value BooleanPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 {
     bool result;
     if (ctx->thisObject.isBoolean()) {
@@ -84,14 +84,14 @@ Value BooleanPrototype::method_toString(SimpleCallContext *ctx)
         result = thisObject->value.booleanValue();
     }
 
-    return Value::fromString(ctx, QLatin1String(result ? "true" : "false"));
+    return Value::fromString(ctx, QLatin1String(result ? "true" : "false")).asReturnedValue();
 }
 
-Value BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 {
     BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
     if (!thisObject)
         ctx->throwTypeError();
 
-    return thisObject->value;
+    return thisObject->value.asReturnedValue();
 }

@@ -85,17 +85,17 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
 
     QObject *object() const { return m_object.data(); }
 
-    Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
-    static Value getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
+    ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
+    static ReturnedValue getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
     static bool setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
-    static Value wrap(ExecutionEngine *engine, QObject *object);
+    static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
 
     using Object::get;
 
 private:
-    static Value create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
+    static ReturnedValue create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 
     QObjectWrapper(ExecutionEngine *engine, QObject *object);
 
@@ -105,7 +105,7 @@ private:
     String *m_destroy;
     String *m_toString;
 
-    static Value get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
@@ -116,8 +116,8 @@ private:
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
 
-    static Value method_connect(SimpleCallContext *ctx);
-    static Value method_disconnect(SimpleCallContext *ctx);
+    static ReturnedValue method_connect(SimpleCallContext *ctx);
+    static ReturnedValue method_disconnect(SimpleCallContext *ctx);
 };
 
 struct QObjectMethod : public QV4::FunctionObject
@@ -134,16 +134,16 @@ struct QObjectMethod : public QV4::FunctionObject
 private:
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
 
-    QV4::Value method_toString(QV4::ExecutionContext *ctx);
-    QV4::Value method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
+    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
+    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
 
     QPointer<QObject> m_object;
     int m_index;
     QV4::PersistentValue m_qmlGlobal;
 
-    static Value call(Managed *, CallData *callData);
+    static ReturnedValue call(Managed *, CallData *callData);
 
-    Value callInternal(CallData *callData);
+    ReturnedValue callInternal(CallData *callData);
 
     static void destroy(Managed *that)
     {
@@ -188,7 +188,7 @@ public:
     Iterator erase(Iterator it);
     void remove(QObject *key);
 
-private slots:
+private Q_SLOTS:
     void removeDestroyedObject(QObject*);
 };
 

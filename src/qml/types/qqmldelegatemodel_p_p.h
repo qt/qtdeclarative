@@ -126,19 +126,19 @@ public:
     int groupIndex(Compositor::Group group);
 
     int modelIndex() const { return index; }
-    void setModelIndex(int idx) { index = idx; emit modelIndexChanged(); }
+    void setModelIndex(int idx) { index = idx; Q_EMIT modelIndexChanged(); }
 
-    virtual QV4::Value get() { return QV4::QObjectWrapper::wrap(v4, this); }
+    virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQmlAdaptorModel &, int) { return false; }
 
-    static QV4::Value get_model(QV4::SimpleCallContext *ctx);
-    static QV4::Value get_groups(QV4::SimpleCallContext *ctx);
-    static QV4::Value set_groups(QV4::SimpleCallContext *ctx);
-    static QV4::Value get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
-    static QV4::Value set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
-    static QV4::Value get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
+    static QV4::ReturnedValue get_model(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue get_groups(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue set_groups(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
+    static QV4::ReturnedValue set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
+    static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
 
     QV4::ExecutionEngine *v4;
     QQmlDelegateModelItemMetaType * const metaType;
@@ -260,11 +260,11 @@ public:
     void emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
     void emitInitPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
     void emitCreatedItem(QQDMIncubationTask *incubationTask, QObject *item) {
-        emit q_func()->createdItem(incubationTask->index[m_compositorGroup], item); }
+        Q_EMIT q_func()->createdItem(incubationTask->index[m_compositorGroup], item); }
     void emitInitItem(QQDMIncubationTask *incubationTask, QObject *item) {
-        emit q_func()->initItem(incubationTask->index[m_compositorGroup], item); }
+        Q_EMIT q_func()->initItem(incubationTask->index[m_compositorGroup], item); }
     void emitDestroyingPackage(QQuickPackage *package);
-    void emitDestroyingItem(QObject *item) { emit q_func()->destroyingItem(item); }
+    void emitDestroyingItem(QObject *item) { Q_EMIT q_func()->destroyingItem(item); }
     void removeCacheItem(QQmlDelegateModelItem *cacheItem);
 
     void updateFilterGroup();

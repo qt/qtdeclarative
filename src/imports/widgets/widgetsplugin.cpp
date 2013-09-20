@@ -41,8 +41,10 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include "qquickqmessagebox_p.h"
 #include "qquickqfiledialog_p.h"
 #include "qquickqcolordialog_p.h"
+#include "qquickqfontdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -59,7 +61,7 @@ QT_BEGIN_NAMESPACE
     and to provide fallback implementations in case they fail to load.
 
     \code
-    import QtQuick.PrivateWidgets 1.0
+    import QtQuick.PrivateWidgets 1.1
     \endcode
 
     \since 5.1
@@ -75,8 +77,10 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.PrivateWidgets"));
 
+        qmlRegisterType<QQuickQMessageBox>(uri, 1, 1, "QtMessageDialog");
         qmlRegisterType<QQuickQFileDialog>(uri, 1, 0, "QtFileDialog");
         qmlRegisterType<QQuickQColorDialog>(uri, 1, 0, "QtColorDialog");
+        qmlRegisterType<QQuickQFontDialog>(uri, 1, 1, "QtFontDialog");
     }
 };
 

@@ -50,7 +50,7 @@ Item {
     property alias containsMouse: mouseArea.containsMouse
     property alias pressed: mouseArea.pressed
     implicitHeight: Math.max(Screen.logicalPixelDensity * 7, buttonLabel.implicitHeight * 1.2)
-    implicitWidth: Math.max(Screen.logicalPixelDensity * 11, buttonLabel.implicitWidth * 1.3)
+    implicitWidth: visible ? Math.max(Screen.logicalPixelDensity * 11, buttonLabel.implicitWidth * 1.3) : 0
     height: implicitHeight
     width: implicitWidth
 

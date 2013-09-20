@@ -57,17 +57,17 @@ public:
         return m_mirrored;
     }
 
-signals:
+Q_SIGNALS:
 
     void mirroredChanged(bool arg);
 
-public slots:
+public Q_SLOTS:
 
     void setmirrored(bool arg)
     {
         if (m_mirrored != arg) {
             m_mirrored = arg;
-            emit mirroredChanged(arg);
+            Q_EMIT mirroredChanged(arg);
         }
     }
 private:

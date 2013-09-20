@@ -52,9 +52,38 @@ typedef uint Bool;
 
 struct Q_QML_EXPORT Value
 {
+    /*
+        We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
+
+        In both cases, we 8 bytes for a value and different variant of NaN boxing. A Double NaN (actually -qNaN)
+        is indicated by a number that has the top 13 bits set. THe other values are usually set to 0 by the
+        processor, and are thus free for us to store other data. We keep pointers in there for managed objects,
+        and encode the other types using the free space given to use by the unused bits for NaN values. This also
+        works for pointers on 64 bit systems, as they all currently only have 48 bits of addressable memory.
+
+        On 32bit, we store doubles as doubles. All other values, have the high 32bits set to a value that
+        will make the number a NaN. The Masks below are used for encoding the other types.
+
+        On 64 bit, we xor Doubles with (0xffff8000 << 32). Thas has the effect that no doubles will get encoded
+        with the 13 highest bits all 0. We are now using special values for bits 14-17 to encode our values. These
+        can be used, as the highest valid pointer on a 64 bit system is 2^48-1.
+
+        If they are all 0, we have a pointer to a Managed object. If bit 14 is set we have an integer.
+        This makes testing for pointers and numbers very fast (we have a number if any of the highest 14 bits is set).
+
+        Bit 15-17 is then used to encode other immediates.
+    */
+
+
     union {
         quint64 val;
+#if QT_POINTER_SIZE == 8
+        Managed *m;
+        Object *o;
+        String *s;
+#else
         double dbl;
+#endif
         struct {
 #if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
             uint tag;
@@ -74,12 +103,12 @@ struct Q_QML_EXPORT Value
         };
     };
 
+#if QT_POINTER_SIZE == 4
     enum Masks {
         NaN_Mask = 0x7ff80000,
         NotDouble_Mask = 0x7ffc0000,
         Type_Mask = 0xffff8000,
         Immediate_Mask = NotDouble_Mask | 0x00008000,
-        IsManaged_Mask = Type_Mask & ~0x10000,
         IsNullOrUndefined_Mask = Immediate_Mask | 0x20000,
         Tag_Shift = 32
     };
@@ -88,9 +117,8 @@ struct Q_QML_EXPORT Value
         Null_Type = Immediate_Mask | 0x10000,
         Boolean_Type = Immediate_Mask | 0x20000,
         Integer_Type = Immediate_Mask | 0x30000,
-        Object_Type = NotDouble_Mask | 0x00000,
-        String_Type = NotDouble_Mask | 0x10000,
-        Deleted_Type = NotDouble_Mask | 0x30000
+        Managed_Type = NotDouble_Mask | 0x00000,
+        Empty_Type = NotDouble_Mask | 0x30000
     };
 
     enum ImmediateFlags {
@@ -98,45 +126,119 @@ struct Q_QML_EXPORT Value
     };
 
     enum ValueTypeInternal {
-        _Undefined_Type = Undefined_Type,
-        _Empty_Type = Deleted_Type,
         _Null_Type = Null_Type | ConvertibleToInt,
         _Boolean_Type = Boolean_Type | ConvertibleToInt,
         _Integer_Type = Integer_Type | ConvertibleToInt,
-        _Object_Type = Object_Type,
-        _String_Type = String_Type
 
     };
+#else
+    static const quint64 NaNEncodeMask = 0xffff800000000000ll;
+    static const quint64 IsInt32Mask  = 0x0002000000000000ll;
+    static const quint64 IsDoubleMask = 0xfffc000000000000ll;
+    static const quint64 IsNumberMask = IsInt32Mask|IsDoubleMask;
+    static const quint64 IsNullOrUndefinedMask = 0x0000800000000000ll;
+    static const quint64 IsNullOrBooleanMask = 0x0001000000000000ll;
+    static const quint64 IsConvertibleToIntMask = IsInt32Mask|IsNullOrBooleanMask;
+
+    enum Masks {
+        NaN_Mask = 0x7ff80000,
+        Type_Mask = 0xffff8000,
+        IsDouble_Mask = 0xfffc0000,
+        Immediate_Mask = 0x00018000,
+        IsNullOrUndefined_Mask = 0x00008000,
+        IsNullOrBoolean_Mask = 0x00010000,
+        Tag_Shift = 32
+    };
+    enum ValueType {
+        Undefined_Type = IsNullOrUndefined_Mask,
+        Null_Type = IsNullOrUndefined_Mask|IsNullOrBoolean_Mask,
+        Boolean_Type = IsNullOrBoolean_Mask,
+        Integer_Type = 0x20000|IsNullOrBoolean_Mask,
+        Managed_Type = 0,
+        Empty_Type = Undefined_Type | 0x4000
+    };
+    enum {
+        IsDouble_Shift = 64-14,
+        IsNumber_Shift = 64-15,
+        IsConvertibleToInt_Shift = 64-16,
+        IsManaged_Shift = 64-17
+    };
+
+
+    enum ValueTypeInternal {
+        _Null_Type = Null_Type,
+        _Boolean_Type = Boolean_Type,
+        _Integer_Type = Integer_Type
+    };
+#endif
 
     inline unsigned type() const {
         return tag & Type_Mask;
     }
 
     // used internally in property
-    inline bool isEmpty() const { return tag == _Empty_Type; }
+    inline bool isEmpty() const { return tag == Empty_Type; }
 
-    inline bool isUndefined() const { return tag == _Undefined_Type; }
+    inline bool isUndefined() const { return tag == Undefined_Type; }
     inline bool isNull() const { return tag == _Null_Type; }
     inline bool isBoolean() const { return tag == _Boolean_Type; }
     inline bool isInteger() const { return tag == _Integer_Type; }
+#if QT_POINTER_SIZE == 8
+    inline bool isDouble() const { return (val >> IsDouble_Shift); }
+    inline bool isNumber() const { return (val >> IsNumber_Shift); }
+    inline bool isManaged() const { return !(val >> IsManaged_Shift); }
+    inline bool isNullOrUndefined() const { return ((val >> IsManaged_Shift) & ~2) == 1; }
+    inline bool integerCompatible() const { return ((val >> IsConvertibleToInt_Shift) & ~2) == 1; }
+    static inline bool integerCompatible(Value a, Value b) {
+        return a.integerCompatible() && b.integerCompatible();
+    }
+    static inline bool bothDouble(Value a, Value b) {
+        return a.isDouble() && b.isDouble();
+    }
+    double doubleValue() const {
+        Q_ASSERT(isDouble());
+        union {
+            quint64 i;
+            double d;
+        } v;
+        v.i = val ^ NaNEncodeMask;
+        return v.d;
+    }
+    void setDouble(double d) {
+        union {
+            quint64 i;
+            double d;
+        } v;
+        v.d = d;
+        val = v.i ^ NaNEncodeMask;
+        Q_ASSERT(isDouble());
+    }
+    bool isNaN() const { return (tag & 0x7fff8000) == 0x00078000; }
+#else
     inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
-#if QT_POINTER_SIZE == 8
-    inline bool isString() const { return (tag & Type_Mask) == String_Type; }
-    inline bool isObject() const { return (tag & Type_Mask) == Object_Type; }
-#else
-    inline bool isString() const { return tag == String_Type; }
-    inline bool isObject() const { return tag == Object_Type; }
-#endif
-    inline bool isManaged() const { return (tag & IsManaged_Mask) == Object_Type; }
+    inline bool isManaged() const { return tag == Managed_Type; }
     inline bool isNullOrUndefined() const { return (tag & IsNullOrUndefined_Mask) == Undefined_Type; }
-    inline bool isConvertibleToInt() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
+    inline bool integerCompatible() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
+    static inline bool integerCompatible(Value a, Value b) {
+        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
+    }
+    static inline bool bothDouble(Value a, Value b) {
+        return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
+    }
+    double doubleValue() const { return dbl; }
+    void setDouble(double d) { dbl = d; }
+    bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
+#endif
+    inline bool isString() const;
+    inline bool isObject() const;
     inline bool isInt32() {
         if (tag == _Integer_Type)
             return true;
         if (isDouble()) {
-            int i = (int)dbl;
-            if (i == dbl) {
+            double d = doubleValue();
+            int i = (int)d;
+            if (i == d) {
                 int_32 = i;
                 tag = _Integer_Type;
                 return true;
@@ -144,36 +246,19 @@ struct Q_QML_EXPORT Value
         }
         return false;
     }
-
-    bool booleanValue() const {
-        return int_32;
-    }
-    double doubleValue() const {
-        return dbl;
-    }
-    void setDouble(double d) {
-        dbl = d;
-    }
     double asDouble() const {
         if (tag == _Integer_Type)
             return int_32;
-        return dbl;
+        return doubleValue();
+    }
+
+    bool booleanValue() const {
+        return int_32;
     }
     int integerValue() const {
         return int_32;
     }
 
-#if QT_POINTER_SIZE == 8
-    String *stringValue() const {
-        return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-    Object *objectValue() const {
-        return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-    Managed *managed() const {
-        return (Managed *)(val & ~(quint64(Type_Mask) << Tag_Shift));
-    }
-#else
     String *stringValue() const {
         return s;
     }
@@ -183,7 +268,6 @@ struct Q_QML_EXPORT Value
     Managed *managed() const {
         return m;
     }
-#endif
 
     quint64 rawValue() const {
         return val;
@@ -198,6 +282,7 @@ struct Q_QML_EXPORT Value
     static Value fromUInt32(uint i);
     static Value fromString(String *s);
     static Value fromObject(Object *o);
+    static Value fromManaged(Managed *o);
 
 #ifndef QMLJS_LLVM_RUNTIME
     static Value fromString(ExecutionContext *ctx, const QString &fromString);
@@ -215,37 +300,15 @@ struct Q_QML_EXPORT Value
     bool toBoolean() const;
     double toInteger() const;
     double toNumber() const;
+    double toNumberImpl() const;
+    QString toQStringNoThrow() const;
     QString toQString() const;
     String *toString(ExecutionContext *ctx) const;
     Object *toObject(ExecutionContext *ctx) const;
 
-    inline bool isPrimitive() const { return !isObject(); }
-#if QT_POINTER_SIZE == 8
-    inline bool integerCompatible() const {
-        const quint64 mask = quint64(ConvertibleToInt) << 32;
-        return (val & mask) == mask;
-    }
-    static inline bool integerCompatible(Value a, Value b) {
-        const quint64 mask = quint64(ConvertibleToInt) << 32;
-        return ((a.val & b.val) & mask) == mask;
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        const quint64 mask = quint64(NotDouble_Mask) << 32;
-        return ((a.val | b.val) & mask) != mask;
-    }
-#else
-    inline bool integerCompatible() const {
-        return (tag & ConvertibleToInt) == ConvertibleToInt;
-    }
-    static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
-    }
-#endif
+    inline bool isPrimitive() const;
     inline bool tryIntegerConversion() {
-        bool b = isConvertibleToInt();
+        bool b = integerCompatible();
         if (b)
             tag = _Integer_Type;
         return b;
@@ -267,9 +330,10 @@ struct Q_QML_EXPORT Value
     uint asArrayIndex() const;
     uint asArrayLength(bool *ok) const;
 
-    Value property(ExecutionContext *ctx, String *name) const;
-
     inline ExecutionEngine *engine() const;
+
+    ReturnedValue asReturnedValue() const { return val; }
+    static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
 
     // Section 9.12
     bool sameValue(Value other) const;

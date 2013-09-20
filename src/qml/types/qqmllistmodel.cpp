@@ -414,10 +414,14 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
     ListElement *e = elements[elementIndex];
 
     QV4::ExecutionEngine *v4 = object->engine();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::Object> o(scope);
+
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
+    QV4::Scoped<QV4::String> propertyName(scope);
     while (1) {
         QV4::Value propertyValue;
-        QV4::String *propertyName = it.nextPropertyNameAsString(&propertyValue).asString();
+        propertyName = it.nextPropertyNameAsString(&propertyValue);
         if (!propertyName)
             break;
 
@@ -426,42 +430,42 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
 
         // Add the value now
         if (QV4::String *s = propertyValue.asString()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::String);
             roleIndex = e->setStringProperty(r, s->toQString());
         } else if (propertyValue.isNumber()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Number);
             roleIndex = e->setDoubleProperty(r, propertyValue.asDouble());
         } else if (QV4::ArrayObject *a = propertyValue.asArrayObject()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::List);
             ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
             int arrayLength = a->arrayLength();
             for (int j=0 ; j < arrayLength ; ++j) {
-                QV4::Object *subObject = a->getIndexed(j).asObject();
-                subModel->append(subObject, eng);
+                o = a->getIndexed(j);
+                subModel->append(o.getPointer(), eng);
             }
 
             roleIndex = e->setListProperty(r, subModel);
         } else if (propertyValue.isBoolean()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue.booleanValue());
         } else if (QV4::DateObject *dd = propertyValue.asDateObject()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::DateTime);
             QDateTime dt = dd->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
         } else if (QV4::Object *o = propertyValue.asObject()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object();
-                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
                     roleIndex = e->setQObjectProperty(role, o);
             } else {
-                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap)
                     roleIndex = e->setVariantMapProperty(role, o, eng);
             }
         } else if (propertyValue.isEmpty() || propertyValue.isUndefined() || propertyValue.isNull()) {
-            const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
+            const ListLayout::Role *r = m_layout->getExistingRole(propertyName.getPointer());
             if (r)
                 e->clearProperty(*r);
         }
@@ -480,43 +484,47 @@ void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
     ListElement *e = elements[elementIndex];
 
     QV4::ExecutionEngine *v4 = object->engine();
+    QV4::Scope scope(v4);
+    QV4::Scoped<QV4::Object> o(scope);
+
     QV4::ObjectIterator it(object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
+    QV4::Scoped<QV4::String> propertyName(scope);
     while (1) {
         QV4::Value propertyValue;
-        QV4::String *propertyName = it.nextPropertyNameAsString(&propertyValue).asString();
+        propertyName = it.nextPropertyNameAsString(&propertyValue);
         if (!propertyName)
             break;
 
         // Add the value now
         if (QV4::String *s = propertyValue.asString()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::String);
             if (r.type == ListLayout::Role::String)
                 e->setStringPropertyFast(r, s->toQString());
         } else if (propertyValue.isNumber()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Number);
             if (r.type == ListLayout::Role::Number) {
                 e->setDoublePropertyFast(r, propertyValue.asDouble());
             }
         } else if (QV4::ArrayObject *a = propertyValue.asArrayObject()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::List);
             if (r.type == ListLayout::Role::List) {
                 ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
                 int arrayLength = a->arrayLength();
                 for (int j=0 ; j < arrayLength ; ++j) {
-                    QV4::Object *subObject = a->getIndexed(j).asObject();
-                    subModel->append(subObject, eng);
+                    o = a->getIndexed(j);
+                    subModel->append(o.getPointer(), eng);
                 }
 
                 e->setListPropertyFast(r, subModel);
             }
         } else if (propertyValue.isBoolean()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Bool);
             if (r.type == ListLayout::Role::Bool) {
                 e->setBoolPropertyFast(r, propertyValue.booleanValue());
             }
         } else if (QV4::DateObject *dd = propertyValue.asDateObject()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::DateTime);
             if (r.type == ListLayout::Role::DateTime) {
                 QDateTime dt = dd->toQDateTime();;
                 e->setDateTimePropertyFast(r, dt);
@@ -524,16 +532,16 @@ void ListModel::set(int elementIndex, QV4::Object *object, QV8Engine *eng)
         } else if (QV4::Object *o = propertyValue.asObject()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object();
-                const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
+                const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::QObject);
                 if (r.type == ListLayout::Role::QObject)
                     e->setQObjectPropertyFast(r, o);
             } else {
-                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap)
                     e->setVariantMapFast(role, o, eng);
             }
         } else if (propertyValue.isEmpty() || propertyValue.isUndefined() || propertyValue.isNull()) {
-            const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
+            const ListLayout::Role *r = m_layout->getExistingRole(propertyName.getPointer());
             if (r)
                 e->clearProperty(*r);
         }
@@ -1164,11 +1172,14 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         roleIndex = setDoubleProperty(role, d.asDouble());
     } else if (QV4::ArrayObject *a = d.asArrayObject()) {
         if (role.type == ListLayout::Role::List) {
+            QV4::Scope scope(a->engine());
+            QV4::Scoped<QV4::Object> o(scope);
+
             ListModel *subModel = new ListModel(role.subLayout, 0, -1);
             int arrayLength = a->arrayLength();
             for (int j=0 ; j < arrayLength ; ++j) {
-                QV4::Object *subObject = a->getIndexed(j).asObject();
-                subModel->append(subObject, eng);
+                o = a->getIndexed(j);
+                subModel->append(o.getPointer(), eng);
             }
             roleIndex = setListProperty(role, subModel);
         } else {
@@ -1243,7 +1254,8 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QString propName = QString::fromUtf8(name(index));
     QVariant value = operator[](index);
 
-    QV4::Value v = eng->fromVariant(value);
+    QV4::Scope scope(QV8Engine::getV4((eng)));
+    QV4::ScopedValue v(scope, eng->fromVariant(value));
 
     int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, eng);
     if (roleIndex != -1) {
@@ -1924,14 +1936,17 @@ void QQmlListModel::insert(QQmlV4Function *args)
         QV4::Value arg1 = (*args)[1];
 
         if (QV4::ArrayObject *objectArray = arg1.asArrayObject()) {
+            QV4::Scope scope(objectArray->engine());
+            QV4::Scoped<QV4::Object> argObject(scope);
+
             int objectArrayLength = objectArray->arrayLength();
             for (int i=0 ; i < objectArrayLength ; ++i) {
-                QV4::Object *argObject = objectArray->getIndexed(i).asObject();
+                argObject = objectArray->getIndexed(i);
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject.getPointer()), this));
                 } else {
-                    m_listModel->insert(index+i, argObject, args->engine());
+                    m_listModel->insert(index+i, argObject.getPointer(), args->engine());
                 }
             }
             emitItemsInserted(index, objectArrayLength);
@@ -2022,16 +2037,19 @@ void QQmlListModel::append(QQmlV4Function *args)
         QV4::Value arg = (*args)[0];
 
         if (QV4::ArrayObject *objectArray = arg.asArrayObject()) {
+            QV4::Scope scope(objectArray->engine());
+            QV4::Scoped<QV4::Object> argObject(scope);
+
             int objectArrayLength = objectArray->arrayLength();
 
             int index = count();
             for (int i=0 ; i < objectArrayLength ; ++i) {
-                QV4::Object *argObject = objectArray->getIndexed(i).asObject();
+                argObject = objectArray->getIndexed(i);
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                    m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject.getPointer()), this));
                 } else {
-                    m_listModel->append(argObject, args->engine());
+                    m_listModel->append(argObject.getPointer(), args->engine());
                 }
             }
 
@@ -2088,10 +2106,11 @@ void QQmlListModel::append(QQmlV4Function *args)
 */
 QQmlV4Handle QQmlListModel::get(int index) const
 {
-    QV4::Value result = QV4::Value::undefinedValue();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine());
+    QV4::Scope scope(v4);
+    QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
 
     if (index >= 0 && index < count()) {
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine());
 
         if (m_dynamicRoles) {
             DynamicRoleModelNode *object = m_modelObjects[index];

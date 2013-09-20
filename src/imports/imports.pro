@@ -11,6 +11,7 @@ qtHaveModule(quick) {
         qtquick2 \
         particles \
         window \
+        dialogs-private \
         dialogs \
         testlib
 }

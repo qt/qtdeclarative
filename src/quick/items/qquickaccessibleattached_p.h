@@ -73,7 +73,7 @@ public:
     {
         if (role != m_role) {
             m_role = role;
-            emit roleChanged();
+            Q_EMIT roleChanged();
             // There is no way to signify role changes at the moment.
             // QAccessible::updateAccessibility(parent(), 0, QAccessible::);
         }
@@ -82,7 +82,7 @@ public:
     void setName(const QString &name) {
         if (name != m_name) {
             m_name = name;
-            emit nameChanged();
+            Q_EMIT nameChanged();
             QAccessibleEvent ev(parent(), QAccessible::NameChanged);
             QAccessible::updateAccessibility(&ev);
         }
@@ -93,7 +93,7 @@ public:
     {
         if (m_description != description) {
             m_description = description;
-            emit descriptionChanged();
+            Q_EMIT descriptionChanged();
             QAccessibleEvent ev(parent(), QAccessible::DescriptionChanged);
             QAccessible::updateAccessibility(&ev);
         }
