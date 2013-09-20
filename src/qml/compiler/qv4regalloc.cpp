@@ -1004,9 +1004,9 @@ void RegisterAllocator::run(Function *function, const Optimizer &opt)
     {
         QTextStream qout(stdout, QIODevice::WriteOnly);
         qout << "Ranges:" << endl;
-        QList<LifeTimeInterval> handled = _unhandled;
-        std::sort(handled.begin(), handled.end(), LifeTimeInterval::lessThanForTemp);
-        foreach (const LifeTimeInterval &r, handled) {
+        QList<LifeTimeInterval> intervals = _unhandled;
+        std::sort(intervals.begin(), intervals.end(), LifeTimeInterval::lessThanForTemp);
+        foreach (const LifeTimeInterval &r, intervals) {
             r.dump(qout);
             qout << endl;
         }
@@ -1361,14 +1361,17 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
         return -1;
 
     LifeTimeInterval::Ranges anotherRanges = another.ranges();
-    int anotherIt = indexOfRangeCoveringPosition(anotherRanges, position);
-    if (anotherIt == -1)
+    const int anotherItStart = indexOfRangeCoveringPosition(anotherRanges, position);
+    if (anotherItStart == -1)
         return -1;
 
     for (int currentEnd = currentRanges.size(); currentIt < currentEnd; ++currentIt) {
         const LifeTimeInterval::Range &currentRange = currentRanges[currentIt];
-        for (int anotherEnd = anotherRanges.size(); anotherIt < anotherEnd; ++anotherIt) {
-            int intersectPos = intersectionPosition(currentRange, anotherRanges[anotherIt]);
+        for (int anotherIt = anotherItStart, anotherEnd = anotherRanges.size(); anotherIt < anotherEnd; ++anotherIt) {
+            const LifeTimeInterval::Range &anotherRange = anotherRanges[anotherIt];
+            if (anotherRange.start > currentRange.end)
+                break;
+            int intersectPos = intersectionPosition(currentRange, anotherRange);
             if (intersectPos != -1)
                 return intersectPos;
         }
