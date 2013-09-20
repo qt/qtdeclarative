@@ -274,7 +274,7 @@
     string using the default locale and a short format, then parsed back again
     in the same manner:
     \code
-    import QtQuick 2.0
+    import QtQml 2.2
 
     QtObject {
         property var locale: Qt.locale()
