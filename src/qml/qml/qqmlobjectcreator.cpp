@@ -518,12 +518,12 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     context->setIdPropertyData(mapping);
 
     QObject *instance = createInstance(objectToCreate, parent);
-
-    QQmlData *ddata = QQmlData::get(instance);
-    Q_ASSERT(ddata);
-    ddata->compiledData = compiledData;
-    ddata->compiledData->addref();
-
+    if (instance) {
+        QQmlData *ddata = QQmlData::get(instance);
+        Q_ASSERT(ddata);
+        ddata->compiledData = compiledData;
+        ddata->compiledData->addref();
+    }
     return instance;
 }
 
@@ -991,6 +991,10 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
             QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType);
+            if (!valueType) {
+                recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
+                return false;
+            }
 
             valueType->read(_qobject, property->coreIndex);
 
