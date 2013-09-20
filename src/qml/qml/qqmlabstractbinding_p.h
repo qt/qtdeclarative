@@ -60,6 +60,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QmlObjectCreator;
+
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 {
 public:
@@ -150,6 +152,7 @@ private:
     friend class QQmlVME;
     friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
     friend class QV4Bindings;
+    friend class QmlObjectCreator;
 
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
     // To save memory, we also store the rarely used weakPointer() instance in here

@@ -43,12 +43,30 @@
 
 #include "qv4global_p.h"
 #include "qv4engine_p.h"
+#include "qv4functionobject_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
 struct ExecutionContext;
+
+struct QmlBindingWrapper : FunctionObject {
+    Q_MANAGED
+
+    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
+    // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
+    QmlBindingWrapper(ExecutionContext *scope, Object *qml);
+
+    static ReturnedValue call(Managed *that, CallData *);
+    static void markObjects(Managed *m);
+
+    CallContext *context() const { return qmlContext; }
+
+private:
+    Object *qml;
+    CallContext *qmlContext;
+};
 
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)

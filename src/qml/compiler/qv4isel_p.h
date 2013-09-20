@@ -59,30 +59,40 @@ struct Function;
 
 namespace QQmlJS {
 
-class Q_QML_EXPORT EvalInstructionSelection : public QV4::Compiler::JSUnitGenerator
+class Q_QML_EXPORT EvalInstructionSelection
 {
 public:
-    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
+    EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     virtual ~EvalInstructionSelection() = 0;
 
-    QV4::CompiledData::CompilationUnit *compile();
+    QV4::CompiledData::CompilationUnit *compile(bool generateUnitData = true);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
+
+    int registerString(const QString &str) { return jsGenerator->registerString(str); }
+    uint registerGetterLookup(const QString &name) { return jsGenerator->registerGetterLookup(name); }
+    uint registerSetterLookup(const QString &name) { return jsGenerator->registerSetterLookup(name); }
+    uint registerGlobalGetterLookup(const QString &name) { return jsGenerator->registerGlobalGetterLookup(name); }
+    int registerRegExp(QQmlJS::V4IR::RegExp *regexp) { return jsGenerator->registerRegExp(regexp); }
+    int registerJSClass(QQmlJS::V4IR::ExprList *args) { return jsGenerator->registerJSClass(args); }
+    QV4::Compiler::JSUnitGenerator *jsUnitGenerator() const { return jsGenerator; }
 
 protected:
     virtual void run(int functionIndex) = 0;
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep() = 0;
 
-protected:
     bool useFastLookups;
     QV4::ExecutableAllocator *executableAllocator;
+    QV4::Compiler::JSUnitGenerator *jsGenerator;
+    QScopedPointer<QV4::Compiler::JSUnitGenerator> ownJSGenerator;
+    V4IR::Module *irModule;
 };
 
 class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module) = 0;
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
 };
 

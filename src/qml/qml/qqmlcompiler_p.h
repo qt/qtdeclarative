@@ -70,6 +70,13 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+namespace CompiledData {
+struct CompilationUnit;
+struct QmlUnit;
+}
+}
+
 class QQmlEngine;
 class QQmlComponent;
 class QQmlContext;
@@ -103,7 +110,12 @@ public:
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
     };
+    // --- old compiler:
     QList<TypeReference> types;
+    // --- new compiler:
+    // map from name index
+    QHash<int, TypeReference> resolvedTypes;
+    // ---
 
     struct V8Program {
         V8Program(const QByteArray &p, QQmlCompiledData *c)
@@ -124,6 +136,16 @@ public:
     QList<QVector<QQmlContextData::ObjectIdMapping> > contextCaches;
     QList<QQmlScriptData *> scripts;
     QList<QUrl> urls;
+
+    // --- new compiler
+    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QV4::CompiledData::QmlUnit *qmlUnit;
+    // index in first hash is component index, hash inside maps from object index in that scope to integer id
+    QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
+    QHash<int, int> objectIndexToIdForRoot;
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+    // ---
 
     struct Instruction {
 #define QML_INSTR_DATA_TYPEDEF(I, FMT) typedef QQmlInstructionData<QQmlInstruction::I> I;

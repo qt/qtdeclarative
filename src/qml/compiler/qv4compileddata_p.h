@@ -44,6 +44,7 @@
 #include <QtCore/qstring.h>
 #include <QVector>
 #include <QStringList>
+#include <QHash>
 #include <private/qv4value_def_p.h>
 #include <private/qv4executableallocator_p.h>
 
@@ -66,6 +67,22 @@ struct String;
 struct Function;
 struct Lookup;
 struct RegExp;
+
+struct Location
+{
+    int line;
+    int column;
+};
+
+// map from name index to location of first use
+struct TypeReferenceMap : QHash<int, Location>
+{
+    void add(int nameIndex, const Location &loc) {
+        if (contains(nameIndex))
+            return;
+        insert(nameIndex, loc);
+    }
+};
 
 struct RegExp
 {
@@ -178,9 +195,9 @@ struct Unit
         return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
     }
 
-    static int calculateSize(uint nStrings, uint nFunctions, uint nRegExps,
+    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps,
                              uint nLookups, uint nClasses) {
-        return (sizeof(Unit)
+        return (headerSize
                 + (nStrings + nFunctions + nClasses) * sizeof(uint)
                 + nRegExps * RegExp::calculateSize()
                 + nLookups * Lookup::calculateSize()
@@ -207,6 +224,7 @@ struct Function
     quint32 lineNumberMappingOffset; // Array of uint pairs (offset and line number)
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
+    Location location;
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
@@ -223,79 +241,197 @@ struct Function
 
 // Qml data structures
 
-struct Value
-{
-    quint32 type; // Invalid, Boolean, Number, String, Function, Object, ListOfObjects
-    union {
-        bool b;
-        int i;
-        double d;
-        quint32 offsetToString;
-        quint32 offsetToFunction;
-        quint32 offsetToObject;
-    };
-};
-
 struct Binding
 {
-    quint32 offsetToPropertyName;
-    Value value;
+    quint32 propertyNameIndex;
+
+    enum ValueType {
+        Type_Invalid,
+        Type_Boolean,
+        Type_Number,
+        Type_String,
+        Type_Script,
+        Type_Object,
+        Type_AttachedProperty,
+        Type_GroupProperty
+    };
+
+    enum Flags {
+        IsSignalHandlerExpression = 0x1
+    };
+
+    quint32 flags : 16;
+    quint32 type : 16;
+    union {
+        bool b;
+        double d;
+        quint32 compiledScriptIndex; // used when Type_Script
+        quint32 objectIndex;
+    } value;
+    quint32 stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
+
+    Location location;
+
+    QString valueAsString(const Unit *unit) const;
+    double valueAsNumber() const
+    {
+        if (type == Type_Number)
+            return value.d;
+        return 0.0;
+
+    }
+    bool valueAsBoolean() const
+    {
+        if (type == Type_Boolean)
+            return value.b;
+        return false;
+    }
+
 };
 
 struct Parameter
 {
-    quint32 offsetToName;
+    quint32 nameIndex;
     quint32 type;
-    quint32 offsetToCustomTypeName;
+    quint32 customTypeNameIndex;
     quint32 reserved;
+    Location location;
 };
 
 struct Signal
 {
-    quint32 offsetToName;
+    quint32 nameIndex;
     quint32 nParameters;
-    Parameter parameters[1];
+    Location location;
+    // Parameter parameters[1];
+
+    const Parameter *parameterAt(int idx) const {
+        return reinterpret_cast<const Parameter*>(this + 1) + idx;
+    }
+
+    static int calculateSize(int nParameters) {
+        return (sizeof(Signal)
+                + nParameters * sizeof(Parameter)
+                + 7) & ~0x7;
+    }
 };
 
 struct Property
 {
-    quint32 offsetToName;
+    enum Type { Var = 0, Variant, Int, Bool, Real, String, Url, Color,
+                Font, Time, Date, DateTime, Rect, Point, Size,
+                Vector2D, Vector3D, Vector4D, Matrix4x4, Quaternion,
+                Alias, Custom, CustomList };
+
+    enum Flags {
+        IsReadOnly = 0x1
+    };
+
+    quint32 nameIndex;
     quint32 type;
-    quint32 offsetToCustomTypeName;
-    quint32 flags; // default, readonly
-    Value value;
+    union {
+        quint32 customTypeNameIndex; // If type >= Custom
+        quint32 aliasIdValueIndex; // If type == Alias
+    };
+    quint32 aliasPropertyValueIndex;
+    quint32 flags; // readonly
+    Location location;
 };
 
 struct Object
 {
-    quint32 offsetToInheritedTypeName;
-    quint32 offsetToId;
-    quint32 offsetToDefaultProperty;
+    // Depending on the use, this may be the type name to instantiate before instantiating this
+    // object. For grouped properties the type name will be empty and for attached properties
+    // it will be the name of the attached type.
+    quint32 inheritedTypeNameIndex;
+    quint32 idIndex;
+    quint32 indexOfDefaultProperty;
     quint32 nFunctions;
     quint32 offsetToFunctions;
     quint32 nProperties;
     quint32 offsetToProperties;
     quint32 nSignals;
-    quint32 offsetToSignals;
+    quint32 offsetToSignals; // which in turn will be a table with offsets to variable-sized Signal objects
     quint32 nBindings;
     quint32 offsetToBindings;
+    Location location;
+    Location locationOfIdProperty;
 //    Function[]
 //    Property[]
 //    Signal[]
 //    Binding[]
+
+    static int calculateSizeExcludingSignals(int nFunctions, int nProperties, int nSignals, int nBindings)
+    {
+        return ( sizeof(Object)
+                 + nFunctions * sizeof(quint32)
+                 + nProperties * sizeof(Property)
+                 + nSignals * sizeof(quint32)
+                 + nBindings * sizeof(Binding)
+                 + 0x7
+               ) & ~0x7;
+    }
+
+    const quint32 *functionOffsetTable() const
+    {
+        return reinterpret_cast<const quint32*>(reinterpret_cast<const char *>(this) + offsetToFunctions);
+    }
+
+    const Property *propertyTable() const
+    {
+        return reinterpret_cast<const Property*>(reinterpret_cast<const char *>(this) + offsetToProperties);
+    }
+
+    const Binding *bindingTable() const
+    {
+        return reinterpret_cast<const Binding*>(reinterpret_cast<const char *>(this) + offsetToBindings);
+    }
+
+    const Signal *signalAt(int idx) const
+    {
+        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToSignals);
+        const uint offset = offsetTable[idx];
+        return reinterpret_cast<const Signal*>(reinterpret_cast<const char*>(this) + offset);
+    }
 };
 
-struct Imports
+struct Import
 {
+    enum ImportType {
+        ImportLibrary = 0x1,
+        ImportFile = 0x2,
+        ImportScript = 0x3
+    };
+    quint32 type;
+
+    quint32 uriIndex;
+    quint32 qualifierIndex;
+
+    qint32 majorVersion;
+    qint32 minorVersion;
+
+    Location location;
 };
 
 
 struct QmlUnit
 {
     Unit header;
-    int offsetToTypeName;
-    Imports imports;
-    Object object;
+    quint32 nImports;
+    quint32 offsetToImports;
+    quint32 nObjects;
+    quint32 offsetToObjects;
+    quint32 indexOfRootObject;
+
+    const Import *importAt(int idx) const {
+        return reinterpret_cast<const Import*>((reinterpret_cast<const char *>(this)) + offsetToImports + idx * sizeof(Import));
+    }
+
+    const Object *objectAt(int idx) const {
+        const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToObjects);
+        const uint offset = offsetTable[idx];
+        return reinterpret_cast<const Object*>(reinterpret_cast<const char*>(this) + offset);
+    }
 };
 
 // This is how this hooks into the existing structures:
@@ -304,14 +440,16 @@ struct QmlUnit
 //    CompilationUnit * (for functions that need to clean up)
 //    CompiledData::Function *compiledFunction
 
-struct CompilationUnit
+struct Q_QML_EXPORT CompilationUnit
 {
     CompilationUnit()
         : refCount(0)
         , engine(0)
         , data(0)
+        , ownsData(false)
         , runtimeStrings(0)
         , runtimeLookups(0)
+        , runtimeRegularExpressions(0)
         , runtimeClasses(0)
     {}
     virtual ~CompilationUnit();
@@ -322,6 +460,7 @@ struct CompilationUnit
     int refCount;
     ExecutionEngine *engine;
     Unit *data;
+    bool ownsData;
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
 
@@ -333,6 +472,7 @@ struct CompilationUnit
 //    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
+    void unlink();
 
     virtual QV4::ExecutableAllocator::ChunkOfPages *chunkForFunction(int /*functionIndex*/) { return 0; }
 

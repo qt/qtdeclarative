@@ -62,6 +62,7 @@
 #include "qqmlerror.h"
 #include "qqml.h"
 #include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlobjectcreator_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -105,9 +106,20 @@ public:
     QQmlCompiledData *cc;
 
     struct ConstructionState {
-        ConstructionState() : completePending(false) {}
+        ConstructionState()
+            : creator(0)
+            , completePending(false)
+        {}
+        ~ConstructionState()
+        {
+            delete creator;
+        }
 
+        // --- new compiler
+        QmlObjectCreator *creator;
+        // --- old compiler
         QQmlVME vme;
+        // ---
         QList<QQmlError> errors;
         bool completePending;
     };

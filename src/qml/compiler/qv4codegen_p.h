@@ -435,7 +435,7 @@ protected:
 
     QList<QQmlError> _errors;
 
-    class ScanFunctions: Visitor
+    class ScanFunctions: protected Visitor
     {
         typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
     public:

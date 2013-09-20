@@ -483,6 +483,10 @@ int main(int argc, char ** argv)
             }
 
             QObject *topLevel = component->create();
+            if (!topLevel && component->isError()) {
+                qWarning("%s", qPrintable(component->errorString()));
+                return -1;
+            }
             QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(topLevel));
             if (window) {
                 engine.setIncubationController(window->incubationController());

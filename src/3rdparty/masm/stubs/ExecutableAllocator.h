@@ -67,7 +67,7 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     }
     ~ExecutableMemoryHandle()
     {
-        m_allocator->free(m_allocation);
+        m_allocation->deallocate(m_allocator);
     }
 
     inline void shrink(size_t) {

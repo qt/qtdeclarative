@@ -65,13 +65,7 @@ namespace {
 
 CompilationUnit::~CompilationUnit()
 {
-    engine->compilationUnits.erase(engine->compilationUnits.find(this));
-    free(data);
-    free(runtimeStrings);
-    delete [] runtimeLookups;
-    delete [] runtimeRegularExpressions;
-    free(runtimeClasses);
-    qDeleteAll(runtimeFunctions);
+    unlink();
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -145,6 +139,26 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     return runtimeFunctions[data->indexOfRootFunction];
 }
 
+void CompilationUnit::unlink()
+{
+    if (engine)
+        engine->compilationUnits.erase(engine->compilationUnits.find(this));
+    engine = 0;
+    if (ownsData)
+        free(data);
+    data = 0;
+    free(runtimeStrings);
+    runtimeStrings = 0;
+    delete [] runtimeLookups;
+    runtimeLookups = 0;
+    delete [] runtimeRegularExpressions;
+    runtimeRegularExpressions = 0;
+    free(runtimeClasses);
+    runtimeClasses = 0;
+    qDeleteAll(runtimeFunctions);
+    runtimeFunctions.clear();
+}
+
 void CompilationUnit::markObjects()
 {
     for (int i = 0; i < data->stringTableSize; ++i)
@@ -153,6 +167,24 @@ void CompilationUnit::markObjects()
         runtimeRegularExpressions[i].mark();
     for (int i = 0; i < runtimeFunctions.count(); ++i)
         runtimeFunctions[i]->mark();
+}
+
+QString Binding::valueAsString(const Unit *unit) const
+{
+    switch (type) {
+    case Type_Script:
+    case Type_String:
+        return unit->stringAt(stringIndex);
+    case Type_Boolean:
+        return value.b ? QStringLiteral("true") : QStringLiteral("false");
+    case Type_Number:
+        return QString::number(value.d);
+    case Type_Invalid:
+        return QString();
+    default:
+        break;
+    }
+    return QString();
 }
 
 }
