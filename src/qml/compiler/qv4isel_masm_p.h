@@ -1315,7 +1315,7 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module);
+    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
@@ -1529,8 +1529,8 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
-    { return new InstructionSelection(execAllocator, module); }
+    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    { return new InstructionSelection(execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return true; }
 };

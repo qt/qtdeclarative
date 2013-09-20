@@ -502,7 +502,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         lineNumberMapping[i * 2] = linkBuffer.offsetOf(codeLineNumberMappings.at(i).location);
         lineNumberMapping[i * 2 + 1] = codeLineNumberMappings.at(i).lineNumber;
     }
-    _isel->registerLineNumberMapping(_function, lineNumberMapping);
+    _isel->jsUnitGenerator()->registerLineNumberMapping(_function, lineNumberMapping);
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
@@ -584,8 +584,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     return codeRef;
 }
 
-InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module)
-    : EvalInstructionSelection(execAllocator, module)
+InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
+    : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _block(0)
     , _function(0)
     , _as(0)
@@ -702,7 +702,6 @@ void *InstructionSelection::addConstantTable(QVector<Value> *values)
 
 QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 {
-    compilationUnit->data = generateUnit();
     return compilationUnit;
 }
 

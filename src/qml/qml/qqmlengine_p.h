@@ -99,6 +99,7 @@ class QQmlCleanup;
 class QQmlDelayedError;
 class QQuickWorkerScriptEngine;
 class QQmlVME;
+class QmlObjectCreator;
 class QDir;
 class QQmlIncubator;
 
@@ -144,6 +145,7 @@ public:
 
     QQmlContext *rootContext;
     bool isDebugging;
+    bool useNewCompiler;
 
     bool outputWarningsToStdErr;
 
@@ -165,7 +167,11 @@ public:
     typedef QPair<QPointer<QObject>,int> FinalizeCallback;
     void registerFinalizeCallback(QObject *obj, int index);
 
+    // --- old compiler:
     QQmlVME *activeVME;
+    // --- new compiler:
+    QmlObjectCreator *activeObjectCreator;
+    // ---
 
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;
     QNetworkAccessManager *getNetworkAccessManager() const;

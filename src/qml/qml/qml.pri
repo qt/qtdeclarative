@@ -55,7 +55,8 @@ SOURCES += \
     $$PWD/qqmlcontextwrapper.cpp \
     $$PWD/qqmlvaluetypewrapper.cpp \
     $$PWD/qqmltypewrapper.cpp \
-    $$PWD/qqmlfileselector.cpp
+    $$PWD/qqmlfileselector.cpp \
+    $$PWD/qqmlobjectcreator.cpp
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -133,7 +134,8 @@ HEADERS += \
     $$PWD/qqmlvaluetypewrapper_p.h \
     $$PWD/qqmltypewrapper_p.h \
     $$PWD/qqmlfileselector_p.h \
-    $$PWD/qqmlfileselector.h
+    $$PWD/qqmlfileselector.h \
+    $$PWD/qqmlobjectcreator_p.h
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

@@ -84,6 +84,10 @@ class QQmlTypeData;
 class QQmlDataLoader;
 class QQmlExtensionInterface;
 
+namespace QtQml {
+struct ParsedQML;
+}
+
 class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
 {
 public:
@@ -323,16 +327,10 @@ public:
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
-    enum Option {
-        None,
-        PreserveParser
-    };
-    Q_DECLARE_FLAGS(Options, Option)
-
     QQmlImportDatabase *importDatabase();
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
-    QQmlTypeData *getType(const QByteArray &, const QUrl &url, Options = None);
+    QQmlTypeData *getType(const QByteArray &, const QUrl &url);
 
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
@@ -391,8 +389,6 @@ private:
     QmldirBundleIdCache m_qmldirBundleIdCache;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlTypeLoader::Options)
-
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 {
 public:
@@ -419,7 +415,7 @@ public:
 private:
     friend class QQmlTypeLoader;
 
-    QQmlTypeData(const QUrl &, QQmlTypeLoader::Options, QQmlTypeLoader *);
+    QQmlTypeData(const QUrl &, QQmlTypeLoader *);
 
 public:
     ~QQmlTypeData();
@@ -454,16 +450,24 @@ private:
 
     virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    QQmlTypeLoader::Options m_options;
-
+    // --- old compiler
     QQmlScript::Parser scriptParser;
+    // --- new compiler
+    QScopedPointer<QtQml::ParsedQML> parsedQML;
+    // ---
 
     QList<ScriptReference> m_scripts;
 
     QSet<QString> m_namespaces;
 
+    // --- old compiler
     QList<TypeReference> m_types;
+    // --- new compiler
+    // map from name index to resolved type
+    QHash<int, TypeReference> m_resolvedTypes;
+    // ---
     bool m_typesResolved:1;
+    bool m_useNewCompiler:1;
 
     QQmlCompiledData *m_compiledData;
 

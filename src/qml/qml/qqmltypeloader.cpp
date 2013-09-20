@@ -49,6 +49,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
+#include <private/qqmlcodegenerator_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -1474,17 +1475,6 @@ QQmlImportDatabase *QQmlTypeLoader::importDatabase()
 }
 
 /*!
-\enum QQmlTypeLoader::Option
-
-This enum defines the options that control the way type data is handled.
-
-\value None             The default value, indicating that no other options
-                        are enabled.
-\value PreserveParser   The parser used to handle the type data is preserved
-                        after the data has been parsed.
-*/
-
-/*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
@@ -1498,7 +1488,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     QQmlTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
-        typeData = new QQmlTypeData(url, None, this);
+        typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         QQmlDataLoader::load(typeData, mode);
@@ -1512,14 +1502,12 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 /*!
 Returns a QQmlTypeData for the given \a data with the provided base \a url.  The 
 QQmlTypeData will not be cached.
-
-The specified \a options control how the loader handles type data.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Options options)
+QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlTypeData *typeData = new QQmlTypeData(url, options, this);
+    QQmlTypeData *typeData = new QQmlTypeData(url, this);
     QQmlDataLoader::loadWithStaticData(typeData, data);
 
     return typeData;
@@ -1915,11 +1903,11 @@ QQmlTypeData::TypeDataCallback::~TypeDataCallback()
 {
 }
 
-QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader::Options options, 
-                                           QQmlTypeLoader *manager)
-: QQmlTypeLoader::Blob(url, QmlFile, manager), m_options(options),
+QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
+: QQmlTypeLoader::Blob(url, QmlFile, manager),
    m_typesResolved(false), m_compiledData(0), m_implicitImport(0), m_implicitImportLoaded(false)
 {
+    m_useNewCompiler = QQmlEnginePrivate::get(manager->engine())->useNewCompiler;
 }
 
 QQmlTypeData::~QQmlTypeData()
@@ -1990,6 +1978,7 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
+    // --- old compiler:
     for (int ii = 0; !isError() && ii < m_types.count(); ++ii) {
         const TypeReference &type = m_types.at(ii);
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
@@ -2006,13 +1995,32 @@ void QQmlTypeData::done()
             setError(errors);
         }
     }
+    // --- new compiler:
+    for (QHash<int, TypeReference>::ConstIterator it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+         !isError() && it != end; ++it) {
+        const TypeReference &type = *it;
+        Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
+        if (type.typeData && type.typeData->isError()) {
+            QString typeName = parsedQML->jsGenerator.strings.at(it.key());
+
+            QList<QQmlError> errors = type.typeData->errors();
+            QQmlError error;
+            error.setUrl(finalUrl());
+            error.setLine(type.location.line);
+            error.setColumn(type.location.column);
+            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
+            errors.prepend(error);
+            setError(errors);
+        }
+    }
+    // ---
 
     // Compile component
     if (!isError()) 
         compile();
 
-    if (!(m_options & QQmlTypeLoader::PreserveParser))
-        scriptParser.clear();
+    scriptParser.clear();
+    parsedQML.reset();
 }
 
 void QQmlTypeData::completed()
@@ -2052,9 +2060,18 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
 
-    if (!scriptParser.parse(code, preparseData, finalUrl(), finalUrlString())) {
-        setError(scriptParser.errors());
-        return;
+    if (m_useNewCompiler) {
+        parsedQML.reset(new QtQml::ParsedQML);
+        QQmlCodeGenerator compiler;
+        if (!compiler.generateFromQml(code, finalUrl(), finalUrlString(), parsedQML.data())) {
+            setError(compiler.errors);
+            return;
+        }
+    } else {
+        if (!scriptParser.parse(code, preparseData, finalUrl(), finalUrlString())) {
+            setError(scriptParser.errors());
+            return;
+        }
     }
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
@@ -2084,7 +2101,34 @@ void QQmlTypeData::dataReceived(const Data &data)
 
     QList<QQmlError> errors;
 
-    foreach (const QQmlScript::Import &import, scriptParser.imports()) {
+    // ### convert to use new data structure once old compiler is gone.
+    QList<QQmlScript::Import> imports;
+    if (m_useNewCompiler) {
+        imports.reserve(parsedQML->imports.size());
+        foreach (QV4::CompiledData::Import *i, parsedQML->imports) {
+            QQmlScript::Import import;
+            import.uri = parsedQML->stringAt(i->uriIndex);
+            import.qualifier = parsedQML->stringAt(i->qualifierIndex);
+            import.majorVersion = i->majorVersion;
+            import.minorVersion = i->minorVersion;
+            import.location.start.line = i->location.line;
+            import.location.start.column = i->location.column;
+
+            switch (i->type) {
+            case QV4::CompiledData::Import::ImportFile: import.type = QQmlScript::Import::File; break;
+            case QV4::CompiledData::Import::ImportLibrary: import.type = QQmlScript::Import::Library; break;
+            case QV4::CompiledData::Import::ImportScript: import.type = QQmlScript::Import::Script; break;
+            default: break;
+            }
+
+
+            imports << import;
+        }
+    } else {
+        imports = scriptParser.imports();
+    }
+
+    foreach (const QQmlScript::Import &import, imports) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
@@ -2145,11 +2189,118 @@ void QQmlTypeData::compile()
 
     QQmlCompilingProfiler prof(m_compiledData->name);
 
-    QQmlCompiler compiler(&scriptParser._pool);
-    if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
-        setError(compiler.errors());
-        m_compiledData->release();
-        m_compiledData = 0;
+    if (m_useNewCompiler) {
+        m_compiledData->importCache = new QQmlTypeNameCache;
+        m_imports.populateCache(m_compiledData->importCache);
+        m_compiledData->importCache->addref();
+
+        QQmlEngine *engine = typeLoader()->engine();
+
+        for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
+             resolvedType != end; ++resolvedType) {
+            QQmlCompiledData::TypeReference ref;
+            if (resolvedType->typeData) {
+                ref.component = resolvedType->typeData->compiledData();
+                ref.component->addref();
+            } else {
+                ref.type = resolvedType->type;
+                Q_ASSERT(ref.type);
+            }
+            m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
+        }
+
+        {
+            SignalHandlerConverter converter(QQmlEnginePrivate::get(engine),
+                                             parsedQML.data(),
+                                             m_compiledData);
+            if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations()) {
+                setError(converter.errors);
+                m_compiledData->release();
+                m_compiledData = 0;
+                return;
+            }
+        }
+
+        JSCodeGen jsCodeGen;
+        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
+
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
+        isel->setUseFastLookups(false);
+        QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
+
+        QmlUnitGenerator qmlGenerator;
+        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data());
+
+        if (jsUnit) {
+            Q_ASSERT(!jsUnit->data);
+            jsUnit->ownsData = false;
+            jsUnit->data = &qmlUnit->header;
+        }
+
+        m_compiledData->compilationUnit = jsUnit;
+        if (m_compiledData->compilationUnit)
+            m_compiledData->compilationUnit->ref();
+        m_compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
+
+        QList<QQmlError> errors;
+
+        m_compiledData->datas.reserve(qmlUnit->nObjects);
+        m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
+
+        QQmlPropertyCacheCreator propertyCacheBuilder(QQmlEnginePrivate::get(m_typeLoader->engine()),
+                                                      qmlUnit, m_compiledData->url,
+                                                      &m_imports, &m_compiledData->resolvedTypes);
+
+        for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
+            const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+
+            QByteArray vmeMetaObjectData;
+            QQmlPropertyCache *propertyCache = 0;
+
+            // If the object has no type, then it's probably a nested object definition as part
+            // of a group property.
+            const bool objectHasType = !parsedQML->jsGenerator.strings.at(obj->inheritedTypeNameIndex).isEmpty();
+            if (objectHasType) {
+                if (!propertyCacheBuilder.create(obj, &propertyCache, &vmeMetaObjectData)) {
+                    errors << propertyCacheBuilder.errors;
+                    break;
+                }
+            }
+
+            m_compiledData->datas << vmeMetaObjectData;
+            if (propertyCache)
+                propertyCache->addref();
+            m_compiledData->propertyCaches << propertyCache;
+
+            if (i == qmlUnit->indexOfRootObject) {
+                Q_ASSERT(propertyCache);
+                m_compiledData->rootPropertyCache = propertyCache;
+                propertyCache->addref();
+            }
+        }
+
+        if (errors.isEmpty()) {
+            // Scan for components, determine their scopes and resolve aliases within the scope.
+            QQmlComponentAndAliasResolver resolver(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes, m_compiledData->propertyCaches,
+                                                   &m_compiledData->datas, &m_compiledData->objectIndexToIdForRoot, &m_compiledData->objectIndexToIdPerComponent);
+            if (!resolver.resolve())
+                errors << resolver.errors;
+        }
+
+        if (!errors.isEmpty()) {
+            setError(errors);
+            m_compiledData->release();
+            m_compiledData = 0;
+        }
+    } else {
+        QQmlCompiler compiler(&scriptParser._pool);
+        if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
+            setError(compiler.errors());
+            m_compiledData->release();
+            m_compiledData = 0;
+        }
     }
 }
 
@@ -2176,10 +2327,10 @@ void QQmlTypeData::resolveTypes()
         m_scripts << ref;
     }
 
+    // --- old compiler:
     foreach (QQmlScript::TypeReference *parserRef, scriptParser.referencedTypes()) {
         TypeReference ref;
 
-        QString url;
         int majorVersion = -1;
         int minorVersion = -1;
         QQmlImportNamespace *typeNamespace = 0;
@@ -2238,6 +2389,80 @@ void QQmlTypeData::resolveTypes()
         ref.location = parserRef->firstUse->location.start;
 
         m_types << ref;
+    }
+
+    // --- new compiler:
+    QV4::CompiledData::TypeReferenceMap typeReferences;
+    QStringList names;
+    if (parsedQML) {
+        typeReferences = parsedQML->typeReferences;
+        names = parsedQML->jsGenerator.strings;
+    } else {
+        // ### collect from available QV4::CompiledData::QmlUnit
+    }
+    for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = typeReferences.constBegin(), end = typeReferences.constEnd();
+         unresolvedRef != end; ++unresolvedRef) {
+
+        TypeReference ref; // resolved reference
+
+        int majorVersion = -1;
+        int minorVersion = -1;
+        QQmlImportNamespace *typeNamespace = 0;
+        QList<QQmlError> errors;
+
+        const QString name = names.at(unresolvedRef.key());
+        bool typeFound = m_imports.resolveType(name, &ref.type,
+                &majorVersion, &minorVersion, &typeNamespace, &errors);
+        if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
+            // Lazy loading of implicit import
+            if (loadImplicitImport()) {
+                // Try again to find the type
+                errors.clear();
+                typeFound = m_imports.resolveType(name, &ref.type,
+                    &majorVersion, &minorVersion, &typeNamespace, &errors);
+            } else {
+                return; //loadImplicitImport() hit an error, and called setError already
+            }
+        }
+
+        if (!typeFound || typeNamespace) {
+            // Known to not be a type:
+            //  - known to be a namespace (Namespace {})
+            //  - type with unknown namespace (UnknownNamespace.SomeType {})
+            QQmlError error;
+            if (typeNamespace) {
+                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(name));
+            } else {
+                if (errors.size()) {
+                    error = errors.takeFirst();
+                } else {
+                    // this should not be possible!
+                    // Description should come from error provided by addImport() function.
+                    error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
+                }
+                error.setUrl(m_imports.baseUrl());
+                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(name).arg(error.description()));
+            }
+
+            error.setLine(unresolvedRef->line);
+            error.setColumn(unresolvedRef->column);
+
+            errors.prepend(error);
+            setError(errors);
+            return;
+        }
+
+        if (ref.type->isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
+            addDependency(ref.typeData);
+        }
+        ref.majorVersion = majorVersion;
+        ref.minorVersion = minorVersion;
+
+        ref.location.line = unresolvedRef->line;
+        ref.location.column = unresolvedRef->column;
+
+        m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
 }
 

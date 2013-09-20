@@ -13,7 +13,8 @@ HEADERS += \
     $$PWD/qv4isel_moth_p.h \
     $$PWD/qv4isel_util_p.h \
     $$PWD/qv4ssa_p.h \
-    $$PWD/qv4regalloc_p.h
+    $$PWD/qv4regalloc_p.h \
+    $$PWD/qqmlcodegenerator_p.h
 
 SOURCES += \
     $$PWD/qv4compileddata.cpp \
@@ -24,7 +25,8 @@ SOURCES += \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
     $$PWD/qv4ssa.cpp \
-    $$PWD/qv4regalloc.cpp
+    $$PWD/qv4regalloc.cpp \
+    $$PWD/qqmlcodegenerator.cpp
 
 contains(DEFINES, V4_ENABLE_JIT) {
     HEADERS += $$PWD/qv4isel_masm_p.h

@@ -48,6 +48,7 @@
 #include <QHash>
 #include <QVector>
 #include <QByteArray>
+#include <QMutex>
 
 namespace WTF {
 class PageAllocation;
@@ -63,6 +64,7 @@ public:
     struct ChunkOfPages;
     struct Allocation;
 
+    ExecutableAllocator();
     ~ExecutableAllocator();
 
     Allocation *allocate(size_t size);
@@ -79,8 +81,13 @@ public:
         {}
 
         void *start() const;
+        void invalidate() { addr = 0; }
+        bool isValid() const { return addr != 0; }
+        void deallocate(ExecutableAllocator *allocator);
 
     private:
+        ~Allocation() {}
+
         friend class ExecutableAllocator;
 
         Allocation *split(size_t dividingSize);
@@ -125,6 +132,7 @@ public:
 private:
     QMultiMap<size_t, Allocation*> freeAllocations;
     QMap<quintptr, ChunkOfPages*> chunks;
+    mutable QMutex mutex;
 };
 
 }

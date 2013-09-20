@@ -894,8 +894,20 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     state.completePending = true;
 
     enginePriv->referenceScarceResources();
-    state.vme.init(context, cc, start, creationContext);
-    QObject *rv = state.vme.execute(&state.errors);
+    QObject *rv = 0;
+    if (enginePriv->useNewCompiler) {
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        if (cc->compilationUnit && !cc->compilationUnit->engine)
+            cc->compilationUnit->linkToEngine(v4);
+
+        state.creator = new QmlObjectCreator(context, cc);
+        rv = state.creator->create(start);
+        if (!rv)
+            state.errors = state.creator->errors;
+    } else {
+        state.vme.init(context, cc, start, creationContext);
+        rv = state.vme.execute(&state.errors);
+    }
     enginePriv->dereferenceScarceResources();
 
     if (rv) {
@@ -935,14 +947,22 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     state->errors.clear();
     state->completePending = true;
 
-    state->vme.initDeferred(object);
-    state->vme.execute(&state->errors);
+    if (enginePriv->useNewCompiler) {
+        // ###
+    } else {
+        state->vme.initDeferred(object);
+        state->vme.execute(&state->errors);
+    }
 }
 
 void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionState *state)
 {
     if (state->completePending) {
-        state->vme.complete();
+        if (enginePriv->useNewCompiler) {
+            state->creator->finalize();
+        } else {
+            state->vme.complete();
+        }
 
         state->completePending = false;
 
@@ -1015,9 +1035,11 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     if (!engine)
         return a;
 
-    if (QQmlEnginePrivate::get(engine)->activeVME) { // XXX should only be allowed during begin
-        QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
+    QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
+    if (p->activeVME) { // XXX should only be allowed during begin
         a->add(&p->activeVME->componentAttached);
+    } else if (p->activeObjectCreator) {
+        a->add(&p->activeObjectCreator->componentAttached);
     } else {
         QQmlData *d = QQmlData::get(obj);
         Q_ASSERT(d);

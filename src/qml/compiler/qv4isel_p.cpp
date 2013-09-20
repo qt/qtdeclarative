@@ -58,11 +58,16 @@ QTextStream qout(stderr, QIODevice::WriteOnly);
 using namespace QQmlJS;
 using namespace QQmlJS::V4IR;
 
-EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module)
-    : QV4::Compiler::JSUnitGenerator(module)
-    , useFastLookups(true)
+EvalInstructionSelection::EvalInstructionSelection(QV4::ExecutableAllocator *execAllocator, Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    : useFastLookups(true)
     , executableAllocator(execAllocator)
+    , irModule(module)
 {
+    if (!jsGenerator) {
+        jsGenerator = new QV4::Compiler::JSUnitGenerator(module);
+        ownJSGenerator.reset(jsGenerator);
+    }
+    this->jsGenerator = jsGenerator;
     assert(execAllocator);
     assert(module);
 }
@@ -73,7 +78,7 @@ EvalInstructionSelection::~EvalInstructionSelection()
 EvalISelFactory::~EvalISelFactory()
 {}
 
-QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
+QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool generateUnitData)
 {
     Function *rootFunction = irModule->rootFunction;
     if (!rootFunction)
@@ -81,7 +86,12 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile()
     for (int i = 0; i < irModule->functions.size(); ++i)
         run(i);
 
-    return backendCompileStep();
+    QV4::CompiledData::CompilationUnit *unit = backendCompileStep();
+    if (generateUnitData) {
+        unit->data = jsGenerator->generateUnit();
+        unit->ownsData = true;
+    }
+    return unit;
 }
 
 void IRDecoder::visitMove(V4IR::Move *s)

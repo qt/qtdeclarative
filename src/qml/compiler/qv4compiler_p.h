@@ -57,8 +57,8 @@ struct JSClassMember;
 
 namespace Compiler {
 
-struct JSUnitGenerator {
-    JSUnitGenerator(QQmlJS::V4IR::Module *module);
+struct Q_QML_EXPORT JSUnitGenerator {
+    JSUnitGenerator(QQmlJS::V4IR::Module *module, int headerSize = -1);
 
     QQmlJS::V4IR::Module *irModule;
 
@@ -75,19 +75,20 @@ struct JSUnitGenerator {
 
     int registerJSClass(QQmlJS::V4IR::ExprList *args);
 
-    QV4::CompiledData::Unit *generateUnit();
+    QV4::CompiledData::Unit *generateUnit(int *totalUnitSize = 0);
     // Returns bytes written
     int writeFunction(char *f, int index, QQmlJS::V4IR::Function *irFunction);
 
     QHash<QString, int> stringToId;
     QStringList strings;
-    int stringDataSize;
+    uint stringDataSize;
     QHash<QQmlJS::V4IR::Function *, uint> functionOffsets;
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;
     QHash<QQmlJS::V4IR::Function *, QVector<uint> > lineNumberMappingsPerFunction;
     QList<QList<CompiledData::JSClassMember> > jsClasses;
-    int jsClassDataSize;
+    uint jsClassDataSize;
+    uint headerSize;
 };
 
 }
