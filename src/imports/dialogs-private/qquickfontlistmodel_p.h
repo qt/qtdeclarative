@@ -43,10 +43,10 @@
 #define QQUICKFONTLISTMODEL_P_H
 
 #include <QtCore/qstringlist.h>
-#include <QtCore/QAbstractListModel>
+#include <QtCore/qabstractitemmodel.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <QtQml/qqmlparserstatus.h>
-#include <QtQml/qjsvalue.h>
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,8 +90,8 @@ public:
     bool monospacedFonts() const;
     bool proportionalFonts() const;
 
-    Q_INVOKABLE QJSValue get(int index) const;
-    Q_INVOKABLE QJSValue pointSizes();
+    Q_INVOKABLE QQmlV4Handle get(int index) const;
+    Q_INVOKABLE QQmlV4Handle pointSizes();
 
     virtual void classBegin();
     virtual void componentComplete();

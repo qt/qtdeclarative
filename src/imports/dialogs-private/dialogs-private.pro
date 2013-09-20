@@ -12,6 +12,6 @@ HEADERS += \
     qquickfontlistmodel_p.h \
     qquickwritingsystemlistmodel_p.h
 
-QT += quick-private gui-private core-private qml-private
+QT += gui-private core-private qml-private
 
 load(qml_plugin)
