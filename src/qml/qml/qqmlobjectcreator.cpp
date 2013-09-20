@@ -1301,6 +1301,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     setupBindings();
     setupFunctions();
 
+    allCreatedBindings.append(_createdBindings);
+
     qSwap(_qmlContext, qmlContext);
 
     qSwap(_createdBindings, createdBindings);
@@ -1309,8 +1311,6 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
     qSwap(_qobject, instance);
-
-    allCreatedBindings.append(_createdBindings);
 
     return errors.isEmpty();
 }
