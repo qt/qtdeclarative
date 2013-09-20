@@ -805,7 +805,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     assert(expr.code);
     initializer = *expr;
 
-    if (! _env->parent || _function->insideWithOrCatch) {
+    if (! _env->parent || _function->insideWithOrCatch || _mode == QmlBinding) {
         // it's global code.
         move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
     } else {
@@ -1343,6 +1343,9 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     uint scope = 0;
     Environment *e = _env;
     V4IR::Function *f = _function;
+
+    if (_mode == QmlBinding)
+        return _block->NAME(name, line, col);
 
     while (f && e->parent) {
         if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
