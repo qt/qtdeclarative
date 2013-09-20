@@ -2102,9 +2102,8 @@ void QQmlTypeData::dataReceived(const Data &data)
     QList<QQmlError> errors;
 
     // ### convert to use new data structure once old compiler is gone.
-    QList<QQmlScript::Import> imports;
-    if (m_useNewCompiler) {
-        imports.reserve(parsedQML->imports.size());
+    if (m_useNewCompiler && m_newImports.isEmpty()) {
+        m_newImports.reserve(parsedQML->imports.size());
         foreach (QV4::CompiledData::Import *i, parsedQML->imports) {
             QQmlScript::Import import;
             import.uri = parsedQML->stringAt(i->uriIndex);
@@ -2122,13 +2121,11 @@ void QQmlTypeData::dataReceived(const Data &data)
             }
 
 
-            imports << import;
+            m_newImports << import;
         }
-    } else {
-        imports = scriptParser.imports();
     }
 
-    foreach (const QQmlScript::Import &import, imports) {
+    foreach (const QQmlScript::Import &import, m_useNewCompiler ? m_newImports : scriptParser.imports()) {
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
