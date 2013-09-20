@@ -942,16 +942,26 @@ void QmlObjectCreator::setupBindings()
     qSwap(_currentList, savedList);
 
     QQmlPropertyData *property = 0;
+    bool defaultPropertyQueried = false;
+    QQmlPropertyData *defaultProperty = 0;
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
 
+        QString name = stringAt(binding->propertyNameIndex);
+        if (name.isEmpty())
+            property = 0;
+
         if (!property || (i > 0 && (binding - 1)->propertyNameIndex != binding->propertyNameIndex)) {
-            QString name = stringAt(binding->propertyNameIndex);
             if (!name.isEmpty())
                 property = _propertyCache->property(name, _qobject, context);
-            else
-                property = 0;
+            else {
+                if (!defaultPropertyQueried) {
+                    defaultProperty = _propertyCache->defaultProperty();
+                    defaultPropertyQueried = true;
+                }
+                property = defaultProperty;
+            }
 
             if (property && property->isQList()) {
                 void *argv[1] = { (void*)&_currentList };
