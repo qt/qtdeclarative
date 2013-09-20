@@ -43,6 +43,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qguiapplication_p.h>
 #include <QEvent>
 #include <QMouseEvent>
 #include <math.h>
@@ -675,6 +676,10 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
         QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
+        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&mouseEvent,
+                                                             QGuiApplicationPrivate::mouseEventCaps(event),
+                                                             QGuiApplicationPrivate::mouseEventVelocity(event));
+        QGuiApplicationPrivate::setMouseEventSource(&mouseEvent, Qt::MouseEventSynthesizedByQt);
 
         switch (mouseEvent.type()) {
         case QEvent::MouseMove:
