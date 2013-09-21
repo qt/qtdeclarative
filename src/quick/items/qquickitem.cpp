@@ -2101,6 +2101,12 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
 {
     Q_ASSERT(item);
 
+    if (!item->window())
+        return item;
+    const QQuickItem * const contentItem = item->window()->contentItem();
+    if (!contentItem)
+        return item;
+
     bool all = QQuickItemPrivate::qt_tab_all_widgets();
 
     QQuickItem *from = 0;
@@ -2113,7 +2119,6 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             from = item->parentItem();
     }
     bool skip = false;
-    const QQuickItem * const contentItem = item->window()->contentItem();
     const QQuickItem * const originalItem = item;
     QQuickItem * startItem = item;
     QQuickItem * firstFromItem = from;
@@ -7351,7 +7356,7 @@ void QQuickItemLayer::setFormat(QQuickShaderEffectSource::Format f)
 
 
 /*!
-    \qmlproperty enumeration QtQuick2::Item::layer.sourceRect
+    \qmlproperty rect QtQuick2::Item::layer.sourceRect
 
     This property defines the rectangular area of the item that should be
     rendered into the texture. The source rectangle can be larger than
