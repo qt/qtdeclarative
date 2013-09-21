@@ -1273,6 +1273,11 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                     const QString &signalName = stringAt(signal->nameIndex);
                     customSignals.insert(signalName, signal->parameterStringList(parsedQML->jsGenerator.strings));
                 }
+
+                for (QmlProperty *property = obj->properties->first; property; property = property->next) {
+                    const QString propName = stringAt(property->nameIndex);
+                    customSignals.insert(propName, QStringList());
+                }
             }
 
             QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);

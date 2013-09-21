@@ -486,6 +486,10 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , _vmeMetaObject(0)
     , _qmlContext(0)
 {
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    if (compiledData->compilationUnit && !compiledData->compilationUnit->engine)
+        compiledData->compilationUnit->linkToEngine(v4);
+
 }
 
 QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
@@ -938,16 +942,26 @@ void QmlObjectCreator::setupBindings()
     qSwap(_currentList, savedList);
 
     QQmlPropertyData *property = 0;
+    bool defaultPropertyQueried = false;
+    QQmlPropertyData *defaultProperty = 0;
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
 
+        QString name = stringAt(binding->propertyNameIndex);
+        if (name.isEmpty())
+            property = 0;
+
         if (!property || (i > 0 && (binding - 1)->propertyNameIndex != binding->propertyNameIndex)) {
-            QString name = stringAt(binding->propertyNameIndex);
             if (!name.isEmpty())
                 property = _propertyCache->property(name, _qobject, context);
-            else
-                property = 0;
+            else {
+                if (!defaultPropertyQueried) {
+                    defaultProperty = _propertyCache->defaultProperty();
+                    defaultPropertyQueried = true;
+                }
+                property = defaultProperty;
+            }
 
             if (property && property->isQList()) {
                 void *argv[1] = { (void*)&_currentList };
@@ -1155,10 +1169,18 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlType *type = typeRef.type;
         if (type) {
             instance = type->create();
+            if (!instance) {
+                recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
+                return 0;
+            }
         } else {
             Q_ASSERT(typeRef.component);
             QmlObjectCreator subCreator(context, typeRef.component);
             instance = subCreator.create();
+            if (!instance) {
+                errors += subCreator.errors;
+                return 0;
+            }
         }
         // ### use no-event variant
         if (parent)
@@ -1289,6 +1311,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     setupBindings();
     setupFunctions();
 
+    allCreatedBindings.append(_createdBindings);
+
     qSwap(_qmlContext, qmlContext);
 
     qSwap(_createdBindings, createdBindings);
@@ -1297,8 +1321,6 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
     qSwap(_qobject, instance);
-
-    allCreatedBindings.append(_createdBindings);
 
     return errors.isEmpty();
 }
