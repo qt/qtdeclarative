@@ -1010,19 +1010,45 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
-            QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType);
-            if (!valueType) {
-                recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
-                return false;
+
+            QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+            QQmlRefPointer<QQmlPropertyCache> groupedObjCache;
+            QObject *groupedObjInstance = 0;
+            QQmlValueType *valueType = 0;
+
+            if (QQmlValueTypeFactory::isValueType(property->propType)) {
+                valueType = QQmlValueTypeFactory::valueType(property->propType);
+                if (!valueType) {
+                    recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
+                    return false;
+                }
+
+                valueType->read(_qobject, property->coreIndex);
+
+                groupedObjCache = enginePrivate->cache(valueType);
+                groupedObjInstance = valueType;
+            } else {
+                groupedObjCache = enginePrivate->propertyCacheForType(property->propType);
+                if (!groupedObjCache) {
+                    recordError(binding->location, tr("Invalid grouped property access"));
+                    return false;
+                }
+                groupedObjInstance = valueType;
+
+                void *argv[1] = { &groupedObjInstance };
+                QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
+                if (!groupedObjInstance) {
+                    recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
+                    return false;
+                }
             }
 
-            valueType->read(_qobject, property->coreIndex);
-
-            QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(valueType);
-            if (!populateInstance(binding->value.objectIndex, valueType, cache, _qobject))
+            if (!populateInstance(binding->value.objectIndex, groupedObjInstance, groupedObjCache, _qobject))
                 return false;
 
-            valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
+            if (valueType)
+                valueType->write(_qobject, property->coreIndex, QQmlPropertyPrivate::BypassInterceptor);
+
             return true;
         }
     }
