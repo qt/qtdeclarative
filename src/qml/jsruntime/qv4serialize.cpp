@@ -259,7 +259,8 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         }
 
         // regular object
-        QV4::ArrayObject *properties = QV4::ObjectPrototype::getOwnPropertyNames(v4, v);
+        QV4::ScopedValue val(scope, v);
+        QV4::ScopedArrayObject properties(scope, QV4::ObjectPrototype::getOwnPropertyNames(v4, val));
         quint32 length = properties->arrayLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
@@ -267,7 +268,6 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
         }
         push(data, valueheader(WorkerObject, length));
 
-        QV4::ScopedValue val(scope);
         QV4::ScopedValue s(scope);
         QV4::ScopedString str(scope);
         for (quint32 ii = 0; ii < length; ++ii) {

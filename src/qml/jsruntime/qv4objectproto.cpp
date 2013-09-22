@@ -164,12 +164,13 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
 {
-    Object *O = context->argumentCount ? context->arguments[0].asObject() : 0;
+    Scope scope(context);
+    ScopedObject O(scope, context->argument(0));
     if (!O)
         context->throwTypeError();
 
-    ArrayObject *array = getOwnPropertyNames(context->engine, context->arguments[0]);
-    return Value::fromObject(array).asReturnedValue();
+    ScopedArrayObject array(scope, getOwnPropertyNames(context->engine, context->arguments[0]));
+    return array.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
@@ -385,13 +386,14 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
 
 ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     if (ctx->thisObject.isUndefined()) {
         return Value::fromString(ctx, QStringLiteral("[object Undefined]")).asReturnedValue();
     } else if (ctx->thisObject.isNull()) {
         return Value::fromString(ctx, QStringLiteral("[object Null]")).asReturnedValue();
     } else {
-        Value obj = Value::fromReturnedValue(__qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
-        QString className = obj.objectValue()->className();
+        ScopedObject obj(scope, __qmljs_to_object(ctx, ValueRef(&ctx->thisObject)));
+        QString className = obj->className();
         return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className)).asReturnedValue();
     }
 }
@@ -502,7 +504,8 @@ ReturnedValue ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 
 ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
 {
-    Object *o = ctx->thisObject.asObject();
+    Scope scope(ctx);
+    ScopedObject o(scope, ctx->thisObject.asObject());
     if (!o)
         ctx->throwTypeError();
 
@@ -537,11 +540,10 @@ ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
 
 void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs)
 {
-    if (!v.isObject())
-        ctx->throwTypeError();
-
     Scope scope(ctx);
-    Object *o = v.objectValue();
+    ScopedObject o(scope, v);
+    if (!o)
+        ctx->throwTypeError();
 
     attrs->clear();
     desc->setGetter(0);
@@ -606,7 +608,8 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
 
     ExecutionEngine *engine = ctx->engine;
     Scope scope(engine);
-//    Let obj be the result of creating a new object as if by the expression new Object() where Object is the standard built-in constructor with that name.
+    // Let obj be the result of creating a new object as if by the expression new Object() where Object
+    // is the standard built-in constructor with that name.
     Scoped<Object> o(scope, engine->newObject());
     ScopedString s(scope);
 
@@ -637,21 +640,20 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
 }
 
 
-ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
+Returned<ArrayObject> *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o)
 {
     Scope scope(v4);
     Scoped<ArrayObject> array(scope, v4->newArrayObject());
-    Object *O = o.asObject();
-    if (!O)
-        return array.getPointer();
-
-    ObjectIterator it(O, ObjectIterator::NoFlags);
-    ScopedValue name(scope);
-    while (1) {
-        name = it.nextPropertyNameAsString();
-        if (name->isNull())
-            break;
-        array->push_back(name);
+    ScopedObject O(scope, o);
+    if (O) {
+        ObjectIterator it(O.getPointer(), ObjectIterator::NoFlags);
+        ScopedValue name(scope);
+        while (1) {
+            name = it.nextPropertyNameAsString();
+            if (name->isNull())
+                break;
+            array->push_back(name);
+        }
     }
-    return array.getPointer();
+    return array->asReturned<ArrayObject>();
 }
