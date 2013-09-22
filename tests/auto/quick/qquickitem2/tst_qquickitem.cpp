@@ -76,6 +76,7 @@ private slots:
 
     void nextItemInFocusChain();
     void nextItemInFocusChain2();
+    void nextItemInFocusChain3();
 
     void keys();
     void standardKeys_data();
@@ -958,6 +959,18 @@ void tst_QQuickItem::nextItemInFocusChain2()
     QCOMPARE(prev, button12);
 
     delete window;
+}
+
+void tst_QQuickItem::nextItemInFocusChain3()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("nextItemInFocusChain3.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 }
 
 void tst_QQuickItem::keys()
