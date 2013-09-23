@@ -43,7 +43,7 @@ Rectangle {
         currentIndex: -1
         width: 240
         height: 320
-        cacheBuffer: 0
+        cacheBuffer: 60
         delegate: myDelegate
         highlightMoveVelocity: 1000
         model: testModel

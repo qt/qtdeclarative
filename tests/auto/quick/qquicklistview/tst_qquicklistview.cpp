@@ -736,6 +736,8 @@ void tst_QQuickListView::insertBeforeVisible()
 {
     QFETCH(int, insertIndex);
     QFETCH(int, insertCount);
+    QFETCH(int, removeIndex);
+    QFETCH(int, removeCount);
     QFETCH(int, cacheBuffer);
 
     QQuickText *name;
@@ -775,14 +777,19 @@ void tst_QQuickListView::insertBeforeVisible()
     QVERIFY(item);
     QCOMPARE(item->y(), listview->contentY());
 
-    QList<QPair<QString, QString> > newData;
-    for (int i=0; i<insertCount; i++)
-        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
-    model.insertItems(insertIndex, newData);
-    QTRY_COMPARE(listview->property("count").toInt(), model.count());
+    if (removeCount > 0)
+        model.removeItems(removeIndex, removeCount);
+
+    if (insertCount > 0) {
+        QList<QPair<QString, QString> > newData;
+        for (int i=0; i<insertCount; i++)
+            newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+        model.insertItems(insertIndex, newData);
+        QTRY_COMPARE(listview->property("count").toInt(), model.count());
+    }
 
     // now, moving to the top of the view should position the inserted items correctly
-    int itemsOffsetAfterMove = -(insertCount * 20);
+    int itemsOffsetAfterMove = (removeCount - insertCount) * 20;
     listview->setCurrentIndex(0);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     QTRY_COMPARE(listview->currentIndex(), 0);
@@ -807,23 +814,41 @@ void tst_QQuickListView::insertBeforeVisible_data()
 {
     QTest::addColumn<int>("insertIndex");
     QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("removeIndex");
+    QTest::addColumn<int>("removeCount");
     QTest::addColumn<int>("cacheBuffer");
 
-    QTest::newRow("insert 1 at 0, 0 buffer") << 0 << 1 << 0;
-    QTest::newRow("insert 1 at 0, 100 buffer") << 0 << 1 << 100;
-    QTest::newRow("insert 1 at 0, 500 buffer") << 0 << 1 << 500;
+    QTest::newRow("insert 1 at 0, 0 buffer") << 0 << 1 << 0 << 0 << 0;
+    QTest::newRow("insert 1 at 0, 100 buffer") << 0 << 1 << 0 << 0 << 100;
+    QTest::newRow("insert 1 at 0, 500 buffer") << 0 << 1 << 0 << 0 << 500;
 
-    QTest::newRow("insert 1 at 1, 0 buffer") << 1 << 1 << 0;
-    QTest::newRow("insert 1 at 1, 100 buffer") << 1 << 1 << 100;
-    QTest::newRow("insert 1 at 1, 500 buffer") << 1 << 1 << 500;
+    QTest::newRow("insert 1 at 1, 0 buffer") << 1 << 1 << 0 << 0 << 0;
+    QTest::newRow("insert 1 at 1, 100 buffer") << 1 << 1 << 0 << 0 << 100;
+    QTest::newRow("insert 1 at 1, 500 buffer") << 1 << 1 << 0 << 0 << 500;
 
-    QTest::newRow("insert multiple at 0, 0 buffer") << 0 << 3 << 0;
-    QTest::newRow("insert multiple at 0, 100 buffer") << 0 << 3 << 100;
-    QTest::newRow("insert multiple at 0, 500 buffer") << 0 << 3 << 500;
+    QTest::newRow("insert multiple at 0, 0 buffer") << 0 << 3 << 0 << 0 << 0;
+    QTest::newRow("insert multiple at 0, 100 buffer") << 0 << 3 << 0 << 0 << 100;
+    QTest::newRow("insert multiple at 0, 500 buffer") << 0 << 3 << 0 << 0 << 500;
 
-    QTest::newRow("insert multiple at 1, 0 buffer") << 1 << 3 << 0;
-    QTest::newRow("insert multiple at 1, 100 buffer") << 1 << 3 << 100;
-    QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 3 << 500;
+    QTest::newRow("insert multiple at 1, 0 buffer") << 1 << 3 << 0 << 0 << 0;
+    QTest::newRow("insert multiple at 1, 100 buffer") << 1 << 3 << 0 << 0 << 100;
+    QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 3 << 0 << 0 << 500;
+
+    QTest::newRow("remove 1 at 0, 0 buffer") << 0 << 0 << 0 << 1 << 0;
+    QTest::newRow("remove 1 at 0, 100 buffer") << 0 << 0 << 0 << 1 << 100;
+    QTest::newRow("remove 1 at 0, 500 buffer") << 0 << 0 << 0 << 1 << 500;
+
+    QTest::newRow("remove 1 at 1, 0 buffer") << 0 << 0 << 1 << 1 << 0;
+    QTest::newRow("remove 1 at 1, 100 buffer") << 0 << 0 << 1 << 1 << 100;
+    QTest::newRow("remove 1 at 1, 500 buffer") << 0 << 0 << 1 << 1 << 500;
+
+    QTest::newRow("remove multiple at 0, 0 buffer") << 0 << 0 << 0 << 3 << 0;
+    QTest::newRow("remove multiple at 0, 100 buffer") << 0 << 0 << 0 << 3 << 100;
+    QTest::newRow("remove multiple at 0, 500 buffer") << 0 << 0 << 0 << 3 << 500;
+
+    QTest::newRow("remove multiple at 1, 0 buffer") << 0 << 0 << 1 << 3 << 0;
+    QTest::newRow("remove multiple at 1, 100 buffer") << 0 << 0 << 1 << 3 << 100;
+    QTest::newRow("remove multiple at 1, 500 buffer") << 0 << 0 << 1 << 3 << 500;
 }
 
 template <class T>

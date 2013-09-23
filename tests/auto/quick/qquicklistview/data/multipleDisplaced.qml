@@ -44,7 +44,7 @@ Rectangle {
         anchors.centerIn: parent
         width: 240
         height: 320
-        cacheBuffer: 0
+        cacheBuffer: 60
         model: testModel
         delegate: myDelegate
 

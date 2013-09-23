@@ -68,6 +68,6 @@ Rectangle {
         height: 320
         model: visualModel.parts.package
         section.property: "number"
-        cacheBuffer: 0
+        cacheBuffer: 60
     }
 }
