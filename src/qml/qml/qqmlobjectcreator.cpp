@@ -1241,6 +1241,9 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 errors += subCreator.errors;
                 return 0;
             }
+            if (subCreator.componentAttached)
+                subCreator.componentAttached->add(&componentAttached);
+            allCreatedBindings << subCreator.allCreatedBindings;
         }
         // ### use no-event variant
         if (parent)
