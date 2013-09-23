@@ -1270,7 +1270,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
         Q_ASSERT(!cache.isNull());
 
-        if (!populateInstance(index, instance, cache, _qobject, /*value type property*/0))
+        if (!populateInstance(index, instance, cache, instance, /*value type property*/0))
             return 0;
     }
 
@@ -1327,8 +1327,7 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
-    if (!scopeObjectForBindings)
-        scopeObjectForBindings = instance;
+    Q_ASSERT(scopeObjectForBindings);
 
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
