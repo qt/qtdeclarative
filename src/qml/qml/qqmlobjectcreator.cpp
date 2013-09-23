@@ -534,6 +534,8 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
         ddata->compiledData = compiledData;
         ddata->compiledData->addref();
 
+        context->contextObject = instance;
+
         QQmlEnginePrivate::get(engine)->registerInternalCompositeType(compiledData);
     }
     return instance;
