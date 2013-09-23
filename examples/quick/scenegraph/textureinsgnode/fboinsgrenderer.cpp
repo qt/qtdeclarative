@@ -46,84 +46,30 @@
 #include <QtQuick/QQuickWindow>
 #include <qsgsimpletexturenode.h>
 
-
-
-
-class TextureNode : public QObject, public QSGSimpleTextureNode
+class LogoInFboRenderer : public QQuickFramebufferObject::Renderer
 {
-    Q_OBJECT
-
 public:
-    TextureNode(QQuickWindow *window)
-        : m_fbo(0)
-        , m_texture(0)
-        , m_window(window)
-        , m_logoRenderer(0)
+    LogoInFboRenderer()
     {
-        connect(m_window, SIGNAL(beforeRendering()), this, SLOT(renderFBO()));
+        logo.initialize();
     }
 
-    ~TextureNode()
-    {
-        delete m_texture;
-        delete m_fbo;
-        delete m_logoRenderer;
+    void render() {
+        logo.render();
+        update();
     }
 
-public slots:
-    void renderFBO()
-    {
-        QSize size = rect().size().toSize();
-
-        if (!m_fbo) {
-
-            QOpenGLFramebufferObjectFormat format;
-            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            m_fbo = new QOpenGLFramebufferObject(size, format);
-            m_texture = m_window->createTextureFromId(m_fbo->texture(), size);
-            m_logoRenderer = new LogoRenderer();
-            m_logoRenderer->initialize();
-            setTexture(m_texture);
-        }
-
-        m_fbo->bind();
-
-        glViewport(0, 0, size.width(), size.height());
-
-        m_logoRenderer->render();
-
-        m_fbo->bindDefault();
-
-        m_window->update();
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) {
+        QOpenGLFramebufferObjectFormat format;
+        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+        format.setSamples(4);
+        return new QOpenGLFramebufferObject(size, format);
     }
 
-private:
-    QOpenGLFramebufferObject *m_fbo;
-    QSGTexture *m_texture;
-    QQuickWindow *m_window;
-
-    LogoRenderer *m_logoRenderer;
+    LogoRenderer logo;
 };
 
-
-
-FboInSGRenderer::FboInSGRenderer()
+QQuickFramebufferObject::Renderer *FboInSGRenderer::createRenderer() const
 {
-    setFlag(ItemHasContents, true);
+    return new LogoInFboRenderer();
 }
-
-
-QSGNode *FboInSGRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
-{
-    // Don't bother with resize and such, just recreate the node from scratch
-    // when geometry changes.
-    if (oldNode)
-        delete oldNode;
-
-    TextureNode *node = new TextureNode(window());
-    node->setRect(boundingRect());
-
-    return node;
-}
-
-#include "fboinsgrenderer.moc"
