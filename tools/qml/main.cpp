@@ -193,6 +193,7 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
     case QtCriticalMsg:
     case QtDebugMsg:
     case QtWarningMsg:
+    default:
         ;
     }
 }
