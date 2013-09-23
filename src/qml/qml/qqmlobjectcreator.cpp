@@ -1161,7 +1161,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             bool isAssignable = false;
             // Determine isAssignable value
             if (propertyMetaObject) {
-                QQmlPropertyCache *c = enginePrivate->cache(createdSubObject);
+                QQmlPropertyCache *c = propertyCaches.value(binding->value.objectIndex);
+                if (!c)
+                    c = enginePrivate->cache(createdSubObject);
                 while (c && !isAssignable) {
                     isAssignable |= c == propertyMetaObject;
                     c = c->parent();
