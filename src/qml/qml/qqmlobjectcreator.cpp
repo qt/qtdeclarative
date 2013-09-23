@@ -945,6 +945,20 @@ void QmlObjectCreator::setupBindings()
     bool defaultPropertyQueried = false;
     QQmlPropertyData *defaultProperty = 0;
 
+    QString id = stringAt(_compiledObject->idIndex);
+    if (!id.isEmpty()) {
+        QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
+        if (idProperty) {
+            QV4::CompiledData::Binding idBinding;
+            idBinding.propertyNameIndex = 0; // Not used
+            idBinding.flags = 0;
+            idBinding.type = QV4::CompiledData::Binding::Type_String;
+            idBinding.stringIndex = _compiledObject->idIndex;
+            idBinding.location = _compiledObject->location; // ###
+            setPropertyValue(idProperty, &idBinding);
+        }
+    }
+
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
 
