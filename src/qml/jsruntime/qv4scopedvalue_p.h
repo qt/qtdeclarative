@@ -439,6 +439,10 @@ struct Referenced {
     Referenced(const Scoped<T> &v)
         : ptr(v.ptr) {}
     Referenced(Safe<T> &v) { ptr = &v; }
+    Referenced(SafeValue &v) {
+        ptr = value_cast<T>(v) ? &v : 0;
+    }
+
     Referenced &operator=(const Referenced &o)
     { *ptr = *o.ptr; return *this; }
     Referenced &operator=(T *t)
@@ -465,7 +469,7 @@ struct Referenced {
     T *getPointer() const {
         return static_cast<T *>(ptr->managed());
     }
-    ReturnedValue asReturnedValue() const { return ptr->val; }
+    ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Value::undefinedValue().asReturnedValue(); }
 
     static Referenced null() { return Referenced(Null); }
     bool isNull() const { return !ptr; }
@@ -643,7 +647,7 @@ PersistentValue::PersistentValue(Returned<T> *obj)
 }
 
 template<typename T>
-inline PersistentValue::PersistentValue(const Scoped<T> &obj)
+inline PersistentValue::PersistentValue(const Referenced<T> obj)
     : d(new PersistentValuePrivate(*obj.ptr))
 {
 }
@@ -655,7 +659,7 @@ inline PersistentValue &PersistentValue::operator=(Returned<T> *obj)
 }
 
 template<typename T>
-inline PersistentValue &PersistentValue::operator=(const Scoped<T> &obj)
+inline PersistentValue &PersistentValue::operator=(const Referenced<T> obj)
 {
     return operator=(*obj.ptr);
 }

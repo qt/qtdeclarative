@@ -1087,7 +1087,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
 
     // If compilation throws an error, a surrounding catch will record it.
     // pass 0 as the QML object, we set it later before calling run()
-    QV4::Script *program = new QV4::Script(v4, 0, m_programSource, urlString, 1);
+    QV4::Script *program = new QV4::Script(v4, QV4::ObjectRef::null(), m_programSource, urlString, 1);
     try {
         program->parse();
     } catch (QV4::Exception &) {

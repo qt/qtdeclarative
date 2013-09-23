@@ -297,7 +297,8 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
         }
         if (query.exec()) {
             QQmlSqlDatabaseWrapper *rows = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-            rows->setPrototype(databaseData(engine)->rowsProto.value().asObject());
+            QV4::ScopedObject p(scope, databaseData(engine)->rowsProto.value());
+            rows->setPrototype(p.getPointer());
             rows->type = QQmlSqlDatabaseWrapper::Rows;
             rows->database = db;
             rows->sqlQuery = query;
@@ -344,7 +345,8 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
 
     QQmlSqlDatabaseWrapper *w = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    w->setPrototype(databaseData(engine)->queryProto.value().asObject());
+    QV4::ScopedObject p(scope, databaseData(engine)->queryProto.value());
+    w->setPrototype(p.getPointer());
     w->type = QQmlSqlDatabaseWrapper::Query;
     w->database = db;
     w->version = r->version;
@@ -401,7 +403,8 @@ static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, b
     QSqlDatabase db = r->database;
 
     QQmlSqlDatabaseWrapper *w = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    w->setPrototype(databaseData(engine)->queryProto.value().asObject());
+    QV4::ScopedObject p(scope, databaseData(engine)->queryProto.value());
+    w->setPrototype(p.getPointer());
     w->type = QQmlSqlDatabaseWrapper::Query;
     w->database = db;
     w->version = r->version;
@@ -684,7 +687,8 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     }
 
     QQmlSqlDatabaseWrapper *db = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
-    db->setPrototype(databaseData(engine)->databaseProto.value().asObject());
+    QV4::ScopedObject p(scope, databaseData(engine)->databaseProto.value());
+    db->setPrototype(p.getPointer());
     db->database = database;
     db->version = version;
 

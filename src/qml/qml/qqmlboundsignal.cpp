@@ -86,7 +86,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     m_expression = expression;
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::PersistentValue &function)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_v8function(function),
       m_line(-1),
@@ -128,7 +128,9 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        return m_v8function.value().toQStringNoThrow();
+        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
+        QV4::ScopedValue v(scope, m_v8function.value());
+        return v->toQStringNoThrow();
     } else {
         return m_expression;
     }
@@ -144,6 +146,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         return;
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
+    QV4::Scope scope(ep->v4engine());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
@@ -181,7 +184,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_v8function = evalFunction(context(), scopeObject(), expression,
                                         m_fileName, m_line, &m_v8qmlscope);
 
-            if (m_v8function.isUndefined() || m_v8function.value().isNull()) {
+            if (m_v8function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
@@ -223,7 +226,8 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             }
         }
 
-        QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args, 0);
+        QV4::ScopedValue f(scope, m_v8function.value());
+        QQmlJavaScriptExpression::evaluate(context(), f, argCount, args, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

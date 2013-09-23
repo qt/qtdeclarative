@@ -1233,13 +1233,13 @@ public:
     {
         QQmlData *ddata = QQmlData::get(this);
         assert(ddata);
-        QV4::QObjectWrapper *thisObject = ddata->jsWrapper.value().as<QV4::QObjectWrapper>();
+        QV4::QObjectWrapper *thisObject = QV4::Value::fromReturnedValue(ddata->jsWrapper.value()).as<QV4::QObjectWrapper>();
         assert(thisObject);
 
         QQmlData *otherDData = QQmlData::get(other);
         assert(otherDData);
 
-        thisObject->defineDefaultProperty(QStringLiteral("autoTestStrongRef"), otherDData->jsWrapper.value());
+        thisObject->defineDefaultProperty(QStringLiteral("autoTestStrongRef"), QV4::Value::fromReturnedValue(otherDData->jsWrapper.value()));
     }
 
     void setEngine(QQmlEngine* declarativeEngine)

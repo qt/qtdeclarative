@@ -244,9 +244,13 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 // Requires handle and context scope
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
-    QV4::FunctionObject *f = createsend.value().asFunctionObject();
-    QV4::ExecutionContext *ctx = f->engine()->current;
-    QV4::Scope scope(ctx->engine);
+    QV4::ExecutionEngine *v4 = createsend.engine();
+    if (!v4)
+        return QV4::Encode::undefined();
+
+    QV4::Scope scope(v4);
+    QV4::ScopedFunctionObject f(scope, createsend.value());
+    QV4::ExecutionContext *ctx = v4->current;
 
     QV4::ScopedValue v(scope);
     try {
@@ -315,12 +319,12 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         QV4::Scoped<QV4::Object> api(scope, v4->newObject());
         api->put(QV4::ScopedString(scope, v4->newString("sendMessage")), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
-        script->object.value().asObject()->put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
+        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
 
         w->setReadOnly(true);
     }
 
-    return script->object.value().asReturnedValue();
+    return script->object.value();
 }
 
 bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
@@ -351,9 +355,10 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
-    QV4::ExecutionContext *ctx = f->internalClass->engine->current;
-    QV4::Scope scope(ctx);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+    QV4::Scope scope(v4);
+    QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
+    QV4::ExecutionContext *ctx = v4->current;
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
@@ -396,7 +401,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         if (!activation)
             return;
 
-        QV4::Script program(v4, activation.getPointer(), sourceCode, url.toString());
+        QV4::Script program(v4, activation, sourceCode, url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
         try {

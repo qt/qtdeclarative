@@ -236,6 +236,8 @@ struct Q_QML_EXPORT ExecutionEngine
 
     RegExpCache *regExpCache;
 
+    SafeValue exceptionValue;
+
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
     // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
     // out-of-resource situations.  When such a resource is passed into JavaScript we

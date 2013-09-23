@@ -512,9 +512,11 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
 
     QV8ParticleDataDeletable *d = particleV8Data(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Object *o = new (v4->memoryManager) QV4ParticleData(v4, datum);
-    o->setPrototype(d->proto.value().asObject());
-    m_v4Value = QV4::Value::fromObject(o);
+    QV4::Scope scope(v4);
+    QV4::ScopedObject o(scope, new (v4->memoryManager) QV4ParticleData(v4, datum));
+    QV4::ScopedObject p(scope, d->proto.value());
+    o->setPrototype(p.getPointer());
+    m_v4Value = o;
 }
 
 QQuickV4ParticleData::~QQuickV4ParticleData()
@@ -523,7 +525,7 @@ QQuickV4ParticleData::~QQuickV4ParticleData()
 
 QQmlV4Handle QQuickV4ParticleData::v4Value()
 {
-    return QQmlV4Handle(m_v4Value);
+    return QQmlV4Handle(QV4::Value::fromReturnedValue(m_v4Value.value()));
 }
 
 QT_END_NAMESPACE

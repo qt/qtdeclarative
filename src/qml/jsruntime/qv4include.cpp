@@ -62,9 +62,9 @@ QV4Include::QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *cont
                        const QV4::Value &qmlglobal, const QV4::Value &callback)
     : v4(QV8Engine::getV4(engine)), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = qmlglobal;
+    m_qmlglobal = qmlglobal.asReturnedValue();
     if (callback.asFunctionObject())
-        m_callbackFunction = callback;
+        m_callbackFunction = callback.asReturnedValue();
 
     m_resultObject = resultValue(v4);
 
@@ -119,7 +119,7 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
 
 QV4::ReturnedValue QV4Include::result()
 {
-    return m_resultObject.value().asReturnedValue();
+    return m_resultObject.value();
 }
 
 #define INCLUDE_MAXIMUM_REDIRECT_RECURSION 15
@@ -143,32 +143,34 @@ void QV4Include::finished()
     }
 
     QV4::Scope scope(v4);
+    QV4::ScopedObject resultObj(scope, m_resultObject.value());
     if (m_reply->error() == QNetworkReply::NoError) {
         QByteArray data = m_reply->readAll();
 
         QString code = QString::fromUtf8(data);
         QQmlScript::Parser::extractPragmas(code);
 
-        QV4::Script script(v4, m_qmlglobal.value().asObject(), code, m_url.toString());
+        QV4::ScopedObject qmlglobal(scope, m_qmlglobal.value());
+        QV4::Script script(v4, qmlglobal, code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        QV4::Scoped<QV4::Object> o(scope, m_resultObject.value());
         QV4::ScopedString status(scope, v4->newString("status"));
         try {
             script.parse();
             script.run();
-            o->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Ok)));
+            resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Ok)));
         } catch (QV4::Exception &e) {
             e.accept(ctx);
-            o->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Exception)));
+            resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Exception)));
             QV4::ScopedValue ex(scope, e.value());
-            o->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
+            resultObj->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
         }
     } else {
-        m_resultObject.value().asObject()->put(QV4::ScopedString(scope, v4->newString("status")), QV4::ScopedValue(scope, QV4::Value::fromInt32(NetworkError)));
+        resultObj->put(QV4::ScopedString(scope, v4->newString("status")), QV4::ScopedValue(scope, QV4::Value::fromInt32(NetworkError)));
     }
 
-    callback(m_callbackFunction.value(), m_resultObject.value());
+    QV4::ScopedValue cb(scope, m_callbackFunction.value());
+    callback(cb, resultObj.asValue());
 
     disconnect();
     deleteLater();
@@ -216,7 +218,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
             QString code = QString::fromUtf8(data);
             QQmlScript::Parser::extractPragmas(code);
 
-            QV4::Script script(v4, qmlcontextobject.getPointer(), code, url.toString());
+            QV4::Script script(v4, qmlcontextobject, code, url.toString());
 
             QV4::ExecutionContext *ctx = v4->current;
             try {

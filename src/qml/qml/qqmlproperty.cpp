@@ -1460,7 +1460,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
                                                const QQmlPropertyData &core,
                                                QQmlContextData *context,
                                                QQmlJavaScriptExpression *expression,
-                                               const QV4::Value &result, bool isUndefined,
+                                               const QV4::ValueRef result, bool isUndefined,
                                                WriteFlags flags)
 {
     Q_ASSERT(object);
@@ -1482,22 +1482,22 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     if (!isUndefined && !core.isValueTypeVirtual()) {
         switch (core.propType) {
         case QMetaType::Int:
-            if (result.isInteger())
-                QUICK_STORE(int, result.integerValue())
-            else if (result.isNumber())
-                QUICK_STORE(int, qRound(result.doubleValue()))
+            if (result->isInteger())
+                QUICK_STORE(int, result->integerValue())
+            else if (result->isNumber())
+                QUICK_STORE(int, qRound(result->doubleValue()))
             break;
         case QMetaType::Double:
-            if (result.isNumber())
-                QUICK_STORE(double, result.asDouble())
+            if (result->isNumber())
+                QUICK_STORE(double, result->asDouble())
             break;
         case QMetaType::Float:
-            if (result.isNumber())
-                QUICK_STORE(float, result.asDouble())
+            if (result->isNumber())
+                QUICK_STORE(float, result->asDouble())
             break;
         case QMetaType::QString:
-            if (result.isString())
-                QUICK_STORE(QString, result.toQStringNoThrow())
+            if (result->isString())
+                QUICK_STORE(QString, result->toQStringNoThrow())
             break;
         default:
             break;
@@ -1514,19 +1514,19 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
     if (isUndefined) {
     } else if (core.isQList()) {
-        value = v8engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
-    } else if (result.isNull() && core.isQObject()) {
+        value = v8engine->toVariant(*result, qMetaTypeId<QList<QObject *> >());
+    } else if (result->isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
     } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
-        value = resolvedUrlSequence(v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context);
+        value = resolvedUrlSequence(v8engine->toVariant(*result, qMetaTypeId<QList<QUrl> >()), context);
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
-        value = v8engine->toVariant(result, type);
+        value = v8engine->toVariant(*result, type);
     }
 
     if (expression->hasError()) {
         return false;
     } else if (isVarProperty) {
-        QV4::FunctionObject *f = result.asFunctionObject();
+        QV4::FunctionObject *f = result->asFunctionObject();
         if (f && f->bindingKeyFlag) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
             // in an array in a var property if they need to, but the common case is user error.
@@ -1537,14 +1537,14 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(core.coreIndex, result);
+        vmemo->setVMEProperty(core.coreIndex, *result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         writeValueProperty(object, core, QVariant(), context, flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
-        QV4::FunctionObject *f = result.asFunctionObject();
+        QV4::FunctionObject *f = result->asFunctionObject();
         if (f && f->bindingKeyFlag) {
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             expression->delayedError()->setErrorObject(object);
@@ -1562,7 +1562,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->setErrorDescription(errorStr);
         expression->delayedError()->setErrorObject(object);
         return false;
-    } else if (QV4::FunctionObject *f = result.asFunctionObject()) {
+    } else if (QV4::FunctionObject *f = result->asFunctionObject()) {
         if (f->bindingKeyFlag)
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else

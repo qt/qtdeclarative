@@ -149,7 +149,7 @@ using namespace QV4;
   Constructs a new QJSValue with a boolean \a value.
 */
 QJSValue::QJSValue(bool value)
-    : d(new QJSValuePrivate(0, Value::fromBoolean(value)))
+    : d(new QJSValuePrivate(Encode(value)))
 {
 }
 
@@ -162,7 +162,7 @@ QJSValue::QJSValue(QJSValuePrivate *dd)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(int value)
-    : d(new QJSValuePrivate(0, Value::fromInt32(value)))
+    : d(new QJSValuePrivate(Encode(value)))
 {
 }
 
@@ -170,7 +170,7 @@ QJSValue::QJSValue(int value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(uint value)
-    : d(new QJSValuePrivate(0, Value::fromUInt32(value)))
+    : d(new QJSValuePrivate(Encode(value)))
 {
 }
 
@@ -178,7 +178,7 @@ QJSValue::QJSValue(uint value)
   Constructs a new QJSValue with a number \a value.
 */
 QJSValue::QJSValue(double value)
-    : d(new QJSValuePrivate(0, Value::fromDouble(value)))
+    : d(new QJSValuePrivate(Encode(value)))
 {
 }
 
@@ -194,7 +194,7 @@ QJSValue::QJSValue(const QString& value)
   Constructs a new QJSValue with a special \a value.
 */
 QJSValue::QJSValue(SpecialValue value)
-    : d(new QJSValuePrivate(0, value == UndefinedValue ? Value::undefinedValue() : Value::nullValue()))
+    : d(new QJSValuePrivate(value == UndefinedValue ? Encode::undefined() : Encode::null()))
 {
 }
 
@@ -673,7 +673,7 @@ QJSValue QJSValue::prototype() const
     Scoped<Object> p(scope, o->prototype());
     if (!p)
         return QJSValue(NullValue);
-    return new QJSValuePrivate(o->internalClass->engine, p.asValue());
+    return new QJSValuePrivate(o->internalClass->engine, p);
 }
 
 /*!

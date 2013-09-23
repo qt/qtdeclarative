@@ -579,13 +579,14 @@ ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
 
 Value NodePrototype::getProto(ExecutionEngine *v4)
 {
+    Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->nodePrototype.isUndefined()) {
-        Object *p = new (v4->memoryManager) NodePrototype(v4);
-        d->nodePrototype = Value::fromObject(p);
-        v4->v8Engine->freezeObject(d->nodePrototype.value());
+        ScopedObject p(scope, new (v4->memoryManager) NodePrototype(v4));
+        d->nodePrototype = p;
+        v4->v8Engine->freezeObject(p.asValue());
     }
-    return d->nodePrototype.value();
+    return Value::fromReturnedValue(d->nodePrototype.value());
 }
 
 Value Node::create(QV8Engine *engine, NodeImpl *data)
@@ -631,9 +632,9 @@ Value Element::prototype(ExecutionEngine *engine)
         p->setPrototype(NodePrototype::getProto(engine).asObject());
         p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
         d->elementPrototype = p;
-        engine->v8Engine->freezeObject(d->elementPrototype.value());
+        engine->v8Engine->freezeObject(p.asValue());
     }
-    return d->elementPrototype.value();
+    return Value::fromReturnedValue(d->elementPrototype.value());
 }
 
 Value Attr::prototype(ExecutionEngine *engine)
@@ -647,9 +648,9 @@ Value Attr::prototype(ExecutionEngine *engine)
         p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
         p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
         d->attrPrototype = p;
-        engine->v8Engine->freezeObject(d->attrPrototype.value());
+        engine->v8Engine->freezeObject(p.asValue());
     }
-    return d->attrPrototype.value();
+    return Value::fromReturnedValue(d->attrPrototype.value());
 }
 
 ReturnedValue Attr::method_name(SimpleCallContext *ctx)
@@ -702,9 +703,9 @@ Value CharacterData::prototype(ExecutionEngine *v4)
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
         d->characterDataPrototype = p;
-        v4->v8Engine->freezeObject(d->characterDataPrototype);
+        v4->v8Engine->freezeObject(p.asValue());
     }
-    return d->characterDataPrototype.value();
+    return Value::fromReturnedValue(d->characterDataPrototype.value());
 }
 
 ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
@@ -735,9 +736,9 @@ Value Text::prototype(ExecutionEngine *v4)
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
         p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
         d->textPrototype = p;
-        v4->v8Engine->freezeObject(d->textPrototype);
+        v4->v8Engine->freezeObject(p.asValue());
     }
-    return d->textPrototype.value();
+    return Value::fromReturnedValue(d->textPrototype.value());
 }
 
 Value CDATA::prototype(ExecutionEngine *v4)
@@ -749,9 +750,9 @@ Value CDATA::prototype(ExecutionEngine *v4)
         Scoped<Object> p(scope, v4->newObject());
         p->setPrototype(Text::prototype(v4).asObject());
         d->cdataPrototype = p;
-        v4->v8Engine->freezeObject(d->cdataPrototype);
+        v4->v8Engine->freezeObject(p.asValue());
     }
-    return d->cdataPrototype.value();
+    return Value::fromReturnedValue(d->cdataPrototype.value());
 }
 
 Value Document::prototype(ExecutionEngine *v4)
@@ -766,9 +767,9 @@ Value Document::prototype(ExecutionEngine *v4)
         p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
         p->defineAccessorProperty(QStringLiteral("documentElement"), method_documentElement, 0);
         d->documentPrototype = p;
-        v4->v8Engine->freezeObject(d->documentPrototype);
+        v4->v8Engine->freezeObject(p.asValue());
     }
-    return d->documentPrototype.value();
+    return Value::fromReturnedValue(d->documentPrototype.value());
 }
 
 ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
@@ -1284,7 +1285,7 @@ ReturnedValue QQmlXMLHttpRequest::abort(const ValueRef me)
 
 ReturnedValue QQmlXMLHttpRequest::getMe() const
 {
-    return m_me.value().asReturnedValue();
+    return m_me.value();
 }
 
 void QQmlXMLHttpRequest::setMe(const ValueRef me)

@@ -101,6 +101,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
+    exceptionValue = Encode::undefined();
+
     if (!factory) {
 
 #ifdef V4_ENABLE_JIT
@@ -734,6 +736,8 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark();
     typeErrorCtor.mark();
     uRIErrorCtor.mark();
+
+    exceptionValue.mark();
 
     thrower->mark();
 

@@ -3905,8 +3905,11 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
 
             if (qmlglobal.isUndefined())
                 continue;
+            QV4::Scope scope(QV8Engine::getV4((engine)));
+            QV4::ScopedValue qml(scope, qmlglobal.value());
 
-            scriptContext = QV4::QmlContextWrapper::getContext(qmlglobal);
+            scriptContext = QV4::QmlContextWrapper::getContext(qml);
+            qml = QV4::Encode::undefined();
 
             {
                 QV4::Scope scope(QV8Engine::getV4((engine)));
@@ -3915,7 +3918,8 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             }
 
             engine->gc();
-            newContext = QV4::QmlContextWrapper::getContext(qmlglobal);
+            qml = qmlglobal.value();
+            newContext = QV4::QmlContextWrapper::getContext(qml);
             QVERIFY(scriptContext == newContext);
         }
     }
@@ -4992,11 +4996,11 @@ void tst_qqmlecmascript::propertyVarInheritance()
     {
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        QV4::Value tmp = QV4::Value::fromReturnedValue(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
+        QV4::ReturnedValue tmp = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
         icoCanaryHandle = tmp;
-        tmp = QV4::Value::fromReturnedValue(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
+        tmp = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
         ccoCanaryHandle = tmp;
-        tmp = QV4::Value::nullValue();
+        tmp = QV4::Encode::null();
         QVERIFY(!icoCanaryHandle.isUndefined());
         QVERIFY(!ccoCanaryHandle.isUndefined());
         gc(engine);
@@ -5038,9 +5042,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        QV4::Value tmp = QV4::Value::fromReturnedValue(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
-        childObjectVarArrayValueHandle = tmp;
-        tmp = QV4::Value::nullValue();
+        childObjectVarArrayValueHandle = QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp"));
         QVERIFY(!childObjectVarArrayValueHandle.isUndefined());
         gc(engine);
         QVERIFY(!childObjectVarArrayValueHandle.isUndefined()); // should not have been collected yet.

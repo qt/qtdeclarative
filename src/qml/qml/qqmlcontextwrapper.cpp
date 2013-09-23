@@ -188,7 +188,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
             if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value().asReturnedValue();
+                    return context->importedScripts.at(index).value();
                 else
                     return QV4::Value::undefinedValue().asReturnedValue();
             } else if (r.type) {
@@ -318,13 +318,13 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 
         // Search scope object
         if (scopeObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
 
         context = context->parent;

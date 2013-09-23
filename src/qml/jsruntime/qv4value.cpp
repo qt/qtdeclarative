@@ -285,18 +285,13 @@ Object *Value::toObject(ExecutionContext *ctx) const
 }
 
 
-PersistentValue::PersistentValue(const Value &val)
-    : d(new PersistentValuePrivate(val))
-{
-}
-
-PersistentValue::PersistentValue(const ScopedValue &val)
-    : d(new PersistentValuePrivate(*val.operator ->()))
+PersistentValue::PersistentValue(const ValueRef val)
+    : d(new PersistentValuePrivate(val.asReturnedValue()))
 {
 }
 
 PersistentValue::PersistentValue(ReturnedValue val)
-    : d(new PersistentValuePrivate(Value::fromReturnedValue(val)))
+    : d(new PersistentValuePrivate(val))
 {
 }
 
@@ -323,7 +318,17 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
     return *this;
 }
 
-PersistentValue &PersistentValue::operator =(const Value &other)
+PersistentValue &PersistentValue::operator =(const ValueRef other)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(other.asReturnedValue());
+        return *this;
+    }
+    d = d->detach(other.asReturnedValue());
+    return *this;
+}
+
+PersistentValue &PersistentValue::operator =(ReturnedValue other)
 {
     if (!d) {
         d = new PersistentValuePrivate(other);
@@ -333,34 +338,14 @@ PersistentValue &PersistentValue::operator =(const Value &other)
     return *this;
 }
 
-PersistentValue &PersistentValue::operator =(const ScopedValue &other)
-{
-    return operator=(*other.operator ->());
-}
-
-PersistentValue &PersistentValue::operator =(const ValueRef other)
-{
-    return operator=(*other.operator ->());
-}
-
-PersistentValue &PersistentValue::operator =(const ReturnedValue &other)
-{
-    if (!d) {
-        d = new PersistentValuePrivate(Value::fromReturnedValue(other));
-        return *this;
-    }
-    d = d->detach(Value::fromReturnedValue(other));
-    return *this;
-}
-
 PersistentValue::~PersistentValue()
 {
     if (d)
         d->deref();
 }
 
-WeakValue::WeakValue(const Value &val)
-    : d(new PersistentValuePrivate(val, /*engine*/0, /*weak*/true))
+WeakValue::WeakValue(const ValueRef val)
+    : d(new PersistentValuePrivate(val.asReturnedValue(), /*engine*/0, /*weak*/true))
 {
 }
 
@@ -372,7 +357,7 @@ WeakValue::WeakValue(const WeakValue &other)
 }
 
 WeakValue::WeakValue(ReturnedValue val)
-    : d(new PersistentValuePrivate(Value::fromReturnedValue(val), /*engine*/0, /*weak*/true))
+    : d(new PersistentValuePrivate(val, /*engine*/0, /*weak*/true))
 {
 }
 
@@ -392,23 +377,23 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
     return *this;
 }
 
-WeakValue &WeakValue::operator =(const Value &other)
+WeakValue &WeakValue::operator =(const ValueRef other)
 {
     if (!d) {
-        d = new PersistentValuePrivate(other, /*engine*/0, /*weak*/true);
+        d = new PersistentValuePrivate(other.asReturnedValue(), /*engine*/0, /*weak*/true);
         return *this;
     }
-    d = d->detach(other, /*weak*/true);
+    d = d->detach(other.asReturnedValue(), /*weak*/true);
     return *this;
 }
 
 WeakValue &WeakValue::operator =(const ReturnedValue &other)
 {
     if (!d) {
-        d = new PersistentValuePrivate(Value::fromReturnedValue(other), /*engine*/0, /*weak*/true);
+        d = new PersistentValuePrivate(other, /*engine*/0, /*weak*/true);
         return *this;
     }
-    d = d->detach(Value::fromReturnedValue(other), /*weak*/true);
+    d = d->detach(other, /*weak*/true);
     return *this;
 }
 
@@ -429,21 +414,27 @@ void WeakValue::markOnce()
     m->mark();
 }
 
-PersistentValuePrivate::PersistentValuePrivate(const Value &v, ExecutionEngine *e, bool weak)
-    : value(v)
-    , refcount(1)
+PersistentValuePrivate::PersistentValuePrivate(ReturnedValue v, ExecutionEngine *e, bool weak)
+    : refcount(1)
+    , weak(weak)
+    , engine(e)
     , prev(0)
     , next(0)
-    , engine(e)
+{
+    value.val = v;
+    init();
+}
+
+void PersistentValuePrivate::init()
 {
     if (!engine) {
-        Managed *m = v.asManaged();
+        Managed *m = value.asManaged();
         if (!m)
             return;
 
         engine = m->engine();
     }
-    if (engine) {
+    if (engine && !prev) {
         PersistentValuePrivate **listRoot = weak ? &engine->memoryManager->m_weakValues : &engine->memoryManager->m_persistentValues;
 
         prev = listRoot;
@@ -479,10 +470,10 @@ void PersistentValuePrivate::deref()
     }
 }
 
-PersistentValuePrivate *PersistentValuePrivate::detach(const QV4::Value &value, bool weak)
+PersistentValuePrivate *PersistentValuePrivate::detach(const QV4::ReturnedValue val, bool weak)
 {
     if (refcount == 1) {
-        this->value = value;
+        value.val = val;
 
         Managed *m = value.asManaged();
         if (!prev) {
@@ -503,6 +494,6 @@ PersistentValuePrivate *PersistentValuePrivate::detach(const QV4::Value &value, 
         return this;
     }
     --refcount;
-    return new PersistentValuePrivate(value, engine, weak);
+    return new PersistentValuePrivate(val, engine, weak);
 }
 

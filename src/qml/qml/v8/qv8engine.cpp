@@ -120,6 +120,8 @@ QV8Engine::~QV8Engine()
 QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
 {
     Q_ASSERT (!value.isEmpty());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, value);
 
     if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->data;
@@ -131,7 +133,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 
     if (typeHint == qMetaTypeId<QJSValue>())
-        return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, value)));
+        return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, v)));
 
     if (QV4::Object *object = value.asObject()) {
         if (typeHint == QMetaType::QJsonObject
@@ -450,9 +452,9 @@ void QV8Engine::initializeGlobal()
                       "    }"\
                       "})"
 
-        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
+        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), QV4::ObjectRef::null()));
         Q_ASSERT(!!result);
-        m_freezeObject = result.asValue();
+        m_freezeObject = result;
 #undef FREEZE_SOURCE
     }
 }
@@ -460,10 +462,11 @@ void QV8Engine::initializeGlobal()
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
     QV4::Scope scope(m_v4Engine);
+    QV4::ScopedFunctionObject f(scope, m_freezeObject.value());
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = value;
     callData->thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
-    m_freezeObject.value().asFunctionObject()->call(callData);
+    f->call(callData);
 }
 
 void QV8Engine::gc()
@@ -709,6 +712,8 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
 bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
+    QV4::Scope scope(QV8Engine::getV4(this));
+
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
     case QMetaType::Bool:
@@ -871,7 +876,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, value));
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, QV4::ScopedValue(scope, value)));
         return true;
     }
 

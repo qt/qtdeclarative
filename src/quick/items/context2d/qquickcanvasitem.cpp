@@ -666,7 +666,7 @@ void QQuickCanvasItem::updatePolish()
         callData->thisObject = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, this));
 
         foreach (int key, animationCallbacks.keys()) {
-            QV4::FunctionObject *f = animationCallbacks.value(key).value().asFunctionObject();
+            QV4::ScopedFunctionObject f(scope, animationCallbacks.value(key).value());
             callData->args[0] = QV4::Value::fromUInt32(QDateTime::currentDateTimeUtc().toTime_t());
             f->call(callData);
         }
@@ -789,7 +789,9 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 
     static int id = 0;
 
-    d->animationCallbacks.insert(++id, QV4::PersistentValue((*args)[0]));
+    QV4::Scope scope(QV8Engine::getV4(args->engine()));
+    QV4::ScopedValue v(scope, (*args)[0]);
+    d->animationCallbacks.insert(++id, QV4::PersistentValue(v));
 
     if (isVisible())
         polish();

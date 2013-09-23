@@ -346,18 +346,20 @@ inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m 
 
 struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate
 {
-    PersistentValuePrivate(const Value &v, ExecutionEngine *engine = 0, bool weak = false);
+    PersistentValuePrivate(ReturnedValue v, ExecutionEngine *engine = 0, bool weak = false);
     virtual ~PersistentValuePrivate();
     Value value;
     uint refcount;
+    bool weak;
     QV4::ExecutionEngine *engine;
     PersistentValuePrivate **prev;
     PersistentValuePrivate *next;
 
+    void init();
     void removeFromList();
     void ref() { ++refcount; }
     void deref();
-    PersistentValuePrivate *detach(const QV4::Value &value, bool weak = false);
+    PersistentValuePrivate *detach(const ReturnedValue value, bool weak = false);
 
     bool checkEngine(QV4::ExecutionEngine *otherEngine) {
         if (!engine) {
@@ -372,38 +374,35 @@ class Q_QML_EXPORT PersistentValue
 {
 public:
     PersistentValue() : d(0) {}
+    PersistentValue(const PersistentValue &other);
+    PersistentValue &operator=(const PersistentValue &other);
 
-    PersistentValue(const Value &val);
-    PersistentValue(const ScopedValue &val);
+    PersistentValue(const ValueRef val);
     PersistentValue(ReturnedValue val);
     template<typename T>
     PersistentValue(Returned<T> *obj);
     template<typename T>
-    PersistentValue(const Scoped<T> &obj);
-    PersistentValue(const PersistentValue &other);
-    PersistentValue &operator=(const PersistentValue &other);
-    PersistentValue &operator=(const Value &other);
-    PersistentValue &operator=(const ScopedValue &other);
+    PersistentValue(const Referenced<T> obj);
     PersistentValue &operator=(const ValueRef other);
-    PersistentValue &operator =(const ReturnedValue &other);
+    PersistentValue &operator =(ReturnedValue other);
     template<typename T>
     PersistentValue &operator=(Returned<T> *obj);
     template<typename T>
-    PersistentValue &operator=(const Scoped<T> &obj);
+    PersistentValue &operator=(const Referenced<T> obj);
     ~PersistentValue();
 
-    Value value() const {
-        return d ? d->value : Value::undefinedValue();
+    ReturnedValue value() const {
+        return (d ? d->value : Value::undefinedValue()).asReturnedValue();
     }
 
     ExecutionEngine *engine() {
         if (!d)
             return 0;
+        if (d->engine)
+            return d->engine;
         Managed *m = d->value.asManaged();
         return m ? m->engine() : 0;
     }
-
-    operator Value() const { return value(); }
 
     bool isUndefined() const { return !d || d->value.isUndefined(); }
     bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }
@@ -420,31 +419,31 @@ class Q_QML_EXPORT WeakValue
 {
 public:
     WeakValue() : d(0) {}
-    WeakValue(const Value &val);
+    WeakValue(const ValueRef val);
     WeakValue(const WeakValue &other);
     WeakValue(ReturnedValue val);
     template<typename T>
     WeakValue(Returned<T> *obj);
     WeakValue &operator=(const WeakValue &other);
-    WeakValue &operator=(const Value &other);
+    WeakValue &operator=(const ValueRef other);
     WeakValue &operator =(const ReturnedValue &other);
     template<typename T>
     WeakValue &operator=(Returned<T> *obj);
 
     ~WeakValue();
 
-    Value value() const {
-        return d ? d->value : Value::undefinedValue();
+    ReturnedValue value() const {
+        return (d ? d->value : Value::undefinedValue()).asReturnedValue();
     }
 
     ExecutionEngine *engine() {
         if (!d)
             return 0;
+        if (d->engine)
+            return d->engine;
         Managed *m = d->value.asManaged();
         return m ? m->engine() : 0;
     }
-
-    operator Value() const { return value(); }
 
     bool isUndefined() const { return !d || d->value.isUndefined(); }
     bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }

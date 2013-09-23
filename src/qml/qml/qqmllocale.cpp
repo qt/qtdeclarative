@@ -835,11 +835,13 @@ QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale
 {
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
     QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine);
-    QQmlLocaleData *wrapper = new (engine->memoryManager) QQmlLocaleData(engine);
+    QV4::Scope scope(engine);
+    QV4::Scoped<QQmlLocaleData> wrapper(scope, new (engine->memoryManager) QQmlLocaleData(engine));
     if (!locale.isEmpty())
         wrapper->locale = QLocale(locale);
-    wrapper->setPrototype(d->prototype.value().asObject());
-    return QV4::Value::fromObject(wrapper).asReturnedValue();
+    QV4::ScopedObject p(scope, d->prototype.value());
+    wrapper->setPrototype(p.getPointer());
+    return wrapper.asReturnedValue();
 }
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)

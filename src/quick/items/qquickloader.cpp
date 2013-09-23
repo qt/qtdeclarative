@@ -577,8 +577,8 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     QUrl sourceUrl = d->resolveSourceUrl(args);
     if (!ipv.isUndefined()) {
         d->disposeInitialPropertyValues();
-        d->initialPropertyValues = ipv;
-        d->qmlGlobalForIpv = args->qmlGlobal();
+        d->initialPropertyValues = ipv.asReturnedValue();
+        d->qmlGlobalForIpv = args->qmlGlobal().asReturnedValue();
     }
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
@@ -644,7 +644,11 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 
     QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
     Q_ASSERT(d && d->engine);
-    d->initializeObjectWithInitialProperties(qmlGlobalForIpv.value(), initialPropertyValues.value(), obj);
+    QV4::ExecutionEngine *v4 = qmlGlobalForIpv.engine();
+    Q_ASSERT(v4);
+    QV4::Scope scope(v4);
+    QV4::ScopedValue ipv(scope, initialPropertyValues.value());
+    d->initializeObjectWithInitialProperties(qmlGlobalForIpv, ipv, obj);
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)

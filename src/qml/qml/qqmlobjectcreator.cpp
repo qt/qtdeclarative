@@ -1080,7 +1080,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-        QV4::Value function = QV4::Value::fromObject(QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
+
+        QV4::Scope scope(_qmlContext);
+        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex);
@@ -1194,6 +1196,8 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
 void QmlObjectCreator::setupFunctions()
 {
+    QV4::Scope scope(_qmlContext);
+    QV4::ScopedValue function(scope);
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
 
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
@@ -1205,8 +1209,8 @@ void QmlObjectCreator::setupFunctions()
         if (!property->isVMEFunction())
             continue;
 
-        QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
-        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(function));
+        function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
+        vme->setVmeMethod(property->coreIndex, function);
     }
 }
 

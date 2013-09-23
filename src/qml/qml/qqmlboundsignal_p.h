@@ -76,7 +76,7 @@ public:
                               const QString &parameterString = QString());
 
     QQmlBoundSignalExpression(QObject *target, int index,
-                              QQmlContextData *ctxt, QObject *scope, const QV4::PersistentValue &function);
+                              QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function);
 
 
     // "inherited" from QQmlJavaScriptExpression.

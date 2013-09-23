@@ -88,8 +88,8 @@ void Exception::throwException(ExecutionContext *context, const Value &value)
 
 Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
     : e(throwingContext->engine)
-    , exception(exceptionValue)
 {
+    e->exceptionValue = exceptionValue;
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
     if (ErrorObject *error = exceptionValue.asErrorObject())
@@ -101,6 +101,7 @@ Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionVa
 Exception::~Exception()
 {
     assert(accepted);
+    e->exceptionValue = Value::undefinedValue();
 }
 
 void Exception::accept(ExecutionContext *catchingContext)

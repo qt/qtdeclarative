@@ -915,8 +915,10 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
 {
     QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QQuickJSContext2DPixelData *pixelData = new (v4->memoryManager) QQuickJSContext2DPixelData(v4);
-    pixelData->setPrototype(ed->pixelArrayProto.value().asObject());
+    QV4::Scope scope(v4);
+    QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, new (v4->memoryManager) QQuickJSContext2DPixelData(v4));
+    QV4::ScopedObject p(scope, ed->pixelArrayProto.value());
+    pixelData->setPrototype(p.getPointer());
 
     if (image.isNull()) {
         pixelData->image = QImage(w, h, QImage::Format_ARGB32);
@@ -927,7 +929,7 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
     }
 
     QQuickJSContext2DImageData *imageData = new (v4->memoryManager) QQuickJSContext2DImageData(v4);
-    imageData->pixelData = QV4::Value::fromObject(pixelData);
+    imageData->pixelData = pixelData.asValue();
     return QV4::Value::fromObject(imageData);
 }
 
@@ -1362,7 +1364,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_fillStyle(QV4::SimpleCallContex
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
         return QV4::Value::fromString(ctx->engine->newString(str)).asReturnedValue();
     }
-    return r->context->m_fillStyle.value().asReturnedValue();
+    return r->context->m_fillStyle.value();
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::SimpleCallContext *ctx)
@@ -1477,7 +1479,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_strokeStyle(QV4::SimpleCallCont
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
         return QV4::Value::fromString(ctx->engine->newString(str)).asReturnedValue();
     }
-    return r->context->m_strokeStyle.value().asReturnedValue();
+    return r->context->m_strokeStyle.value();
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::SimpleCallContext *ctx)
@@ -1559,10 +1561,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
         }
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->setPrototype(ed->gradientProto.value().asObject());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (v4->memoryManager) QQuickContext2DStyle(v4));
+        QV4::ScopedObject p(scope, ed->gradientProto.value());
+        gradient->setPrototype(p.getPointer());
         gradient->brush = QLinearGradient(x0, y0, x1, y1);
-        return QV4::Value::fromObject(gradient).asReturnedValue();
+        return gradient.asReturnedValue();
     }
 
     return ctx->thisObject.asReturnedValue();
@@ -1613,10 +1616,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
 
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->setPrototype(ed->gradientProto.value().asObject());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (v4->memoryManager) QQuickContext2DStyle(v4));
+        QV4::ScopedObject p(scope, ed->gradientProto.value());
+        gradient->setPrototype(p.getPointer());
         gradient->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
-        return QV4::Value::fromObject(gradient).asReturnedValue();
+        return gradient.asReturnedValue();
     }
 
     return ctx->thisObject.asReturnedValue();
@@ -1659,10 +1663,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
 
         QQuickContext2DEngineData *ed = engineData(engine);
 
-        QQuickContext2DStyle *gradient = new (v4->memoryManager) QQuickContext2DStyle(v4);
-        gradient->setPrototype(ed->gradientProto.value().asObject());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, new (v4->memoryManager) QQuickContext2DStyle(v4));
+        QV4::ScopedObject p(scope, ed->gradientProto.value());
+        gradient->setPrototype(p.getPointer());
         gradient->brush = QConicalGradient(x, y, angle);
-        return QV4::Value::fromObject(gradient).asReturnedValue();
+        return gradient.asReturnedValue();
     }
 
     return ctx->thisObject.asReturnedValue();
@@ -2080,7 +2085,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_path(QV4::SimpleCallContext *ct
     QQuickJSContext2D *r = ctx->thisObject.as<QQuickJSContext2D>();
     CHECK_CONTEXT(r)
 
-    return r->context->m_v4path.value().asReturnedValue();
+    return r->context->m_v4path.value();
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_path(QV4::SimpleCallContext *ctx)
@@ -4041,7 +4046,7 @@ QQuickContext2D::~QQuickContext2D()
 
 QV4::Value QQuickContext2D::v4value() const
 {
-    return m_v4value.value();
+    return QV4::Value::fromReturnedValue(m_v4value.value());
 }
 
 QStringList QQuickContext2D::contextNames() const
@@ -4278,10 +4283,12 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
 
         QQuickContext2DEngineData *ed = engineData(engine);
         QV4::ExecutionEngine *v4Engine = QV8Engine::getV4(engine);
-        QQuickJSContext2D *wrapper = new (v4Engine->memoryManager) QQuickJSContext2D(v4Engine);
-        wrapper->setPrototype(ed->contextPrototype.value().asObject());
+        QV4::Scope scope(v4Engine);
+        QV4::Scoped<QQuickJSContext2D> wrapper(scope, new (v4Engine->memoryManager) QQuickJSContext2D(v4Engine));
+        QV4::ScopedObject p(scope, ed->contextPrototype.value());
+        wrapper->setPrototype(p.getPointer());
         wrapper->context = this;
-        m_v4value = QV4::Value::fromObject(wrapper);
+        m_v4value = wrapper;
     }
 }
 

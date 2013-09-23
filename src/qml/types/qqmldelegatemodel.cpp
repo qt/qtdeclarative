@@ -2390,11 +2390,13 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_cacheMetaType->initializePrototype();
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    QV4::Object *o = new (v4->memoryManager) QQmlDelegateModelItemObject(v4, cacheItem);
-    o->setPrototype(model->m_cacheMetaType->modelItemProto.value().asObject());
+    QV4::Scope scope(v4);
+    QV4::ScopedObject o(scope, new (v4->memoryManager) QQmlDelegateModelItemObject(v4, cacheItem));
+    QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
+    o->setPrototype(p.getPointer());
     ++cacheItem->scriptRef;
 
-    return QQmlV4Handle(QV4::Value::fromObject(o));
+    return QQmlV4Handle(o.asValue());
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const
@@ -3158,7 +3160,8 @@ public:
     static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
     {
         QV4::ExecutionEngine *v4 = m->engine();
-        QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
+        QV4::Scope scope(v4);
+        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, m->as<QQmlDelegateModelGroupChangeArray>());
         if (!array)
             v4->current->throwTypeError();
 
@@ -3170,14 +3173,14 @@ public:
 
         const QQmlChangeSet::Change &change = array->at(index);
 
-        QV4::Object *changeProto = engineData(v4->v8Engine)->changeProto.value().asObject();
-        QQmlDelegateModelGroupChange *object = new (v4->memoryManager) QQmlDelegateModelGroupChange(v4);
-        object->setPrototype(changeProto);
+        QV4::ScopedObject changeProto(scope, engineData(v4->v8Engine)->changeProto.value());
+        QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, new (v4->memoryManager) QQmlDelegateModelGroupChange(v4));
+        object->setPrototype(changeProto.getPointer());
         object->change = change;
 
         if (hasProperty)
             *hasProperty = true;
-        return QV4::Value::fromObject(object).asReturnedValue();
+        return object.asReturnedValue();
     }
 
     static QV4::ReturnedValue get(QV4::Managed *m, const QV4::StringRef name, bool *hasProperty)
