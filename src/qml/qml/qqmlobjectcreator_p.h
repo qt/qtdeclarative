@@ -100,6 +100,9 @@ protected:
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
+    bool isComponentType(int typeNameIndex) const
+    { return resolvedTypes.value(typeNameIndex).type == 0; }
+
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;
     QHash<int, int> *_objectIndexToIdInScope;

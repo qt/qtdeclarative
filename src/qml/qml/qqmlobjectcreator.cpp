@@ -1420,7 +1420,8 @@ bool QQmlComponentAndAliasResolver::resolve()
             continue;
 
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(i);
-        if (!cache || cache->metaObject() != &QQmlComponent::staticMetaObject)
+        if (!cache || isComponentType(obj->inheritedTypeNameIndex)
+            || cache->metaObject() != &QQmlComponent::staticMetaObject)
             continue;
 
         componentRoots.append(i);
