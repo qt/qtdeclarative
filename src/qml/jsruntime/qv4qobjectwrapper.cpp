@@ -186,7 +186,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.isV4Handle()) {
         QQmlV4Handle handle;
         ReadFunction(object, property, &handle, notifier);
-        return handle.toValue().asReturnedValue();
+        return handle;
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
@@ -1552,7 +1552,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
         }
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        handlePtr = new (&allocData) QQmlV4Handle(QQmlV4Handle(value));
+        handlePtr = new (&allocData) QQmlV4Handle(value.asReturnedValue());
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
         jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(value.asArrayObject()));
@@ -1634,7 +1634,7 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         array->setArrayLengthUnchecked(list.count());
         return array.asReturnedValue();
     } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-        return handlePtr->toValue().asReturnedValue();
+        return *handlePtr;
     } else if (type == QMetaType::QJsonArray) {
         return QV4::JsonObject::fromJsonArray(v4, *jsonArrayPtr);
     } else if (type == QMetaType::QJsonObject) {

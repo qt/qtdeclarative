@@ -99,7 +99,9 @@ public Q_SLOTS:
 
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
-        return QQmlV4Handle(QV4::Value::fromString(v4->newString(name)));
+        QV4::Scope scope(v4);
+        QV4::ScopedValue s(scope, QV4::Value::fromString(v4->newString(name)));
+        return QQmlV4Handle(s);
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
@@ -110,10 +112,13 @@ public Q_SLOTS:
     {
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        QV4::Scope scope(v4);
 
         QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 2);
-        if (stack.size() > frameIndex + 1)
-            return QQmlV4Handle(QV4::Value::fromString(v4->newString(stack.at(frameIndex + 1).source)));
+        if (stack.size() > frameIndex + 1) {
+            QV4::ScopedValue s(scope, v4->newString(stack.at(frameIndex + 1).source));
+            return QQmlV4Handle(s);
+        }
         return QQmlV4Handle();
     }
     int callerLine(int frameIndex = 0) const

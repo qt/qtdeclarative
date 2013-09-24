@@ -370,7 +370,7 @@ QQmlV4Handle QQuickCanvasItem::context() const
     if (d->context)
         return QQmlV4Handle(d->context->v4value());
 
-    return QQmlV4Handle(QV4::Value::nullValue());
+    return QQmlV4Handle(QV4::Encode::null());
 }
 
 /*!
@@ -755,7 +755,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 
     if (d->context != 0) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
-            args->setReturnValue(d->context->v4value());
+            args->setReturnValue(QV4::Value::fromReturnedValue(d->context->v4value()));
             return;
         }
 
@@ -765,7 +765,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
     }
 
     if (createContext(contextId))
-        args->setReturnValue(d->context->v4value());
+        args->setReturnValue(QV4::Value::fromReturnedValue(d->context->v4value()));
     else
         args->setReturnValue(QV4::Value::nullValue());
 }

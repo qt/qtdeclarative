@@ -151,23 +151,16 @@ private:
     QV8Engine *e;
 };
 
-// ### GC
 class Q_QML_PRIVATE_EXPORT QQmlV4Handle
 {
 public:
-    QQmlV4Handle() : d(0) {}
-    QQmlV4Handle(const QQmlV4Handle &other) : d(other.d) {}
-    QQmlV4Handle &operator=(const QQmlV4Handle &other) { d = other.d; return *this; }
-    explicit QQmlV4Handle(const QV4::Value &v) : d(v.val) {}
+    QQmlV4Handle() : d(QV4::Encode::undefined()) {}
+    explicit QQmlV4Handle(QV4::ValueRef v) : d(v.asReturnedValue()) {}
+    explicit QQmlV4Handle(QV4::ReturnedValue v) : d(v) {}
 
-    QV4::Value toValue() const {
-        QV4::Value v;
-        v.val = d;
-        return v;
-    }
+    operator QV4::ReturnedValue() const { return d; }
 
 private:
-    QQmlV4Handle(quint64 h) : d(h) {}
     quint64 d;
 };
 

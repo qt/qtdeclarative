@@ -4044,9 +4044,9 @@ QQuickContext2D::~QQuickContext2D()
     m_texture->deleteLater();
 }
 
-QV4::Value QQuickContext2D::v4value() const
+QV4::ReturnedValue QQuickContext2D::v4value() const
 {
-    return QV4::Value::fromReturnedValue(m_v4value.value());
+    return m_v4value.value();
 }
 
 QStringList QQuickContext2D::contextNames() const

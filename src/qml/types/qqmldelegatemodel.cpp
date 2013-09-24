@@ -2160,8 +2160,9 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
 {
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
-        QV4::Value removed  = engineData(engine)->array(engine, changeSet.removes());
-        QV4::Value inserted = engineData(engine)->array(engine, changeSet.inserts());
+        QV4::Scope scope(QV8Engine::getV4(engine));
+        QV4::ScopedValue removed(scope, engineData(engine)->array(engine, changeSet.removes()));
+        QV4::ScopedValue inserted(scope, engineData(engine)->array(engine, changeSet.inserts()));
         emit q->changed(QQmlV4Handle(removed), QQmlV4Handle(inserted));
     }
     if (changeSet.difference() != 0)
@@ -2360,14 +2361,14 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
 {
     Q_D(QQmlDelegateModelGroup);
     if (!d->model)
-        return QQmlV4Handle(QV4::Value::undefinedValue());;
+        return QQmlV4Handle(QV4::Encode::undefined());
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
     if (!model->m_context->isValid()) {
-        return QQmlV4Handle(QV4::Value::undefinedValue());
+        return QQmlV4Handle(QV4::Encode::undefined());
     } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
-        return QQmlV4Handle(QV4::Value::undefinedValue());
+        return QQmlV4Handle(QV4::Encode::undefined());
     }
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
@@ -2379,7 +2380,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         cacheItem = model->m_adaptorModel.createItem(
                 model->m_cacheMetaType, model->m_context->engine(), it.modelIndex());
         if (!cacheItem)
-            return QQmlV4Handle(QV4::Value::undefinedValue());
+            return QQmlV4Handle(QV4::Encode::undefined());
         cacheItem->groups = it->flags;
 
         model->m_cache.insert(it.cacheIndex, cacheItem);
@@ -2396,7 +2397,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     o->setPrototype(p.getPointer());
     ++cacheItem->scriptRef;
 
-    return QQmlV4Handle(o.asValue());
+    return QQmlV4Handle(o);
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const

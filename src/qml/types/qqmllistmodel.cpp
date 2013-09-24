@@ -2142,7 +2142,8 @@ QQmlV4Handle QQmlListModel::get(int index) const
 */
 void QQmlListModel::set(int index, const QQmlV4Handle &handle)
 {
-    QV4::Object *object = handle.toValue().asObject();
+    QV4::Scope scope(QV8Engine::getV4(engine()));
+    QV4::ScopedObject object(scope, handle);
 
     if (!object) {
         qmlInfo(this) << tr("set: value is not an object");
@@ -2157,9 +2158,9 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
     if (index == count()) {
 
         if (m_dynamicRoles) {
-            m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object), this));
+            m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object.getPointer()), this));
         } else {
-            m_listModel->insert(index, object, engine());
+            m_listModel->insert(index, object.getPointer(), engine());
         }
 
         emitItemsInserted(index, 1);
@@ -2168,9 +2169,9 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
         QVector<int> roles;
 
         if (m_dynamicRoles) {
-            m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object), roles);
+            m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object.getPointer()), roles);
         } else {
-            m_listModel->set(index, object, &roles, engine());
+            m_listModel->set(index, object.getPointer(), &roles, engine());
         }
 
         if (roles.count())

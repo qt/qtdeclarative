@@ -149,7 +149,7 @@ QQmlV4Handle QQuickWritingSystemListModel::get(int idx) const
     Q_D(const QQuickWritingSystemListModel);
 
     if (idx < 0 || idx >= count())
-        return QQmlV4Handle(Value::undefinedValue());
+        return QQmlV4Handle(Encode::undefined());
 
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
@@ -162,7 +162,7 @@ QQmlV4Handle QQuickWritingSystemListModel::get(int idx) const
         p->value = Value::fromReturnedValue(v8engine->fromVariant(data(index(idx, 0), Qt::UserRole + ii + 1)));
     }
 
-    return QQmlV4Handle(o.asValue());
+    return QQmlV4Handle(o);
 }
 
 void QQuickWritingSystemListModel::classBegin()

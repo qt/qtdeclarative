@@ -525,7 +525,7 @@ QQuickV4ParticleData::~QQuickV4ParticleData()
 
 QQmlV4Handle QQuickV4ParticleData::v4Value()
 {
-    return QQmlV4Handle(QV4::Value::fromReturnedValue(m_v4Value.value()));
+    return QQmlV4Handle(m_v4Value.value());
 }
 
 QT_END_NAMESPACE
