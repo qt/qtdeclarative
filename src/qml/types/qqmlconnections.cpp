@@ -73,7 +73,7 @@ public:
 /*!
     \qmltype Connections
     \instantiates QQmlConnections
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals
 

@@ -27,7 +27,7 @@
 
 /*!
     \qmltype Date
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \brief Provides date functions
 
     The QML Date object extends the

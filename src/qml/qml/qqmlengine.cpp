@@ -121,7 +121,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 /*!
   \qmltype QtObject
     \instantiates QObject
-  \inqmlmodule QtQml 2
+  \inqmlmodule QtQml
   \ingroup qml-utility-elements
   \brief A basic QML type
 
@@ -275,7 +275,7 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 
 /*!
 \qmltype Qt
-\inqmlmodule QtQml 2
+\inqmlmodule QtQml
 \instantiates QQmlEnginePrivate
 \ingroup qml-utility-elements
 \keyword QmlGlobalQtObject

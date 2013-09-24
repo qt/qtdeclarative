@@ -211,7 +211,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \qmltype Component
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \brief Encapsulates a QML component definition
 
     Components are reusable, encapsulated QML types with well-defined interfaces.

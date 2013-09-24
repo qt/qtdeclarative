@@ -190,7 +190,7 @@ void QQmlInstantiatorPrivate::makeModel()
 /*!
     \qmltype Instantiator
     \instantiates QQmlInstantiator
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \brief Dynamically creates objects
 
     A Instantiator can be used to control the dynamic creation of objects, or to dynamically
