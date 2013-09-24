@@ -1244,7 +1244,7 @@ DEFINE_MANAGED_VTABLE(BindingFunction);
     binding assignment, so the Qt.binding() function is new in
     \l {Qt Quick}{Qt Quick 2}.
 
-    \since QtQuick 2.0
+    \since 5.0
 */
 ReturnedValue QtObject::method_binding(SimpleCallContext *ctx)
 {
