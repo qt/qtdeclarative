@@ -117,27 +117,27 @@ QV8Engine::~QV8Engine()
     delete m_v4Engine;
 }
 
-QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
+QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
 {
-    Q_ASSERT (!value.isEmpty());
+    Q_ASSERT (!value->isEmpty());
     QV4::Scope scope(m_v4Engine);
-    QV4::ScopedValue v(scope, value);
+//    QV4::ScopedValue v(scope, value);
 
-    if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
+    if (QV4::VariantObject *v = value->as<QV4::VariantObject>())
         return v->data;
 
     if (typeHint == QVariant::Bool)
-        return QVariant(value.toBoolean());
+        return QVariant(value->toBoolean());
 
     if (typeHint == QMetaType::QJsonValue)
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 
     if (typeHint == qMetaTypeId<QJSValue>())
-        return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, v)));
+        return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, value)));
 
-    if (QV4::Object *object = value.asObject()) {
+    if (QV4::Object *object = value->asObject()) {
         if (typeHint == QMetaType::QJsonObject
-                   && !value.asArrayObject() && !value.asFunctionObject()) {
+                   && !value->asArrayObject() && !value->asFunctionObject()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
@@ -153,7 +153,7 @@ QVariant QV8Engine::toVariant(const QV4::Value &value, int typeHint)
             return QV4::SequencePrototype::toVariant(object);
     }
 
-    if (QV4::ArrayObject *a = value.asArrayObject()) {
+    if (QV4::ArrayObject *a = value->asArrayObject()) {
         QV4::Scope scope(a->engine());
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
@@ -373,27 +373,27 @@ QQmlContextData *QV8Engine::callingContext()
 // Date -> QVariant(QDateTime)
 // RegExp -> QVariant(QRegExp)
 // [Any other object] -> QVariantMap(...)
-QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
+QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
 {
-    if (value.isNull() || value.isUndefined())
+    if (value->isNullOrUndefined())
         return QVariant();
-    if (value.isBoolean())
-        return value.booleanValue();
-    if (value.isInteger())
-        return value.integerValue();
-    if (value.isNumber())
-        return value.asDouble();
-    if (value.isString())
-        return value.stringValue()->toQString();
-    if (QV4::DateObject *d = value.asDateObject())
+    if (value->isBoolean())
+        return value->booleanValue();
+    if (value->isInteger())
+        return value->integerValue();
+    if (value->isNumber())
+        return value->asDouble();
+    if (value->isString())
+        return value->stringValue()->toQString();
+    if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
-    Q_ASSERT(value.isObject());
+    Q_ASSERT(value->isObject());
 
-    if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
+    if (QV4::RegExpObject *re = value->as<QV4::RegExpObject>())
         return re->toQRegExp();
-    if (QV4::ArrayObject *a = value.asArrayObject()) {
+    if (QV4::ArrayObject *a = value->asArrayObject()) {
         QV4::Scope scope(a->engine());
         QV4::ScopedValue v(scope);
         QVariantList rv;
@@ -405,8 +405,8 @@ QVariant QV8Engine::toBasicVariant(const QV4::Value &value)
         }
         return rv;
     }
-    if (!value.asFunctionObject())
-        return variantMapFromJS(value.asObject());
+    if (!value->asFunctionObject())
+        return variantMapFromJS(value->asObject());
 
     return QVariant();
 }
@@ -620,7 +620,8 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
             break;
 
         QString key = name->toQStringNoThrow();
-        result.insert(key, variantFromJS(v, visitedObjects));
+        QV4::ScopedValue val(scope, v);
+        result.insert(key, variantFromJS(val, visitedObjects));
     }
 
     visitedObjects.remove(o);
@@ -713,92 +714,93 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
-bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
+bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
+{
     QV4::Scope scope(QV8Engine::getV4(this));
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
     case QMetaType::Bool:
-        *reinterpret_cast<bool*>(data) = value.toBoolean();
+        *reinterpret_cast<bool*>(data) = value->toBoolean();
         return true;
     case QMetaType::Int:
-        *reinterpret_cast<int*>(data) = value.toInt32();
+        *reinterpret_cast<int*>(data) = value->toInt32();
         return true;
     case QMetaType::UInt:
-        *reinterpret_cast<uint*>(data) = value.toUInt32();
+        *reinterpret_cast<uint*>(data) = value->toUInt32();
         return true;
     case QMetaType::LongLong:
-        *reinterpret_cast<qlonglong*>(data) = qlonglong(value.toInteger());
+        *reinterpret_cast<qlonglong*>(data) = qlonglong(value->toInteger());
         return true;
     case QMetaType::ULongLong:
-        *reinterpret_cast<qulonglong*>(data) = qulonglong(value.toInteger());
+        *reinterpret_cast<qulonglong*>(data) = qulonglong(value->toInteger());
         return true;
     case QMetaType::Double:
-        *reinterpret_cast<double*>(data) = value.toNumber();
+        *reinterpret_cast<double*>(data) = value->toNumber();
         return true;
     case QMetaType::QString:
-        if (value.isUndefined() || value.isNull())
+        if (value->isUndefined() || value->isNull())
             *reinterpret_cast<QString*>(data) = QString();
         else
-            *reinterpret_cast<QString*>(data) = value.toString(m_v4Engine->current)->toQString();
+            *reinterpret_cast<QString*>(data) = value->toString(m_v4Engine->current)->toQString();
         return true;
     case QMetaType::Float:
-        *reinterpret_cast<float*>(data) = value.toNumber();
+        *reinterpret_cast<float*>(data) = value->toNumber();
         return true;
     case QMetaType::Short:
-        *reinterpret_cast<short*>(data) = short(value.toInt32());
+        *reinterpret_cast<short*>(data) = short(value->toInt32());
         return true;
     case QMetaType::UShort:
-        *reinterpret_cast<unsigned short*>(data) = value.toUInt16();
+        *reinterpret_cast<unsigned short*>(data) = value->toUInt16();
         return true;
     case QMetaType::Char:
-        *reinterpret_cast<char*>(data) = char(value.toInt32());
+        *reinterpret_cast<char*>(data) = char(value->toInt32());
         return true;
     case QMetaType::UChar:
-        *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value.toInt32());
+        *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value->toInt32());
         return true;
     case QMetaType::QChar:
-        if (value.isString()) {
-            QString str = value.stringValue()->toQString();
+        if (value->isString()) {
+            QString str = value->stringValue()->toQString();
             *reinterpret_cast<QChar*>(data) = str.isEmpty() ? QChar() : str.at(0);
         } else {
-            *reinterpret_cast<QChar*>(data) = QChar(ushort(value.toUInt16()));
+            *reinterpret_cast<QChar*>(data) = QChar(ushort(value->toUInt16()));
         }
         return true;
     case QMetaType::QDateTime:
-        if (QV4::DateObject *d = value.asDateObject()) {
+        if (QV4::DateObject *d = value->asDateObject()) {
             *reinterpret_cast<QDateTime *>(data) = d->toQDateTime();
             return true;
         } break;
     case QMetaType::QDate:
-        if (QV4::DateObject *d = value.asDateObject()) {
+        if (QV4::DateObject *d = value->asDateObject()) {
             *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
             return true;
         } break;
     case QMetaType::QRegExp:
-        if (QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
+        if (QV4::RegExpObject *r = value->as<QV4::RegExpObject>()) {
             *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
     case QMetaType::QObjectStar: {
-        QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>();
-        if (qobjectWrapper || value.isNull()) {
+        QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>();
+        if (qobjectWrapper || value->isNull()) {
             *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(value);
             return true;
         } break;
     }
     case QMetaType::QStringList:
-        if (QV4::ArrayObject *a = value.asArrayObject()) {
+        if (QV4::ArrayObject *a = value->asArrayObject()) {
             *reinterpret_cast<QStringList *>(data) = a->toQStringList();
             return true;
         } break;
     case QMetaType::QVariantList:
-        if (QV4::ArrayObject *a = value.asArrayObject()) {
+        if (QV4::ArrayObject *a = value->asArrayObject()) {
             *reinterpret_cast<QVariantList *>(data) = variantListFromJS(a);
             return true;
         } break;
     case QMetaType::QVariantMap:
-        if (QV4::Object *o = value.asObject()) {
+        if (QV4::Object *o = value->asObject()) {
             *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(o);
             return true;
         } break;
@@ -809,10 +811,10 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
         *reinterpret_cast<QJsonValue *>(data) = QV4::JsonObject::toJsonValue(value);
         return true;
     case QMetaType::QJsonObject:
-        *reinterpret_cast<QJsonObject *>(data) = QV4::JsonObject::toJsonObject(value.asObject());
+        *reinterpret_cast<QJsonObject *>(data) = QV4::JsonObject::toJsonObject(value->asObject());
         return true;
     case QMetaType::QJsonArray:
-        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(value.asArrayObject());
+        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(value->asArrayObject());
         return true;
     default:
     ;
@@ -842,14 +844,14 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
-    if (value.as<QV4::VariantObject>() && name.endsWith('*')) {
+    if (value->as<QV4::VariantObject>() && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant &var = value.as<QV4::VariantObject>()->data;
+        QVariant &var = value->as<QV4::VariantObject>()->data;
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else if (QV4::Object *o = value.asObject()) {
+        } else if (QV4::Object *o = value->asObject()) {
             // Look in the prototype chain.
             QV4::Object *proto = o->prototype();
             while (proto) {
@@ -860,7 +862,8 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
                     QByteArray className = name.left(name.size()-1);
-                    if (QObject *qobject = qtObjectFromJS(QV4::Value::fromObject(proto)))
+                    QV4::ScopedObject p(scope, proto);
+                    if (QObject *qobject = qtObjectFromJS(p))
                         canCast = qobject->qt_metacast(className) != 0;
                 }
                 if (canCast) {
@@ -874,11 +877,11 @@ bool QV8Engine::metaTypeFromJS(const QV4::Value &value, int type, void *data) {
                 proto = proto->prototype();
             }
         }
-    } else if (value.isNull() && name.endsWith('*')) {
+    } else if (value->isNull() && name.endsWith('*')) {
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, QV4::ScopedValue(scope, value)));
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(m_v4Engine, value));
         return true;
     }
 
@@ -901,40 +904,40 @@ QV4::ReturnedValue QV8Engine::variantToJS(const QVariant &value)
 // Date -> QVariant(QDateTime)
 // RegExp -> QVariant(QRegExp)
 // [Any other object] -> QVariantMap(...)
-QVariant QV8Engine::variantFromJS(const QV4::Value &value,
+QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
                                   V8ObjectSet &visitedObjects)
 {
-    Q_ASSERT(!value.isEmpty());
-    if (value.isUndefined())
+    Q_ASSERT(!value->isEmpty());
+    if (value->isUndefined())
         return QVariant();
-    if (value.isNull())
+    if (value->isNull())
         return QVariant(QMetaType::VoidStar, 0);
-    if (value.isBoolean())
-        return value.booleanValue();
-    if (value.isInteger())
-        return value.integerValue();
-    if (value.isNumber())
-        return value.asDouble();
-    if (value.isString())
-        return value.stringValue()->toQString();
-    Q_ASSERT(value.isObject());
-    if (QV4::ArrayObject *a = value.asArrayObject())
+    if (value->isBoolean())
+        return value->booleanValue();
+    if (value->isInteger())
+        return value->integerValue();
+    if (value->isNumber())
+        return value->asDouble();
+    if (value->isString())
+        return value->stringValue()->toQString();
+    Q_ASSERT(value->isObject());
+    if (QV4::ArrayObject *a = value->asArrayObject())
         return variantListFromJS(a, visitedObjects);
-    if (QV4::DateObject *d = value.asDateObject())
+    if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();
-    if (QV4::RegExpObject *re = value.as<QV4::RegExpObject>())
+    if (QV4::RegExpObject *re = value->as<QV4::RegExpObject>())
         return re->toQRegExp();
-    if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
+    if (QV4::VariantObject *v = value->as<QV4::VariantObject>())
         return v->data;
-    if (value.as<QV4::QObjectWrapper>())
+    if (value->as<QV4::QObjectWrapper>())
         return qVariantFromValue(qtObjectFromJS(value));
-    if (QV4::QmlValueTypeWrapper *v = value.as<QV4::QmlValueTypeWrapper>())
+    if (QV4::QmlValueTypeWrapper *v = value->as<QV4::QmlValueTypeWrapper>())
         return v->toVariant();
-    return variantMapFromJS(value.asObject(), visitedObjects);
+    return variantMapFromJS(value->asObject(), visitedObjects);
 }
 
 
-bool QV8Engine::convertToNativeQObject(const QV4::Value &value, const QByteArray &targetType, void **result)
+bool QV8Engine::convertToNativeQObject(const QV4::ValueRef value, const QByteArray &targetType, void **result)
 {
     if (!targetType.endsWith('*'))
         return false;
@@ -949,19 +952,21 @@ bool QV8Engine::convertToNativeQObject(const QV4::Value &value, const QByteArray
     return false;
 }
 
-QObject *QV8Engine::qtObjectFromJS(const QV4::Value &value)
+QObject *QV8Engine::qtObjectFromJS(const QV4::ValueRef value)
 {
-    if (!value.isObject())
+    if (!value->isObject())
         return 0;
 
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::VariantObject> v(scope, value);
 
-    if (QV4::VariantObject *v = value.as<QV4::VariantObject>()) {
+    if (v) {
         QVariant variant = v->data;
         int type = variant.userType();
         if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());
     }
-    QV4::QObjectWrapper *wrapper = value.as<QV4::QObjectWrapper>();
+    QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, value);
     if (!wrapper)
         return 0;
     return wrapper->object();

@@ -2287,7 +2287,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     return false;
 }
 
-static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
+static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
                                   const char *source, const QV4::Value &result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
@@ -2424,8 +2424,8 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::Value ret = EVALUATE("object.method_NoArgs_QPointF()");
-    QVERIFY(!ret.isUndefined());
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QPointF()"));
+    QVERIFY(!ret->isUndefined());
     QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
@@ -2434,8 +2434,8 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::Value ret = EVALUATE("object.method_NoArgs_QObject()");
-    QV4::QObjectWrapper *qobjectWrapper = ret.as<QV4::QObjectWrapper>();
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QObject()"));
+    QV4::QObjectWrapper *qobjectWrapper = ret->as<QV4::QObjectWrapper>();
     QVERIFY(qobjectWrapper);
     QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
@@ -2460,7 +2460,7 @@ void tst_qqmlecmascript::callQtInvokables()
     }
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", engine->toString("QML rocks")));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::Value::fromReturnedValue(engine->toString("QML rocks"))));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 7);
     QCOMPARE(o->actuals().count(), 0);

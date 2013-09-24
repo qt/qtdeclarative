@@ -270,12 +270,13 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
 
     if (query.prepare(sql)) {
         if (ctx->argumentCount > 1) {
-            Value values = ctx->arguments[1];
-            if (ArrayObject *array = values.asArrayObject()) {
+            ScopedValue values(scope, ctx->arguments[1]);
+            if (ArrayObject *array = values->asArrayObject()) {
                 quint32 size = array->arrayLength();
+                QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, engine->toVariant(QV4::Value::fromReturnedValue(array->getIndexed(ii)), -1));
-            } else if (Object *object = values.asObject()) {
+                    query.bindValue(ii, engine->toVariant((v = array->getIndexed(ii)), -1));
+            } else if (Object *object = values->asObject()) {
                 ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);
                 while (1) {
@@ -283,7 +284,8 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
                     key = it.nextPropertyName(&value);
                     if (key->isNull())
                         break;
-                    QVariant v = engine->toVariant(value, -1);
+                    QV4::ScopedValue val(scope, value);
+                    QVariant v = engine->toVariant(val, -1);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
                     } else {

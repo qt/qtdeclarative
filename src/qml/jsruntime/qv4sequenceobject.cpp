@@ -624,15 +624,18 @@ QVariant SequencePrototype::toVariant(QV4::Object *object)
         return QQml##ElementTypeName##List::toVariant(a); \
     } else
 
-QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, bool *succeeded)
 {
     *succeeded = true;
 
-    QV4::ArrayObject *a = array.asArrayObject();
-    if (!a) {
+    if (!array->asArrayObject()) {
         *succeeded = false;
         return QVariant();
     }
+    QV4::Scope scope(array->engine());
+    // ### GC
+    QV4::ArrayObject *a = array->asArrayObject();
+
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }
 

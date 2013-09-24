@@ -513,9 +513,9 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     } else {
         QVariant v;
         if (result->isQList())
-            v = ctx->engine->v8Engine->toVariant(*value, qMetaTypeId<QList<QObject *> >());
+            v = ctx->engine->v8Engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
         else
-            v = ctx->engine->v8Engine->toVariant(*value, result->propType);
+            v = ctx->engine->v8Engine->toVariant(value, result->propType);
 
         QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
         if (!QQmlPropertyPrivate::write(object, *result, v, callingQmlContext)) {
@@ -980,7 +980,7 @@ struct CallArgument {
     inline void *dataPtr();
 
     inline void initAsType(int type);
-    inline void fromValue(int type, QV8Engine *, const QV4::Value&);
+    inline void fromValue(int type, QV8Engine *, const ValueRef);
     inline ReturnedValue toValue(QV8Engine *);
 
 private:
@@ -1022,21 +1022,8 @@ private:
 };
 }
 
-namespace {
-struct CallArgs
-{
-    CallArgs(int length, const QV4::Value *args) : _length(length), _args(args) {}
-    int Length() const { return _length; }
-    QV4::Value operator[](int idx) { return _args[idx]; }
-
-private:
-    int _length;
-    const QV4::Value *_args;
-};
-}
-
 static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType, int argCount,
-                                        int *argTypes, QV8Engine *engine, CallArgs &callArgs)
+                                        int *argTypes, QV8Engine *engine, QV4::CallData *callArgs)
 {
     if (argCount > 0) {
 
@@ -1054,7 +1041,7 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
         QVarLengthArray<CallArgument, 9> args(argCount + 1);
         args[0].initAsType(returnType);
         for (int ii = 0; ii < argCount; ++ii)
-            args[ii + 1].fromValue(argTypes[ii], engine, callArgs[ii]);
+            args[ii + 1].fromValue(argTypes[ii], engine, callArgs->args[ii]);
         QVarLengthArray<void *, 9> argData(args.count());
         for (int ii = 0; ii < args.count(); ++ii)
             argData[ii] = args[ii].dataPtr();
@@ -1093,9 +1080,9 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
 
     The conversion table is copied out of the \l QScript::callQtMethod() function.
 */
-static int MatchScore(const QV4::Value &actual, int conversionType)
+static int MatchScore(const QV4::ValueRef actual, int conversionType)
 {
-    if (actual.isNumber()) {
+    if (actual->isNumber()) {
         switch (conversionType) {
         case QMetaType::Double:
             return 0;
@@ -1122,7 +1109,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.isString()) {
+    } else if (actual->isString()) {
         switch (conversionType) {
         case QMetaType::QString:
             return 0;
@@ -1131,7 +1118,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.isBoolean()) {
+    } else if (actual->isBoolean()) {
         switch (conversionType) {
         case QMetaType::Bool:
             return 0;
@@ -1140,7 +1127,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.asDateObject()) {
+    } else if (actual->asDateObject()) {
         switch (conversionType) {
         case QMetaType::QDateTime:
             return 0;
@@ -1151,14 +1138,14 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.as<QV4::RegExpObject>()) {
+    } else if (actual->as<QV4::RegExpObject>()) {
         switch (conversionType) {
         case QMetaType::QRegExp:
             return 0;
         default:
             return 10;
         }
-    } else if (actual.asArrayObject()) {
+    } else if (actual->asArrayObject()) {
         switch (conversionType) {
         case QMetaType::QJsonArray:
             return 3;
@@ -1173,7 +1160,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.isNull()) {
+    } else if (actual->isNull()) {
         switch (conversionType) {
         case QMetaType::VoidStar:
         case QMetaType::QObjectStar:
@@ -1187,7 +1174,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
                 return 10;
         }
         }
-    } else if (QV4::Object *obj = actual.asObject()) {
+    } else if (QV4::Object *obj = actual->asObject()) {
         QV8Engine *engine = obj->engine()->v8Engine;
 
         if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
@@ -1279,7 +1266,7 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
 }
 
 static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &data,
-                                         QV8Engine *engine, CallArgs &callArgs)
+                                         QV8Engine *engine, QV4::CallData *callArgs)
 {
     QByteArray unknownTypeError;
 
@@ -1305,7 +1292,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
             QV8Engine::getV4(engine)->current->throwError(error);
         }
 
-        if (args[0] > callArgs.Length()) {
+        if (args[0] > callArgs->argc) {
             QString error = QLatin1String("Insufficient arguments");
             QV8Engine::getV4(engine)->current->throwError(error);
         }
@@ -1333,9 +1320,9 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         score is constructed by adding the matchScore() result for each of the parameters.
 */
 static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData &data,
-                                            QV8Engine *engine, CallArgs &callArgs)
+                                            QV8Engine *engine, QV4::CallData *callArgs)
 {
-    int argumentCount = callArgs.Length();
+    int argumentCount = callArgs->argc;
 
     const QQmlPropertyData *best = 0;
     int bestParameterScore = INT_MAX;
@@ -1353,6 +1340,9 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
 
     QQmlPropertyData dummy;
     const QQmlPropertyData *attempt = &data;
+
+    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::ScopedValue v(scope);
 
     do {
         QVarLengthArray<int, 9> dummy;
@@ -1377,7 +1367,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
 
         int methodMatchScore = 0;
         for (int ii = 0; ii < methodArgumentCount; ++ii) 
-            methodMatchScore += MatchScore(callArgs[ii], methodArgTypes[ii]);
+            methodMatchScore += MatchScore((v = callArgs->args[ii]), methodArgTypes[ii]);
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
             best = attempt;
@@ -1491,40 +1481,38 @@ void CallArgument::initAsType(int callType)
     }
 }
 
-void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &value)
+void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRef value)
 {
     if (type != 0) { cleanup(); type = 0; }
 
     if (callType == qMetaTypeId<QJSValue>()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-        QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, value);
-        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(v4, v));
+        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(v4, value));
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
-        intValue = quint32(value.toInt32());
+        intValue = quint32(value->toInt32());
         type = callType;
     } else if (callType == QMetaType::UInt) {
-        intValue = quint32(value.toUInt32());
+        intValue = quint32(value->toUInt32());
         type = callType;
     } else if (callType == QMetaType::Bool) {
-        boolValue = value.toBoolean();
+        boolValue = value->toBoolean();
         type = callType;
     } else if (callType == QMetaType::Double) {
-        doubleValue = double(value.toNumber());
+        doubleValue = double(value->toNumber());
         type = callType;
     } else if (callType == QMetaType::Float) {
-        floatValue = float(value.toNumber());
+        floatValue = float(value->toNumber());
         type = callType;
     } else if (callType == QMetaType::QString) {
-        if (value.isNull() || value.isUndefined())
+        if (value->isNull() || value->isUndefined())
             qstringPtr = new (&allocData) QString();
         else
-            qstringPtr = new (&allocData) QString(value.toQStringNoThrow());
+            qstringPtr = new (&allocData) QString(value->toQStringNoThrow());
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = 0;
-        if (QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+        if (QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
@@ -1532,7 +1520,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
-        if (QV4::ArrayObject *array = value.asArrayObject()) {
+        if (QV4::ArrayObject *array = value->asArrayObject()) {
             QV4::Scope scope(array->engine());
             Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
 
@@ -1546,19 +1534,19 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::Value &
             }
         } else {
             QObject *o = 0;
-            if (QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+            if (QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>())
                 o = qobjectWrapper->object();
             qlistPtr->append(o);
         }
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV4Handle>()) {
-        handlePtr = new (&allocData) QQmlV4Handle(value.asReturnedValue());
+        handlePtr = new (&allocData) QQmlV4Handle(value->asReturnedValue());
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
-        jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(value.asArrayObject()));
+        jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(value->asArrayObject()));
         type = callType;
     } else if (callType == QMetaType::QJsonObject) {
-        jsonObjectPtr = new (&allocData) QJsonObject(QV4::JsonObject::toJsonObject(value.asObject()));
+        jsonObjectPtr = new (&allocData) QJsonObject(QV4::JsonObject::toJsonObject(value->asObject()));
         type = callType;
     } else if (callType == QMetaType::QJsonValue) {
         jsonValuePtr = new (&allocData) QJsonValue(QV4::JsonObject::toJsonValue(value));
@@ -1771,11 +1759,10 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
         return rv.asReturnedValue();
     }
 
-    CallArgs callArgs(callData->argc, callData->args);
     if (!method.isOverload()) {
-        return CallPrecise(object, method, v8Engine, callArgs);
+        return CallPrecise(object, method, v8Engine, callData);
     } else {
-        return CallOverloaded(object, method, v8Engine, callArgs);
+        return CallOverloaded(object, method, v8Engine, callData);
     }
 }
 

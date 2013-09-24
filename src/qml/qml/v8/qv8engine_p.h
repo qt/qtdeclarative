@@ -205,7 +205,7 @@ public:
 
     void freezeObject(const QV4::ValueRef value);
 
-    QVariant toVariant(const QV4::Value &value, int typeHint);
+    QVariant toVariant(const QV4::ValueRef value, int typeHint);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
     // Return a JS string for the given QString \a string
@@ -236,13 +236,13 @@ public:
     { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
 
     QV4::ReturnedValue variantToJS(const QVariant &value);
-    inline QVariant variantFromJS(const QV4::Value &value)
+    inline QVariant variantFromJS(const QV4::ValueRef value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
-    bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
+    bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
 
-    bool convertToNativeQObject(const QV4::Value &value,
+    bool convertToNativeQObject(const QV4::ValueRef value,
                                 const QByteArray &targetType,
                                 void **result);
 
@@ -253,7 +253,7 @@ public:
     // used for console.count()
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
-    QObject *qtObjectFromJS(const QV4::Value &value);
+    QObject *qtObjectFromJS(const QV4::ValueRef value);
 
 protected:
     QJSEngine* q;
@@ -275,14 +275,14 @@ protected:
 
     QHash<QString, quint32> m_consoleCount;
 
-    QVariant toBasicVariant(const QV4::Value &);
+    QVariant toBasicVariant(const QV4::ValueRef);
 
     void initializeGlobal();
 
 private:
     QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
     QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
-    QVariant variantFromJS(const QV4::Value &value, V8ObjectSet &visitedObjects);
+    QVariant variantFromJS(const QV4::ValueRef value, V8ObjectSet &visitedObjects);
 
     Q_DISABLE_COPY(QV8Engine)
 };

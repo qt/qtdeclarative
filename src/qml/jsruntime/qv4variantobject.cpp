@@ -69,24 +69,25 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
         internalClass->engine->scarceResources.insert(this);
 }
 
-QVariant VariantObject::toVariant(const QV4::Value &v)
+QVariant VariantObject::toVariant(const QV4::ValueRef v)
 {
-    if (Object *o = v.asObject())
-        return o->engine()->v8Engine->variantFromJS(v);
+    if (v->asObject())
+        return v->engine()->v8Engine->variantFromJS(v);
 
-    if (v.isString())
-        return QVariant(v.stringValue()->toQString());
-    if (v.isBoolean())
-        return QVariant(v.booleanValue());
-    if (v.isNumber()) {
-        QV4::Value val = v;
+    if (v->isString())
+        return QVariant(v->stringValue()->toQString());
+    if (v->isBoolean())
+        return QVariant(v->booleanValue());
+    if (v->isNumber()) {
+        QV4::SafeValue val;
+        val = v;
         if (val.isInt32())
             return QVariant(val.integerValue());
-        return QVariant(v.asDouble());
+        return QVariant(v->asDouble());
     }
-    if (v.isNull())
+    if (v->isNull())
         return QVariant(QMetaType::VoidStar, 0);
-    Q_ASSERT(v.isUndefined());
+    Q_ASSERT(v->isUndefined());
     return QVariant();
 }
 

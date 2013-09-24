@@ -378,10 +378,10 @@ void MemoryManager::mark()
     for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
         if (!weak->refcount)
             continue;
-        QObjectWrapper *qobjectWrapper = weak->value.as<QObjectWrapper>();
+        Returned<QObjectWrapper> *qobjectWrapper = weak->value.as<QObjectWrapper>();
         if (!qobjectWrapper)
             continue;
-        QObject *qobject = qobjectWrapper->object();
+        QObject *qobject = qobjectWrapper->getPointer()->object();
         if (!qobject)
             continue;
         bool keepAlive = QQmlData::keepAliveDuringGarbageCollection(qobject);
@@ -396,7 +396,7 @@ void MemoryManager::mark()
         }
 
         if (keepAlive)
-            qobjectWrapper->mark();
+            qobjectWrapper->getPointer()->mark();
     }
 }
 

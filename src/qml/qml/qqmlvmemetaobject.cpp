@@ -1010,8 +1010,8 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
         if (ensureVarPropertiesAllocated()) {
             QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
             QV4::ScopedObject o(scope, varProperties.value());
-            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(
-                        QV4::Value::fromReturnedValue(o->getIndexed(id - firstVarPropertyIndex)), -1);
+            QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
+            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(val, -1);
         }
         return QVariant();
     } else {

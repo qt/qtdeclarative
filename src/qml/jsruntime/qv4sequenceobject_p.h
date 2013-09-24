@@ -81,7 +81,7 @@ struct SequencePrototype : public QV4::Object
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
     static int metaTypeForSequence(QV4::Object *object);
     static QVariant toVariant(QV4::Object *object);
-    static QVariant toVariant(const QV4::Value &array, int typeHint, bool *succeeded);
+    static QVariant toVariant(const ValueRef array, int typeHint, bool *succeeded);
 };
 
 }

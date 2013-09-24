@@ -385,7 +385,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             oldBinding->destroy();
 
         if (!f) {
-            QVariant v = r->v8->toVariant(*value, -1);
+            QVariant v = r->v8->toVariant(value, -1);
 
             if (p.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
                 v = v.toInt();
@@ -409,7 +409,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
         if (index == -1)
             return;
 
-        QVariant v = r->v8->toVariant(*value, -1);
+        QVariant v = r->v8->toVariant(value, -1);
 
         r->type->setValue(copy->value);
         QMetaProperty p = r->type->metaObject()->property(index);

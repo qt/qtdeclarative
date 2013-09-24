@@ -375,7 +375,9 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
     QV8Engine *engine = vp->engine ? vp->engine->v8Engine : 0;
     if (engine) {
-        return engine->metaTypeFromJS(QV4::Value::fromReturnedValue(vp->getValue(engine->m_v4Engine)), type, ptr);
+        QV4::Scope scope(engine->m_v4Engine);
+        QV4::ScopedValue v(scope, vp->getValue(engine->m_v4Engine));
+        return engine->metaTypeFromJS(v, type, ptr);
     } else {
         switch (type) {
             case QMetaType::Bool:

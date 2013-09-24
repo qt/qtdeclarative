@@ -963,20 +963,20 @@ ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValu
         return Encode::undefined();
 }
 
-QJsonValue JsonObject::toJsonValue(const QV4::Value &value,
+QJsonValue JsonObject::toJsonValue(const ValueRef value,
                                        V4ObjectSet &visitedObjects)
 {
-    if (String *s = value.asString())
+    if (String *s = value->asString())
         return QJsonValue(s->toQString());
-    else if (value.isNumber())
-        return QJsonValue(value.toNumber());
-    else if (value.isBoolean())
-        return QJsonValue((bool)value.booleanValue());
-    else if (ArrayObject *a = value.asArrayObject())
+    else if (value->isNumber())
+        return QJsonValue(value->toNumber());
+    else if (value->isBoolean())
+        return QJsonValue((bool)value->booleanValue());
+    else if (ArrayObject *a = value->asArrayObject())
         return toJsonArray(a, visitedObjects);
-    else if (Object *o = value.asObject())
+    else if (Object *o = value->asObject())
         return toJsonObject(o, visitedObjects);
-    else if (value.isNull())
+    else if (value->isNull())
         return QJsonValue(QJsonValue::Null);
     else
         return QJsonValue(QJsonValue::Undefined);
@@ -1020,9 +1020,11 @@ QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects
         if (name->isNull())
             break;
 
+        QV4::ScopedValue val(scope, v);
+
         QString key = name->toQStringNoThrow();
-        if (!v.asFunctionObject())
-            result.insert(key, toJsonValue(v, visitedObjects));
+        if (!val->asFunctionObject())
+            result.insert(key, toJsonValue(val, visitedObjects));
     }
 
     visitedObjects.remove(o);
@@ -1065,7 +1067,9 @@ QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
     quint32 length = a->arrayLength();
     for (quint32 i = 0; i < length; ++i) {
         v = a->getIndexed(i);
-        result.append(toJsonValue(v->asFunctionObject() ? QV4::Value::nullValue() : v, visitedObjects));
+        if (v->asFunctionObject())
+            v = Encode::null();
+        result.append(toJsonValue(v, visitedObjects));
     }
 
     visitedObjects.remove(a);

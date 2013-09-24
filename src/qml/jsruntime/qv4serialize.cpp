@@ -391,7 +391,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
             array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = QV4::SequencePrototype::toVariant(array.asValue(), sequenceType, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);
         return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);
     }
     }
