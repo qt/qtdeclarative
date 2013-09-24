@@ -389,12 +389,14 @@ QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
         return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
-    Q_ASSERT(value->isObject());
+    QV4::Scope scope(value->engine());
+    QV4::ScopedObject o(scope, value);
+    Q_ASSERT(o);
 
-    if (QV4::RegExpObject *re = value->as<QV4::RegExpObject>())
+    if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>())
         return re->toQRegExp();
-    if (QV4::ArrayObject *a = value->asArrayObject()) {
-        QV4::Scope scope(a->engine());
+    if (o->asArrayObject()) {
+        QV4::ScopedArrayObject a(scope, o);
         QV4::ScopedValue v(scope);
         QVariantList rv;
 
@@ -406,7 +408,7 @@ QVariant QV8Engine::toBasicVariant(const QV4::ValueRef value)
         return rv;
     }
     if (!value->asFunctionObject())
-        return variantMapFromJS(value->asObject());
+        return variantMapFromJS(o);
 
     return QVariant();
 }
@@ -544,7 +546,7 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 // The result is a QVariantList with length equal to the length
 // of the JS Array, and elements being the JS Array's elements
 // converted to QVariants, recursively.
-QVariantList QV8Engine::variantListFromJS(QV4::ArrayObject *a,
+QVariantList QV8Engine::variantListFromJS(QV4::ArrayObjectRef a,
                                           V8ObjectSet &visitedObjects)
 {
     QVariantList result;
@@ -593,7 +595,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 // The result is a QVariantMap with keys being the property names
 // of the object, and values being the values of the JS object's
 // properties converted to QVariants, recursively.
-QVariantMap QV8Engine::variantMapFromJS(QV4::Object *o,
+QVariantMap QV8Engine::variantMapFromJS(QV4::ObjectRef o,
                                         V8ObjectSet &visitedObjects)
 {
     QVariantMap result;
@@ -795,12 +797,14 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             return true;
         } break;
     case QMetaType::QVariantList:
-        if (QV4::ArrayObject *a = value->asArrayObject()) {
+        if (value->asArrayObject()) {
+            QV4::ScopedArrayObject a(scope, value);
             *reinterpret_cast<QVariantList *>(data) = variantListFromJS(a);
             return true;
         } break;
     case QMetaType::QVariantMap:
-        if (QV4::Object *o = value->asObject()) {
+        if (value->asObject()) {
+            QV4::ScopedObject o(scope, value);
             *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(o);
             return true;
         } break;
@@ -921,8 +925,11 @@ QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
     if (value->isString())
         return value->stringValue()->toQString();
     Q_ASSERT(value->isObject());
-    if (QV4::ArrayObject *a = value->asArrayObject())
+    QV4::Scope scope(value->engine());
+    if (value->asArrayObject()) {
+        QV4::ScopedArrayObject a(scope, value);
         return variantListFromJS(a, visitedObjects);
+    }
     if (QV4::DateObject *d = value->asDateObject())
         return d->toQDateTime();
     if (QV4::RegExpObject *re = value->as<QV4::RegExpObject>())
@@ -933,7 +940,8 @@ QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
         return qVariantFromValue(qtObjectFromJS(value));
     if (QV4::QmlValueTypeWrapper *v = value->as<QV4::QmlValueTypeWrapper>())
         return v->toVariant();
-    return variantMapFromJS(value->asObject(), visitedObjects);
+    QV4::ScopedObject o(scope, value);
+    return variantMapFromJS(o, visitedObjects);
 }
 
 
