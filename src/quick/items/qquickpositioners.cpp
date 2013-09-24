@@ -1198,7 +1198,7 @@ void QQuickGrid::setFlow(Flow flow)
     By default this property is not set.
 
     \sa columnSpacing
-    \since QtQuick 2.0
+    \since 5.0
 */
 void QQuickGrid::setRowSpacing(const qreal rowSpacing)
 {
@@ -1220,7 +1220,7 @@ void QQuickGrid::setRowSpacing(const qreal rowSpacing)
     By default this property is not set.
 
     \sa rowSpacing
-    \since QtQuick 2.0
+    \since 5.0
 */
 void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
 {

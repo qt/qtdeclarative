@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickParentAnimation
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-properties
-    \since QtQuick 2.0
+    \since 5.0
     \inherits Animation
     \brief Animates changes in parent values
 
@@ -561,7 +561,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-properties
     \inherits Animation
-    \since QtQuick 2.0
+    \since 5.0
     \brief Animates an item along a path
 
     When used in a transition, the path can be specified without start

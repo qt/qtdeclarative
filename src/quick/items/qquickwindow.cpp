@@ -896,7 +896,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 */
 /*!
     \class QQuickWindow
-    \since QtQuick 2.0
+    \since 5.0
 
     \inmodule QtQuick
 
@@ -2637,7 +2637,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 /*!
     \class QQuickCloseEvent
     \internal
-    \since QtQuick 2.1
+    \since 5.1
 
     \inmodule QtQuick.Window
 
@@ -2649,7 +2649,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
     \inqmlmodule QtQuick.Window 2
     \ingroup qtquick-visual
     \brief Notification that a \l Window is about to be closed
-    \since Qt 5.1
+    \since 5.1
 
     Notification that a window is about to be closed by the windowing system
     (e.g. the user clicked the titlebar close button). The CloseEvent contains
@@ -2667,7 +2667,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 
 /*!
     \fn void QQuickWindow::closing()
-    \since QtQuick 2.1
+    \since 5.1
 
     This signal is emitted when the window receives a QCloseEvent from the
     windowing system.
@@ -2675,7 +2675,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 
 /*!
     \qmlsignal QtQuick.Window2::closing(CloseEvent close)
-    \since Qt 5.1
+    \since 5.1
 
     This signal is emitted when the user tries to close the window.
 
@@ -3078,7 +3078,7 @@ QColor QQuickWindow::color() const
 /*!
     \brief Returns whether to use alpha transparency on newly created windows.
 
-    \since Qt 5.1
+    \since 5.1
     \sa setDefaultAlphaBuffer()
  */
 bool QQuickWindow::hasDefaultAlphaBuffer()
@@ -3088,7 +3088,7 @@ bool QQuickWindow::hasDefaultAlphaBuffer()
 
 /*!
     \brief \a useAlpha specifies whether to use alpha transparency on newly created windows.
-    \since Qt 5.1
+    \since 5.1
 
     In any application which expects to create translucent windows, it's
     necessary to set this to true before creating the first QQuickWindow,
@@ -3217,7 +3217,7 @@ void QQuickWindow::resetOpenGLState()
 /*!
     \qmlproperty int QtQuick.Window2::Window::minimumWidth
     \qmlproperty int QtQuick.Window2::Window::minimumHeight
-    \since Qt 5.1
+    \since 5.1
 
     Defines the window's minimum size.
 
@@ -3228,7 +3228,7 @@ void QQuickWindow::resetOpenGLState()
 /*!
     \qmlproperty int QtQuick.Window2::Window::maximumWidth
     \qmlproperty int QtQuick.Window2::Window::maximumHeight
-    \since Qt 5.1
+    \since 5.1
 
     Defines the window's maximum size.
 
@@ -3263,7 +3263,7 @@ void QQuickWindow::resetOpenGLState()
     visibility to Hidden is the same as setting \l visible to false.
 
     \sa visible
-    \since Qt 5.1
+    \since 5.1
  */
 
 /*!
@@ -3284,7 +3284,7 @@ void QQuickWindow::resetOpenGLState()
 
     \sa Screen
 
-    \since Qt 5.1
+    \since 5.1
  */
 
 /*!
@@ -3301,12 +3301,12 @@ void QQuickWindow::resetOpenGLState()
 
     The default value is 1.0.
 
-    \since Qt 5.1
+    \since 5.1
  */
 
 /*!
     \qmlproperty Item QtQuick.Window2::Window::activeFocusItem
-    \since Qt 5.1
+    \since 5.1
 
     The item which currently has active focus or \c null if there is
     no item with active focus.
@@ -3314,7 +3314,7 @@ void QQuickWindow::resetOpenGLState()
 
 /*!
     \qmlproperty QtQuick.Window2::Window::active
-    \since Qt 5.1
+    \since 5.1
 
     The active status of the window.
 
@@ -3323,14 +3323,14 @@ void QQuickWindow::resetOpenGLState()
 
 /*!
     \qmlmethod QtQuick2::Window::requestActivate()
-    \since QtQuick 2.1
+    \since 5.1
 
     Requests the window to be activated, i.e. receive keyboard focus.
  */
 
 /*!
     \qmlmethod QtQuick2::Window::alert(int msec)
-    \since QtQuick 2.1
+    \since 5.1
 
     Causes an alert to be shown for \a msec miliseconds. If \a msec is \c 0 (the
     default), then the alert is shown indefinitely until the window becomes

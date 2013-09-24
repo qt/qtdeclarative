@@ -123,7 +123,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 
 /*!
     \class QQuickView
-    \since QtQuick 2.0
+    \since 5.0
     \brief The QQuickView class provides a window for displaying a Qt Quick user interface.
 
     \inmodule QtQuick

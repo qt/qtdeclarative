@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickContext2D
     \inqmlmodule QtQuick 2
     \ingroup qtquick-canvas
-    \since QtQuick 2.0
+    \since 5.0
     \brief Provides 2D context for shapes on a Canvas item
 
     The Context2D object can be created by \c Canvas item's \c getContext()
@@ -2835,7 +2835,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(QV4::SimpleCall
 /*!
   \qmltype TextMetrics
     \inqmlmodule QtQuick 2
-    \since QtQuick 2.0
+    \since 5.0
     \ingroup qtquick-canvas
     \brief Provides a Context2D TextMetrics interface
 
@@ -3376,7 +3376,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::SimpleCa
 /*!
     \qmltype CanvasGradient
     \inqmlmodule QtQuick 2
-    \since QtQuick 2.0
+    \since 5.0
     \ingroup qtquick-canvas
     \brief Provides an opaque CanvasGradient interface
   */

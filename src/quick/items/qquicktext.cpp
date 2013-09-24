@@ -2594,7 +2594,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
 
 /*!
     \qmlsignal QtQuick2::Text::onLinkHovered(string link)
-    \since QtQuick 2.2
+    \since 5.2
 
     This handler is called when the user hovers a link embedded in the
     text. The link must be in rich text or HTML format and the \a link
@@ -2605,7 +2605,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
 
 /*!
     \qmlproperty string QtQuick2::Text::hoveredLink
-    \since QtQuick 2.2
+    \since 5.2
 
     This property contains the link string when user hovers a link
     embedded in the text. The link must be in rich text or HTML format

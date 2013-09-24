@@ -149,7 +149,7 @@ Item {
 
 /*!
     \qmlmethod bool QtQuick2::KeyEvent::matches(StandardKey key)
-    \since QtQuick 2.2
+    \since 5.2
 
     Returns \c true if the key event matches the given standard \a key; otherwise returns \c false.
 

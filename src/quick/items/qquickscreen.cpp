@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty String QtQuick.Window2::Screen::name
     \readonly
-    \since Qt 5.1
+    \since 5.1
 
     The name of the screen.
 */
@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableWidth
     \readonly
-    \since Qt 5.1
+    \since 5.1
 
     This contains the available width of the collection of screens which make
     up the virtual desktop, in pixels, excluding window manager reserved areas
@@ -115,7 +115,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableHeight
     \readonly
-    \since Qt 5.1
+    \since 5.1
 
     This contains the available height of the collection of screens which make
     up the virtual desktop, in pixels, excluding window manager reserved areas
@@ -129,7 +129,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty real QtQuick.Window2::Screen::logicalPixelDensity
     \readonly
-    \since Qt 5.1
+    \since 5.1
 
     The number of logical pixels per millimeter.  Logical pixels are the
     usual units in QML; on some systems they may be different than physical

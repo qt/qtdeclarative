@@ -431,7 +431,7 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
 
 /*!
     \qmlattachedproperty stringlist QtQuick2::Drag::mimeData
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds a map of mimeData that is used during startDrag.
 */
@@ -508,7 +508,7 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
 
 /*!
  \qmlattachedproperty enumeration QtQuick2::Drag::dragType
- \since QtQuick 2.2
+ \since 5.2
 
  This property indicates whether to automatically start drags, do nothing, or
  to use backwards compatible internal drags. The default is to use backwards

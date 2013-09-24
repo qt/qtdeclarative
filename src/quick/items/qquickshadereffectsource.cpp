@@ -469,7 +469,7 @@ QImage QQuickShaderEffectTexture::toImage() const
     \qmltype ShaderEffectSource
     \instantiates QQuickShaderEffectSource
     \inqmlmodule QtQuick 2
-    \since QtQuick 2.0
+    \since 5.0
     \inherits Item
     \ingroup qtquick-effects
     \brief Renders a \l {Qt Quick} item into a texture and displays it

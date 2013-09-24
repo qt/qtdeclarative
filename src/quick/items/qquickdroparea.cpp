@@ -398,7 +398,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 
 /*!
     \qmlproperty flags QtQuick2::DragEvent::proposedAction
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds the set of \l {action}{actions} proposed by the
     drag source.
@@ -423,77 +423,77 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 
 /*!
     \qmlmethod QtQuick2::DragEvent::acceptProposedAction()
-    \since QtQuick 2.2
+    \since 5.2
 
     Accepts the drag event with the \l proposedAction.
 */
 
 /*!
     \qmlproperty bool QtQuick2::DragEvent::hasColor
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds whether the drag event contains a color item.
 */
 
 /*!
     \qmlproperty bool QtQuick2::DragEvent::hasHtml
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds whether the drag event contains a html item.
 */
 
 /*!
     \qmlproperty bool QtQuick2::DragEvent::hasText
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds whether the drag event contains a text item.
 */
 
 /*!
     \qmlproperty bool QtQuick2::DragEvent::hasUrls
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds whether the drag event contains one or more url items.
 */
 
 /*!
     \qmlproperty color QtQuick2::DragEvent::colorData
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds color data, if any.
 */
 
 /*!
     \qmlproperty string QtQuick2::DragEvent::html
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds html data, if any.
 */
 
 /*!
     \qmlproperty string QtQuick2::DragEvent::text
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds text data, if any.
 */
 
 /*!
     \qmlproperty urllist QtQuick2::DragEvent::urls
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds a list of urls, if any.
 */
 
 /*!
     \qmlproperty stringlist QtQuick2::DragEvent::formats
-    \since QtQuick 2.2
+    \since 5.2
 
     This property holds a list of mime type formats contained in the drag data.
 */
 
 /*!
     \qmlmethod string QtQuick2::DragEvent::getDataAsString(string format)
-    \since QtQuick 2.2
+    \since 5.2
 
     Returns the data for the given \a format converted to a string. \a format should be one contained in the \l formats property.
 */

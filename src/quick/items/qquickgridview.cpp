@@ -2566,7 +2566,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     This method forces the GridView to immediately respond to any outstanding
     changes in the model.
 
-    \since QtQuick 2.1
+    \since 5.1
 
     \b Note: methods should only be called after the Component has completed.
 */

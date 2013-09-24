@@ -4018,7 +4018,7 @@ void QQuickItem::forceActiveFocus()
     This method sets focus on the item and ensures that all ancestor
     FocusScope objects in the object hierarchy are also given \l focus.
 
-    \since QtQuick 2.1
+    \since 5.1
 
     \sa activeFocus, Qt::FocusReason
 */
@@ -4038,7 +4038,7 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 /*!
     \qmlmethod QtQuick2::Item::nextItemInFocusChain(bool forward)
 
-    \since QtQuick 2.1
+    \since 5.1
 
     Returns the item in the focus chain which is next to this item.
     If \a forward is \c true, or not supplied, it is the next item in
