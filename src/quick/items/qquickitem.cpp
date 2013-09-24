@@ -3868,34 +3868,35 @@ void QQuickItem::polish()
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
-        QV4::Value item = (*args)[0];
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue item(scope, (*args)[0]);
 
         QQuickItem *itemObj = 0;
-        if (!item.isNull()) {
-            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+        if (!item->isNull()) {
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
+            if (qobjectWrapper)
                 itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
         }
 
-        if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQStringNoThrow()
+        if (!itemObj && !item->isNull()) {
+            qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
-        args->setReturnValue(rv.asValue());
+        args->setReturnValue(rv.asReturnedValue());
 
         QV4::ScopedString s(scope);
         QV4::ScopedValue v(scope);
 
-        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
-        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
+        qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
+        qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
 
         if (args->length() > 3) {
-            qreal w = (*args)[3].asDouble();
-            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
+            qreal w = (v = (*args)[3])->asDouble();
+            qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
@@ -3946,34 +3947,36 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
-        QV4::Value item = (*args)[0];
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue item(scope, (*args)[0]);
 
         QQuickItem *itemObj = 0;
-        if (!item.isNull()) {
-            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+        if (!item->isNull()) {
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
+            if (qobjectWrapper)
                 itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
         }
 
-        if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapToItem() given argument \"" << item.toQStringNoThrow()
+        if (!itemObj && !item->isNull()) {
+            qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
-        args->setReturnValue(rv.asValue());
+        args->setReturnValue(rv.asReturnedValue());
 
-        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
-        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
-
-        QV4::ScopedString s(scope);
         QV4::ScopedValue v(scope);
 
+        qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
+        qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
+
+        QV4::ScopedString s(scope);
+
         if (args->length() > 3) {
-            qreal w = (*args)[3].asDouble();
-            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
+            qreal w = (v = (*args)[3])->asDouble();
+            qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 

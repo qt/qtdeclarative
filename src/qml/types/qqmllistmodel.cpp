@@ -1883,8 +1883,9 @@ void QQmlListModel::remove(QQmlV4Function *args)
     int argLength = args->length();
 
     if (argLength == 1 || argLength == 2) {
-        int index = (*args)[0].toInt32();
-        int removeCount = (argLength == 2 ? (*args)[1].toInt32() : 1);
+        QV4::Scope scope(args->v4engine());
+        int index = QV4::ScopedValue(scope, (*args)[0])->toInt32();
+        int removeCount = (argLength == 2 ? QV4::ScopedValue(scope, (*args)[1])->toInt32() : 1);
 
         if (index < 0 || index+removeCount > count() || removeCount <= 0) {
             qmlInfo(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+removeCount).arg(count());
@@ -1924,20 +1925,19 @@ void QQmlListModel::remove(QQmlV4Function *args)
 void QQmlListModel::insert(QQmlV4Function *args)
 {
     if (args->length() == 2) {
-
-        QV4::Value arg0 = (*args)[0];
-        int index = arg0.toInt32();
+        QV4::Scope scope(args->v4engine());
+        QV4::ScopedValue arg0(scope, (*args)[0]);
+        int index = arg0->toInt32();
 
         if (index < 0 || index > count()) {
             qmlInfo(this) << tr("insert: index %1 out of range").arg(index);
             return;
         }
 
-        QV4::Value arg1 = (*args)[1];
-
-        if (QV4::ArrayObject *objectArray = arg1.asArrayObject()) {
-            QV4::Scope scope(objectArray->engine());
-            QV4::Scoped<QV4::Object> argObject(scope);
+        QV4::ScopedObject argObject(scope, (*args)[1]);
+        QV4::ScopedArrayObject objectArray(scope, (*args)[1]);
+        if (objectArray) {
+            QV4::ScopedObject argObject(scope);
 
             int objectArrayLength = objectArray->arrayLength();
             for (int i=0 ; i < objectArrayLength ; ++i) {
@@ -1950,11 +1950,11 @@ void QQmlListModel::insert(QQmlV4Function *args)
                 }
             }
             emitItemsInserted(index, objectArrayLength);
-        } else if (QV4::Object *argObject = arg1.asObject()) {
+        } else if (argObject) {
             if (m_dynamicRoles) {
-                m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject.getPointer()), this));
             } else {
-                m_listModel->insert(index, argObject, args->engine());
+                m_listModel->insert(index, argObject.getPointer(), args->engine());
             }
 
             emitItemsInserted(index, 1);
@@ -2034,10 +2034,11 @@ void QQmlListModel::move(int from, int to, int n)
 void QQmlListModel::append(QQmlV4Function *args)
 {
     if (args->length() == 1) {
-        QV4::Value arg = (*args)[0];
+        QV4::Scope scope(args->v4engine());
+        QV4::ScopedObject argObject(scope, (*args)[0]);
+        QV4::ScopedArrayObject objectArray(scope, (*args)[0]);
 
-        if (QV4::ArrayObject *objectArray = arg.asArrayObject()) {
-            QV4::Scope scope(objectArray->engine());
+        if (objectArray) {
             QV4::Scoped<QV4::Object> argObject(scope);
 
             int objectArrayLength = objectArray->arrayLength();
@@ -2054,14 +2055,14 @@ void QQmlListModel::append(QQmlV4Function *args)
             }
 
             emitItemsInserted(index, objectArrayLength);
-        } else if (QV4::Object *argObject = arg.asObject()) {
+        } else if (argObject) {
             int index;
 
             if (m_dynamicRoles) {
                 index = m_modelObjects.count();
-                m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject.getPointer()), this));
             } else {
-                index = m_listModel->append(argObject, args->engine());
+                index = m_listModel->append(argObject.getPointer(), args->engine());
             }
 
             emitItemsInserted(index, 1);

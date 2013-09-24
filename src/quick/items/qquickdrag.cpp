@@ -595,9 +595,10 @@ void QQuickDragAttached::start(QQmlV4Function *args)
     Qt::DropActions supportedActions = d->supportedActions;
     // check arguments for supportedActions, maybe data?
     if (args->length() >= 1) {
-        QV4::Value v = (*args)[0];
-        if (v.isInt32()) {
-            supportedActions = Qt::DropActions(v.integerValue());
+        QV4::Scope scope(args->v4engine());
+        QV4::ScopedValue v(scope, (*args)[0]);
+        if (v->isInt32()) {
+            supportedActions = Qt::DropActions(v->integerValue());
             d->overrideActions = true;
         }
     }
@@ -773,15 +774,16 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
 
     // check arguments for supportedActions
     if (args->length() >= 1) {
-        QV4::Value v = (*args)[0];
-        if (v.isInt32()) {
-            supportedActions = Qt::DropActions(v.integerValue());
+        QV4::Scope scope(args->v4engine());
+        QV4::ScopedValue v(scope, (*args)[0]);
+        if (v->isInt32()) {
+            supportedActions = Qt::DropActions(v->integerValue());
         }
     }
 
     Qt::DropAction dropAction = d->startDrag(supportedActions);
 
-    args->setReturnValue(QV4::Value::fromInt32(dropAction));
+    args->setReturnValue(QV4::Encode((int)dropAction));
 }
 
 QQuickDrag::QQuickDrag(QObject *parent)

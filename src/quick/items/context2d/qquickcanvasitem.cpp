@@ -739,35 +739,37 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 {
     Q_D(QQuickCanvasItem);
 
-    if (args->length() < 1 || !(*args)[0].isString()) {
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedString str(scope, (*args)[0]);
+    if (!str) {
         qmlInfo(this) << "getContext should be called with a string naming the required context type";
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
         return;
     }
 
     if (!d->available) {
         qmlInfo(this) << "Unable to use getContext() at this time, please wait for available: true";
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
         return;
     }
 
-    QString contextId = (*args)[0].toQStringNoThrow();
+    QString contextId = str->toQString();
 
     if (d->context != 0) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
-            args->setReturnValue(QV4::Value::fromReturnedValue(d->context->v4value()));
+            args->setReturnValue(d->context->v4value());
             return;
         }
 
         qmlInfo(this) << "Canvas already initialized with a different context type";
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
         return;
     }
 
     if (createContext(contextId))
-        args->setReturnValue(QV4::Value::fromReturnedValue(d->context->v4value()));
+        args->setReturnValue(d->context->v4value());
     else
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
 }
 
 /*!
@@ -779,9 +781,11 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 
 void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 {
-    if (args->length() < 1 || !(*args)[0].asFunctionObject()) {
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedFunctionObject f(scope, (*args)[0]);
+    if (!f) {
         qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
         return;
     }
 
@@ -789,14 +793,12 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 
     static int id = 0;
 
-    QV4::Scope scope(QV8Engine::getV4(args->engine()));
-    QV4::ScopedValue v(scope, (*args)[0]);
-    d->animationCallbacks.insert(++id, QV4::PersistentValue(v));
+    d->animationCallbacks.insert(++id, QV4::PersistentValue(f));
 
     if (isVisible())
         polish();
 
-    args->setReturnValue(QV4::Value::fromInt32(id));
+    args->setReturnValue(QV4::Encode(id));
 }
 
 /*!
@@ -807,13 +809,15 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 
 void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4Function *args)
 {
-    if (args->length() < 1 || !(*args)[0].isInteger()) {
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
+    if (!v->isInteger()) {
         qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
         return;
     }
 
-    d_func()->animationCallbacks.remove((*args)[0].integerValue());
+    d_func()->animationCallbacks.remove(v->integerValue());
 }
 
 

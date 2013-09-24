@@ -631,7 +631,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV8Engine *engine = args->engine();
-    ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
+    QV4::ExecutionContext *ctx = args->v4engine()->current;
     QV4::Scope scope(ctx);
     if (engine->engine()->offlineStoragePath().isEmpty())
         V4THROW_SQL(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
@@ -640,11 +640,12 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 
     QSqlDatabase database;
 
-    QString dbname = (*args)[0].toQStringNoThrow();
-    QString dbversion = (*args)[1].toQStringNoThrow();
-    QString dbdescription = (*args)[2].toQStringNoThrow();
-    int dbestimatedsize = (*args)[3].toInt32();
-    FunctionObject *dbcreationCallback = (*args)[4].asFunctionObject();
+    QV4::ScopedValue v(scope);
+    QString dbname = (v = (*args)[0])->toQStringNoThrow();
+    QString dbversion = (v = (*args)[1])->toQStringNoThrow();
+    QString dbdescription = (v = (*args)[2])->toQStringNoThrow();
+    int dbestimatedsize = (v = (*args)[3])->toInt32();
+    FunctionObject *dbcreationCallback = (v = (*args)[4])->asFunctionObject();
 
     QCryptographicHash md5(QCryptographicHash::Md5);
     md5.addData(dbname.toUtf8());
@@ -686,7 +687,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
             database.open();
     }
 
-    QQmlSqlDatabaseWrapper *db = new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine);
+    QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, new (ctx->engine->memoryManager) QQmlSqlDatabaseWrapper(engine));
     QV4::ScopedObject p(scope, databaseData(engine)->databaseProto.value());
     db->setPrototype(p.getPointer());
     db->database = database;
@@ -696,11 +697,11 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
         Scope scope(ctx);
         ScopedCallData callData(scope, 1);
         callData->thisObject = engine->global();
-        callData->args[0] = Value::fromObject(db);
+        callData->args[0] = db;
         dbcreationCallback->call(callData);
     }
 
-    args->setReturnValue(Value::fromObject(db));
+    args->setReturnValue(db.asReturnedValue());
 #endif // QT_NO_SETTINGS
 }
 

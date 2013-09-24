@@ -1757,10 +1757,10 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 
     if (method.isV4Function()) {
-        QV4::Value rv = QV4::Value::undefinedValue();
+        QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
 
         QV4::ScopedValue qmlGlobal(scope, m_qmlGlobal.value());
-        QQmlV4Function func(callData->argc, callData->args, &rv, qmlGlobal,
+        QQmlV4Function func(callData, rv, qmlGlobal,
                             QmlContextWrapper::getContext(qmlGlobal),
                             v8Engine);
         QQmlV4Function *funcptr = &func;

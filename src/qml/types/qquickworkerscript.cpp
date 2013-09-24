@@ -682,7 +682,8 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
         return;
     }
 
-    QV4::Value argument = QV4::Value::undefinedValue();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue argument(scope, QV4::Value::undefinedValue());
     if (args->length() != 0)
         argument = (*args)[0];
 

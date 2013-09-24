@@ -125,28 +125,28 @@ class QV8Engine;
 class QQmlV4Function
 {
 public:
-    int length() const { return argc; }
-    QV4::Value operator[](int idx) { return idx < argc ? args[idx] : QV4::Value::undefinedValue(); }
+    int length() const { return callData->argc; }
+    QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx] : QV4::Value::undefinedValue()).asReturnedValue(); }
     QQmlContextData *context() { return ctx; }
-    QV4::Value qmlGlobal() { return global; }
-    void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
-    void setReturnValue(QV4::ReturnedValue rv) { *retVal = QV4::Value::fromReturnedValue(rv); }
+    QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
+    void setReturnValue(QV4::ReturnedValue rv) { retVal = rv; }
     QV8Engine *engine() const { return e; }
+    QV4::ExecutionEngine *v4engine() const;
 private:
     friend struct QV4::QObjectMethod;
     QQmlV4Function();
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(int length, const QV4::Value *args,
-                           QV4::Value *rv, const QV4::Value &global,
-                           QQmlContextData *c, QV8Engine *e)
-    : argc(length), args(args), retVal(rv), global(global), ctx(c), e(e) {}
+    QQmlV4Function(QV4::CallData *callData, QV4::ValueRef retVal,
+                   const QV4::ValueRef global, QQmlContextData *c, QV8Engine *e)
+        : callData(callData), retVal(retVal), ctx(c), e(e)
+    {
+        callData->thisObject.val = global.asReturnedValue();
+    }
 
-    int argc;
-    const QV4::Value *args;
-    QV4::Value *retVal;
-    QV4::Value global;
+    QV4::CallData *callData;
+    QV4::ValueRef retVal;
     QQmlContextData *ctx;
     QV8Engine *e;
 };
@@ -288,12 +288,17 @@ private:
     Q_DISABLE_COPY(QV8Engine)
 };
 
-QV8Engine::Deletable *QV8Engine::extensionData(int index) const
+inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 {
     if (index < m_extensionData.count())
         return m_extensionData[index];
     else
         return 0;
+}
+
+inline QV4::ExecutionEngine *QQmlV4Function::v4engine() const
+{
+    return QV8Engine::getV4(e);
 }
 
 QT_END_NAMESPACE

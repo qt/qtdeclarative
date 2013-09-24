@@ -2447,7 +2447,8 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
         return;
 
     int  i = 0;
-    QV4::Value v = (*args)[i];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[i]);
     if (d->parseIndex(v, &index, &group)) {
         if (index < 0 || index > model->m_compositor.count(group)) {
             qmlInfo(this) << tr("insert: index out of range");
@@ -2463,12 +2464,14 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
             : model->m_compositor.end();
 
     int groups = 1 << d->group;
-    if (++i < args->length())
-        groups |= model->m_cacheMetaType->parseGroups((*args)[i]);
+    if (++i < args->length()) {
+        QV4::ScopedValue val(scope, (*args)[i]);
+        groups |= model->m_cacheMetaType->parseGroups(val);
+    }
 
-    if (v.asArrayObject()) {
+    if (v->asArrayObject()) {
         return;
-    } else if (v.asObject()) {
+    } else if (v->asObject()) {
         model->insert(before, v, groups);
         model->emitChanges();
     }
@@ -2506,16 +2509,19 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
     Compositor::Group group = d->group;
 
     int  i = 0;
-    QV4::Value v = (*args)[i];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[i]);
     if (d->parseIndex(v, &index, &group))
         ++i;
 
     if (i < args->length() && index >= 0 && index <= model->m_compositor.count(group)) {
         v = (*args)[i];
-        if (/*QV4::Object *o = */v.asObject()) {
+        if (v->asObject()) {
             int groups = 1 << d->group;
-            if (++i < args->length())
-                groups |= model->m_cacheMetaType->parseGroups((*args)[i]);
+            if (++i < args->length()) {
+                QV4::ScopedValue val(scope, (*args)[i]);
+                groups |= model->m_cacheMetaType->parseGroups(val);
+            }
 
             Compositor::insert_iterator before = index < model->m_compositor.count(group)
                     ? model->m_compositor.findInsertPosition(group, index)
@@ -2579,7 +2585,8 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     Compositor::Group fromGroup = d->group;
     Compositor::Group toGroup = d->group;
 
-    QV4::Value v = (*args)[0];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
     if (d->parseIndex(v, &from, &fromGroup)) {
         if (from < 0 || from >= model->m_compositor.count(fromGroup)) {
             qmlInfo(this) << tr("resolve: from index out of range");
@@ -2676,7 +2683,8 @@ void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
         return;
 
     int i = 0;
-    QV4::Value v = (*args)[i];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
     if (!d->parseIndex(v, &index, &group)) {
         qmlInfo(this) << tr("remove: invalid index");
         return;
@@ -2684,8 +2692,8 @@ void QQmlDelegateModelGroup::remove(QQmlV4Function *args)
 
     if (++i < args->length()) {
         v = (*args)[i];
-        if (v.isNumber())
-            count = v.toInt32();
+        if (v->isNumber())
+            count = v->toInt32();
     }
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);
@@ -2711,13 +2719,14 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
         return false;
 
     int i = 0;
-    QV4::Value v = (*args)[i];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[i]);
     if (!parseIndex(v, index, group))
         return false;
 
     v = (*args)[++i];
-    if (v.isNumber()) {
-        *count = v.toInt32();
+    if (v->isNumber()) {
+        *count = v->toInt32();
 
         if (++i == args->length())
             return false;
@@ -2844,20 +2853,23 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
     int to = -1;
     int count = 1;
 
-    if (!d->parseIndex((*args)[0], &from, &fromGroup)) {
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
+    if (!d->parseIndex(v, &from, &fromGroup)) {
         qmlInfo(this) << tr("move: invalid from index");
         return;
     }
 
-    if (!d->parseIndex((*args)[1], &to, &toGroup)) {
+    v = (*args)[1];
+    if (!d->parseIndex(v, &to, &toGroup)) {
         qmlInfo(this) << tr("move: invalid to index");
         return;
     }
 
     if (args->length() > 2) {
-        QV4::Value v = (*args)[2];
-        if (v.isNumber())
-            count = v.toInt32();
+        v = (*args)[2];
+        if (v->isNumber())
+            count = v->toInt32();
     }
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(d->model);

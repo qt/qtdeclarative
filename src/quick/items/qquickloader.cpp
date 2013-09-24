@@ -568,7 +568,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     Q_D(QQuickLoader);
 
     bool ipvError = false;
-    args->setReturnValue(QV4::Value::undefinedValue());
+    args->setReturnValue(QV4::Encode::undefined());
     QV4::Value ipv = d->extractInitialPropertyValues(args, this, &ipvError);
     if (ipvError)
         return;
@@ -578,7 +578,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     if (!ipv.isUndefined()) {
         d->disposeInitialPropertyValues();
         d->initialPropertyValues = ipv.asReturnedValue();
-        d->qmlGlobalForIpv = args->qmlGlobal().asReturnedValue();
+        d->qmlGlobalForIpv = args->qmlGlobal();
     }
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
@@ -926,7 +926,9 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
 
 QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 {
-    QString arg = (*args)[0].toQStringNoThrow();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
+    QString arg = v->toQString();
     if (arg.isEmpty())
         return QUrl();
 
@@ -937,10 +939,11 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 
 QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
-    QV4::Value valuemap = QV4::Value::undefinedValue();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
     if (args->length() >= 2) {
-        QV4::Value v = (*args)[1];
-        if (!v.isObject() || v.asArrayObject()) {
+        QV4::ScopedValue v(scope, (*args)[1]);
+        if (!v->isObject() || v->asArrayObject()) {
             *error = true;
             qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {

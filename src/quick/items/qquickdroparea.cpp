@@ -559,11 +559,12 @@ QStringList QQuickDropEvent::formats() const
 void QQuickDropEvent::getDataAsString(QQmlV4Function *args)
 {
     if (args->length() != 0) {
-        QV4::Value v = (*args)[0];
-        QString format = v.toQString();
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue v(scope, (*args)[0]);
+        QString format = v->toQString();
         QString rv = QString::fromUtf8(event->mimeData()->data(format));
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        args->setReturnValue(QV4::Value::fromString(v4, rv));
+        args->setReturnValue(QV4::Value::fromString(v4, rv).asReturnedValue());
     }
 }
 
@@ -577,9 +578,10 @@ void QQuickDropEvent::accept(QQmlV4Function *args)
     Qt::DropAction action = event->dropAction();
 
     if (args->length() >= 1) {
-        QV4::Value v = (*args)[0];
-        if (v.isInt32())
-            action = Qt::DropAction(v.integerValue());
+        QV4::Scope scope(args->v4engine());
+        QV4::ScopedValue v(scope, (*args)[0]);
+        if (v->isInt32())
+            action = Qt::DropAction(v->integerValue());
     }
 
     // get action from arguments.
