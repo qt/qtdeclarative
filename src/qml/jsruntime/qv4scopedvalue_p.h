@@ -592,6 +592,12 @@ inline SafeValue &SafeValue::operator=(const Scoped<T> &t)
     return *this;
 }
 
+inline SafeValue &SafeValue::operator=(const ValueRef v)
+{
+    val = v.asReturnedValue();
+    return *this;
+}
+
 template<typename T>
 inline Returned<T> *SafeValue::as()
 {

@@ -459,7 +459,7 @@ void QV8Engine::initializeGlobal()
     }
 }
 
-void QV8Engine::freezeObject(const QV4::Value &value)
+void QV8Engine::freezeObject(const QV4::ValueRef value)
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedFunctionObject f(scope, m_freezeObject.value());
@@ -507,7 +507,9 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
 void QV8Engine::initQmlGlobalObject()
 {
     initializeGlobal();
-    freezeObject(QV4::Value::fromObject(m_v4Engine->globalObject));
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->globalObject);
+    freezeObject(v);
 }
 
 void QV8Engine::setEngine(QQmlEngine *engine)
@@ -516,9 +518,9 @@ void QV8Engine::setEngine(QQmlEngine *engine)
     initQmlGlobalObject();
 }
 
-QV4::Value QV8Engine::global()
+QV4::ReturnedValue QV8Engine::global()
 {
-    return QV4::Value::fromObject(m_v4Engine->globalObject);
+    return m_v4Engine->globalObject->asReturnedValue();
 }
 
 // Converts a QVariantList to JS.
@@ -992,9 +994,9 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     return number;
 }
 
-QV4::Value QV8Engine::toString(const QString &string)
+QV4::ReturnedValue QV8Engine::toString(const QString &string)
 {
-    return QV4::Value::fromString(m_v4Engine->newString(string));
+    return QV4::Value::fromString(m_v4Engine->newString(string)).asReturnedValue();
 }
 
 QT_END_NAMESPACE

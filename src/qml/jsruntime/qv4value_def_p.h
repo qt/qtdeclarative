@@ -352,6 +352,7 @@ struct SafeValue : public Value
     }
     template<typename T>
     SafeValue &operator=(const Scoped<T> &t);
+    SafeValue &operator=(const ValueRef v);
     SafeValue &operator=(const Value &v) {
         val = v.val;
         return *this;

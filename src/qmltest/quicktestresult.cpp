@@ -513,7 +513,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result.append(tmp);
     }
 
-    args->setReturnValue(args->engine()->toString(result).asReturnedValue());
+    args->setReturnValue(args->engine()->toString(result));
 }
 
 bool QuickTestResult::compare

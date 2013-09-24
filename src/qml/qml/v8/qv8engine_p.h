@@ -194,7 +194,7 @@ public:
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     QJSEngine *publicEngine() { return q; }
-    QV4::Value global();
+    QV4::ReturnedValue global();
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -203,13 +203,13 @@ public:
 
     QQmlContextData *callingContext();
 
-    void freezeObject(const QV4::Value &value);
+    void freezeObject(const QV4::ValueRef value);
 
     QVariant toVariant(const QV4::Value &value, int typeHint);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
     // Return a JS string for the given QString \a string
-    QV4::Value toString(const QString &string);
+    QV4::ReturnedValue toString(const QString &string);
 
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
@@ -219,7 +219,6 @@ public:
     // Return the list of illegal id names (the names of the properties on the global object)
     const QV4::IdentifierHash<bool> &illegalNames() const;
 
-    inline void collectGarbage() { gc(); }
     void gc();
 
     static QMutex *registrationMutex();

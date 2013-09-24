@@ -252,7 +252,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     if (w->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
         if (reference->object && readReferenceValue(reference)) {
-            return w->v8->toString(w->type->toString()).asReturnedValue();
+            return w->v8->toString(w->type->toString());
         } else {
             return QV4::Encode::undefined();
         }
@@ -260,7 +260,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
         Q_ASSERT(w->objectType == QmlValueTypeWrapper::Copy);
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(w);
         w->type->setValue(copy->value);
-        return w->v8->toString(w->type->toString()).asReturnedValue();
+        return w->v8->toString(w->type->toString());
     }
 }
 
@@ -310,14 +310,14 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
         cpptype v; \
         void *args[] = { &v, 0 }; \
         r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args); \
-        return constructor(v).asReturnedValue(); \
+        return constructor(v); \
     }
 
     // These four types are the most common used by the value type wrappers
-    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Value::fromDouble);
-    VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Value::fromInt32);
+    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Encode);
+    VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Encode);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, r->v8->toString);
-    VALUE_TYPE_LOAD(QMetaType::Bool, bool, QV4::Value::fromBoolean);
+    VALUE_TYPE_LOAD(QMetaType::Bool, bool, QV4::Encode);
 
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
