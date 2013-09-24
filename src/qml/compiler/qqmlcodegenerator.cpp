@@ -118,6 +118,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     output->program = program;
 
     qSwap(_imports, output->imports);
+    qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
@@ -147,6 +148,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     collectTypeReferences();
 
     qSwap(_imports, output->imports);
+    qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
@@ -403,6 +405,11 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
         error.setColumn(node->importIdToken.startColumn);
         errors << error;
         return false;
+    } else {
+        // For backward compatibility in how the imports are loaded we
+        // must otherwise initialize the major and minor version to -1.
+        import->majorVersion = -1;
+        import->minorVersion = -1;
     }
 
     import->location.line = node->importToken.startLine;
@@ -415,9 +422,38 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(AST::UiPragma *ast)
+bool QQmlCodeGenerator::visit(AST::UiPragma *node)
 {
-  return true;
+    Pragma *pragma = New<Pragma>();
+
+    // For now the only valid pragma is Singleton, so lets validate the input
+    if (!node->pragmaType->name.isNull())
+    {
+        if (QLatin1String("Singleton") == node->pragmaType->name)
+        {
+            pragma->type = Pragma::PragmaSingleton;
+        } else {
+            QQmlError error;
+            error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+            error.setLine(node->pragmaToken.startLine);
+            error.setColumn(node->pragmaToken.startColumn);
+            errors << error;
+            return false;
+        }
+    } else {
+        QQmlError error;
+        error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+        error.setLine(node->pragmaToken.startLine);
+        error.setColumn(node->pragmaToken.startColumn);
+        errors << error;
+        return false;
+    }
+
+    pragma->location.line = node->pragmaToken.startLine;
+    pragma->location.column = node->pragmaToken.startColumn;
+    _pragmas.append(pragma);
+
+    return false;
 }
 
 static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
@@ -1144,6 +1180,14 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const 
 
         objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functions->count, o->properties->count, o->qmlSignals->count, o->bindings->count);
         objectPtr += signalTableSize;
+    }
+
+    // enable flag if we encountered pragma Singleton
+    foreach (Pragma *p, output.pragmas) {
+        if (p->type == Pragma::PragmaSingleton) {
+            qmlUnit->header.flags |= QV4::CompiledData::Unit::IsSingleton;
+            break;
+        }
     }
 
     return qmlUnit;

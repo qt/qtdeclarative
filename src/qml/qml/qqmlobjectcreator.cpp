@@ -1239,6 +1239,11 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             }
         } else {
             Q_ASSERT(typeRef.component);
+            if (typeRef.component->qmlUnit->isSingleton())
+            {
+                recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
+                return 0;
+            }
             QmlObjectCreator subCreator(context, typeRef.component);
             instance = subCreator.create();
             if (!instance) {

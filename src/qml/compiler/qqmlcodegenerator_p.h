@@ -154,6 +154,16 @@ struct QmlObject
     void dump(DebugStream &out);
 };
 
+struct Pragma
+{
+    enum PragmaType {
+        PragmaSingleton = 0x1
+    };
+    quint32 type;
+
+    QV4::CompiledData::Location location;
+};
+
 struct ParsedQML
 {
     ParsedQML()
@@ -163,6 +173,7 @@ struct ParsedQML
     QQmlJS::Engine jsParserEngine;
     V4IR::Module jsModule;
     QList<QV4::CompiledData::Import*> imports;
+    QList<Pragma*> pragmas;
     AST::UiProgram *program;
     int indexOfRootObject;
     QList<QmlObject*> objects;
@@ -253,6 +264,7 @@ public:
     QList<QQmlError> errors;
 
     QList<QV4::CompiledData::Import*> _imports;
+    QList<Pragma*> _pragmas;
     QList<QmlObject*> _objects;
     QList<AST::Node*> _functions;
 

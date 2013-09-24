@@ -895,7 +895,7 @@ bool ProcessAST::visit(AST::UiPragma *node)
     // For now the only valid pragma is Singleton, so lets validate the input
     if (!node->pragmaType->name.isNull())
     {
-        if (QLatin1String("Singleton") == node->pragmaType->name.toString())
+        if (QLatin1String("Singleton") == node->pragmaType->name)
         {
             pragma.type = QQmlScript::Pragma::Singleton;
         } else {

@@ -460,6 +460,7 @@ private:
     // --- new compiler
     QScopedPointer<QtQml::ParsedQML> parsedQML;
     QList<QQmlScript::Import> m_newImports;
+    QList<QQmlScript::Pragma> m_newPragmas;
     // ---
 
     QList<ScriptReference> m_scripts;

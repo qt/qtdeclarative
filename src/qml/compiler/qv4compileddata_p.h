@@ -148,7 +148,8 @@ struct Unit
     enum {
         IsJavascript = 0x1,
         IsQml = 0x2,
-        StaticData = 0x4 // Unit data persistent in memory?
+        StaticData = 0x4, // Unit data persistent in memory?
+        IsSingleton = 0x8
     };
     quint32 flags;
     uint stringTableSize;
@@ -414,7 +415,6 @@ struct Import
     Location location;
 };
 
-
 struct QmlUnit
 {
     Unit header;
@@ -432,6 +432,10 @@ struct QmlUnit
         const uint *offsetTable = reinterpret_cast<const uint*>((reinterpret_cast<const char *>(this)) + offsetToObjects);
         const uint offset = offsetTable[idx];
         return reinterpret_cast<const Object*>(reinterpret_cast<const char*>(this) + offset);
+    }
+
+    bool isSingleton() const {
+        return header.flags & Unit::IsSingleton;
     }
 };
 

@@ -2218,7 +2218,24 @@ void QQmlTypeData::dataReceived(const Data &data)
         }
     }
 
-    foreach (const QQmlScript::Pragma &pragma, scriptParser.pragmas()) {
+    // ### convert to use new data structure once old compiler is gone.
+    if (m_useNewCompiler && m_newPragmas.isEmpty()) {
+        m_newPragmas.reserve(parsedQML->pragmas.size());
+        foreach (QtQml::Pragma *p, parsedQML->pragmas) {
+            QQmlScript::Pragma pragma;
+            pragma.location.start.line = p->location.line;
+            pragma.location.start.column = p->location.column;
+
+            switch (p->type) {
+            case QtQml::Pragma::PragmaSingleton: pragma.type = QQmlScript::Pragma::Singleton; break;
+            default: break;
+            }
+
+            m_newPragmas << pragma;
+        }
+    }
+
+    foreach (const QQmlScript::Pragma &pragma, m_useNewCompiler ? m_newPragmas : scriptParser.pragmas()) {
         if (!addPragma(pragma, &errors)) {
             Q_ASSERT(errors.size());
             setError(errors);
@@ -2279,6 +2296,12 @@ void QQmlTypeData::compile()
 
         foreach (const QString &ns, m_namespaces)
             m_compiledData->importCache->add(ns);
+
+        // Add any Composite Singletons that were used to the import cache
+        for (int i = 0; i < compositeSingletons().count(); ++i) {
+            m_compiledData->importCache->add(compositeSingletons().at(i).type->qmlTypeName(),
+                compositeSingletons().at(i).type->sourceUrl(), compositeSingletons().at(i).prefix);
+        }
 
         m_imports.populateCache(m_compiledData->importCache);
         m_compiledData->importCache->addref();
