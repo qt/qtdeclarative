@@ -47,31 +47,39 @@ Item {
     width: 200
     height: 200
 
+    property int restartCount: 5;
+
     TestCase {
-        id: testCase
-        name: "y"
-        when: !animation.running
+        id: testcase
+        name: "animators-restart"
+        when: root.restartCount == 0 && animation.running == false;
         function test_endresult() {
-            compare(box.yChangeCounter, 1);
-            compare(box.y, 100);
-            var image = grabImage(root);
-            compare(image.pixel(50, 100), Qt.rgba(1, 0, 0));
-            compare(image.pixel(50, 99), Qt.rgba(1, 1, 1)); // outside on the left
+            compare(box.scale, 2);
         }
     }
 
     Box {
         id: box
 
-        anchors.centerIn: undefined
-
-        YAnimator {
+        ScaleAnimator {
             id: animation
-            target: box
-            from: 0;
-            to: 100
-            duration: 1000
+            target: box;
+            from: 1;
+            to: 2.0;
+            duration: 100;
+            loops: 1
+            running: false;
+        }
+
+        Timer {
+            id: timer;
+            interval: 500
             running: true
+            repeat: true
+            onTriggered: {
+                animation.running = true;
+                --root.restartCount;
+            }
         }
     }
 }

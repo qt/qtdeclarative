@@ -49,7 +49,7 @@ Item {
 
     TestCase {
         id: testcase
-        name: "behavior"
+        name: "animators-behavior"
         when: box.scale == 2
         function test_endresult() {
             compare(box.scaleChangeCounter, 1);
@@ -62,7 +62,7 @@ Item {
 
     Box {
         id: box
-        Behavior on scale { ScaleAnimator { id: animation; duration: 300; } }
+        Behavior on scale { ScaleAnimator { id: animation; duration: 100; } }
     }
 
     Timer {

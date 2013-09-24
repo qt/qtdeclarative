@@ -52,7 +52,6 @@ QT_BEGIN_NAMESPACE
 
 QQuickAnimatorController::QQuickAnimatorController()
     : window(0)
-    , driver(0)
 {
 }
 
@@ -61,20 +60,14 @@ QQuickAnimatorController::~QQuickAnimatorController()
     qDeleteAll(activeRootAnimations);
 }
 
+void QQuickAnimatorController::itemDestroyed(QObject *o)
+{
+    deletedSinceLastFrame << (QQuickItem *) o;
+}
+
 void QQuickAnimatorController::advance()
 {
-    if (driver && driver->isRunning()) {
-        // This lock is to prevent conflicts with syncBackCurrentValues
-        mutex.lock();
-        driver->advance();
-        mutex.unlock();
-    }
-
-    // The animation system uses a chain of queued connections to
-    // start the animation driver and these won't get delievered until,
-    // at best, after this frame. We need to track if animations
-    // are running here so we can keep on rendering in that case.
-    bool running = driver && driver->isRunning();
+    bool running = false;
     for (QSet<QAbstractAnimationJob *>::const_iterator it = activeRootAnimations.constBegin();
          !running && it != activeRootAnimations.constEnd(); ++it) {
         if ((*it)->isRunning())
@@ -97,7 +90,10 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
 {
     if (job->isRenderThreadJob()) {
         QQuickAnimatorJob *j = static_cast<QQuickAnimatorJob *>(job);
-        j->initialize(c);
+        if (j->target() && c->deletedSinceLastFrame.contains(j->target()))
+            j->targetWasDeleted();
+        else
+            j->initialize(c);
     } else if (job->isGroup()) {
         QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
         for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
@@ -107,15 +103,6 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
 
 void QQuickAnimatorController::beforeNodeSync()
 {
-    if (!driver && window->thread() != window->openglContext()->thread()) {
-        driver = QQuickWindowPrivate::get(window)->context->createAnimationDriver(this);
-        connect(driver, SIGNAL(started()), this, SLOT(animationsStarted()), Qt::DirectConnection);
-        connect(driver, SIGNAL(stopped()), this, SLOT(animationsStopped()), Qt::DirectConnection);
-        driver->install();
-
-        QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
-    }
-
     // Force a render pass if we are adding new animations
     // so that advance will be called..
     if (starting.size())
@@ -123,11 +110,12 @@ void QQuickAnimatorController::beforeNodeSync()
 
     for (int i=0; i<starting.size(); ++i) {
         QAbstractAnimationJob *job = starting.at(i);
-        qquick_initialize_helper(job, this);
         job->addAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
+        qquick_initialize_helper(job, this);
         job->start();
     }
     starting.clear();
+    deletedSinceLastFrame.clear();
 
     for (QSet<QQuickAnimatorJob *>::const_iterator it = activeLeafAnimations.constBegin();
          it != activeLeafAnimations.constEnd(); ++it) {
@@ -155,10 +143,6 @@ void QQuickAnimatorController::startAnimation(QAbstractAnimationJob *job)
     mutex.lock();
     starting << job;
     mutex.unlock();
-}
-
-void QQuickAnimatorController::animationsStopped()
-{
 }
 
 void QQuickAnimatorController::animationsStarted()

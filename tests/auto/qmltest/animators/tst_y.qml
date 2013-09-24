@@ -49,14 +49,14 @@ Item {
 
     TestCase {
         id: testCase
-        name: "x"
+        name: "animators-y"
         when: !animation.running
         function test_endresult() {
-            compare(box.xChangeCounter, 1);
-            compare(box.x, 100);
+            compare(box.yChangeCounter, 1);
+            compare(box.y, 100);
             var image = grabImage(root);
-            compare(image.pixel(100, 50), Qt.rgba(1, 0, 0));
-            compare(image.pixel(99, 50), Qt.rgba(1, 1, 1)); // outside on the left
+            compare(image.pixel(50, 100), Qt.rgba(1, 0, 0));
+            compare(image.pixel(50, 99), Qt.rgba(1, 1, 1)); // outside on the left
         }
     }
 
@@ -65,12 +65,12 @@ Item {
 
         anchors.centerIn: undefined
 
-        XAnimator {
+        YAnimator {
             id: animation
             target: box
             from: 0;
             to: 100
-            duration: 1000
+            duration: 100
             running: true
         }
     }

@@ -40,35 +40,29 @@
 ****************************************************************************/
 
 import QtQuick 2.2
-import QtTest 1.0
+import QtQuick.Window 2.0
 
-Item {
-    id: root;
+Window {
     width: 200
     height: 200
 
-    TestCase {
-        id: testcase
-        name: "mixedparallel"
-        when: !animation.running
-        function test_endresult() {
-            compare(box.rotationChangeCounter, 1);
-            compare(box.scale, 2);
-            compare(box.rotation, 180);
-            var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
-            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
-        }
-    }
+    visible: true
+    property bool animationDone: rect.scale == 1;
 
-    Box {
-        id: box
-        ParallelAnimation {
-            id: animation
-            NumberAnimation { target: box; property: "scale"; from: 1; to: 2.0; duration: 1000; }
-            RotationAnimator { target: box; from: 0; to: 180; duration: 1000; }
-            running: true
-            loops: 1;
+    Rectangle {
+        id: rect
+        anchors.centerIn: parent
+
+        width: 100
+        height: 100
+        color: "red"
+        scale: 0
+
+        ScaleAnimator on scale {
+            id: animation;
+            from: 0
+            to: 1
+            duration: 1000
         }
     }
 }

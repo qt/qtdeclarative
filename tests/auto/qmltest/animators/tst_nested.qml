@@ -48,44 +48,45 @@ Item {
     height: 200
 
     TestCase {
-        id: testcase
-        name: "transition"
-        when: box.scale == 2
+        id: testCase
+        name: "animators-nested"
+        when: !animation.running
         function test_endresult() {
-            compare(box.scaleChangeCounter, 1);
-            compare(box.scale, 2);
-            var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
-            compare(image.pixel(199, 199), Qt.rgba(0, 0, 1));
+            compare(box.before, 2);
+            compare(box.after, 2);
         }
     }
-
-    states: [
-        State {
-            name: "one"
-            PropertyChanges { target: box; scale: 1 }
-        },
-        State {
-            name: "two"
-            PropertyChanges { target: box; scale: 2 }
-        }
-    ]
-    state: "one"
-
-    transitions: [
-        Transition {
-            ScaleAnimator { duration: 200; }
-        }
-    ]
 
     Box {
         id: box
+
+        anchors.centerIn: undefined
+
+        property int before: 0;
+        property int after: 0;
+
+        SequentialAnimation {
+            id: animation;
+            ScriptAction { script: box.before++; }
+            ParallelAnimation {
+                ScaleAnimator { target: box; from: 2.0; to: 1; duration: 100; }
+                OpacityAnimator { target: box; from: 0; to: 1; duration: 100; }
+            }
+            PauseAnimation { duration: 100 }
+            SequentialAnimation {
+                ParallelAnimation {
+                    XAnimator { target: box; from: 0; to: 100; duration: 100 }
+                    RotationAnimator { target: box; from: 0; to: 90; duration: 100 }
+                }
+                ParallelAnimation {
+                    XAnimator { target: box; from: 100; to: 0; duration: 100 }
+                    RotationAnimator { target: box; from: 90; to: 0; duration: 100 }
+                }
+            }
+            ScriptAction { script: box.after++; }
+            running: true
+            loops: 2
+        }
     }
 
-    Timer {
-        interval: 1000;
-        repeat: false
-        running: true
-        onTriggered: root.state = "two"
-    }
 }

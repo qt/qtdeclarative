@@ -39,75 +39,38 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
+import QtQuick 2.2
+import QtTest 1.0
 
-#include <QtQuick>
-#include <private/qquickanimator_p.h>
+Item {
+    id: root;
+    width: 200
+    height: 200
 
-#include <QtQml>
-
-class tst_Animators: public QObject
-{
-    Q_OBJECT
-
-private slots:
-    void testMultiWinAnimator_data();
-    void testMultiWinAnimator();
-};
-
-void tst_Animators::testMultiWinAnimator_data()
-{
-    QTest::addColumn<int>("count");
-
-    QTest::newRow("1") << 1;
-    QTest::newRow("10") << 10;
-}
-
-void tst_Animators::testMultiWinAnimator()
-{
-    QFETCH(int, count);
-
-    QQmlEngine engine;
-    QQmlComponent component(&engine, "data/windowWithAnimator.qml");
-
-    QList<QQuickWindow *> windows;
-    for (int i=0; i<count; ++i) {
-        QQuickWindow *win = qobject_cast<QQuickWindow *>(component.create());
-        windows << win;
-
-        // As the windows are all the same size, if they are positioned at the
-        // same place only the top-most one will strictly be "exposed" and rendering
-        // for all the others will be disabled. Move the windows a little bit
-        // to ensure they are exposed and actually rendering.
-        if (i > 0) {
-            QPoint pos = win->position();
-            if (pos == windows.first()->position())
-                pos += QPoint(10 * i, 10 * i);
-                win->setPosition(pos);
+    TestCase {
+        id: testCase
+        name: "animators-opacity"
+        when: !animation.running
+        function test_endresult() {
+            compare(box.opacityChangeCounter, 1);
+            compare(box.opacity, 0.5);
+            var image = grabImage(root);
+            compare(image.red(50, 50), 255);
+            verify(image.green(50, 50) > 0);
+            verify(image.blue(50, 50) > 0);
         }
     }
 
-    // let all animations run their course...
-    while (true) {
-        QTest::qWait(200);
-        bool allDone = true;
-        for (int i=0; i<count; ++i) {
-            QQuickWindow *win = windows.at(i);
-            allDone = win->isExposed() && win->property("animationDone").toBool();
-        }
+    Box {
+        id: box
 
-        if (allDone) {
-            for (int i=0; i<count; ++i) {
-                QQuickWindow *win = windows.at(i);
-                delete win;
-            }
-            break;
+        OpacityAnimator {
+            id: animation
+            target: box
+            from: 1;
+            to: 0.5
+            duration: 100
+            running: true
         }
     }
-    QVERIFY(true);
 }
-
-#include "tst_qquickanimators.moc"
-
-QTEST_MAIN(tst_Animators)
-

@@ -93,7 +93,7 @@ public:
 
 public Q_SLOTS:
     void animationsStarted();
-    void animationsStopped();
+    void itemDestroyed(QObject *);
 
 public:
     QList<QAbstractAnimationJob *> starting;
@@ -104,9 +104,9 @@ public:
 
     QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *> transforms;
 
-    QQuickWindow *window;
+    QSet<QQuickItem *> deletedSinceLastFrame;
 
-    QAnimationDriver *driver;
+    QQuickWindow *window;
 
     QMutex mutex;
 };

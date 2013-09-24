@@ -49,27 +49,28 @@ Item {
 
     TestCase {
         id: testCase
-        name: "opacity"
+        name: "animators-x"
         when: !animation.running
         function test_endresult() {
-            compare(box.opacityChangeCounter, 1);
-            compare(box.opacity, 0.5);
+            compare(box.xChangeCounter, 1);
+            compare(box.x, 100);
             var image = grabImage(root);
-            compare(image.red(50, 50), 255);
-            verify(image.green(50, 50) > 0);
-            verify(image.blue(50, 50) > 0);
+            compare(image.pixel(100, 50), Qt.rgba(1, 0, 0));
+            compare(image.pixel(99, 50), Qt.rgba(1, 1, 1)); // outside on the left
         }
     }
 
     Box {
         id: box
 
-        OpacityAnimator {
+        anchors.centerIn: undefined
+
+        XAnimator {
             id: animation
             target: box
-            from: 1;
-            to: 0.5
-            duration: 1000
+            from: 0;
+            to: 100
+            duration: 100
             running: true
         }
     }
