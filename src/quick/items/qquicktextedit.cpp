@@ -1861,7 +1861,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         break;
 
                     QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
-                    if (currentNodeSize > nodeBreakingSize || *lowerBound > nodeStart) {
+                    if (currentNodeSize > nodeBreakingSize || lowerBound == frameBoundaries.constEnd() || *lowerBound > nodeStart) {
                         currentNodeSize = 0;
                         d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
                         node = d->createTextNode();
