@@ -45,7 +45,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
 #include <QtQml/QQmlAbstractUrlInterceptor>
-#include <qtqmlglobal.h>
+#include <QtQml/qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 
