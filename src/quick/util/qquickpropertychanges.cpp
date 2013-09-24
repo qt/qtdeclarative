@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PropertyChanges
     \instantiates QQuickPropertyChanges
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Describes new property bindings or values for a state
 

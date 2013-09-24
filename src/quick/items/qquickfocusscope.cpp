@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FocusScope
     \instantiates QQuickFocusScope
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
 
     \brief Explicitly creates a focus scope

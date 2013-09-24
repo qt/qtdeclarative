@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PinchEvent
     \instantiates QQuickPinchEvent
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief For specifying information about a pinch event
 
@@ -165,7 +165,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 /*!
     \qmltype PinchArea
     \instantiates QQuickPinchArea
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \inherits Item
     \brief Enables simple pinch gesture handling

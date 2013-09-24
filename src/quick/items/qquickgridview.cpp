@@ -1124,7 +1124,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 /*!
     \qmltype GridView
     \instantiates QQuickGridView
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-views
 
     \inherits Flickable

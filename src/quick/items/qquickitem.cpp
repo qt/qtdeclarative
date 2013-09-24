@@ -141,7 +141,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmltype Transform
     \instantiates QQuickTransform
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items
 
@@ -377,7 +377,7 @@ void QQuickItemKeyFilter::componentComplete()
 /*!
     \qmltype KeyNavigation
     \instantiates QQuickKeyNavigationAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Supports key navigation by arrow keys
 
@@ -810,7 +810,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 /*!
     \qmltype Keys
     \instantiates QQuickKeysAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Provides key handling to Items
 
@@ -1361,7 +1361,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 /*!
     \qmltype LayoutMirroring
     \instantiates QQuickLayoutMirroringAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-positioners
     \ingroup qml-utility-elements
     \brief Property used to mirror layout behavior
@@ -1623,7 +1623,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \qmltype Item
     \instantiates QQuickItem
     \inherits QtObject
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \brief A basic visual QML type
 

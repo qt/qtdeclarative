@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype AnimatedImage
     \instantiates QQuickAnimatedImage
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \inherits Image
     \brief Plays animations stored as a series of images
     \ingroup qtquick-visual

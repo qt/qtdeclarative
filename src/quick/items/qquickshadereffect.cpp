@@ -535,7 +535,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 /*!
     \qmltype ShaderEffect
     \instantiates QQuickShaderEffect
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-effects
     \brief Applies custom shaders to a rectangle

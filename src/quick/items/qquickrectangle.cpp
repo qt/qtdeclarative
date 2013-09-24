@@ -130,7 +130,7 @@ bool QQuickPen::isValid() const
 /*!
     \qmltype GradientStop
     \instantiates QQuickGradientStop
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Defines the color at a position in a Gradient
 
@@ -182,7 +182,7 @@ void QQuickGradientStop::updateGradient()
 /*!
     \qmltype Gradient
     \instantiates QQuickGradient
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Defines a gradient fill
 
@@ -265,7 +265,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 /*!
     \qmltype Rectangle
     \instantiates QQuickRectangle
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-visual
     \brief Paints a filled rectangle with an optional border

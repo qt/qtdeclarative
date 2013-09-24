@@ -208,7 +208,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 /*!
     \qmltype Canvas
     \instantiates QQuickCanvasItem
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \since 5.0
     \inherits Item
     \ingroup qtquick-canvas

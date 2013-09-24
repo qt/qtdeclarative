@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PathElement
     \instantiates QQuickPathElement
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief PathElement is the base path type
 
@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Path
     \instantiates QQuickPath
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path for use by \l PathView
 
@@ -888,7 +888,7 @@ bool QQuickCurve::hasRelativeY()
 /*!
     \qmltype PathAttribute
     \instantiates QQuickPathAttribute
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Specifies how to set an attribute at a given position in a Path
 
@@ -1005,7 +1005,7 @@ void QQuickPathAttribute::setValue(qreal value)
 /*!
     \qmltype PathLine
     \instantiates QQuickPathLine
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a straight line
 
@@ -1064,7 +1064,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 /*!
     \qmltype PathQuad
     \instantiates QQuickPathQuad
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a quadratic Bezier curve with a control point
 
@@ -1216,7 +1216,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
 /*!
     \qmltype PathCubic
     \instantiates QQuickPathCubic
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a cubic Bezier curve with two control points
 
@@ -1440,7 +1440,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
 /*!
     \qmltype PathCurve
     \instantiates QQuickPathCatmullRomCurve
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a point on a Catmull-Rom curve
 
@@ -1586,7 +1586,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
 /*!
     \qmltype PathArc
     \instantiates QQuickPathArc
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radius
 
@@ -1757,7 +1757,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 /*!
     \qmltype PathSvg
     \instantiates QQuickPathSvg
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path using an SVG path data string
 
@@ -1810,7 +1810,7 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 /*!
     \qmltype PathPercent
     \instantiates QQuickPathPercent
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Manipulates the way a path is interpreted
 

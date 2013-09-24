@@ -53,7 +53,7 @@ QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObject *parent)
 /*!
     \qmltype GridMesh
     \instantiates QQuickGridMesh
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \since 5.0
     \ingroup qtquick-effects
     \brief Defines a mesh with vertices arranged in a grid

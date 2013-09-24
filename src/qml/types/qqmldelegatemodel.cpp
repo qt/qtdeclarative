@@ -139,7 +139,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 /*!
     \qmltype VisualDataModel
     \instantiates QQmlDelegateModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-models
     \brief Encapsulates a model and delegate
 
@@ -2196,7 +2196,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 /*!
     \qmltype VisualDataGroup
     \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 

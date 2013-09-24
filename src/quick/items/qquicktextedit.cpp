@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TextEdit
     \instantiates QQuickTextEdit
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item

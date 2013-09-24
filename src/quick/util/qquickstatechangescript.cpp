@@ -69,7 +69,7 @@ public:
 /*!
     \qmltype StateChangeScript
     \instantiates QQuickStateChangeScript
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to run a script in a state
 

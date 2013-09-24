@@ -599,7 +599,7 @@ is finished.
 /*!
     \qmltype Flickable
     \instantiates QQuickFlickable
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \ingroup qtquick-containers
 

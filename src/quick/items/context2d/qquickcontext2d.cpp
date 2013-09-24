@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Context2D
     \instantiates QQuickContext2D
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \since 5.0
     \brief Provides 2D context for shapes on a Canvas item
@@ -2834,7 +2834,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(QV4::SimpleCall
 
 /*!
   \qmltype TextMetrics
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \since 5.0
     \ingroup qtquick-canvas
     \brief Provides a Context2D TextMetrics interface
@@ -3047,7 +3047,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallC
 // pixel manipulation
 /*!
     \qmltype CanvasImageData
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \brief Contains image pixel data in RGBA order
 
@@ -3111,7 +3111,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_data(QV4::SimpleCallCo
 
 /*!
     \qmltype CanvasPixelArray
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \brief Provides ordered and indexed access to the components of each pixel in image data
 
@@ -3375,7 +3375,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::SimpleCa
 
 /*!
     \qmltype CanvasGradient
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \since 5.0
     \ingroup qtquick-canvas
     \brief Provides an opaque CanvasGradient interface
