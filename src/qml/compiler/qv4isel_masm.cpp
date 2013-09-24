@@ -358,7 +358,6 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
     }
 }
 
-
 void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);
@@ -1128,7 +1127,9 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
         }
     }
 
-    _as->copyValue(targetTemp, sourceTemp);
+    // The target is not a physical register, nor is the source. So we can do a memory-to-memory copy:
+    _as->memcopyValue(_as->loadTempAddress(Assembler::ReturnValueRegister, targetTemp), sourceTemp,
+                      Assembler::ScratchRegister);
 }
 
 void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
@@ -1910,7 +1911,11 @@ int InstructionSelection::prepareVariableArguments(V4IR::ExprList* args)
     for (V4IR::ExprList *it = args; it; it = it->next, ++i) {
         V4IR::Expr *arg = it->expr;
         Q_ASSERT(arg != 0);
-        _as->copyValue(_as->stackLayout().argumentAddressForCall(i), arg);
+        Pointer dst(_as->stackLayout().argumentAddressForCall(i));
+        if (arg->asTemp() && arg->asTemp()->kind != V4IR::Temp::PhysicalRegister)
+            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+        else
+            _as->copyValue(dst, arg);
     }
 
     return argc;
@@ -1937,7 +1942,11 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     for (V4IR::ExprList *it = args; it; it = it->next, ++i) {
         V4IR::Expr *arg = it->expr;
         Q_ASSERT(arg != 0);
-        _as->copyValue(_as->stackLayout().argumentAddressForCall(i), arg);
+        Pointer dst(_as->stackLayout().argumentAddressForCall(i));
+        if (arg->asTemp() && arg->asTemp()->kind != V4IR::Temp::PhysicalRegister)
+            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+        else
+            _as->copyValue(dst, arg);
     }
     return argc;
 }

@@ -808,6 +808,15 @@ public:
     template <typename Result>
     void copyValue(Result result, V4IR::Expr* source);
 
+    // The scratch register is used to calculate the temp address for the source.
+    void memcopyValue(Pointer target, V4IR::Temp *sourceTemp, RegisterID scratchRegister)
+    {
+        Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister);
+        Q_ASSERT(target.base != scratchRegister);
+        JSC::MacroAssembler::loadDouble(loadTempAddress(scratchRegister, sourceTemp), FPGpr0);
+        JSC::MacroAssembler::storeDouble(FPGpr0, target);
+    }
+
     void storeValue(QV4::Value value, RegisterID destination)
     {
         Q_UNUSED(value);
