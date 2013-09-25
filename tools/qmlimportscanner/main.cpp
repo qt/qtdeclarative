@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
-    if (args.size() < 1) {
+    if (args.size() < 2) {
         printUsage(appName);
         return 1;
     }
