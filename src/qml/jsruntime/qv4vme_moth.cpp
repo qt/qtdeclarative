@@ -242,7 +242,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     }
 #endif
 
-    QV4::SafeString * const runtimeStrings = context->runtimeStrings;
+    QV4::SafeString * const runtimeStrings = context->compilationUnit->runtimeStrings;
     context->interpreterInstructionPointer = &code;
 
 #ifdef MOTH_THREADED_INTERPRETER

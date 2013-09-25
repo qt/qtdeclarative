@@ -77,9 +77,7 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, Value *locals, F
 
     if (function->function) {
         c->compilationUnit = function->function->compilationUnit;
-        c->compiledFunction = function->function->compiledFunction;
         c->lookups = c->compilationUnit->runtimeLookups;
-        c->runtimeStrings = c->compilationUnit->runtimeStrings;
     }
 
     c->locals = locals;
@@ -120,9 +118,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
     if (function->function) {
         c->compilationUnit = function->function->compilationUnit;
-        c->compiledFunction = function->function->compiledFunction;
         c->lookups = c->compilationUnit->runtimeLookups;
-        c->runtimeStrings = c->compilationUnit->runtimeStrings;
     }
 
     c->locals = (Value *)(c + 1);
@@ -230,9 +226,7 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
     callData = p->callData;
     outer = p;
     lookups = p->lookups;
-    runtimeStrings = p->runtimeStrings;
     compilationUnit = p->compilationUnit;
-    compiledFunction = p->compiledFunction;
 
     withObject = with;
 }
@@ -244,9 +238,7 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     callData = p->callData;
     outer = p;
     lookups = p->lookups;
-    runtimeStrings = p->runtimeStrings;
     compilationUnit = p->compilationUnit;
-    compiledFunction = p->compiledFunction;
 
     this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
@@ -273,9 +265,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     if (function->function) {
         compilationUnit = function->function->compilationUnit;
-        compiledFunction = function->function->compiledFunction;
         lookups = compilationUnit->runtimeLookups;
-        runtimeStrings = compilationUnit->runtimeStrings;
     }
 
     locals = (Value *)(this + 1);

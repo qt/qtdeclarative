@@ -407,11 +407,7 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
     ctx->strictMode = strictMode;
 
     CompiledData::CompilationUnit * const oldCompilationUnit = ctx->compilationUnit;
-    const CompiledData::Function * const oldCompiledFunction = ctx->compiledFunction;
-    SafeString * const oldRuntimeStrings = ctx->runtimeStrings;
     ctx->compilationUnit = function->compilationUnit;
-    ctx->compiledFunction = function->compiledFunction;
-    ctx->runtimeStrings = function->compilationUnit->runtimeStrings;
 
     ScopedValue result(scope);
     try {
@@ -420,8 +416,6 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;
         ctx->compilationUnit = oldCompilationUnit;
-        ctx->compiledFunction = oldCompiledFunction;
-        ctx->runtimeStrings = oldRuntimeStrings;
         if (strictMode)
             ex.partiallyUnwindContext(parentContext);
         throw;
@@ -430,8 +424,6 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
     ctx->strictMode = cstrict;
     ctx->currentEvalCode = evalCode.next;
     ctx->compilationUnit = oldCompilationUnit;
-    ctx->compiledFunction = oldCompiledFunction;
-    ctx->runtimeStrings = oldRuntimeStrings;
 
     while (engine->current != parentContext)
         engine->popContext();
