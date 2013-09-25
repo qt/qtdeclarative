@@ -1224,9 +1224,12 @@ public:
     {
         if (V4IR::Const *c = e->asConst()) {
 #if QT_POINTER_SIZE == 8
-            load64(constantTable().loadValueAddress(c, ScratchRegister), ReturnValueRegister);
-            move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-            xor64(ScratchRegister, ReturnValueRegister);
+            union {
+                double d;
+                int64_t i;
+            } u;
+            u.d = c->value;
+            move(TrustedImm64(u.i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
             JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
