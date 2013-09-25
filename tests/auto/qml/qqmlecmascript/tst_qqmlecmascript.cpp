@@ -260,6 +260,7 @@ private slots:
     void urlListPropertyWithEncoding();
     void dynamicString();
     void include();
+    void includeRemoteSuccess();
     void signalHandlers();
     void doubleEvaluate();
     void forInLoop();
@@ -5955,8 +5956,33 @@ void tst_qqmlecmascript::include()
     delete o;
     }
 
-    // Remote - success
+    // Remote - error
     {
+    TestHTTPServer server(8111);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory());
+
+    QQmlComponent component(&engine, testFileUrl("include_remote_missing.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QTRY_VERIFY(o->property("done").toBool() == true);
+
+    QCOMPARE(o->property("test1").toBool(), true);
+    QCOMPARE(o->property("test2").toBool(), true);
+    QCOMPARE(o->property("test3").toBool(), true);
+
+    delete o;
+    }
+}
+
+void tst_qqmlecmascript::includeRemoteSuccess()
+{
+#if defined(Q_CC_MSVC) && _MSC_VER == 1700
+    QSKIP("This test does not work reliably with MSVC2012 on Win8 64-bit in release mode.");
+#endif
+
+    // Remote - success
     TestHTTPServer server(8111);
     QVERIFY(server.isValid());
     server.serveDirectory(dataDirectory());
@@ -5981,26 +6007,6 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test10").toBool(), true);
 
     delete o;
-    }
-
-    // Remote - error
-    {
-    TestHTTPServer server(8111);
-    QVERIFY(server.isValid());
-    server.serveDirectory(dataDirectory());
-
-    QQmlComponent component(&engine, testFileUrl("include_remote_missing.qml"));
-    QObject *o = component.create();
-    QVERIFY(o != 0);
-
-    QTRY_VERIFY(o->property("done").toBool() == true);
-
-    QCOMPARE(o->property("test1").toBool(), true);
-    QCOMPARE(o->property("test2").toBool(), true);
-    QCOMPARE(o->property("test3").toBool(), true);
-
-    delete o;
-    }
 }
 
 void tst_qqmlecmascript::signalHandlers()
