@@ -2115,7 +2115,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine());
     QV4::Scope scope(v4);
-    QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
 
     if (index >= 0 && index < count()) {
 

@@ -63,7 +63,7 @@ struct Property {
     // Section 8.10
     inline void fullyPopulated(PropertyAttributes *attrs) {
         if (!attrs->hasType()) {
-            value = Value::undefinedValue();
+            value = Primitive::undefinedValue();
         }
         if (attrs->type() == PropertyAttributes::Accessor) {
             attrs->clearWritable();

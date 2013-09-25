@@ -940,7 +940,7 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
     QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
     if (args->length() >= 2) {
         QV4::ScopedValue v(scope, (*args)[1]);
         if (!v->isObject() || v->asArrayObject()) {

@@ -78,7 +78,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
     {
         m->engine()->current->throwTypeError();
-        return QV4::Value::undefinedValue().asReturnedValue();
+        return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
@@ -90,7 +90,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         if (!o)
             v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        QV4::Value v = callData->argc ? callData->args[0] : QV4::Value::undefinedValue();
+        QV4::Value v = callData->argc ? callData->args[0] : QV4::Primitive::undefinedValue();
         return f->code(o->item, f->flag, v);
     }
 };
@@ -3188,7 +3188,7 @@ public:
         if (index >= array->count()) {
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Value::undefinedValue().asReturnedValue();
+            return QV4::Primitive::undefinedValue().asReturnedValue();
         }
 
         const QQmlChangeSet::Change &change = array->at(index);

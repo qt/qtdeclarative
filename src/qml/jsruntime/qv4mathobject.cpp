@@ -55,14 +55,14 @@ MathObject::MathObject(ExecutionEngine *engine)
 {
     type = Type_MathObject;
 
-    defineReadonlyProperty(QStringLiteral("E"), Value::fromDouble(::exp(1.0)));
-    defineReadonlyProperty(QStringLiteral("LN2"), Value::fromDouble(::log(2.0)));
-    defineReadonlyProperty(QStringLiteral("LN10"), Value::fromDouble(::log(10.0)));
-    defineReadonlyProperty(QStringLiteral("LOG2E"), Value::fromDouble(1.0/::log(2.0)));
-    defineReadonlyProperty(QStringLiteral("LOG10E"), Value::fromDouble(1.0/::log(10.0)));
-    defineReadonlyProperty(QStringLiteral("PI"), Value::fromDouble(qt_PI));
-    defineReadonlyProperty(QStringLiteral("SQRT1_2"), Value::fromDouble(::sqrt(0.5)));
-    defineReadonlyProperty(QStringLiteral("SQRT2"), Value::fromDouble(::sqrt(2.0)));
+    defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(::exp(1.0)));
+    defineReadonlyProperty(QStringLiteral("LN2"), Primitive::fromDouble(::log(2.0)));
+    defineReadonlyProperty(QStringLiteral("LN10"), Primitive::fromDouble(::log(10.0)));
+    defineReadonlyProperty(QStringLiteral("LOG2E"), Primitive::fromDouble(1.0/::log(2.0)));
+    defineReadonlyProperty(QStringLiteral("LOG10E"), Primitive::fromDouble(1.0/::log(10.0)));
+    defineReadonlyProperty(QStringLiteral("PI"), Primitive::fromDouble(qt_PI));
+    defineReadonlyProperty(QStringLiteral("SQRT1_2"), Primitive::fromDouble(::sqrt(0.5)));
+    defineReadonlyProperty(QStringLiteral("SQRT2"), Primitive::fromDouble(::sqrt(2.0)));
 
     defineDefaultProperty(QStringLiteral("abs"), method_abs, 1);
     defineDefaultProperty(QStringLiteral("acos"), method_acos, 1);

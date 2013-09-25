@@ -97,9 +97,9 @@ inline void Value::mark() const {
         m->mark();
 }
 
-inline Value Value::undefinedValue()
+inline Value Primitive::undefinedValue()
 {
-    Value v;
+    Primitive v;
 #if QT_POINTER_SIZE == 8
     v.val = quint64(Undefined_Type) << Tag_Shift;
 #else
@@ -109,9 +109,9 @@ inline Value Value::undefinedValue()
     return v;
 }
 
-inline Value Value::nullValue()
+inline Primitive Primitive::nullValue()
 {
-    Value v;
+    Primitive v;
 #if QT_POINTER_SIZE == 8
     v.val = quint64(_Null_Type) << Tag_Shift;
 #else
@@ -130,32 +130,32 @@ inline Value Value::emptyValue()
 }
 
 
-inline Value Value::fromBoolean(Bool b)
+inline Primitive Primitive::fromBoolean(bool b)
 {
-    Value v;
+    Primitive v;
     v.tag = _Boolean_Type;
     v.int_32 = (bool)b;
     return v;
 }
 
-inline Value Value::fromDouble(double d)
+inline Primitive Primitive::fromDouble(double d)
 {
-    Value v;
+    Primitive v;
     v.setDouble(d);
     return v;
 }
 
-inline Value Value::fromInt32(int i)
+inline Primitive Primitive::fromInt32(int i)
 {
-    Value v;
+    Primitive v;
     v.tag = _Integer_Type;
     v.int_32 = i;
     return v;
 }
 
-inline Value Value::fromUInt32(uint i)
+inline Primitive Primitive::fromUInt32(uint i)
 {
-    Value v;
+    Primitive v;
     if (i < INT_MAX) {
         v.tag = _Integer_Type;
         v.int_32 = (int)i;
@@ -192,7 +192,7 @@ inline Value Value::fromObject(Object *o)
 inline Value Value::fromManaged(Managed *m)
 {
     if (!m)
-        return QV4::Value::undefinedValue();
+        return QV4::Primitive::undefinedValue();
     Value v;
 #if QT_POINTER_SIZE == 8
     v.m = m;
@@ -392,7 +392,7 @@ public:
     ~PersistentValue();
 
     ReturnedValue value() const {
-        return (d ? d->value : Value::undefinedValue()).asReturnedValue();
+        return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
     }
 
     ExecutionEngine *engine() {
@@ -433,7 +433,7 @@ public:
     ~WeakValue();
 
     ReturnedValue value() const {
-        return (d ? d->value : Value::undefinedValue()).asReturnedValue();
+        return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
     }
 
     ExecutionEngine *engine() {

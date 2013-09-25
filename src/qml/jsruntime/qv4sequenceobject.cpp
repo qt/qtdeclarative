@@ -86,7 +86,7 @@ static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QStr
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
 {
-    return QV4::Value::fromInt32(element);
+    return QV4::Primitive::fromInt32(element);
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
@@ -96,12 +96,12 @@ static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, qreal element)
 {
-    return QV4::Value::fromDouble(element);
+    return QV4::Primitive::fromDouble(element);
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, bool element)
 {
-    return QV4::Value::fromBoolean(element);
+    return QV4::Primitive::fromBoolean(element);
 }
 
 static QString convertElementToString(const QString &element)
@@ -202,13 +202,13 @@ public:
             generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Value::undefinedValue();
+            return QV4::Primitive::undefinedValue();
         }
         if (m_isReference) {
             if (!m_object) {
                 if (hasProperty)
                     *hasProperty = false;
-                return QV4::Value::undefinedValue();
+                return QV4::Primitive::undefinedValue();
             }
             loadReference();
         }
@@ -220,7 +220,7 @@ public:
         }
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::undefinedValue();
+        return QV4::Primitive::undefinedValue();
     }
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)

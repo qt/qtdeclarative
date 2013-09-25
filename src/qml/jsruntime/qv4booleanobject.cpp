@@ -55,7 +55,7 @@ ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    ScopedValue b(scope, QV4::Value::fromBoolean(n));
+    ScopedValue b(scope, QV4::Primitive::fromBoolean(n));
     return Encode(m->engine()->newBooleanObject(b));
 }
 
@@ -67,7 +67,7 @@ ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
 
 void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
     defineDefaultProperty(engine->id_toString, method_toString);

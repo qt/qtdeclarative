@@ -255,7 +255,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     QV4::ScopedValue v(scope);
     try {
         QV4::ScopedCallData callData(scope, 1);
-        callData->args[0] = QV4::Value::fromInt32(id);
+        callData->args[0] = QV4::Primitive::fromInt32(id);
         callData->thisObject = global();
         v = f->call(callData);
     } catch (QV4::Exception &e) {
@@ -288,7 +288,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 
     int id = ctx->callData->argc > 1 ? ctx->callData->args[1].toInt32() : 0;
 
-    QByteArray data = QV4::Serialize::serialize(ctx->callData->argc > 2 ? ctx->callData->args[2] : QV4::Value::undefinedValue(), engine);
+    QByteArray data = QV4::Serialize::serialize(ctx->callData->argc > 2 ? ctx->callData->args[2] : QV4::Primitive::undefinedValue(), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
@@ -683,7 +683,7 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
     }
 
     QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue argument(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue argument(scope, QV4::Primitive::undefinedValue());
     if (args->length() != 0)
         argument = (*args)[0];
 

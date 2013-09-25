@@ -202,7 +202,7 @@ Value JsonParser::parse(QJsonParseError *error)
             lastError = QJsonParseError::IllegalValue;
         error->offset = json - head;
         error->error  = lastError;
-        return Value::undefinedValue();
+        return Primitive::undefinedValue();
     }
 
     // some input left...
@@ -210,7 +210,7 @@ Value JsonParser::parse(QJsonParseError *error)
         lastError = QJsonParseError::IllegalValue;
         error->offset = json - head;
         error->error  = lastError;
-        return Value::undefinedValue();
+        return Primitive::undefinedValue();
     }
 
     END;
@@ -356,7 +356,7 @@ bool JsonParser::parseValue(ValueRef val)
         if (*json++ == 'u' &&
             *json++ == 'l' &&
             *json++ == 'l') {
-            *val = Value::nullValue();
+            *val = Primitive::nullValue();
             DEBUG << "value: null";
             END;
             return true;
@@ -371,7 +371,7 @@ bool JsonParser::parseValue(ValueRef val)
         if (*json++ == 'r' &&
             *json++ == 'u' &&
             *json++ == 'e') {
-            *val = Value::fromBoolean(true);
+            *val = Primitive::fromBoolean(true);
             DEBUG << "value: true";
             END;
             return true;
@@ -387,7 +387,7 @@ bool JsonParser::parseValue(ValueRef val)
             *json++ == 'l' &&
             *json++ == 's' &&
             *json++ == 'e') {
-            *val = Value::fromBoolean(false);
+            *val = Primitive::fromBoolean(false);
             DEBUG << "value: false";
             END;
             return true;
@@ -495,7 +495,7 @@ bool JsonParser::parseNumber(Value *val)
         bool ok;
         int n = number.toInt(&ok);
         if (ok && n < (1<<25) && n > -(1<<25)) {
-            *val = Value::fromInt32(n);
+            *val = Primitive::fromInt32(n);
             END;
             return true;
         }
@@ -510,7 +510,7 @@ bool JsonParser::parseNumber(Value *val)
         return false;
     }
 
-    * val = Value::fromDouble(d);
+    * val = Primitive::fromDouble(d);
 
     END;
     return true;

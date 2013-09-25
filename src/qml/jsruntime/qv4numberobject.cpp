@@ -60,31 +60,31 @@ ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    ScopedValue d(scope, QV4::Value::fromDouble(dbl));
+    ScopedValue d(scope, QV4::Primitive::fromDouble(dbl));
     return Encode(m->engine()->newNumberObject(d));
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromDouble(dbl).asReturnedValue();
+    return Primitive::fromDouble(dbl).asReturnedValue();
 }
 
 void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
 
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
 
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
+    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
@@ -157,7 +157,7 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
         }
     }
 
-    String *str = Value::fromDouble(num).toString(ctx);
+    String *str = Primitive::fromDouble(num).toString(ctx);
     return Value::fromString(str).asReturnedValue();
 }
 

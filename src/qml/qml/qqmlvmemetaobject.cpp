@@ -78,7 +78,7 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
                 QV4::Scope scope(v4);
                 QV4::ScopedArrayObject a(scope, m_target->varProperties.value());
                 if (a)
-                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Value::nullValue()));
+                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Primitive::nullValue()));
             }
         }
 
@@ -970,7 +970,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return QV4::Value::undefinedValue().asReturnedValue();
+        return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 
     if (!v8methods) 
@@ -1001,7 +1001,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
         QV4::ScopedObject o(scope, varProperties.value());
         return o->getIndexed(id - firstVarPropertyIndex);
     }
-    return QV4::Value::undefinedValue().asReturnedValue();
+    return QV4::Primitive::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)

@@ -63,7 +63,7 @@ struct DateObject: Object {
     QDateTime toQDateTime() const;
 
 protected:
-    DateObject(InternalClass *ic): Object(ic), value(Value::fromDouble(qSNaN())) {
+    DateObject(InternalClass *ic): Object(ic), value(Primitive::fromDouble(qSNaN())) {
         vtbl = &static_vtbl;
         type = Type_DateObject;
     }

@@ -2596,7 +2596,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_isPointInPath(QV4::SimpleC
     bool pointInPath = false;
     if (ctx->callData->argc == 2)
         pointInPath = r->context->isPointInPath(ctx->callData->args[0].toNumber(), ctx->callData->args[1].toNumber());
-    return QV4::Value::fromBoolean(pointInPath).asReturnedValue();
+    return QV4::Primitive::fromBoolean(pointInPath).asReturnedValue();
 }
 
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawFocusRing(QV4::SimpleCallContext *ctx)
@@ -2874,7 +2874,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::SimpleCal
         uint width = fm.width(ctx->callData->args[0].toQStringNoThrow());
         QV4::Scoped<QV4::Object> tm(scope, ctx->engine->newObject());
         tm->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("width"))),
-                QV4::ScopedValue(scope, QV4::Value::fromDouble(width)));
+                QV4::ScopedValue(scope, QV4::Primitive::fromDouble(width)));
         return tm.asReturnedValue();
     }
     return QV4::Encode::undefined();

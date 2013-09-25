@@ -274,12 +274,6 @@ struct Q_QML_EXPORT Value
     }
 
     static Value emptyValue();
-    static Value undefinedValue();
-    static Value nullValue();
-    static Value fromBoolean(Bool b);
-    static Value fromDouble(double d);
-    static Value fromInt32(int i);
-    static Value fromUInt32(uint i);
     static Value fromString(String *s);
     static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
@@ -360,6 +354,19 @@ struct SafeValue : public Value
 
     template<typename T>
     Returned<T> *as();
+};
+
+struct Primitive : public Value
+{
+    static Primitive fromBoolean(bool b);
+    static Primitive fromInt32(int i);
+    static Value undefinedValue();
+    static Primitive nullValue();
+    static Primitive fromDouble(double d);
+    static Primitive fromUInt32(uint i);
+
+    inline operator ValueRef();
+    Value asValue() const { return *this; }
 };
 
 template <typename T>

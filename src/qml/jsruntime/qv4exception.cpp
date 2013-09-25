@@ -101,7 +101,7 @@ Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionVa
 Exception::~Exception()
 {
     assert(accepted);
-    e->exceptionValue = Value::undefinedValue();
+    e->exceptionValue = Primitive::undefinedValue();
 }
 
 void Exception::accept(ExecutionContext *catchingContext)

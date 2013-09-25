@@ -190,7 +190,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
                 if (index < context->importedScripts.count())
                     return context->importedScripts.at(index).value();
                 else
-                    return QV4::Value::undefinedValue().asReturnedValue();
+                    return QV4::Primitive::undefinedValue().asReturnedValue();
             } else if (r.type) {
                 return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {
@@ -269,7 +269,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
 
     expressionContext->unresolvedNames = true;
 
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef value)

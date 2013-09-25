@@ -67,7 +67,7 @@ using namespace QV4;
 #define V4THROW_SQL(error, desc) { \
     QV4::Scoped<String> v(scope, Value::fromString(ctx, desc)); \
     QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v.asValue())); \
-    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Value::fromInt32(error))); \
+    ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->throwError(ex); \
 }
 
@@ -263,7 +263,7 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
     QSqlQuery query(db);
     bool err = false;
 
-    ScopedValue result(scope, Value::undefinedValue());
+    ScopedValue result(scope, Primitive::undefinedValue());
 
     if (query.prepare(sql)) {
         if (ctx->callData->argc > 1) {
@@ -307,7 +307,7 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
-            resultObject->put((s = ctx->engine->newIdentifier("rowsAffected")), (v = Value::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = ctx->engine->newIdentifier("rowsAffected")), (v = Primitive::fromInt32(query.numRowsAffected())));
             resultObject->put((s = ctx->engine->newIdentifier("insertId")), (v = engine->toString(query.lastInsertId().toString())));
             resultObject->put((s = ctx->engine->newIdentifier("rows")), (v = Value::fromObject(rows)));
         } else {

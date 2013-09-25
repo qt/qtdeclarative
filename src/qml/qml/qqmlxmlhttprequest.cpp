@@ -618,7 +618,7 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::EntityReference:
     case NodeImpl::Notation:
     case NodeImpl::ProcessingInstruction:
-        return Value::undefinedValue();
+        return Primitive::undefinedValue();
     case NodeImpl::CDATA:
         instance->setPrototype(CDATA::prototype(v4).asObject());
         break;
@@ -916,7 +916,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
 
     name->makeIdentifier();
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->list.count()).asReturnedValue();
+        return Primitive::fromInt32(r->list.count()).asReturnedValue();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -971,7 +971,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
     name->makeIdentifier();
 
     if (name->isEqualTo(v4->id_length))
-        return Value::fromInt32(r->d->children.count()).asReturnedValue();
+        return Primitive::fromInt32(r->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }
 
@@ -1440,7 +1440,7 @@ void QQmlXMLHttpRequest::finished()
     dispatchCallback(m_me);
 
     Scope scope(v4);
-    ScopedValue v(scope, Value::undefinedValue());
+    ScopedValue v(scope, Primitive::undefinedValue());
     setMe(v);
 }
 
@@ -1612,11 +1612,11 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Scope scope(engine);
         ScopedValue protectThis(scope, this);
 
-        defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
-        defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
-        defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
-        defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
-        defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
+        defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
+        defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
+        defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
+        defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
+        defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
         if (!proto)
             setupProto();
         ScopedString s(scope, engine->id_prototype);
@@ -1647,7 +1647,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     }
 
     static ReturnedValue call(Managed *, QV4::CallData *) {
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
     }
 
     void setupProto();
@@ -1694,11 +1694,11 @@ void QQmlXMLHttpRequestCtor::setupProto()
     proto->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
 
     // State values
-    proto->defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
-    proto->defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
-    proto->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
-    proto->defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
-    proto->defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
+    proto->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
+    proto->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
+    proto->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
+    proto->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
+    proto->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
 }
 
 

@@ -92,7 +92,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     }
     Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
-    lp->value = Value::fromInt32(context->realArgumentCount);
+    lp->value = Primitive::fromInt32(context->realArgumentCount);
 }
 
 void ArgumentsObject::destroy(Managed *that)
@@ -172,8 +172,8 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
         setter->engine()->current->throwTypeError();
 
     assert(s->index < o->context->callData->argc);
-    o->context->callData->args[s->index] = callData->argc ? callData->args[0] : Value::undefinedValue();
-    return Value::undefinedValue().asReturnedValue();
+    o->context->callData->args[s->index] = callData->argc ? callData->args[0] : Primitive::undefinedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void ArgumentsObject::markObjects(Managed *that)

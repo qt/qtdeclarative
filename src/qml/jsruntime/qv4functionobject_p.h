@@ -199,7 +199,7 @@ struct IndexedBuiltinFunction: FunctionObject
     static ReturnedValue construct(Managed *m, CallData *)
     {
         m->engine()->current->throwTypeError();
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);

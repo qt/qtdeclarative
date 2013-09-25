@@ -152,7 +152,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
                             bool ok;
                             int value = e.keyToValue(enumName.constData(), &ok);
                             if (ok)
-                                return QV4::Value::fromInt32(value).asReturnedValue();
+                                return QV4::Primitive::fromInt32(value).asReturnedValue();
                         }
                     }
                 }
@@ -174,7 +174,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
                 bool ok = false;
                 int value = type->enumValue(name, &ok);
                 if (ok)
-                    return QV4::Value::fromInt32(value).asReturnedValue();
+                    return QV4::Primitive::fromInt32(value).asReturnedValue();
 
                 // Fall through to base implementation
 

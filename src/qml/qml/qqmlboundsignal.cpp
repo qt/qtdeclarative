@@ -202,7 +202,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         QV4::Value *args = (QV4::Value *)alloca(qMax(argCount, (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value));
 #ifndef QT_NO_DEBUG
         for (int ii = 0; ii < qMax(argCount, (int)QV4::Global::ReservedArgumentCount); ++ii)
-            args[ii] = QV4::Value::undefinedValue();
+            args[ii] = QV4::Primitive::undefinedValue();
 #endif
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
@@ -213,12 +213,12 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(*((QVariant *)a[ii + 1])));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-                args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+                args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
             } else if (type == qMetaTypeId<QQmlV4Handle>()) {
                 args[ii] = QV4::Value::fromReturnedValue(*reinterpret_cast<QQmlV4Handle *>(a[ii + 1]));
             } else if (ep->isQObject(type)) {
                 if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                    args[ii] = QV4::Value::nullValue();
+                    args[ii] = QV4::Primitive::nullValue();
                 else
                     args[ii] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1])));
             } else {

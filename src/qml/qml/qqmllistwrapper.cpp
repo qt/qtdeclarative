@@ -107,7 +107,7 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
     if (name->isEqualTo(v4->id_length) && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
-        return Value::fromUInt32(count).asReturnedValue();
+        return Primitive::fromUInt32(count).asReturnedValue();
     }
 
     uint idx = name->asArrayIndex();
@@ -128,7 +128,7 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
     if (index < count && w->property.at)
         return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
 
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void QmlListWrapper::put(Managed *m, const StringRef name, const ValueRef value)

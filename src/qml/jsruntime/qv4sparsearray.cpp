@@ -66,7 +66,7 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
         Scope scope(o->engine());
         ScopedValue result(scope);
         ScopedCallData callData(scope, 2);
-        callData->thisObject = Value::undefinedValue();
+        callData->thisObject = Primitive::undefinedValue();
         callData->args[0] = p1.value;
         callData->args[1] = p2.value;
         result = __qmljs_call_value(m_context, m_comparefn, callData);

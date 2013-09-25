@@ -126,7 +126,7 @@ struct QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static Value create(QV4::ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal = Value::undefinedValue());
+    static Value create(QV4::ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal = Primitive::undefinedValue());
 
     int methodIndex() const { return m_index; }
     QObject *object() const { return m_object.data(); }

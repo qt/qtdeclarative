@@ -276,7 +276,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
 
         if (!reference->object || !readReferenceValue(reference))
-            return Value::undefinedValue().asReturnedValue();
+            return Primitive::undefinedValue().asReturnedValue();
 
     } else {
         Q_ASSERT(r->objectType == QmlValueTypeWrapper::Copy);

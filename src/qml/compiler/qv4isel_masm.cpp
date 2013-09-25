@@ -781,7 +781,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
-    _as->storeValue(Value::fromBoolean(false), result);
+    _as->storeValue(Primitive::fromBoolean(false), result);
 }
 
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
@@ -794,7 +794,7 @@ typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr))
 static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
                         QV4::StringRef exceptionVarName, ValueRef exceptionVar)
 {
-    exceptionVar = Value::undefinedValue();
+    exceptionVar = Primitive::undefinedValue();
     void *addressToContinueAt = 0;
     SafeValue *jsStackTop = context->engine->jsStackTop;
     try {
@@ -1191,13 +1191,13 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         QV4::Value tag;
         switch (registerTemp->type) {
         case V4IR::BoolType:
-            tag = QV4::Value::fromBoolean(false);
+            tag = QV4::Primitive::fromBoolean(false);
             break;
         case V4IR::SInt32Type:
-            tag = QV4::Value::fromInt32(0);
+            tag = QV4::Primitive::fromInt32(0);
             break;
         default:
-            tag = QV4::Value::undefinedValue();
+            tag = QV4::Primitive::undefinedValue();
             Q_UNREACHABLE();
         }
         _as->store32(Assembler::TrustedImm32(tag.tag), addr);
@@ -1858,13 +1858,13 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
                 QV4::Value upper;
                 switch (t->type) {
                 case V4IR::SInt32Type:
-                    upper = QV4::Value::fromInt32(0);
+                    upper = QV4::Primitive::fromInt32(0);
                     break;
                 case V4IR::BoolType:
-                    upper = QV4::Value::fromBoolean(false);
+                    upper = QV4::Primitive::fromBoolean(false);
                     break;
                 default:
-                    upper = QV4::Value::undefinedValue();
+                    upper = QV4::Primitive::undefinedValue();
                     Q_UNREACHABLE();
                 }
                 _as->or64(Assembler::TrustedImm64(((int64_t) upper.tag) << 32),
@@ -1929,7 +1929,7 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     _as->store32(Assembler::TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));
     if (!thisObject)
-        _as->storeValue(QV4::Value::undefinedValue(), p);
+        _as->storeValue(QV4::Primitive::undefinedValue(), p);
     else
         _as->copyValue(p, thisObject);
 

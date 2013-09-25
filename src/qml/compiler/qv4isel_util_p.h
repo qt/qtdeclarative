@@ -69,30 +69,30 @@ inline QV4::Value convertToValue(V4IR::Const *c)
     case V4IR::MissingType:
         return QV4::Value::emptyValue();
     case V4IR::NullType:
-        return QV4::Value::nullValue();
+        return QV4::Primitive::nullValue();
     case V4IR::UndefinedType:
-        return QV4::Value::undefinedValue();
+        return QV4::Primitive::undefinedValue();
     case V4IR::BoolType:
-        return QV4::Value::fromBoolean(c->value != 0);
+        return QV4::Primitive::fromBoolean(c->value != 0);
     case V4IR::SInt32Type:
-        return QV4::Value::fromInt32(int(c->value));
+        return QV4::Primitive::fromInt32(int(c->value));
     case V4IR::UInt32Type:
-        return QV4::Value::fromUInt32(unsigned(c->value));
+        return QV4::Primitive::fromUInt32(unsigned(c->value));
     case V4IR::DoubleType:
-        return QV4::Value::fromDouble(c->value);
+        return QV4::Primitive::fromDouble(c->value);
     case V4IR::NumberType: {
         int ival = (int)c->value;
         if (canConvertToSignedInteger(c->value)) {
-            return QV4::Value::fromInt32(ival);
+            return QV4::Primitive::fromInt32(ival);
         } else {
-            return QV4::Value::fromDouble(c->value);
+            return QV4::Primitive::fromDouble(c->value);
         }
     }
     default:
         Q_UNREACHABLE();
     }
     // unreachable, but the function must return something
-    return QV4::Value::undefinedValue();
+    return QV4::Primitive::undefinedValue();
 }
 
 } // namespace QQmlJS

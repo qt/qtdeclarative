@@ -551,7 +551,7 @@ public:
         Q_UNUSED(argumentNumber);
 
         if (!temp) {
-            QV4::Value undefined = QV4::Value::undefinedValue();
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else {
             Pointer addr = loadTempAddress(dest, temp);
@@ -572,7 +572,7 @@ public:
         Q_UNUSED(argumentNumber);
 
         if (!expr) {
-            QV4::Value undefined = QV4::Value::undefinedValue();
+            QV4::Value undefined = QV4::Primitive::undefinedValue();
             move(TrustedImm64(undefined.val), dest);
         } else if (expr->asTemp()){
             loadArgumentInRegister(expr->asTemp(), dest, argumentNumber);
@@ -1124,7 +1124,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Value::fromBoolean(0).tag), addr);
+        store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag), addr);
     }
 
     void storeBool(RegisterID src, RegisterID dest)
@@ -1161,7 +1161,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Value::fromInt32(0).tag), addr);
+        store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag), addr);
     }
 
     void storeInt32(RegisterID reg, V4IR::Temp *target)

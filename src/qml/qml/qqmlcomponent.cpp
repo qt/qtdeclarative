@@ -1208,7 +1208,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QObject *parent = 0;
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
-    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
 
     if (args->length() >= 1) {
         QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, (*args)[0]);
@@ -1333,7 +1333,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::Scope scope(v4);
 
     QObject *parent = 0;
-    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
     if (args->length() >= 1) {
@@ -1485,9 +1485,9 @@ QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, IncubationMode m)
     v8 = engine;
     vtbl = &static_vtbl;
 
-    valuemap = QV4::Value::undefinedValue();
-    qmlGlobal = QV4::Value::undefinedValue();
-    m_statusChanged = QV4::Value::undefinedValue();
+    valuemap = QV4::Primitive::undefinedValue();
+    qmlGlobal = QV4::Primitive::undefinedValue();
+    m_statusChanged = QV4::Primitive::undefinedValue();
 }
 
 void QmlIncubatorObject::setInitialState(QObject *o)
@@ -1541,7 +1541,7 @@ void QmlIncubatorObject::statusChanged(Status s)
         try {
             QV4::ScopedCallData callData(scope, 1);
             callData->thisObject = QV4::Value::fromObject(this);
-            callData->args[0] = QV4::Value::fromUInt32(s);
+            callData->args[0] = QV4::Primitive::fromUInt32(s);
             f->call(callData);
         } catch (QV4::Exception &e) {
             e.accept(ctx);

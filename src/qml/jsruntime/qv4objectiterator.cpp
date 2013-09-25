@@ -53,7 +53,7 @@ ObjectIterator::ObjectIterator(Object *o, uint flags)
     , memberIndex(0)
     , flags(flags)
 {
-    tmpDynamicProperty.value = Value::undefinedValue();
+    tmpDynamicProperty.value = Primitive::undefinedValue();
 }
 
 Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *attrs)

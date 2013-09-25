@@ -135,7 +135,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
         }
     }
 
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
@@ -182,7 +182,7 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
             Scope scope(o->engine());
             FunctionObject *getter = o->memberData[l->index].getter();
             if (!getter)
-                return Value::undefinedValue().asReturnedValue();
+                return Primitive::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = *object;
@@ -201,7 +201,7 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
             Scope scope(o->engine());
             FunctionObject *getter = o->prototype()->memberData[l->index].getter();
             if (!getter)
-                return Value::undefinedValue().asReturnedValue();
+                return Primitive::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = *object;
@@ -223,7 +223,7 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, const ValueRef object)
                     Scope scope(o->engine());
                     FunctionObject *getter = o->memberData[l->index].getter();
                     if (!getter)
-                        return Value::undefinedValue().asReturnedValue();
+                        return Primitive::undefinedValue().asReturnedValue();
 
                     ScopedCallData callData(scope, 0);
                     callData->thisObject = *object;
@@ -269,7 +269,7 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const ValueRef object)
             Value res;
             FunctionObject *getter = o->memberData[l->index].getter();
             if (!getter)
-                return Value::undefinedValue().asReturnedValue();
+                return Primitive::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = *object;
@@ -290,7 +290,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
             Value res;
             FunctionObject *getter = o->prototype()->memberData[l->index].getter();
             if (!getter)
-                return Value::undefinedValue().asReturnedValue();
+                return Primitive::undefinedValue().asReturnedValue();
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = *object;
@@ -304,7 +304,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
 ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
 {
     if (String *s = object->asString())
-        return Value::fromUInt32(s->length()).asReturnedValue();
+        return Primitive::fromUInt32(s->length()).asReturnedValue();
 
     l->getter = getterGeneric;
     return getterGeneric(l, object);
@@ -384,10 +384,10 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx)
         Scope scope(o->engine());
         FunctionObject *getter = o->memberData[l->index].getter();
         if (!getter)
-            return Value::undefinedValue().asReturnedValue();
+            return Primitive::undefinedValue().asReturnedValue();
 
         ScopedCallData callData(scope, 0);
-        callData->thisObject = Value::undefinedValue();
+        callData->thisObject = Primitive::undefinedValue();
         return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
@@ -402,10 +402,10 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx)
         Scope scope(o->engine());
         FunctionObject *getter = o->prototype()->memberData[l->index].getter();
         if (!getter)
-            return Value::undefinedValue().asReturnedValue();
+            return Primitive::undefinedValue().asReturnedValue();
 
         ScopedCallData callData(scope, 0);
-        callData->thisObject = Value::undefinedValue();
+        callData->thisObject = Primitive::undefinedValue();
         return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
@@ -423,10 +423,10 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx)
                 Scope scope(o->engine());
                 FunctionObject *getter = o->memberData[l->index].getter();
                 if (!getter)
-                    return Value::undefinedValue().asReturnedValue();
+                    return Primitive::undefinedValue().asReturnedValue();
 
                 ScopedCallData callData(scope, 0);
-                callData->thisObject = Value::undefinedValue();
+                callData->thisObject = Primitive::undefinedValue();
                 return getter->call(callData);
             }
         }

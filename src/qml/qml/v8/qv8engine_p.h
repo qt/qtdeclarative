@@ -126,7 +126,7 @@ class QQmlV4Function
 {
 public:
     int length() const { return callData->argc; }
-    QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx] : QV4::Value::undefinedValue()).asReturnedValue(); }
+    QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx] : QV4::Primitive::undefinedValue()).asReturnedValue(); }
     QQmlContextData *context() { return ctx; }
     QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
     void setReturnValue(QV4::ReturnedValue rv) { retVal = rv; }

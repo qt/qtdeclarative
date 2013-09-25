@@ -137,7 +137,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope, Returned<T> *t)
     {
         ptr = scope.engine->jsStackTop++;
-        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Value::undefinedValue();
+        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Primitive::undefinedValue();
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -160,7 +160,7 @@ struct ScopedValue
 
     template<typename T>
     ScopedValue &operator=(Returned<T> *t) {
-        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Value::undefinedValue();
+        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Primitive::undefinedValue();
         return *this;
     }
 
@@ -196,7 +196,7 @@ struct Scoped
 #if QT_POINTER_SIZE == 8
         ptr->val = (quint64)p;
 #else
-        *ptr = p ? QV4::Value::fromManaged(p) : QV4::Value::undefinedValue();
+        *ptr = p ? QV4::Value::fromManaged(p) : QV4::Primitive::undefinedValue();
 #endif
     }
 
@@ -327,16 +327,14 @@ struct Scoped
     }
 
     Value asValue() const {
-#if QT_POINTER_SIZE == 8
-        return ptr->val ? *ptr : QV4::Value::undefinedValue();
-#else
-        return *ptr;
-#endif
+        if (ptr->m)
+            return *ptr;
+        return QV4::Primitive::undefinedValue();
     }
 
     ReturnedValue asReturnedValue() const {
 #if QT_POINTER_SIZE == 8
-        return ptr->val ? ptr->val : Value::undefinedValue().asReturnedValue();
+        return ptr->val ? ptr->val : Primitive::undefinedValue().asReturnedValue();
 #else
         return ptr->val;
 #endif
@@ -478,7 +476,7 @@ struct Referenced {
     T *getPointer() const {
         return static_cast<T *>(ptr->managed());
     }
-    ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Value::undefinedValue().asReturnedValue(); }
+    ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Primitive::undefinedValue().asReturnedValue(); }
 
     static Referenced null() { return Referenced(Null); }
     bool isNull() const { return !ptr; }
@@ -654,6 +652,11 @@ inline Safe<T>::operator Returned<T> *()
     return Returned<T>::create(static_cast<T *>(managed()));
 }
 
+inline Primitive::operator ValueRef()
+{
+    return ValueRef(this);
+}
+
 
 template<typename T>
 PersistentValue::PersistentValue(Returned<T> *obj)
@@ -693,7 +696,7 @@ inline WeakValue &WeakValue::operator=(Returned<T> *obj)
 }
 
 inline ReturnedValue SimpleCallContext::argument(int i) {
-    return i < callData->argc ? callData->args[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
+    return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
 

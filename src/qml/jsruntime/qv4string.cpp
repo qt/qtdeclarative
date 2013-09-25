@@ -138,14 +138,14 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     if (name->isEqualTo(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromInt32(that->_text.length()).asReturnedValue();
+        return Primitive::fromInt32(that->_text.length()).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = true;
@@ -168,7 +168,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = true;

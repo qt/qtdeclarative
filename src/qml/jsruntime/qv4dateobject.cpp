@@ -692,7 +692,7 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    return Encode(m->engine()->newDateObject(Value::fromDouble(t)));
+    return Encode(m->engine()->newDateObject(Primitive::fromDouble(t)));
 }
 
 ReturnedValue DateCtor::call(Managed *m, CallData *)
@@ -704,7 +704,7 @@ ReturnedValue DateCtor::call(Managed *m, CallData *)
 void DatePrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(7));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(7));
     LocalTZA = getLocalTZA();
 
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);

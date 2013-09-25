@@ -83,13 +83,13 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, Value *locals, F
     c->locals = locals;
 
     if (function->varCount)
-        std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
+        std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
 
     if (callData->argc < function->formalParameterCount) {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
 #endif
-        std::fill(c->callData->args + callData->argc, c->callData->args + function->formalParameterCount, Value::undefinedValue());
+        std::fill(c->callData->args + callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
         c->callData->argc = function->formalParameterCount;
     }
 
@@ -124,12 +124,12 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     c->locals = (Value *)(c + 1);
 
     if (function->varCount)
-        std::fill(c->locals, c->locals + function->varCount, Value::undefinedValue());
+        std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
 
     c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
     ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(Value));
     if (callData->argc < function->formalParameterCount)
-        std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Value::undefinedValue());
+        std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
 
     return c;
@@ -183,7 +183,7 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
 
     if (activation->__hasProperty__(name))
         return;
-    Property desc = Property::fromValue(Value::undefinedValue());
+    Property desc = Property::fromValue(Primitive::undefinedValue());
     PropertyAttributes attrs(Attr_Data);
     attrs.setConfigurable(deletable);
     activation->__defineOwnProperty__(this, name, desc, attrs);
@@ -252,7 +252,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
     this->callData = reinterpret_cast<CallData *>(this + 1);
     this->callData->tag = QV4::Value::Integer_Type;
     this->callData->argc = 0;
-    this->callData->thisObject = Value::undefinedValue();
+    this->callData->thisObject = Primitive::undefinedValue();
 
     strictMode = true;
     marked = false;
@@ -270,7 +270,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
 
     locals = (Value *)(this + 1);
     if (function->varCount)
-        std::fill(locals, locals + function->varCount, Value::undefinedValue());
+        std::fill(locals, locals + function->varCount, Primitive::undefinedValue());
 }
 
 
@@ -522,7 +522,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
                 return v.asReturnedValue();
         }
     }
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, Object **base)

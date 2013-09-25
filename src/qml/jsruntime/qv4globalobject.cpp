@@ -351,7 +351,7 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     : FunctionObject(scope, scope->engine->id_eval)
 {
     vtbl = &static_vtbl;
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 }
 
 ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)

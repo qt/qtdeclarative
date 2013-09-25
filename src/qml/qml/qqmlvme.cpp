@@ -421,9 +421,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         // Store a literal value in a var property.
         // We deliberately do not use string converters here
         QML_STORE_VAR(StoreVar, QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
-        QML_STORE_VAR(StoreVarInteger, QV4::Value::fromInt32(instr.value));
-        QML_STORE_VAR(StoreVarDouble, QV4::Value::fromDouble(instr.value));
-        QML_STORE_VAR(StoreVarBool, QV4::Value::fromBoolean(instr.value));
+        QML_STORE_VAR(StoreVarInteger, QV4::Primitive::fromInt32(instr.value));
+        QML_STORE_VAR(StoreVarDouble, QV4::Primitive::fromDouble(instr.value));
+        QML_STORE_VAR(StoreVarBool, QV4::Primitive::fromBoolean(instr.value));
 
         // Store a literal value in a QJSValue property.
         QML_STORE_VALUE(StoreJSValueString, QJSValue, QJSValue(PRIMITIVES.at(instr.value)));

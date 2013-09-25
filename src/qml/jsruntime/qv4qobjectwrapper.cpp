@@ -850,8 +850,8 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
-    QV4::Value functionValue = QV4::Value::undefinedValue();
-    QV4::Value functionThisValue = QV4::Value::undefinedValue();
+    QV4::Value functionValue = QV4::Primitive::undefinedValue();
+    QV4::Value functionThisValue = QV4::Primitive::undefinedValue();
 
     if (ctx->callData->argc == 1) {
         functionValue = ctx->callData->args[0];
@@ -1745,7 +1745,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 
     if (method.isV4Function()) {
-        QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
+        QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
 
         QV4::ScopedValue qmlGlobal(scope, m_qmlGlobal.value());
         QQmlV4Function func(callData, rv, qmlGlobal,

@@ -101,11 +101,11 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            put((str = v4->newString(enumerator.key(jj))), (v = QV4::Value::fromInt32(enumerator.value(jj))));
+            put((str = v4->newString(enumerator.key(jj))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
         }
     }
-    put((str = v4->newString("Asynchronous")), (v = QV4::Value::fromInt32(0)));
-    put((str = v4->newString("Synchronous")), (v = QV4::Value::fromInt32(1)));
+    put((str = v4->newString("Asynchronous")), (v = QV4::Primitive::fromInt32(0)));
+    put((str = v4->newString("Synchronous")), (v = QV4::Primitive::fromInt32(1)));
 
     defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     defineDefaultProperty(QStringLiteral("isQtObject"), method_isQtObject);
@@ -955,8 +955,8 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
                 qmlerror = v4->newObject();
-                qmlerror->put((s = v4->newString("lineNumber")), (v = QV4::Value::fromInt32(error.line())));
-                qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Value::fromInt32(error.column())));
+                qmlerror->put((s = v4->newString("lineNumber")), (v = QV4::Primitive::fromInt32(error.line())));
+                qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Primitive::fromInt32(error.column())));
                 qmlerror->put((s = v4->newString("fileName")), (v = Value::fromString(v4->newString(error.url().toString()))));
                 qmlerror->put((s = v4->newString("message")), (v = Value::fromString(v4->newString(error.description()))));
                 qmlerrors->putIndexed(ii, qmlerror);

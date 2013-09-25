@@ -295,10 +295,10 @@ FunctionPrototype::FunctionPrototype(InternalClass *ic)
 
 void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
 
-    defineReadonlyProperty(engine->id_length, Value::fromInt32(0));
+    defineReadonlyProperty(engine->id_length, Primitive::fromInt32(0));
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
     defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
@@ -349,7 +349,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
             for (quint32 i = 0; i < alen; ++i)
                 callData->args[i] = arr->arrayData[i].value;
             for (quint32 i = alen; i < len; ++i)
-                callData->args[i] = Value::undefinedValue();
+                callData->args[i] = Primitive::undefinedValue();
         }
     }
 
@@ -415,7 +415,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
     varList = function->locals.constData();
@@ -514,7 +514,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
     varList = function->locals.constData();
@@ -675,7 +675,7 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(len));
 
     ExecutionEngine *v4 = scope->engine;
 

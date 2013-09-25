@@ -69,7 +69,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     function->compilationUnit->ref();
     usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
     qmlContext = scope->engine->current->newQmlContext(this, qml);
     scope->engine->popContext();
@@ -83,7 +83,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Object *qml)
     function = 0;
     usesArgumentsObject = false;
     needsActivation = false;
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(1));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
     qmlContext = scope->engine->current->newQmlContext(this, qml);
     scope->engine->popContext();
@@ -97,7 +97,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     Q_ASSERT(This->function);
 
     CallContext *ctx = This->qmlContext;
-    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Value::undefinedValue());
+    std::fill(ctx->locals, ctx->locals + ctx->function->varCount, Primitive::undefinedValue());
     engine->pushContext(ctx);
     ScopedValue result(scope, This->function->code(ctx, This->function->codeData));
     engine->popContext();
@@ -252,7 +252,7 @@ ReturnedValue Script::run()
         ScopedObject qmlObj(valueScope, qml.value());
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj.getPointer());
         ScopedCallData callData(valueScope, 0);
-        callData->thisObject = Value::undefinedValue();
+        callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
     }
 }

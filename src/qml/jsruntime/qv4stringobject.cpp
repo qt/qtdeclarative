@@ -83,9 +83,9 @@ StringObject::StringObject(InternalClass *ic)
     vtbl = &static_vtbl;
     type = Type_StringObject;
 
-    tmpProperty.value = Value::undefinedValue();
+    tmpProperty.value = Primitive::undefinedValue();
 
-    defineReadonlyProperty(ic->engine->id_length, Value::fromInt32(0));
+    defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
 
 StringObject::StringObject(ExecutionEngine *engine, const Value &value)
@@ -94,10 +94,10 @@ StringObject::StringObject(ExecutionEngine *engine, const Value &value)
     vtbl = &static_vtbl;
     type = Type_StringObject;
 
-    tmpProperty.value = Value::undefinedValue();
+    tmpProperty.value = Primitive::undefinedValue();
 
     assert(value.isString());
-    defineReadonlyProperty(engine->id_length, Value::fromUInt32(value.stringValue()->toQString().length()));
+    defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(value.stringValue()->toQString().length()));
 }
 
 Property *StringObject::getIndex(uint index) const
@@ -189,7 +189,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
 void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
 {
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
     ctor.objectValue()->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), ctor);
@@ -333,7 +333,7 @@ ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
 {
     const QString value = getThisString(context);
-    const QString that = (context->callData->argc ? context->callData->args[0] : Value::undefinedValue()).toQString();
+    const QString that = (context->callData->argc ? context->callData->args[0] : Primitive::undefinedValue()).toQString();
     return Encode(QString::localeAwareCompare(value, that));
 }
 
@@ -345,7 +345,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
     Scope scope(context);
     ScopedString s(scope, context->callData->thisObject.toString(context));
 
-    ScopedValue regexp(scope, context->callData->argc ? context->callData->args[0] : Value::undefinedValue());
+    ScopedValue regexp(scope, context->callData->argc ? context->callData->args[0] : Primitive::undefinedValue());
     Scoped<RegExpObject> rx(scope, regexp);
     if (!rx) {
         ScopedCallData callData(scope, 1);
@@ -370,7 +370,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         return exec->call(callData);
 
     ScopedString lastIndex(scope, context->engine->newString(QStringLiteral("lastIndex")));
-    rx->put(lastIndex, ScopedValue(scope, Value::fromInt32(0)));
+    rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
     Scoped<ArrayObject> a(scope, context->engine->newArrayObject());
 
     double previousLastIndex = 0;
@@ -387,7 +387,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(lastIndex, ScopedValue(scope, Value::fromDouble(previousLastIndex)));
+            rx->put(lastIndex, ScopedValue(scope, Primitive::fromDouble(previousLastIndex)));
         } else {
             previousLastIndex = thisIndex;
         }
@@ -488,7 +488,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global)
-            regExp->lastIndexProperty(ctx)->value = Value::fromUInt32(0);
+            regExp->lastIndexProperty(ctx)->value = Primitive::fromUInt32(0);
         numStringMatches = nMatchOffsets / (regExp->value->captureCount() * 2);
         numCaptures = regExp->value->captureCount();
     } else {
@@ -510,14 +510,14 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedCallData callData(scope, numCaptures + 2);
-        callData->thisObject = Value::undefinedValue();
+        callData->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
                 int idx = (i * numCaptures + k) * 2;
                 uint start = matchOffsets[idx];
                 uint end = matchOffsets[idx + 1];
-                Value entry = Value::undefinedValue();
+                Value entry = Primitive::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = Value::fromString(ctx, string.mid(start, end - start));
                 callData->args[k] = entry;
@@ -525,7 +525,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= lastEnd);
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            callData->args[numCaptures] = Value::fromUInt32(matchStart);
+            callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = Value::fromString(ctx, string);
 
             replacement = searchCallback->call(callData);

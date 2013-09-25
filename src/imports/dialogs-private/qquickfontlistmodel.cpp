@@ -241,7 +241,7 @@ QQmlV4Handle QQuickFontListModel::pointSizes()
     a->arrayReserve(size);
     a->arrayDataLen = size;
     for (int i = 0; i < size; ++i)
-        a->arrayData[i].value = Value::fromInt32(pss.at(i));
+        a->arrayData[i].value = Primitive::fromInt32(pss.at(i));
     a->setArrayLengthUnchecked(size);
 
     return QQmlV4Handle(ScopedValue(scope, a.asReturnedValue()));

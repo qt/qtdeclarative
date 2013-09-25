@@ -82,7 +82,7 @@ static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
@@ -280,9 +280,9 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(this)));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(this)));
 
-    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Value::undefinedValue());
-    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
-    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
+    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
+    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
+    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), Value::fromObject(evalFunction));
