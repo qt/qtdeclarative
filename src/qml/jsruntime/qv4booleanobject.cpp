@@ -77,10 +77,10 @@ void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
 ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 {
     bool result;
-    if (ctx->thisObject.isBoolean()) {
-        result = ctx->thisObject.booleanValue();
+    if (ctx->callData->thisObject.isBoolean()) {
+        result = ctx->callData->thisObject.booleanValue();
     } else {
-        BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+        BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
         if (!thisObject)
             ctx->throwTypeError();
         result = thisObject->value.booleanValue();
@@ -91,7 +91,7 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 
 ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+    BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
     if (!thisObject)
         ctx->throwTypeError();
 

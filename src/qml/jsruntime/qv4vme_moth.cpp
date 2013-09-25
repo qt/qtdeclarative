@@ -170,9 +170,9 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
         QV4::CallContext *cc = static_cast<QV4::CallContext *>(c);
         const unsigned arg = param.index;
         Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < cc->argumentCount);
-        Q_ASSERT(cc->arguments);
-        return cc->arguments + arg;
+        Q_ASSERT((unsigned) arg < cc->callData->argc);
+        Q_ASSERT(cc->callData->args);
+        return cc->callData->args + arg;
     } else if (param.isLocal()) {
         VMSTATS(paramIsLocal);
         const unsigned index = param.index;
@@ -546,7 +546,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)
-        VALUE(instr.result) = context->thisObject;
+        VALUE(instr.result) = context->callData->thisObject;
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(InplaceElementOp)

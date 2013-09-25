@@ -788,10 +788,10 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
 {
-    if (ctx->argumentCount == 0)
+    if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->callData->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -808,11 +808,11 @@ ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
     QV4::ScopedFunctionObject f(scope);
     QV4::ScopedValue thisObject (scope, QV4::Encode::undefined());
 
-    if (ctx->argumentCount == 1) {
-        f = ctx->arguments[0];
-    } else if (ctx->argumentCount >= 2) {
-        thisObject = ctx->arguments[0];
-        f = ctx->arguments[1];
+    if (ctx->callData->argc == 1) {
+        f = ctx->callData->args[0];
+    } else if (ctx->callData->argc >= 2) {
+        thisObject = ctx->callData->args[0];
+        f = ctx->callData->args[1];
     }
 
     if (!f)
@@ -834,10 +834,10 @@ ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
 
 ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
 {
-    if (ctx->argumentCount == 0)
+    if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->callData->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -853,11 +853,11 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     QV4::Value functionValue = QV4::Value::undefinedValue();
     QV4::Value functionThisValue = QV4::Value::undefinedValue();
 
-    if (ctx->argumentCount == 1) {
-        functionValue = ctx->arguments[0];
-    } else if (ctx->argumentCount >= 2) {
-        functionThisValue = ctx->arguments[0];
-        functionValue = ctx->arguments[1];
+    if (ctx->callData->argc == 1) {
+        functionValue = ctx->callData->args[0];
+    } else if (ctx->callData->argc >= 2) {
+        functionThisValue = ctx->callData->args[0];
+        functionValue = ctx->callData->args[1];
     }
 
     if (!functionValue.asFunctionObject())

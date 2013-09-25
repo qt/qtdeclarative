@@ -279,8 +279,8 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     switch (t->kind) {
     case V4IR::Temp::Formal:
     case V4IR::Temp::ScopedFormal: {
-        loadPtr(Address(context, qOffsetOf(CallContext, arguments)), reg);
-        offset = t->index * sizeof(Value);
+        loadPtr(Address(context, qOffsetOf(CallContext, callData)), reg);
+        offset = sizeof(CallData) + (t->index - 1) * sizeof(Value);
     } break;
     case V4IR::Temp::Local:
     case V4IR::Temp::ScopedLocal: {
@@ -952,12 +952,13 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 
 void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 {
+    _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(CallContext, callData)), Assembler::ScratchRegister);
 #if defined(VALUE_FITS_IN_REGISTER)
-    _as->load64(Pointer(Assembler::ContextRegister, qOffsetOf(ExecutionContext, thisObject)),
+    _as->load64(Pointer(Assembler::ScratchRegister, qOffsetOf(CallData, thisObject)),
                 Assembler::ReturnValueRegister);
     _as->storeReturnValue(temp);
 #else
-    _as->copyValue(temp, Pointer(Assembler::ContextRegister, qOffsetOf(ExecutionContext, thisObject)));
+    _as->copyValue(temp, Pointer(Assembler::ScratchRegister, qOffsetOf(CallData, thisObject)));
 #endif
 }
 

@@ -393,7 +393,7 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
     if (strictMode) {
         FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
         ScopedCallData callData(scope, 0);
-        callData->thisObject = ctx->thisObject;
+        callData->thisObject = ctx->callData->thisObject;
         return e->call(callData);
     }
 
@@ -573,38 +573,38 @@ ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
 /// isNaN [15.1.2.4]
 ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
 {
-    if (!ctx->argumentCount)
+    if (!ctx->callData->argc)
         // undefined gets converted to NaN
         return Encode(true);
 
-    if (ctx->arguments[0].integerCompatible())
+    if (ctx->callData->args[0].integerCompatible())
         return Encode(false);
 
-    double d = ctx->arguments[0].toNumber();
+    double d = ctx->callData->args[0].toNumber();
     return Encode((bool)std::isnan(d));
 }
 
 /// isFinite [15.1.2.5]
 ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
 {
-    if (!ctx->argumentCount)
+    if (!ctx->callData->argc)
         // undefined gets converted to NaN
         return Encode(false);
 
-    if (ctx->arguments[0].integerCompatible())
+    if (ctx->callData->args[0].integerCompatible())
         return Encode(true);
 
-    double d = ctx->arguments[0].toNumber();
+    double d = ctx->callData->args[0].toNumber();
     return Encode((bool)std::isfinite(d));
 }
 
 /// decodeURI [15.1.3.1]
 ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
 {
-    if (context->argumentCount == 0)
+    if (context->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->arguments[0].toString(context)->toQString();
+    QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok)
@@ -616,10 +616,10 @@ ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
 /// decodeURIComponent [15.1.3.2]
 ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
 {
-    if (context->argumentCount == 0)
+    if (context->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->arguments[0].toString(context)->toQString();
+    QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
     if (!ok)
@@ -631,10 +631,10 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *cont
 /// encodeURI [15.1.3.3]
 ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
 {
-    if (context->argumentCount == 0)
+    if (context->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->arguments[0].toString(context)->toQString();
+    QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok)
@@ -646,10 +646,10 @@ ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
 /// encodeURIComponent [15.1.3.4]
 ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
 {
-    if (context->argumentCount == 0)
+    if (context->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->arguments[0].toString(context)->toQString();
+    QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok)
@@ -660,18 +660,18 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *cont
 
 ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
 {
-    if (!context->argumentCount)
+    if (!context->callData->argc)
         return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
-    QString str = context->arguments[0].toString(context)->toQString();
+    QString str = context->callData->args[0].toString(context)->toQString();
     return Value::fromString(context, escape(str)).asReturnedValue();
 }
 
 ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
 {
-    if (!context->argumentCount)
+    if (!context->callData->argc)
         return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
 
-    QString str = context->arguments[0].toString(context)->toQString();
+    QString str = context->callData->args[0].toString(context)->toQString();
     return Value::fromString(context, unescape(str)).asReturnedValue();
 }

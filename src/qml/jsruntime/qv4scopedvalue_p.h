@@ -60,13 +60,13 @@ struct Scope {
         , size(0)
 #endif
     {
-        mark = ctx->engine->jsStackTop;
+        mark = engine->jsStackTop;
     }
 
     explicit Scope(ExecutionEngine *e)
         : engine(e)
     {
-        mark = e->jsStackTop;
+        mark = engine->jsStackTop;
     }
 
     ~Scope() {
@@ -75,6 +75,15 @@ struct Scope {
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
         engine->jsStackTop = mark;
+    }
+
+    Value *alloc(int nValues) {
+        Value *ptr = engine->jsStackTop;
+        engine->jsStackTop += nValues;
+#ifndef QT_NO_DEBUG
+        size += nValues;
+#endif
+        return ptr;
     }
 
     ExecutionEngine *engine;
@@ -681,6 +690,10 @@ template<typename T>
 inline WeakValue &WeakValue::operator=(Returned<T> *obj)
 {
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
+}
+
+inline ReturnedValue SimpleCallContext::argument(int i) {
+    return i < callData->argc ? callData->args[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
 }
 
 

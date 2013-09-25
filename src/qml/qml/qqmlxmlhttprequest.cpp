@@ -415,7 +415,8 @@ void NodeImpl::release()
 
 ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -439,7 +440,8 @@ ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -457,7 +459,8 @@ ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -466,7 +469,8 @@ ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -480,7 +484,8 @@ ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -491,7 +496,8 @@ ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -505,7 +511,8 @@ ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -519,7 +526,8 @@ ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -542,7 +550,8 @@ ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -565,7 +574,8 @@ ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
 
 ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         ctx->throwTypeError();
 
@@ -655,7 +665,8 @@ Value Attr::prototype(ExecutionEngine *engine)
 
 ReturnedValue Attr::method_name(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -665,7 +676,8 @@ ReturnedValue Attr::method_name(SimpleCallContext *ctx)
 
 ReturnedValue Attr::method_value(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -675,7 +687,8 @@ ReturnedValue Attr::method_value(SimpleCallContext *ctx)
 
 ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -685,7 +698,8 @@ ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
 
 ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -710,7 +724,8 @@ Value CharacterData::prototype(ExecutionEngine *v4)
 
 ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r) return Encode::undefined();
 
     return Encode(r->d->data.trimmed().isEmpty());
@@ -718,7 +733,8 @@ ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
 
 ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -969,7 +985,8 @@ Value NodeList::create(QV8Engine *engine, NodeImpl *data)
 
 ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r || r->d->type != NodeImpl::Document)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -979,7 +996,8 @@ ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
 
 ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r || r->d->type != NodeImpl::Document)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -989,7 +1007,8 @@ ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
 
 ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r || r->d->type != NodeImpl::Document)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -999,7 +1018,8 @@ ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
 
 ReturnedValue Document::method_xmlEncoding(SimpleCallContext *ctx)
 {
-    Node *r = ctx->thisObject.as<Node>();
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r || r->d->type != NodeImpl::Document)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
@@ -1686,18 +1706,18 @@ void QQmlXMLHttpRequestCtor::setupProto()
 ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    if (ctx->argumentCount < 2 || ctx->argumentCount > 5)
+    if (ctx->callData->argc < 2 || ctx->callData->argc > 5)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
     // Argument 0 - Method
-    QString method = ctx->arguments[0].toQStringNoThrow().toUpper();
+    QString method = ctx->callData->args[0].toQStringNoThrow().toUpper();
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
@@ -1706,21 +1726,21 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl(ctx->arguments[1].toQStringNoThrow());
+    QUrl url = QUrl(ctx->callData->args[1].toQStringNoThrow());
 
     if (url.isRelative()) 
         url = engine->callingContext()->resolvedUrl(url);
 
     // Argument 2 - async (optional)
-    if (ctx->argumentCount > 2 && !ctx->arguments[2].booleanValue())
+    if (ctx->callData->argc > 2 && !ctx->callData->args[2].booleanValue())
         V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
-    if (ctx->argumentCount > 3)
-        username = ctx->arguments[3].toQStringNoThrow();
-    if (ctx->argumentCount > 4)
-        password = ctx->arguments[4].toQStringNoThrow();
+    if (ctx->callData->argc > 3)
+        username = ctx->callData->args[3].toQStringNoThrow();
+    if (ctx->callData->argc > 4)
+        password = ctx->callData->args[4].toQStringNoThrow();
 
     // Clear the fragment (if any)
     url.setFragment(QString());
@@ -1729,27 +1749,26 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, engine));
+    ScopedValue meObject(scope, constructMeObject(ctx->callData->thisObject, engine));
     return r->open(meObject, method, url);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    if (ctx->argumentCount != 2)
+    if (ctx->callData->argc != 2)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Opened || r->sendFlag())
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    QString name = ctx->arguments[0].toQStringNoThrow();
-    QString value = ctx->arguments[1].toQStringNoThrow();
+    QString name = ctx->callData->args[0].toQStringNoThrow();
+    QString value = ctx->callData->args[1].toQStringNoThrow();
 
     // ### Check that name and value are well formed
 
@@ -1784,8 +1803,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext 
 ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
@@ -1797,38 +1815,36 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
-    if (ctx->argumentCount > 0)
-        data = ctx->arguments[0].toQStringNoThrow().toUtf8();
+    if (ctx->callData->argc > 0)
+        data = ctx->callData->args[0].toQStringNoThrow().toUtf8();
 
-    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, engine));
+    ScopedValue meObject(scope, constructMeObject(ctx->callData->thisObject, engine));
     return r->send(meObject, data);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
-    ScopedValue meObject(scope, constructMeObject(ctx->thisObject, ctx->engine->v8Engine));
+    ScopedValue meObject(scope, constructMeObject(ctx->callData->thisObject, ctx->engine->v8Engine));
     return r->abort(meObject);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (ctx->argumentCount != 1)
+    if (ctx->callData->argc != 1)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
@@ -1836,21 +1852,20 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->header(ctx->arguments[0].toQStringNoThrow()));
+    return engine->toString(r->header(ctx->callData->args[0].toQStringNoThrow()));
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (ctx->argumentCount != 0)
+    if (ctx->callData->argc != 0)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
@@ -1865,8 +1880,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallCon
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
@@ -1877,8 +1891,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *c
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
@@ -1896,8 +1909,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
@@ -1917,8 +1929,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *c
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;
@@ -1935,8 +1946,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    QQmlXMLHttpRequestWrapper *w = ctx->thisObject.as<QQmlXMLHttpRequestWrapper>();
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
     if (!w)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->request;

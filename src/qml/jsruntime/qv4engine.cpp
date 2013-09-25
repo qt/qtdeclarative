@@ -260,7 +260,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     //
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
-    rootContext->thisObject = Value::fromObject(globalObject);
+    rootContext->callData->thisObject = Value::fromObject(globalObject);
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);
@@ -335,7 +335,7 @@ void ExecutionEngine::enableDebugger()
 
 void ExecutionEngine::initRootContext()
 {
-    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
+    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext) + sizeof(CallData)));
     current = rootContext;
     current->parent = 0;
     rootContext->initGlobalContext(this);

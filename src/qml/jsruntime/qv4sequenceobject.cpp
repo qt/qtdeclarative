@@ -376,8 +376,8 @@ public:
             loadReference();
         }
 
-        if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
-            QV4::Value compareFn = ctx->arguments[0];
+        if (ctx->callData->argc == 1 && ctx->callData->args[0].asFunctionObject()) {
+            QV4::Value compareFn = ctx->callData->args[0];
             CompareFunctor cf(ctx, compareFn);
             std::sort(m_container.begin(), m_container.end(), cf);
         } else {
@@ -391,7 +391,8 @@ public:
 
     static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
     {
-        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        QV4::Scope scope(ctx);
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             ctx->throwTypeError();
 
@@ -405,11 +406,12 @@ public:
 
     static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
     {
-        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        QV4::Scope scope(ctx);
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             ctx->throwTypeError();
 
-        quint32 newLength = ctx->arguments[0].toUInt32();
+        quint32 newLength = ctx->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
@@ -542,12 +544,12 @@ void SequencePrototype::init()
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
-    QV4::Object *o = ctx->thisObject.asObject();
+    QV4::Object *o = ctx->callData->thisObject.asObject();
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
-    if (ctx->argumentCount >= 2)
-        return ctx->thisObject.asReturnedValue();
+    if (ctx->callData->argc >= 2)
+        return ctx->callData->thisObject.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -557,7 +559,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->thisObject.asReturnedValue();
+    return ctx->callData->thisObject.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \

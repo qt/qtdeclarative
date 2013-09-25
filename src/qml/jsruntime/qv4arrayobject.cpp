@@ -131,19 +131,19 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
 
 ReturnedValue ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 {
-    bool isArray = ctx->argumentCount ? ctx->arguments[0].asArrayObject() : false;
+    bool isArray = ctx->callData->argc ? ctx->callData->args[0].asArrayObject() : false;
     return Encode(isArray);
 }
 
 ReturnedValue ArrayPrototype::method_toString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject, ScopedObject::Convert);
+    ScopedObject o(scope, ctx->callData->thisObject, ScopedObject::Convert);
     ScopedString s(scope, ctx->engine->newString("join"));
     ScopedFunctionObject f(scope, o->get(s));
     if (!!f) {
         ScopedCallData d(scope, 0);
-        d->thisObject = ctx->thisObject;
+        d->thisObject = ctx->callData->thisObject;
         return f->call(d);
     }
     return ObjectPrototype::method_toString(ctx);
@@ -159,7 +159,7 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
 
-    ScopedObject thisObject(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject thisObject(scope, ctx->callData->thisObject.toObject(ctx));
     ScopedArrayObject instance(scope, thisObject);
     if (instance) {
         result->copyArrayData(instance.getPointer());
@@ -168,12 +168,12 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     }
 
     ScopedArrayObject elt(scope);
-    for (uint i = 0; i < ctx->argumentCount; ++i) {
-        elt = ctx->arguments[i];
+    for (uint i = 0; i < ctx->callData->argc; ++i) {
+        elt = ctx->callData->args[i];
         if (elt)
             result->arrayConcat(elt.getPointer());
         else
-            result->arraySet(getLength(ctx, result.getPointer()), ctx->arguments[i]);
+            result->arraySet(getLength(ctx, result.getPointer()), ctx->callData->args[i]);
     }
 
     return result.asReturnedValue();
@@ -190,7 +190,7 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
     else
         r4 = arg->toQString();
 
-    ScopedObject self(scope, ctx->thisObject);
+    ScopedObject self(scope, ctx->callData->thisObject);
     ScopedValue length(scope, self->get(ctx->engine->id_length));
     const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
 
@@ -237,7 +237,7 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
 
     if (!len) {
@@ -259,18 +259,18 @@ ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
 
-    if (len + ctx->argumentCount < len) {
+    if (len + ctx->callData->argc < len) {
         // ughh...
         double l = len;
         ScopedString s(scope);
-        for (int i = 0; i < ctx->argumentCount; ++i) {
+        for (int i = 0; i < ctx->callData->argc; ++i) {
             s = Value::fromDouble(l + i).toString(ctx);
-            instance->put(s, ctx->arguments[i]);
+            instance->put(s, ctx->callData->args[i]);
         }
-        double newLen = l + ctx->argumentCount;
+        double newLen = l + ctx->callData->argc;
         if (!instance->isArrayObject())
             instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(newLen)));
         else
@@ -279,24 +279,24 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
     }
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
-        for (uint i = 0; i < ctx->argumentCount; ++i) {
+        for (uint i = 0; i < ctx->callData->argc; ++i) {
             if (!instance->sparseArray) {
                 if (len >= instance->arrayAlloc)
                     instance->arrayReserve(len + 1);
-                instance->arrayData[len].value = ctx->arguments[i];
+                instance->arrayData[len].value = ctx->callData->args[i];
                 if (instance->arrayAttributes)
                     instance->arrayAttributes[len] = Attr_Data;
                 instance->arrayDataLen = len + 1;
             } else {
-                uint i = instance->allocArrayValue(ctx->arguments[i]);
+                uint i = instance->allocArrayValue(ctx->callData->args[i]);
                 instance->sparseArray->push_back(i, len);
             }
             ++len;
         }
     } else {
-        for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->putIndexed(len + i, ctx->arguments[i]);
-        len += ctx->argumentCount;
+        for (uint i = 0; i < ctx->callData->argc; ++i)
+            instance->putIndexed(len + i, ctx->callData->args[i]);
+        len += ctx->callData->argc;
     }
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
@@ -309,7 +309,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint length = getLength(ctx, instance.getPointer());
 
     int lo = 0, hi = length - 1;
@@ -335,7 +335,7 @@ ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
 
     if (!len) {
@@ -389,7 +389,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject o(scope, ctx->callData->thisObject.toObject(ctx));
 
     Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
     uint len = getLength(ctx, o.getPointer());
@@ -402,8 +402,8 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
     else
         start = (uint) s;
     uint end = len;
-    if (ctx->argumentCount > 1 && !ctx->arguments[1].isUndefined()) {
-        double e = ctx->arguments[1].toInteger();
+    if (ctx->callData->argc > 1 && !ctx->callData->args[1].isUndefined()) {
+        double e = ctx->callData->args[1].toInteger();
         if (e < 0)
             end = (uint)qMax(len + e, 0.);
         else if (e > len)
@@ -428,19 +428,19 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
     ScopedValue comparefn(scope, ctx->argument(0));
     instance->arraySort(ctx, instance, comparefn, len);
-    return ctx->thisObject.asReturnedValue();
+    return ctx->callData->thisObject.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
 
     Scoped<ArrayObject> newArray(scope, ctx->engine->newArrayObject());
@@ -461,7 +461,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 
-    uint itemCount = ctx->argumentCount < 2 ? 0 : ctx->argumentCount - 2;
+    uint itemCount = ctx->callData->argc < 2 ? 0 : ctx->callData->argc - 2;
 
     ScopedValue v(scope);
     if (itemCount < deleteCount) {
@@ -489,7 +489,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     }
 
     for (uint i = 0; i < itemCount; ++i)
-        instance->putIndexed(start + i, ctx->arguments[i + 2]);
+        instance->putIndexed(start + i, ctx->callData->args[i + 2]);
 
     ctx->strictMode = true;
     instance->put(ctx->engine->id_length, ScopedValue(scope, Value::fromDouble(len - deleteCount + itemCount)));
@@ -500,12 +500,12 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
 
     ScopedValue v(scope);
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
-        for (int i = ctx->argumentCount - 1; i >= 0; --i) {
+        for (int i = ctx->callData->argc - 1; i >= 0; --i) {
             v = ctx->argument(i);
 
             if (!instance->sparseArray) {
@@ -530,15 +530,15 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
             bool exists;
             v = instance->getIndexed(k - 1, &exists);
             if (exists)
-                instance->putIndexed(k + ctx->argumentCount - 1, v);
+                instance->putIndexed(k + ctx->callData->argc - 1, v);
             else
-                instance->deleteIndexedProperty(k + ctx->argumentCount - 1);
+                instance->deleteIndexedProperty(k + ctx->callData->argc - 1);
         }
-        for (uint i = 0; i < ctx->argumentCount; ++i)
-            instance->putIndexed(i, ctx->arguments[i]);
+        for (uint i = 0; i < ctx->callData->argc; ++i)
+            instance->putIndexed(i, ctx->callData->args[i]);
     }
 
-    uint newLen = len + ctx->argumentCount;
+    uint newLen = len + ctx->callData->argc;
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else
@@ -551,7 +551,7 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
     if (!len)
         return Value::fromInt32(-1).asReturnedValue();
@@ -559,13 +559,13 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     ScopedValue searchValue(scope);
     uint fromIndex = 0;
 
-    if (ctx->argumentCount >= 1)
-        searchValue = ctx->arguments[0];
+    if (ctx->callData->argc >= 1)
+        searchValue = ctx->callData->args[0];
     else
         searchValue = Value::undefinedValue();
 
-    if (ctx->argumentCount >= 2) {
-        double f = ctx->arguments[1].toInteger();
+    if (ctx->callData->argc >= 2) {
+        double f = ctx->callData->args[1].toInteger();
         if (f >= len)
             return Encode(-1);
         if (f < 0)
@@ -591,7 +591,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedObject instance(scope, ctx->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
     if (!len)
         return Value::fromInt32(-1).asReturnedValue();
@@ -599,13 +599,13 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
     ScopedValue searchValue(scope);
     uint fromIndex = len;
 
-    if (ctx->argumentCount >= 1)
+    if (ctx->callData->argc >= 1)
         searchValue = ctx->argument(0);
     else
         searchValue = Value::undefinedValue();
 
-    if (ctx->argumentCount >= 2) {
-        double f = ctx->arguments[1].toInteger();
+    if (ctx->callData->argc >= 2) {
+        double f = ctx->callData->args[1].toInteger();
         if (f > 0)
             f = qMin(f, (double)(len - 1));
         else if (f < 0) {
@@ -630,7 +630,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -662,7 +662,7 @@ ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -693,7 +693,7 @@ ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_forEach(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -722,7 +722,7 @@ ReturnedValue ArrayPrototype::method_forEach(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -757,7 +757,7 @@ ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -796,7 +796,7 @@ ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -808,7 +808,7 @@ ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
     ScopedValue acc(scope);
     ScopedValue v(scope);
 
-    if (ctx->argumentCount > 1) {
+    if (ctx->callData->argc > 1) {
         acc = ctx->argument(1);
     } else {
         bool kPresent = false;
@@ -844,7 +844,7 @@ ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
     uint len = getLength(ctx, instance.getPointer());
 
@@ -853,7 +853,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     if (len == 0) {
-        if (ctx->argumentCount == 1)
+        if (ctx->callData->argc == 1)
             ctx->throwTypeError();
         return ctx->argument(1);
     }
@@ -861,7 +861,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
     uint k = len;
     ScopedValue acc(scope);
     ScopedValue v(scope);
-    if (ctx->argumentCount > 1) {
+    if (ctx->callData->argc > 1) {
         acc = ctx->argument(1);
     } else {
         bool kPresent = false;

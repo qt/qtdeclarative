@@ -286,9 +286,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
-    int id = ctx->argumentCount > 1 ? ctx->arguments[1].toInt32() : 0;
+    int id = ctx->callData->argc > 1 ? ctx->callData->args[1].toInt32() : 0;
 
-    QByteArray data = QV4::Serialize::serialize(ctx->argumentCount > 2 ? ctx->arguments[2] : QV4::Value::undefinedValue(), engine);
+    QByteArray data = QV4::Serialize::serialize(ctx->callData->argc > 2 ? ctx->callData->args[2] : QV4::Value::undefinedValue(), engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);

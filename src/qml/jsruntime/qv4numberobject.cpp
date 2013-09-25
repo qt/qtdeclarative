@@ -100,9 +100,9 @@ void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
 
 inline Value thisNumberValue(ExecutionContext *ctx)
 {
-    if (ctx->thisObject.isNumber())
-        return ctx->thisObject;
-    NumberObject *n = ctx->thisObject.asNumberObject();
+    if (ctx->callData->thisObject.isNumber())
+        return ctx->callData->thisObject;
+    NumberObject *n = ctx->callData->thisObject.asNumberObject();
     if (!n)
         ctx->throwTypeError();
     return n->value;
@@ -112,8 +112,8 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
     double num = thisNumberValue(ctx).asDouble();
 
-    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
-        int radix = ctx->arguments[0].toInt32();
+    if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
+        int radix = ctx->callData->args[0].toInt32();
         if (radix < 2 || radix > 36) {
             ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
@@ -180,14 +180,14 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 
     double fdigits = 0;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->arguments[0].toInteger();
+    if (ctx->callData->argc > 0)
+        fdigits = ctx->callData->args[0].toInteger();
 
     if (std::isnan(fdigits))
         fdigits = 0;
 
     if (fdigits < 0 || fdigits > 20)
-        ctx->throwRangeError(ctx->thisObject);
+        ctx->throwRangeError(ctx->callData->thisObject);
 
     QString str;
     if (std::isnan(v))
@@ -207,8 +207,8 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 
     int fdigits = -1;
 
-    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
-        int fdigits = ctx->arguments[0].toInt32();
+    if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
+        int fdigits = ctx->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range"));
             ctx->throwRangeError(Value::fromString(error));
@@ -229,10 +229,10 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     ScopedValue v(scope, thisNumberValue(ctx));
 
-    if (!ctx->argumentCount || ctx->arguments[0].isUndefined())
+    if (!ctx->callData->argc || ctx->callData->args[0].isUndefined())
         return __qmljs_to_string(v, ctx);
 
-    double precision = ctx->arguments[0].toInt32();
+    double precision = ctx->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
         String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range"));
         ctx->throwRangeError(Value::fromString(error));

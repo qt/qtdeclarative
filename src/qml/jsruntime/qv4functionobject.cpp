@@ -309,7 +309,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
 
 ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
-    FunctionObject *fun = ctx->thisObject.asFunctionObject();
+    FunctionObject *fun = ctx->callData->thisObject.asFunctionObject();
     if (!fun)
         ctx->throwTypeError();
 
@@ -319,7 +319,7 @@ ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
@@ -361,14 +361,14 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
-    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount) {
-        std::copy(ctx->arguments + 1,
-                  ctx->arguments + ctx->argumentCount, callData->args);
+    ScopedCallData callData(scope, ctx->callData->argc ? ctx->callData->argc - 1 : 0);
+    if (ctx->callData->argc) {
+        std::copy(ctx->callData->args + 1,
+                  ctx->callData->args + ctx->callData->argc, callData->args);
     }
     callData->thisObject = ctx->argument(0);
     return o->call(callData);
@@ -377,14 +377,14 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<FunctionObject> target(scope, ctx->thisObject);
+    Scoped<FunctionObject> target(scope, ctx->callData->thisObject);
     if (!target)
         ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     QVector<Value> boundArgs;
-    for (uint i = 1; i < ctx->argumentCount; ++i)
-        boundArgs += ctx->arguments[i];
+    for (uint i = 1; i < ctx->callData->argc; ++i)
+        boundArgs += ctx->callData->args[i];
 
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target.getPointer(), boundThis, boundArgs)->asReturnedValue();
 }
@@ -469,9 +469,9 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
-            ctx->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = Value::fromObject(callData->thisObject.toObject(context));
         }
     }
 
@@ -541,7 +541,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     callData->thisObject = obj;
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f.getPointer(), callData);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
     try {
         Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
@@ -558,17 +558,19 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
-    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
+    ExecutionEngine *v4 = that->engine();
+    Scope scope(v4);
+    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
+
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
-    ExecutionContext *context = f->engine()->current;
-    Scope scope(context);
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
+    ExecutionContext *context = v4->current;
+    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = Value::fromObject(f->engine()->globalObject);
         } else {
-            ctx->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = Value::fromObject(callData->thisObject.toObject(context));
         }
     }
 
@@ -614,10 +616,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = callData->thisObject;
-    // ### const_cast
-    ctx.arguments = const_cast<SafeValue *>(callData->args);
-    ctx.argumentCount = callData->argc;
+    ctx.callData = callData;
     v4->pushContext(&ctx);
 
     ScopedValue result(scope);
@@ -642,10 +641,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = callData->thisObject;
-    // ### const_cast
-    ctx.arguments = const_cast<SafeValue *>(callData->args);
-    ctx.argumentCount = callData->argc;
+    ctx.callData = callData;
     v4->pushContext(&ctx);
 
     ScopedValue result(scope);

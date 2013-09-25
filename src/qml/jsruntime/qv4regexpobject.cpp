@@ -303,8 +303,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
 ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
@@ -355,7 +354,8 @@ ReturnedValue RegExpPrototype::method_test(SimpleCallContext *ctx)
 
 ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
 {
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scope scope(ctx);
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
@@ -365,12 +365,12 @@ ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
 ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->argumentCount);
-    memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
+    ScopedCallData callData(scope, ctx->callData->argc);
+    memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(Value));
     RegExpObject *re = Value::fromReturnedValue(ctx->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
 
     r->value = re->value;
