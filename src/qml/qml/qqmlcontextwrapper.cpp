@@ -76,23 +76,25 @@ QmlContextWrapper::~QmlContextWrapper()
 ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope valueScope(v4);
 
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
-    return Value::fromObject(w).asReturnedValue();
+    Scoped<QmlContextWrapper> w(valueScope, new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope));
+    return w.asReturnedValue();
 }
 
 ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
     QQmlContextData *context = new QQmlContextData;
     context->url = url;
     context->isInternal = true;
     context->isJSContext = true;
 
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, context, 0);
+    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0));
     w->isNullWrapper = true;
-    return Value::fromObject(w).asReturnedValue();
+    return w.asReturnedValue();
 }
 
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)

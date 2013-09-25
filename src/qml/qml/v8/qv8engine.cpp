@@ -190,7 +190,7 @@ static QV4::ReturnedValue arrayFromStringList(QV8Engine *engine, const QStringLi
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        a->arrayData[ii].value = QV4::Value::fromString(e->newString(list.at(ii)));
+        a->arrayData[ii].value = QV4::Encode(e->newString(list.at(ii)));
         a->arrayDataLen = ii + 1;
     }
     a->setArrayLengthUnchecked(len);
@@ -1013,7 +1013,7 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
 
 QV4::ReturnedValue QV8Engine::toString(const QString &string)
 {
-    return QV4::Value::fromString(m_v4Engine->newString(string)).asReturnedValue();
+    return QV4::Encode(m_v4Engine->newString(string));
 }
 
 QT_END_NAMESPACE

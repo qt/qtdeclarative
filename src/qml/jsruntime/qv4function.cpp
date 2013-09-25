@@ -65,14 +65,14 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     formals.fill(0);
     const quint32 *formalsIndices = compiledFunction->formalsTable();
     for (int i = 0; i < compiledFunction->nFormals; ++i)
-        formals[i] = engine->newString(unit->data->stringAt(formalsIndices[i]));
+        formals[i] = engine->newString(unit->data->stringAt(formalsIndices[i]))->getPointer();
 
 
     locals.resize(compiledFunction->nLocals);
     locals.fill(0);
     const quint32 *localsIndices = compiledFunction->localsTable();
     for (int i = 0; i < compiledFunction->nLocals; ++i)
-        locals[i] = engine->newString(unit->data->stringAt(localsIndices[i]));
+        locals[i] = engine->newString(unit->data->stringAt(localsIndices[i]))->getPointer();
 }
 
 Function::~Function()

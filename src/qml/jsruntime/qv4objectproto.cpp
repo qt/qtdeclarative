@@ -412,7 +412,9 @@ ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 
 ReturnedValue ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    return Value::fromObject(ctx->callData->thisObject.toObject(ctx)).asReturnedValue();
+    Scope scope(ctx);
+    ScopedValue v(scope, ctx->callData->thisObject.toObject(ctx));
+    return v.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
@@ -509,7 +511,7 @@ ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
     if (!o)
         ctx->throwTypeError();
 
-    return Value::fromObject(o->prototype()).asReturnedValue();
+    return o->prototype()->asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)

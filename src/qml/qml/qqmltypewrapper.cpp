@@ -91,10 +91,11 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t, Typ
 {
     Q_ASSERT(t);
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
+    Scoped<QmlTypeWrapper> w(scope, new (v4->memoryManager) QmlTypeWrapper(v8));
     w->mode = mode; w->object = o; w->type = t;
-    return Value::fromObject(w).asReturnedValue();
+    return w.asReturnedValue();
 }
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
@@ -104,11 +105,12 @@ ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCach
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlTypeWrapper *w = new (v4->memoryManager) QmlTypeWrapper(v8);
+    Scoped<QmlTypeWrapper> w(scope, new (v4->memoryManager) QmlTypeWrapper(v8));
     w->mode = mode; w->object = o; w->typeNamespace = t; w->importNamespace = importNamespace;
     t->addref();
-    return Value::fromObject(w).asReturnedValue();
+    return w.asReturnedValue();
 }
 
 
@@ -117,7 +119,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
 
-    QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
+    Scoped<QmlTypeWrapper> w(scope,  m->as<QmlTypeWrapper>());
     if (!w)
         v4->current->throwTypeError();
 

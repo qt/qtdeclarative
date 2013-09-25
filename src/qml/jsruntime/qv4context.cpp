@@ -429,7 +429,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
 
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->function;
+            ScopedFunctionObject f(scope, c->function);
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -446,7 +446,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function).asReturnedValue();
+                return f.asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {
@@ -494,7 +494,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
 
         else if (ctx->type >= Type_CallContext) {
             QV4::CallContext *c = static_cast<CallContext *>(ctx);
-            FunctionObject *f = c->function;
+            ScopedFunctionObject f(scope, c->function);
             if (f->needsActivation || hasWith || hasCatchScope) {
                 for (unsigned int i = 0; i < f->varCount; ++i)
                     if (f->varList[i]->isEqualTo(name))
@@ -511,7 +511,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function).asReturnedValue();
+                return f.asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {

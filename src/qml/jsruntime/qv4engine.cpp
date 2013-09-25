@@ -385,9 +385,9 @@ Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
     return object->asReturned<Object>();
 }
 
-String *ExecutionEngine::newString(const QString &s)
+Returned<String> *ExecutionEngine::newString(const QString &s)
 {
-    return new (memoryManager) String(this, s);
+    return (new (memoryManager) String(this, s))->asReturned<String>();
 }
 
 String *ExecutionEngine::newIdentifier(const QString &text)
@@ -395,7 +395,7 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Returned<Object> *ExecutionEngine::newStringObject(const Value &value)
+Returned<Object> *ExecutionEngine::newStringObject(const ValueRef value)
 {
     StringObject *object = new (memoryManager) StringObject(this, value);
     return object->asReturned<Object>();

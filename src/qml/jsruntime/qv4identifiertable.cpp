@@ -129,7 +129,7 @@ String *IdentifierTable::insertString(const QString &s)
         idx %= alloc;
     }
 
-    String *str = engine->newString(s);
+    String *str = engine->newString(s)->getPointer();
     addEntry(str);
     return str;
 }
@@ -177,7 +177,7 @@ Identifier *IdentifierTable::identifier(const char *s, int len)
         idx %= alloc;
     }
 
-    String *str = engine->newString(QString::fromLatin1(s, len));
+    String *str = engine->newString(QString::fromLatin1(s, len))->getPointer();
     addEntry(str);
     return str->identifier;
 }

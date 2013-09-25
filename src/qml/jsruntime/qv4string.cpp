@@ -161,7 +161,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     if (index < that->_text.length()) {
         if (hasProperty)
             *hasProperty = true;
-        return Value::fromString(engine->newString(that->toQString().mid(index, 1))).asReturnedValue();
+        return Encode(engine->newString(that->toQString().mid(index, 1)));
     }
     PropertyAttributes attrs;
     Property *pd = engine->stringClass->prototype->__getPropertyDescriptor__(index, &attrs);
@@ -178,16 +178,16 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 void String::put(Managed *m, const StringRef name, const ValueRef value)
 {
     Scope scope(m->engine());
-    String *that = static_cast<String *>(m);
-    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
+    ScopedString that(scope, static_cast<String *>(m));
+    Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->put(name, value);
 }
 
 void String::putIndexed(Managed *m, uint index, const ValueRef value)
 {
     Scope scope(m->engine());
-    String *that = static_cast<String *>(m);
-    Scoped<Object> o(scope, that->engine()->newStringObject(Value::fromString(that)));
+    ScopedString that(scope, static_cast<String *>(m));
+    Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->putIndexed(index, value);
 }
 

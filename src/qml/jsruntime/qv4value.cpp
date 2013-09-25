@@ -204,12 +204,12 @@ bool Value::sameValue(Value other) const {
 
 Value Value::fromString(ExecutionContext *ctx, const QString &s)
 {
-    return fromString(ctx->engine->newString(s));
+    return fromManaged(ctx->engine->newString(s)->getPointer());
 }
 
 Value Value::fromString(ExecutionEngine *engine, const QString &s)
 {
-    return fromString(engine->newString(s));
+    return fromManaged(engine->newString(s)->getPointer());
 }
 
 

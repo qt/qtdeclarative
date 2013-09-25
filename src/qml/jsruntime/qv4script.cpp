@@ -271,7 +271,8 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->engine;
     Scope valueScope(v4);
     ScopedObject qmlObj(valueScope, qml.value());
-    return Value::fromObject(new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj.getPointer())).asReturnedValue();
+    ScopedObject v(valueScope, new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj.getPointer()));
+    return v.asReturnedValue();
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, ObjectRef scopeObject)

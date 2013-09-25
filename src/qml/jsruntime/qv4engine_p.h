@@ -272,10 +272,10 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<Object> *newObject();
     Returned<Object> *newObject(InternalClass *internalClass);
 
-    String *newString(const QString &s);
+    Returned<String> *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Returned<Object> *newStringObject(const Value &value);
+    Returned<Object> *newStringObject(const ValueRef value);
     Returned<Object> *newNumberObject(const ValueRef value);
     Returned<Object> *newBooleanObject(const ValueRef value);
 

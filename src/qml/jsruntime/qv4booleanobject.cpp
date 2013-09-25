@@ -86,7 +86,7 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
         result = thisObject->value.booleanValue();
     }
 
-    return Value::fromString(ctx, QLatin1String(result ? "true" : "false")).asReturnedValue();
+    return Encode(ctx->engine->newString(QLatin1String(result ? "true" : "false")));
 }
 
 ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)

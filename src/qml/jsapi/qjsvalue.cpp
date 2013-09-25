@@ -508,7 +508,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
     Scope scope(engine);
     ScopedCallData callData(scope, args.length());
-    callData->thisObject = Encode(engine->globalObject);
+    callData->thisObject = engine->globalObject->asReturnedValue();
     for (int i = 0; i < args.size(); ++i) {
         if (!args.at(i).d->checkEngine(engine)) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");

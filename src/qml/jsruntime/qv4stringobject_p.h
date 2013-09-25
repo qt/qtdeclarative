@@ -54,7 +54,7 @@ struct StringObject: Object {
 
     Value value;
     mutable Property tmpProperty;
-    StringObject(ExecutionEngine *engine, const Value &value);
+    StringObject(ExecutionEngine *engine, const ValueRef value);
 
     Property *getIndex(uint index) const;
 

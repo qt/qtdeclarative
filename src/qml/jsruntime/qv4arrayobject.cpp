@@ -349,7 +349,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (pidx < UINT_MAX && (!instance->arrayAttributes || !instance->arrayAttributes[0].isGeneric()))
             front = instance->arrayData + pidx;
 
-    Value result = front ? Value::fromReturnedValue(instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data)) : Primitive::undefinedValue();
+    ScopedValue result(scope, front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Encode::undefined());
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
         if (!instance->sparseArray) {
@@ -456,7 +456,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
 
     newArray->arrayReserve(deleteCount);
     for (uint i = 0; i < deleteCount; ++i) {
-        newArray->arrayData[i].value = Value::fromReturnedValue(instance->getIndexed(start + i));
+        newArray->arrayData[i].value = instance->getIndexed(start + i);
         newArray->arrayDataLen = i + 1;
     }
     newArray->setArrayLengthUnchecked(deleteCount);
@@ -675,6 +675,7 @@ ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
     callData->args[2] = instance;
     ScopedValue v(scope);
 
+    ScopedValue r(scope);
     for (uint k = 0; k < len; ++k) {
         bool exists;
         v = instance->getIndexed(k, &exists);
@@ -683,8 +684,8 @@ ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
 
         callData->args[0] = v;
         callData->args[1] = Primitive::fromDouble(k);
-        Value r = Value::fromReturnedValue(callback->call(callData));
-        if (r.toBoolean())
+        r = callback->call(callData);
+        if (r->toBoolean())
             return Encode(true);
     }
     return Encode(false);

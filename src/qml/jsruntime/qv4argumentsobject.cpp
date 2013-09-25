@@ -71,7 +71,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     } else {
         internalClass = engine()->argumentsObjectClass;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
-        memberData[CalleePropertyIndex].value = Encode(context->function);
+        memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
         isNonStrictArgumentsObject = true;
 
         uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
@@ -128,7 +128,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
             ScopedCallData callData(scope, 1);
-            callData->thisObject = Value::fromObject(this);
+            callData->thisObject = this->asReturnedValue();
             callData->args[0] = desc.value;
             map.setter()->call(callData);
         }

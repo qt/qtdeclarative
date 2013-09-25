@@ -328,14 +328,14 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
             return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex,
                                               qmlcontextobject.asValue()).asReturnedValue();
         } else if (result->isSignalHandler()) {
-            QV4::QmlSignalHandler *handler = new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex);
+            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex));
 
             QV4::ScopedString connect(scope, ctx->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->engine->newIdentifier(QStringLiteral("disconnect")));
             handler->put(connect, QV4::ScopedValue(scope, ctx->engine->functionClass->prototype->get(connect)));
             handler->put(disconnect, QV4::ScopedValue(scope, ctx->engine->functionClass->prototype->get(disconnect)));
 
-            return QV4::Value::fromObject(handler).asReturnedValue();
+            return handler.asReturnedValue();
         } else {
             return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex).asReturnedValue();
         }
@@ -598,7 +598,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, Q
         if (ddata->propertyCache) ddata->propertyCache->addref();
     }
 
-    return Value::fromObject(new (engine->memoryManager) QV4::QObjectWrapper(engine, object)).asReturnedValue();
+    return (new (engine->memoryManager) QV4::QObjectWrapper(engine, object))->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectWrapper::get(Managed *m, const StringRef name, bool *hasProperty)

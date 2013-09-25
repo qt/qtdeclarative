@@ -549,8 +549,7 @@ Returned<String> *__qmljs_string_from_number(ExecutionContext *ctx, double numbe
 {
     QString qstr;
     __qmljs_numberToString(&qstr, number, 10);
-    String *string = ctx->engine->newString(qstr);
-    return string->asReturned<String>();
+    return ctx->engine->newString(qstr);
 }
 
 Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
@@ -563,7 +562,7 @@ Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, St
     data += a.length();
     memcpy(data, b.constData(), b.length()*sizeof(QChar));
 
-    return ctx->engine->newString(newStr)->asReturned<String>();
+    return ctx->engine->newString(newStr);
 }
 
 ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
@@ -622,7 +621,7 @@ Returned<Object> *__qmljs_convert_to_object(ExecutionContext *ctx, const ValueRe
         return ctx->engine->newBooleanObject(value);
     case Value::Managed_Type:
         Q_ASSERT(value->isString());
-        return ctx->engine->newStringObject(*value);
+        return ctx->engine->newStringObject(value);
     case Value::Integer_Type:
     default: // double
         return ctx->engine->newNumberObject(value);
@@ -1096,7 +1095,8 @@ void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 
 ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
 {
-    String *res = 0;
+    Scope scope(ctx);
+    ScopedString res(scope);
     switch (value->type()) {
     case Value::Undefined_Type:
         res = ctx->engine->id_undefined;
@@ -1119,7 +1119,7 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
         res = ctx->engine->id_number;
         break;
     }
-    return Value::fromString(res).asReturnedValue();
+    return res.asReturnedValue();
 }
 
 QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, const StringRef name)
@@ -1240,8 +1240,7 @@ QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx)
 {
     assert(ctx->type >= ExecutionContext::Type_CallContext);
     CallContext *c = static_cast<CallContext *>(ctx);
-    ArgumentsObject *args = new (c->engine->memoryManager) ArgumentsObject(c);
-    return Value::fromObject(args).asReturnedValue();
+    return (new (c->engine->memoryManager) ArgumentsObject(c))->asReturnedValue();
 }
 
 QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value)
@@ -1309,7 +1308,7 @@ unsigned __qmljs_double_to_uint32(const double &d)
 
 ReturnedValue __qmljs_value_from_string(String *string)
 {
-    return Value::fromString(string).asReturnedValue();
+    return string->asReturnedValue();
 }
 
 ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)

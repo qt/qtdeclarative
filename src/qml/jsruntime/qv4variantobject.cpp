@@ -183,7 +183,7 @@ QV4::ReturnedValue VariantPrototype::method_toString(SimpleCallContext *ctx)
     QString result = o->data.toString();
     if (result.isEmpty() && !o->data.canConvert(QVariant::String))
         result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->data.typeName()));
-    return Value::fromString(ctx->engine->newString(result)).asReturnedValue();
+    return Encode(ctx->engine->newString(result));
 }
 
 QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
@@ -196,7 +196,7 @@ QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
         case QVariant::Invalid:
             return Encode::undefined();
         case QVariant::String:
-            return Value::fromString(ctx->engine->newString(v.toString())).asReturnedValue();
+            return Encode(ctx->engine->newString(v.toString()));
         case QVariant::Int:
             return Encode(v.toInt());
         case QVariant::Double:

@@ -312,7 +312,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 size = headersize(header);
         QString qstr((QChar *)data, size);
         data += ALIGN(size * sizeof(uint16_t));
-        return QV4::Value::fromString(v4->newString(qstr)).asReturnedValue();
+        return QV4::Encode(v4->newString(qstr));
     }
     case WorkerFunction:
         Q_ASSERT(!"Unreachable");

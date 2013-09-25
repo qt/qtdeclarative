@@ -69,24 +69,26 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId,
         return Encode::null();
 
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlListWrapper *r = new (v4->memoryManager) QmlListWrapper(v8);
+    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
     r->object = object;
     r->propertyType = propType;
     void *args[] = { &r->property, 0 };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlListWrapper *r = new (v4->memoryManager) QmlListWrapper(v8);
+    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
     r->object = prop.object;
     r->property = prop;
     r->propertyType = propType;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 QVariant QmlListWrapper::toVariant() const

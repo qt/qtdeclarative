@@ -274,7 +274,6 @@ struct Q_QML_EXPORT Value
     }
 
     static Value emptyValue();
-    static Value fromString(String *s);
     static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
 

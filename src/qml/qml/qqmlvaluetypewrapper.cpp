@@ -143,23 +143,25 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
+    Scoped<QmlValueTypeReference> r(scope, new (v4->memoryManager) QmlValueTypeReference(v8));
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->object = object; r->property = property;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
+    Scoped<QmlValueTypeCopy> r(scope, new (v4->memoryManager) QmlValueTypeCopy(v8));
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->value = value;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 QVariant QmlValueTypeWrapper::toVariant() const

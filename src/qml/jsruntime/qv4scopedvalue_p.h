@@ -555,7 +555,7 @@ struct Encode {
         val = v.val;
     }
     Encode(int i) {
-        val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | i;
+        val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | (uint)i;
     }
     Encode(uint i) {
         if (i <= INT_MAX) {
@@ -579,6 +579,8 @@ struct Encode {
         return val;
     }
     quint64 val;
+private:
+    Encode(void *);
 };
 
 inline SafeValue &SafeValue::operator =(const ScopedValue &v)

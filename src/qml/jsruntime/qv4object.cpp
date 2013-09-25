@@ -1451,7 +1451,7 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     int len = list.count();
     arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        arrayData[ii].value = Value::fromString(engine->newString(list.at(ii)));
+        arrayData[ii].value = Encode(engine->newString(list.at(ii)));
         arrayDataLen = ii + 1;
     }
     setArrayLengthUnchecked(len);

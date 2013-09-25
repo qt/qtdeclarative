@@ -1299,7 +1299,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_globalCompositeOperation(QV4::S
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    return QV4::Value::fromString(ctx->engine->newString(qt_composite_mode_to_string(r->context->state.globalCompositeOperation))).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(qt_composite_mode_to_string(r->context->state.globalCompositeOperation)));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_globalCompositeOperation(QV4::SimpleCallContext *ctx)
@@ -1357,14 +1357,14 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_fillStyle(QV4::SimpleCallContex
     QColor color = r->context->state.fillStyle.color();
     if (color.isValid()) {
         if (color.alpha() == 255)
-            return QV4::Value::fromString(ctx->engine->newString(color.name())).asReturnedValue();
+            return QV4::Encode(ctx->engine->newString(color.name()));
         QString alphaString = QString::number(color.alphaF(), 'f');
         while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
         if (alphaString.endsWith(QLatin1Char('.')))
             alphaString += QLatin1Char('0');
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
-        return QV4::Value::fromString(ctx->engine->newString(str)).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(str));
     }
     return r->context->m_fillStyle.value();
 }
@@ -1472,14 +1472,14 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_strokeStyle(QV4::SimpleCallCont
     QColor color = r->context->state.strokeStyle.color();
     if (color.isValid()) {
         if (color.alpha() == 255)
-            return QV4::Value::fromString(ctx->engine->newString(color.name())).asReturnedValue();
+            return QV4::Encode(ctx->engine->newString(color.name()));
         QString alphaString = QString::number(color.alphaF(), 'f');
         while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
         if (alphaString.endsWith(QLatin1Char('.')))
             alphaString += QLatin1Char('0');
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
-        return QV4::Value::fromString(ctx->engine->newString(str)).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(str));
     }
     return r->context->m_strokeStyle.value();
 }
@@ -1798,14 +1798,14 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_lineCap(QV4::SimpleCallContext 
 
     switch (r->context->state.lineCap) {
     case Qt::RoundCap:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("round"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("round")));
     case Qt::SquareCap:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("square"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("square")));
     case Qt::FlatCap:
     default:
         break;
     }
-    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("butt"))).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(QStringLiteral("butt")));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_lineCap(QV4::SimpleCallContext *ctx)
@@ -1856,14 +1856,14 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_lineJoin(QV4::SimpleCallContext
 
     switch (r->context->state.lineJoin) {
     case Qt::RoundJoin:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("round"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("round")));
     case Qt::BevelJoin:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("bevel"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("bevel")));
     case Qt::MiterJoin:
     default:
         break;
     }
-    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("miter"))).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(QStringLiteral("miter")));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_lineJoin(QV4::SimpleCallContext *ctx)
@@ -1997,7 +1997,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_shadowColor(QV4::SimpleCallCont
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->callData->thisObject);
     CHECK_CONTEXT(r)
 
-    return QV4::Value::fromString(ctx->engine->newString(r->context->state.shadowColor.name())).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(r->context->state.shadowColor.name()));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_shadowColor(QV4::SimpleCallContext *ctx)
@@ -2649,7 +2649,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_font(QV4::SimpleCallContext *ct
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->callData->thisObject);
     CHECK_CONTEXT(r)
 
-    return QV4::Value::fromString(ctx->engine->newString(r->context->state.font.toString())).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(r->context->state.font.toString()));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_font(QV4::SimpleCallContext *ctx)
@@ -2688,18 +2688,18 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_textAlign(QV4::SimpleCallContex
 
     switch (r->context->state.textAlign) {
     case QQuickContext2D::End:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("end"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("end")));
     case QQuickContext2D::Left:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("left"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("left")));
     case QQuickContext2D::Right:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("right"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("right")));
     case QQuickContext2D::Center:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("center"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("center")));
     case QQuickContext2D::Start:
     default:
         break;
     }
-    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("start"))).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(QStringLiteral("start")));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(QV4::SimpleCallContext *ctx)
@@ -2754,18 +2754,18 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_textBaseline(QV4::SimpleCallCon
 
     switch (r->context->state.textBaseline) {
     case QQuickContext2D::Hanging:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("hanging"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("hanging")));
     case QQuickContext2D::Top:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("top"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("top")));
     case QQuickContext2D::Bottom:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("bottom"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("bottom")));
     case QQuickContext2D::Middle:
-        return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("middle"))).asReturnedValue();
+        return QV4::Encode(ctx->engine->newString(QStringLiteral("middle")));
     case QQuickContext2D::Alphabetic:
     default:
         break;
     }
-    return QV4::Value::fromString(ctx->engine->newString(QStringLiteral("alphabetic"))).asReturnedValue();
+    return QV4::Encode(ctx->engine->newString(QStringLiteral("alphabetic")));
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(QV4::SimpleCallContext *ctx)

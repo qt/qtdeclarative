@@ -159,7 +159,8 @@ void RegExpObject::init(ExecutionEngine *engine)
         p.replace('/', QLatin1String("\\/"));
     }
 
-    defineReadonlyProperty(QStringLiteral("source"), Value::fromString(engine->newString(p)));
+    ScopedValue v(scope);
+    defineReadonlyProperty(QStringLiteral("source"), (v = engine->newString(p)));
     defineReadonlyProperty(QStringLiteral("global"), Primitive::fromBoolean(global));
     defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value->ignoreCase()));
     defineReadonlyProperty(QStringLiteral("multiline"), Primitive::fromBoolean(this->value->multiLine()));

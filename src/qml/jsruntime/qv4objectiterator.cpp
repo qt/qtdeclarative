@@ -107,7 +107,7 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
         *value = Value::fromReturnedValue(object->getValue(p, attrs));
 
     if (name)
-        return Value::fromString(name).asReturnedValue();
+        return name->asReturnedValue();
     assert(index < UINT_MAX);
     return Encode(index);
 }
@@ -125,7 +125,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
         *value = Value::fromReturnedValue(object->getValue(p, attrs));
 
     if (name)
-        return Value::fromString(name).asReturnedValue();
+        return name->asReturnedValue();
     assert(index < UINT_MAX);
-    return Value::fromString(object->engine()->newString(QString::number(index))).asReturnedValue();
+    return Encode(object->engine()->newString(QString::number(index)));
 }

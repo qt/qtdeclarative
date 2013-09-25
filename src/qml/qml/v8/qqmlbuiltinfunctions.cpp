@@ -957,12 +957,13 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
                 qmlerror = v4->newObject();
                 qmlerror->put((s = v4->newString("lineNumber")), (v = QV4::Primitive::fromInt32(error.line())));
                 qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Primitive::fromInt32(error.column())));
-                qmlerror->put((s = v4->newString("fileName")), (v = Value::fromString(v4->newString(error.url().toString()))));
-                qmlerror->put((s = v4->newString("message")), (v = Value::fromString(v4->newString(error.description()))));
+                qmlerror->put((s = v4->newString("fileName")), (v = v4->newString(error.url().toString())));
+                qmlerror->put((s = v4->newString("message")), (v = v4->newString(error.description())));
                 qmlerrors->putIndexed(ii, qmlerror);
             }
 
-            Scoped<Object> errorObject(scope, v4->newErrorObject(Value::fromString(v4->newString(errorstr))));
+            v = v4->newString(errorstr);
+            Scoped<Object> errorObject(scope, v4->newErrorObject(v));
             errorObject->put((s = v4->newString("qmlErrors")), qmlerrors);
             return errorObject.asReturnedValue();
         }
@@ -1254,7 +1255,7 @@ ReturnedValue QtObject::method_binding(SimpleCallContext *ctx)
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    return QV4::Value::fromObject(new (ctx->engine->memoryManager) BindingFunction(f)).asReturnedValue();
+    return (new (ctx->engine->memoryManager) BindingFunction(f))->asReturnedValue();
 }
 
 

@@ -435,7 +435,7 @@ ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
         name = r->d->name;
         break;
     }
-    return Value::fromString(ctx->engine->newString(name)).asReturnedValue();
+    return Encode(ctx->engine->newString(name));
 }
 
 ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
@@ -454,7 +454,7 @@ ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
         r->d->type == NodeImpl::Notation)
         return Encode::null();
 
-    return Value::fromString(ctx->engine->newString(r->d->data)).asReturnedValue();
+    return Encode(ctx->engine->newString(r->d->data));
 }
 
 ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
@@ -792,6 +792,7 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
 {
     Q_ASSERT(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    Scope scope(v4);
 
     DocumentImpl *document = 0;
     QStack<NodeImpl *> nodeStack;
@@ -871,9 +872,9 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
         return Encode::null();
     }
 
-    Object *instance = new (v4->memoryManager) Node(v4, document);
+    ScopedObject instance(scope, new (v4->memoryManager) Node(v4, document));
     instance->setPrototype(Document::prototype(v4).asObject());
-    return Value::fromObject(instance).asReturnedValue();
+    return instance.asReturnedValue();
 }
 
 Node::Node(const Node &o)
@@ -1635,15 +1636,16 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
-        QQmlXMLHttpRequestCtor *ctor = that->as<QQmlXMLHttpRequestCtor>();
+        Scope scope(that->engine());
+        Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
             that->engine()->current->throwTypeError();
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
-        QQmlXMLHttpRequestWrapper *w = new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r);
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, new (that->engine()->memoryManager) QQmlXMLHttpRequestWrapper(that->engine(), r));
         w->setPrototype(ctor->proto);
-        return Value::fromObject(w).asReturnedValue();
+        return w.asReturnedValue();
     }
 
     static ReturnedValue call(Managed *, QV4::CallData *) {

@@ -157,16 +157,16 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
         }
     }
 
-    String *str = Primitive::fromDouble(num).toString(ctx);
-    return Value::fromString(str).asReturnedValue();
+    return Primitive::fromDouble(num).toString(ctx)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     Value v = thisNumberValue(ctx);
 
-    String *str = v.toString(ctx);
-    return Value::fromString(str).asReturnedValue();
+    ScopedString str(scope, v.toString(ctx));
+    return str.asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_valueOf(SimpleCallContext *ctx)
@@ -203,6 +203,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 
 ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     double d = thisNumberValue(ctx).asDouble();
 
     int fdigits = -1;
@@ -210,8 +211,8 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
         int fdigits = ctx->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
-            String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range"));
-            ctx->throwRangeError(Value::fromString(error));
+            ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
+            ctx->throwRangeError(error.asValue());
         }
     }
 
@@ -234,8 +235,8 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     double precision = ctx->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
-        String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range"));
-        ctx->throwRangeError(Value::fromString(error));
+        ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
+        ctx->throwRangeError(error.asValue());
     }
 
     char str[100];

@@ -83,7 +83,7 @@ public:
         : PersistentValuePrivate(QV4::Encode::undefined())
         , string(0, s)
     {
-        value = QV4::Value::fromString(&string);
+        value.val = QV4::Encode(string.asReturned<QV4::String>());
     }
 
     QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);

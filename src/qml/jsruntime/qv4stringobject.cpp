@@ -88,11 +88,12 @@ StringObject::StringObject(InternalClass *ic)
     defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
 
-StringObject::StringObject(ExecutionEngine *engine, const Value &value)
-    : Object(engine->stringClass), value(value)
+StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
+    : Object(engine->stringClass)
 {
     vtbl = &static_vtbl;
     type = Type_StringObject;
+    value = *val;
 
     tmpProperty.value = Primitive::undefinedValue();
 
@@ -105,7 +106,7 @@ Property *StringObject::getIndex(uint index) const
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    tmpProperty.value = Value::fromString(internalClass->engine->newString(str.mid(index, 1)));
+    tmpProperty.value = Encode(internalClass->engine->newString(str.mid(index, 1)));
     return &tmpProperty;
 }
 
@@ -168,7 +169,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = Value::fromString(callData->args[0].toString(v4->current));
+        value = callData->args[0].toString(v4->current);
     else
         value = Value::fromString(v4->current, QString());
     return Encode(v4->newStringObject(value));
@@ -180,7 +181,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = Value::fromString(callData->args[0].toString(v4->current));
+        value = callData->args[0].toString(v4->current);
     else
         value = Value::fromString(v4->current, QString());
     return value.asReturnedValue();

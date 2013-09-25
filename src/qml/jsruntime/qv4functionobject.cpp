@@ -279,7 +279,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return Value::fromObject(FunctionObject::creatScriptFunction(v4->rootContext, vmf)).asReturnedValue();
+    return FunctionObject::creatScriptFunction(v4->rootContext, vmf)->asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)
