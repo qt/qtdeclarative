@@ -1265,18 +1265,27 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     Q_ASSERT(!current.isFixedInterval());
     Q_ASSERT(current.reg() == LifeTimeInterval::Invalid);
 
+    const bool isPhiTarget = _info->isPhiTarget(current.temp());
+    if (isPhiTarget && !current.isSplitFromInterval()) {
+        split(current, position + 1, true);
+        _inactive.append(current);
+        return;
+    }
+
     const bool needsFPReg = isFP(current.temp());
     QVector<int> nextUsePos(needsFPReg ? _fpRegisters.size() : _normalRegisters.size(), INT_MAX);
     QVector<LifeTimeInterval *> nextUseRangeForReg(nextUsePos.size(), 0);
     Q_ASSERT(nextUsePos.size() > 0);
 
-    const bool isPhiTarget = _info->isPhiTarget(current.temp());
     for (int i = 0, ei = _active.size(); i != ei; ++i) {
         LifeTimeInterval &it = _active[i];
         if (it.isFP() == needsFPReg) {
             int nu = it.isFixedInterval() ? 0 : nextUse(it.temp(), current.firstPossibleUsePosition(isPhiTarget));
             if (nu != -1 && nu < nextUsePos[it.reg()]) {
                 nextUsePos[it.reg()] = nu;
+                nextUseRangeForReg[it.reg()] = &it;
+            } else if (nu == -1 && nextUsePos[it.reg()] == INT_MAX) {
+                // in a loop, the range can be active, but only used before the current position (e.g. in a loop header or phi node)
                 nextUseRangeForReg[it.reg()] = &it;
             }
         }
@@ -1298,12 +1307,10 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
     }
 
     int reg, nextUsePos_reg;
-    longestAvailableReg(nextUsePos, reg, nextUsePos_reg);
+    longestAvailableReg(nextUsePos, reg, nextUsePos_reg, current.end());
 
     if (current.start() > nextUsePos_reg) {
         // all other intervals are used before current, so it is best to spill current itself
-        // Note: even if we absolutely need a register (e.g. with a floating-point add), we have
-        // a scratch register available, and so we can still use a spill slot as the destination.
 #ifdef DEBUG_REGALLOC
         QTextStream out(stderr, QIODevice::WriteOnly);
         out << "*** splitting current for range ";current.dump(out);out<<endl;
@@ -1320,6 +1327,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
         current.setReg(reg);
         _lastAssignedRegister.insert(current.temp(), reg);
         Q_ASSERT(nextUseRangeForReg[reg]);
+        Q_ASSERT(!nextUseRangeForReg[reg]->isFixedInterval());
         split(*nextUseRangeForReg[reg], position);
         splitInactiveAtEndOfLifetimeHole(reg, needsFPReg, position);
 
@@ -1331,7 +1339,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current, const int 
 #ifdef DEBUG_REGALLOC
             out << "***-- current range intersects with a fixed reg use at "<<ni<<", so splitting it."<<endl;
 #endif // DEBUG_REGALLOC
-            split(current, ni);
+            split(current, ni, true);
         }
     }
 }
@@ -1465,6 +1473,8 @@ void RegisterAllocator::splitInactiveAtEndOfLifetimeHole(int reg, bool isFPReg, 
 {
     for (int i = 0, ei = _inactive.size(); i != ei; ++i) {
         LifeTimeInterval &interval = _inactive[i];
+        if (interval.isFixedInterval())
+            continue;
         if (isFPReg == interval.isFP() && interval.reg() == reg) {
             LifeTimeInterval::Ranges ranges = interval.ranges();
             int endOfLifetimeHole = -1;
