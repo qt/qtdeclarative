@@ -662,19 +662,19 @@ void ExecutionContext::throwReferenceError(const QString &message, const QString
     throwError(error);
 }
 
-void ExecutionContext::throwRangeError(Value value)
+void ExecutionContext::throwRangeError(const ValueRef value)
 {
     Scope scope(this);
-    Scoped<String> s(scope, value.toString(this));
+    ScopedString s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" out of range");
-    Scoped<Object> error(scope, engine->newRangeErrorObject(msg));
+    ScopedObject error(scope, engine->newRangeErrorObject(msg));
     throwError(error);
 }
 
-void ExecutionContext::throwURIError(Value msg)
+void ExecutionContext::throwURIError(const ValueRef msg)
 {
     Scope scope(this);
-    Scoped<Object> error(scope, engine->newURIErrorObject(msg));
+    ScopedObject error(scope, engine->newURIErrorObject(msg));
     throwError(error);
 }
 

@@ -290,14 +290,14 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
-    Returned<Object> *newErrorObject(const Value &value);
+    Returned<Object> *newErrorObject(const ValueRef value);
     Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Returned<Object> *newSyntaxErrorObject(const QString &message);
     Returned<Object> *newReferenceErrorObject(const QString &message);
     Returned<Object> *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
     Returned<Object> *newTypeErrorObject(const QString &message);
     Returned<Object> *newRangeErrorObject(const QString &message);
-    Returned<Object> *newURIErrorObject(Value message);
+    Returned<Object> *newURIErrorObject(const ValueRef message);
 
     Returned<Object> *newVariantObject(const QVariant &v);
 

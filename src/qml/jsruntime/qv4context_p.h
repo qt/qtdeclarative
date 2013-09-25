@@ -133,8 +133,8 @@ struct Q_QML_EXPORT ExecutionContext
     void Q_NORETURN throwTypeError(const QString &message);
     void Q_NORETURN throwReferenceError(const ValueRef value);
     void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
-    void Q_NORETURN throwRangeError(Value value);
-    void Q_NORETURN throwURIError(Value msg);
+    void Q_NORETURN throwRangeError(const ValueRef value);
+    void Q_NORETURN throwURIError(const ValueRef msg);
     void Q_NORETURN throwUnimplemented(const QString &message);
 
     void setProperty(const StringRef name, const ValueRef value);

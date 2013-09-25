@@ -273,8 +273,10 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
         double newLen = l + ctx->callData->argc;
         if (!instance->isArrayObject())
             instance->put(ctx->engine->id_length, ScopedValue(scope, Primitive::fromDouble(newLen)));
-        else
-            ctx->throwRangeError(Value::fromString(ctx, QStringLiteral("Array.prototype.push: Overflow")));
+        else {
+            ScopedString str(scope, ctx->engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
+            ctx->throwRangeError(str);
+        }
         return Primitive::fromDouble(newLen).asReturnedValue();
     }
 

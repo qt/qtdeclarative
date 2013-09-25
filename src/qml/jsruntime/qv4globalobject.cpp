@@ -599,8 +599,11 @@ ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
     QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
-    if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+    if (!ok) {
+        Scope scope(context);
+        ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
+        context->throwURIError(s);
+    }
 
     return Value::fromString(context, out).asReturnedValue();
 }
@@ -614,8 +617,11 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *cont
     QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
-    if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+    if (!ok) {
+        Scope scope(context);
+        ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
+        context->throwURIError(s);
+    }
 
     return Value::fromString(context, out).asReturnedValue();
 }
@@ -629,8 +635,11 @@ ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
     QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
-    if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+    if (!ok) {
+        Scope scope(context);
+        ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
+        context->throwURIError(s);
+    }
 
     return Value::fromString(context, out).asReturnedValue();
 }
@@ -644,8 +653,11 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *cont
     QString uriString = context->callData->args[0].toString(context)->toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
-    if (!ok)
-        context->throwURIError(Value::fromString(context, QStringLiteral("malformed URI sequence")));
+    if (!ok) {
+        Scope scope(context);
+        ScopedString s(scope, context->engine->newString(QStringLiteral("malformed URI sequence")));
+        context->throwURIError(s);
+    }
 
     return Value::fromString(context, out).asReturnedValue();
 }

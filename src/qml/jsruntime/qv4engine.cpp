@@ -475,7 +475,7 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
     return object->asReturned<RegExpObject>();
 }
 
-Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
+Returned<Object> *ExecutionEngine::newErrorObject(const ValueRef value)
 {
     ErrorObject *object = new (memoryManager) ErrorObject(errorClass, value);
     return object->asReturned<Object>();
@@ -483,7 +483,9 @@ Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
 
 Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    Object *error = new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    Scope scope(this);
+    ScopedString s(scope, newString(message));
+    Object *error = new (memoryManager) SyntaxErrorObject(this, s);
     return error->asReturned<Object>();
 }
 
@@ -519,7 +521,7 @@ Returned<Object> *ExecutionEngine::newRangeErrorObject(const QString &message)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newURIErrorObject(Value message)
+Returned<Object> *ExecutionEngine::newURIErrorObject(const ValueRef message)
 {
     Object *o = new (memoryManager) URIErrorObject(this, message);
     return o->asReturned<Object>();

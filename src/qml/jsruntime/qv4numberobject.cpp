@@ -212,7 +212,7 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
         int fdigits = ctx->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
-            ctx->throwRangeError(error.asValue());
+            ctx->throwRangeError(error);
         }
     }
 
@@ -236,7 +236,7 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     double precision = ctx->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
-        ctx->throwRangeError(error.asValue());
+        ctx->throwRangeError(error);
     }
 
     char str[100];

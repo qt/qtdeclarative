@@ -64,7 +64,8 @@ struct ErrorObject: Object {
     };
 
     ErrorObject(InternalClass *ic);
-    ErrorObject(InternalClass *ic, const Value &message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const QString &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
@@ -83,33 +84,33 @@ inline ErrorObject *value_cast(const Value &v) {
 }
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionEngine *engine, const Value &message);
+    EvalErrorObject(ExecutionEngine *engine, const ValueRef message);
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionEngine *engine, const Value &message);
+    RangeErrorObject(ExecutionEngine *engine, const ValueRef message);
     RangeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
+    ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject: ErrorObject {
     Q_MANAGED
-    SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
+    SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionEngine *engine, const Value &message);
+    TypeErrorObject(ExecutionEngine *engine, const ValueRef message);
     TypeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionEngine *engine, const Value &message);
+    URIErrorObject(ExecutionEngine *engine, const ValueRef message);
 };
 
 struct ErrorCtor: FunctionObject

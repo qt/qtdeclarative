@@ -743,7 +743,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
             bool ok;
             uint l = value->asArrayLength(&ok);
             if (!ok)
-                engine()->current->throwRangeError(*value);
+                engine()->current->throwRangeError(value);
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
@@ -927,6 +927,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
 
     name->makeIdentifier();
 
+    Scope scope(ctx);
     Property *current;
     PropertyAttributes *cattrs;
 
@@ -942,8 +943,10 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
             uint l = p.value.asArrayLength(&ok);
-            if (!ok)
-                ctx->throwRangeError(p.value);
+            if (!ok) {
+                ScopedValue v(scope, p.value);
+                ctx->throwRangeError(v);
+            }
             succeeded = setArrayLength(l);
         }
         if (attrs.hasWritable() && !attrs.isWritable())
