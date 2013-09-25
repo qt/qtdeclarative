@@ -58,7 +58,6 @@
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QLibraryInfo>
-#include <QtCore/QDebug>
 
 #include <iostream>
 
@@ -68,7 +67,7 @@ QStringList g_qmlImportPaths;
 
 void printUsage(const QString &appName)
 {
-    qWarning() << qPrintable(QString::fromLatin1(
+    std::cerr << qPrintable(QString::fromLatin1(
                                  "Usage: %1 -rootPath qmldir -importPath importPath \n"
                                  "Example: %1 -rootPath qmldir -importPath importPath").arg(
                                  appName));
@@ -115,7 +114,8 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
 QVariantList findQmlImportsInFile(const QString &qmlFilePath) {
     QFile qmlFile(qmlFilePath);
     if (!qmlFile.open(QIODevice::ReadOnly)) {
-           std::cerr << "Cannot open input file " << qPrintable(qmlFile.fileName()) << std::endl;
+           std::cerr << "Cannot open input file " << qPrintable(QDir::toNativeSeparators(qmlFile.fileName()))
+                     << ':' << qPrintable(qmlFile.errorString()) << std::endl;
            return QVariantList();
     }
     QByteArray code = qmlFile.readAll();
@@ -128,11 +128,7 @@ QVariantList findQmlImportsInFile(const QString &qmlFilePath) {
     if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
         // Extract errors from the parser
         foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
-            if (m.isWarning()) {
-                qWarning("%s:%d : %s", qPrintable(qmlFile.fileName()), m.loc.startLine, qPrintable(m.message));
-                continue;
-            }
-            std::cerr << qPrintable(qmlFile.fileName()) << ':'
+            std::cerr << qPrintable(QDir::toNativeSeparators(qmlFile.fileName())) << ':'
                       << m.loc.startLine << ':' << qPrintable(m.message) << std::endl;
         }
         return QVariantList();
@@ -287,7 +283,7 @@ int main(int argc, char *argv[])
             qmlRootPaths += arg;
         } else if (arg == QLatin1String("-rootPath")) {
             if (i >= args.count())
-                qWarning() << "-rootPath requires an argument";
+                std::cerr << "-rootPath requires an argument\n";
 
             while (i < args.count()) {
                 const QString arg = args.at(i);
@@ -298,7 +294,7 @@ int main(int argc, char *argv[])
             }
         } else if (arg == QLatin1String("-importPath")) {
             if (i >= args.count())
-                qWarning() << "-importPath requires an argument";
+                std::cerr << "-importPath requires an argument\n";
 
             while (i < args.count()) {
                 const QString arg = args.at(i);
@@ -308,7 +304,7 @@ int main(int argc, char *argv[])
                 qmlImportPaths += arg;
             }
         } else {
-            qWarning() << "Invalid argument: " << arg;
+            std::cerr << "Invalid argument: \"" << qPrintable(arg) << "\"\n";
             return 1;
         }
     }
