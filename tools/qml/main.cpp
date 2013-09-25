@@ -189,7 +189,7 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
     //Doesn't print anything
     switch (type) {
     case QtFatalMsg:
-        abort();
+        exit(-1);
     case QtCriticalMsg:
     case QtDebugMsg:
     case QtWarningMsg:
