@@ -632,9 +632,14 @@ void InstructionSelection::run(int functionIndex)
     V4IR::Optimizer opt(_function);
     opt.run();
 
-#if CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))
+#if (CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))) || (CPU(X86) && OS(LINUX))
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
     if (opt.isInSSA() && withRegisterAllocator) {
+#if CPU(X86) && OS(LINUX) // x86 with linux
+        static const QVector<int> intRegisters = QVector<int>()
+                << JSC::X86Registers::edx
+                << JSC::X86Registers::ebx;
+#else // x86_64 with linux or with macos
         static const QVector<int> intRegisters = QVector<int>()
                 << JSC::X86Registers::edi
                 << JSC::X86Registers::esi
@@ -643,6 +648,7 @@ void InstructionSelection::run(int functionIndex)
                 << JSC::X86Registers::r8
                 << JSC::X86Registers::r13
                 << JSC::X86Registers::r15;
+#endif
         static const QVector<int> fpRegisters = QVector<int>()
                 << JSC::X86Registers::xmm1
                 << JSC::X86Registers::xmm2
