@@ -121,7 +121,6 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
 {
     Q_ASSERT (!value->isEmpty());
     QV4::Scope scope(m_v4Engine);
-//    QV4::ScopedValue v(scope, value);
 
     if (QV4::VariantObject *v = value->as<QV4::VariantObject>())
         return v->data;
@@ -135,7 +134,8 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
     if (typeHint == qMetaTypeId<QJSValue>())
         return QVariant::fromValue(QJSValue(new QJSValuePrivate(m_v4Engine, value)));
 
-    if (QV4::Object *object = value->asObject()) {
+    if (value->asObject()) {
+        QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
                    && !value->asArrayObject() && !value->asFunctionObject()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
@@ -150,11 +150,11 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
         } else if (object->isListType())
-            return QV4::SequencePrototype::toVariant(object);
+            return QV4::SequencePrototype::toVariant(object.getPointer());
     }
 
-    if (QV4::ArrayObject *a = value->asArrayObject()) {
-        QV4::Scope scope(a->engine());
+    if (value->asArrayObject()) {
+        QV4::ScopedArrayObject a(scope, value);
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
             uint32_t length = a->arrayLength();
@@ -814,12 +814,16 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
     case QMetaType::QJsonValue:
         *reinterpret_cast<QJsonValue *>(data) = QV4::JsonObject::toJsonValue(value);
         return true;
-    case QMetaType::QJsonObject:
-        *reinterpret_cast<QJsonObject *>(data) = QV4::JsonObject::toJsonObject(value->asObject());
+    case QMetaType::QJsonObject: {
+        QV4::ScopedObject o(scope, value);
+        *reinterpret_cast<QJsonObject *>(data) = QV4::JsonObject::toJsonObject(o);
         return true;
-    case QMetaType::QJsonArray:
-        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(value->asArrayObject());
+    }
+    case QMetaType::QJsonArray: {
+        QV4::ScopedArrayObject a(scope, value);
+        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(a);
         return true;
+    }
     default:
     ;
     }

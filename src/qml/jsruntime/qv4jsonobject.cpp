@@ -966,20 +966,24 @@ ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValu
 QJsonValue JsonObject::toJsonValue(const ValueRef value,
                                        V4ObjectSet &visitedObjects)
 {
-    if (String *s = value->asString())
-        return QJsonValue(s->toQString());
-    else if (value->isNumber())
+    if (value->isNumber())
         return QJsonValue(value->toNumber());
     else if (value->isBoolean())
         return QJsonValue((bool)value->booleanValue());
-    else if (ArrayObject *a = value->asArrayObject())
-        return toJsonArray(a, visitedObjects);
-    else if (Object *o = value->asObject())
-        return toJsonObject(o, visitedObjects);
     else if (value->isNull())
         return QJsonValue(QJsonValue::Null);
-    else
+    else if (value->isUndefined())
         return QJsonValue(QJsonValue::Undefined);
+
+    Q_ASSERT(value->engine());
+    Scope scope(value->engine());
+    ScopedArrayObject a(scope, value);
+    if (a)
+        return toJsonArray(a, visitedObjects);
+    ScopedObject o(scope, value);
+    if (o)
+        return toJsonObject(o, visitedObjects);
+    return QJsonValue(value->toQString());
 }
 
 QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
@@ -995,7 +999,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     return o.asReturnedValue();
 }
 
-QJsonObject JsonObject::toJsonObject(QV4::Object *o, V4ObjectSet &visitedObjects)
+QJsonObject JsonObject::toJsonObject(ObjectRef o, V4ObjectSet &visitedObjects)
 {
     QJsonObject result;
     if (!o || o->asFunctionObject())
@@ -1046,7 +1050,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     return a.asReturnedValue();
 }
 
-QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
+QJsonArray JsonObject::toJsonArray(ArrayObjectRef a, V4ObjectSet &visitedObjects)
 {
     QJsonArray result;
     if (!a)

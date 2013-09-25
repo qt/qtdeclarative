@@ -1484,6 +1484,7 @@ void CallArgument::initAsType(int callType)
 void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRef value)
 {
     if (type != 0) { cleanup(); type = 0; }
+    QV4::Scope scope(QV8Engine::getV4(engine));
 
     if (callType == qMetaTypeId<QJSValue>()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
@@ -1521,7 +1522,6 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
         if (QV4::ArrayObject *array = value->asArrayObject()) {
-            QV4::Scope scope(array->engine());
             Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
 
             uint32_t length = array->arrayLength();
@@ -1543,10 +1543,12 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         handlePtr = new (&allocData) QQmlV4Handle(value->asReturnedValue());
         type = callType;
     } else if (callType == QMetaType::QJsonArray) {
-        jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(value->asArrayObject()));
+        QV4::ScopedArrayObject a(scope, value);
+        jsonArrayPtr = new (&allocData) QJsonArray(QV4::JsonObject::toJsonArray(a));
         type = callType;
     } else if (callType == QMetaType::QJsonObject) {
-        jsonObjectPtr = new (&allocData) QJsonObject(QV4::JsonObject::toJsonObject(value->asObject()));
+        QV4::ScopedObject o(scope, value);
+        jsonObjectPtr = new (&allocData) QJsonObject(QV4::JsonObject::toJsonObject(o));
         type = callType;
     } else if (callType == QMetaType::QJsonValue) {
         jsonValuePtr = new (&allocData) QJsonValue(QV4::JsonObject::toJsonValue(value));
