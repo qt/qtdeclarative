@@ -796,7 +796,7 @@ static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunc
 {
     exceptionVar = Value::undefinedValue();
     void *addressToContinueAt = 0;
-    Value *jsStackTop = context->engine->jsStackTop;
+    SafeValue *jsStackTop = context->engine->jsStackTop;
     try {
         addressToContinueAt = tryBody(context, localsPtr);
     } catch (Exception& ex) {

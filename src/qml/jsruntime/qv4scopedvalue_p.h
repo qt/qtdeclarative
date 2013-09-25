@@ -78,7 +78,7 @@ struct Scope {
     }
 
     Value *alloc(int nValues) {
-        Value *ptr = engine->jsStackTop;
+        SafeValue *ptr = engine->jsStackTop;
         engine->jsStackTop += nValues;
 #ifndef QT_NO_DEBUG
         size += nValues;
@@ -87,7 +87,7 @@ struct Scope {
     }
 
     ExecutionEngine *engine;
-    Value *mark;
+    SafeValue *mark;
 #ifndef QT_NO_DEBUG
     mutable int size;
 #endif
@@ -183,7 +183,7 @@ struct ScopedValue
 
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
-    Value *ptr;
+    SafeValue *ptr;
 };
 
 template<typename T>
@@ -342,7 +342,7 @@ struct Scoped
 #endif
     }
 
-    Value *ptr;
+    SafeValue *ptr;
 };
 
 struct CallData
@@ -433,9 +433,9 @@ struct ValueRef {
     ReturnedValue asReturnedValue() const { return ptr->val; }
 
     // ### get rid of this one!
-    ValueRef(Value *v) { ptr = v; }
+    ValueRef(Value *v) { ptr = reinterpret_cast<SafeValue *>(v); }
 private:
-    Value *ptr;
+    SafeValue *ptr;
 };
 
 
@@ -485,7 +485,7 @@ struct Referenced {
 private:
     enum _Null { Null };
     Referenced(_Null) { ptr = 0; }
-    Value *ptr;
+    SafeValue *ptr;
 };
 
 typedef Referenced<String> StringRef;

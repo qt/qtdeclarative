@@ -125,11 +125,11 @@ struct Q_QML_EXPORT ExecutionEngine
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
     WTF::PageAllocation *jsStack;
-    Value *jsStackBase;
-    Value *jsStackTop;
+    SafeValue *jsStackBase;
+    SafeValue *jsStackTop;
 
-    Value *stackPush(uint nValues) {
-        Value *ptr = jsStackTop;
+    SafeValue *stackPush(uint nValues) {
+        SafeValue *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
         return ptr;
     }
@@ -148,21 +148,21 @@ struct Q_QML_EXPORT ExecutionEngine
 
     QV8Engine *v8Engine;
 
-    Value objectCtor;
-    Value stringCtor;
-    Value numberCtor;
-    Value booleanCtor;
-    Value arrayCtor;
-    Value functionCtor;
-    Value dateCtor;
-    Value regExpCtor;
-    Value errorCtor;
-    Value evalErrorCtor;
-    Value rangeErrorCtor;
-    Value referenceErrorCtor;
-    Value syntaxErrorCtor;
-    Value typeErrorCtor;
-    Value uRIErrorCtor;
+    SafeValue objectCtor;
+    SafeValue stringCtor;
+    SafeValue numberCtor;
+    SafeValue booleanCtor;
+    SafeValue arrayCtor;
+    SafeValue functionCtor;
+    SafeValue dateCtor;
+    SafeValue regExpCtor;
+    SafeValue errorCtor;
+    SafeValue evalErrorCtor;
+    SafeValue rangeErrorCtor;
+    SafeValue referenceErrorCtor;
+    SafeValue syntaxErrorCtor;
+    SafeValue typeErrorCtor;
+    SafeValue uRIErrorCtor;
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;

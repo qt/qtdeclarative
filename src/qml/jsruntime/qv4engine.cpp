@@ -121,7 +121,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     // reserve 8MB for the JS stack
     *jsStack = WTF::PageAllocation::allocate(8*1024*1024, WTF::OSAllocator::JSVMStackPages, true);
-    jsStackBase = (Value *)jsStack->base();
+    jsStackBase = (SafeValue *)jsStack->base();
     jsStackTop = jsStackBase;
 
     identifierTable = new IdentifierTable(this);

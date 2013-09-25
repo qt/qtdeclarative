@@ -363,7 +363,7 @@ struct SafeValue : public Value
 };
 
 template <typename T>
-struct Safe : public Value
+struct Safe : public SafeValue
 {
     Safe &operator =(T *t);
     Safe &operator =(const Scoped<T> &v);

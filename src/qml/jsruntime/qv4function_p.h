@@ -86,7 +86,7 @@ struct Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
     inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
-        Value *stack = ctx->engine->jsStackTop;
+        SafeValue *stack = ctx->engine->jsStackTop;
         try {
             return codePtr(ctx, data);
         } catch (...) {
