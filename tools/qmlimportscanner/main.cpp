@@ -73,7 +73,8 @@ void printUsage(const QString &appName)
                                  appName));
 }
 
-QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QByteArray &code, const QString &path) {
+QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QByteArray &code, const QString &path)
+{
     QVariantList imports;
 
     // extract uri and version from the imports (which look like "import Foo.Bar 1.2.3")
@@ -111,7 +112,8 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
 }
 
 // Scan a single qml file for import statements
-QVariantList findQmlImportsInFile(const QString &qmlFilePath) {
+QVariantList findQmlImportsInFile(const QString &qmlFilePath)
+{
     QFile qmlFile(qmlFilePath);
     if (!qmlFile.open(QIODevice::ReadOnly)) {
            std::cerr << "Cannot open input file " << qPrintable(QDir::toNativeSeparators(qmlFile.fileName()))
@@ -156,11 +158,11 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
 
 // Read the qmldir file, extract a list of plugins by
 // parsing the "plugin" lines
-QString pluginsForModulePath(const QString &modulePath) {
+QString pluginsForModulePath(const QString &modulePath)
+{
     QFile qmldirFile(modulePath + QStringLiteral("/qmldir"));
-    if (!qmldirFile.exists()) {
+    if (!qmldirFile.exists())
         return QString();
-    }
     qmldirFile.open(QIODevice::ReadOnly | QIODevice::Text);
 
     QString plugins;
@@ -179,7 +181,8 @@ QString pluginsForModulePath(const QString &modulePath) {
 // Construct a file system path from a module uri and version.
 // Special case for 1.x: QtQuick.Dialogs 1.x -> QtQuick/Dialogs
 // Genral casefor y.x:  QtQuick.Dialogs y.x -> QtQuick/Dialogs.y
-QString localPathForModule(const QString &moduleUri, const QString &version) {
+QString localPathForModule(const QString &moduleUri, const QString &version)
+{
     QString path;
     foreach (const QString &part, moduleUri.split(QLatin1Char('.')))
         path += QLatin1Char('/') + part;
@@ -195,7 +198,8 @@ QString localPathForModule(const QString &moduleUri, const QString &version) {
 }
 
 // Search for a given qml import in g_qmlImportPaths
-QString findPathForImport(const QString&localModulePath) {
+QString findPathForImport(const QString&localModulePath)
+{
     foreach (const QString &qmlImportPath, g_qmlImportPaths) {
         QString candidatePath = QDir::cleanPath(qmlImportPath + QLatin1Char('/') + localModulePath);
         if (QDir(candidatePath).exists())
@@ -205,7 +209,8 @@ QString findPathForImport(const QString&localModulePath) {
 }
 
 // Find absolute file system paths and plugins for a list of modules.
-QVariantList findPathsForModuleImports(const QVariantList &imports) {
+QVariantList findPathsForModuleImports(const QVariantList &imports)
+{
     QVariantList done;
 
     foreach (QVariant importVariant, imports) {
@@ -224,7 +229,8 @@ QVariantList findPathsForModuleImports(const QVariantList &imports) {
 }
 
 // Merge two lists of imports, discard duplicates.
-QVariantList mergeImports(const QVariantList &a, const QVariantList &b) {
+QVariantList mergeImports(const QVariantList &a, const QVariantList &b)
+{
     QVariantList merged = a;
     foreach (const QVariant &variant, b) {
         if (!merged.contains(variant))
@@ -234,7 +240,8 @@ QVariantList mergeImports(const QVariantList &a, const QVariantList &b) {
 }
 
 // find Qml Imports Recursively
-QVariantList findQmlImportsRecursively(const QStringList &qmlDirs) {
+QVariantList findQmlImportsRecursively(const QStringList &qmlDirs)
+{
     QVariantList ret;
 
     QSet<QString> toVisit = qmlDirs.toSet();
