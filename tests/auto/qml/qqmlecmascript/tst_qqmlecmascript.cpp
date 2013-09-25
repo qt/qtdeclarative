@@ -4976,6 +4976,8 @@ void tst_qqmlecmascript::propertyVarCircular2()
 
 void tst_qqmlecmascript::propertyVarInheritance()
 {
+    QSKIP("This test does not work reliably with our conservative GC.");
+
     // enforce behaviour regarding element inheritance - ensure handle disposal.
     // The particular component under test here has a chain of references.
     QQmlComponent component(&engine, testFileUrl("propertyVar.inherit.qml"));
@@ -5026,6 +5028,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
 
 void tst_qqmlecmascript::propertyVarInheritance2()
 {
+    QSKIP("This test does not work reliably with our conservative GC.");
+
     // The particular component under test here does NOT have a chain of references; the
     // only link between rootObject and childObject is that rootObject is the parent of childObject.
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.2.qml"));
