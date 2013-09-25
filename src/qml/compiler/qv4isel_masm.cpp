@@ -1755,16 +1755,49 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
 void InstructionSelection::visitRet(V4IR::Ret *s)
 {
     if (V4IR::Temp *t = s->expr->asTemp()) {
-#if CPU(X86)
-       Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
-       _as->load32(addr, JSC::X86Registers::eax);
-       addr.offset += 4;
-       _as->load32(addr, JSC::X86Registers::edx);
-#elif CPU(ARM)
-        Address addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
-        _as->load32(addr, JSC::ARMRegisters::r0);
-        addr.offset += 4;
-        _as->load32(addr, JSC::ARMRegisters::r1);
+#if CPU(X86) || CPU(ARM)
+
+#  if CPU(X86)
+        Assembler::RegisterID lowReg = JSC::X86Registers::eax;
+        Assembler::RegisterID highReg = JSC::X86Registers::edx;
+#  else // CPU(ARM)
+        Assembler::RegisterID lowReg = JSC::ARMRegisters::r0;
+        Assembler::RegisterID highReg = JSC::ARMRegisters::r1;
+#  endif
+
+        if (t->kind == V4IR::Temp::PhysicalRegister) {
+            switch (t->type) {
+            case V4IR::DoubleType:
+                _as->moveDoubleToInts((Assembler::FPRegisterID) t->index, lowReg, highReg);
+                break;
+            case V4IR::UInt32Type: {
+                Assembler::RegisterID srcReg = (Assembler::RegisterID) t->index;
+                Assembler::Jump intRange = _as->branch32(Assembler::GreaterThanOrEqual, srcReg, Assembler::TrustedImm32(0));
+                _as->convertUInt32ToDouble(srcReg, Assembler::FPGpr0, Assembler::ReturnValueRegister);
+                _as->moveDoubleToInts(Assembler::FPGpr0, lowReg, highReg);
+                Assembler::Jump done = _as->jump();
+                intRange.link(_as);
+                _as->move(srcReg, lowReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), highReg);
+                done.link(_as);
+            } break;
+            case V4IR::SInt32Type:
+                _as->move((Assembler::RegisterID) t->index, lowReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), highReg);
+                break;
+            case V4IR::BoolType:
+                _as->move((Assembler::RegisterID) t->index, lowReg);
+                _as->move(Assembler::TrustedImm32(QV4::Value::_Boolean_Type), highReg);
+                break;
+            default:
+                Q_UNREACHABLE();
+            }
+        } else {
+            Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+            _as->load32(addr, lowReg);
+            addr.offset += 4;
+            _as->load32(addr, highReg);
+        }
 #else
         if (t->kind == V4IR::Temp::PhysicalRegister) {
             if (t->type == V4IR::DoubleType) {
