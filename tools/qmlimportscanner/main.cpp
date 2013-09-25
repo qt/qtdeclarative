@@ -68,7 +68,7 @@ QStringList g_qmlImportPaths;
 
 void printUsage(const QString &appName)
 {
-    qWarning() << qPrintable(QString(
+    qWarning() << qPrintable(QString::fromLatin1(
                                  "Usage: %1 -rootPath qmldir -importPath importPath \n"
                                  "Example: %1 -rootPath qmldir -importPath importPath").arg(
                                  appName));
@@ -86,23 +86,23 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
         // handle directory imports
         if (!importNode->fileName.isEmpty()) {
             QString name = importNode->fileName.toString();
-            import["name"] = name;
-            import["type"] = QStringLiteral("directory");
-            import["path"] = path + QStringLiteral("/") + name;
+            import[QStringLiteral("name")] = name;
+            import[QStringLiteral("type")] = QStringLiteral("directory");
+            import[QStringLiteral("path")] = path + QLatin1Char('/') + name;
         } else {
             // Walk the id chain ("Foo" -> "Bar" -> etc)
             QString  name;
             QQmlJS::AST::UiQualifiedId *uri = importNode->importUri;
             while (uri) {
                 name.append(uri->name);
-                name.append(".");
+                name.append(QLatin1Char('.'));
                 uri = uri->next;
             }
             name.chop(1); // remove trailing "."
             if (!name.isEmpty())
-                import["name"] = name;
-            import["type"] = QStringLiteral("module");
-            import["version"] = code.mid(importNode->versionToken.offset, importNode->versionToken.length);
+                import[QStringLiteral("name")] = name;
+            import[QStringLiteral("type")] = QStringLiteral("module");
+            import[QStringLiteral("version")] = code.mid(importNode->versionToken.offset, importNode->versionToken.length);
         }
 
         imports.append(import);
@@ -122,7 +122,7 @@ QVariantList findQmlImportsInFile(const QString &qmlFilePath) {
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
-    lexer.setCode(code, /*line = */ 1);
+    lexer.setCode(QString::fromUtf8(code), /*line = */ 1);
     QQmlJS::Parser parser(&engine);
 
     if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
@@ -132,7 +132,8 @@ QVariantList findQmlImportsInFile(const QString &qmlFilePath) {
                 qWarning("%s:%d : %s", qPrintable(qmlFile.fileName()), m.loc.startLine, qPrintable(m.message));
                 continue;
             }
-            std::cerr << qPrintable(qmlFile.fileName()) << ":" << m.loc.startLine << ":" << qPrintable(m.message) << std::endl;
+            std::cerr << qPrintable(qmlFile.fileName()) << ':'
+                      << m.loc.startLine << ':' << qPrintable(m.message) << std::endl;
         }
         return QVariantList();
     }
@@ -147,9 +148,9 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
     if (qmlDir.isEmpty())
         return ret;
 
-    QStringList qmlFileNames = QDir(qmlDir).entryList(QStringList() << "*.qml");
+    QStringList qmlFileNames = QDir(qmlDir).entryList(QStringList(QStringLiteral("*.qml")));
     foreach (const QString &qmlFileName, qmlFileNames) {
-        QString qmlFilePath = qmlDir + "/" + qmlFileName;
+        QString qmlFilePath = qmlDir + QLatin1Char('/') + qmlFileName;
             QVariantList imports = findQmlImportsInFile(qmlFilePath);
             ret.append(imports);
 
@@ -160,7 +161,7 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
 // Read the qmldir file, extract a list of plugins by
 // parsing the "plugin" lines
 QString pluginsForModulePath(const QString &modulePath) {
-    QFile qmldirFile(modulePath + "/qmldir");
+    QFile qmldirFile(modulePath + QStringLiteral("/qmldir"));
     if (!qmldirFile.exists()) {
         return QString();
     }
@@ -172,7 +173,7 @@ QString pluginsForModulePath(const QString &modulePath) {
         line = qmldirFile.readLine();
         if (line.startsWith("plugin")) {
             plugins += QString::fromUtf8(line.split(' ').at(1));
-            plugins += " ";
+            plugins += QLatin1Char(' ');
         }
     } while (line.length() > 0);
 
@@ -184,24 +185,23 @@ QString pluginsForModulePath(const QString &modulePath) {
 // Genral casefor y.x:  QtQuick.Dialogs y.x -> QtQuick/Dialogs.y
 QString localPathForModule(const QString &moduleUri, const QString &version) {
     QString path;
-    foreach (const QString &part, moduleUri.split(".")) {
-        path += QString("/" + part);
-    }
+    foreach (const QString &part, moduleUri.split(QLatin1Char('.')))
+        path += QLatin1Char('/') + part;
 
-    if (version.startsWith("1."))
+    if (version.startsWith(QLatin1String("1.")))
         return path;
 
-    if (version.contains("."))
-        path += "." + version.split(".").at(0);
+    if (version.contains(QLatin1Char('.')))
+        path += QLatin1Char('.') + version.split(QLatin1Char('.')).at(0);
     else
-        path += "." + version;
+        path += QLatin1Char('.') + version;
     return path;
 }
 
 // Search for a given qml import in g_qmlImportPaths
 QString findPathForImport(const QString&localModulePath) {
     foreach (const QString &qmlImportPath, g_qmlImportPaths) {
-        QString candidatePath = QDir::cleanPath(qmlImportPath + "/" + localModulePath);
+        QString candidatePath = QDir::cleanPath(qmlImportPath + QLatin1Char('/') + localModulePath);
         if (QDir(candidatePath).exists())
             return candidatePath;
     }
@@ -214,13 +214,14 @@ QVariantList findPathsForModuleImports(const QVariantList &imports) {
 
     foreach (QVariant importVariant, imports) {
         QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
-        if (import["type"] == QStringLiteral("module")) {
-            import["path"] = findPathForImport(localPathForModule(import["name"].toString(), import["version"].toString()));
-            QString plugin = pluginsForModulePath(import["path"].toString());
+        if (import[QStringLiteral("type")] == QStringLiteral("module")) {
+            const QString path = findPathForImport(localPathForModule(import[QStringLiteral("name")].toString(), import[QStringLiteral("version")].toString()));
+            import.insert(QStringLiteral("path"), path);
+            const QString plugin = pluginsForModulePath(path);
             if (!plugin.isEmpty())
-                import["plugin"] = plugin;
+                import[QStringLiteral("plugin")] = plugin;
         }
-        if (!import["path"].isNull())
+        if (!import[QStringLiteral("path")].isNull())
             done.append(import);
     }
     return done;
@@ -253,7 +254,7 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs) {
         // schedule recursive visit of imports
         foreach (const QVariant &importVariant, imports) {
             QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
-            QString path = import["path"].toString();
+            QString path = import[QStringLiteral("path")].toString();
             if (!path.isEmpty() && !visited.contains(path)) {
                 toVisit.insert(path);
             }
@@ -282,7 +283,7 @@ int main(int argc, char *argv[])
     while (i < args.count()) {
         const QString &arg = args.at(i);
         ++i;
-        if (!arg.startsWith("-")) {
+        if (!arg.startsWith(QLatin1Char('-'))) {
             qmlRootPaths += arg;
         } else if (arg == QLatin1String("-rootPath")) {
             if (i >= args.count())
@@ -290,7 +291,7 @@ int main(int argc, char *argv[])
 
             while (i < args.count()) {
                 const QString arg = args.at(i);
-                if (arg.startsWith("-"))
+                if (arg.startsWith(QLatin1Char('-')))
                     break;
                 ++i;
                 qmlRootPaths += arg;
@@ -301,7 +302,7 @@ int main(int argc, char *argv[])
 
             while (i < args.count()) {
                 const QString arg = args.at(i);
-                if (arg.startsWith("-"))
+                if (arg.startsWith(QLatin1Char('-')))
                     break;
                 ++i;
                 qmlImportPaths += arg;
