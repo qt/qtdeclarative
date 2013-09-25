@@ -538,31 +538,32 @@ private:
     CallData *ptr;
 };
 
-struct Encode : private Value {
+struct Encode {
     static ReturnedValue undefined() {
-        return quint64(Undefined_Type) << Tag_Shift;
+        return quint64(Value::Undefined_Type) << Value::Tag_Shift;
     }
     static ReturnedValue null() {
-        return quint64(_Null_Type) << Tag_Shift;
+        return quint64(Value::_Null_Type) << Value::Tag_Shift;
     }
 
     Encode(bool b) {
-        tag = _Boolean_Type;
-        int_32 = b;
+        val = (quint64(Value::_Boolean_Type) << Value::Tag_Shift) | (uint)b;
     }
     Encode(double d) {
-        setDouble(d);
+        Value v;
+        v.setDouble(d);
+        val = v.val;
     }
     Encode(int i) {
-        tag = _Integer_Type;
-        int_32 = i;
+        val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | i;
     }
     Encode(uint i) {
         if (i <= INT_MAX) {
-            tag = _Integer_Type;
-            int_32 = i;
+            val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | i;
         } else {
-            setDouble(i);
+            Value v;
+            v.setDouble(i);
+            val = v.val;
         }
     }
     Encode(ReturnedValue v) {
@@ -577,6 +578,7 @@ struct Encode : private Value {
     operator ReturnedValue() const {
         return val;
     }
+    quint64 val;
 };
 
 inline SafeValue &SafeValue::operator =(const ScopedValue &v)

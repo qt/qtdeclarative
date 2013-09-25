@@ -71,7 +71,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     } else {
         internalClass = engine()->argumentsObjectClass;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
-        memberData[CalleePropertyIndex].value = Value::fromObject(context->function);
+        memberData[CalleePropertyIndex].value = Encode(context->function);
         isNonStrictArgumentsObject = true;
 
         uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
