@@ -134,7 +134,7 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
                 num = -num;
             }
             double frac = num - ::floor(num);
-            num = Value::toInteger(num);
+            num = Primitive::toInteger(num);
             do {
                 char c = (char)::fmod(num, radix);
                 c = (c < 10) ? (c + '0') : (c - 10 + 'a');

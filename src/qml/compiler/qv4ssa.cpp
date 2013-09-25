@@ -1583,10 +1583,10 @@ public:
                     case DoubleType:
                         break;
                     case SInt32Type:
-                        c->value = QV4::Value::toInt32(c->value);
+                        c->value = QV4::Primitive::toInt32(c->value);
                         break;
                     case UInt32Type:
-                        c->value = QV4::Value::toUInt32(c->value);
+                        c->value = QV4::Primitive::toUInt32(c->value);
                         break;
                     case BoolType:
                         c->value = !(c->value == 0 || std::isnan(c->value));
@@ -1626,9 +1626,9 @@ protected:
     virtual void visitConst(Const *c) {
         if (_ty & NumberType && c->type & NumberType) {
             if (_ty == SInt32Type)
-                c->value = QV4::Value::toInt32(c->value);
+                c->value = QV4::Primitive::toInt32(c->value);
             else if (_ty == UInt32Type)
-                c->value = QV4::Value::toUInt32(c->value);
+                c->value = QV4::Primitive::toUInt32(c->value);
             c->type = _ty;
         }
     }
@@ -2347,7 +2347,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                                 doneSomething = true;
                                 break;
                             case OpCompl:
-                                constOperand->value = ~QV4::Value::toInt32(constOperand->value);
+                                constOperand->value = ~QV4::Primitive::toInt32(constOperand->value);
                                 constOperand->type = SInt32Type;
                                 doneSomething = true;
                                 break;

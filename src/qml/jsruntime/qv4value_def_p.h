@@ -283,10 +283,6 @@ struct Q_QML_EXPORT Value
     static Value fromString(ExecutionEngine *engine, const QString &s);
 #endif
 
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
-
     int toUInt16() const;
     int toInt32() const;
     unsigned int toUInt32() const;
@@ -328,6 +324,7 @@ struct Q_QML_EXPORT Value
 
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
+    Value &operator=(ReturnedValue v) { val = v; return *this; }
 
     // Section 9.12
     bool sameValue(Value other) const;
@@ -356,7 +353,7 @@ struct SafeValue : public Value
     Returned<T> *as();
 };
 
-struct Primitive : public Value
+struct Q_QML_EXPORT Primitive : public Value
 {
     static Primitive fromBoolean(bool b);
     static Primitive fromInt32(int i);
@@ -364,6 +361,10 @@ struct Primitive : public Value
     static Primitive nullValue();
     static Primitive fromDouble(double d);
     static Primitive fromUInt32(uint i);
+
+    static double toInteger(double fromNumber);
+    static int toInt32(double value);
+    static unsigned int toUInt32(double value);
 
     inline operator ValueRef();
     Value asValue() const { return *this; }

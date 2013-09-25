@@ -79,7 +79,7 @@ double Value::toInteger() const
     if (integerCompatible())
         return int_32;
 
-    return Value::toInteger(toNumber());
+    return Primitive::toInteger(toNumber());
 }
 
 double Value::toNumberImpl() const
@@ -213,7 +213,7 @@ Value Value::fromString(ExecutionEngine *engine, const QString &s)
 }
 
 
-int Value::toInt32(double number)
+int Primitive::toInt32(double number)
 {
     const double D32 = 4294967296.0;
     const double D31 = D32 / 2.0;
@@ -239,7 +239,7 @@ int Value::toInt32(double number)
     return int(number);
 }
 
-unsigned int Value::toUInt32(double number)
+unsigned int Primitive::toUInt32(double number)
 {
     const double D32 = 4294967296.0;
     if ((number >= 0 && number < D32))
@@ -260,7 +260,7 @@ unsigned int Value::toUInt32(double number)
     return unsigned(number);
 }
 
-double Value::toInteger(double number)
+double Primitive::toInteger(double number)
 {
     if (std::isnan(number))
         return +0;

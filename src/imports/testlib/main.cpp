@@ -100,7 +100,7 @@ public Q_SLOTS:
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
         QV4::Scope scope(v4);
-        QV4::ScopedValue s(scope, QV4::Value::fromString(v4->newString(name)));
+        QV4::ScopedValue s(scope, v4->newString(name));
         return QQmlV4Handle(s);
     }
 

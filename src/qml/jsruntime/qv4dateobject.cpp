@@ -212,7 +212,7 @@ static inline double MonthFromTime(double t)
 
 static inline double DateFromTime(double t)
 {
-    int m = (int) Value::toInteger(MonthFromTime(t));
+    int m = (int) Primitive::toInteger(MonthFromTime(t));
     double d = DayWithinYear(t);
     double l = InLeapYear(t);
 
@@ -336,7 +336,7 @@ static inline double TimeClip(double t)
 {
     if (! qIsFinite(t) || fabs(t) > 8.64e15)
         return qSNaN();
-    return Value::toInteger(t);
+    return Primitive::toInteger(t);
 }
 
 static inline double ParseString(const QString &s)
@@ -1193,7 +1193,7 @@ ReturnedValue DatePrototype::method_setYear(SimpleCallContext *ctx)
     if (std::isnan(year)) {
         r = qSNaN();
     } else {
-        if ((Value::toInteger(year) >= 0) && (Value::toInteger(year) <= 99))
+        if ((Primitive::toInteger(year) >= 0) && (Primitive::toInteger(year) <= 99))
             year += 1900;
         r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         r = UTC(MakeDate(r, TimeWithinDay(t)));

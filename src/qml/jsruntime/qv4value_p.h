@@ -228,7 +228,7 @@ inline int Value::toInt32() const
     if ((d >= -D31 && d < D31))
         return static_cast<int>(d);
 
-    return Value::toInt32(d);
+    return Primitive::toInt32(d);
 }
 
 inline unsigned int Value::toUInt32() const

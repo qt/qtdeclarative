@@ -216,7 +216,7 @@ void __qmljs_numberToString(QString *result, double num, int radix)
     }
 
     double frac = num - ::floor(num);
-    num = Value::toInteger(num);
+    num = Primitive::toInteger(num);
 
     do {
         char c = (char)::fmod(num, radix);
@@ -1294,7 +1294,7 @@ int __qmljs_value_to_int32(const ValueRef value)
 
 int __qmljs_double_to_int32(const double &d)
 {
-    return Value::toInt32(d);
+    return Primitive::toInt32(d);
 }
 
 unsigned __qmljs_value_to_uint32(const ValueRef value)
@@ -1304,7 +1304,7 @@ unsigned __qmljs_value_to_uint32(const ValueRef value)
 
 unsigned __qmljs_double_to_uint32(const double &d)
 {
-    return Value::toUInt32(d);
+    return Primitive::toUInt32(d);
 }
 
 ReturnedValue __qmljs_value_from_string(String *string)

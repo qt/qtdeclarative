@@ -385,7 +385,7 @@ inline uint Object::arrayLength() const
         Value v = memberData[ArrayObject::LengthPropertyIndex].value;
         if (v.isInteger())
             return v.integerValue();
-        return Value::toUInt32(v.doubleValue());
+        return Primitive::toUInt32(v.doubleValue());
     }
     return 0;
 }

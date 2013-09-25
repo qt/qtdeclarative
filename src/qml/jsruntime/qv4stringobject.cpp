@@ -703,8 +703,8 @@ ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
 
     length = qMin(qMax(length, 0.0), count - start);
 
-    qint32 x = Value::toInt32(start);
-    qint32 y = Value::toInt32(length);
+    qint32 x = Primitive::toInt32(start);
+    qint32 y = Primitive::toInt32(length);
     return Value::fromString(context, value.mid(x, y)).asReturnedValue();
 }
 
