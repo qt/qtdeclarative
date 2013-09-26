@@ -720,7 +720,7 @@ void QuickTestResult::setProgramName(const char *name)
 
 void QuickTestResult::setCurrentAppname(const char *appname)
 {
-    QTestResult::setCurrentAppname(appname);
+    QTestResult::setCurrentAppName(appname);
 }
 
 int QuickTestResult::exitCode()
