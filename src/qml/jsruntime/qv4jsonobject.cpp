@@ -71,7 +71,7 @@ class JsonParser
 public:
     JsonParser(ExecutionContext *context, const QChar *json, int length);
 
-    Value parse(QJsonParseError *error);
+    ReturnedValue parse(QJsonParseError *error);
 
 private:
     inline bool eatSpace();
@@ -79,10 +79,10 @@ private:
 
     ReturnedValue parseObject();
     ReturnedValue parseArray();
-    bool parseMember(Object *o);
+    bool parseMember(ObjectRef o);
     bool parseString(QString *string);
     bool parseValue(ValueRef val);
-    bool parseNumber(Value *val);
+    bool parseNumber(ValueRef val);
 
     ExecutionContext *context;
     const QChar *head;
@@ -184,7 +184,7 @@ QChar JsonParser::nextToken()
 /*
     JSON-text = object / array
 */
-Value JsonParser::parse(QJsonParseError *error)
+ReturnedValue JsonParser::parse(QJsonParseError *error)
 {
 #ifdef PARSER_DEBUG
     indent = 0;
@@ -193,8 +193,9 @@ Value JsonParser::parse(QJsonParseError *error)
 
     eatSpace();
 
-    Value v;
-    if (!parseValue(&v)) {
+    Scope scope(context);
+    ScopedValue v(scope);
+    if (!parseValue(v)) {
 #ifdef PARSER_DEBUG
         qDebug() << ">>>>> parser error";
 #endif
@@ -202,7 +203,7 @@ Value JsonParser::parse(QJsonParseError *error)
             lastError = QJsonParseError::IllegalValue;
         error->offset = json - head;
         error->error  = lastError;
-        return Primitive::undefinedValue();
+        return Encode::undefined();
     }
 
     // some input left...
@@ -210,13 +211,13 @@ Value JsonParser::parse(QJsonParseError *error)
         lastError = QJsonParseError::IllegalValue;
         error->offset = json - head;
         error->error  = lastError;
-        return Primitive::undefinedValue();
+        return Encode::undefined();
     }
 
     END;
     error->offset = 0;
     error->error = QJsonParseError::NoError;
-    return v;
+    return v.asReturnedValue();
 }
 
 /*
@@ -234,11 +235,11 @@ ReturnedValue JsonParser::parseObject()
     BEGIN << "parseObject pos=" << json;
     Scope scope(context);
 
-    Scoped<Object> o(scope, context->engine->newObject());
+    ScopedObject o(scope, context->engine->newObject());
 
     QChar token = nextToken();
     while (token == Quote) {
-        if (!parseMember(o.getPointer()))
+        if (!parseMember(o))
             return Encode::undefined();
         token = nextToken();
         if (token != ValueSeparator)
@@ -265,9 +266,10 @@ ReturnedValue JsonParser::parseObject()
 /*
     member = string name-separator value
 */
-bool JsonParser::parseMember(Object *o)
+bool JsonParser::parseMember(ObjectRef o)
 {
     BEGIN << "parseMember";
+    Scope scope(context);
 
     QString key;
     if (!parseString(&key))
@@ -277,11 +279,10 @@ bool JsonParser::parseMember(Object *o)
         lastError = QJsonParseError::MissingNameSeparator;
         return false;
     }
-    Value val;
-    if (!parseValue(&val))
+    ScopedValue val(scope);
+    if (!parseValue(val))
         return false;
 
-    Scope scope(o->engine());
     ScopedString s(scope, context->engine->newIdentifier(key));
     Property *p = o->insertMember(s, Attr_Data);
     p->value = val;
@@ -404,7 +405,7 @@ bool JsonParser::parseValue(ValueRef val)
         return true;
     }
     case BeginArray: {
-        *val = Value::fromReturnedValue(parseArray());
+        *val = parseArray();
         if (val->isUndefined())
             return false;
         DEBUG << "value: array";
@@ -412,7 +413,7 @@ bool JsonParser::parseValue(ValueRef val)
         return true;
     }
     case BeginObject: {
-        *val = Value::fromReturnedValue(parseObject());
+        *val = parseObject();
         if (val->isUndefined())
             return false;
         DEBUG << "value: object";
@@ -451,7 +452,7 @@ bool JsonParser::parseValue(ValueRef val)
 
 */
 
-bool JsonParser::parseNumber(Value *val)
+bool JsonParser::parseNumber(ValueRef val)
 {
     BEGIN << "parseNumber" << *json;
 
@@ -651,11 +652,11 @@ struct Stringify
 
     Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
 
-    QString Str(const QString &key, Value value);
-    QString JA(ArrayObject *a);
-    QString JO(Object *o);
+    QString Str(const QString &key, ValueRef v);
+    QString JA(ArrayObjectRef a);
+    QString JO(ObjectRef o);
 
-    QString makeMember(const QString &key, Value v);
+    QString makeMember(const QString &key, ValueRef v);
 };
 
 static QString quote(const QString &str)
@@ -699,33 +700,35 @@ static QString quote(const QString &str)
     return product;
 }
 
-QString Stringify::Str(const QString &key, Value value)
+QString Stringify::Str(const QString &key, ValueRef v)
 {
     Scope scope(ctx);
 
-    if (Object *o = value.asObject()) {
+    ScopedValue value(scope, *v);
+    ScopedObject o(scope, value);
+    if (o) {
         ScopedString s(scope, ctx->engine->newString(QStringLiteral("toJSON")));
         Scoped<FunctionObject> toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
             callData->args[0] = ctx->engine->newString(key);
-            value = Value::fromReturnedValue(toJSON->call(callData));
+            value = toJSON->call(callData);
         }
     }
 
     if (replacerFunction) {
-        Scoped<Object> holder(scope, ctx->engine->newObject());
-        ScopedValue v(scope, value);
-        holder->put(ctx, QString(), v);
+        ScopedObject holder(scope, ctx->engine->newObject());
+        holder->put(ctx, QString(), value);
         ScopedCallData callData(scope, 2);
         callData->args[0] = ctx->engine->newString(key);
         callData->args[1] = value;
         callData->thisObject = holder;
-        value = Value::fromReturnedValue(replacerFunction->call(callData));
+        value = replacerFunction->call(callData);
     }
 
-    if (Object *o = value.asObject()) {
+    o = value.asReturnedValue();
+    if (o) {
         if (NumberObject *n = o->asNumberObject())
             value = n->value;
         else if (StringObject *so = o->asStringObject())
@@ -734,31 +737,34 @@ QString Stringify::Str(const QString &key, Value value)
             value = b->value;
     }
 
-    if (value.isNull())
+    if (value->isNull())
         return QStringLiteral("null");
-    if (value.isBoolean())
-        return value.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
-    if (value.isString())
-        return quote(value.stringValue()->toQString());
+    if (value->isBoolean())
+        return value->booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
+    if (value->isString())
+        return quote(value->stringValue()->toQString());
 
-    if (value.isNumber()) {
-        double d = value.toNumber();
-        return std::isfinite(d) ? value.toString(ctx)->toQString() : QStringLiteral("null");
+    if (value->isNumber()) {
+        double d = value->toNumber();
+        return std::isfinite(d) ? value->toString(ctx)->toQString() : QStringLiteral("null");
     }
 
-    if (Object *o = value.asObject()) {
+    o = value.asReturnedValue();
+    if (o) {
         if (!o->asFunctionObject()) {
-            if (o->asArrayObject())
-                return JA(static_cast<ArrayObject *>(o));
-            else
+            if (o->asArrayObject()) {
+                ScopedArrayObject a(scope, o);
+                return JA(a);
+            } else {
                 return JO(o);
+            }
         }
     }
 
     return QString();
 }
 
-QString Stringify::makeMember(const QString &key, Value v)
+QString Stringify::makeMember(const QString &key, ValueRef v)
 {
     QString strP = Str(key, v);
     if (!strP.isEmpty()) {
@@ -771,30 +777,32 @@ QString Stringify::makeMember(const QString &key, Value v)
     return QString();
 }
 
-QString Stringify::JO(Object *o)
+QString Stringify::JO(ObjectRef o)
 {
-    if (stack.contains(o))
+    if (stack.contains(o.getPointer()))
         ctx->throwTypeError();
 
-    Scope scope(o->engine());
+    Scope scope(ctx);
 
     QString result;
-    stack.push(o);
+    stack.push(o.getPointer());
     QString stepback = indent;
     indent += gap;
 
     QStringList partial;
     if (propertyList.isEmpty()) {
-        ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+        ObjectIterator it(o.getPointer(), ObjectIterator::EnumerableOnly);
         ScopedValue name(scope);
 
+        ScopedValue val(scope);
         while (1) {
             Value v;
             name = it.nextPropertyNameAsString(&v);
             if (name->isNull())
                 break;
+            val = v;
             QString key = name->toQStringNoThrow();
-            QString member = makeMember(key, v);
+            QString member = makeMember(key, val);
             if (!member.isEmpty())
                 partial += member;
         }
@@ -826,15 +834,15 @@ QString Stringify::JO(Object *o)
     return result;
 }
 
-QString Stringify::JA(ArrayObject *a)
+QString Stringify::JA(ArrayObjectRef a)
 {
-    if (stack.contains(a))
+    if (stack.contains(a.getPointer()))
         ctx->throwTypeError();
 
     Scope scope(a->engine());
 
     QString result;
-    stack.push(a);
+    stack.push(a.getPointer());
     QString stepback = indent;
     indent += gap;
 
@@ -993,7 +1001,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     ScopedString s(scope);
     ScopedValue v(scope);
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it) {
-        v = Value::fromReturnedValue(fromJsonValue(engine, it.value()));
+        v = fromJsonValue(engine, it.value());
         o->put((s = engine->newString(it.key())), v);
     }
     return o.asReturnedValue();
@@ -1043,7 +1051,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     Scoped<ArrayObject> a(scope, engine->newArrayObject());
     a->arrayReserve(size);
     for (int i = 0; i < size; i++) {
-        a->arrayData[i].value = Value::fromReturnedValue(fromJsonValue(engine, array.at(i)));
+        a->arrayData[i].value = fromJsonValue(engine, array.at(i));
         a->arrayDataLen = i + 1;
     }
     a->setArrayLengthUnchecked(size);

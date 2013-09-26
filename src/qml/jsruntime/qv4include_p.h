@@ -85,13 +85,13 @@ private Q_SLOTS:
 
 private:
     QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
-               const QV4::Value &qmlglobal, const QV4::Value &callback);
+               const QV4::ValueRef qmlglobal, const QV4::ValueRef callback);
     ~QV4Include();
 
     QV4::ReturnedValue result();
 
     static QV4::ReturnedValue resultValue(QV4::ExecutionEngine *v4, Status status = Loading);
-    static void callback(const QV4::Value &callback, const QV4::Value &status);
+    static void callback(const QV4::ValueRef callback, const QV4::ValueRef status);
 
     QV4::ExecutionEngine *v4;
     QNetworkAccessManager *m_network;

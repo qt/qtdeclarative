@@ -59,12 +59,12 @@
 QT_BEGIN_NAMESPACE
 
 QV4Include::QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
-                       const QV4::Value &qmlglobal, const QV4::Value &callback)
+                       const QV4::ValueRef qmlglobal, const QV4::ValueRef callback)
     : v4(QV8Engine::getV4(engine)), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = qmlglobal.asReturnedValue();
-    if (callback.asFunctionObject())
-        m_callbackFunction = callback.asReturnedValue();
+    m_qmlglobal = qmlglobal;
+    if (callback->asFunctionObject())
+        m_callbackFunction = callback;
 
     m_resultObject = resultValue(v4);
 
@@ -99,17 +99,20 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
     return o.asReturnedValue();
 }
 
-void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
+void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef status)
 {
-    QV4::FunctionObject *f = callback.asFunctionObject();
+    QV4::ExecutionEngine *v4 = callback->engine();
+    if (!v4)
+        return;
+    QV4::Scope scope(v4);
+    QV4::ScopedFunctionObject f(scope, callback);
     if (!f)
         return;
 
-    QV4::ExecutionContext *ctx = f->engine()->current;
-    QV4::Scope scope(ctx);
+    QV4::ExecutionContext *ctx = v4->current;
     try {
         QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = QV4::Value::fromObject(f->engine()->globalObject);
+        callData->thisObject = v4->globalObject->asReturnedValue();
         callData->args[0] = status;
         f->call(callData);
     } catch (QV4::Exception &e) {
@@ -170,7 +173,7 @@ void QV4Include::finished()
     }
 
     QV4::ScopedValue cb(scope, m_callbackFunction.value());
-    callback(cb, resultObj.asValue());
+    callback(cb, resultObj);
 
     disconnect();
     deleteLater();
@@ -194,18 +197,18 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
 
     QUrl url(ctx->engine->resolvedUrl(ctx->callData->args[0].toQStringNoThrow()));
 
-    QV4::Value callbackFunction = QV4::Primitive::undefinedValue();
+    QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
     if (ctx->callData->argc >= 2 && ctx->callData->args[1].asFunctionObject())
         callbackFunction = ctx->callData->args[1];
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     QV4::ScopedValue result(scope);
-    QV4::Scoped<QV4::Object> qmlcontextobject(scope, v4->qmlContextObject());
+    QV4::ScopedObject qmlcontextobject(scope, v4->qmlContextObject());
 
     if (localFile.isEmpty()) {
         QV4Include *i = new QV4Include(url, engine, context,
-                                       qmlcontextobject.asValue(),
+                                       qmlcontextobject,
                                        callbackFunction);
         result = i->result();
 
