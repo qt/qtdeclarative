@@ -143,7 +143,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
-        proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
+        proto->memberData[Index_ProtoConstructor].value = this->asReturnedValue();
         memberData[Index_Prototype].value = proto.asValue();
     }
 
@@ -346,7 +346,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (len) {
         if (arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = Value::fromReturnedValue(arr->getIndexed(i));
+                callData->args[i] = arr->getIndexed(i);
         } else {
             int alen = qMin(len, arr->arrayDataLen);
             for (quint32 i = 0; i < alen; ++i)
@@ -437,10 +437,10 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->memberData[Index_Prototype].value;
-    if (proto.isObject())
-        ic = v4->emptyClass->changePrototype(proto.objectValue());
-    Scoped<Object> obj(scope, v4->newObject(ic));
+    ScopedObject proto(scope, f->memberData[Index_Prototype].value);
+    if (proto)
+        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    ScopedObject obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
     callData->thisObject = obj.asValue();
@@ -472,9 +472,9 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
         } else {
-            ctx->callData->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
 
@@ -571,9 +571,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
         } else {
-            ctx->callData->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
 
@@ -674,7 +674,8 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    int len = Value::fromReturnedValue(target->get(scope->engine->id_length)).toUInt32();
+    ScopedValue l(s, target->get(scope->engine->id_length));
+    int len = l->toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
@@ -699,8 +700,8 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
     return f->target->call(callData);
 }
 
@@ -709,8 +710,8 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Scope scope(f->scope->engine);
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
     return f->target->construct(callData);
 }
 
