@@ -1,3 +1,4 @@
 module QtQuick.Particles
 plugin particlesplugin
+classname QtQuick2ParticlesPlugin
 typeinfo plugins.qmltypes
