@@ -354,9 +354,9 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 }
 
-ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc, bool directCall)
+ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 {
-    if (argc < 1)
+    if (callData->argc < 1)
         return Encode::undefined();
 
     ExecutionContext *parentContext = engine()->current;
@@ -370,10 +370,10 @@ ReturnedValue EvalFunction::evalCall(Value /*thisObject*/, Value *args, int argc
         ctx = engine->pushGlobalContext();
     }
 
-    if (!args[0].isString())
-        return args[0].asReturnedValue();
+    if (!callData->args[0].isString())
+        return callData->args[0].asReturnedValue();
 
-    const QString code = args[0].stringValue()->toQString();
+    const QString code = callData->args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
     Script script(ctx, code, QString("eval code"));
@@ -436,7 +436,7 @@ ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
 {
     // indirect call
     // ### const_cast
-    return static_cast<EvalFunction *>(that)->evalCall(callData->thisObject, const_cast<Value *>(static_cast<const Value *>(callData->args)), callData->argc, false);
+    return static_cast<EvalFunction *>(that)->evalCall(callData, false);
 }
 
 

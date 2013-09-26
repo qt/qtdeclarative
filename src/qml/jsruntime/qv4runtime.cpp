@@ -950,7 +950,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
         context->throwTypeError();
 
     if (o.getPointer() == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
-        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData->thisObject, callData->args, callData->argc, true);
+        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
     return o->call(callData);
 }
@@ -976,7 +976,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
     }
 
     if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
-        return static_cast<EvalFunction *>(o)->evalCall(callData->thisObject, callData->args, callData->argc, true);
+        return static_cast<EvalFunction *>(o)->evalCall(callData, true);
     }
 
     return o->call(callData);
