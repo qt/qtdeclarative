@@ -169,52 +169,6 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
 
 }
 
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOp op, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedValue v(scope, get(name));
-    ScopedValue result(scope, op(v, rhs));
-    put(name, result);
-}
-
-void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    uint idx = index->asArrayIndex();
-    if (idx < UINT_MAX) {
-        bool hasProperty = false;
-        ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope, op(v, rhs));
-        putIndexed(idx, result);
-        return;
-    }
-    ScopedString name(scope, index->toString(ctx));
-    inplaceBinOp(ctx, op, name, rhs);
-}
-
-void Object::inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedValue v(scope, get(name));
-    ScopedValue result(scope, op(ctx, v, rhs));
-    put(name, result);
-}
-
-void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    uint idx = index->asArrayIndex();
-    if (idx < UINT_MAX) {
-        bool hasProperty = false;
-        ScopedValue v(scope, getIndexed(idx, &hasProperty));
-        ScopedValue result(scope, op(ctx, v, rhs));
-        putIndexed(idx, result);
-        return;
-    }
-    ScopedString name(scope, index->toString(ctx));
-    inplaceBinOp(ctx, op, name, rhs);
-}
-
 void Object::defineDefaultProperty(const StringRef name, ValueRef value)
 {
     Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);

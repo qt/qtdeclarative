@@ -480,24 +480,6 @@ protected: // IRDecoder
         }
     }
 
-    virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
-    {
-        Q_UNREACHABLE();
-        // TODO: remove this!
-    }
-
-    virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
-    {
-        Q_UNREACHABLE();
-        // TODO: remove this!
-    }
-
-    virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
-    {
-        Q_UNREACHABLE();
-        // TODO: remove this!
-    }
-
     virtual void visitJump(V4IR::Jump *) {}
     virtual void visitCJump(V4IR::CJump *s)
     {
@@ -906,8 +888,7 @@ private:
 
         Move *store = _function->New<Move>();
         store->init(createTemp(Temp::StackSlot, spillSlot, type),
-                    createTemp(Temp::PhysicalRegister, pReg, type),
-                    V4IR::OpInvalid);
+                    createTemp(Temp::PhysicalRegister, pReg, type));
         return store;
     }
 
@@ -918,8 +899,7 @@ private:
         Q_ASSERT(spillSlot != -1);
         Move *load = _function->New<Move>();
         load->init(createTemp(Temp::PhysicalRegister, pReg, t.type),
-                   createTemp(Temp::StackSlot, spillSlot, t.type),
-                   V4IR::OpInvalid);
+                   createTemp(Temp::StackSlot, spillSlot, t.type));
         return load;
     }
 

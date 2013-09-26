@@ -99,10 +99,7 @@ QT_BEGIN_NAMESPACE
     F(AddNumberParams, addNumberParams) \
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
-    F(LoadThis, loadThis) \
-    F(InplaceElementOp, inplaceElementOp) \
-    F(InplaceMemberOp, inplaceMemberOp) \
-    F(InplaceNameOp, inplaceNameOp)
+    F(LoadThis, loadThis)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -484,26 +481,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_inplaceElementOp {
-        MOTH_INSTR_HEADER
-        QV4::InplaceBinOpElement alu;
-        Param base;
-        Param index;
-        Param source;
-    };
-    struct instr_inplaceMemberOp {
-        MOTH_INSTR_HEADER
-        QV4::InplaceBinOpMember alu;
-        int member;
-        Param base;
-        Param source;
-    };
-    struct instr_inplaceNameOp {
-        MOTH_INSTR_HEADER
-        QV4::InplaceBinOpName alu;
-        int name;
-        Param source;
-    };
 
     instr_common common;
     instr_ret ret;
@@ -556,9 +533,6 @@ union Instr
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
-    instr_inplaceElementOp inplaceElementOp;
-    instr_inplaceMemberOp inplaceMemberOp;
-    instr_inplaceNameOp inplaceNameOp;
 
     static int size(Type type);
 };

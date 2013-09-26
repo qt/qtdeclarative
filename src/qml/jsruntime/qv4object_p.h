@@ -156,11 +156,6 @@ struct Q_QML_EXPORT Object: Managed {
 
     void putValue(Property *pd, PropertyAttributes attrs, const ValueRef value);
 
-    void inplaceBinOp(ExecutionContext *, BinOp op, const StringRef name, const ValueRef rhs);
-    void inplaceBinOpValue(ExecutionContext *ctx, BinOp op, const ValueRef index, const ValueRef rhs);
-    void inplaceBinOp(ExecutionContext *ctx, BinOpContext op, const StringRef name, const ValueRef rhs);
-    void inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs);
-
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(const StringRef name, ValueRef value);
     void defineDefaultProperty(const QString &name, ValueRef value);

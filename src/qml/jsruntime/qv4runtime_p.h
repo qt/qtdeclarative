@@ -226,46 +226,6 @@ QV4::ReturnedValue __qmljs_sne(const QV4::ValueRef left, const QV4::ValueRef rig
 
 QV4::ReturnedValue __qmljs_add_helper(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 
-
-typedef void (*InplaceBinOpName)(QV4::ExecutionContext *ctx, const QV4::StringRef name, const QV4::ValueRef value);
-void __qmljs_inplace_bit_and_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const QV4::ValueRef value);
-void __qmljs_inplace_bit_or_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const QV4::ValueRef value);
-void __qmljs_inplace_bit_xor_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const QV4::ValueRef value);
-void __qmljs_inplace_add_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_sub_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_mul_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_div_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_mod_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_shl_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_shr_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-void __qmljs_inplace_ushr_name(QV4::ExecutionContext *ctx, const QV4::StringRef name, const ValueRef value);
-
-typedef void (*InplaceBinOpElement)(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_and_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_or_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_xor_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_add_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_sub_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_mul_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_div_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_mod_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_shl_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_shr_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-void __qmljs_inplace_ushr_element(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::ValueRef index, const QV4::ValueRef rhs);
-
-typedef void (*InplaceBinOpMember)(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_and_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_or_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_bit_xor_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_add_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_sub_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_mul_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_div_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_mod_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_shl_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_shr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-void __qmljs_inplace_ushr_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name, const QV4::ValueRef rhs);
-
 typedef QV4::Bool (*CmpOp)(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::Bool __qmljs_cmp_gt(const QV4::ValueRef l, const QV4::ValueRef r);
 QV4::Bool __qmljs_cmp_lt(const QV4::ValueRef l, const QV4::ValueRef r);

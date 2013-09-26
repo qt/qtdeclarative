@@ -96,119 +96,93 @@ QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool gener
 
 void IRDecoder::visitMove(V4IR::Move *s)
 {
-    if (s->op == V4IR::OpInvalid) {
-        if (V4IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp() || s->source->asConst()) {
-                setActivationProperty(s->source, *n->id);
+    if (V4IR::Name *n = s->target->asName()) {
+        if (s->source->asTemp() || s->source->asConst()) {
+            setActivationProperty(s->source, *n->id);
+            return;
+        }
+    } else if (V4IR::Temp *t = s->target->asTemp()) {
+        if (V4IR::Name *n = s->source->asName()) {
+            if (*n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
+                loadThisObject(t);
+            else
+                getActivationProperty(n, t);
+            return;
+        } else if (V4IR::Const *c = s->source->asConst()) {
+            loadConst(c, t);
+            return;
+        } else if (V4IR::Temp *t2 = s->source->asTemp()) {
+            if (s->swap)
+                swapValues(t2, t);
+            else
+                copyValue(t2, t);
+            return;
+        } else if (V4IR::String *str = s->source->asString()) {
+            loadString(*str->value, t);
+            return;
+        } else if (V4IR::RegExp *re = s->source->asRegExp()) {
+            loadRegexp(re, t);
+            return;
+        } else if (V4IR::Closure *clos = s->source->asClosure()) {
+            initClosure(clos, t);
+            return;
+        } else if (V4IR::New *ctor = s->source->asNew()) {
+            if (Name *func = ctor->base->asName()) {
+                constructActivationProperty(func, ctor->args, t);
+                return;
+            } else if (V4IR::Member *member = ctor->base->asMember()) {
+                constructProperty(member->base->asTemp(), *member->name, ctor->args, t);
+                return;
+            } else if (V4IR::Temp *value = ctor->base->asTemp()) {
+                constructValue(value, ctor->args, t);
                 return;
             }
-        } else if (V4IR::Temp *t = s->target->asTemp()) {
-            if (V4IR::Name *n = s->source->asName()) {
-                if (*n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
-                    loadThisObject(t);
-                else
-                    getActivationProperty(n, t);
-                return;
-            } else if (V4IR::Const *c = s->source->asConst()) {
-                loadConst(c, t);
-                return;
-            } else if (V4IR::Temp *t2 = s->source->asTemp()) {
-                if (s->swap)
-                    swapValues(t2, t);
-                else
-                    copyValue(t2, t);
-                return;
-            } else if (V4IR::String *str = s->source->asString()) {
-                loadString(*str->value, t);
-                return;
-            } else if (V4IR::RegExp *re = s->source->asRegExp()) {
-                loadRegexp(re, t);
-                return;
-            } else if (V4IR::Closure *clos = s->source->asClosure()) {
-                initClosure(clos, t);
-                return;
-            } else if (V4IR::New *ctor = s->source->asNew()) {
-                if (Name *func = ctor->base->asName()) {
-                    constructActivationProperty(func, ctor->args, t);
-                    return;
-                } else if (V4IR::Member *member = ctor->base->asMember()) {
-                    constructProperty(member->base->asTemp(), *member->name, ctor->args, t);
-                    return;
-                } else if (V4IR::Temp *value = ctor->base->asTemp()) {
-                    constructValue(value, ctor->args, t);
-                    return;
-                }
-            } else if (V4IR::Member *m = s->source->asMember()) {
-                if (m->base->asTemp() || m->base->asConst()) {
-                    getProperty(m->base, *m->name, t);
-                    return;
-                }
-            } else if (V4IR::Subscript *ss = s->source->asSubscript()) {
-                getElement(ss->base->asTemp(), ss->index, t);
-                return;
-            } else if (V4IR::Unop *u = s->source->asUnop()) {
-                if (V4IR::Temp *e = u->expr->asTemp()) {
-                    unop(u->op, e, t);
-                    return;
-                }
-            } else if (V4IR::Binop *b = s->source->asBinop()) {
-                binop(b->op, b->left, b->right, t);
-                return;
-            } else if (V4IR::Call *c = s->source->asCall()) {
-                if (c->base->asName()) {
-                    callBuiltin(c, t);
-                    return;
-                } else if (Member *member = c->base->asMember()) {
-                    callProperty(member->base, *member->name, c->args, t);
-                    return;
-                } else if (Subscript *ss = c->base->asSubscript()) {
-                    callSubscript(ss->base, ss->index, c->args, t);
-                    return;
-                } else if (V4IR::Temp *value = c->base->asTemp()) {
-                    callValue(value, c->args, t);
-                    return;
-                }
-            } else if (V4IR::Convert *c = s->source->asConvert()) {
-                Q_ASSERT(c->expr->asTemp());
-                convertType(c->expr->asTemp(), t);
-                return;
-            }
-        } else if (V4IR::Member *m = s->target->asMember()) {
+        } else if (V4IR::Member *m = s->source->asMember()) {
             if (m->base->asTemp() || m->base->asConst()) {
-                if (s->source->asTemp() || s->source->asConst()) {
-                    setProperty(s->source, m->base, *m->name);
-                    return;
-                }
+                getProperty(m->base, *m->name, t);
+                return;
             }
-        } else if (V4IR::Subscript *ss = s->target->asSubscript()) {
+        } else if (V4IR::Subscript *ss = s->source->asSubscript()) {
+            getElement(ss->base->asTemp(), ss->index, t);
+            return;
+        } else if (V4IR::Unop *u = s->source->asUnop()) {
+            if (V4IR::Temp *e = u->expr->asTemp()) {
+                unop(u->op, e, t);
+                return;
+            }
+        } else if (V4IR::Binop *b = s->source->asBinop()) {
+            binop(b->op, b->left, b->right, t);
+            return;
+        } else if (V4IR::Call *c = s->source->asCall()) {
+            if (c->base->asName()) {
+                callBuiltin(c, t);
+                return;
+            } else if (Member *member = c->base->asMember()) {
+                callProperty(member->base, *member->name, c->args, t);
+                return;
+            } else if (Subscript *ss = c->base->asSubscript()) {
+                callSubscript(ss->base, ss->index, c->args, t);
+                return;
+            } else if (V4IR::Temp *value = c->base->asTemp()) {
+                callValue(value, c->args, t);
+                return;
+            }
+        } else if (V4IR::Convert *c = s->source->asConvert()) {
+            Q_ASSERT(c->expr->asTemp());
+            convertType(c->expr->asTemp(), t);
+            return;
+        }
+    } else if (V4IR::Member *m = s->target->asMember()) {
+        if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                setElement(s->source, ss->base, ss->index);
+                setProperty(s->source, m->base, *m->name);
                 return;
             }
         }
-    } else {
-        // inplace assignment, e.g. x += 1, ++x, ...
-        if (V4IR::Temp *t = s->target->asTemp()) {
-            if (s->source->asTemp()) {
-                binop(s->op, t, s->source->asTemp(), t);
-                return;
-            }
-        } else if (V4IR::Name *n = s->target->asName()) {
-            if (s->source->asTemp()) {
-                inplaceNameOp(s->op, s->source->asTemp(), *n->id);
-                return;
-            }
-        } else if (V4IR::Subscript *ss = s->target->asSubscript()) {
-            if (s->source->asTemp()) {
-                inplaceElementOp(s->op, s->source->asTemp(), ss->base->asTemp(),
-                                 ss->index->asTemp());
-                return;
-            }
-        } else if (V4IR::Member *m = s->target->asMember()) {
-            if (s->source->asTemp()) {
-                inplaceMemberOp(s->op, s->source->asTemp(), m->base->asTemp(), *m->name);
-                return;
-            }
+    } else if (V4IR::Subscript *ss = s->target->asSubscript()) {
+        if (s->source->asTemp() || s->source->asConst()) {
+            setElement(s->source, ss->base, ss->index);
+            return;
         }
     }
 

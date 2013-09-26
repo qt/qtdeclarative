@@ -548,25 +548,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         VALUE(instr.result) = context->callData->thisObject;
     MOTH_END_INSTR(LoadThis)
 
-    MOTH_BEGIN_INSTR(InplaceElementOp)
-        instr.alu(context,
-                  VALUEPTR(instr.base),
-                  VALUEPTR(instr.index),
-                  VALUEPTR(instr.source));
-    MOTH_END_INSTR(InplaceElementOp)
-
-    MOTH_BEGIN_INSTR(InplaceMemberOp)
-        instr.alu(context,
-                  VALUEPTR(instr.base),
-                  runtimeStrings[instr.member],
-                  VALUEPTR(instr.source));
-    MOTH_END_INSTR(InplaceMemberOp)
-
-    MOTH_BEGIN_INSTR(InplaceNameOp)
-        TRACE(name, "%s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
-        instr.alu(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
-    MOTH_END_INSTR(InplaceNameOp)
-
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do
 #else

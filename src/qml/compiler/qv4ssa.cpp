@@ -1462,7 +1462,6 @@ protected:
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
     virtual void visitMove(Move *s) {
         TypingResult sourceTy = run(s->source);
-        Q_ASSERT(s->op == OpInvalid);
         if (Temp *t = s->target->asTemp()) {
             setType(t, sourceTy.type);
             _ty = sourceTy;
@@ -1602,7 +1601,7 @@ public:
                     target->type = conversion.targetType;
                     Expr *convert = bb->CONVERT(*conversion.expr, conversion.targetType);
                     Move *convCall = f->New<Move>();
-                    convCall->init(target, convert, OpInvalid);
+                    convCall->init(target, convert);
 
                     Temp *source = bb->TEMP(target->index);
                     source->type = conversion.targetType;
@@ -2988,7 +2987,7 @@ void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) co
     int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
-        move->init(m.to, m.from, OpInvalid);
+        move->init(m.to, m.from);
         move->id = m.id;
         move->swap = m.needsSwap;
         bb->statements.insert(insertionPoint++, move);
