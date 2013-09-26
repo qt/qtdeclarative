@@ -617,9 +617,15 @@ public:
 
     void storeReturnValue(FPRegisterID dest)
     {
+#ifdef VALUE_FITS_IN_REGISTER
+        move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, ReturnValueRegister);
+        move64ToDouble(ReturnValueRegister, dest);
+#else
         Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
         storeReturnValue(tmp);
         loadDouble(tmp, dest);
+#endif
     }
 
 #ifdef VALUE_FITS_IN_REGISTER
