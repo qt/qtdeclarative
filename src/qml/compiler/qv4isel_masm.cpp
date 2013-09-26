@@ -542,7 +542,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     JSC::MacroAssemblerCodeRef codeRef;
 
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
     if (showCode) {
 #if OS(LINUX) && !defined(Q_OS_ANDROID)
         char* disasmOutput = 0;

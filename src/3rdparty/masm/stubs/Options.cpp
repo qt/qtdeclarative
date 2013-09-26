@@ -48,7 +48,7 @@ namespace JSC {
 
 bool Options::showDisassembly()
 {
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
     return showCode;
 }
 

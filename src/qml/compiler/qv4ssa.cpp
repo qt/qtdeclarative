@@ -75,7 +75,7 @@ QTextStream qout(stdout, QIODevice::WriteOnly);
 
 void showMeTheCode(Function *function)
 {
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
     if (showCode) {
         QVector<Stmt *> code;
         QHash<Stmt *, BasicBlock *> leader;
