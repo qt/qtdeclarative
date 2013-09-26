@@ -201,7 +201,7 @@ void Script::parse()
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
-        ScopedValue holder(valueScope, Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit)));
+        ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
         compilationUnitHolder = holder;
     }
 

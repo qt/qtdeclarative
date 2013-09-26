@@ -311,10 +311,10 @@ inline QV4::ReturnedValue __qmljs_uminus(const QV4::ValueRef value)
 
     // +0 != -0, so we need to convert to double when negating 0
     if (value->isInteger() && value->integerValue())
-        return QV4::Primitive::fromInt32(-value->integerValue()).asReturnedValue();
+        return Encode(-value->integerValue());
     else {
         double n = __qmljs_to_number(value);
-        return QV4::Primitive::fromDouble(-n).asReturnedValue();
+        return Encode(-n);
     }
 }
 
@@ -345,11 +345,11 @@ inline ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRe
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right))
-        return QV4::Primitive::fromInt32(left->integerValue() | right->integerValue()).asReturnedValue();
+        return Encode(left->integerValue() | right->integerValue());
 
     int lval = left->toInt32();
     int rval = right->toInt32();
-    return QV4::Primitive::fromInt32(lval | rval).asReturnedValue();
+    return Encode(lval | rval);
 }
 
 inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -357,11 +357,11 @@ inline ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueR
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right))
-        return QV4::Primitive::fromInt32(left->integerValue() ^ right->integerValue()).asReturnedValue();
+        return Encode(left->integerValue() ^ right->integerValue());
 
     int lval = left->toInt32();
     int rval = right->toInt32();
-    return QV4::Primitive::fromInt32(lval ^ rval).asReturnedValue();
+    return Encode(lval ^ rval);
 }
 
 inline ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -369,11 +369,11 @@ inline ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueR
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right))
-        return QV4::Primitive::fromInt32(left->integerValue() & right->integerValue()).asReturnedValue();
+        return Encode(left->integerValue() & right->integerValue());
 
     int lval = left->toInt32();
     int rval = right->toInt32();
-    return QV4::Primitive::fromInt32(lval & rval).asReturnedValue();
+    return Encode(lval & rval);
 }
 
 inline QV4::ReturnedValue __qmljs_add(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right)
@@ -429,7 +429,7 @@ inline QV4::ReturnedValue __qmljs_mod(const QV4::ValueRef left, const QV4::Value
     if (QV4::Value::integerCompatible(*left, *right) && right->integerValue() != 0) {
         int intRes = left->integerValue() % right->integerValue();
         if (intRes != 0 || left->integerValue() >= 0)
-            return QV4::Primitive::fromInt32(intRes).asReturnedValue();
+            return Encode(intRes);
     }
 
     double lval = __qmljs_to_number(left);
@@ -442,11 +442,11 @@ inline QV4::ReturnedValue __qmljs_shl(const QV4::ValueRef left, const QV4::Value
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right))
-        return QV4::Primitive::fromInt32(left->integerValue() << ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
+        return Encode((int)(left->integerValue() << ((uint(right->integerValue()) & 0x1f))));
 
     int lval = left->toInt32();
     unsigned rval = right->toUInt32() & 0x1f;
-    return QV4::Primitive::fromInt32(lval << rval).asReturnedValue();
+    return Encode((int)(lval << rval));
 }
 
 inline QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -454,11 +454,11 @@ inline QV4::ReturnedValue __qmljs_shr(const QV4::ValueRef left, const QV4::Value
     TRACE2(left, right);
 
     if (QV4::Value::integerCompatible(*left, *right))
-        return QV4::Primitive::fromInt32(left->integerValue() >> ((uint(right->integerValue()) & 0x1f))).asReturnedValue();
+        return Encode((int)(left->integerValue() >> ((uint(right->integerValue()) & 0x1f))));
 
     int lval = left->toInt32();
     unsigned rval = right->toUInt32() & 0x1f;
-    return QV4::Primitive::fromInt32(lval >> rval).asReturnedValue();
+    return Encode((int)(lval >> rval));
 }
 
 inline QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -474,52 +474,55 @@ inline QV4::ReturnedValue __qmljs_ushr(const QV4::ValueRef left, const QV4::Valu
         res = lval >> rval;
     }
 
-    if (res > INT_MAX)
-        return QV4::Primitive::fromDouble(res).asReturnedValue();
-    else
-        return QV4::Primitive::fromInt32(res).asReturnedValue();
+    return Encode(res);
 }
 
 inline QV4::ReturnedValue __qmljs_gt(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(__qmljs_cmp_gt(left, right)).asReturnedValue();
+    bool r = __qmljs_cmp_gt(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_lt(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(__qmljs_cmp_lt(left, right)).asReturnedValue();
+    bool r = __qmljs_cmp_lt(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_ge(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(__qmljs_cmp_ge(left, right)).asReturnedValue();
+    bool r = __qmljs_cmp_ge(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_le(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(__qmljs_cmp_le(left, right)).asReturnedValue();
+    bool r = __qmljs_cmp_le(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_eq(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(__qmljs_cmp_eq(left, right)).asReturnedValue();
+    bool r = __qmljs_cmp_eq(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_ne(const QV4::ValueRef left, const QV4::ValueRef right)
 {
     TRACE2(left, right);
 
-    return QV4::Primitive::fromBoolean(!__qmljs_cmp_eq(left, right)).asReturnedValue();
+    bool r = !__qmljs_cmp_eq(left, right);
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_se(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -527,7 +530,7 @@ inline QV4::ReturnedValue __qmljs_se(const QV4::ValueRef left, const QV4::ValueR
     TRACE2(left, right);
 
     bool r = __qmljs_strict_equal(left, right);
-    return QV4::Primitive::fromBoolean(r).asReturnedValue();
+    return Encode(r);
 }
 
 inline QV4::ReturnedValue __qmljs_sne(const QV4::ValueRef left, const QV4::ValueRef right)
@@ -535,7 +538,7 @@ inline QV4::ReturnedValue __qmljs_sne(const QV4::ValueRef left, const QV4::Value
     TRACE2(left, right);
 
     bool r = ! __qmljs_strict_equal(left, right);
-    return QV4::Primitive::fromBoolean(r).asReturnedValue();
+    return Encode(r);
 }
 
 inline QV4::Bool __qmljs_cmp_eq(const QV4::ValueRef left, const QV4::ValueRef right)

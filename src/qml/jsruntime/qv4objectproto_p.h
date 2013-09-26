@@ -91,7 +91,7 @@ struct ObjectPrototype: Object
     static ReturnedValue method_get_proto(SimpleCallContext *ctx);
     static ReturnedValue method_set_proto(SimpleCallContext *ctx);
 
-    static void toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs);
+    static void toPropertyDescriptor(ExecutionContext *ctx, const ValueRef v, Property *desc, PropertyAttributes *attrs);
     static ReturnedValue fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
 
     static Returned<ArrayObject> *getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o);

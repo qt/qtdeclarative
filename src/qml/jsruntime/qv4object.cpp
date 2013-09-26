@@ -135,7 +135,7 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
         return p->value.asReturnedValue();
     FunctionObject *getter = p->getter();
     if (!getter)
-        return Primitive::undefinedValue().asReturnedValue();
+        return Encode::undefined();
 
     Scope scope(getter->engine());
     ScopedCallData callData(scope, 0);
@@ -150,7 +150,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
             Scope scope(pd->set->engine());
             ScopedCallData callData(scope, 1);
             callData->args[0] = *value;
-            callData->thisObject = Value::fromObject(this);
+            callData->thisObject = this;
             pd->set->call(callData);
             return;
         }
@@ -538,7 +538,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
             return o->getValue(p, attrs);
         }
     }
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
@@ -710,7 +710,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 
@@ -777,7 +777,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
         Scope scope(engine());
         ScopedCallData callData(scope, 1);
         callData->args[0] = *value;
-        callData->thisObject = Value::fromObject(this);
+        callData->thisObject = this;
         pd->setter()->call(callData);
         return;
     }
@@ -856,7 +856,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
         Scope scope(engine());
         ScopedCallData callData(scope, 1);
         callData->args[0] = *value;
-        callData->thisObject = Value::fromObject(this);
+        callData->thisObject = this;
         pd->setter()->call(callData);
         return;
     }
@@ -1140,7 +1140,7 @@ void Object::copyArrayData(Object *other)
 }
 
 
-ReturnedValue Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
+ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
     Scope scope(engine());
     ScopedValue value(scope);
@@ -1150,13 +1150,13 @@ ReturnedValue Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, Execu
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
             value = o->getIndexed(i, &exists);
-            if (exists && __qmljs_strict_equal(value, ValueRef(&v)))
+            if (exists && __qmljs_strict_equal(value, v))
                 return Encode(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
-            if (__qmljs_strict_equal(value, ValueRef(&v)))
+            if (__qmljs_strict_equal(value, v))
                 return Encode(n->key());
         }
     } else {
@@ -1168,7 +1168,7 @@ ReturnedValue Object::arrayIndexOf(Value v, uint fromIndex, uint endIndex, Execu
         while (pd < end) {
             if (!arrayAttributes || !arrayAttributes[pd - arrayData].isGeneric()) {
                 value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
-                if (__qmljs_strict_equal(value, ValueRef(&v)))
+                if (__qmljs_strict_equal(value, v))
                     return Encode((uint)(pd - arrayData));
             }
             ++pd;
@@ -1208,7 +1208,7 @@ void Object::arrayConcat(const ArrayObject *other)
         if (other->arrayAttributes) {
             for (int i = 0; i < other->arrayDataLen; ++i) {
                 bool exists;
-                arrayData[oldSize + i].value = Value::fromReturnedValue(const_cast<ArrayObject *>(other)->getIndexed(i, &exists));
+                arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(i, &exists);
                 arrayDataLen = oldSize + i + 1;
                 if (arrayAttributes)
                     arrayAttributes[oldSize + i] = Attr_Data;
@@ -1250,11 +1250,11 @@ void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const Va
                 while (--len > i)
                     if (!arrayAttributes[len].isGeneric())
                         break;
-                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + len, arrayAttributes[len]));
+                arrayData[i].value = getValue(arrayData + len, arrayAttributes[len]);
                 arrayAttributes[i] = Attr_Data;
                 arrayAttributes[len].clear();
             } else if (arrayAttributes[i].isAccessor()) {
-                arrayData[i].value = Value::fromReturnedValue(getValue(arrayData + i, arrayAttributes[i]));
+                arrayData[i].value = getValue(arrayData + i, arrayAttributes[i]);
                 arrayAttributes[i] = Attr_Data;
             }
         }

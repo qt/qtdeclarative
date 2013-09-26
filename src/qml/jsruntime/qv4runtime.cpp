@@ -255,7 +255,7 @@ ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef bas
     if (o) {
         uint n = index->asArrayIndex();
         if (n < UINT_MAX) {
-            return Primitive::fromBoolean(o->deleteIndexedProperty(n)).asReturnedValue();
+            return Encode((bool)o->deleteIndexedProperty(n));
         }
     }
 
@@ -291,7 +291,7 @@ QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
-    return Primitive::fromDouble(x + y).asReturnedValue();
+    return Encode(x + y);
 }
 
 QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -301,7 +301,7 @@ QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left
         ctx->throwTypeError();
 
     bool r = o->hasInstance(left);
-    return Primitive::fromBoolean(r).asReturnedValue();
+    return Encode(r);
 }
 
 QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -311,7 +311,7 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
     Scope scope(ctx);
     ScopedString s(scope, left->toString(ctx));
     bool r = right->objectValue()->__hasProperty__(s);
-    return Primitive::fromBoolean(r).asReturnedValue();
+    return Encode(r);
 }
 
 static void inplaceBitOp(ExecutionContext *ctx, const StringRef name, const ValueRef value, BinOp op)
@@ -584,24 +584,24 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     ExecutionContext *ctx = engine->current;
     Scope scope(ctx);
     ScopedCallData callData(scope, 0);
-    callData->thisObject = Value::fromObject(object);
+    callData->thisObject = object;
 
     ScopedValue conv(scope, object->get(*meth1));
     if (FunctionObject *o = conv->asFunctionObject()) {
-        Value r = Value::fromReturnedValue(o->call(callData));
-        if (r.isPrimitive())
-            return r.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     conv = object->get(*meth2);
     if (FunctionObject *o = conv->asFunctionObject()) {
-        Value r = Value::fromReturnedValue(o->call(callData));
-        if (r.isPrimitive())
-            return r.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     ctx->throwTypeError();
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 Bool __qmljs_to_boolean(const ValueRef value)
@@ -674,7 +674,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
                 if (idx >= (uint)str->toQString().length()) {
-                    return Primitive::undefinedValue().asReturnedValue();
+                    return Encode::undefined();
                 }
                 const QString s = str->toQString().mid(idx, 1);
                 return scope.engine->newString(s)->asReturnedValue();
@@ -813,11 +813,9 @@ uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
         double dx = __qmljs_to_number(x);
         return dx == y->asDouble();
     } else if (x->isBoolean()) {
-        Value nx = Primitive::fromDouble((double) x->booleanValue());
-        return __qmljs_cmp_eq(ValueRef(&nx), y);
+        return __qmljs_cmp_eq(Primitive::fromDouble((double) x->booleanValue()), y);
     } else if (y->isBoolean()) {
-        Value ny = Primitive::fromDouble((double) y->booleanValue());
-        return __qmljs_cmp_eq(x, ValueRef(&ny));
+        return __qmljs_cmp_eq(x, Primitive::fromDouble((double) y->booleanValue()));
     } else if ((x->isNumber() || x->isString()) && y->isObject()) {
         Scope scope(y->objectValue()->engine());
         ScopedValue py(scope, __qmljs_to_primitive(y, PREFERREDTYPE_HINT));
@@ -964,13 +962,15 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
     Object *base;
     ScopedValue func(scope, context->getPropertyAndBase(name, &base));
     if (base)
-        callData->thisObject = Value::fromObject(base);
+        callData->thisObject = base;
 
     FunctionObject *o = func->asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
-        if (base)
-            objectAsString = Value::fromObject(base).toQStringNoThrow();
+        if (base) {
+            ScopedValue b(scope, base);
+            objectAsString = b->toQStringNoThrow();
+        }
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         context->throwTypeError(msg);
     }
@@ -1021,11 +1021,11 @@ ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
     Scope scope(context);
-    Object *baseObject = callData->thisObject.toObject(context);
-    callData->thisObject = Value::fromObject(baseObject);
+    ScopedObject baseObject(scope, callData->thisObject.toObject(context));
+    callData->thisObject = baseObject;
 
     ScopedString s(scope, index->toString(context));
-    Scoped<Object> o(scope, baseObject->get(s));
+    ScopedObject o(scope, baseObject->get(s));
     if (!o)
         context->throwTypeError();
 
@@ -1247,11 +1247,11 @@ QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->isInteger())
-        return Primitive::fromInt32(value->integerValue() + 1).asReturnedValue();
+    if (value->isInteger() && value->integerValue() < INT_MAX)
+        return Encode(value->integerValue() + 1);
     else {
         double d = value->toNumber();
-        return Primitive::fromDouble(d + 1).asReturnedValue();
+        return Encode(d + 1.);
     }
 }
 
@@ -1259,11 +1259,11 @@ QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->isInteger())
-        return Primitive::fromInt32(value->integerValue() - 1).asReturnedValue();
+    if (value->isInteger() && value->integerValue() > INT_MIN)
+        return Encode(value->integerValue() - 1);
     else {
         double d = value->toNumber();
-        return Primitive::fromDouble(d - 1).asReturnedValue();
+        return Encode(d - 1.);
     }
 }
 

@@ -85,23 +85,32 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
+static QPair<QObject *, int> extractQtMethod(QV4::FunctionObjectRef function)
 {
-    if (function && function->subtype == QV4::FunctionObject::WrappedQtMethod) {
-        QObjectMethod *method = static_cast<QObjectMethod*>(function);
-        return qMakePair(method->object(), method->methodIndex());
+    QV4::ExecutionEngine *v4 = function->engine();
+    if (v4) {
+        QV4::Scope scope(v4);
+        QV4::Scoped<QObjectMethod> method(scope, function->as<QObjectMethod>());
+        if (method)
+            return qMakePair(method->object(), method->methodIndex());
     }
 
     return qMakePair((QObject *)0, -1);
 }
 
-static QPair<QObject *, int> extractQtSignal(const Value &value)
+static QPair<QObject *, int> extractQtSignal(const ValueRef value)
 {
-    if (QV4::FunctionObject *function = value.asFunctionObject())
-        return extractQtMethod(function);
+    QV4::ExecutionEngine *v4 = value->engine();
+    if (v4) {
+        QV4::Scope scope(v4);
+        QV4::ScopedFunctionObject function(scope, value);
+        if (function)
+            return extractQtMethod(function);
 
-    if (QV4::QmlSignalHandler *handler = value.as<QV4::QmlSignalHandler>())
-        return qMakePair(handler->object(), handler->signalIndex());
+        QV4::Scoped<QV4::QmlSignalHandler> handler(scope, value);
+        if (handler)
+            return qMakePair(handler->object(), handler->signalIndex());
+    }
 
     return qMakePair((QObject *)0, -1);
 }
@@ -325,8 +334,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
             return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV4Function()) {
             QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->engine->qmlContextObject());
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex,
-                                              qmlcontextobject.asValue()).asReturnedValue();
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex, qmlcontextobject);
         } else if (result->isSignalHandler()) {
             QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex));
 
@@ -337,7 +345,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
 
             return handler.asReturnedValue();
         } else {
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex).asReturnedValue();
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex);
         }
     }
 
@@ -567,7 +575,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
         // tainted object list
         Scoped<Object> alternateWrapper(scope, (Object *)0);
         if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
-            alternateWrapper = Value::fromObject(engine->m_multiplyWrappedQObjects->value(object));
+            alternateWrapper = engine->m_multiplyWrappedQObjects->value(object);
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
         // a handle in the ddata, we can assume ownership of the ddata->v8object
@@ -658,7 +666,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(n));
+        it->tmpDynamicProperty.value = that->get(n);
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
@@ -668,7 +676,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(that->get(n));
+        it->tmpDynamicProperty.value = that->get(n);
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attributes);
@@ -708,13 +716,13 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ExecutionContext *ctx = v4->current;
 
             QV4::ScopedCallData callData(scope, argCount);
-            callData->thisObject = This->thisObject.isUndefined() ? Value::fromObject(v4->globalObject) : Value::fromReturnedValue(This->thisObject.value());
+            callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    callData->args[ii] = QV4::Value::fromReturnedValue(v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1])));
+                    callData->args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    callData->args[ii] = QV4::Value::fromReturnedValue(v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1])));
+                    callData->args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
@@ -758,7 +766,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                         (connection->thisObject.isUndefined() || __qmljs_strict_equal(connection->thisObject, thisObject))) {
 
                     QV4::ScopedFunctionObject f(scope, connection->function.value());
-                    QPair<QObject *, int> connectedFunctionData = extractQtMethod(f.getPointer());
+                    QPair<QObject *, int> connectedFunctionData = extractQtMethod(f);
                     if (connectedFunctionData.first == receiverToDisconnect &&
                         connectedFunctionData.second == slotIndexToDisconnect) {
                         *ret = true;
@@ -837,6 +845,8 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
+    QV4::Scope scope(ctx);
+
     QPair<QObject *, int> signalInfo = extractQtSignal(ctx->callData->thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
@@ -850,8 +860,8 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
     if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V4THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
 
-    QV4::Value functionValue = QV4::Primitive::undefinedValue();
-    QV4::Value functionThisValue = QV4::Primitive::undefinedValue();
+    QV4::ScopedFunctionObject functionValue(scope);
+    QV4::ScopedValue functionThisValue(scope, QV4::Encode::undefined());
 
     if (ctx->callData->argc == 1) {
         functionValue = ctx->callData->args[0];
@@ -860,18 +870,18 @@ ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
         functionValue = ctx->callData->args[1];
     }
 
-    if (!functionValue.asFunctionObject())
+    if (!functionValue)
         V4THROW_ERROR("Function.prototype.disconnect: target is not a function");
 
-    if (!functionThisValue.isUndefined() && !functionThisValue.isObject())
+    if (!functionThisValue->isUndefined() && !functionThisValue->isObject())
         V4THROW_ERROR("Function.prototype.disconnect: target this is not an object");
 
-    QPair<QObject *, int> functionData = extractQtMethod(functionValue.asFunctionObject());
+    QPair<QObject *, int> functionData = extractQtMethod(functionValue);
 
     void *a[] = {
         ctx->engine,
-        &functionValue,
-        &functionThisValue,
+        functionValue.ptr,
+        functionThisValue.ptr,
         functionData.first,
         &functionData.second
     };
@@ -1618,7 +1628,7 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
         for (int ii = 0; ii < list.count(); ++ii) {
-            array->arrayData[ii].value = Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, list.at(ii)));
+            array->arrayData[ii].value = QV4::QObjectWrapper::wrap(v4, list.at(ii));
             array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(list.count());
@@ -1644,19 +1654,19 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
     }
 }
 
-Value QObjectMethod::create(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
+ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
 {
-    return Value::fromObject(new (scope->engine->memoryManager) QObjectMethod(scope, object, index, qmlGlobal));
+    return (new (scope->engine->memoryManager) QObjectMethod(scope, object, index, qmlGlobal))->asReturnedValue();
 }
 
-QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
+QObjectMethod::QObjectMethod(ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal)
     : FunctionObject(scope)
     , m_object(object)
     , m_index(index)
 {
     vtbl = &static_vtbl;
     subtype = WrappedQtMethod;
-    m_qmlGlobal = qmlGlobal.asReturnedValue();
+    m_qmlGlobal = qmlGlobal;
 }
 
 QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
@@ -1683,7 +1693,7 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
     return ctx->engine->newString(result)->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
+QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const ValueRef args, int argc)
 {
     if (!m_object)
         return Encode::undefined();

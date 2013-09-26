@@ -150,7 +150,7 @@ struct Q_QML_EXPORT Object: Managed {
     static ReturnedValue getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs);
     ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
         Scope scope(this->engine());
-        ScopedValue t(scope, Value::fromObject(const_cast<Object *>(this)));
+        ScopedValue t(scope, const_cast<Object *>(this));
         return getValue(t, p, attrs);
     }
 
@@ -270,7 +270,7 @@ public:
 
     void arrayConcat(const ArrayObject *other);
     void arraySort(ExecutionContext *context, ObjectRef thisObject, const ValueRef comparefn, uint arrayDataLen);
-    ReturnedValue arrayIndexOf(Value v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
+    ReturnedValue arrayIndexOf(const ValueRef v, uint fromIndex, uint arrayDataLen, ExecutionContext *ctx, Object *o);
 
     void arrayReserve(uint n);
     void ensureArrayAttributes();
@@ -350,17 +350,33 @@ protected:
 };
 
 struct BooleanObject: Object {
-    Value value;
-    BooleanObject(ExecutionEngine *engine, const ValueRef value): Object(engine->booleanClass), value(*value) { type = Type_BooleanObject; }
+    SafeValue value;
+    BooleanObject(ExecutionEngine *engine, const ValueRef val)
+        : Object(engine->booleanClass) {
+        type = Type_BooleanObject;
+        value = val;
+    }
 protected:
-    BooleanObject(InternalClass *ic): Object(ic), value(Primitive::fromBoolean(false)) { type = Type_BooleanObject; }
+    BooleanObject(InternalClass *ic)
+        : Object(ic) {
+        type = Type_BooleanObject;
+        value = Encode(false);
+    }
 };
 
 struct NumberObject: Object {
-    Value value;
-    NumberObject(ExecutionEngine *engine, const ValueRef value): Object(engine->numberClass), value(*value) { type = Type_NumberObject; }
+    SafeValue value;
+    NumberObject(ExecutionEngine *engine, const ValueRef val)
+        : Object(engine->numberClass) {
+        type = Type_NumberObject;
+        value = val;
+    }
 protected:
-    NumberObject(InternalClass *ic): Object(ic), value(Primitive::fromInt32(0)) { type = Type_NumberObject; }
+    NumberObject(InternalClass *ic)
+        : Object(ic) {
+        type = Type_NumberObject;
+        value = Encode((int)0);
+    }
 };
 
 struct ArrayObject: Object {
@@ -381,11 +397,9 @@ struct ArrayObject: Object {
 inline uint Object::arrayLength() const
 {
     if (isArrayObject()) {
-        // length is always the first property of an array
-        Value v = memberData[ArrayObject::LengthPropertyIndex].value;
-        if (v.isInteger())
-            return v.integerValue();
-        return Primitive::toUInt32(v.doubleValue());
+        if (memberData[ArrayObject::LengthPropertyIndex].value.isInteger())
+            return memberData[ArrayObject::LengthPropertyIndex].value.integerValue();
+        return Primitive::toUInt32(memberData[ArrayObject::LengthPropertyIndex].value.doubleValue());
     }
     return 0;
 }

@@ -279,7 +279,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
             ScopedString str(scope, ctx->engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
             ctx->throwRangeError(str);
         }
-        return Primitive::fromDouble(newLen).asReturnedValue();
+        return Encode(newLen);
     }
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
@@ -345,7 +345,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
     if (!len) {
         if (!instance->isArrayObject())
             instance->put(ctx->engine->id_length, ScopedValue(scope, Primitive::fromInt32(0)));
-        return Primitive::undefinedValue().asReturnedValue();
+        return Encode::undefined();
     }
 
     Property *front = 0;
@@ -558,7 +558,7 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
     if (!len)
-        return Primitive::fromInt32(-1).asReturnedValue();
+        return Encode(-1);
 
     ScopedValue searchValue(scope);
     uint fromIndex = 0;
@@ -598,7 +598,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
     uint len = getLength(ctx, instance.getPointer());
     if (!len)
-        return Primitive::fromInt32(-1).asReturnedValue();
+        return Encode(-1);
 
     ScopedValue searchValue(scope);
     uint fromIndex = len;
@@ -628,7 +628,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         if (exists && __qmljs_strict_equal(v, searchValue))
             return Encode(k);
     }
-    return Primitive::fromInt32(-1).asReturnedValue();
+    return Encode(-1);
 }
 
 ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)

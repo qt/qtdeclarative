@@ -173,7 +173,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 
     assert(s->index < o->context->callData->argc);
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void ArgumentsObject::markObjects(Managed *that)

@@ -522,7 +522,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
                 return v.asReturnedValue();
         }
     }
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, Object **base)

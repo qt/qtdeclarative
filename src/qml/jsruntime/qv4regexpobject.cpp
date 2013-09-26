@@ -374,8 +374,9 @@ ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     ScopedCallData callData(scope, ctx->callData->argc);
-    memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(Value));
-    RegExpObject *re = Value::fromReturnedValue(ctx->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
+    memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(SafeValue));
+
+    Scoped<RegExpObject> re(scope, ctx->engine->regExpCtor.asFunctionObject()->construct(callData));
 
     r->value = re->value;
     r->global = re->global;
