@@ -1247,7 +1247,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
         QV4::ScopedValue f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlglobal));
         Q_ASSERT(f->asFunctionObject());
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = QV4::Value::fromObject(v4->globalObject);
+        callData->thisObject = v4->globalObject;
         callData->args[0] = object;
         callData->args[1] = valuemap;
         f->asFunctionObject()->call(callData);
@@ -1401,7 +1401,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
         QV4::Scoped<QV4::FunctionObject>  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
                                                                     QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = QV4::Value::fromObject(v4engine->globalObject);
+        callData->thisObject = v4engine->globalObject;
         callData->args[0] = object;
         callData->args[1] = valuemap;
         f->call(callData);
@@ -1502,7 +1502,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
 
         QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal));
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = QV4::Value::fromObject(v4->globalObject);
+        callData->thisObject = v4->globalObject;
         callData->args[0] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, o));
         callData->args[1] = valuemap;
         f->call(callData);
@@ -1540,7 +1540,7 @@ void QmlIncubatorObject::statusChanged(Status s)
         QV4::Scope scope(ctx);
         try {
             QV4::ScopedCallData callData(scope, 1);
-            callData->thisObject = QV4::Value::fromObject(this);
+            callData->thisObject = this;
             callData->args[0] = QV4::Primitive::fromUInt32(s);
             f->call(callData);
         } catch (QV4::Exception &e) {

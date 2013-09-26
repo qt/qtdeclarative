@@ -203,7 +203,7 @@ public:
     }
 
     // C++ API
-    static Value create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
+    static ReturnedValue create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
     static void destroy(Managed *that) {
@@ -244,7 +244,7 @@ public:
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
     // C++ API
-    static Value create(QV8Engine *, NodeImpl *);
+    static ReturnedValue create(QV8Engine *, NodeImpl *);
 
     NodeImpl *d;
 };
@@ -287,14 +287,14 @@ public:
     static ReturnedValue method_get_nextSibling(SimpleCallContext *ctx);
     static ReturnedValue method_get_attributes(SimpleCallContext *ctx);
 
-    //static Value ownerDocument(SimpleCallContext *ctx);
-    //static Value namespaceURI(SimpleCallContext *ctx);
-    //static Value prefix(SimpleCallContext *ctx);
-    //static Value localName(SimpleCallContext *ctx);
-    //static Value baseURI(SimpleCallContext *ctx);
-    //static Value textContent(SimpleCallContext *ctx);
+    //static ReturnedValue ownerDocument(SimpleCallContext *ctx);
+    //static ReturnedValue namespaceURI(SimpleCallContext *ctx);
+    //static ReturnedValue prefix(SimpleCallContext *ctx);
+    //static ReturnedValue localName(SimpleCallContext *ctx);
+    //static ReturnedValue baseURI(SimpleCallContext *ctx);
+    //static ReturnedValue textContent(SimpleCallContext *ctx);
 
-    static Value getProto(ExecutionEngine *v4);
+    static ReturnedValue getProto(ExecutionEngine *v4);
 
 };
 
@@ -324,7 +324,7 @@ class Node : public Object
     }
 
     // C++ API
-    static Value create(QV8Engine *, NodeImpl *);
+    static ReturnedValue create(QV8Engine *, NodeImpl *);
 
     Node(const Node &o);
     bool isNull() const;
@@ -341,7 +341,7 @@ class Element : public Node
 {
 public:
     // C++ API
-    static Value prototype(ExecutionEngine *);
+    static ReturnedValue prototype(ExecutionEngine *);
 };
 
 class Attr : public Node
@@ -349,14 +349,14 @@ class Attr : public Node
 public:
     // JS API
     static ReturnedValue method_name(SimpleCallContext *ctx);
-//    static Value specified(SimpleCallContext *);
+//    static ReturnedValue specified(SimpleCallContext *);
     static ReturnedValue method_value(SimpleCallContext *ctx);
     static ReturnedValue method_ownerElement(SimpleCallContext *ctx);
-//    static Value schemaTypeInfo(SimpleCallContext *);
-//    static Value isId(SimpleCallContext *c);
+//    static ReturnedValue schemaTypeInfo(SimpleCallContext *);
+//    static ReturnedValue isId(SimpleCallContext *c);
 
     // C++ API
-    static Value prototype(ExecutionEngine *);
+    static ReturnedValue prototype(ExecutionEngine *);
 };
 
 class CharacterData : public Node
@@ -366,7 +366,7 @@ public:
     static ReturnedValue method_length(SimpleCallContext *ctx);
 
     // C++ API
-    static Value prototype(ExecutionEngine *v4);
+    static ReturnedValue prototype(ExecutionEngine *v4);
 };
 
 class Text : public CharacterData
@@ -377,14 +377,14 @@ public:
     static ReturnedValue method_wholeText(SimpleCallContext *ctx);
 
     // C++ API
-    static Value prototype(ExecutionEngine *);
+    static ReturnedValue prototype(ExecutionEngine *);
 };
 
 class CDATA : public Text
 {
 public:
     // C++ API
-    static Value prototype(ExecutionEngine *v4);
+    static ReturnedValue prototype(ExecutionEngine *v4);
 };
 
 class Document : public Node
@@ -397,7 +397,7 @@ public:
     static ReturnedValue method_documentElement(SimpleCallContext *ctx);
 
     // C++ API
-    static Value prototype(ExecutionEngine *);
+    static ReturnedValue prototype(ExecutionEngine *);
     static ReturnedValue load(QV8Engine *engine, const QByteArray &data);
 };
 
@@ -477,7 +477,7 @@ ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
     QV8Engine *engine = ctx->engine->v8Engine;
 
     if (r->d->parent)
-        return Node::create(engine, r->d->parent).asReturnedValue();
+        return Node::create(engine, r->d->parent);
     else
         return Encode::null();
 }
@@ -491,7 +491,7 @@ ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return NodeList::create(engine, r->d).asReturnedValue();
+    return NodeList::create(engine, r->d);
 }
 
 ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
@@ -506,7 +506,7 @@ ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
     if (r->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(engine, r->d->children.first()).asReturnedValue();
+        return Node::create(engine, r->d->children.first());
 }
 
 ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
@@ -521,7 +521,7 @@ ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
     if (r->d->children.isEmpty())
         return Encode::null();
     else
-        return Node::create(engine, r->d->children.last()).asReturnedValue();
+        return Node::create(engine, r->d->children.last());
 }
 
 ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
@@ -541,7 +541,7 @@ ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
             if (ii == 0)
                 return Encode::null();
             else
-                return Node::create(engine, r->d->parent->children.at(ii - 1)).asReturnedValue();
+                return Node::create(engine, r->d->parent->children.at(ii - 1));
         }
     }
 
@@ -565,7 +565,7 @@ ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
             if ((ii + 1) == r->d->parent->children.count())
                 return Encode::null();
             else
-                return Node::create(engine, r->d->parent->children.at(ii + 1)).asReturnedValue();
+                return Node::create(engine, r->d->parent->children.at(ii + 1));
         }
     }
 
@@ -584,10 +584,10 @@ ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
     if (r->d->type != NodeImpl::Element)
         return Encode::null();
     else
-        return NamedNodeMap::create(engine, r->d, r->d->attributes).asReturnedValue();
+        return NamedNodeMap::create(engine, r->d, r->d->attributes);
 }
 
-Value NodePrototype::getProto(ExecutionEngine *v4)
+ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
 {
     Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
@@ -596,19 +596,21 @@ Value NodePrototype::getProto(ExecutionEngine *v4)
         d->nodePrototype = p;
         v4->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->nodePrototype.value());
+    return d->nodePrototype.value();
 }
 
-Value Node::create(QV8Engine *engine, NodeImpl *data)
+ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    Scope scope(v4);
 
     QQmlXMLHttpRequestData *d = xhrdata(engine);
-    Node *instance = new (v4->memoryManager) Node(v4, data);
+    Scoped<Node> instance(scope, new (v4->memoryManager) Node(v4, data));
+    ScopedObject p(scope);
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance->setPrototype(Attr::prototype(v4).asObject());
+        instance->setPrototype((p = Attr::prototype(v4)).getPointer());
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -618,49 +620,51 @@ Value Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::EntityReference:
     case NodeImpl::Notation:
     case NodeImpl::ProcessingInstruction:
-        return Primitive::undefinedValue();
+        return Encode::undefined();
     case NodeImpl::CDATA:
-        instance->setPrototype(CDATA::prototype(v4).asObject());
+        instance->setPrototype((p = CDATA::prototype(v4)).getPointer());
         break;
     case NodeImpl::Text:
-        instance->setPrototype(Text::prototype(v4).asObject());
+        instance->setPrototype((p = Text::prototype(v4)).getPointer());
         break;
     case NodeImpl::Element:
-        instance->setPrototype(Element::prototype(v4).asObject());
+        instance->setPrototype((p = Element::prototype(v4)).getPointer());
         break;
     }
 
-    return Value::fromObject(instance);
+    return instance.asReturnedValue();
 }
 
-Value Element::prototype(ExecutionEngine *engine)
+ReturnedValue Element::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->elementPrototype.isUndefined()) {
         Scope scope(engine);
-        Scoped<Object> p(scope, engine->newObject());
-        p->setPrototype(NodePrototype::getProto(engine).asObject());
+        ScopedObject p(scope, engine->newObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = NodePrototype::getProto(engine)).getPointer());
         p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
         d->elementPrototype = p;
         engine->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->elementPrototype.value());
+    return d->elementPrototype.value();
 }
 
-Value Attr::prototype(ExecutionEngine *engine)
+ReturnedValue Attr::prototype(ExecutionEngine *engine)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->attrPrototype.isUndefined()) {
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
-        p->setPrototype(NodePrototype::getProto(engine).asObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = NodePrototype::getProto(engine)).getPointer());
         p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
         p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
         p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
         d->attrPrototype = p;
         engine->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->attrPrototype.value());
+    return d->attrPrototype.value();
 }
 
 ReturnedValue Attr::method_name(SimpleCallContext *ctx)
@@ -693,7 +697,7 @@ ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return Node::create(engine, r->d->parent).asReturnedValue();
+    return Node::create(engine, r->d->parent);
 }
 
 ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
@@ -707,19 +711,20 @@ ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
     return Encode(r->d->data.length());
 }
 
-Value CharacterData::prototype(ExecutionEngine *v4)
+ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->characterDataPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
-        p->setPrototype(NodePrototype::getProto(v4).asObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = NodePrototype::getProto(v4)).getPointer());
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
         d->characterDataPrototype = p;
         v4->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->characterDataPrototype.value());
+    return d->characterDataPrototype.value();
 }
 
 ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
@@ -742,42 +747,45 @@ ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
     return engine->toString(r->d->data);
 }
 
-Value Text::prototype(ExecutionEngine *v4)
+ReturnedValue Text::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->textPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
-        p->setPrototype(CharacterData::prototype(v4).asObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = CharacterData::prototype(v4)).getPointer());
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
         p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
         d->textPrototype = p;
         v4->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->textPrototype.value());
+    return d->textPrototype.value();
 }
 
-Value CDATA::prototype(ExecutionEngine *v4)
+ReturnedValue CDATA::prototype(ExecutionEngine *v4)
 {
     // ### why not just use TextProto???
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->cdataPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
-        p->setPrototype(Text::prototype(v4).asObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = Text::prototype(v4)).getPointer());
         d->cdataPrototype = p;
         v4->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->cdataPrototype.value());
+    return d->cdataPrototype.value();
 }
 
-Value Document::prototype(ExecutionEngine *v4)
+ReturnedValue Document::prototype(ExecutionEngine *v4)
 {
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->documentPrototype.isUndefined()) {
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
-        p->setPrototype(NodePrototype::getProto(v4).asObject());
+        ScopedObject pp(scope);
+        p->setPrototype((pp = NodePrototype::getProto(v4)).getPointer());
         p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, 0);
         p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
         p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
@@ -785,7 +793,7 @@ Value Document::prototype(ExecutionEngine *v4)
         d->documentPrototype = p;
         v4->v8Engine->freezeObject(p);
     }
-    return Value::fromReturnedValue(d->documentPrototype.value());
+    return d->documentPrototype.value();
 }
 
 ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
@@ -873,7 +881,8 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
     }
 
     ScopedObject instance(scope, new (v4->memoryManager) Node(v4, document));
-    instance->setPrototype(Document::prototype(v4).asObject());
+    ScopedObject p(scope);
+    instance->setPrototype((p = Document::prototype(v4)).getPointer());
     return instance.asReturnedValue();
 }
 
@@ -901,7 +910,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     if ((int)index < r->list.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->list.at(index)).asReturnedValue();
+        return Node::create(engine, r->list.at(index));
     }
     if (hasProperty)
         *hasProperty = false;
@@ -926,7 +935,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
         if (r->list.at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
-            return Node::create(engine, r->list.at(ii)).asReturnedValue();
+            return Node::create(engine, r->list.at(ii));
         }
     }
 
@@ -935,12 +944,13 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
     return Encode::undefined();
 }
 
-Value NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
+ReturnedValue NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    Scope scope(v4);
 
-    NamedNodeMap *instance = new (v4->memoryManager) NamedNodeMap(v4, data, list);
-    return Value::fromObject(instance);
+    Scoped<NamedNodeMap> instance(scope, new (v4->memoryManager) NamedNodeMap(v4, data, list));
+    return instance.asReturnedValue();
 }
 
 ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -955,7 +965,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     if ((int)index < r->d->children.count()) {
         if (hasProperty)
             *hasProperty = true;
-        return Node::create(engine, r->d->children.at(index)).asReturnedValue();
+        return Node::create(engine, r->d->children.at(index));
     }
     if (hasProperty)
         *hasProperty = false;
@@ -976,12 +986,13 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
     return Object::get(m, name, hasProperty);
 }
 
-Value NodeList::create(QV8Engine *engine, NodeImpl *data)
+ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
     QQmlXMLHttpRequestData *d = xhrdata(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    NodeList *instance = new (v4->memoryManager) NodeList(v4, data);
-    return Value::fromObject(instance);
+    Scope scope(v4);
+    Scoped<NodeList> instance(scope, new (v4->memoryManager) NodeList(v4, data));
+    return instance.asReturnedValue();
 }
 
 ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
@@ -992,7 +1003,7 @@ ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
         return Encode::undefined();
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root).asReturnedValue();
+    return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
 }
 
 ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)

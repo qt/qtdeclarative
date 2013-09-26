@@ -220,21 +220,21 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     SequencePrototype *sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
     sequenceClass = emptyClass->changePrototype(sequencePrototype);
 
-    objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
-    stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
-    numberCtor = Value::fromObject(new (memoryManager) NumberCtor(rootContext));
-    booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
-    arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
-    functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
-    dateCtor = Value::fromObject(new (memoryManager) DateCtor(rootContext));
-    regExpCtor = Value::fromObject(new (memoryManager) RegExpCtor(rootContext));
-    errorCtor = Value::fromObject(new (memoryManager) ErrorCtor(rootContext));
-    evalErrorCtor = Value::fromObject(new (memoryManager) EvalErrorCtor(rootContext));
-    rangeErrorCtor = Value::fromObject(new (memoryManager) RangeErrorCtor(rootContext));
-    referenceErrorCtor = Value::fromObject(new (memoryManager) ReferenceErrorCtor(rootContext));
-    syntaxErrorCtor = Value::fromObject(new (memoryManager) SyntaxErrorCtor(rootContext));
-    typeErrorCtor = Value::fromObject(new (memoryManager) TypeErrorCtor(rootContext));
-    uRIErrorCtor = Value::fromObject(new (memoryManager) URIErrorCtor(rootContext));
+    objectCtor = new (memoryManager) ObjectCtor(rootContext);
+    stringCtor = new (memoryManager) StringCtor(rootContext);
+    numberCtor = new (memoryManager) NumberCtor(rootContext);
+    booleanCtor = new (memoryManager) BooleanCtor(rootContext);
+    arrayCtor = new (memoryManager) ArrayCtor(rootContext);
+    functionCtor = new (memoryManager) FunctionCtor(rootContext);
+    dateCtor = new (memoryManager) DateCtor(rootContext);
+    regExpCtor = new (memoryManager) RegExpCtor(rootContext);
+    errorCtor = new (memoryManager) ErrorCtor(rootContext);
+    evalErrorCtor = new (memoryManager) EvalErrorCtor(rootContext);
+    rangeErrorCtor = new (memoryManager) RangeErrorCtor(rootContext);
+    referenceErrorCtor = new (memoryManager) ReferenceErrorCtor(rootContext);
+    syntaxErrorCtor = new (memoryManager) SyntaxErrorCtor(rootContext);
+    typeErrorCtor = new (memoryManager) TypeErrorCtor(rootContext);
+    uRIErrorCtor = new (memoryManager) URIErrorCtor(rootContext);
 
     objectPrototype->init(this, objectCtor);
     stringPrototype->init(this, stringCtor);
@@ -260,7 +260,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     //
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
-    rootContext->callData->thisObject = Value::fromObject(globalObject);
+    rootContext->callData->thisObject = globalObject;
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);

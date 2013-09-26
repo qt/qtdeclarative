@@ -338,6 +338,12 @@ struct SafeValue : public Value
         return *this;
     }
     template<typename T>
+    SafeValue &operator=(T *t) {
+        val = Value::fromManaged(t).val;
+        return *this;
+    }
+
+    template<typename T>
     SafeValue &operator=(const Scoped<T> &t);
     SafeValue &operator=(const ValueRef v);
     SafeValue &operator=(const Value &v) {
@@ -369,10 +375,15 @@ struct Q_QML_EXPORT Primitive : public Value
 template <typename T>
 struct Safe : public SafeValue
 {
+    template<typename X>
+    Safe &operator =(X *x) {
+        val = Value::fromManaged(x).val;
+    }
     Safe &operator =(T *t);
     Safe &operator =(const Scoped<T> &v);
     Safe &operator =(const Referenced<T> &v);
     Safe &operator =(Returned<T> *t);
+
     Safe &operator =(const Safe<T> &t);
 
     // ### GC: remove me
