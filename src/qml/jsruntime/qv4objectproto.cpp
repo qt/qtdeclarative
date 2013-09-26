@@ -388,13 +388,13 @@ ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     if (ctx->callData->thisObject.isUndefined()) {
-        return Value::fromString(ctx, QStringLiteral("[object Undefined]")).asReturnedValue();
+        return ctx->engine->newString(QStringLiteral("[object Undefined]"))->asReturnedValue();
     } else if (ctx->callData->thisObject.isNull()) {
-        return Value::fromString(ctx, QStringLiteral("[object Null]")).asReturnedValue();
+        return ctx->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
     } else {
         ScopedObject obj(scope, __qmljs_to_object(ctx, ValueRef(&ctx->callData->thisObject)));
         QString className = obj->className();
-        return Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(className)).asReturnedValue();
+        return ctx->engine->newString(QString::fromUtf8("[object %1]").arg(className))->asReturnedValue();
     }
 }
 

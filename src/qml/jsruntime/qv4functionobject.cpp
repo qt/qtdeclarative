@@ -313,7 +313,7 @@ ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
     if (!fun)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, QStringLiteral("function() { [code] }")).asReturnedValue();
+    return ctx->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
 
 ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)

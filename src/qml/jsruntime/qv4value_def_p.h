@@ -277,11 +277,6 @@ struct Q_QML_EXPORT Value
     static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
 
-#ifndef QMLJS_LLVM_RUNTIME
-    static Value fromString(ExecutionContext *ctx, const QString &fromString);
-    static Value fromString(ExecutionEngine *engine, const QString &s);
-#endif
-
     int toUInt16() const;
     int toInt32() const;
     unsigned int toUInt32() const;
@@ -324,6 +319,8 @@ struct Q_QML_EXPORT Value
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
     Value &operator=(ReturnedValue v) { val = v; return *this; }
+    template <typename T>
+    inline Value &operator=(Returned<T> *t);
 
     // Section 9.12
     bool sameValue(Value other) const;

@@ -332,7 +332,7 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        array->arrayData[i].value = (start != -1 && end != -1) ? Value::fromString(ctx, s.mid(start, end - start)) : Primitive::undefinedValue();
+        array->arrayData[i].value = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
         array->arrayDataLen = i + 1;
     }
     array->setArrayLengthUnchecked(len);
@@ -360,7 +360,7 @@ ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
     if (!r)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, r->toString()).asReturnedValue();
+    return ctx->engine->newString(r->toString())->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)

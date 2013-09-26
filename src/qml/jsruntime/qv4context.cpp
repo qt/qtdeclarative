@@ -604,7 +604,7 @@ void ExecutionContext::throwError(const ValueRef value)
 void ExecutionContext::throwError(const QString &message)
 {
     Scope scope(this);
-    ScopedValue v(scope, Value::fromString(this, message));
+    ScopedValue v(scope, engine->newString(message));
     v = engine->newErrorObject(v);
     throwError(v);
 }
@@ -640,7 +640,7 @@ void ExecutionContext::throwTypeError(const QString &message)
 void ExecutionContext::throwUnimplemented(const QString &message)
 {
     Scope scope(this);
-    ScopedValue v(scope, Value::fromString(this, QStringLiteral("Unimplemented ") + message));
+    ScopedValue v(scope, engine->newString(QStringLiteral("Unimplemented ") + message));
     v = engine->newErrorObject(v);
     throwError(v);
 }

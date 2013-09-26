@@ -202,16 +202,6 @@ bool Value::sameValue(Value other) const {
     return false;
 }
 
-Value Value::fromString(ExecutionContext *ctx, const QString &s)
-{
-    return fromManaged(ctx->engine->newString(s)->getPointer());
-}
-
-Value Value::fromString(ExecutionEngine *engine, const QString &s)
-{
-    return fromManaged(engine->newString(s)->getPointer());
-}
-
 
 int Primitive::toInt32(double number)
 {

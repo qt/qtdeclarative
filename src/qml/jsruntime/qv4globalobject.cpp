@@ -605,7 +605,7 @@ ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
         context->throwURIError(s);
     }
 
-    return Value::fromString(context, out).asReturnedValue();
+    return context->engine->newString(out)->asReturnedValue();
 }
 
 /// decodeURIComponent [15.1.3.2]
@@ -623,7 +623,7 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *cont
         context->throwURIError(s);
     }
 
-    return Value::fromString(context, out).asReturnedValue();
+    return context->engine->newString(out)->asReturnedValue();
 }
 
 /// encodeURI [15.1.3.3]
@@ -641,7 +641,7 @@ ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
         context->throwURIError(s);
     }
 
-    return Value::fromString(context, out).asReturnedValue();
+    return context->engine->newString(out)->asReturnedValue();
 }
 
 /// encodeURIComponent [15.1.3.4]
@@ -659,23 +659,23 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *cont
         context->throwURIError(s);
     }
 
-    return Value::fromString(context, out).asReturnedValue();
+    return context->engine->newString(out)->asReturnedValue();
 }
 
 ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
 {
     if (!context->callData->argc)
-        return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
+        return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
 
     QString str = context->callData->args[0].toString(context)->toQString();
-    return Value::fromString(context, escape(str)).asReturnedValue();
+    return context->engine->newString(escape(str))->asReturnedValue();
 }
 
 ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
 {
     if (!context->callData->argc)
-        return Value::fromString(context, QStringLiteral("undefined")).asReturnedValue();
+        return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
 
     QString str = context->callData->args[0].toString(context)->toQString();
-    return Value::fromString(context, unescape(str)).asReturnedValue();
+    return context->engine->newString(unescape(str))->asReturnedValue();
 }

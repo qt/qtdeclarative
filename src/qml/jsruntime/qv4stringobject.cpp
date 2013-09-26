@@ -78,10 +78,11 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(StringObject);
 
 StringObject::StringObject(InternalClass *ic)
-    : Object(ic), value(Value::fromString(ic->engine, ""))
+    : Object(ic)
 {
     vtbl = &static_vtbl;
     type = Type_StringObject;
+    value = ic->engine->newString("")->asReturnedValue();
 
     tmpProperty.value = Primitive::undefinedValue();
 
@@ -171,7 +172,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     if (callData->argc)
         value = callData->args[0].toString(v4->current);
     else
-        value = Value::fromString(v4->current, QString());
+        value = v4->newString(QString());
     return Encode(v4->newStringObject(value));
 }
 
@@ -183,7 +184,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     if (callData->argc)
         value = callData->args[0].toString(v4->current);
     else
-        value = Value::fromString(v4->current, QString());
+        value = v4->newString(QString());
     return value.asReturnedValue();
 }
 
@@ -252,7 +253,7 @@ ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    return Value::fromString(context, result).asReturnedValue();
+    return context->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_charCodeAt(SimpleCallContext *context)
@@ -283,7 +284,7 @@ ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
         value += v->stringValue()->toQString();
     }
 
-    return Value::fromString(context, value).asReturnedValue();
+    return context->engine->newString(value)->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_indexOf(SimpleCallContext *context)
@@ -513,21 +514,22 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
         ScopedCallData callData(scope, numCaptures + 2);
         callData->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
+        ScopedValue entry(scope);
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
                 int idx = (i * numCaptures + k) * 2;
                 uint start = matchOffsets[idx];
                 uint end = matchOffsets[idx + 1];
-                Value entry = Primitive::undefinedValue();
+                entry = Primitive::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
-                    entry = Value::fromString(ctx, string.mid(start, end - start));
+                    entry = ctx->engine->newString(string.mid(start, end - start));
                 callData->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= lastEnd);
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            callData->args[numCaptures + 1] = Value::fromString(ctx, string);
+            callData->args[numCaptures + 1] = ctx->engine->newString(string);
 
             replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
@@ -557,7 +559,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
     if (matchOffsets != _matchOffsets)
         free(matchOffsets);
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
@@ -604,7 +606,7 @@ ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    return Value::fromString(ctx, text.mid(intStart, count)).asReturnedValue();
+    return ctx->engine->newString(text.mid(intStart, count))->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
@@ -623,7 +625,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
             array->push_back(s);
             return array.asReturnedValue();
         }
-        return Value::fromString(ctx, text.left(limitValue->toInteger())).asReturnedValue();
+        return ctx->engine->newString(text.left(limitValue->toInteger()))->asReturnedValue();
     }
 
     uint limit = limitValue->isUndefined() ? UINT_MAX : limitValue->toUInt32();
@@ -635,7 +637,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
     if (re) {
         if (re->value->pattern().isEmpty()) {
             re = (RegExpObject *)0;
-            separatorValue = Value::fromString(ctx, QString());
+            separatorValue = ctx->engine->newString(QString());
         }
     }
 
@@ -648,7 +650,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
             if (result == JSC::Yarr::offsetNoMatch)
                 break;
 
-            array->push_back((s = Value::fromString(ctx, text.mid(offset, matchOffsets[0] - offset))));
+            array->push_back((s = ctx->engine->newString(text.mid(offset, matchOffsets[0] - offset))));
             offset = qMax(offset + 1, matchOffsets[1]);
 
             if (array->arrayLength() >= limit)
@@ -657,31 +659,31 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
             for (int i = 1; i < re->value->captureCount(); ++i) {
                 uint start = matchOffsets[i * 2];
                 uint end = matchOffsets[i * 2 + 1];
-                array->push_back((s = Value::fromString(ctx, text.mid(start, end - start))));
+                array->push_back((s = ctx->engine->newString(text.mid(start, end - start))));
                 if (array->arrayLength() >= limit)
                     break;
             }
         }
         if (array->arrayLength() < limit)
-            array->push_back((s = Value::fromString(ctx, text.mid(offset))));
+            array->push_back((s = ctx->engine->newString(text.mid(offset))));
     } else {
         QString separator = separatorValue->toString(ctx)->toQString();
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
-                array->push_back((s = Value::fromString(ctx, text.mid(i, 1))));
+                array->push_back((s = ctx->engine->newString(text.mid(i, 1))));
             return array.asReturnedValue();
         }
 
         int start = 0;
         int end;
         while ((end = text.indexOf(separator, start)) != -1) {
-            array->push_back((s = Value::fromString(ctx, text.mid(start, end - start))));
+            array->push_back((s = ctx->engine->newString(text.mid(start, end - start))));
             start = end + separator.size();
             if (array->arrayLength() >= limit)
                 break;
         }
         if (array->arrayLength() < limit && start != -1)
-            array->push_back((s = Value::fromString(ctx, text.mid(start))));
+            array->push_back((s = ctx->engine->newString(text.mid(start))));
     }
     return array.asReturnedValue();
 }
@@ -706,7 +708,7 @@ ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
 
     qint32 x = Primitive::toInt32(start);
     qint32 y = Primitive::toInt32(length);
-    return Value::fromString(context, value.mid(x, y)).asReturnedValue();
+    return context->engine->newString(value.mid(x, y))->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
@@ -745,13 +747,13 @@ ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
 
     qint32 x = (int)start;
     qint32 y = (int)(end - start);
-    return Value::fromString(context, value.mid(x, y)).asReturnedValue();
+    return context->engine->newString(value.mid(x, y))->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
-    return Value::fromString(ctx, value.toLower()).asReturnedValue();
+    return ctx->engine->newString(value.toLower())->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
@@ -762,7 +764,7 @@ ReturnedValue StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
 ReturnedValue StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
-    return Value::fromString(ctx, value.toUpper()).asReturnedValue();
+    return ctx->engine->newString(value.toUpper())->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
@@ -778,7 +780,7 @@ ReturnedValue StringPrototype::method_fromCharCode(SimpleCallContext *context)
         *ch = QChar(context->callData->args[i].toUInt16());
         ++ch;
     }
-    return Value::fromString(context, str).asReturnedValue();
+    return context->engine->newString(str)->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_trim(SimpleCallContext *ctx)
@@ -796,5 +798,5 @@ ReturnedValue StringPrototype::method_trim(SimpleCallContext *ctx)
             break;
     }
 
-    return Value::fromString(ctx, QString(chars + start, end - start + 1)).asReturnedValue();
+    return ctx->engine->newString(QString(chars + start, end - start + 1))->asReturnedValue();
 }

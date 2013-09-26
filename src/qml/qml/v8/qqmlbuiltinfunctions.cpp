@@ -834,12 +834,12 @@ ReturnedValue QtObject::method_resolvedUrl(QV4::SimpleCallContext *ctx)
     if (p) {
         QQmlContextData *ctxt = v8engine->callingContext();
         if (ctxt)
-            return Value::fromString(ctx, ctxt->resolvedUrl(url).toString()).asReturnedValue();
+            return ctx->engine->newString(ctxt->resolvedUrl(url).toString())->asReturnedValue();
         else
-            return Value::fromString(ctx, url.toString()).asReturnedValue();
+            return ctx->engine->newString(url.toString())->asReturnedValue();
     }
 
-    return Value::fromString(ctx, e->baseUrl().resolved(url).toString()).asReturnedValue();
+    return ctx->engine->newString(e->baseUrl().resolved(url).toString())->asReturnedValue();
 }
 
 /*!
@@ -866,7 +866,7 @@ ReturnedValue QtObject::method_md5(SimpleCallContext *ctx)
 
     QByteArray data = ctx->callData->args[0].toQStringNoThrow().toUtf8();
     QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
-    return Value::fromString(ctx, QLatin1String(result.toHex())).asReturnedValue();
+    return ctx->engine->newString(QLatin1String(result.toHex()))->asReturnedValue();
 }
 
 /*!
@@ -880,7 +880,7 @@ ReturnedValue QtObject::method_btoa(SimpleCallContext *ctx)
 
     QByteArray data = ctx->callData->args[0].toQStringNoThrow().toUtf8();
 
-    return Value::fromString(ctx, QLatin1String(data.toBase64())).asReturnedValue();
+    return ctx->engine->newString(QLatin1String(data.toBase64()))->asReturnedValue();
 }
 
 /*!
@@ -894,7 +894,7 @@ ReturnedValue QtObject::method_atob(SimpleCallContext *ctx)
 
     QByteArray data = ctx->callData->args[0].toQStringNoThrow().toLatin1();
 
-    return Value::fromString(ctx, QString::fromUtf8(QByteArray::fromBase64(data))).asReturnedValue();
+    return ctx->engine->newString(QString::fromUtf8(QByteArray::fromBase64(data)))->asReturnedValue();
 }
 
 /*!
@@ -1644,7 +1644,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(SimpleCallContext *ctx)
                                                  comment.toUtf8().constData(),
                                                  n);
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 /*!
@@ -1722,7 +1722,7 @@ ReturnedValue GlobalExtensions::method_qsTr(SimpleCallContext *ctx)
     QString result = QCoreApplication::translate(context.toUtf8().constData(), text.toUtf8().constData(),
                                                  comment.toUtf8().constData(), n);
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 /*!
@@ -1797,7 +1797,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(SimpleCallContext *ctx)
     if (ctx->callData->argc > 1)
         n = ctx->callData->args[1].toInt32();
 
-    return Value::fromString(ctx, qtTrId(ctx->callData->args[0].toQStringNoThrow().toUtf8().constData(), n)).asReturnedValue();
+    return ctx->engine->newString(qtTrId(ctx->callData->args[0].toQStringNoThrow().toUtf8().constData(), n))->asReturnedValue();
 }
 
 /*!
@@ -1842,13 +1842,13 @@ ReturnedValue GlobalExtensions::method_string_arg(SimpleCallContext *ctx)
 
     QV4::Value arg = ctx->callData->args[0];
     if (arg.isInteger())
-        return Value::fromString(ctx, value.arg(arg.integerValue())).asReturnedValue();
+        return ctx->engine->newString(value.arg(arg.integerValue()))->asReturnedValue();
     else if (arg.isDouble())
-        return Value::fromString(ctx, value.arg(arg.doubleValue())).asReturnedValue();
+        return ctx->engine->newString(value.arg(arg.doubleValue()))->asReturnedValue();
     else if (arg.isBoolean())
-        return Value::fromString(ctx, value.arg(arg.booleanValue())).asReturnedValue();
+        return ctx->engine->newString(value.arg(arg.booleanValue()))->asReturnedValue();
 
-    return Value::fromString(ctx, value.arg(arg.toQStringNoThrow())).asReturnedValue();
+    return ctx->engine->newString(value.arg(arg.toQStringNoThrow()))->asReturnedValue();
 }
 
 

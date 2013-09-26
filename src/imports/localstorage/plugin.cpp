@@ -65,14 +65,14 @@
 using namespace QV4;
 
 #define V4THROW_SQL(error, desc) { \
-    QV4::Scoped<String> v(scope, Value::fromString(ctx, desc)); \
+    QV4::Scoped<String> v(scope, ctx->engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->throwError(ex); \
 }
 
 #define V4THROW_REFERENCE(string) { \
-    QV4::Scoped<String> v(scope, Value::fromString(ctx, string)); \
+    QV4::Scoped<String> v(scope, ctx->engine->newString(string)); \
     ctx->throwReferenceError(v); \
 }
 

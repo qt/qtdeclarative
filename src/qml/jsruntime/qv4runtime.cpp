@@ -677,7 +677,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
                     return Primitive::undefinedValue().asReturnedValue();
                 }
                 const QString s = str->toQString().mid(idx, 1);
-                return Value::fromString(ctx, s).asReturnedValue();
+                return scope.engine->newString(s)->asReturnedValue();
             }
         }
 

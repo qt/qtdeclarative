@@ -249,7 +249,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::Double:
                 return QV4::Encode(*reinterpret_cast<const double*>(ptr));
             case QMetaType::QString:
-                return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(ptr)).asReturnedValue();
+                return m_v4Engine->current->engine->newString(*reinterpret_cast<const QString*>(ptr))->asReturnedValue();
             case QMetaType::Float:
                 return QV4::Encode(*reinterpret_cast<const float*>(ptr));
             case QMetaType::Short:
@@ -661,7 +661,7 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::Double:
         return QV4::Encode(*reinterpret_cast<const double*>(data));
     case QMetaType::QString:
-        return QV4::Value::fromString(m_v4Engine->current, *reinterpret_cast<const QString*>(data)).asReturnedValue();
+        return m_v4Engine->current->engine->newString(*reinterpret_cast<const QString*>(data))->asReturnedValue();
     case QMetaType::Float:
         return QV4::Encode(*reinterpret_cast<const float*>(data));
     case QMetaType::Short:

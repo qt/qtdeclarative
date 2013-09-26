@@ -82,7 +82,8 @@ ErrorObject::ErrorObject(InternalClass *ic)
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
 
-    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, "Error"));
+    ScopedString s(scope, ic->engine->newString("Error"));
+    defineDefaultProperty(QStringLiteral("name"), s.asValue());
 }
 
 ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
@@ -100,11 +101,12 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
 
     if (!message->isUndefined())
         defineDefaultProperty(QStringLiteral("message"), *message);
-    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
+    ScopedString s(scope);
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
 
     stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 }
@@ -119,16 +121,17 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
+    ScopedString s(scope);
 
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     ScopedValue v(scope, ic->engine->newString(message));
     defineDefaultProperty(QStringLiteral("message"), v);
-    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
 
     stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 }
@@ -143,9 +146,10 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
 
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
+    ScopedString s(scope);
 
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
-    defineDefaultProperty(QStringLiteral("name"), Value::fromString(ic->engine, className()));
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
 
     stackTrace = ic->engine->stackTrace();
     ExecutionEngine::StackFrame frame;
@@ -155,7 +159,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     stackTrace.prepend(frame);
 
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), Value::fromString(ic->engine, stackTrace.at(0).source));
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 
@@ -368,11 +372,13 @@ ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
 
 void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *obj)
 {
+    Scope scope(engine);
+    ScopedString s(scope);
     ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(obj));
     ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
     obj->defineDefaultProperty(QStringLiteral("constructor"), ctor);
     obj->defineDefaultProperty(engine->id_toString, method_toString, 0);
-    obj->defineDefaultProperty(QStringLiteral("message"), Value::fromString(engine, QString()));
+    obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())).asValue());
 }
 
 ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
@@ -405,5 +411,5 @@ ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    return Value::fromString(ctx, str).asReturnedValue();
+    return ctx->engine->newString(str)->asReturnedValue();
 }

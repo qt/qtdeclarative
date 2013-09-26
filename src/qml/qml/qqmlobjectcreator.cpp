@@ -548,6 +548,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     int propertyWriteStatus = -1;
     void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
 
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
     // ### enums
 
     switch (property->propType) {
@@ -583,7 +585,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
         } else {
             QString stringValue = binding->valueAsString(&qmlUnit->header);
             if (property->isVarProperty()) {
-                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromString(QV8Engine::getV4(engine), stringValue));
+                QV4::ScopedString s(scope, v4->newString(stringValue));
+                _vmeMetaObject->setVMEProperty(property->coreIndex, s.asValue());
             } else {
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 argv[0] = &value;

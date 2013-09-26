@@ -121,9 +121,9 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
         }
 
         if (std::isnan(num)) {
-            return Value::fromString(ctx, QStringLiteral("NaN")).asReturnedValue();
+            return ctx->engine->newString(QStringLiteral("NaN"))->asReturnedValue();
         } else if (qIsInf(num)) {
-            return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity")).asReturnedValue();
+            return ctx->engine->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity"))->asReturnedValue();
         }
 
         if (radix != 10) {
@@ -153,7 +153,7 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
             }
             if (negative)
                 str.prepend(QLatin1Char('-'));
-            return Value::fromString(ctx, str).asReturnedValue();
+            return ctx->engine->newString(str)->asReturnedValue();
         }
     }
 
@@ -198,7 +198,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
         str = QString::number(v, 'f', int (fdigits));
     else
         return __qmljs_string_from_number(ctx, v)->asReturnedValue();
-    return Value::fromString(ctx, str).asReturnedValue();
+    return ctx->engine->newString(str)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
@@ -221,7 +221,7 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(d, fdigits, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
@@ -244,5 +244,5 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }

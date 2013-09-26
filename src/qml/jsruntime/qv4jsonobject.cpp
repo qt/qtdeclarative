@@ -400,7 +400,7 @@ bool JsonParser::parseValue(ValueRef val)
             return false;
         DEBUG << "value: string";
         END;
-        *val = Value::fromString(context, value);
+        val = context->engine->newString(value);
         return true;
     }
     case BeginArray: {
@@ -709,7 +709,7 @@ QString Stringify::Str(const QString &key, Value value)
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
-            callData->args[0] = Value::fromString(ctx, key);
+            callData->args[0] = ctx->engine->newString(key);
             value = Value::fromReturnedValue(toJSON->call(callData));
         }
     }
@@ -719,7 +719,7 @@ QString Stringify::Str(const QString &key, Value value)
         ScopedValue v(scope, value);
         holder->put(ctx, QString(), v);
         ScopedCallData callData(scope, 2);
-        callData->args[0] = Value::fromString(ctx, key);
+        callData->args[0] = ctx->engine->newString(key);
         callData->args[1] = value;
         callData->thisObject = holder;
         value = Value::fromReturnedValue(replacerFunction->call(callData));
@@ -940,7 +940,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty())
         return Encode::undefined();
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 
@@ -948,7 +948,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return Value::fromString(engine->current, value.toString()).asReturnedValue();
+        return engine->current->engine->newString(value.toString())->asReturnedValue();
     else if (value.isDouble())
         return Encode(value.toDouble());
     else if (value.isBool())

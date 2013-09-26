@@ -170,7 +170,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.propType == QMetaType::QString) {
         QString v;
         ReadFunction(object, property, &v, notifier);
-        return Value::fromString(v4, v).asReturnedValue();
+        return v4->newString(v)->asReturnedValue();
     } else if (property.propType == QMetaType::UInt) {
         uint v = 0;
         ReadFunction(object, property, &v, notifier);
@@ -1680,7 +1680,7 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
         result = QLatin1String("null");
     }
 
-    return QV4::Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)

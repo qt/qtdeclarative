@@ -81,7 +81,9 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
-    return QV4::Value::fromString(engine, element);
+    QV4::Value v;
+    v = engine->newString(element)->asReturnedValue();
+    return v;
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
@@ -91,7 +93,9 @@ static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
 {
-    return QV4::Value::fromString(engine, element.toString());
+    QV4::Value v;
+    v = engine->newString(element.toString())->asReturnedValue();
+    return v;
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, qreal element)

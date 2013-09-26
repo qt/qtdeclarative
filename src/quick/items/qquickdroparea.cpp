@@ -564,7 +564,7 @@ void QQuickDropEvent::getDataAsString(QQmlV4Function *args)
         QV4::ScopedValue v(scope, (*args)[0]);
         QString format = v->toQString();
         QString rv = QString::fromUtf8(event->mimeData()->data(format));
-        args->setReturnValue(QV4::Value::fromString(v4, rv).asReturnedValue());
+        args->setReturnValue(v4->newString(rv)->asReturnedValue());
     }
 }
 

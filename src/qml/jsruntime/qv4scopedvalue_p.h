@@ -406,6 +406,11 @@ struct ValueRef {
         ptr->val = v;
         return *this;
     }
+    template <typename T>
+    ValueRef &operator=(Returned<T> *v) {
+        ptr->val = v->asReturnedValue();
+        return *this;
+    }
 
     operator const Value *() const {
         return ptr;
@@ -582,6 +587,14 @@ struct Encode {
 private:
     Encode(void *);
 };
+
+
+template <typename T>
+inline Value &Value::operator=(Returned<T> *t)
+{
+    val = t->getPointer()->asReturnedValue();
+    return *this;
+}
 
 inline SafeValue &SafeValue::operator =(const ScopedValue &v)
 {

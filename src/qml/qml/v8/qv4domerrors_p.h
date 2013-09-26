@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 #define DOMEXCEPTION_TYPE_MISMATCH_ERR 17
 
 #define V4THROW_DOM(error, string) { \
-    QV4::ScopedValue v(scope, QV4::Value::fromString(ctx, QStringLiteral(string))); \
+    QV4::ScopedValue v(scope, ctx->engine->newString(QStringLiteral(string))); \
     QV4::Scoped<Object> ex(scope, ctx->engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, ctx->engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(error))); \
     ctx->throwError(ex); \

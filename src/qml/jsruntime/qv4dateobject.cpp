@@ -698,7 +698,7 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
 ReturnedValue DateCtor::call(Managed *m, CallData *)
 {
     double t = currentTime();
-    return Value::fromString(m->engine()->current, ToString(t)).asReturnedValue();
+    return m->engine()->newString(ToString(t))->asReturnedValue();
 }
 
 void DatePrototype::init(ExecutionEngine *engine, const Value &ctor)
@@ -807,37 +807,37 @@ ReturnedValue DatePrototype::method_now(SimpleCallContext *ctx)
 ReturnedValue DatePrototype::method_toString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToString(t)).asReturnedValue();
+    return ctx->engine->newString(ToString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toDateString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToDateString(t)).asReturnedValue();
+    return ctx->engine->newString(ToDateString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toTimeString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToTimeString(t)).asReturnedValue();
+    return ctx->engine->newString(ToTimeString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToLocaleString(t)).asReturnedValue();
+    return ctx->engine->newString(ToLocaleString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleDateString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToLocaleDateString(t)).asReturnedValue();
+    return ctx->engine->newString(ToLocaleDateString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toLocaleTimeString(SimpleCallContext *ctx)
 {
     double t = getThisDate(ctx);
-    return Value::fromString(ctx, ToLocaleTimeString(t)).asReturnedValue();
+    return ctx->engine->newString(ToLocaleTimeString(t))->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_valueOf(SimpleCallContext *ctx)
@@ -1242,7 +1242,7 @@ ReturnedValue DatePrototype::method_toUTCString(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     double t = self->value.asDouble();
-    return Value::fromString(ctx, ToUTCString(t)).asReturnedValue();
+    return ctx->engine->newString(ToUTCString(t))->asReturnedValue();
 }
 
 static void addZeroPrefixedInt(QString &str, int num, int nDigits)
@@ -1272,7 +1272,7 @@ ReturnedValue DatePrototype::method_toISOString(SimpleCallContext *ctx)
     int year = (int)YearFromTime(t);
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
-            return Value::fromString(ctx, QStringLiteral("Invalid Date")).asReturnedValue();
+            return ctx->engine->newString(QStringLiteral("Invalid Date"))->asReturnedValue();
         result += year < 0 ? '-' : '+';
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
@@ -1293,7 +1293,7 @@ ReturnedValue DatePrototype::method_toISOString(SimpleCallContext *ctx)
     addZeroPrefixedInt(result, msFromTime(t), 3);
     result += 'Z';
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue DatePrototype::method_toJSON(SimpleCallContext *ctx)
