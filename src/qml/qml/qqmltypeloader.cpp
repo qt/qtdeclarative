@@ -619,12 +619,10 @@ void QQmlDataBlob::tryDone()
 
         // Locking is not required here, as anyone expecting callbacks must
         // already be protected against the blob being completed (as set above);
-        if (m_data.isAsync()) {
 #ifdef DATABLOB_DEBUG
-            qWarning("QQmlDataBlob: Dispatching completed");
+        qWarning("QQmlDataBlob: Dispatching completed");
 #endif
-            m_manager->m_thread->callCompleted(this);
-        }
+        m_manager->m_thread->callCompleted(this);
 
         release();
     }
