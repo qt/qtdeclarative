@@ -83,7 +83,7 @@ ErrorObject::ErrorObject(InternalClass *ic)
     ScopedValue protectThis(scope, this);
 
     ScopedString s(scope, ic->engine->newString("Error"));
-    defineDefaultProperty(QStringLiteral("name"), s.asValue());
+    defineDefaultProperty(QStringLiteral("name"), s);
 }
 
 ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
@@ -100,13 +100,13 @@ ErrorObject::ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t)
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
 
     if (!message->isUndefined())
-        defineDefaultProperty(QStringLiteral("message"), *message);
+        defineDefaultProperty(QStringLiteral("message"), message);
     ScopedString s(scope);
-    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
     stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 }
@@ -127,11 +127,11 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, ErrorObject:
 
     ScopedValue v(scope, ic->engine->newString(message));
     defineDefaultProperty(QStringLiteral("message"), v);
-    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
     stackTrace = ic->engine->stackTrace();
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 }
@@ -149,7 +149,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     ScopedString s(scope);
 
     defineAccessorProperty(QStringLiteral("stack"), ErrorObject::method_get_stack, 0);
-    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())).asValue());
+    defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
     stackTrace = ic->engine->stackTrace();
     ExecutionEngine::StackFrame frame;
@@ -159,7 +159,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     stackTrace.prepend(frame);
 
     if (!stackTrace.isEmpty()) {
-        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)).asValue());
+        defineDefaultProperty(QStringLiteral("fileName"), (s = ic->engine->newString(stackTrace.at(0).source)));
         defineDefaultProperty(QStringLiteral("lineNumber"), Primitive::fromInt32(stackTrace.at(0).line));
     }
 
@@ -283,7 +283,7 @@ ErrorCtor::ErrorCtor(ExecutionContext *scope, const QString &name)
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return Encode(m->engine()->newErrorObject(v));
 }
 
@@ -301,7 +301,7 @@ EvalErrorCtor::EvalErrorCtor(ExecutionContext *scope)
 ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) EvalErrorObject(m->engine(), v))->asReturnedValue();
 }
 
@@ -314,7 +314,7 @@ RangeErrorCtor::RangeErrorCtor(ExecutionContext *scope)
 ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) RangeErrorObject(scope.engine, v))->asReturnedValue();
 }
 
@@ -327,7 +327,7 @@ ReferenceErrorCtor::ReferenceErrorCtor(ExecutionContext *scope)
 ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) ReferenceErrorObject(scope.engine, v))->asReturnedValue();
 }
 
@@ -340,7 +340,7 @@ SyntaxErrorCtor::SyntaxErrorCtor(ExecutionContext *scope)
 ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) SyntaxErrorObject(scope.engine, v))->asReturnedValue();
 }
 
@@ -353,7 +353,7 @@ TypeErrorCtor::TypeErrorCtor(ExecutionContext *scope)
 ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) TypeErrorObject(scope.engine, v))->asReturnedValue();
 }
 
@@ -366,19 +366,20 @@ URIErrorCtor::URIErrorCtor(ExecutionContext *scope)
 ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
-    ScopedValue v(scope, callData->argc ? callData->args[0] : Primitive::undefinedValue());
+    ScopedValue v(scope, callData->argument(0));
     return (new (m->engine()->memoryManager) URIErrorObject(scope.engine, v))->asReturnedValue();
 }
 
-void ErrorPrototype::init(ExecutionEngine *engine, const Value &ctor, Object *obj)
+void ErrorPrototype::init(ExecutionEngine *engine, ObjectRef ctor, Object *obj)
 {
     Scope scope(engine);
     ScopedString s(scope);
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(obj));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    obj->defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = obj));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    obj->defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     obj->defineDefaultProperty(engine->id_toString, method_toString, 0);
-    obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())).asValue());
+    obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())));
 }
 
 ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)

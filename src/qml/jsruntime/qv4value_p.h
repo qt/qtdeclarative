@@ -97,7 +97,7 @@ inline void Value::mark() const {
         m->mark();
 }
 
-inline Value Primitive::undefinedValue()
+inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
 #if QT_POINTER_SIZE == 8

@@ -293,13 +293,16 @@ FunctionPrototype::FunctionPrototype(InternalClass *ic)
 {
 }
 
-void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void FunctionPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    Scope scope(engine);
+    ScopedObject o(scope);
+
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
 
     defineReadonlyProperty(engine->id_length, Primitive::fromInt32(0));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);

@@ -1569,7 +1569,8 @@ QV4::ReturnedValue ConsoleObject::method_exception(SimpleCallContext *ctx)
 
 void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
 {
-    QV4::ExecutionEngine *v4 = globalObject->engine();
+    ExecutionEngine *v4 = globalObject->engine();
+    Scope scope(v4);
 
 #ifndef QT_NO_TRANSLATION
     globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), method_qsTranslate);
@@ -1583,15 +1584,14 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(QStringLiteral("print"), ConsoleObject::method_log);
     globalObject->defineDefaultProperty(QStringLiteral("gc"), method_gc);
 
-    Value console = QV4::Value::fromObject(new (v4->memoryManager) QV4::ConsoleObject(v4));
+    ScopedValue console(scope, new (v4->memoryManager) QV4::ConsoleObject(v4));
     globalObject->defineDefaultProperty(QStringLiteral("console"), console);
 
-    Value qt = QV4::Value::fromObject(new (v4->memoryManager) QV4::QtObject(v4, qmlEngine));
+    ScopedValue qt(scope, new (v4->memoryManager) QV4::QtObject(v4, qmlEngine));
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension
-    QV4::Object *stringProto = v4->stringClass->prototype;
-    stringProto->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
+    v4->stringClass->prototype->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
 }
 
 

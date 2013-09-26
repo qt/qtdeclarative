@@ -188,13 +188,16 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     return value.asReturnedValue();
 }
 
-void StringPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void StringPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
+    Scope scope(engine);
+    ScopedObject o(scope);
 
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
+
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(engine->id_valueOf, method_toString); // valueOf and toString are identical
     defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
@@ -334,8 +337,10 @@ ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
 
 ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
 {
+    Scope scope(context);
     const QString value = getThisString(context);
-    const QString that = (context->callData->argc ? context->callData->args[0] : Primitive::undefinedValue()).toQString();
+    ScopedValue v(scope, context->callData->argument(0));
+    const QString that = v->toQString();
     return Encode(QString::localeAwareCompare(value, that));
 }
 
@@ -347,7 +352,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
     Scope scope(context);
     ScopedString s(scope, context->callData->thisObject.toString(context));
 
-    ScopedValue regexp(scope, context->callData->argc ? context->callData->args[0] : Primitive::undefinedValue());
+    ScopedValue regexp(scope, context->callData->argument(0));
     Scoped<RegExpObject> rx(scope, regexp);
     if (!rx) {
         ScopedCallData callData(scope, 1);

@@ -1632,7 +1632,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         if (!proto)
             setupProto();
         ScopedString s(scope, engine->id_prototype);
-        defineDefaultProperty(s, Value::fromObject(proto));
+        defineDefaultProperty(s, ScopedObject(scope, proto));
     }
     ~QQmlXMLHttpRequestCtor()
     {}
@@ -1986,7 +1986,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
 
     Scoped<QQmlXMLHttpRequestCtor> ctor(scope, new (v4->memoryManager) QQmlXMLHttpRequestCtor(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
-    v4->globalObject->defineReadonlyProperty(s, ctor.asValue());
+    v4->globalObject->defineReadonlyProperty(s, ctor);
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

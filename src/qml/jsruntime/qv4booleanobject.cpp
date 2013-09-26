@@ -65,11 +65,13 @@ ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
     return Encode(value);
 }
 
-void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void BooleanPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(engine->id_valueOf, method_valueOf);
 }

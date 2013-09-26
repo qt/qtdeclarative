@@ -162,7 +162,7 @@ struct FunctionCtor: FunctionObject
 struct FunctionPrototype: FunctionObject
 {
     FunctionPrototype(InternalClass *ic);
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static ReturnedValue method_toString(SimpleCallContext *ctx);
     static ReturnedValue method_apply(SimpleCallContext *ctx);

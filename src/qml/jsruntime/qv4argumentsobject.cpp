@@ -172,7 +172,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
         setter->engine()->current->throwTypeError();
 
     assert(s->index < o->context->callData->argc);
-    o->context->callData->args[s->index] = callData->argc ? callData->args[0] : Primitive::undefinedValue();
+    o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
     return Primitive::undefinedValue().asReturnedValue();
 }
 

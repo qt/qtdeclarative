@@ -61,7 +61,7 @@ struct BooleanCtor: FunctionObject
 struct BooleanPrototype: BooleanObject
 {
     BooleanPrototype(InternalClass *ic): BooleanObject(ic) {}
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static ReturnedValue method_toString(SimpleCallContext *ctx);
     static ReturnedValue method_valueOf(SimpleCallContext *ctx);

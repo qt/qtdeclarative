@@ -70,26 +70,28 @@ ReturnedValue NumberCtor::call(Managed *, CallData *callData)
     return Primitive::fromDouble(dbl).asReturnedValue();
 }
 
-void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void NumberPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
 
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
+    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
+    ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
 
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
+    ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
     defineDefaultProperty(engine->id_valueOf, method_valueOf);

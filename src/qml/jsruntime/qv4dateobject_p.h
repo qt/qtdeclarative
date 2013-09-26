@@ -81,7 +81,7 @@ struct DateCtor: FunctionObject
 struct DatePrototype: DateObject
 {
     DatePrototype(InternalClass *ic): DateObject(ic) {}
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static double getThisDate(ExecutionContext *ctx);
 

@@ -241,8 +241,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     ExecutionContext *ctx = m->engine()->current;
     Scope scope(ctx);
 
-    ScopedValue r(scope, callData->argc > 0 ? callData->args[0] : Primitive::undefinedValue());
-    ScopedValue f(scope, callData->argc > 1 ? callData->args[1] : Primitive::undefinedValue());
+    ScopedValue r(scope, callData->argument(0));
+    ScopedValue f(scope, callData->argument(1));
     if (RegExpObject *re = r->as<RegExpObject>()) {
         if (!f->isUndefined())
             ctx->throwTypeError();
@@ -290,11 +290,14 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    Scope scope(engine);
+    ScopedObject o(scope);
+
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString, method_toString, 0);

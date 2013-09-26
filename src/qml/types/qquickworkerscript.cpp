@@ -288,14 +288,13 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 
     int id = ctx->callData->argc > 1 ? ctx->callData->args[1].toInt32() : 0;
 
-    QByteArray data = QV4::Serialize::serialize(ctx->callData->argc > 2 ? ctx->callData->args[2] : QV4::Primitive::undefinedValue(), engine);
+    QV4::Scope scope(ctx);
+    QV4::ScopedValue v(scope, ctx->callData->argument(2));
+    QByteArray data = QV4::Serialize::serialize(v, engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
-    if (!script)
-        return QV4::Encode::undefined();
-
-    if (script->owner)
+    if (script && script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
     return QV4::Encode::undefined();

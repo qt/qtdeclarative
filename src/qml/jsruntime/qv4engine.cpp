@@ -124,6 +124,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     jsStackBase = (SafeValue *)jsStack->base();
     jsStackTop = jsStackBase;
 
+    Scope scope(this);
+
     identifierTable = new IdentifierTable(this);
 
     emptyClass =  new (classPool.allocate(sizeof(InternalClass))) InternalClass(this);
@@ -277,15 +279,16 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(this)));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(this)));
+    ScopedObject o(scope);
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(this)));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);
-    globalObject->defineDefaultProperty(QStringLiteral("eval"), Value::fromObject(evalFunction));
+    globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
     globalObject->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
@@ -298,7 +301,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
-    Scope scope(this);
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
     thrower = newBuiltinFunction(rootContext, name, throwTypeError)->getPointer();
 }

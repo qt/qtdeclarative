@@ -101,27 +101,28 @@ ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
     return __qmljs_to_object(m->engine()->current, ValueRef(&callData->args[0]));
 }
 
-void ObjectPrototype::init(ExecutionEngine *v4, const Value &ctor)
+void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
 {
     Scope scope(v4);
+    ScopedObject o(scope);
 
-    ctor.objectValue()->defineReadonlyProperty(v4->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(v4->id_length, Primitive::fromInt32(1));
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("create"), method_create, 2);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("defineProperty"), method_defineProperty, 3);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("defineProperties"), method_defineProperties, 2);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("seal"), method_seal, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("freeze"), method_freeze, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("preventExtensions"), method_preventExtensions, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("isSealed"), method_isSealed, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("isFrozen"), method_isFrozen, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("isExtensible"), method_isExtensible, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("keys"), method_keys, 1);
+    ctor->defineReadonlyProperty(v4->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(v4->id_length, Primitive::fromInt32(1));
+    ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
+    ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
+    ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
+    ctor->defineDefaultProperty(QStringLiteral("create"), method_create, 2);
+    ctor->defineDefaultProperty(QStringLiteral("defineProperty"), method_defineProperty, 3);
+    ctor->defineDefaultProperty(QStringLiteral("defineProperties"), method_defineProperties, 2);
+    ctor->defineDefaultProperty(QStringLiteral("seal"), method_seal, 1);
+    ctor->defineDefaultProperty(QStringLiteral("freeze"), method_freeze, 1);
+    ctor->defineDefaultProperty(QStringLiteral("preventExtensions"), method_preventExtensions, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isSealed"), method_isSealed, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isFrozen"), method_isFrozen, 1);
+    ctor->defineDefaultProperty(QStringLiteral("isExtensible"), method_isExtensible, 1);
+    ctor->defineDefaultProperty(QStringLiteral("keys"), method_keys, 1);
 
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(v4->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(v4->id_valueOf, method_valueOf, 0);

@@ -90,7 +90,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         if (!o)
             v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        QV4::Value v = callData->argc ? callData->args[0] : QV4::Primitive::undefinedValue();
+        QV4::ScopedValue v(scope, callData->argument(0));
         return f->code(o->item, f->flag, v);
     }
 };

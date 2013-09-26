@@ -215,13 +215,13 @@ void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const Val
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::defineDefaultProperty(const StringRef name, Value value)
+void Object::defineDefaultProperty(const StringRef name, ValueRef value)
 {
     Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
-    pd->value = value;
+    pd->value = *value;
 }
 
-void Object::defineDefaultProperty(const QString &name, Value value)
+void Object::defineDefaultProperty(const QString &name, ValueRef value)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -236,7 +236,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Si
     ScopedString s(scope, e->newIdentifier(name));
     Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s, code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s, function.asValue());
+    defineDefaultProperty(s, function);
 }
 
 void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
@@ -245,7 +245,7 @@ void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(S
     Scope scope(e);
     Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, name, code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(name, function.asValue());
+    defineDefaultProperty(name, function);
 }
 
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
@@ -267,7 +267,7 @@ void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter
         p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
 }
 
-void Object::defineReadonlyProperty(const QString &name, Value value)
+void Object::defineReadonlyProperty(const QString &name, ValueRef value)
 {
     QV4::ExecutionEngine *e = engine();
     Scope scope(e);
@@ -275,10 +275,10 @@ void Object::defineReadonlyProperty(const QString &name, Value value)
     defineReadonlyProperty(s, value);
 }
 
-void Object::defineReadonlyProperty(const StringRef name, Value value)
+void Object::defineReadonlyProperty(const StringRef name, ValueRef value)
 {
     Property *pd = insertMember(name, Attr_ReadOnly);
-    pd->value = value;
+    pd->value = *value;
 }
 
 void Object::markObjects(Managed *that)

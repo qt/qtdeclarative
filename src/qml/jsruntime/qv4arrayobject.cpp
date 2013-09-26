@@ -91,12 +91,14 @@ ArrayPrototype::ArrayPrototype(InternalClass *ic)
 {
 }
 
-void ArrayPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void ArrayPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);

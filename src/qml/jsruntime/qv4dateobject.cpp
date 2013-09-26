@@ -701,17 +701,19 @@ ReturnedValue DateCtor::call(Managed *m, CallData *)
     return m->engine()->newString(ToString(t))->asReturnedValue();
 }
 
-void DatePrototype::init(ExecutionEngine *engine, const Value &ctor)
+void DatePrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(7));
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(7));
     LocalTZA = getLocalTZA();
 
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("UTC"), method_UTC, 7);
-    ctor.objectValue()->defineDefaultProperty(QStringLiteral("now"), method_now, 0);
+    ctor->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
+    ctor->defineDefaultProperty(QStringLiteral("UTC"), method_UTC, 7);
+    ctor->defineDefaultProperty(QStringLiteral("now"), method_now, 0);
 
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("toDateString"), method_toDateString, 0);
     defineDefaultProperty(QStringLiteral("toTimeString"), method_toTimeString, 0);

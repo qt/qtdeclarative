@@ -359,7 +359,7 @@ struct Q_QML_EXPORT Primitive : public Value
 {
     static Primitive fromBoolean(bool b);
     static Primitive fromInt32(int i);
-    static Value undefinedValue();
+    static Primitive undefinedValue();
     static Primitive nullValue();
     static Primitive fromDouble(double d);
     static Primitive fromUInt32(uint i);
