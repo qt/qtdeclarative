@@ -1764,37 +1764,48 @@ bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
-    bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
-                               event->button(), event->buttons(), event->modifiers());
-        mouseEvent.setAccepted(false);
+    if (grabber == this && d->stealMouse) {
+        // we are already the grabber and we do want the mouse event to ourselves.
+        return true;
+    }
 
-        switch (mouseEvent.type()) {
+    bool grabberDisabled = grabber && !grabber->isEnabled();
+    bool stealThisEvent = d->stealMouse;
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
+        QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
+        mouseEvent->setAccepted(false);
+
+        switch (mouseEvent->type()) {
         case QEvent::MouseMove:
-            d->handleMouseMoveEvent(&mouseEvent);
+            d->handleMouseMoveEvent(mouseEvent.data());
             break;
         case QEvent::MouseButtonPress:
-            d->handleMousePressEvent(&mouseEvent);
+            d->handleMousePressEvent(mouseEvent.data());
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
         case QEvent::MouseButtonRelease:
-            d->handleMouseReleaseEvent(&mouseEvent);
+            d->handleMouseReleaseEvent(mouseEvent.data());
             break;
         default:
             break;
         }
         grabber = c->mouseGrabberItem();
-        if (grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this)
+        if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
             grabMouse();
+        }
 
-        return d->stealMouse;
+        const bool filtered = stealThisEvent || grabberDisabled;
+        if (filtered) {
+            event->setAccepted(false);
+        }
+        return filtered;
     } else if (d->timer.isValid()) {
         d->timer.invalidate();
         d->fixOffset();
     }
-    if (event->type() == QEvent::MouseButtonRelease)
+    if (event->type() == QEvent::MouseButtonRelease || (grabber && grabber->keepMouseGrab() && !grabberDisabled)) {
         d->stealMouse = false;
+    }
     return false;
 }
 
