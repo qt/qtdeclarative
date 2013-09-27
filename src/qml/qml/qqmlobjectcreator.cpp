@@ -586,7 +586,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             QString stringValue = binding->valueAsString(&qmlUnit->header);
             if (property->isVarProperty()) {
                 QV4::ScopedString s(scope, v4->newString(stringValue));
-                _vmeMetaObject->setVMEProperty(property->coreIndex, s.asValue());
+                _vmeMetaObject->setVMEProperty(property->coreIndex, s);
             } else {
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 argv[0] = &value;

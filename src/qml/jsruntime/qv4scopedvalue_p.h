@@ -370,6 +370,8 @@ struct ScopedCallData {
         ptr->argc = argc;
 #ifndef QT_NO_DEBUG
         scope.size += size;
+        for (int ii = 0; ii < qMax(argc, (int)QV4::Global::ReservedArgumentCount); ++ii)
+            ptr->args[ii] = QV4::Primitive::undefinedValue();
 #endif
     }
 

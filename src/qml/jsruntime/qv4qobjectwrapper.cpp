@@ -473,7 +473,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, *value);
+        vmemo->setVMEProperty(result->coreIndex, value);
         return true;
     }
 
@@ -517,7 +517,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     } else if (result->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, *value);
+        vmemo->setVMEProperty(result->coreIndex, value);
     } else {
         QVariant v;
         if (result->isQList())

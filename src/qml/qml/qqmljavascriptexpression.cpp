@@ -123,22 +123,26 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::Value &function, bool *isUndefined)
+                                   const QV4::ValueRef function, bool *isUndefined)
 {
-    return evaluate(context, function, 0, 0, isUndefined);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(context->engine);
+    QV4::Scope scope(v4);
+    QV4::ScopedCallData callData(scope, 0);
+
+    return evaluate(context, function, callData, isUndefined);
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::Value &function,
-                                   int argc, QV4::Value *args,
+                                   const QV4::ValueRef function,
+                                   QV4::CallData *callData,
                                    bool *isUndefined)
 {
     Q_ASSERT(context && context->engine);
 
-    if (function.isUndefined()) {
+    if (function->isUndefined()) {
         if (isUndefined)
             *isUndefined = true;
-        return QV4::Primitive::undefinedValue().asReturnedValue();
+        return QV4::Encode::undefined();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -165,7 +169,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
     try {
-        QV4::ScopedCallData callData(scope, argc);
         callData->thisObject = ep->v8engine()->global();
         if (scopeObject() && requiresThisObject()) {
             QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->engine, scopeObject()));
@@ -173,8 +176,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                 callData->thisObject = value;
         }
 
-        memcpy(callData->args, args, argc*sizeof(QV4::Value));
-        result = function.asFunctionObject()->call(callData);
+        result = function->asFunctionObject()->call(callData);
 
         if (isUndefined)
             *isUndefined = result->isUndefined();

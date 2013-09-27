@@ -296,12 +296,12 @@ static QVariant variantFromString(const QString &string)
 
 #define QML_STORE_VAR(name, value) \
     QML_BEGIN_INSTR(name) \
-        QV4::Value v4value = value; \
+        QV4::ValueRef valueref = value; \
         QObject *target = objects.top(); \
         CLEAN_PROPERTY(target, instr.propertyIndex); \
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(target); \
         Q_ASSERT(vmemo); \
-        vmemo->setVMEProperty(instr.propertyIndex, v4value); \
+        vmemo->setVMEProperty(instr.propertyIndex, valueref); \
     QML_END_INSTR(name)
 
 #define QML_STORE_POINTER(name, value) \
@@ -339,6 +339,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
     QQmlEngine *engine = states.at(0).context->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    QV4::ExecutionEngine *v4 = ep->v4engine();
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue tmpValue(valueScope);
 
     int status = -1; // needed for dbus
     QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::BypassInterceptor |
@@ -372,7 +375,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         // Store a created object in a property.  These all pop from the objects stack.
         QML_STORE_VALUE(StoreObject, QObject *, objects.pop());
         QML_STORE_VALUE(StoreVariantObject, QVariant, QVariant::fromValue(objects.pop()));
-        QML_STORE_VAR(StoreVarObject, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop())));
+        QML_STORE_VAR(StoreVarObject, (tmpValue = QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop())));
 
         // Store a literal value in a corresponding property
         QML_STORE_VALUE(StoreFloat, float, instr.value);
@@ -420,7 +423,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         // Store a literal value in a var property.
         // We deliberately do not use string converters here
-        QML_STORE_VAR(StoreVar, QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
+        QML_STORE_VAR(StoreVar, (tmpValue = ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
         QML_STORE_VAR(StoreVarInteger, QV4::Primitive::fromInt32(instr.value));
         QML_STORE_VAR(StoreVarDouble, QV4::Primitive::fromDouble(instr.value));
         QML_STORE_VAR(StoreVarBool, QV4::Primitive::fromBoolean(instr.value));

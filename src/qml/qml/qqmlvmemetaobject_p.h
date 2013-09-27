@@ -168,7 +168,7 @@ public:
     quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, QV4::ValueRef function);
     QV4::ReturnedValue vmeProperty(int index);
-    void setVMEProperty(int index, const QV4::Value &v);
+    void setVMEProperty(int index, const QV4::ValueRef v);
 
     void connectAliasSignal(int index, bool indexInSignalRange);
 
@@ -220,7 +220,7 @@ public:
     QV4::ReturnedValue method(int);
 
     QV4::ReturnedValue readVarProperty(int);
-    void writeVarProperty(int, const QV4::Value &);
+    void writeVarProperty(int, const QV4::ValueRef);
     QVariant readPropertyAsVariant(int);
     void writeProperty(int, const QVariant &);
 

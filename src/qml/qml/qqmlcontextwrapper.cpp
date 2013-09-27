@@ -105,23 +105,26 @@ QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
     return !!c ? c->getContext() : 0;
 }
 
-QQmlContextData *QmlContextWrapper::getContext(const Value &value)
+QQmlContextData *QmlContextWrapper::getContext(const ValueRef value)
 {
-    QV4::ExecutionEngine *v4 = value.engine();
+    QV4::ExecutionEngine *v4 = value->engine();
     if (!v4)
         return 0;
 
     Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, value.as<QmlContextWrapper>());
+    QV4::Scoped<QmlContextWrapper> c(scope, value);
 
-    return !!c ? c->getContext():0;
+    return c ? c->getContext() : 0;
 }
 
-void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
+void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
 {
-    Object *o = qmlglobal.asObject();
-    QmlContextWrapper *c = o ? o->as<QmlContextWrapper>() : 0;
-    assert(c);
+    QV4::ExecutionEngine *v4 = qmlglobal->engine();
+    Q_ASSERT(v4);
+
+    Scope scope(v4);
+    QV4::Scoped<QmlContextWrapper> c(scope, qmlglobal);
+    Q_ASSERT(c);
     c->ownsContext = true;
 }
 
