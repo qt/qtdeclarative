@@ -13,6 +13,7 @@ Item {
             bottomMargin: 20
             leftMargin: 40
             rightMargin: 20
+            highlightMoveVelocity: 100000
             anchors.fill: parent
 
             model: 20
