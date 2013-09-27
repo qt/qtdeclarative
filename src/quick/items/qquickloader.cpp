@@ -569,13 +569,14 @@ void QQuickLoader::setSource(QQmlV4Function *args)
 
     bool ipvError = false;
     args->setReturnValue(QV4::Encode::undefined());
-    QV4::Value ipv = d->extractInitialPropertyValues(args, this, &ipvError);
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue ipv(scope, d->extractInitialPropertyValues(args, this, &ipvError));
     if (ipvError)
         return;
 
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
-    if (!ipv.isUndefined()) {
+    if (!ipv->isUndefined()) {
         d->disposeInitialPropertyValues();
         d->initialPropertyValues = ipv.asReturnedValue();
         d->qmlGlobalForIpv = args->qmlGlobal();
@@ -937,7 +938,7 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
     return context->resolvedUrl(QUrl(arg));
 }
 
-QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
+QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
@@ -952,7 +953,7 @@ QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *arg
         }
     }
 
-    return valuemap;
+    return valuemap.asReturnedValue();
 }
 
 #include <moc_qquickloader_p.cpp>

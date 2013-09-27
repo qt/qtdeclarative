@@ -2261,7 +2261,7 @@ void tst_qqmlecmascript::regExpBug()
     }
 }
 
-static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const char *source)
+static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2288,7 +2288,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
 }
 
 static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
-                                  const char *source, const QV4::Value &result)
+                                  const char *source, const QV4::ValueRef result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2305,19 +2305,18 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
             return false;
 
         QV4::ScopedValue value(scope);
-        QV4::ScopedValue res(scope, result);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
         value = function->call(d);
-        return __qmljs_strict_equal(value, res);
+        return __qmljs_strict_equal(value, result);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
     return false;
 }
 
-static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
+static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,
                                              const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
@@ -2331,16 +2330,15 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
     try {
         QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
-            return QV4::Primitive::undefinedValue();
+            return QV4::Encode::undefined();
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
-        QV4::ScopedValue value(scope, function->call(d));
-        return value;
+        return function->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
-    return QV4::Primitive::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
@@ -2359,7 +2357,8 @@ void tst_qqmlecmascript::callQtInvokables()
     QV8Engine *engine = ep->v8engine();
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
+    QV4::ScopedValue qobjectwrapper(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
+    QV4::ScopedValue object(scope, qobjectwrapper);
 
     // Non-existent methods
     o->reset();
@@ -2434,8 +2433,7 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QObject()"));
-    QV4::QObjectWrapper *qobjectWrapper = ret->as<QV4::QObjectWrapper>();
+    QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, EVALUATE("object.method_NoArgs_QObject()"));
     QVERIFY(qobjectWrapper);
     QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
@@ -2451,16 +2449,16 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::Value ret = EVALUATE("object.method_NoArgs_QScriptValue()");
-    QVERIFY(ret.isString());
-    QCOMPARE(ret.toQStringNoThrow(), QString("Hello world"));
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QScriptValue()"));
+    QVERIFY(ret->isString());
+    QCOMPARE(ret->toQStringNoThrow(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);
     }
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::Value::fromReturnedValue(engine->toString("QML rocks"))));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::ScopedValue(scope, engine->toString("QML rocks"))));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 7);
     QCOMPARE(o->actuals().count(), 0);

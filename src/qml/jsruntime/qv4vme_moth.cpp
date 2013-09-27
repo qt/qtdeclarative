@@ -214,7 +214,7 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
                     : (param.isLocal() ? static_cast<QV4::CallContext *>(context)->locals + param.index \
                                        : getValueRef(context, stack, param)))
 #else
-# define VALUE(param) *getValueRef(context, stack, param, stackSize)
+# define VALUE(param) (*getValueRef(context, stack, param, stackSize))
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
 #endif
 #define STOREVALUE(param, value) VALUE(param) = QV4::Value::fromReturnedValue((value))
@@ -325,7 +325,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
             }
         }
 #endif // DO_TRACE_INSTR
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -335,7 +335,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -344,7 +344,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -354,7 +354,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
         TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -470,7 +470,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -479,7 +479,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -489,7 +489,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
         TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
-        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
         callData->argc = instr.argc;
@@ -521,28 +521,27 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(AddNumberParams)
-        QV4::Value lhs = VALUE(instr.lhs);
-        QV4::Value rhs = VALUE(instr.rhs);
-        VALUEPTR(instr.result)->setDouble(lhs.asDouble() + rhs.asDouble());
+        double lhs = VALUE(instr.lhs).asDouble();
+        double rhs = VALUE(instr.rhs).asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs + rhs);
     MOTH_END_INSTR(AddNumberParams)
 
     MOTH_BEGIN_INSTR(MulNumberParams)
-        QV4::Value lhs = VALUE(instr.lhs);
-        QV4::Value rhs = VALUE(instr.rhs);
-        VALUEPTR(instr.result)->setDouble(lhs.asDouble() * rhs.asDouble());
+        double lhs = VALUE(instr.lhs).asDouble();
+        double rhs = VALUE(instr.rhs).asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs * rhs);
     MOTH_END_INSTR(MulNumberParams)
 
     MOTH_BEGIN_INSTR(SubNumberParams)
-        QV4::Value lhs = VALUE(instr.lhs);
-        QV4::Value rhs = VALUE(instr.rhs);
-        VALUEPTR(instr.result)->setDouble(lhs.asDouble() - rhs.asDouble());
+        double lhs = VALUE(instr.lhs).asDouble();
+        double rhs = VALUE(instr.rhs).asDouble();
+        VALUEPTR(instr.result)->setDouble(lhs - rhs);
     MOTH_END_INSTR(SubNumberParams)
 
     MOTH_BEGIN_INSTR(Ret)
         context->engine->stackPop(stackSize);
-        QV4::Value &result = VALUE(instr.result);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
-        return result.asReturnedValue();
+        return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(LoadThis)

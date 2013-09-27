@@ -1240,7 +1240,7 @@ public:
         Q_ASSERT(thisObject);
 
         QQmlData *otherDData = QQmlData::get(other);
-        assert(otherDData);
+        Q_ASSERT(otherDData);
 
         QV4::ScopedValue v(scope, otherDData->jsWrapper.value());
         thisObject->defineDefaultProperty(QStringLiteral("autoTestStrongRef"), v);
