@@ -122,7 +122,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
     defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
 }
 
-uint ArrayPrototype::getLength(ExecutionContext *ctx, Object *o)
+uint ArrayPrototype::getLength(ExecutionContext *ctx, ObjectRef o)
 {
     if (o->isArrayObject())
         return o->arrayLength();
@@ -159,7 +159,7 @@ ReturnedValue ArrayPrototype::method_toLocaleString(SimpleCallContext *ctx)
 ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
+    ScopedObject result(scope, ctx->engine->newArrayObject());
 
     ScopedObject thisObject(scope, ctx->callData->thisObject.toObject(ctx));
     ScopedArrayObject instance(scope, thisObject);
@@ -175,7 +175,7 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
         if (elt)
             result->arrayConcat(elt.getPointer());
         else
-            result->arraySet(getLength(ctx, result.getPointer()), ctx->callData->args[i]);
+            result->arraySet(getLength(ctx, result), ctx->callData->args[i]);
     }
 
     return result.asReturnedValue();
@@ -240,7 +240,7 @@ ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     if (!len) {
         if (!instance->isArrayObject())
@@ -262,7 +262,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     if (len + ctx->callData->argc < len) {
         // ughh...
@@ -314,7 +314,7 @@ ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint length = getLength(ctx, instance.getPointer());
+    uint length = getLength(ctx, instance);
 
     int lo = 0, hi = length - 1;
 
@@ -340,7 +340,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     if (!len) {
         if (!instance->isArrayObject())
@@ -396,7 +396,7 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
     ScopedObject o(scope, ctx->callData->thisObject.toObject(ctx));
 
     Scoped<ArrayObject> result(scope, ctx->engine->newArrayObject());
-    uint len = getLength(ctx, o.getPointer());
+    uint len = getLength(ctx, o);
     double s = ScopedValue(scope, ctx->argument(0))->toInteger();
     uint start;
     if (s < 0)
@@ -434,7 +434,7 @@ ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     ScopedValue comparefn(scope, ctx->argument(0));
     instance->arraySort(ctx, instance, comparefn, len);
@@ -445,7 +445,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<ArrayObject> newArray(scope, ctx->engine->newArrayObject());
 
@@ -505,7 +505,7 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     ScopedValue v(scope);
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
@@ -556,7 +556,7 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     Scope scope(ctx);
 
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
     if (!len)
         return Encode(-1);
 
@@ -596,7 +596,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
     Scope scope(ctx);
 
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
     if (!len)
         return Encode(-1);
 
@@ -636,7 +636,7 @@ ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -668,7 +668,7 @@ ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -700,7 +700,7 @@ ReturnedValue ArrayPrototype::method_forEach(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -729,7 +729,7 @@ ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -764,7 +764,7 @@ ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -803,7 +803,7 @@ ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)
@@ -851,7 +851,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
 
-    uint len = getLength(ctx, instance.getPointer());
+    uint len = getLength(ctx, instance);
 
     Scoped<FunctionObject> callback(scope, ctx->argument(0));
     if (!callback)

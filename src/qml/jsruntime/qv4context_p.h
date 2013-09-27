@@ -114,9 +114,9 @@ struct Q_QML_EXPORT ExecutionContext
 
     CallContext *newCallContext(void *stackSpace, Value *locals, FunctionObject *f, CallData *callData);
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
-    WithContext *newWithContext(Object *with);
+    WithContext *newWithContext(ObjectRef with);
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
-    CallContext *newQmlContext(FunctionObject *f, Object *qml);
+    CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
 
     String * const *formals() const;
     unsigned int formalCount() const;
@@ -140,7 +140,7 @@ struct Q_QML_EXPORT ExecutionContext
     void setProperty(const StringRef name, const ValueRef value);
     ReturnedValue getProperty(const StringRef name);
     ReturnedValue getPropertyNoThrow(const StringRef name);
-    ReturnedValue getPropertyAndBase(const StringRef name, Object **base);
+    ReturnedValue getPropertyAndBase(const StringRef name, ObjectRef base);
     bool deleteProperty(const StringRef name);
 
     void mark();
@@ -160,7 +160,7 @@ struct SimpleCallContext : public ExecutionContext
 
 struct CallContext : public SimpleCallContext
 {
-    void initQmlContext(ExecutionContext *parentContext, Object *qml, QV4::FunctionObject *function);
+    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
     bool needsOwnArguments() const;
 
     Value *locals;
@@ -186,7 +186,7 @@ struct WithContext : public ExecutionContext
 {
     Object *withObject;
 
-    void initWithContext(ExecutionContext *p, Object *with);
+    void initWithContext(ExecutionContext *p, ObjectRef with);
 };
 
 inline CallContext *ExecutionContext::asCallContext()

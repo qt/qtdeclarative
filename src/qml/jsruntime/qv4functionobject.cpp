@@ -328,7 +328,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
 
     ScopedValue arg(scope, ctx->argument(1));
 
-    Scoped<Object> arr(scope, arg);
+    ScopedObject arr(scope, arg);
 
     quint32 len;
     if (!arr) {
@@ -338,7 +338,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
             return Encode::undefined();
         }
     } else {
-        len = ArrayPrototype::getLength(ctx, arr.getPointer());
+        len = ArrayPrototype::getLength(ctx, arr);
     }
 
     ScopedCallData callData(scope, len);

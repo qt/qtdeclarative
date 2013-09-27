@@ -959,18 +959,16 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(context);
 
-    Object *base;
-    ScopedValue func(scope, context->getPropertyAndBase(name, &base));
+    ScopedObject base(scope);
+    ScopedValue func(scope, context->getPropertyAndBase(name, base));
     if (base)
         callData->thisObject = base;
 
     FunctionObject *o = func->asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
-        if (base) {
-            ScopedValue b(scope, base);
-            objectAsString = b->toQStringNoThrow();
-        }
+        if (base)
+            objectAsString = ScopedValue(scope, base.asReturnedValue())->toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         context->throwTypeError(msg);
     }
@@ -1148,7 +1146,8 @@ QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, con
 
 ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionContext *ctx)
 {
-    Object *obj = o->toObject(ctx);
+    Scope scope(ctx);
+    ScopedObject obj(scope, o->toObject(ctx));
     return ctx->newWithContext(obj);
 }
 

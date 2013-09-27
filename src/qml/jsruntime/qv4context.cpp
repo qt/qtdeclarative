@@ -135,7 +135,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
     return c;
 }
 
-WithContext *ExecutionContext::newWithContext(Object *with)
+WithContext *ExecutionContext::newWithContext(ObjectRef with)
 {
     WithContext *w = static_cast<WithContext *>(engine->memoryManager->allocContext(sizeof(WithContext)));
     engine->current = w;
@@ -151,7 +151,7 @@ CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const 
     return c;
 }
 
-CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
+CallContext *ExecutionContext::newQmlContext(FunctionObject *f, ObjectRef qml)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(f, 0)));
 
@@ -168,7 +168,7 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
     Scope scope(this);
 
     // find the right context to create the binding on
-    Object *activation = engine->globalObject;
+    ScopedObject activation(scope, engine->globalObject);
     ExecutionContext *ctx = this;
     while (ctx) {
         if (ctx->type >= Type_CallContext) {
@@ -220,7 +220,7 @@ void GlobalContext::initGlobalContext(ExecutionEngine *eng)
     global = 0;
 }
 
-void WithContext::initWithContext(ExecutionContext *p, Object *with)
+void WithContext::initWithContext(ExecutionContext *p, ObjectRef with)
 {
     initBaseContext(Type_WithContext, p->engine, p);
     callData = p->callData;
@@ -228,7 +228,7 @@ void WithContext::initWithContext(ExecutionContext *p, Object *with)
     lookups = p->lookups;
     compilationUnit = p->compilationUnit;
 
-    withObject = with;
+    withObject = with.getPointer();
 }
 
 void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
@@ -244,7 +244,7 @@ void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarNam
     this->exceptionValue = exceptionValue;
 }
 
-void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, FunctionObject *function)
+void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml, FunctionObject *function)
 {
     initBaseContext(Type_QmlContext, parentContext->engine, parentContext);
 
@@ -261,7 +261,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, Object *qml, F
     assert(outer->next != (ExecutionContext *)0x1);
 #endif
 
-    activation = qml;
+    activation = qml.getPointer();
 
     if (function->function) {
         compilationUnit = function->function->compilationUnit;
@@ -357,7 +357,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
     Scope scope(this);
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
-            Object *w = static_cast<WithContext *>(ctx)->withObject;
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
             if (w->__hasProperty__(name)) {
                 w->put(name, value);
                 return;
@@ -366,7 +366,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             static_cast<CatchContext *>(ctx)->exceptionValue = *value;
             return;
         } else {
-            Object *activation = 0;
+            ScopedObject activation(scope, (Object *)0);
             if (ctx->type >= Type_CallContext) {
                 CallContext *c = static_cast<CallContext *>(ctx);
                 for (unsigned int i = 0; i < c->function->varCount; ++i)
@@ -410,7 +410,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
-            Object *w = static_cast<WithContext *>(ctx)->withObject;
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
             hasWith = true;
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
@@ -475,7 +475,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
     bool hasCatchScope = false;
     for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
         if (ctx->type == Type_WithContext) {
-            Object *w = static_cast<WithContext *>(ctx)->withObject;
+            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
             hasWith = true;
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
@@ -525,11 +525,11 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
     return Encode::undefined();
 }
 
-ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, Object **base)
+ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectRef base)
 {
     Scope scope(this);
     ScopedValue v(scope);
-    *base = 0;
+    base = (Object *)0;
     name->makeIdentifier();
 
     if (name->isEqualTo(engine->id_this))
@@ -544,7 +544,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, Object 
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
             if (hasProperty) {
-                *base = w;
+                base = w;
                 return v.asReturnedValue();
             }
             continue;
@@ -573,7 +573,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, Object 
                 v = c->activation->get(name, &hasProperty);
                 if (hasProperty) {
                     if (ctx->type == Type_QmlContext)
-                        *base = c->activation;
+                        base = c->activation;
                     return v.asReturnedValue();
                 }
             }

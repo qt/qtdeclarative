@@ -268,13 +268,15 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
     if (query.prepare(sql)) {
         if (ctx->callData->argc > 1) {
             ScopedValue values(scope, ctx->callData->args[1]);
-            if (ArrayObject *array = values->asArrayObject()) {
+            if (values->asArrayObject()) {
+                ScopedArrayObject array(scope, values);
                 quint32 size = array->arrayLength();
                 QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii)
                     query.bindValue(ii, engine->toVariant((v = array->getIndexed(ii)), -1));
-            } else if (Object *object = values->asObject()) {
-                ObjectIterator it(object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
+            } else if (values->asObject()) {
+                ScopedObject object(scope, values);
+                ObjectIterator it(object.getPointer(), ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);
                 while (1) {
                     Value value;

@@ -54,9 +54,9 @@ struct ExecutionContext;
 struct QmlBindingWrapper : FunctionObject {
     Q_MANAGED
 
-    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
+    QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-    QmlBindingWrapper(ExecutionContext *scope, Object *qml);
+    QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml);
 
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m);

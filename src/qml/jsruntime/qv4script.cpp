@@ -60,7 +60,7 @@
 
 using namespace QV4;
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml)
+QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml)
     : FunctionObject(scope, scope->engine->id_eval)
     , qml(qml)
 {
@@ -75,7 +75,7 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     scope->engine->popContext();
 }
 
-QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Object *qml)
+QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
     : FunctionObject(scope, scope->engine->id_eval)
     , qml(qml)
 {
@@ -250,7 +250,7 @@ ReturnedValue Script::run()
 
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
-        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj.getPointer());
+        FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj);
         ScopedCallData callData(valueScope, 0);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -271,7 +271,7 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->engine;
     Scope valueScope(v4);
     ScopedObject qmlObj(valueScope, qml.value());
-    ScopedObject v(valueScope, new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj.getPointer()));
+    ScopedObject v(valueScope, new (v4->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj));
     return v.asReturnedValue();
 }
 
