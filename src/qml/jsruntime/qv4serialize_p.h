@@ -65,11 +65,11 @@ namespace QV4 {
 class Serialize {
 public:
 
-    static QByteArray serialize(const Value &, QV8Engine *);
+    static QByteArray serialize(const ValueRef, QV8Engine *);
     static ReturnedValue deserialize(const QByteArray &, QV8Engine *);
 
 private:
-    static void serialize(QByteArray &, const Value &, QV8Engine *);
+    static void serialize(QByteArray &, const ValueRef, QV8Engine *);
     static ReturnedValue deserialize(const char *&, QV8Engine *);
 };
 

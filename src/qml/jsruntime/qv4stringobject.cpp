@@ -357,7 +357,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        rx = Value::fromReturnedValue(context->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
+        rx = context->engine->regExpCtor.asFunctionObject()->construct(callData);
     }
 
     if (!rx)

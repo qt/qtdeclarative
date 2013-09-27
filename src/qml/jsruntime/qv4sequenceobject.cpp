@@ -347,25 +347,25 @@ public:
 
     struct CompareFunctor
     {
-        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
+        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::ValueRef compareFn)
             : m_ctx(ctx), m_compareFn(compareFn)
         {}
 
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
-            QV4::Managed *fun = this->m_compareFn.asManaged();
-            Scope scope(fun->engine());
+            QV4::Scope scope(m_ctx);
+            ScopedObject compare(scope, m_compareFn);
             ScopedCallData callData(scope, 2);
             callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);
-            callData->thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
-            QV4::ScopedValue result(scope, fun->call(callData));
+            callData->thisObject = this->m_ctx->engine->globalObject;
+            QV4::ScopedValue result(scope, compare->call(callData));
             return result->toNumber() < 0;
         }
 
     private:
         QV4::ExecutionContext *m_ctx;
-        QV4::Value m_compareFn;
+        QV4::ValueRef m_compareFn;
     };
 
     void sort(QV4::SimpleCallContext *ctx)
@@ -376,9 +376,9 @@ public:
             loadReference();
         }
 
+        QV4::Scope scope(ctx);
         if (ctx->callData->argc == 1 && ctx->callData->args[0].asFunctionObject()) {
-            QV4::Value compareFn = ctx->callData->args[0];
-            CompareFunctor cf(ctx, compareFn);
+            CompareFunctor cf(ctx, ctx->callData->args[0]);
             std::sort(m_container.begin(), m_container.end(), cf);
         } else {
             DefaultCompareFunctor cf;
@@ -648,7 +648,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         return qMetaTypeId<SequenceType>(); \
     } else
 
-int SequencePrototype::metaTypeForSequence(QV4::Object *object)
+int SequencePrototype::metaTypeForSequence(QV4::ObjectRef object)
 {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
     /*else*/ {
