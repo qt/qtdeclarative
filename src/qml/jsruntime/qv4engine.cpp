@@ -82,7 +82,7 @@ static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
@@ -100,6 +100,8 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     , m_qmlExtensions(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
+
+    exceptionValue = Encode::undefined();
 
     if (!factory) {
 
@@ -119,8 +121,10 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
 
     // reserve 8MB for the JS stack
     *jsStack = WTF::PageAllocation::allocate(8*1024*1024, WTF::OSAllocator::JSVMStackPages, true);
-    jsStackBase = (Value *)jsStack->base();
+    jsStackBase = (SafeValue *)jsStack->base();
     jsStackTop = jsStackBase;
+
+    Scope scope(this);
 
     identifierTable = new IdentifierTable(this);
 
@@ -218,21 +222,21 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     SequencePrototype *sequencePrototype = new (memoryManager) SequencePrototype(arrayClass->changePrototype(arrayPrototype));
     sequenceClass = emptyClass->changePrototype(sequencePrototype);
 
-    objectCtor = Value::fromObject(new (memoryManager) ObjectCtor(rootContext));
-    stringCtor = Value::fromObject(new (memoryManager) StringCtor(rootContext));
-    numberCtor = Value::fromObject(new (memoryManager) NumberCtor(rootContext));
-    booleanCtor = Value::fromObject(new (memoryManager) BooleanCtor(rootContext));
-    arrayCtor = Value::fromObject(new (memoryManager) ArrayCtor(rootContext));
-    functionCtor = Value::fromObject(new (memoryManager) FunctionCtor(rootContext));
-    dateCtor = Value::fromObject(new (memoryManager) DateCtor(rootContext));
-    regExpCtor = Value::fromObject(new (memoryManager) RegExpCtor(rootContext));
-    errorCtor = Value::fromObject(new (memoryManager) ErrorCtor(rootContext));
-    evalErrorCtor = Value::fromObject(new (memoryManager) EvalErrorCtor(rootContext));
-    rangeErrorCtor = Value::fromObject(new (memoryManager) RangeErrorCtor(rootContext));
-    referenceErrorCtor = Value::fromObject(new (memoryManager) ReferenceErrorCtor(rootContext));
-    syntaxErrorCtor = Value::fromObject(new (memoryManager) SyntaxErrorCtor(rootContext));
-    typeErrorCtor = Value::fromObject(new (memoryManager) TypeErrorCtor(rootContext));
-    uRIErrorCtor = Value::fromObject(new (memoryManager) URIErrorCtor(rootContext));
+    objectCtor = new (memoryManager) ObjectCtor(rootContext);
+    stringCtor = new (memoryManager) StringCtor(rootContext);
+    numberCtor = new (memoryManager) NumberCtor(rootContext);
+    booleanCtor = new (memoryManager) BooleanCtor(rootContext);
+    arrayCtor = new (memoryManager) ArrayCtor(rootContext);
+    functionCtor = new (memoryManager) FunctionCtor(rootContext);
+    dateCtor = new (memoryManager) DateCtor(rootContext);
+    regExpCtor = new (memoryManager) RegExpCtor(rootContext);
+    errorCtor = new (memoryManager) ErrorCtor(rootContext);
+    evalErrorCtor = new (memoryManager) EvalErrorCtor(rootContext);
+    rangeErrorCtor = new (memoryManager) RangeErrorCtor(rootContext);
+    referenceErrorCtor = new (memoryManager) ReferenceErrorCtor(rootContext);
+    syntaxErrorCtor = new (memoryManager) SyntaxErrorCtor(rootContext);
+    typeErrorCtor = new (memoryManager) TypeErrorCtor(rootContext);
+    uRIErrorCtor = new (memoryManager) URIErrorCtor(rootContext);
 
     objectPrototype->init(this, objectCtor);
     stringPrototype->init(this, stringCtor);
@@ -258,7 +262,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     //
     globalObject = newObject()->getPointer();
     rootContext->global = globalObject;
-    rootContext->thisObject = Value::fromObject(globalObject);
+    rootContext->callData->thisObject = globalObject;
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);
@@ -275,15 +279,16 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), Value::fromObject(new (memoryManager) MathObject(this)));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), Value::fromObject(new (memoryManager) JsonObject(this)));
+    ScopedObject o(scope);
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = new (memoryManager) MathObject(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = new (memoryManager) JsonObject(this)));
 
-    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Value::undefinedValue());
-    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
-    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
+    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
+    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
+    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
     evalFunction = new (memoryManager) EvalFunction(rootContext);
-    globalObject->defineDefaultProperty(QStringLiteral("eval"), Value::fromObject(evalFunction));
+    globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
     globalObject->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
@@ -296,7 +301,6 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
-    Scope scope(this);
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
     thrower = newBuiltinFunction(rootContext, name, throwTypeError)->getPointer();
 }
@@ -333,7 +337,7 @@ void ExecutionEngine::enableDebugger()
 
 void ExecutionEngine::initRootContext()
 {
-    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext)));
+    rootContext = static_cast<GlobalContext *>(memoryManager->allocContext(sizeof(GlobalContext) + sizeof(CallData)));
     current = rootContext;
     current->parent = 0;
     rootContext->initGlobalContext(this);
@@ -383,9 +387,9 @@ Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
     return object->asReturned<Object>();
 }
 
-String *ExecutionEngine::newString(const QString &s)
+Returned<String> *ExecutionEngine::newString(const QString &s)
 {
-    return new (memoryManager) String(this, s);
+    return (new (memoryManager) String(this, s))->asReturned<String>();
 }
 
 String *ExecutionEngine::newIdentifier(const QString &text)
@@ -393,7 +397,7 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Returned<Object> *ExecutionEngine::newStringObject(const Value &value)
+Returned<Object> *ExecutionEngine::newStringObject(const ValueRef value)
 {
     StringObject *object = new (memoryManager) StringObject(this, value);
     return object->asReturned<Object>();
@@ -473,7 +477,7 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
     return object->asReturned<RegExpObject>();
 }
 
-Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
+Returned<Object> *ExecutionEngine::newErrorObject(const ValueRef value)
 {
     ErrorObject *object = new (memoryManager) ErrorObject(errorClass, value);
     return object->asReturned<Object>();
@@ -481,7 +485,9 @@ Returned<Object> *ExecutionEngine::newErrorObject(const Value &value)
 
 Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    Object *error = new (memoryManager) SyntaxErrorObject(this, Value::fromString(this, message));
+    Scope scope(this);
+    ScopedString s(scope, newString(message));
+    Object *error = new (memoryManager) SyntaxErrorObject(this, s);
     return error->asReturned<Object>();
 }
 
@@ -517,7 +523,7 @@ Returned<Object> *ExecutionEngine::newRangeErrorObject(const QString &message)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newURIErrorObject(Value message)
+Returned<Object> *ExecutionEngine::newURIErrorObject(const ValueRef message)
 {
     Object *o = new (memoryManager) URIErrorObject(this, message);
     return o->asReturned<Object>();
@@ -734,6 +740,8 @@ void ExecutionEngine::markObjects()
     syntaxErrorCtor.mark();
     typeErrorCtor.mark();
     uRIErrorCtor.mark();
+
+    exceptionValue.mark();
 
     thrower->mark();
 

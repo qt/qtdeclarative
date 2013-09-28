@@ -86,7 +86,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     m_expression = expression;
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::PersistentValue &function)
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_v8function(function),
       m_line(-1),
@@ -128,7 +128,9 @@ QString QQmlBoundSignalExpression::expression() const
 {
     if (m_expressionFunctionValid) {
         Q_ASSERT (context() && engine());
-        return m_v8function.value().toQStringNoThrow();
+        QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
+        QV4::ScopedValue v(scope, m_v8function.value());
+        return v->toQStringNoThrow();
     } else {
         return m_expression;
     }
@@ -144,6 +146,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         return;
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
+    QV4::Scope scope(ep->v4engine());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
     {
@@ -181,7 +184,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_v8function = evalFunction(context(), scopeObject(), expression,
                                         m_fileName, m_line, &m_v8qmlscope);
 
-            if (m_v8function.isUndefined() || m_v8function.value().isNull()) {
+            if (m_v8function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
@@ -199,7 +202,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         QV4::Value *args = (QV4::Value *)alloca(qMax(argCount, (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value));
 #ifndef QT_NO_DEBUG
         for (int ii = 0; ii < qMax(argCount, (int)QV4::Global::ReservedArgumentCount); ++ii)
-            args[ii] = QV4::Value::undefinedValue();
+            args[ii] = QV4::Primitive::undefinedValue();
 #endif
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
@@ -210,12 +213,12 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(*((QVariant *)a[ii + 1])));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-                args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+                args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
             } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-                args[ii] = reinterpret_cast<QQmlV4Handle *>(a[ii + 1])->toValue();
+                args[ii] = QV4::Value::fromReturnedValue(*reinterpret_cast<QQmlV4Handle *>(a[ii + 1]));
             } else if (ep->isQObject(type)) {
                 if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                    args[ii] = QV4::Value::nullValue();
+                    args[ii] = QV4::Primitive::nullValue();
                 else
                     args[ii] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1])));
             } else {
@@ -223,7 +226,8 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             }
         }
 
-        QQmlJavaScriptExpression::evaluate(context(), m_v8function.value(), argCount, args, 0);
+        QV4::ScopedValue f(scope, m_v8function.value());
+        QQmlJavaScriptExpression::evaluate(context(), f, argCount, args, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

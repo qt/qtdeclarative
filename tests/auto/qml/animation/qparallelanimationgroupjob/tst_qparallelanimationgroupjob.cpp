@@ -64,6 +64,7 @@ private slots:
     void startGroupWithRunningChild();
     void zeroDurationAnimation();
     void stopUncontrolledAnimations();
+    void uncontrolledWithLoops();
     void loopCount_data();
     void loopCount();
     void addAndRemoveDuration();
@@ -779,6 +780,9 @@ void tst_QParallelAnimationGroupJob::loopCount_data()
 
 }
 
+#undef Stopped
+#undef Running
+
 void tst_QParallelAnimationGroupJob::loopCount()
 {
     QFETCH(bool, directionBackward);
@@ -924,6 +928,46 @@ void tst_QParallelAnimationGroupJob::crashWhenRemovingUncontrolledAnimation()
     delete anim;
     // it would crash here because the internals of the group would still have a reference to anim
     delete anim2;
+}
+
+void tst_QParallelAnimationGroupJob::uncontrolledWithLoops()
+{
+    QParallelAnimationGroupJob group;
+
+    TestAnimation *plain = new TestAnimation(100);
+    TestAnimation *loopsForever = new TestAnimation();
+    UncontrolledAnimation *notTimeBased = new UncontrolledAnimation();
+
+    loopsForever->setLoopCount(-1);
+
+    group.appendAnimation(plain);
+    group.appendAnimation(loopsForever);
+    group.appendAnimation(notTimeBased);
+
+    StateChangeListener listener;
+    group.addAnimationChangeListener(&listener, QAbstractAnimationJob::CurrentLoop);
+    group.setLoopCount(2);
+
+    group.start();
+
+    QCOMPARE(group.currentLoop(), 0);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(plain->state(), QAbstractAnimationJob::Running);
+    QCOMPARE(loopsForever->state(), QAbstractAnimationJob::Running);
+    QCOMPARE(notTimeBased->state(), QAbstractAnimationJob::Running);
+
+    loopsForever->stop();
+    notTimeBased->stop();
+
+    QTRY_COMPARE(group.currentLoop(), 1);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(loopsForever->state(), QAbstractAnimationJob::Running);
+    QCOMPARE(notTimeBased->state(), QAbstractAnimationJob::Running);
+
+    loopsForever->stop();
+    notTimeBased->stop();
+
+    QTRY_COMPARE(group.state(), QAbstractAnimationJob::Stopped);
 }
 
 

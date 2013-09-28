@@ -143,23 +143,25 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeReference *r = new (v4->memoryManager) QmlValueTypeReference(v8);
+    Scoped<QmlValueTypeReference> r(scope, new (v4->memoryManager) QmlValueTypeReference(v8));
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->object = object; r->property = property;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValueType *type)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
     initProto(v4);
 
-    QmlValueTypeCopy *r = new (v4->memoryManager) QmlValueTypeCopy(v8);
+    Scoped<QmlValueTypeCopy> r(scope, new (v4->memoryManager) QmlValueTypeCopy(v8));
     r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->type = type; r->value = value;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 QVariant QmlValueTypeWrapper::toVariant() const
@@ -242,7 +244,7 @@ bool QmlValueTypeWrapper::isEqual(const QVariant& value)
 
 ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
 {
-    Object *o = ctx->thisObject.asObject();
+    Object *o = ctx->callData->thisObject.asObject();
     if (!o)
         ctx->throwTypeError();
     QmlValueTypeWrapper *w = o->as<QmlValueTypeWrapper>();
@@ -252,7 +254,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
     if (w->objectType == QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(w);
         if (reference->object && readReferenceValue(reference)) {
-            return w->v8->toString(w->type->toString()).asReturnedValue();
+            return w->v8->toString(w->type->toString());
         } else {
             return QV4::Encode::undefined();
         }
@@ -260,7 +262,7 @@ ReturnedValue QmlValueTypeWrapper::method_toString(SimpleCallContext *ctx)
         Q_ASSERT(w->objectType == QmlValueTypeWrapper::Copy);
         QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(w);
         w->type->setValue(copy->value);
-        return w->v8->toString(w->type->toString()).asReturnedValue();
+        return w->v8->toString(w->type->toString());
     }
 }
 
@@ -276,7 +278,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
 
         if (!reference->object || !readReferenceValue(reference))
-            return Value::undefinedValue().asReturnedValue();
+            return Primitive::undefinedValue().asReturnedValue();
 
     } else {
         Q_ASSERT(r->objectType == QmlValueTypeWrapper::Copy);
@@ -310,14 +312,14 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, const StringRef name, bool *h
         cpptype v; \
         void *args[] = { &v, 0 }; \
         r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args); \
-        return constructor(v).asReturnedValue(); \
+        return constructor(v); \
     }
 
     // These four types are the most common used by the value type wrappers
-    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Value::fromDouble);
-    VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Value::fromInt32);
+    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, QV4::Encode);
+    VALUE_TYPE_LOAD(QMetaType::Int, int, QV4::Encode);
     VALUE_TYPE_LOAD(QMetaType::QString, QString, r->v8->toString);
-    VALUE_TYPE_LOAD(QMetaType::Bool, bool, QV4::Value::fromBoolean);
+    VALUE_TYPE_LOAD(QMetaType::Bool, bool, QV4::Encode);
 
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
@@ -372,7 +374,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
 
             QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
 
-            newBinding = new QQmlBinding(*value, reference->object, context,
+            newBinding = new QQmlBinding(value, reference->object, context,
                                          frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
@@ -385,7 +387,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             oldBinding->destroy();
 
         if (!f) {
-            QVariant v = r->v8->toVariant(*value, -1);
+            QVariant v = r->v8->toVariant(value, -1);
 
             if (p.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
                 v = v.toInt();
@@ -409,7 +411,7 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
         if (index == -1)
             return;
 
-        QVariant v = r->v8->toVariant(*value, -1);
+        QVariant v = r->v8->toVariant(value, -1);
 
         r->type->setValue(copy->value);
         QMetaProperty p = r->type->metaObject()->property(index);

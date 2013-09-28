@@ -49,7 +49,7 @@ Item {
 
     TestCase {
         id: testcase
-        name: "parallel"
+        name: "animators-parallel"
         when: !animation.running
         function test_endresult() {
             compare(box.rotationChangeCounter, 1);
@@ -64,10 +64,10 @@ Item {
 
     Box {
         id: box
-        ParallelAnimation {
+        SequentialAnimation {
             id: animation
-            ScaleAnimator { target: box; from: 1; to: 2.0; duration: 1000; }
-            RotationAnimator { target: box; from: 0; to: 180; duration: 1000; }
+            ScaleAnimator { target: box; from: 1; to: 2.0; duration: 100; }
+            RotationAnimator { target: box; from: 0; to: 180; duration: 100; }
             running: true
         }
     }

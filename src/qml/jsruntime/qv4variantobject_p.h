@@ -71,7 +71,7 @@ public:
     VariantObject(InternalClass *ic);
     VariantObject(ExecutionEngine *engine, const QVariant &value);
 
-    static QVariant toVariant(const QV4::Value &v);
+    static QVariant toVariant(const ValueRef v);
 
     void addVmePropertyReference();
     void removeVmePropertyReference();

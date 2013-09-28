@@ -60,7 +60,7 @@ public:
 /*!
     \qmltype Translate
     \instantiates QQuickTranslate
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief Provides a way to move an Item without changing its x or y properties
 
@@ -164,7 +164,7 @@ public:
 /*!
     \qmltype Scale
     \instantiates QQuickScale
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief Provides a way to scale an Item
 
@@ -305,7 +305,7 @@ public:
 /*!
     \qmltype Rotation
     \instantiates QQuickRotation
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief Provides a way to rotate an Item
 

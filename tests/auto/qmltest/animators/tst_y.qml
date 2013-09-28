@@ -48,44 +48,30 @@ Item {
     height: 200
 
     TestCase {
-        id: testcase
-        name: "transition"
-        when: box.scale == 2
+        id: testCase
+        name: "animators-y"
+        when: !animation.running
         function test_endresult() {
-            compare(box.scaleChangeCounter, 1);
-            compare(box.scale, 2);
+            compare(box.yChangeCounter, 1);
+            compare(box.y, 100);
             var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
-            compare(image.pixel(199, 199), Qt.rgba(0, 0, 1));
+            compare(image.pixel(50, 100), Qt.rgba(1, 0, 0));
+            compare(image.pixel(50, 99), Qt.rgba(1, 1, 1)); // outside on the left
         }
     }
-
-    states: [
-        State {
-            name: "one"
-            PropertyChanges { target: box; scale: 1 }
-        },
-        State {
-            name: "two"
-            PropertyChanges { target: box; scale: 2 }
-        }
-    ]
-    state: "one"
-
-    transitions: [
-        Transition {
-            ScaleAnimator { duration: 200; }
-        }
-    ]
 
     Box {
         id: box
-    }
 
-    Timer {
-        interval: 1000;
-        repeat: false
-        running: true
-        onTriggered: root.state = "two"
+        anchors.centerIn: undefined
+
+        YAnimator {
+            id: animation
+            target: box
+            from: 0;
+            to: 100
+            duration: 100
+            running: true
+        }
     }
 }

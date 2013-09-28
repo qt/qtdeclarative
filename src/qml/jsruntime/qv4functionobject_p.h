@@ -162,7 +162,7 @@ struct FunctionCtor: FunctionObject
 struct FunctionPrototype: FunctionObject
 {
     FunctionPrototype(InternalClass *ic);
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static ReturnedValue method_toString(SimpleCallContext *ctx);
     static ReturnedValue method_apply(SimpleCallContext *ctx);
@@ -199,7 +199,7 @@ struct IndexedBuiltinFunction: FunctionObject
     static ReturnedValue construct(Managed *m, CallData *)
     {
         m->engine()->current->throwTypeError();
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);

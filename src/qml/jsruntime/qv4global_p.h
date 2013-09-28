@@ -121,6 +121,7 @@ template<typename T> struct Referenced;
 typedef Referenced<Managed> ManagedRef;
 typedef Referenced<String> StringRef;
 typedef Referenced<Object> ObjectRef;
+typedef Referenced<ArrayObject> ArrayObjectRef;
 typedef Referenced<FunctionObject> FunctionObjectRef;
 
 

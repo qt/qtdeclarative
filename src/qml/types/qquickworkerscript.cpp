@@ -244,14 +244,18 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 // Requires handle and context scope
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
 {
-    QV4::FunctionObject *f = createsend.value().asFunctionObject();
-    QV4::ExecutionContext *ctx = f->engine()->current;
-    QV4::Scope scope(ctx->engine);
+    QV4::ExecutionEngine *v4 = createsend.engine();
+    if (!v4)
+        return QV4::Encode::undefined();
+
+    QV4::Scope scope(v4);
+    QV4::ScopedFunctionObject f(scope, createsend.value());
+    QV4::ExecutionContext *ctx = v4->current;
 
     QV4::ScopedValue v(scope);
     try {
         QV4::ScopedCallData callData(scope, 1);
-        callData->args[0] = QV4::Value::fromInt32(id);
+        callData->args[0] = QV4::Primitive::fromInt32(id);
         callData->thisObject = global();
         v = f->call(callData);
     } catch (QV4::Exception &e) {
@@ -282,16 +286,15 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Simp
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 
-    int id = ctx->argumentCount > 1 ? ctx->arguments[1].toInt32() : 0;
+    int id = ctx->callData->argc > 1 ? ctx->callData->args[1].toInt32() : 0;
 
-    QByteArray data = QV4::Serialize::serialize(ctx->argumentCount > 2 ? ctx->arguments[2] : QV4::Value::undefinedValue(), engine);
+    QV4::Scope scope(ctx);
+    QV4::ScopedValue v(scope, ctx->callData->argument(2));
+    QByteArray data = QV4::Serialize::serialize(v, engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
-    if (!script)
-        return QV4::Encode::undefined();
-
-    if (script->owner)
+    if (script && script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
     return QV4::Encode::undefined();
@@ -315,12 +318,12 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         QV4::Scoped<QV4::Object> api(scope, v4->newObject());
         api->put(QV4::ScopedString(scope, v4->newString("sendMessage")), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
-        script->object.value().asObject()->put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
+        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
 
         w->setReadOnly(true);
     }
 
-    return script->object.value().asReturnedValue();
+    return script->object.value();
 }
 
 bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
@@ -351,9 +354,10 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::FunctionObject *f = workerEngine->onmessage.value().asFunctionObject();
-    QV4::ExecutionContext *ctx = f->internalClass->engine->current;
-    QV4::Scope scope(ctx);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+    QV4::Scope scope(v4);
+    QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
+    QV4::ExecutionContext *ctx = v4->current;
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
@@ -396,7 +400,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         if (!activation)
             return;
 
-        QV4::Script program(v4, activation.getPointer(), sourceCode, url.toString());
+        QV4::Script program(v4, activation, sourceCode, url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
         try {
@@ -574,7 +578,7 @@ void QQuickWorkerScriptEngine::run()
     \qmltype WorkerScript
     \instantiates QQuickWorkerScript
     \ingroup qtquick-threading
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \brief Enables the use of threads in a Qt Quick application
 
     Use WorkerScript to run operations in a new thread.
@@ -677,7 +681,8 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
         return;
     }
 
-    QV4::Value argument = QV4::Value::undefinedValue();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue argument(scope, QV4::Primitive::undefinedValue());
     if (args->length() != 0)
         argument = (*args)[0];
 

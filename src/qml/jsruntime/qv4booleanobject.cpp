@@ -55,7 +55,7 @@ ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    ScopedValue b(scope, QV4::Value::fromBoolean(n));
+    ScopedValue b(scope, QV4::Primitive::fromBoolean(n));
     return Encode(m->engine()->newBooleanObject(b));
 }
 
@@ -65,11 +65,13 @@ ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
     return Encode(value);
 }
 
-void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void BooleanPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(engine->id_valueOf, method_valueOf);
 }
@@ -77,21 +79,21 @@ void BooleanPrototype::init(ExecutionEngine *engine, const Value &ctor)
 ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 {
     bool result;
-    if (ctx->thisObject.isBoolean()) {
-        result = ctx->thisObject.booleanValue();
+    if (ctx->callData->thisObject.isBoolean()) {
+        result = ctx->callData->thisObject.booleanValue();
     } else {
-        BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+        BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
         if (!thisObject)
             ctx->throwTypeError();
         result = thisObject->value.booleanValue();
     }
 
-    return Value::fromString(ctx, QLatin1String(result ? "true" : "false")).asReturnedValue();
+    return Encode(ctx->engine->newString(QLatin1String(result ? "true" : "false")));
 }
 
 ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    BooleanObject *thisObject = ctx->thisObject.asBooleanObject();
+    BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
     if (!thisObject)
         ctx->throwTypeError();
 

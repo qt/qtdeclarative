@@ -274,24 +274,8 @@ struct Q_QML_EXPORT Value
     }
 
     static Value emptyValue();
-    static Value undefinedValue();
-    static Value nullValue();
-    static Value fromBoolean(Bool b);
-    static Value fromDouble(double d);
-    static Value fromInt32(int i);
-    static Value fromUInt32(uint i);
-    static Value fromString(String *s);
     static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
-
-#ifndef QMLJS_LLVM_RUNTIME
-    static Value fromString(ExecutionContext *ctx, const QString &fromString);
-    static Value fromString(ExecutionEngine *engine, const QString &s);
-#endif
-
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
 
     int toUInt16() const;
     int toInt32() const;
@@ -334,6 +318,9 @@ struct Q_QML_EXPORT Value
 
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
+    Value &operator=(ReturnedValue v) { val = v; return *this; }
+    template <typename T>
+    inline Value &operator=(Returned<T> *t);
 
     // Section 9.12
     bool sameValue(Value other) const;
@@ -351,7 +338,14 @@ struct SafeValue : public Value
         return *this;
     }
     template<typename T>
+    SafeValue &operator=(T *t) {
+        val = Value::fromManaged(t).val;
+        return *this;
+    }
+
+    template<typename T>
     SafeValue &operator=(const Scoped<T> &t);
+    SafeValue &operator=(const ValueRef v);
     SafeValue &operator=(const Value &v) {
         val = v.val;
         return *this;
@@ -361,13 +355,35 @@ struct SafeValue : public Value
     Returned<T> *as();
 };
 
-template <typename T>
-struct Safe : public Value
+struct Q_QML_EXPORT Primitive : public Value
 {
+    static Primitive fromBoolean(bool b);
+    static Primitive fromInt32(int i);
+    static Primitive undefinedValue();
+    static Primitive nullValue();
+    static Primitive fromDouble(double d);
+    static Primitive fromUInt32(uint i);
+
+    static double toInteger(double fromNumber);
+    static int toInt32(double value);
+    static unsigned int toUInt32(double value);
+
+    inline operator ValueRef();
+    Value asValue() const { return *this; }
+};
+
+template <typename T>
+struct Safe : public SafeValue
+{
+    template<typename X>
+    Safe &operator =(X *x) {
+        val = Value::fromManaged(x).val;
+    }
     Safe &operator =(T *t);
     Safe &operator =(const Scoped<T> &v);
     Safe &operator =(const Referenced<T> &v);
     Safe &operator =(Returned<T> *t);
+
     Safe &operator =(const Safe<T> &t);
 
     // ### GC: remove me

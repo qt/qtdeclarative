@@ -480,6 +480,8 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , vmeMetaObjectData(compiledData->datas)
     , compiledData(compiledData)
     , _qobject(0)
+    , _qobjectForBindings(0)
+    , _valueTypeProperty(0)
     , _compiledObject(0)
     , _ddata(0)
     , _propertyCache(0)
@@ -532,6 +534,8 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
         ddata->compiledData = compiledData;
         ddata->compiledData->addref();
 
+        context->contextObject = instance;
+
         QQmlEnginePrivate::get(engine)->registerInternalCompositeType(compiledData);
     }
     return instance;
@@ -544,6 +548,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
     int propertyWriteStatus = -1;
     void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
 
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    QV4::Scope scope(v4);
     // ### enums
 
     switch (property->propType) {
@@ -552,7 +558,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             double n = binding->valueAsNumber();
             if (double(int(n)) == n) {
                 if (property->isVarProperty()) {
-                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromInt32(int(n)));
+                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Primitive::fromInt32(int(n)));
                 } else {
                     int i = int(n);
                     QVariant value(i);
@@ -561,7 +567,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
                 }
             } else {
                 if (property->isVarProperty()) {
-                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromDouble(n));
+                    _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Primitive::fromDouble(n));
                 } else {
                     QVariant value(n);
                     argv[0] = &value;
@@ -570,7 +576,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             }
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             if (property->isVarProperty()) {
-                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromBoolean(binding->valueAsBoolean()));
+                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Primitive::fromBoolean(binding->valueAsBoolean()));
             } else {
                 QVariant value(binding->valueAsBoolean());
                 argv[0] = &value;
@@ -579,7 +585,8 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
         } else {
             QString stringValue = binding->valueAsString(&qmlUnit->header);
             if (property->isVarProperty()) {
-                _vmeMetaObject->setVMEProperty(property->coreIndex, QV4::Value::fromString(QV8Engine::getV4(engine), stringValue));
+                QV4::ScopedString s(scope, v4->newString(stringValue));
+                _vmeMetaObject->setVMEProperty(property->coreIndex, s.asValue());
             } else {
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 argv[0] = &value;
@@ -945,6 +952,20 @@ void QmlObjectCreator::setupBindings()
     bool defaultPropertyQueried = false;
     QQmlPropertyData *defaultProperty = 0;
 
+    QString id = stringAt(_compiledObject->idIndex);
+    if (!id.isEmpty()) {
+        QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
+        if (idProperty) {
+            QV4::CompiledData::Binding idBinding;
+            idBinding.propertyNameIndex = 0; // Not used
+            idBinding.flags = 0;
+            idBinding.type = QV4::CompiledData::Binding::Type_String;
+            idBinding.stringIndex = _compiledObject->idIndex;
+            idBinding.location = _compiledObject->location; // ###
+            setPropertyValue(idProperty, &idBinding);
+        }
+    }
+
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
 
@@ -987,7 +1008,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
         QQmlRefPointer<QQmlPropertyCache> cache = QQmlEnginePrivate::get(engine)->cache(qmlObject);
-        if (!populateInstance(binding->value.objectIndex, qmlObject, cache, _qobject))
+        if (!populateInstance(binding->value.objectIndex, qmlObject, cache, _qobject, /*value type property*/0))
             return false;
         return true;
     }
@@ -1014,7 +1035,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
             QQmlRefPointer<QQmlPropertyCache> groupedObjCache;
             QObject *groupedObjInstance = 0;
+            QObject *objForBindings = _qobjectForBindings;
             QQmlValueType *valueType = 0;
+            QQmlPropertyData *valueTypeProperty = 0;
 
             if (QQmlValueTypeFactory::isValueType(property->propType)) {
                 valueType = QQmlValueTypeFactory::valueType(property->propType);
@@ -1027,13 +1050,13 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
                 groupedObjCache = enginePrivate->cache(valueType);
                 groupedObjInstance = valueType;
+                valueTypeProperty = property;
             } else {
                 groupedObjCache = enginePrivate->propertyCacheForType(property->propType);
                 if (!groupedObjCache) {
                     recordError(binding->location, tr("Invalid grouped property access"));
                     return false;
                 }
-                groupedObjInstance = valueType;
 
                 void *argv[1] = { &groupedObjInstance };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
@@ -1041,9 +1064,11 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
                     recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
                     return false;
                 }
+
+                objForBindings = groupedObjInstance;
             }
 
-            if (!populateInstance(binding->value.objectIndex, groupedObjInstance, groupedObjCache, _qobject))
+            if (!populateInstance(binding->value.objectIndex, groupedObjInstance, groupedObjCache, objForBindings, valueTypeProperty))
                 return false;
 
             if (valueType)
@@ -1058,7 +1083,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = jsUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-        QV4::Value function = QV4::Value::fromObject(QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
+
+        QV4::Scope scope(_qmlContext);
+        QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction));
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex);
@@ -1070,7 +1097,17 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         } else {
             QQmlBinding *qmlBinding = new QQmlBinding(function, _qobject, context,
                                                       QString(), 0, 0); // ###
-            qmlBinding->setTarget(_qobject, *property, context);
+
+            // When writing bindings to grouped properties implemented as value types,
+            // such as point.x: { someExpression; }, then the binding is installed on
+            // the point property (_qobjectForBindings) and after evaluating the expression,
+            // the result is written to a value type virtual property, that contains the sub-index
+            // of the "x" property.
+            QQmlPropertyData targetCorePropertyData = *property;
+            if (_valueTypeProperty)
+                targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
+
+            qmlBinding->setTarget(_qobjectForBindings, targetCorePropertyData, context);
             qmlBinding->addToObject();
 
             _createdBindings[bindingIndex] = qmlBinding;
@@ -1131,7 +1168,9 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             bool isAssignable = false;
             // Determine isAssignable value
             if (propertyMetaObject) {
-                QQmlPropertyCache *c = enginePrivate->cache(createdSubObject);
+                QQmlPropertyCache *c = propertyCaches.value(binding->value.objectIndex);
+                if (!c)
+                    c = enginePrivate->cache(createdSubObject);
                 while (c && !isAssignable) {
                     isAssignable |= c == propertyMetaObject;
                     c = c->parent();
@@ -1160,6 +1199,8 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
 void QmlObjectCreator::setupFunctions()
 {
+    QV4::Scope scope(_qmlContext);
+    QV4::ScopedValue function(scope);
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(_qobject);
 
     const quint32 *functionIdx = _compiledObject->functionOffsetTable();
@@ -1171,8 +1212,8 @@ void QmlObjectCreator::setupFunctions()
         if (!property->isVMEFunction())
             continue;
 
-        QV4::FunctionObject *function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
-        vme->setVmeMethod(property->coreIndex, QV4::Value::fromObject(function));
+        function = QV4::FunctionObject::creatScriptFunction(_qmlContext, runtimeFunction);
+        vme->setVmeMethod(property->coreIndex, function);
     }
 }
 
@@ -1207,6 +1248,9 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 errors += subCreator.errors;
                 return 0;
             }
+            if (subCreator.componentAttached)
+                subCreator.componentAttached->add(&componentAttached);
+            allCreatedBindings << subCreator.allCreatedBindings;
         }
         // ### use no-event variant
         if (parent)
@@ -1238,7 +1282,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
         Q_ASSERT(!cache.isNull());
 
-        if (!populateInstance(index, instance, cache, _qobject))
+        if (!populateInstance(index, instance, cache, instance, /*value type property*/0))
             return 0;
     }
 
@@ -1290,17 +1334,19 @@ void QmlObjectCreator::finalize()
     }
 }
 
-bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *scopeObjectForJavaScript)
+bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
+                                        QObject *scopeObjectForBindings, QQmlPropertyData *valueTypeProperty)
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
 
-    if (!scopeObjectForJavaScript)
-        scopeObjectForJavaScript = instance;
+    Q_ASSERT(scopeObjectForBindings);
 
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
     qSwap(_propertyCache, cache);
     qSwap(_qobject, instance);
+    qSwap(_qobjectForBindings, scopeObjectForBindings);
+    qSwap(_valueTypeProperty, valueTypeProperty);
     qSwap(_compiledObject, obj);
     qSwap(_ddata, declarativeData);
 
@@ -1308,13 +1354,13 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     const QByteArray data = vmeMetaObjectData.value(index);
     if (!data.isEmpty()) {
         // install on _object
-        vmeMetaObject = new QQmlVMEMetaObject(_qobject, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
+        vmeMetaObject = new QQmlVMEMetaObject(_qobjectForBindings, _propertyCache, reinterpret_cast<const QQmlVMEMetaData*>(data.constData()));
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
         _ddata->propertyCache = _propertyCache;
         _ddata->propertyCache->addref();
     } else {
-        vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
+        vmeMetaObject = QQmlVMEMetaObject::get(_qobjectForBindings);
     }
 
     _ddata->lineNumber = _compiledObject->location.line;
@@ -1327,9 +1373,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
-    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, scopeObjectForJavaScript));
-    QV4::QmlBindingWrapper *qmlBindingWrapper = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject->asObject());
-    QV4::ScopedValue qmlScopeFunction(valueScope, QV4::Value::fromObject(qmlBindingWrapper));
+    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobjectForBindings));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject->asObject()));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
     qSwap(_qmlContext, qmlContext);
@@ -1346,6 +1391,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
     qSwap(_propertyCache, cache);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
+    qSwap(_valueTypeProperty, valueTypeProperty);
+    qSwap(_qobjectForBindings, scopeObjectForBindings);
     qSwap(_qobject, instance);
 
     return errors.isEmpty();
@@ -1384,7 +1431,8 @@ bool QQmlComponentAndAliasResolver::resolve()
             continue;
 
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(i);
-        if (!cache || cache->metaObject() != &QQmlComponent::staticMetaObject)
+        if (!cache || isComponentType(obj->inheritedTypeNameIndex)
+            || cache->metaObject() != &QQmlComponent::staticMetaObject)
             continue;
 
         componentRoots.append(i);

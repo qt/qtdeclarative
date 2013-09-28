@@ -84,7 +84,7 @@ public:
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
-    QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *,
+    QQmlBinding(const QV4::ValueRef, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
 
     void setTarget(const QQmlProperty &);

@@ -141,7 +141,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmltype Transform
     \instantiates QQuickTransform
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items
 
@@ -377,7 +377,7 @@ void QQuickItemKeyFilter::componentComplete()
 /*!
     \qmltype KeyNavigation
     \instantiates QQuickKeyNavigationAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Supports key navigation by arrow keys
 
@@ -810,7 +810,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 /*!
     \qmltype Keys
     \instantiates QQuickKeysAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Provides key handling to Items
 
@@ -1361,7 +1361,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 /*!
     \qmltype LayoutMirroring
     \instantiates QQuickLayoutMirroringAttached
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-positioners
     \ingroup qml-utility-elements
     \brief Property used to mirror layout behavior
@@ -1623,7 +1623,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \qmltype Item
     \instantiates QQuickItem
     \inherits QtObject
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \brief A basic visual QML type
 
@@ -3868,46 +3868,47 @@ void QQuickItem::polish()
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
-        QV4::Value item = (*args)[0];
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue item(scope, (*args)[0]);
 
         QQuickItem *itemObj = 0;
-        if (!item.isNull()) {
-            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+        if (!item->isNull()) {
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
+            if (qobjectWrapper)
                 itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
         }
 
-        if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapFromItem() given argument \"" << item.toQStringNoThrow()
+        if (!itemObj && !item->isNull()) {
+            qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
-        args->setReturnValue(rv.asValue());
+        args->setReturnValue(rv.asReturnedValue());
 
         QV4::ScopedString s(scope);
         QV4::ScopedValue v(scope);
 
-        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
-        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
+        qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
+        qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
 
         if (args->length() > 3) {
-            qreal w = (*args)[3].asDouble();
-            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
+            qreal w = (v = (*args)[3])->asDouble();
+            qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(r.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(r.y())));
-            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Value::fromDouble(r.width())));
-            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Value::fromDouble(r.height())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Primitive::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Primitive::fromDouble(r.height())));
         } else {
             QPointF p = mapFromItem(itemObj, QPointF(x, y));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(p.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(p.y())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(p.y())));
         }
     }
 }
@@ -3946,46 +3947,48 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
     if (args->length() != 0) {
-        QV4::Value item = (*args)[0];
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue item(scope, (*args)[0]);
 
         QQuickItem *itemObj = 0;
-        if (!item.isNull()) {
-            if (QV4::QObjectWrapper *qobjectWrapper = item.as<QV4::QObjectWrapper>())
+        if (!item->isNull()) {
+            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, item->as<QV4::QObjectWrapper>());
+            if (qobjectWrapper)
                 itemObj = qobject_cast<QQuickItem*>(qobjectWrapper->object());
         }
 
-        if (!itemObj && !item.isNull()) {
-            qmlInfo(this) << "mapToItem() given argument \"" << item.toQStringNoThrow()
+        if (!itemObj && !item->isNull()) {
+            qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                           << "\" which is neither null nor an Item";
             return;
         }
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(args->engine());
-        QV4::Scope scope(v4);
         QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
-        args->setReturnValue(rv.asValue());
+        args->setReturnValue(rv.asReturnedValue());
 
-        qreal x = (args->length() > 1) ? (*args)[1].asDouble() : 0;
-        qreal y = (args->length() > 2) ? (*args)[2].asDouble() : 0;
-
-        QV4::ScopedString s(scope);
         QV4::ScopedValue v(scope);
 
+        qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
+        qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
+
+        QV4::ScopedString s(scope);
+
         if (args->length() > 3) {
-            qreal w = (*args)[3].asDouble();
-            qreal h = (args->length() > 4) ? (*args)[4].asDouble() : 0;
+            qreal w = (v = (*args)[3])->asDouble();
+            qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(r.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(r.y())));
-            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Value::fromDouble(r.width())));
-            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Value::fromDouble(r.height())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Primitive::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Primitive::fromDouble(r.height())));
         } else {
             QPointF p = mapToItem(itemObj, QPointF(x, y));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Value::fromDouble(p.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Value::fromDouble(p.y())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(p.y())));
         }
     }
 }
@@ -4018,7 +4021,7 @@ void QQuickItem::forceActiveFocus()
     This method sets focus on the item and ensures that all ancestor
     FocusScope objects in the object hierarchy are also given \l focus.
 
-    \since QtQuick 2.1
+    \since 5.1
 
     \sa activeFocus, Qt::FocusReason
 */
@@ -4038,7 +4041,7 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 /*!
     \qmlmethod QtQuick2::Item::nextItemInFocusChain(bool forward)
 
-    \since QtQuick 2.1
+    \since 5.1
 
     Returns the item in the focus chain which is next to this item.
     If \a forward is \c true, or not supplied, it is the next item in

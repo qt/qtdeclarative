@@ -126,6 +126,7 @@ public:
     QEasingCurve easingCurve() const { return m_easing; }
     void setEasingCurve(const QEasingCurve &curve) { m_easing = curve; }
 
+    void targetWasDeleted();
     virtual void initialize(QQuickAnimatorController *controller);
     virtual void writeBack() = 0;
 
@@ -140,7 +141,7 @@ protected:
     QQuickAnimatorJob();
     void updateState(State newState, State oldState);
 
-    QPointer<QQuickItem> m_target;
+    QQuickItem *m_target;
     QQuickAnimatorController *m_controller;
 
     qreal m_from;
@@ -164,7 +165,6 @@ public:
     {
         Helper()
             : ref(1)
-            , item(0)
             , node(0)
             , ox(0)
             , oy(0)
@@ -176,6 +176,8 @@ public:
             , wasChanged(false)
         {
         }
+
+        ~Helper();
 
         void sync();
         void apply();

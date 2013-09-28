@@ -140,7 +140,7 @@ valgrind {
 
 ios: DEFINES += ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
 
-win32 {
+win32:!wince* {
     LIBS_PRIVATE += -lDbgHelp
 }
 

@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Dialogs 1
     \ingroup dialogs
     \brief Dialog component for choosing files from a local filesystem.
-    \since Qt 5.1
+    \since 5.1
 
     FileDialog provides a basic file chooser: it allows the user to select
     existing files and/or directories, or create new filenames. The dialog is

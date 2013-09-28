@@ -260,8 +260,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (!gl->create()) {
             delete gl;
             gl = 0;
+        } else {
+            current = gl->makeCurrent(window);
         }
-        current = gl->makeCurrent(window);
         if (current)
             sg->initialize(gl);
     } else {

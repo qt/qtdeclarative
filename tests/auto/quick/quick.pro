@@ -44,6 +44,7 @@ QUICKTESTS =  \
     qquickflickable \
     qquickflipable \
     qquickfocusscope \
+    qquickframebufferobject \
     qquickgridview \
     qquickimage \
     qquickitem \

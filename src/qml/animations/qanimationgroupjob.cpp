@@ -57,7 +57,7 @@ QAnimationGroupJob::~QAnimationGroupJob()
 void QAnimationGroupJob::topLevelAnimationLoopChanged()
 {
     for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling())
-        animation->topLevelAnimationLoopChanged();
+        animation->fireTopLevelAnimationLoopChanged();
 }
 
 void QAnimationGroupJob::appendAnimation(QAbstractAnimationJob *animation)

@@ -41,19 +41,15 @@
 #ifndef FBOINSGRENDERER_H
 #define FBOINSGRENDERER_H
 
-#include <QQuickItem>
+#include <QtQuick/QQuickFramebufferObject>
 
+class LogoRenderer;
 
-class FboInSGRenderer : public QQuickItem
+class FboInSGRenderer : public QQuickFramebufferObject
 {
     Q_OBJECT
-
 public:
-    FboInSGRenderer();
-
-protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-
+    Renderer *createRenderer() const;
 };
 
 #endif

@@ -162,15 +162,15 @@ struct Q_QML_EXPORT Object: Managed {
     void inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const ValueRef index, const ValueRef rhs);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(const StringRef name, Value value);
-    void defineDefaultProperty(const QString &name, Value value);
+    void defineDefaultProperty(const StringRef name, ValueRef value);
+    void defineDefaultProperty(const QString &name, ValueRef value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
     void defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
-    void defineReadonlyProperty(const QString &name, Value value);
-    void defineReadonlyProperty(const StringRef name, Value value);
+    void defineReadonlyProperty(const QString &name, ValueRef value);
+    void defineReadonlyProperty(const StringRef name, ValueRef value);
 
     Property *insertMember(const StringRef s, PropertyAttributes attributes);
 
@@ -353,14 +353,14 @@ struct BooleanObject: Object {
     Value value;
     BooleanObject(ExecutionEngine *engine, const ValueRef value): Object(engine->booleanClass), value(*value) { type = Type_BooleanObject; }
 protected:
-    BooleanObject(InternalClass *ic): Object(ic), value(Value::fromBoolean(false)) { type = Type_BooleanObject; }
+    BooleanObject(InternalClass *ic): Object(ic), value(Primitive::fromBoolean(false)) { type = Type_BooleanObject; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(ExecutionEngine *engine, const ValueRef value): Object(engine->numberClass), value(*value) { type = Type_NumberObject; }
 protected:
-    NumberObject(InternalClass *ic): Object(ic), value(Value::fromInt32(0)) { type = Type_NumberObject; }
+    NumberObject(InternalClass *ic): Object(ic), value(Primitive::fromInt32(0)) { type = Type_NumberObject; }
 };
 
 struct ArrayObject: Object {
@@ -385,7 +385,7 @@ inline uint Object::arrayLength() const
         Value v = memberData[ArrayObject::LengthPropertyIndex].value;
         if (v.isInteger())
             return v.integerValue();
-        return Value::toUInt32(v.doubleValue());
+        return Primitive::toUInt32(v.doubleValue());
     }
     return 0;
 }
@@ -395,7 +395,7 @@ inline void Object::setArrayLengthUnchecked(uint l)
     if (isArrayObject()) {
         // length is always the first property of an array
         Property &lengthProperty = memberData[ArrayObject::LengthPropertyIndex];
-        lengthProperty.value = Value::fromUInt32(l);
+        lengthProperty.value = Primitive::fromUInt32(l);
     }
 }
 

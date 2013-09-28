@@ -76,9 +76,9 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             QV4::ExecutionEngine *v4 = m_target->varProperties.engine();
             if (v4) {
                 QV4::Scope scope(v4);
-                QV4::ScopedArrayObject a(scope, m_target->varProperties.value().asArrayObject());
+                QV4::ScopedArrayObject a(scope, m_target->varProperties.value());
                 if (a)
-                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Value::nullValue()));
+                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Primitive::nullValue()));
             }
         }
 
@@ -970,7 +970,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return QV4::Value::undefinedValue().asReturnedValue();
+        return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 
     if (!v8methods) 
@@ -989,24 +989,30 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
                                                                ctxt->urlString, data->lineNumber);
     }
 
-    return v8methods[index].value().asReturnedValue();
+    return v8methods[index].value();
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
-    if (ensureVarPropertiesAllocated())
-        return varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex);
-    return QV4::Value::undefinedValue().asReturnedValue();
+    if (ensureVarPropertiesAllocated()) {
+        QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
+        QV4::ScopedObject o(scope, varProperties.value());
+        return o->getIndexed(id - firstVarPropertyIndex);
+    }
+    return QV4::Primitive::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
-        if (ensureVarPropertiesAllocated())
-            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(
-                        QV4::Value::fromReturnedValue(varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex)), -1);
+        if (ensureVarPropertiesAllocated()) {
+            QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
+            QV4::ScopedObject o(scope, varProperties.value());
+            QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
+            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(val, -1);
+        }
         return QVariant();
     } else {
         if (data[id].dataType() == QMetaType::QObjectStar) {
@@ -1026,7 +1032,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     QV4::Scope scope(varProperties.engine());
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    QV4::Scoped<QV4::VariantObject> oldv(scope, varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
+    QV4::ScopedObject vp(scope, varProperties.value());
+    QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id - firstVarPropertyIndex));
     if (!!oldv)
         oldv->removeVmePropertyReference();
 
@@ -1057,7 +1064,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     }
 
     // Write the value and emit change signal as appropriate.
-    varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, v);
+    vp->putIndexed(id - firstVarPropertyIndex, v);
     activate(object, methodOffset() + id, 0);
 }
 
@@ -1071,7 +1078,8 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        QV4::Scoped<QV4::VariantObject> oldv(scope, varProperties.value().asObject()->getIndexed(id - firstVarPropertyIndex));
+        QV4::ScopedObject vp(scope, varProperties.value());
+        QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id - firstVarPropertyIndex));
         if (!!oldv)
             oldv->removeVmePropertyReference();
 
@@ -1083,7 +1091,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        varProperties.value().asObject()->putIndexed(id - firstVarPropertyIndex, newv);
+        vp->putIndexed(id - firstVarPropertyIndex, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
             activate(object, methodOffset() + id, 0);
     } else {
@@ -1169,7 +1177,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)
 }
 
 // Used by debugger
-void QQmlVMEMetaObject::setVmeMethod(int index, QV4::PersistentValue function)
+void QQmlVMEMetaObject::setVmeMethod(int index, QV4::ValueRef function)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());

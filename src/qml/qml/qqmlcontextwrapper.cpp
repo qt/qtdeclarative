@@ -76,23 +76,25 @@ QmlContextWrapper::~QmlContextWrapper()
 ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope valueScope(v4);
 
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope);
-    return Value::fromObject(w).asReturnedValue();
+    Scoped<QmlContextWrapper> w(valueScope, new (v4->memoryManager) QmlContextWrapper(v8, ctxt, scope));
+    return w.asReturnedValue();
 }
 
 ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
     QQmlContextData *context = new QQmlContextData;
     context->url = url;
     context->isInternal = true;
     context->isJSContext = true;
 
-    QmlContextWrapper *w = new (v4->memoryManager) QmlContextWrapper(v8, context, 0);
+    Scoped<QmlContextWrapper> w(scope, new (v4->memoryManager) QmlContextWrapper(v8, context, 0));
     w->isNullWrapper = true;
-    return Value::fromObject(w).asReturnedValue();
+    return w.asReturnedValue();
 }
 
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
@@ -188,9 +190,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
             if (r.scriptIndex != -1) {
                 int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value().asReturnedValue();
+                    return context->importedScripts.at(index).value();
                 else
-                    return QV4::Value::undefinedValue().asReturnedValue();
+                    return QV4::Primitive::undefinedValue().asReturnedValue();
             } else if (r.type) {
                 return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {
@@ -269,7 +271,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
 
     expressionContext->unresolvedNames = true;
 
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef value)
@@ -318,13 +320,13 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 
         // Search scope object
         if (scopeObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, scopeObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, *value))
+            QV4::QObjectWrapper::setQmlProperty(v4->current, context, context->contextObject, name.getPointer(), QV4::QObjectWrapper::CheckRevision, value))
             return;
 
         context = context->parent;

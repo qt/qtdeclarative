@@ -80,15 +80,13 @@ struct Q_QML_EXPORT ExecutionContext
     bool strictMode;
     bool marked;
 
-    Value thisObject;
+    CallData *callData;
 
     ExecutionEngine *engine;
     ExecutionContext *parent;
     ExecutionContext *outer;
     Lookup *lookups;
-    SafeString *runtimeStrings;
     CompiledData::CompilationUnit *compilationUnit;
-    const CompiledData::Function *compiledFunction;
     ExecutionContext *next; // used in the GC
 
     struct EvalCode
@@ -105,19 +103,16 @@ struct Q_QML_EXPORT ExecutionContext
         this->type = type;
         strictMode = false;
         marked = false;
-        thisObject = Value::undefinedValue();
         this->engine = engine;
         parent = parentContext;
         outer = 0;
         lookups = 0;
-        runtimeStrings = 0;
         compilationUnit = 0;
-        compiledFunction = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
     }
 
-    CallContext *newCallContext(void *stackSpace, FunctionObject *f, CallData *callData);
+    CallContext *newCallContext(void *stackSpace, Value *locals, FunctionObject *f, CallData *callData);
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(Object *with);
     CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
@@ -138,8 +133,8 @@ struct Q_QML_EXPORT ExecutionContext
     void Q_NORETURN throwTypeError(const QString &message);
     void Q_NORETURN throwReferenceError(const ValueRef value);
     void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
-    void Q_NORETURN throwRangeError(Value value);
-    void Q_NORETURN throwURIError(Value msg);
+    void Q_NORETURN throwRangeError(const ValueRef value);
+    void Q_NORETURN throwURIError(const ValueRef msg);
     void Q_NORETURN throwUnimplemented(const QString &message);
 
     void setProperty(const StringRef name, const ValueRef value);
@@ -158,13 +153,9 @@ struct SimpleCallContext : public ExecutionContext
 {
     void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
-    SafeValue *arguments;
-    unsigned int realArgumentCount;
-    unsigned int argumentCount;
+    int realArgumentCount;
 
-    ReturnedValue argument(uint i) {
-        return i < argumentCount ? arguments[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
-    }
+    inline ReturnedValue argument(int i);
 };
 
 struct CallContext : public SimpleCallContext
@@ -210,9 +201,9 @@ inline const CallContext *ExecutionContext::asCallContext() const
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
-    sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount))
+    sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
 #define requiredMemoryForExecutionContectSimple(f) \
-    sizeof(CallContext) + sizeof(Value) * f->varCount
+    sizeof(CallContext)
 #define requiredMemoryForQmlExecutionContect(f) \
     sizeof(CallContext) + sizeof(Value) * (f->locals.size())
 #define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))

@@ -125,49 +125,42 @@ class QV8Engine;
 class QQmlV4Function
 {
 public:
-    int length() const { return argc; }
-    QV4::Value operator[](int idx) { return idx < argc ? args[idx] : QV4::Value::undefinedValue(); }
+    int length() const { return callData->argc; }
+    QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
     QQmlContextData *context() { return ctx; }
-    QV4::Value qmlGlobal() { return global; }
-    void setReturnValue(const QV4::Value &rv) { *retVal = rv; }
-    void setReturnValue(QV4::ReturnedValue rv) { *retVal = QV4::Value::fromReturnedValue(rv); }
+    QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
+    void setReturnValue(QV4::ReturnedValue rv) { retVal = rv; }
     QV8Engine *engine() const { return e; }
+    QV4::ExecutionEngine *v4engine() const;
 private:
     friend struct QV4::QObjectMethod;
     QQmlV4Function();
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(int length, const QV4::Value *args,
-                           QV4::Value *rv, const QV4::Value &global,
-                           QQmlContextData *c, QV8Engine *e)
-    : argc(length), args(args), retVal(rv), global(global), ctx(c), e(e) {}
+    QQmlV4Function(QV4::CallData *callData, QV4::ValueRef retVal,
+                   const QV4::ValueRef global, QQmlContextData *c, QV8Engine *e)
+        : callData(callData), retVal(retVal), ctx(c), e(e)
+    {
+        callData->thisObject.val = global.asReturnedValue();
+    }
 
-    int argc;
-    const QV4::Value *args;
-    QV4::Value *retVal;
-    QV4::Value global;
+    QV4::CallData *callData;
+    QV4::ValueRef retVal;
     QQmlContextData *ctx;
     QV8Engine *e;
 };
 
-// ### GC
 class Q_QML_PRIVATE_EXPORT QQmlV4Handle
 {
 public:
-    QQmlV4Handle() : d(0) {}
-    QQmlV4Handle(const QQmlV4Handle &other) : d(other.d) {}
-    QQmlV4Handle &operator=(const QQmlV4Handle &other) { d = other.d; return *this; }
-    explicit QQmlV4Handle(const QV4::Value &v) : d(v.val) {}
+    QQmlV4Handle() : d(QV4::Encode::undefined()) {}
+    explicit QQmlV4Handle(QV4::ValueRef v) : d(v.asReturnedValue()) {}
+    explicit QQmlV4Handle(QV4::ReturnedValue v) : d(v) {}
 
-    QV4::Value toValue() const {
-        QV4::Value v;
-        v.val = d;
-        return v;
-    }
+    operator QV4::ReturnedValue() const { return d; }
 
 private:
-    QQmlV4Handle(quint64 h) : d(h) {}
     quint64 d;
 };
 
@@ -201,7 +194,7 @@ public:
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     QJSEngine *publicEngine() { return q; }
-    QV4::Value global();
+    QV4::ReturnedValue global();
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
 
@@ -210,13 +203,13 @@ public:
 
     QQmlContextData *callingContext();
 
-    void freezeObject(const QV4::Value &value);
+    void freezeObject(const QV4::ValueRef value);
 
-    QVariant toVariant(const QV4::Value &value, int typeHint);
+    QVariant toVariant(const QV4::ValueRef value, int typeHint);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
     // Return a JS string for the given QString \a string
-    QV4::Value toString(const QString &string);
+    QV4::ReturnedValue toString(const QString &string);
 
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
@@ -226,7 +219,6 @@ public:
     // Return the list of illegal id names (the names of the properties on the global object)
     const QV4::IdentifierHash<bool> &illegalNames() const;
 
-    inline void collectGarbage() { gc(); }
     void gc();
 
     static QMutex *registrationMutex();
@@ -236,21 +228,21 @@ public:
     void setExtensionData(int, Deletable *);
 
     QV4::ReturnedValue variantListToJS(const QVariantList &lst);
-    inline QVariantList variantListFromJS(QV4::ArrayObject *array)
+    inline QVariantList variantListFromJS(QV4::ArrayObjectRef array)
     { V8ObjectSet visitedObjects; return variantListFromJS(array, visitedObjects); }
 
     QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
-    inline QVariantMap variantMapFromJS(QV4::Object *object)
+    inline QVariantMap variantMapFromJS(QV4::ObjectRef object)
     { V8ObjectSet visitedObjects; return variantMapFromJS(object, visitedObjects); }
 
     QV4::ReturnedValue variantToJS(const QVariant &value);
-    inline QVariant variantFromJS(const QV4::Value &value)
+    inline QVariant variantFromJS(const QV4::ValueRef value)
     { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
-    bool metaTypeFromJS(const QV4::Value &value, int type, void *data);
+    bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
 
-    bool convertToNativeQObject(const QV4::Value &value,
+    bool convertToNativeQObject(const QV4::ValueRef value,
                                 const QByteArray &targetType,
                                 void **result);
 
@@ -261,7 +253,7 @@ public:
     // used for console.count()
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
-    QObject *qtObjectFromJS(const QV4::Value &value);
+    QObject *qtObjectFromJS(const QV4::ValueRef value);
 
 protected:
     QJSEngine* q;
@@ -283,24 +275,29 @@ protected:
 
     QHash<QString, quint32> m_consoleCount;
 
-    QVariant toBasicVariant(const QV4::Value &);
+    QVariant toBasicVariant(const QV4::ValueRef);
 
     void initializeGlobal();
 
 private:
-    QVariantList variantListFromJS(QV4::ArrayObject *array, V8ObjectSet &visitedObjects);
-    QVariantMap variantMapFromJS(QV4::Object *object, V8ObjectSet &visitedObjects);
-    QVariant variantFromJS(const QV4::Value &value, V8ObjectSet &visitedObjects);
+    QVariantList variantListFromJS(QV4::ArrayObjectRef array, V8ObjectSet &visitedObjects);
+    QVariantMap variantMapFromJS(QV4::ObjectRef object, V8ObjectSet &visitedObjects);
+    QVariant variantFromJS(const QV4::ValueRef value, V8ObjectSet &visitedObjects);
 
     Q_DISABLE_COPY(QV8Engine)
 };
 
-QV8Engine::Deletable *QV8Engine::extensionData(int index) const
+inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
 {
     if (index < m_extensionData.count())
         return m_extensionData[index];
     else
         return 0;
+}
+
+inline QV4::ExecutionEngine *QQmlV4Function::v4engine() const
+{
+    return QV8Engine::getV4(e);
 }
 
 QT_END_NAMESPACE

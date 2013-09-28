@@ -96,7 +96,15 @@ public:
     int start() const { return _ranges.first().start; }
     int end() const { return _end; }
     bool covers(int position) const
-    { foreach (const Range &r, _ranges) if (r.covers(position)) return true; return false; }
+    {
+        foreach (const Range &r, _ranges) {
+            if (position < r.start)
+                return false;
+            if (position <= r.end)
+                return true;
+        }
+        return false;
+    }
 
     int firstPossibleUsePosition(bool isPhiTarget) const { return start() + (isSplitFromInterval() || isPhiTarget ? 0 : 1); }
 
@@ -164,7 +172,7 @@ class MoveMapping
 public:
     void add(Expr *from, Temp *to, int id = 0);
     void order();
-    void insertMoves(BasicBlock *predecessor, Function *function) const;
+    void insertMoves(BasicBlock *bb, Function *function, bool atEnd) const;
 
     void dump() const;
 

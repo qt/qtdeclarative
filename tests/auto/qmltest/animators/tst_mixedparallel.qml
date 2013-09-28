@@ -48,28 +48,27 @@ Item {
     height: 200
 
     TestCase {
-        id: testCase
-        name: "scale"
+        id: testcase
+        name: "animators-mixedparallel"
         when: !animation.running
         function test_endresult() {
-            compare(box.scaleChangeCounter, 1);
+            compare(box.rotationChangeCounter, 1);
             compare(box.scale, 2);
+            compare(box.rotation, 180);
             var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
+            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
+            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
         }
     }
 
     Box {
         id: box
-
-        ScaleAnimator {
+        ParallelAnimation {
             id: animation
-            target: box
-            from: 1;
-            to: 2.0
-            duration: 1000
-            easing.type: Easing.InOutCubic
+            NumberAnimation { target: box; property: "scale"; from: 1; to: 2.0; duration: 100; }
+            RotationAnimator { target: box; from: 0; to: 180; duration: 100; }
             running: true
+            loops: 1;
         }
     }
 }

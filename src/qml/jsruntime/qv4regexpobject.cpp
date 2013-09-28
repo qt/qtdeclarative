@@ -147,7 +147,7 @@ void RegExpObject::init(ExecutionEngine *engine)
 
     ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
     Property *lastIndexProperty = insertMember(lastIndex, Attr_NotEnumerable|Attr_NotConfigurable);
-    lastIndexProperty->value = Value::fromInt32(0);
+    lastIndexProperty->value = Primitive::fromInt32(0);
     if (!this->value)
         return;
 
@@ -159,10 +159,11 @@ void RegExpObject::init(ExecutionEngine *engine)
         p.replace('/', QLatin1String("\\/"));
     }
 
-    defineReadonlyProperty(QStringLiteral("source"), Value::fromString(engine->newString(p)));
-    defineReadonlyProperty(QStringLiteral("global"), Value::fromBoolean(global));
-    defineReadonlyProperty(QStringLiteral("ignoreCase"), Value::fromBoolean(this->value->ignoreCase()));
-    defineReadonlyProperty(QStringLiteral("multiline"), Value::fromBoolean(this->value->multiLine()));
+    ScopedValue v(scope);
+    defineReadonlyProperty(QStringLiteral("source"), (v = engine->newString(p)));
+    defineReadonlyProperty(QStringLiteral("global"), Primitive::fromBoolean(global));
+    defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value->ignoreCase()));
+    defineReadonlyProperty(QStringLiteral("multiline"), Primitive::fromBoolean(this->value->multiLine()));
 }
 
 
@@ -240,8 +241,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     ExecutionContext *ctx = m->engine()->current;
     Scope scope(ctx);
 
-    ScopedValue r(scope, callData->argc > 0 ? callData->args[0] : Value::undefinedValue());
-    ScopedValue f(scope, callData->argc > 1 ? callData->args[1] : Value::undefinedValue());
+    ScopedValue r(scope, callData->argument(0));
+    ScopedValue f(scope, callData->argument(1));
     if (RegExpObject *re = r->as<RegExpObject>()) {
         if (!f->isUndefined())
             ctx->throwTypeError();
@@ -289,11 +290,14 @@ ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(2));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    Scope scope(engine);
+    ScopedObject o(scope);
+
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString, method_toString, 0);
@@ -303,8 +307,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, const Value &ctor)
 ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
@@ -314,14 +317,14 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
 
     int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
-        r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
+        r->lastIndexProperty(ctx)->value = Primitive::fromInt32(0);
         return Encode::null();
     }
 
     uint* matchOffsets = (uint*)alloca(r->value->captureCount() * 2 * sizeof(uint));
     int result = r->value->match(s, offset, matchOffsets);
     if (result == -1) {
-        r->lastIndexProperty(ctx)->value = Value::fromInt32(0);
+        r->lastIndexProperty(ctx)->value = Primitive::fromInt32(0);
         return Encode::null();
     }
 
@@ -332,16 +335,16 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        array->arrayData[i].value = (start != -1 && end != -1) ? Value::fromString(ctx, s.mid(start, end - start)) : Value::undefinedValue();
+        array->arrayData[i].value = (start != -1 && end != -1) ? ctx->engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
         array->arrayDataLen = i + 1;
     }
     array->setArrayLengthUnchecked(len);
 
-    array->memberData[Index_ArrayIndex].value = Value::fromInt32(result);
+    array->memberData[Index_ArrayIndex].value = Primitive::fromInt32(result);
     array->memberData[Index_ArrayInput].value = arg;
 
     if (r->global)
-        r->lastIndexProperty(ctx)->value = Value::fromInt32(matchOffsets[1]);
+        r->lastIndexProperty(ctx)->value = Primitive::fromInt32(matchOffsets[1]);
 
     return array.asReturnedValue();
 }
@@ -355,22 +358,23 @@ ReturnedValue RegExpPrototype::method_test(SimpleCallContext *ctx)
 
 ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
 {
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scope scope(ctx);
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, r->toString()).asReturnedValue();
+    return ctx->engine->newString(r->toString())->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    RegExpObject *r = ctx->thisObject.as<RegExpObject>();
+    Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
         ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->argumentCount);
-    memcpy(callData->args, ctx->arguments, ctx->argumentCount*sizeof(Value));
+    ScopedCallData callData(scope, ctx->callData->argc);
+    memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(Value));
     RegExpObject *re = Value::fromReturnedValue(ctx->engine->regExpCtor.asFunctionObject()->construct(callData)).as<RegExpObject>();
 
     r->value = re->value;

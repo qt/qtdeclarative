@@ -58,7 +58,7 @@ Item {
 
     TestCase {
         id: testCase
-        name: "transformorigin"
+        name: "animators-transformorigin"
         when: timer.triggered
         function test_endresult() {
 
@@ -151,7 +151,7 @@ Item {
 
                     transformOrigin: root.origins[index];
 
-                    ScaleAnimator { target: box; from: 1; to: 5.5; duration: 1000; running: true; }
+                    ScaleAnimator { target: box; from: 1; to: 5.5; duration: 100; running: true; }
                 }
             }
         }

@@ -52,7 +52,7 @@ public:
 
 /*!
     \class QQuickTextureFactory
-    \since QtQuick 2.0
+    \since 5.0
     \brief The QQuickTextureFactory class provides an interface for loading custom textures from QML.
     \inmodule QtQuick
 
@@ -127,7 +127,7 @@ QImage QQuickTextureFactory::image() const
 
 /*!
     \class QQuickImageProvider
-    \since QtQuick 2.0
+    \since 5.0
     \inmodule QtQuick
     \brief The QQuickImageProvider class provides an interface for supporting pixmaps and threaded image requests in QML.
 

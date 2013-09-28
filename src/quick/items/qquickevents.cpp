@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype KeyEvent
     \instantiates QQuickKeyEvent
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
     \brief Provides information about a key event
@@ -149,7 +149,7 @@ Item {
 
 /*!
     \qmlmethod bool QtQuick2::KeyEvent::matches(StandardKey key)
-    \since QtQuick 2.2
+    \since 5.2
 
     Returns \c true if the key event matches the given standard \a key; otherwise returns \c false.
 
@@ -171,7 +171,7 @@ Item {
 /*!
     \qmltype MouseEvent
     \instantiates QQuickMouseEvent
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
     \brief Provides information about a mouse event
@@ -270,7 +270,7 @@ Item {
 /*!
     \qmltype WheelEvent
     \instantiates QQuickWheelEvent
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief Provides information about a mouse wheel event
 

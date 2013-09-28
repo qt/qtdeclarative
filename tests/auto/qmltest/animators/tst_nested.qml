@@ -48,27 +48,45 @@ Item {
     height: 200
 
     TestCase {
-        id: testcase
-        name: "mixedparallel"
+        id: testCase
+        name: "animators-nested"
         when: !animation.running
         function test_endresult() {
-            compare(box.rotationChangeCounter, 1);
-            compare(box.scale, 2);
-            compare(box.rotation, 180);
-            var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
-            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
+            compare(box.before, 2);
+            compare(box.after, 2);
         }
     }
 
     Box {
         id: box
-        ParallelAnimation {
-            id: animation
-            NumberAnimation { target: box; property: "scale"; from: 1; to: 2.0; duration: 1000; }
-            RotationAnimator { target: box; from: 0; to: 180; duration: 1000; }
+
+        anchors.centerIn: undefined
+
+        property int before: 0;
+        property int after: 0;
+
+        SequentialAnimation {
+            id: animation;
+            ScriptAction { script: box.before++; }
+            ParallelAnimation {
+                ScaleAnimator { target: box; from: 2.0; to: 1; duration: 100; }
+                OpacityAnimator { target: box; from: 0; to: 1; duration: 100; }
+            }
+            PauseAnimation { duration: 100 }
+            SequentialAnimation {
+                ParallelAnimation {
+                    XAnimator { target: box; from: 0; to: 100; duration: 100 }
+                    RotationAnimator { target: box; from: 0; to: 90; duration: 100 }
+                }
+                ParallelAnimation {
+                    XAnimator { target: box; from: 100; to: 0; duration: 100 }
+                    RotationAnimator { target: box; from: 90; to: 0; duration: 100 }
+                }
+            }
+            ScriptAction { script: box.after++; }
             running: true
-            loops: 1;
+            loops: 2
         }
     }
+
 }

@@ -39,6 +39,75 @@
 **
 ****************************************************************************/
 
-#include <QtQuickTest/quicktest.h>
+#include <qtest.h>
 
-QUICK_TEST_MAIN(qquickanimators)
+#include <QtQuick>
+#include <private/qquickanimator_p.h>
+
+#include <QtQml>
+
+class tst_Animators: public QObject
+{
+    Q_OBJECT
+
+private slots:
+    void testMultiWinAnimator_data();
+    void testMultiWinAnimator();
+};
+
+void tst_Animators::testMultiWinAnimator_data()
+{
+    QTest::addColumn<int>("count");
+
+    QTest::newRow("1") << 1;
+    QTest::newRow("10") << 10;
+}
+
+void tst_Animators::testMultiWinAnimator()
+{
+    QFETCH(int, count);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, "data/windowWithAnimator.qml");
+
+    QList<QQuickWindow *> windows;
+    for (int i=0; i<count; ++i) {
+        QQuickWindow *win = qobject_cast<QQuickWindow *>(component.create());
+        windows << win;
+
+        // As the windows are all the same size, if they are positioned at the
+        // same place only the top-most one will strictly be "exposed" and rendering
+        // for all the others will be disabled. Move the windows a little bit
+        // to ensure they are exposed and actually rendering.
+        if (i > 0) {
+            QPoint pos = win->position();
+            if (pos == windows.first()->position())
+                pos += QPoint(10 * i, 10 * i);
+                win->setPosition(pos);
+        }
+    }
+
+    // let all animations run their course...
+    while (true) {
+        QTest::qWait(200);
+        bool allDone = true;
+        for (int i=0; i<count; ++i) {
+            QQuickWindow *win = windows.at(i);
+            allDone = win->isExposed() && win->property("animationDone").toBool();
+        }
+
+        if (allDone) {
+            for (int i=0; i<count; ++i) {
+                QQuickWindow *win = windows.at(i);
+                delete win;
+            }
+            break;
+        }
+    }
+    QVERIFY(true);
+}
+
+#include "tst_qquickanimators.moc"
+
+QTEST_MAIN(tst_Animators)
+

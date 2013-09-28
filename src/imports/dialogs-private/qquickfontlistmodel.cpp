@@ -211,7 +211,7 @@ QQmlV4Handle QQuickFontListModel::get(int idx) const
     Q_D(const QQuickFontListModel);
 
     if (idx < 0 || idx >= count())
-        return QQmlV4Handle(Value::undefinedValue());
+        return QQmlV4Handle(Encode::undefined());
 
     QQmlEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
@@ -221,10 +221,10 @@ QQmlV4Handle QQuickFontListModel::get(int idx) const
     ScopedString s(scope);
     for (int ii = 0; ii < d->roleNames.keys().count(); ++ii) {
         Property *p = o->insertMember((s = v4engine->newIdentifier(d->roleNames[Qt::UserRole + ii + 1])), PropertyAttributes());
-        p->value = Value::fromReturnedValue(v8engine->fromVariant(data(index(idx, 0), Qt::UserRole + ii + 1)));
+        p->value = v8engine->fromVariant(data(index(idx, 0), Qt::UserRole + ii + 1));
     }
 
-    return QQmlV4Handle(o.asValue());
+    return QQmlV4Handle(o);
 }
 
 QQmlV4Handle QQuickFontListModel::pointSizes()
@@ -241,7 +241,7 @@ QQmlV4Handle QQuickFontListModel::pointSizes()
     a->arrayReserve(size);
     a->arrayDataLen = size;
     for (int i = 0; i < size; ++i)
-        a->arrayData[i].value = Value::fromInt32(pss.at(i));
+        a->arrayData[i].value = Primitive::fromInt32(pss.at(i));
     a->setArrayLengthUnchecked(size);
 
     return QQmlV4Handle(ScopedValue(scope, a.asReturnedValue()));

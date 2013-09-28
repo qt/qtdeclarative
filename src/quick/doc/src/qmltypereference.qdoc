@@ -304,15 +304,15 @@ Data Storage
 */
 
 /*!
-\qmlmodule QtQuick 2
-\brief The \c {QtQuick 2} module provides graphical primitives for use in QML.
+\qmlmodule QtQuick 2.2
+\brief The Provides graphical primitives for use in QML.
 
-The \c {QtQuick 2} module provides graphical primitive types. They can be used with the following import
+The \l{Qt Quick} module provides graphical primitive types. They can be used with the following import
 \code
-import QtQuick 2.1
+import QtQuick 2.2
 \endcode
 
-For a more detailed listing of types in the \c {QtQuick 2} import, see the \l{Qt Quick QML Types} page.
+For a more detailed listing of types in the \c {QtQuick} import, see the \l{Qt Quick QML Types} page.
 For more details about the module itself, see the \l{Qt Quick} module page.
 */
 

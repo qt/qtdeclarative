@@ -71,7 +71,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 /*!
     \qmltype TextInput
     \instantiates QQuickTextInput
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item
@@ -908,7 +908,7 @@ void QQuickTextInput::setAutoScroll(bool b)
 /*!
     \qmltype IntValidator
     \instantiates QIntValidator
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Defines a validator for integer values
 
@@ -972,7 +972,7 @@ void QQuickIntValidator::resetLocaleName()
 /*!
     \qmltype DoubleValidator
     \instantiates QDoubleValidator
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Defines a validator for non-integer numbers
 
@@ -1066,7 +1066,7 @@ void QQuickDoubleValidator::resetLocaleName()
 /*!
     \qmltype RegExpValidator
     \instantiates QRegExpValidator
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Provides a string validator
 
@@ -1420,17 +1420,18 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
         return;
 
     int i = 0;
-    QV4::Value arg = (*args)[i];
-    x = arg.toNumber();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue arg(scope, (*args)[0]);
+    x = arg->toNumber();
 
     if (++i < args->length()) {
         arg = (*args)[i];
-        y = arg.toNumber();
+        y = arg->toNumber();
     }
 
     if (++i < args->length()) {
         arg = (*args)[i];
-        position = QTextLine::CursorPosition(arg.toInt32());
+        position = QTextLine::CursorPosition(arg->toInt32());
     }
 
     int pos = d->positionAt(x, y, position);
@@ -1445,7 +1446,7 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
         pos = cursor;
 #endif
     }
-    args->setReturnValue(QV4::Value::fromInt32(pos));
+    args->setReturnValue(QV4::Encode(pos));
 }
 
 int QQuickTextInputPrivate::positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const

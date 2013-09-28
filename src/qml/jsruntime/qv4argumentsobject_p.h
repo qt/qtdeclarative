@@ -74,7 +74,7 @@ struct ArgumentsSetterFunction: FunctionObject
 struct ArgumentsObject: Object {
     Q_MANAGED
     CallContext *context;
-    QVector<Value> mappedArguments;
+    QVector<SafeValue> mappedArguments;
     ArgumentsObject(CallContext *context);
     ~ArgumentsObject() {}
 

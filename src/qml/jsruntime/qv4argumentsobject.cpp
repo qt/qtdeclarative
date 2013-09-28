@@ -64,35 +64,35 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         memberData[CalleePropertyIndex] = pd;
         memberData[CallerPropertyIndex] = pd;
 
-        arrayReserve(context->argumentCount);
-        for (unsigned int i = 0; i < context->argumentCount; ++i)
-            arrayData[i].value = context->arguments[i];
-        arrayDataLen = context->argumentCount;
+        arrayReserve(context->callData->argc);
+        for (unsigned int i = 0; i < context->callData->argc; ++i)
+            arrayData[i].value = context->callData->args[i];
+        arrayDataLen = context->callData->argc;
     } else {
         internalClass = engine()->argumentsObjectClass;
         Q_ASSERT(CalleePropertyIndex == internalClass->find(context->engine->id_callee));
-        memberData[CalleePropertyIndex].value = Value::fromObject(context->function);
+        memberData[CalleePropertyIndex].value = context->function->asReturnedValue();
         isNonStrictArgumentsObject = true;
 
-        uint numAccessors = qMin(context->function->formalParameterCount, context->realArgumentCount);
-        uint argCount = qMin((uint)context->realArgumentCount, context->argumentCount);
+        uint numAccessors = qMin((int)context->function->formalParameterCount, context->realArgumentCount);
+        uint argCount = qMin(context->realArgumentCount, context->callData->argc);
         arrayReserve(argCount);
         ensureArrayAttributes();
         context->engine->requireArgumentsAccessors(numAccessors);
         for (uint i = 0; i < (uint)numAccessors; ++i) {
-            mappedArguments.append(context->arguments[i]);
+            mappedArguments.append(context->callData->args[i]);
             arrayData[i] = context->engine->argumentsAccessors.at(i);
             arrayAttributes[i] = Attr_Accessor;
         }
         for (uint i = numAccessors; i < argCount; ++i) {
-            arrayData[i] = Property::fromValue(context->arguments[i]);
+            arrayData[i] = Property::fromValue(context->callData->args[i]);
             arrayAttributes[i] = Attr_Data;
         }
         arrayDataLen = argCount;
     }
     Q_ASSERT(LengthPropertyIndex == internalClass->find(context->engine->id_length));
     Property *lp = memberData + ArrayObject::LengthPropertyIndex;
-    lp->value = Value::fromInt32(context->realArgumentCount);
+    lp->value = Primitive::fromInt32(context->realArgumentCount);
 }
 
 void ArgumentsObject::destroy(Managed *that)
@@ -128,7 +128,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     if (isMapped && attrs.isData()) {
         if (!attrs.isGeneric()) {
             ScopedCallData callData(scope, 1);
-            callData->thisObject = Value::fromObject(this);
+            callData->thisObject = this->asReturnedValue();
             callData->args[0] = desc.value;
             map.setter()->call(callData);
         }
@@ -155,7 +155,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     if (!o)
         getter->engine()->current->throwTypeError();
 
-    assert(g->index < o->context->argumentCount);
+    assert(g->index < o->context->callData->argc);
     return o->context->argument(g->index);
 }
 
@@ -171,9 +171,9 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     if (!o)
         setter->engine()->current->throwTypeError();
 
-    assert(s->index < o->context->argumentCount);
-    o->context->arguments[s->index] = callData->argc ? callData->args[0] : Value::undefinedValue();
-    return Value::undefinedValue().asReturnedValue();
+    assert(s->index < o->context->callData->argc);
+    o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void ArgumentsObject::markObjects(Managed *that)

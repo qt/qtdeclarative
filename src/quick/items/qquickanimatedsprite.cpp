@@ -210,7 +210,7 @@ struct AnimatedSpriteVertices {
 /*!
     \qmltype AnimatedSprite
     \instantiates QQuickAnimatedSprite
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-visual
     \brief Draws a sprite animation

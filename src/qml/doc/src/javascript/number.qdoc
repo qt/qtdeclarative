@@ -27,7 +27,7 @@
 
 /*!
     \qmltype Number
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \brief The Number object provides represents a number value
 
     The QML Number object extends the JS Number object with

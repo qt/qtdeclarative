@@ -121,7 +121,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 /*!
   \qmltype QtObject
     \instantiates QObject
-  \inqmlmodule QtQml 2
+  \inqmlmodule QtQml
   \ingroup qml-utility-elements
   \brief A basic QML type
 
@@ -275,7 +275,7 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 
 /*!
 \qmltype Qt
-\inqmlmodule QtQml 2
+\inqmlmodule QtQml
 \instantiates QQmlEnginePrivate
 \ingroup qml-utility-elements
 \keyword QmlGlobalQtObject
@@ -370,7 +370,7 @@ The following functions are also on the Qt object.
 
 /*!
     \qmlproperty object Qt::platform
-    \since QtQml 2.1
+    \since 4.8
 
     The \c platform object provides info about the underlying platform.
 
@@ -400,7 +400,7 @@ The following functions are also on the Qt object.
 
 /*!
     \qmlproperty object Qt::application
-    \since QtQuick 1.1
+    \since 5.1
 
     The \c application object provides access to global application state
     properties shared by many QML components.
@@ -512,7 +512,7 @@ The following functions are also on the Qt object.
 
 /*!
     \qmlproperty object Qt::inputMethod
-    \since QtQuick 2.0
+    \since 5.0
 
     The \c inputMethod object allows access to application's QInputMethod object
     and all its properties and slots. See the QInputMethod documentation for
@@ -1654,7 +1654,7 @@ void QQmlData::destroyed(QObject *object)
         delete extendedData;
 
     // Dispose the handle.
-    jsWrapper = QV4::Value::undefinedValue();
+    jsWrapper.clear();
 
     if (ownMemory)
         delete this;

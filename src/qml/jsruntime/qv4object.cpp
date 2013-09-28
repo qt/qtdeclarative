@@ -135,7 +135,7 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
         return p->value.asReturnedValue();
     FunctionObject *getter = p->getter();
     if (!getter)
-        return Value::undefinedValue().asReturnedValue();
+        return Primitive::undefinedValue().asReturnedValue();
 
     Scope scope(getter->engine());
     ScopedCallData callData(scope, 0);
@@ -215,13 +215,13 @@ void Object::inplaceBinOpValue(ExecutionContext *ctx, BinOpContext op, const Val
     inplaceBinOp(ctx, op, name, rhs);
 }
 
-void Object::defineDefaultProperty(const StringRef name, Value value)
+void Object::defineDefaultProperty(const StringRef name, ValueRef value)
 {
     Property *pd = insertMember(name, Attr_Data|Attr_NotEnumerable);
-    pd->value = value;
+    pd->value = *value;
 }
 
-void Object::defineDefaultProperty(const QString &name, Value value)
+void Object::defineDefaultProperty(const QString &name, ValueRef value)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -235,8 +235,8 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Si
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
     Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, s, code));
-    function->defineReadonlyProperty(e->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(s, function.asValue());
+    function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(s, function);
 }
 
 void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
@@ -244,8 +244,8 @@ void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(S
     ExecutionEngine *e = engine();
     Scope scope(e);
     Scoped<FunctionObject> function(scope, e->newBuiltinFunction(e->rootContext, name, code));
-    function->defineReadonlyProperty(e->id_length, Value::fromInt32(argumentCount));
-    defineDefaultProperty(name, function.asValue());
+    function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(name, function);
 }
 
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
@@ -267,7 +267,7 @@ void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter
         p->setSetter(v4->newBuiltinFunction(v4->rootContext, name, setter)->getPointer());
 }
 
-void Object::defineReadonlyProperty(const QString &name, Value value)
+void Object::defineReadonlyProperty(const QString &name, ValueRef value)
 {
     QV4::ExecutionEngine *e = engine();
     Scope scope(e);
@@ -275,10 +275,10 @@ void Object::defineReadonlyProperty(const QString &name, Value value)
     defineReadonlyProperty(s, value);
 }
 
-void Object::defineReadonlyProperty(const StringRef name, Value value)
+void Object::defineReadonlyProperty(const StringRef name, ValueRef value)
 {
     Property *pd = insertMember(name, Attr_ReadOnly);
-    pd->value = value;
+    pd->value = *value;
 }
 
 void Object::markObjects(Managed *that)
@@ -538,7 +538,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
             return o->getValue(p, attrs);
         }
     }
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
@@ -710,7 +710,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
     if (hasProperty)
         *hasProperty = false;
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 
@@ -743,7 +743,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
             bool ok;
             uint l = value->asArrayLength(&ok);
             if (!ok)
-                engine()->current->throwRangeError(*value);
+                engine()->current->throwRangeError(value);
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
@@ -902,7 +902,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
         return true;
 
     if (!arrayAttributes || arrayAttributes[pidx].isConfigurable()) {
-        arrayData[pidx].value = Value::undefinedValue();
+        arrayData[pidx].value = Primitive::undefinedValue();
         if (!arrayAttributes)
             ensureArrayAttributes();
         arrayAttributes[pidx].clear();
@@ -927,6 +927,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
 
     name->makeIdentifier();
 
+    Scope scope(ctx);
     Property *current;
     PropertyAttributes *cattrs;
 
@@ -942,8 +943,10 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
         if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
             uint l = p.value.asArrayLength(&ok);
-            if (!ok)
-                ctx->throwRangeError(p.value);
+            if (!ok) {
+                ScopedValue v(scope, p.value);
+                ctx->throwRangeError(v);
+            }
             succeeded = setArrayLength(l);
         }
         if (attrs.hasWritable() && !attrs.isWritable())
@@ -1061,7 +1064,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, Property *current, con
             // 9c
             cattrs.setType(PropertyAttributes::Data);
             cattrs.setWritable(false);
-            current->value = Value::undefinedValue();
+            current->value = Primitive::undefinedValue();
         }
     } else if (cattrs.isData() && attrs.isData()) { // clause 10
         if (!cattrs.isConfigurable() && !cattrs.isWritable()) {
@@ -1293,12 +1296,12 @@ void Object::initSparse()
             arrayAlloc += off;
             int o = off;
             for (int i = 0; i < o - 1; ++i) {
-                arrayData[i].value = Value::fromInt32(i + 1);
+                arrayData[i].value = Primitive::fromInt32(i + 1);
             }
-            arrayData[o - 1].value = Value::fromInt32(arrayDataLen + off);
+            arrayData[o - 1].value = Primitive::fromInt32(arrayDataLen + off);
         }
         for (int i = arrayDataLen + off; i < arrayAlloc; ++i) {
-            arrayData[i].value = Value::fromInt32(i + 1);
+            arrayData[i].value = Primitive::fromInt32(i + 1);
         }
     }
 }
@@ -1327,7 +1330,7 @@ void Object::arrayReserve(uint n)
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
                 arrayData[i].value = Value::emptyValue();
-                arrayData[i].value = Value::fromInt32(i + 1);
+                arrayData[i].value = Primitive::fromInt32(i + 1);
             }
         } else {
             arrayOffset = 0;
@@ -1451,7 +1454,7 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     int len = list.count();
     arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        arrayData[ii].value = Value::fromString(engine->newString(list.at(ii)));
+        arrayData[ii].value = Encode(engine->newString(list.at(ii)));
         arrayDataLen = ii + 1;
     }
     setArrayLengthUnchecked(len);
@@ -1460,7 +1463,7 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 void ArrayObject::init(ExecutionEngine *engine)
 {
     type = Type_ArrayObject;
-    memberData[LengthPropertyIndex].value = Value::fromInt32(0);
+    memberData[LengthPropertyIndex].value = Primitive::fromInt32(0);
 }
 
 QStringList ArrayObject::toQStringList() const

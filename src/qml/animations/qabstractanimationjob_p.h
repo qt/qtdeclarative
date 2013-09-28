@@ -123,6 +123,8 @@ protected:
     virtual void updateDirection(QAbstractAnimationJob::Direction direction);
     virtual void topLevelAnimationLoopChanged() {}
 
+    void fireTopLevelAnimationLoopChanged();
+
     void setState(QAbstractAnimationJob::State state);
 
     void finished();
@@ -143,6 +145,7 @@ protected:
     int m_currentLoop;
     //records the finish time for an uncontrolled animation (used by animation groups)
     int m_uncontrolledFinishTime;
+    int m_currentLoopStartTime; // used together with m_uncontrolledFinishTime
 
     struct ChangeListener {
         ChangeListener(QAnimationJobChangeListener *l, QAbstractAnimationJob::ChangeTypes t) : listener(l), types(t) {}

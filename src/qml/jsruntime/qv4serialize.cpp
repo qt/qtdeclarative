@@ -251,7 +251,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, QV8Engine *engi
             }
             reserve(data, sizeof(quint32) + length * sizeof(quint32));
             push(data, valueheader(WorkerSequence, length));
-            serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
+            serialize(data, QV4::Primitive::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             for (uint32_t ii = 0; ii < seqLength; ++ii)
                 serialize(data, QV4::Value::fromReturnedValue(o->getIndexed(ii)), engine); // sequence elements
 
@@ -312,7 +312,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 size = headersize(header);
         QString qstr((QChar *)data, size);
         data += ALIGN(size * sizeof(uint16_t));
-        return QV4::Value::fromString(v4->newString(qstr)).asReturnedValue();
+        return QV4::Encode(v4->newString(qstr));
     }
     case WorkerFunction:
         Q_ASSERT(!"Unreachable");
@@ -350,7 +350,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Encode(v4->newDateObject(QV4::Value::fromDouble(popDouble(data))));
+        return QV4::Encode(v4->newDateObject(QV4::Primitive::fromDouble(popDouble(data))));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);
@@ -391,7 +391,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
             array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = QV4::SequencePrototype::toVariant(array.asValue(), sequenceType, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);
         return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);
     }
     }

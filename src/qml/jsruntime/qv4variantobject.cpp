@@ -69,24 +69,25 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
         internalClass->engine->scarceResources.insert(this);
 }
 
-QVariant VariantObject::toVariant(const QV4::Value &v)
+QVariant VariantObject::toVariant(const QV4::ValueRef v)
 {
-    if (Object *o = v.asObject())
-        return o->engine()->v8Engine->variantFromJS(v);
+    if (v->asObject())
+        return v->engine()->v8Engine->variantFromJS(v);
 
-    if (v.isString())
-        return QVariant(v.stringValue()->toQString());
-    if (v.isBoolean())
-        return QVariant(v.booleanValue());
-    if (v.isNumber()) {
-        QV4::Value val = v;
+    if (v->isString())
+        return QVariant(v->stringValue()->toQString());
+    if (v->isBoolean())
+        return QVariant(v->booleanValue());
+    if (v->isNumber()) {
+        QV4::SafeValue val;
+        val = v;
         if (val.isInt32())
             return QVariant(val.integerValue());
-        return QVariant(v.asDouble());
+        return QVariant(v->asDouble());
     }
-    if (v.isNull())
+    if (v->isNull())
         return QVariant(QMetaType::VoidStar, 0);
-    Q_ASSERT(v.isUndefined());
+    Q_ASSERT(v->isUndefined());
     return QVariant();
 }
 
@@ -154,7 +155,8 @@ void VariantPrototype::init()
 
 QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
+    Scope scope(ctx);
+    Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (o && o->isScarce())
         o->node.remove();
     return Encode::undefined();
@@ -162,7 +164,8 @@ QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)
 
 QV4::ReturnedValue VariantPrototype::method_destroy(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
+    Scope scope(ctx);
+    Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (o) {
         if (o->isScarce())
             o->node.remove();
@@ -173,25 +176,27 @@ QV4::ReturnedValue VariantPrototype::method_destroy(SimpleCallContext *ctx)
 
 QV4::ReturnedValue VariantPrototype::method_toString(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
+    Scope scope(ctx);
+    Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (!o)
         return Encode::undefined();
     QString result = o->data.toString();
     if (result.isEmpty() && !o->data.canConvert(QVariant::String))
         result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->data.typeName()));
-    return Value::fromString(ctx->engine->newString(result)).asReturnedValue();
+    return Encode(ctx->engine->newString(result));
 }
 
 QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    VariantObject *o = ctx->thisObject.as<QV4::VariantObject>();
+    Scope scope(ctx);
+    Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
     if (o) {
         QVariant v = o->data;
         switch (v.type()) {
         case QVariant::Invalid:
             return Encode::undefined();
         case QVariant::String:
-            return Value::fromString(ctx->engine->newString(v.toString())).asReturnedValue();
+            return Encode(ctx->engine->newString(v.toString()));
         case QVariant::Int:
             return Encode(v.toInt());
         case QVariant::Double:
@@ -203,7 +208,7 @@ QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
             break;
         }
     }
-    return ctx->thisObject.asReturnedValue();
+    return ctx->callData->thisObject.asReturnedValue();
 }
 
 QT_END_NAMESPACE

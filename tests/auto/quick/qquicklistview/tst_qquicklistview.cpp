@@ -408,7 +408,7 @@ void tst_QQuickListView::items(const QUrl &source)
     QTRY_VERIFY(itemCount == 0);
 
     QTRY_COMPARE(listview->highlightResizeVelocity(), 1000.0);
-    QTRY_COMPARE(listview->highlightMoveVelocity(), 1000.0);
+    QTRY_COMPARE(listview->highlightMoveVelocity(), 100000.0);
 
     delete window;
     delete testObject;
@@ -461,6 +461,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
 {
     QQuickView *window = createView();
     window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     T model;
     model.addItem("Fred", "12345");
@@ -1199,7 +1200,7 @@ void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayou
 
     window->setSource(source);
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1736,7 +1737,7 @@ void tst_QQuickListView::swapWithFirstItem()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1764,7 +1765,7 @@ void tst_QQuickListView::enforceRange()
 
     window->setSource(testFileUrl("listview-enforcerange.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1825,7 +1826,7 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
 
     window->setSource(testFileUrl("listview-enforcerange-nohighlight.qml"));
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1868,7 +1869,7 @@ void tst_QQuickListView::spacing()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1927,7 +1928,7 @@ void tst_QQuickListView::sections(const QUrl &source)
 
     window->setSource(source);
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2027,7 +2028,7 @@ void tst_QQuickListView::sectionsDelegate()
 
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2138,7 +2139,7 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
 
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2184,6 +2185,7 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     window->rootContext()->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     window->requestActivate();
     QTest::qWaitForWindowActive(window);
 
@@ -2218,7 +2220,7 @@ void tst_QQuickListView::sectionsPositioning()
 
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     window->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart | QQuickViewSection::NextLabelAtEnd)));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
@@ -2378,7 +2380,7 @@ void tst_QQuickListView::sectionPropertyChange()
 
     window->setSource(testFileUrl("sectionpropertychange.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2444,7 +2446,7 @@ void tst_QQuickListView::sectionDelegateChange()
 
     window->setSource(testFileUrl("sectiondelegatechange.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
     QVERIFY(listview != 0);
@@ -2529,7 +2531,7 @@ void tst_QQuickListView::currentIndex()
     QString filename(testFile("listview-initCurrent.qml"));
     window->setSource(QUrl::fromLocalFile(filename));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2629,7 +2631,7 @@ void tst_QQuickListView::noCurrentIndex()
     QString filename(testFile("listview-noCurrent.qml"));
     window->setSource(QUrl::fromLocalFile(filename));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2695,7 +2697,7 @@ void tst_QQuickListView::keyNavigation()
     // hold down a key to go forwards
     for (int i=0; i<model.count()-1; i++) {
         QTest::simulateEvent(window, true, forwardsKey, Qt::NoModifier, "", true);
-        QTRY_COMPARE(listview->currentIndex(), i+1);
+        QCOMPARE(listview->currentIndex(), i+1);
     }
     QTest::keyRelease(window, forwardsKey);
     listview->forceLayout();
@@ -2782,7 +2784,7 @@ void tst_QQuickListView::itemList()
     QQuickView *window = createView();
     window->setSource(testFileUrl("itemlist.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "view");
     QTRY_VERIFY(listview != 0);
@@ -2823,7 +2825,7 @@ void tst_QQuickListView::itemListFlicker()
     QQuickView *window = createView();
     window->setSource(testFileUrl("itemlist-flicker.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "view");
     QTRY_VERIFY(listview != 0);
@@ -2883,7 +2885,7 @@ void tst_QQuickListView::cacheBuffer()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2983,7 +2985,7 @@ void tst_QQuickListView::positionViewAtBeginningEnd()
     ctxt->setContextProperty("testObject", testObject);
     window->show();
     window->setSource(testFileUrl("listviewtest.qml"));
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3044,7 +3046,7 @@ void tst_QQuickListView::positionViewAtIndex()
     ctxt->setContextProperty("testObject", testObject);
     window->show();
     window->setSource(testFileUrl("listviewtest.qml"));
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3124,7 +3126,7 @@ void tst_QQuickListView::resetModel()
 
     window->setSource(testFileUrl("displaylist.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3386,7 +3388,7 @@ void tst_QQuickListView::QTBUG_11105()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3461,7 +3463,7 @@ void tst_QQuickListView::header()
     window->rootContext()->setContextProperty("initialViewHeight", 320);
     window->setSource(testFileUrl("header.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3540,7 +3542,7 @@ void tst_QQuickListView::header()
     window->rootContext()->setContextProperty("initialViewHeight", 0.0);
     window->setSource(testFileUrl("header.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3671,7 +3673,7 @@ void tst_QQuickListView::footer()
 
     window->setSource(testFileUrl("footer.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3859,7 +3861,7 @@ void tst_QQuickListView::extents()
     ctxt->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("headerfooter.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
     QTRY_VERIFY(listview != 0);
@@ -3994,7 +3996,7 @@ void tst_QQuickListView::resizeView()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4072,7 +4074,7 @@ void tst_QQuickListView::resizeViewAndRepaint()
 
     window->setSource(testFileUrl("resizeview.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4109,7 +4111,7 @@ void tst_QQuickListView::sizeLessThan1()
 
     window->setSource(testFileUrl("sizelessthan1.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4166,7 +4168,7 @@ void tst_QQuickListView::resizeDelegate()
 
     window->setSource(testFileUrl("displaylist.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QVERIFY(listview != 0);
@@ -4250,7 +4252,7 @@ void tst_QQuickListView::resizeFirstDelegate()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QVERIFY(listview != 0);
@@ -4323,7 +4325,7 @@ void tst_QQuickListView::repositionResizedDelegate()
     ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickListView::BottomToTop);
     window->setSource(testFileUrl("repositionResizedDelegate.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
     QTRY_VERIFY(listview != 0);
@@ -4415,7 +4417,7 @@ void tst_QQuickListView::QTBUG_16037()
     window->show();
 
     window->setSource(testFileUrl("qtbug16037.qml"));
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "listview");
     QTRY_VERIFY(listview != 0);
@@ -4462,7 +4464,7 @@ void tst_QQuickListView::indexAt_itemAt()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4627,7 +4629,7 @@ void tst_QQuickListView::rightToLeft()
     window->setGeometry(0,0,640,320);
     window->setSource(testFileUrl("rightToLeft.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject() != 0);
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "view");
@@ -4749,7 +4751,7 @@ void tst_QQuickListView::margins()
 
     window->setSource(testFileUrl("margins.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4822,7 +4824,7 @@ void tst_QQuickListView::marginsResize()
     window->setSource(testFileUrl("margins2.qml"));
     QQuickViewTestUtil::moveMouseAway(window);
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "listview");
     QTRY_VERIFY(listview != 0);
@@ -4960,7 +4962,8 @@ void tst_QQuickListView::snapToItem()
 
     window->setSource(testFileUrl("snapToItem.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5289,7 +5292,8 @@ void tst_QQuickListView::snapOneItem()
 
     window->setSource(testFileUrl("snapOneItem.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5372,7 +5376,8 @@ void tst_QQuickListView::unrequestedVisibility()
 
     window->setSource(testFileUrl("unrequestedItems.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *leftview = findItem<QQuickListView>(window->rootObject(), "leftList");
     QTRY_VERIFY(leftview != 0);
@@ -6294,7 +6299,8 @@ void tst_QQuickListView::displacedTransitions()
     ctxt->setContextProperty("removeDisplacedEnabled", removeDisplacedEnabled);
     window->setSource(testFileUrl("displacedTransitions.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -6578,6 +6584,7 @@ void tst_QQuickListView::multipleTransitions()
         }
     }
     listview->forceLayout();
+    QTest::qWait(200);
     QCOMPARE(listview->count(), model.count());
 
     // verify all items moved to the correct final positions
@@ -6762,7 +6769,8 @@ void tst_QQuickListView::flickBeyondBounds()
 
     window->setSource(testFileUrl("flickBeyondBoundsBug.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -6796,7 +6804,8 @@ void tst_QQuickListView::destroyItemOnCreation()
 
     window->setSource(testFileUrl("destroyItemOnCreation.qml"));
     window->show();
-    qApp->processEvents();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QVERIFY(listview != 0);

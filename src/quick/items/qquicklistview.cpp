@@ -1646,7 +1646,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 /*!
     \qmltype ListView
     \instantiates QQuickListView
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-views
     \inherits Flickable
     \brief Provides a list view of items provided by a model
@@ -3115,7 +3115,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     This method forces the ListView to immediately respond to any outstanding
     changes in the model.
 
-    \since QtQuick 2.1
+    \since 5.1
 
     \b Note: methods should only be called after the Component has completed.
 */

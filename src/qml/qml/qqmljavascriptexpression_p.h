@@ -146,12 +146,12 @@ public:
     QQmlDelayedError *delayedError();
 
     static void exceptionToError(const QV4::Exception &e, QQmlError &);
-    static QV4::PersistentValue evalFunction(QQmlContextData *ctxt, QObject *scope,
+    static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
                                                      quint16 line,
                                                      QV4::PersistentValue *qmlscope = 0);
     // doesn't require rewriting the expression
-    static QV4::PersistentValue qmlBinding(QQmlContextData *ctxt, QObject *scope,
+    static QV4::ReturnedValue qmlBinding(QQmlContextData *ctxt, QObject *scope,
                                         const QString &code,
                                         const QString &filename, quint16 line,
                                         QV4::PersistentValue *qmlscope = 0);

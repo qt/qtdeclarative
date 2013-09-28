@@ -47,14 +47,15 @@ Item {
     width: 200
     height: 200
 
-    property int restartCount: 5;
-
     TestCase {
-        id: testcase
-        name: "restart"
-        when: root.restartCount == 0 && animation.running == false;
+        id: testCase
+        name: "animators-scale"
+        when: !animation.running
         function test_endresult() {
+            compare(box.scaleChangeCounter, 1);
             compare(box.scale, 2);
+            var image = grabImage(root);
+            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
         }
     }
 
@@ -63,23 +64,12 @@ Item {
 
         ScaleAnimator {
             id: animation
-            target: box;
+            target: box
             from: 1;
-            to: 2.0;
-            duration: 100;
-            loops: 1
-            running: false;
-        }
-
-        Timer {
-            id: timer;
-            interval: 500
+            to: 2.0
+            duration: 100
+            easing.type: Easing.InOutCubic
             running: true
-            repeat: true
-            onTriggered: {
-                animation.running = true;
-                --root.restartCount;
-            }
         }
     }
 }

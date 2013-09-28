@@ -158,7 +158,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 /*!
     \qmltype Loader
     \instantiates QQuickLoader
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-dynamic
     \inherits Item
 
@@ -568,7 +568,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     Q_D(QQuickLoader);
 
     bool ipvError = false;
-    args->setReturnValue(QV4::Value::undefinedValue());
+    args->setReturnValue(QV4::Encode::undefined());
     QV4::Value ipv = d->extractInitialPropertyValues(args, this, &ipvError);
     if (ipvError)
         return;
@@ -577,7 +577,7 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     QUrl sourceUrl = d->resolveSourceUrl(args);
     if (!ipv.isUndefined()) {
         d->disposeInitialPropertyValues();
-        d->initialPropertyValues = ipv;
+        d->initialPropertyValues = ipv.asReturnedValue();
         d->qmlGlobalForIpv = args->qmlGlobal();
     }
 
@@ -644,7 +644,11 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 
     QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
     Q_ASSERT(d && d->engine);
-    d->initializeObjectWithInitialProperties(qmlGlobalForIpv.value(), initialPropertyValues.value(), obj);
+    QV4::ExecutionEngine *v4 = qmlGlobalForIpv.engine();
+    Q_ASSERT(v4);
+    QV4::Scope scope(v4);
+    QV4::ScopedValue ipv(scope, initialPropertyValues.value());
+    d->initializeObjectWithInitialProperties(qmlGlobalForIpv, ipv, obj);
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)
@@ -922,7 +926,9 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
 
 QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 {
-    QString arg = (*args)[0].toQStringNoThrow();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue v(scope, (*args)[0]);
+    QString arg = v->toQString();
     if (arg.isEmpty())
         return QUrl();
 
@@ -933,10 +939,11 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 
 QV4::Value QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
 {
-    QV4::Value valuemap = QV4::Value::undefinedValue();
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
     if (args->length() >= 2) {
-        QV4::Value v = (*args)[1];
-        if (!v.isObject() || v.asArrayObject()) {
+        QV4::ScopedValue v(scope, (*args)[1]);
+        if (!v->isObject() || v->asArrayObject()) {
             *error = true;
             qmlInfo(loader) << QQuickLoader::tr("setSource: value is not an object");
         } else {

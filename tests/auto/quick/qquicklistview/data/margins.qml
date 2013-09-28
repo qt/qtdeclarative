@@ -41,6 +41,7 @@ Rectangle {
         anchors.fill: parent
         topMargin: 30
         bottomMargin: 50
+        highlightMoveVelocity: 100000
         cacheBuffer: 0
         model: testModel
         delegate: myDelegate

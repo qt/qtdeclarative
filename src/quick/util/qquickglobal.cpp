@@ -317,15 +317,15 @@ public:
 
         if (ok) *ok = false;
         QFont retn;
-        QV4::Object *obj = object.toValue().asObject();
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+        QV4::Scope scope(v4);
+        QV4::ScopedObject obj(scope, object);
         if (!obj) {
             if (ok)
                 *ok = false;
             return retn;
         }
 
-        QV4::ExecutionEngine *v4 = obj->engine();
-        QV4::Scope scope(v4);
         QV4::ScopedString s(scope);
 
         QV4::Value vbold = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("bold")))));
@@ -389,14 +389,14 @@ public:
         return retn;
     }
 
-    static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, bool *ok)
+    static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, QV8Engine *e, bool *ok)
     {
         if (ok) *ok = false;
-        QV4::ArrayObject *array = object.toValue().asArrayObject();
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+        QV4::Scope scope(v4);
+        QV4::ScopedArrayObject array(scope, object);
         if (!array)
             return QMatrix4x4();
-
-        QV4::Scope scope(array->engine());
 
         if (array->arrayLength() != 16)
             return QMatrix4x4();
@@ -763,15 +763,19 @@ public:
 
     bool variantFromJsObject(int type, QQmlV4Handle object, QV8Engine *e, QVariant *v)
     {
-        // must be called with a valid v8 context.
-        Q_ASSERT(object.toValue().isObject());
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+        QV4::Scope scope(v4);
+#ifndef QT_NO_DEBUG
+        QV4::ScopedObject obj(scope, object);
+        Q_ASSERT(obj);
+#endif
         bool ok = false;
         switch (type) {
         case QMetaType::QFont:
             *v = QVariant::fromValue(fontFromObject(object, e, &ok));
             break;
         case QMetaType::QMatrix4x4:
-            *v = QVariant::fromValue(matrix4x4FromObject(object, &ok));
+            *v = QVariant::fromValue(matrix4x4FromObject(object, e, &ok));
         default: break;
         }
 

@@ -54,7 +54,7 @@ struct StringObject: Object {
 
     Value value;
     mutable Property tmpProperty;
-    StringObject(ExecutionEngine *engine, const Value &value);
+    StringObject(ExecutionEngine *engine, const ValueRef value);
 
     Property *getIndex(uint index) const;
 
@@ -78,7 +78,7 @@ struct StringCtor: FunctionObject
 struct StringPrototype: StringObject
 {
     StringPrototype(InternalClass *ic): StringObject(ic) {}
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static ReturnedValue method_toString(SimpleCallContext *context);
     static ReturnedValue method_charAt(SimpleCallContext *context);

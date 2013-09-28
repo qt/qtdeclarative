@@ -89,7 +89,7 @@ public:
 /*!
     \qmltype Flipable
     \instantiates QQuickFlipable
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-input
     \ingroup qtquick-containers

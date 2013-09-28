@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Dialogs 1
     \ingroup dialogs
     \brief Dialog component for choosing a color.
-    \since Qt 5.1
+    \since 5.1
 
     ColorDialog allows the user to select a color. The dialog is initially
     invisible. You need to set the properties as desired first, then set

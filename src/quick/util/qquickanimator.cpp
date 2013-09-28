@@ -49,8 +49,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Animator
     \instantiates QQuickAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief Is the base of all QML animators.
 
@@ -290,8 +290,8 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
 /*!
     \qmltype XAnimator
     \instantiates QQuickXAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The XAnimator type animates the x position of an Item.
 
@@ -322,8 +322,8 @@ QQuickAnimatorJob *QQuickXAnimator::createJob() const { return new QQuickXAnimat
 /*!
     \qmltype YAnimator
     \instantiates QQuickYAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The YAnimator type animates the y position of an Item.
 
@@ -354,8 +354,8 @@ QQuickAnimatorJob *QQuickYAnimator::createJob() const { return new QQuickYAnimat
 /*!
     \qmltype ScaleAnimator
     \instantiates QQuickScaleAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The ScaleAnimator type animates the scale factor of an Item.
 
@@ -386,8 +386,8 @@ QQuickAnimatorJob *QQuickScaleAnimator::createJob() const { return new QQuickSca
 /*!
     \qmltype OpacityAnimator
     \instantiates QQuickOpacityAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The OpacityAnimator type animates the opacity of an Item.
 
@@ -417,8 +417,8 @@ QQuickAnimatorJob *QQuickOpacityAnimator::createJob() const { return new QQuickO
 /*!
     \qmltype RotationAnimator
     \instantiates QQuickRotationAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The RotationAnimator type animates the rotation of an Item.
 
@@ -488,8 +488,8 @@ QQuickRotationAnimator::RotationDirection QQuickRotationAnimator::direction() co
 /*!
     \qmltype UniformAnimator
     \instantiates QQuickUniformAnimator
-    \inqmlmodule QtQuick 2
-    \since QtQuick 2.2
+    \inqmlmodule QtQuick
+    \since 5.2
     \ingroup qtquick-transitions-animations
     \brief The UniformAnimator type animates a uniform of a ShaderEffect.
 

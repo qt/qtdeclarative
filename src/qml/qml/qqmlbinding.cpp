@@ -178,7 +178,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
     v4function = qmlBinding(ctxt, obj, str, url, m_lineNumber);
 }
 
-QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt,
+QQmlBinding::QQmlBinding(const QV4::ValueRef functionPtr, QObject *obj, QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
   m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
@@ -250,7 +250,8 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool isUndefined = false;
 
-            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined));
+            QV4::ScopedValue f(scope, v4function.value());
+            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), f, &isUndefined));
 
             trace.event("writing binding result");
 
@@ -291,7 +292,8 @@ QVariant QQmlBinding::evaluate()
 
     bool isUndefined = false;
 
-    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), v4function.value(), &isUndefined));
+    QV4::ScopedValue f(scope, v4function.value());
+    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), f, &isUndefined));
 
     ep->dereferenceScarceResources();
 

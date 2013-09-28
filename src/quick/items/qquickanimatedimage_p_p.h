@@ -68,7 +68,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), preset_currentframe(0), _movie(0), reply(0), redirectCount(0)
+      : playing(true), paused(false), preset_currentframe(0), _movie(0), reply(0), redirectCount(0), oldPlaying(false)
     {
     }
 

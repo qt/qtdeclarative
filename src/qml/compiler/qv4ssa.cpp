@@ -1583,10 +1583,10 @@ public:
                     case DoubleType:
                         break;
                     case SInt32Type:
-                        c->value = QV4::Value::toInt32(c->value);
+                        c->value = QV4::Primitive::toInt32(c->value);
                         break;
                     case UInt32Type:
-                        c->value = QV4::Value::toUInt32(c->value);
+                        c->value = QV4::Primitive::toUInt32(c->value);
                         break;
                     case BoolType:
                         c->value = !(c->value == 0 || std::isnan(c->value));
@@ -1626,9 +1626,9 @@ protected:
     virtual void visitConst(Const *c) {
         if (_ty & NumberType && c->type & NumberType) {
             if (_ty == SInt32Type)
-                c->value = QV4::Value::toInt32(c->value);
+                c->value = QV4::Primitive::toInt32(c->value);
             else if (_ty == UInt32Type)
-                c->value = QV4::Value::toUInt32(c->value);
+                c->value = QV4::Primitive::toUInt32(c->value);
             c->type = _ty;
         }
     }
@@ -2276,14 +2276,14 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 continue;
             }
         } else  if (Move *m = s->asMove()) {
-            if (Temp *t = unescapableTemp(m->target, variablesCanEscape)) {
+            if (Temp *targetTemp = unescapableTemp(m->target, variablesCanEscape)) {
                 // constant propagation:
-                if (Const *c = m->source->asConst()) {
-                    if (c->type & NumberType || c->type == BoolType) {
+                if (Const *sourceConst = m->source->asConst()) {
+                    if (sourceConst->type & NumberType || sourceConst->type == BoolType) {
                         // TODO: when propagating other constants, e.g. undefined, the other
                         // optimization passes have to be changed to cope with them.
-                        W += replaceUses(t, c);
-                        defUses.removeDef(*t);
+                        W += replaceUses(targetTemp, sourceConst);
+                        defUses.removeDef(*targetTemp);
                         *ref[s] = 0;
                     }
                     continue;
@@ -2300,63 +2300,63 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
 #endif
 
                 // copy propagation:
-                if (Temp *t2 = unescapableTemp(m->source, variablesCanEscape)) {
-                    QVector<Stmt *> newT2Uses = replaceUses(t, t2);
+                if (Temp *sourceTemp = unescapableTemp(m->source, variablesCanEscape)) {
+                    QVector<Stmt *> newT2Uses = replaceUses(targetTemp, sourceTemp);
                     W += newT2Uses;
-                    defUses.removeUse(s, *t2);
-                    defUses.addUses(*t2, QList<Stmt*>::fromVector(newT2Uses));
-                    defUses.removeDef(*t);
+                    defUses.removeUse(s, *sourceTemp);
+                    defUses.addUses(*sourceTemp, QList<Stmt*>::fromVector(newT2Uses));
+                    defUses.removeDef(*targetTemp);
                     *ref[s] = 0;
                     continue;
                 }
 
-                if (Unop *u = m->source->asUnop()) {
+                if (Unop *unop = m->source->asUnop()) {
                     // Constant unary expression evaluation:
-                    if (Const *c = u->expr->asConst()) {
-                        if (c->type & NumberType || c->type == BoolType) {
+                    if (Const *constOperand = unop->expr->asConst()) {
+                        if (constOperand->type & NumberType || constOperand->type == BoolType) {
                             // TODO: implement unop propagation for other constant types
                             bool doneSomething = false;
-                            switch (u->op) {
+                            switch (unop->op) {
                             case OpNot:
-                                c->value = !c->value;
-                                c->type = BoolType;
+                                constOperand->value = !constOperand->value;
+                                constOperand->type = BoolType;
                                 doneSomething = true;
                                 break;
                             case OpUMinus:
-                                if (int(c->value) == 0 && int(c->value) == c->value) {
-                                    if (isNegative(c->value))
-                                        c->value = 0;
+                                if (int(constOperand->value) == 0 && int(constOperand->value) == constOperand->value) {
+                                    if (isNegative(constOperand->value))
+                                        constOperand->value = 0;
                                     else
-                                        c->value = -1 / Q_INFINITY;
-                                    c->type = DoubleType;
+                                        constOperand->value = -1 / Q_INFINITY;
+                                    constOperand->type = DoubleType;
                                     doneSomething = true;
                                     break;
                                 }
 
-                                c->value = -c->value;
-                                if (canConvertToSignedInteger(c->value))
-                                    c->type = SInt32Type;
-                                else if (canConvertToUnsignedInteger(c->value))
-                                    c->type = UInt32Type;
+                                constOperand->value = -constOperand->value;
+                                if (canConvertToSignedInteger(constOperand->value))
+                                    constOperand->type = SInt32Type;
+                                else if (canConvertToUnsignedInteger(constOperand->value))
+                                    constOperand->type = UInt32Type;
                                 else
-                                    c->type = DoubleType;
+                                    constOperand->type = DoubleType;
                                 doneSomething = true;
                                 break;
                             case OpUPlus:
-                                c->type = DoubleType;
+                                constOperand->type = DoubleType;
                                 doneSomething = true;
                                 break;
                             case OpCompl:
-                                c->value = ~QV4::Value::toInt32(c->value);
-                                c->type = SInt32Type;
+                                constOperand->value = ~QV4::Primitive::toInt32(constOperand->value);
+                                constOperand->type = SInt32Type;
                                 doneSomething = true;
                                 break;
                             case OpIncrement:
-                                c->value = c->value + 1;
+                                constOperand->value = constOperand->value + 1;
                                 doneSomething = true;
                                 break;
                             case OpDecrement:
-                                c->value = c->value - 1;
+                                constOperand->value = constOperand->value - 1;
                                 doneSomething = true;
                                 break;
                             default:
@@ -2364,7 +2364,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                             };
 
                             if (doneSomething) {
-                                m->source = c;
+                                m->source = constOperand;
                                 W += m;
                             }
                         }
@@ -2375,14 +2375,14 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     continue;
                 }
 
-                if (Binop *b = m->source->asBinop()) {
+                if (Binop *binop = m->source->asBinop()) {
                     // TODO: More constant binary expression evaluation
                     // TODO: If the result of the move is only used in one single cjump, then
                     //       inline the binop into the cjump.
-                    Const *leftConst = b->left->asConst();
+                    Const *leftConst = binop->left->asConst();
                     if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
                         continue;
-                    Const *rightConst = b->right->asConst();
+                    Const *rightConst = binop->right->asConst();
                     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
                         continue;
 
@@ -2391,7 +2391,7 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     double l = __qmljs_to_number(&lc);
                     double r = __qmljs_to_number(&rc);
 
-                    switch (b->op) {
+                    switch (binop->op) {
                     case OpMul:
                         leftConst->value = l * r;
                         leftConst->type = DoubleType;
@@ -2430,14 +2430,14 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
 
                     continue;
                 }
-            }
+            } // TODO: var{#0} = double{%10} where %10 is defined once and used once. E.g.: function(t){t = t % 2; return t; }
 
         } else if (CJump *cjump = s->asCJump()) {
-            if (Const *c = cjump->cond->asConst()) {
+            if (Const *constantCondition = cjump->cond->asConst()) {
                 // Note: this assumes that there are no critical edges! Meaning, we can safely purge
                 //       any basic blocks that are found to be unreachable.
                 Jump *jump = function->New<Jump>();
-                if (convertToValue(c).toBoolean()) {
+                if (convertToValue(constantCondition).toBoolean()) {
                     jump->target = cjump->iftrue;
                     purgeBB(cjump->iffalse, function, defUses, W);
                 } else {
@@ -2786,7 +2786,7 @@ void Optimizer::run()
 
 //    showMeTheCode(function);
 
-    static bool doSSA = /*qgetenv("QV4_NO_SSA").isEmpty();*/ false;
+    static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();
     static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
 
     if (!function->hasTry && !function->hasWith && doSSA) {
@@ -2878,7 +2878,7 @@ void Optimizer::convertOutOfSSA() {
 
         moves.order();
 
-        moves.insertMoves(bb, function);
+        moves.insertMoves(bb, function, true);
     }
 
     foreach (BasicBlock *bb, function->basicBlocks) {
@@ -2983,15 +2983,15 @@ void MoveMapping::order()
     qSwap(_moves, output);
 }
 
-void MoveMapping::insertMoves(BasicBlock *predecessor, Function *function) const
+void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) const
 {
-    int predecessorInsertionPoint = predecessor->statements.size() - 1;
+    int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
         move->init(m.to, m.from, OpInvalid);
         move->id = m.id;
         move->swap = m.needsSwap;
-        predecessor->statements.insert(predecessorInsertionPoint++, move);
+        bb->statements.insert(insertionPoint++, move);
     }
 }
 

@@ -143,7 +143,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
-        proto->memberData[Index_ProtoConstructor].value = Value::fromObject(this);
+        proto->memberData[Index_ProtoConstructor].value = this->asReturnedValue();
         memberData[Index_Prototype].value = proto.asValue();
     }
 
@@ -279,7 +279,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return Value::fromObject(FunctionObject::creatScriptFunction(v4->rootContext, vmf)).asReturnedValue();
+    return FunctionObject::creatScriptFunction(v4->rootContext, vmf)->asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)
@@ -293,13 +293,16 @@ FunctionPrototype::FunctionPrototype(InternalClass *ic)
 {
 }
 
-void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void FunctionPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
+    Scope scope(engine);
+    ScopedObject o(scope);
 
-    defineReadonlyProperty(engine->id_length, Value::fromInt32(0));
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+
+    defineReadonlyProperty(engine->id_length, Primitive::fromInt32(0));
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);
@@ -309,17 +312,17 @@ void FunctionPrototype::init(ExecutionEngine *engine, const Value &ctor)
 
 ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
-    FunctionObject *fun = ctx->thisObject.asFunctionObject();
+    FunctionObject *fun = ctx->callData->thisObject.asFunctionObject();
     if (!fun)
         ctx->throwTypeError();
 
-    return Value::fromString(ctx, QStringLiteral("function() { [code] }")).asReturnedValue();
+    return ctx->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
 
 ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
@@ -343,13 +346,13 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     if (len) {
         if (arr->protoHasArray() || arr->hasAccessorProperty) {
             for (quint32 i = 0; i < len; ++i)
-                callData->args[i] = Value::fromReturnedValue(arr->getIndexed(i));
+                callData->args[i] = arr->getIndexed(i);
         } else {
             int alen = qMin(len, arr->arrayDataLen);
             for (quint32 i = 0; i < alen; ++i)
                 callData->args[i] = arr->arrayData[i].value;
             for (quint32 i = alen; i < len; ++i)
-                callData->args[i] = Value::undefinedValue();
+                callData->args[i] = Primitive::undefinedValue();
         }
     }
 
@@ -361,14 +364,14 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
 
-    FunctionObject *o = ctx->thisObject.asFunctionObject();
+    FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
         ctx->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->argumentCount ? ctx->argumentCount - 1 : 0);
-    if (ctx->argumentCount) {
-        std::copy(ctx->arguments + 1,
-                  ctx->arguments + ctx->argumentCount, callData->args);
+    ScopedCallData callData(scope, ctx->callData->argc ? ctx->callData->argc - 1 : 0);
+    if (ctx->callData->argc) {
+        std::copy(ctx->callData->args + 1,
+                  ctx->callData->args + ctx->callData->argc, callData->args);
     }
     callData->thisObject = ctx->argument(0);
     return o->call(callData);
@@ -377,14 +380,14 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<FunctionObject> target(scope, ctx->thisObject);
+    Scoped<FunctionObject> target(scope, ctx->callData->thisObject);
     if (!target)
         ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     QVector<Value> boundArgs;
-    for (uint i = 1; i < ctx->argumentCount; ++i)
-        boundArgs += ctx->arguments[i];
+    for (uint i = 1; i < ctx->callData->argc; ++i)
+        boundArgs += ctx->callData->args[i];
 
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target.getPointer(), boundThis, boundArgs)->asReturnedValue();
 }
@@ -415,7 +418,7 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
     varList = function->locals.constData();
@@ -434,10 +437,10 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
-    Value proto = f->memberData[Index_Prototype].value;
-    if (proto.isObject())
-        ic = v4->emptyClass->changePrototype(proto.objectValue());
-    Scoped<Object> obj(scope, v4->newObject(ic));
+    ScopedObject proto(scope, f->memberData[Index_Prototype].value);
+    if (proto)
+        ic = v4->emptyClass->changePrototype(proto.getPointer());
+    ScopedObject obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
     callData->thisObject = obj.asValue();
@@ -469,9 +472,9 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
         } else {
-            ctx->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
 
@@ -514,7 +517,7 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(formalParameterCount));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(formalParameterCount));
 
     varCount = function->locals.size();
     varList = function->locals.constData();
@@ -541,7 +544,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContext *context = v4->current;
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     callData->thisObject = obj;
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f.getPointer(), callData);
+    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
     try {
         Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
@@ -558,17 +561,19 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
-    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
+    ExecutionEngine *v4 = that->engine();
+    Scope scope(v4);
+    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
+
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
-    ExecutionContext *context = f->engine()->current;
-    Scope scope(context);
-    ExecutionContext *ctx = context->newCallContext(stackSpace, f, callData);
+    ExecutionContext *context = v4->current;
+    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->thisObject = Value::fromObject(f->engine()->globalObject);
+            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
         } else {
-            ctx->thisObject = Value::fromObject(callData->thisObject.toObject(context));
+            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
 
@@ -614,10 +619,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = callData->thisObject;
-    // ### const_cast
-    ctx.arguments = const_cast<SafeValue *>(callData->args);
-    ctx.argumentCount = callData->argc;
+    ctx.callData = callData;
     v4->pushContext(&ctx);
 
     ScopedValue result(scope);
@@ -642,10 +644,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
-    ctx.thisObject = callData->thisObject;
-    // ### const_cast
-    ctx.arguments = const_cast<SafeValue *>(callData->args);
-    ctx.argumentCount = callData->argc;
+    ctx.callData = callData;
     v4->pushContext(&ctx);
 
     ScopedValue result(scope);
@@ -675,11 +674,12 @@ BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Va
     Scope s(scope);
     ScopedValue protectThis(s, this);
 
-    int len = Value::fromReturnedValue(target->get(scope->engine->id_length)).toUInt32();
+    ScopedValue l(s, target->get(scope->engine->id_length));
+    int len = l->toUInt32();
     len -= boundArgs.size();
     if (len < 0)
         len = 0;
-    defineReadonlyProperty(scope->engine->id_length, Value::fromInt32(len));
+    defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(len));
 
     ExecutionEngine *v4 = scope->engine;
 
@@ -700,8 +700,8 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
     return f->target->call(callData);
 }
 
@@ -710,8 +710,8 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Scope scope(f->scope->engine);
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
-    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(Value));
-    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(Value));
+    memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
+    memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));
     return f->target->construct(callData);
 }
 

@@ -148,7 +148,7 @@ QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
 /*!
     \qmltype FontLoader
     \instantiates QQuickFontLoader
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \brief Allows fonts to be loaded by name or URL
 

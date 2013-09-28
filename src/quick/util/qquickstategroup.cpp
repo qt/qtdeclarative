@@ -94,7 +94,7 @@ public:
 /*!
    \qmltype StateGroup
     \instantiates QQuickStateGroup
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
    \ingroup qtquick-states
    \brief Provides built-in state support for non-Item types
 

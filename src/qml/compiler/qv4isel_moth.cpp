@@ -840,7 +840,7 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     Instruction::LoadValue load;
-    load.value = Param::createValue(QV4::Value::fromBoolean(false));
+    load.value = Param::createValue(QV4::Primitive::fromBoolean(false));
     load.result = getResultParam(result);
     addInstruction(load);
 }

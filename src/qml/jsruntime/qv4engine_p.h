@@ -125,11 +125,11 @@ struct Q_QML_EXPORT ExecutionEngine
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
     WTF::PageAllocation *jsStack;
-    Value *jsStackBase;
-    Value *jsStackTop;
+    SafeValue *jsStackBase;
+    SafeValue *jsStackTop;
 
-    Value *stackPush(uint nValues) {
-        Value *ptr = jsStackTop;
+    SafeValue *stackPush(uint nValues) {
+        SafeValue *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
         return ptr;
     }
@@ -148,21 +148,21 @@ struct Q_QML_EXPORT ExecutionEngine
 
     QV8Engine *v8Engine;
 
-    Value objectCtor;
-    Value stringCtor;
-    Value numberCtor;
-    Value booleanCtor;
-    Value arrayCtor;
-    Value functionCtor;
-    Value dateCtor;
-    Value regExpCtor;
-    Value errorCtor;
-    Value evalErrorCtor;
-    Value rangeErrorCtor;
-    Value referenceErrorCtor;
-    Value syntaxErrorCtor;
-    Value typeErrorCtor;
-    Value uRIErrorCtor;
+    SafeValue objectCtor;
+    SafeValue stringCtor;
+    SafeValue numberCtor;
+    SafeValue booleanCtor;
+    SafeValue arrayCtor;
+    SafeValue functionCtor;
+    SafeValue dateCtor;
+    SafeValue regExpCtor;
+    SafeValue errorCtor;
+    SafeValue evalErrorCtor;
+    SafeValue rangeErrorCtor;
+    SafeValue referenceErrorCtor;
+    SafeValue syntaxErrorCtor;
+    SafeValue typeErrorCtor;
+    SafeValue uRIErrorCtor;
 
     QQmlJS::MemoryPool classPool;
     InternalClass *emptyClass;
@@ -236,6 +236,8 @@ struct Q_QML_EXPORT ExecutionEngine
 
     RegExpCache *regExpCache;
 
+    SafeValue exceptionValue;
+
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
     // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
     // out-of-resource situations.  When such a resource is passed into JavaScript we
@@ -270,10 +272,10 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<Object> *newObject();
     Returned<Object> *newObject(InternalClass *internalClass);
 
-    String *newString(const QString &s);
+    Returned<String> *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Returned<Object> *newStringObject(const Value &value);
+    Returned<Object> *newStringObject(const ValueRef value);
     Returned<Object> *newNumberObject(const ValueRef value);
     Returned<Object> *newBooleanObject(const ValueRef value);
 
@@ -288,14 +290,14 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
-    Returned<Object> *newErrorObject(const Value &value);
+    Returned<Object> *newErrorObject(const ValueRef value);
     Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Returned<Object> *newSyntaxErrorObject(const QString &message);
     Returned<Object> *newReferenceErrorObject(const QString &message);
     Returned<Object> *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
     Returned<Object> *newTypeErrorObject(const QString &message);
     Returned<Object> *newRangeErrorObject(const QString &message);
-    Returned<Object> *newURIErrorObject(Value message);
+    Returned<Object> *newURIErrorObject(const ValueRef message);
 
     Returned<Object> *newVariantObject(const QVariant &v);
 

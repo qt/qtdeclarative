@@ -62,7 +62,7 @@ struct ArrayPrototype: ArrayObject
 {
     ArrayPrototype(InternalClass *ic);
 
-    void init(ExecutionEngine *engine, const Value &ctor);
+    void init(ExecutionEngine *engine, ObjectRef ctor);
 
     static uint getLength(ExecutionContext *ctx, Object *o);
 

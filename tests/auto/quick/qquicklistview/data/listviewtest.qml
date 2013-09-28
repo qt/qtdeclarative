@@ -125,7 +125,7 @@ Rectangle {
         model: testModel
         delegate: testObject.animate ? animatedDelegate : myDelegate
         highlight: testObject.invalidHighlight ? invalidHl : myHighlight
-        highlightMoveVelocity: 1000
+        highlightMoveVelocity: 100000
         highlightResizeVelocity: 1000
         preferredHighlightBegin: enforceRange ? 120 : 0
         preferredHighlightEnd: enforceRange ? 120 : 0

@@ -49,31 +49,29 @@ Item {
 
     TestCase {
         id: testCase
-        name: "on"
-        when: !animx.running && !animy.running
-              && !anims.running && !animr.running
-              && !animo.running;
+        name: "animators-x"
+        when: !animation.running
         function test_endresult() {
             compare(box.xChangeCounter, 1);
-            compare(box.yChangeCounter, 1);
-            compare(box.scaleChangeCounter, 1);
-            compare(box.rotationChangeCounter, 1);
-            compare(box.opacityChangeCounter, 1);
             compare(box.x, 100);
-            compare(box.y, 100);
-            compare(box.scale, 2);
-            compare(box.rotation, 180);
-            compare(box.opacity, 0.5);
+            var image = grabImage(root);
+            compare(image.pixel(100, 50), Qt.rgba(1, 0, 0));
+            compare(image.pixel(99, 50), Qt.rgba(1, 1, 1)); // outside on the left
         }
     }
 
     Box {
         id: box
+
         anchors.centerIn: undefined
-        XAnimator on x { id: animx; from: 0; to: 100; duration: 1000 }
-        YAnimator on y { id: animy; from: 0; to: 100; duration: 1000 }
-        ScaleAnimator on scale { id: anims; from: 1; to: 2; duration: 1000 }
-        RotationAnimator on rotation { id: animr ; from: 0; to: 180; duration: 1000 }
-        OpacityAnimator on opacity { id: animo; from: 1; to: 0.5; duration: 1000 }
+
+        XAnimator {
+            id: animation
+            target: box
+            from: 0;
+            to: 100
+            duration: 100
+            running: true
+        }
     }
 }

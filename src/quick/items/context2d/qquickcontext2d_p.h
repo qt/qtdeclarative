@@ -175,7 +175,7 @@ public:
     QSGDynamicTexture *texture() const;
     QImage toImage(const QRectF& bounds);
 
-    QV4::Value v4value() const;
+    QV4::ReturnedValue v4value() const;
     void setV8Engine(QV8Engine *eng);
 
     QQuickCanvasItem* canvas() const { return m_canvas; }

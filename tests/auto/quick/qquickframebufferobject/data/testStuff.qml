@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the tests of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,54 +39,18 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import QtTest 1.0
+import QtQuick 2.0
+import FBOItem 1.0
 
 Item {
-    id: root;
-    width: 200
-    height: 200
+    width: 400
+    height: 400
 
-    TestCase {
-        id: testCase
-        name: "nested"
-        when: !animation.running
-        function test_endresult() {
-            compare(box.before, 2);
-            compare(box.after, 2);
-        }
-    }
-
-    Box {
-        id: box
-
-        anchors.centerIn: undefined
-
-        property int before: 0;
-        property int after: 0;
-
-        SequentialAnimation {
-            id: animation;
-            ScriptAction { script: box.before++; }
-            ParallelAnimation {
-                ScaleAnimator { target: box; from: 2.0; to: 1; duration: 500; }
-                OpacityAnimator { target: box; from: 0; to: 1; duration: 500; }
-            }
-            PauseAnimation { duration: 500 }
-            SequentialAnimation {
-                ParallelAnimation {
-                    XAnimator { target: box; from: 0; to: 100; duration: 500}
-                    RotationAnimator { target: box; from: 0; to: 90; duration: 500 }
-                }
-                ParallelAnimation {
-                    XAnimator { target: box; from: 100; to: 0; duration: 500 }
-                    RotationAnimator { target: box; from: 90; to: 0; duration: 500 }
-                }
-            }
-            ScriptAction { script: box.after++; }
-            running: true
-            loops: 2
-        }
+    FBOItem {
+        objectName: "fbo"
+        color: "red"
+        width: 100
+        height: 100
     }
 
 }

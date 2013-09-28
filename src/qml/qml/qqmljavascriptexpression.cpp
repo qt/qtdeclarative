@@ -138,7 +138,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     if (function.isUndefined()) {
         if (isUndefined)
             *isUndefined = true;
-        return QV4::Value::undefinedValue().asReturnedValue();
+        return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -162,7 +162,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
-    QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
+    QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
     try {
         QV4::ScopedCallData callData(scope, argc);
@@ -321,7 +321,7 @@ void QQmlJavaScriptExpression::exceptionToError(const QV4::Exception &e, QQmlErr
     }
 }
 
-QV4::PersistentValue
+QV4::ReturnedValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObject,
                                        const QString &code, const QString &filename, quint16 line,
                                        QV4::PersistentValue *qmlscope)
@@ -333,8 +333,8 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QV4::ExecutionContext *ctx = v4->current;
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::Object> qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
-    QV4::Script script(v4, qmlScopeObject.getPointer(), code, filename, line);
+    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
+    QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
     try {
         script.parse();
@@ -351,14 +351,14 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
             error.setUrl(QUrl::fromLocalFile(filename));
         error.setObject(scopeObject);
         ep->warning(error);
-        return QV4::PersistentValue();
+        return QV4::Encode::undefined();
     }
     if (qmlscope)
-        *qmlscope = qmlScopeObject.asValue();
+        *qmlscope = qmlScopeObject;
     return result.asReturnedValue();
 }
 
-QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
+QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
                                                        const QString &code, const QString &filename, quint16 line,
                                                        QV4::PersistentValue *qmlscope)
 {
@@ -369,8 +369,8 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
     QV4::ExecutionContext *ctx = v4->current;
     QV4::Scope scope(v4);
 
-    QV4::ScopedValue qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
-    QV4::Script script(v4, qmlScopeObject->asObject(), code, filename, line);
+    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
+    QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
     try {
         script.parse();
@@ -387,7 +387,7 @@ QV4::PersistentValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt,
             error.setUrl(QUrl::fromLocalFile(filename));
         error.setObject(qmlScope);
         ep->warning(error);
-        return QV4::PersistentValue();
+        return QV4::Encode::undefined();
     }
     if (qmlscope)
         *qmlscope = qmlScopeObject;

@@ -150,11 +150,11 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     QV4::Scoped<QV4::ArrayObject> array(scope, v4->newArrayObject(toAffect.size()));
     QV4::ScopedValue v(scope);
     for (int i=0; i<toAffect.size(); i++)
-        array->putIndexed(i, (v = toAffect[i]->v4Value().toValue()));
+        array->putIndexed(i, (v = toAffect[i]->v4Value()));
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QQmlV4Handle(array.asValue()), dt);
+        emit affectParticles(QQmlV4Handle(array), dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
@@ -162,12 +162,12 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
             affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QQmlV4Handle(array.asValue()), simulationDelta);
+            emit affectParticles(QQmlV4Handle(array), simulationDelta);
         }
         m_system->timeInt = realTime;
         if (dt > 0.0) {
             affectProperties(toAffect, dt);
-            emit affectParticles(QQmlV4Handle(array.asValue()), dt);
+            emit affectParticles(QQmlV4Handle(array), dt);
         }
     }
 

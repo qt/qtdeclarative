@@ -43,7 +43,7 @@
 #define QQMLABSTRACTURLINTERCEPTOR_H
 
 #include <QtCore/qurl.h>
-#include <qtqmlglobal.h>
+#include <QtQml/qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -286,16 +286,13 @@ application is allowed to draw.
 The \l {Scene Graph - OpenGL Under QML} example gives an example on
 how to use use these signals.
 
-The other alternative is to create a FramebufferObject, render into it
-and use the result as a textured node in the scene graph, for instance
-using a QSGSimpleTextureNode. The \l {Scene Graph - Rendering FBOs}
-and \l {Scene Graph - Rendering FBOs in a thread} examples show how
-this can be done in an optimal manner.
-
-A simple way of doing the same is to use a QQuickPaintedItem with
-QQuickPaintedItem::FramebufferObject as render target and by calling
-QPainter::beginNativePainting() before the OpenGL rendering and
-QPainter::endNativePainting() after.
+The other alternative is to create a QQuickFramebufferObject, render
+into it, and let it be displayed in the scene graph as a texture.
+The \l {Scene Graph - Rendering FBOs} example shows how this can be
+done. It is also possible to combine multiple rendering contexts and
+multiple threads to create content to be displayed in the scene graph.
+The \l {Scene Graph - Rendering FBOs in a thread} examples show how
+this can be done.
 
 \warning When mixing OpenGL content with scene graph rendering, it is
 important the application does not leave the OpenGL context in a state

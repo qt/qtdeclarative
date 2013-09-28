@@ -48,29 +48,44 @@ Item {
     height: 200
 
     TestCase {
-        id: testCase
-        name: "opacity"
-        when: !animation.running
+        id: testcase
+        name: "animators-transition"
+        when: box.scale == 2
         function test_endresult() {
-            compare(box.opacityChangeCounter, 1);
-            compare(box.opacity, 0.5);
+            compare(box.scaleChangeCounter, 1);
+            compare(box.scale, 2);
             var image = grabImage(root);
-            compare(image.red(50, 50), 255);
-            verify(image.green(50, 50) > 0);
-            verify(image.blue(50, 50) > 0);
+            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0));
+            compare(image.pixel(199, 199), Qt.rgba(0, 0, 1));
         }
     }
 
+    states: [
+        State {
+            name: "one"
+            PropertyChanges { target: box; scale: 1 }
+        },
+        State {
+            name: "two"
+            PropertyChanges { target: box; scale: 2 }
+        }
+    ]
+    state: "one"
+
+    transitions: [
+        Transition {
+            ScaleAnimator { duration: 100; }
+        }
+    ]
+
     Box {
         id: box
+    }
 
-        OpacityAnimator {
-            id: animation
-            target: box
-            from: 1;
-            to: 0.5
-            duration: 1000
-            running: true
-        }
+    Timer {
+        interval: 1000;
+        repeat: false
+        running: true
+        onTriggered: root.state = "two"
     }
 }

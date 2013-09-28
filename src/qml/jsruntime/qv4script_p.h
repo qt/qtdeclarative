@@ -73,10 +73,10 @@ struct Q_QML_EXPORT Script {
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(scope), strictMode(false), inheritContext(false), parsed(false)
         , vmFunction(0), parseAsBinding(false) {}
-    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionEngine *engine, ObjectRef qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
-        , qml(Value::fromObject(qml)), vmFunction(0), parseAsBinding(true) {}
+        , qml(qml.asReturnedValue()), vmFunction(0), parseAsBinding(true) {}
     ~Script();
     QString sourceFile;
     int line;
@@ -98,7 +98,7 @@ struct Q_QML_EXPORT Script {
     Function *function();
 
 
-    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
+    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
 };
 
 }

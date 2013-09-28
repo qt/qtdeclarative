@@ -64,7 +64,8 @@ struct ErrorObject: Object {
     };
 
     ErrorObject(InternalClass *ic);
-    ErrorObject(InternalClass *ic, const Value &message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, const QString &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     SyntaxErrorObject *asSyntaxError();
@@ -83,33 +84,33 @@ inline ErrorObject *value_cast(const Value &v) {
 }
 
 struct EvalErrorObject: ErrorObject {
-    EvalErrorObject(ExecutionEngine *engine, const Value &message);
+    EvalErrorObject(ExecutionEngine *engine, const ValueRef message);
 };
 
 struct RangeErrorObject: ErrorObject {
-    RangeErrorObject(ExecutionEngine *engine, const Value &message);
+    RangeErrorObject(ExecutionEngine *engine, const ValueRef message);
     RangeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct ReferenceErrorObject: ErrorObject {
-    ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
+    ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject: ErrorObject {
     Q_MANAGED
-    SyntaxErrorObject(ExecutionEngine *engine, const Value &msg);
+    SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct TypeErrorObject: ErrorObject {
-    TypeErrorObject(ExecutionEngine *engine, const Value &message);
+    TypeErrorObject(ExecutionEngine *engine, const ValueRef message);
     TypeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct URIErrorObject: ErrorObject {
-    URIErrorObject(ExecutionEngine *engine, const Value &message);
+    URIErrorObject(ExecutionEngine *engine, const ValueRef message);
 };
 
 struct ErrorCtor: FunctionObject
@@ -175,46 +176,46 @@ struct ErrorPrototype: ErrorObject
 {
     // ### shouldn't be undefined
     ErrorPrototype(InternalClass *ic): ErrorObject(ic) {}
-    void init(ExecutionEngine *engine, const Value &ctor) { init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { init(engine, ctor, this); }
 
-    static void init(ExecutionEngine *engine, const Value &ctor, Object *obj);
+    static void init(ExecutionEngine *engine, ObjectRef ctor, Object *obj);
     static ReturnedValue method_toString(SimpleCallContext *ctx);
 };
 
 struct EvalErrorPrototype: ErrorObject
 {
     EvalErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct RangeErrorPrototype: ErrorObject
 {
     RangeErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct ReferenceErrorPrototype: ErrorObject
 {
     ReferenceErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct SyntaxErrorPrototype: ErrorObject
 {
     SyntaxErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct TypeErrorPrototype: ErrorObject
 {
     TypeErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 struct URIErrorPrototype: ErrorObject
 {
     URIErrorPrototype(InternalClass *ic): ErrorObject(ic) { vtbl = &static_vtbl; }
-    void init(ExecutionEngine *engine, const Value &ctor) { ErrorPrototype::init(engine, ctor, this); }
+    void init(ExecutionEngine *engine, ObjectRef ctor) { ErrorPrototype::init(engine, ctor, this); }
 };
 
 

@@ -477,17 +477,18 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
 void QuickTestResult::stringify(QQmlV4Function *args)
 {
     if (args->length() < 1)
-        args->setReturnValue(QV4::Value::nullValue());
+        args->setReturnValue(QV4::Encode::null());
 
-    QV4::Value value = (*args)[0];
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue value(scope, (*args)[0]);
 
     QString result;
     QV8Engine *engine = args->engine();
 
     //Check for Object Type
-    if (value.isObject()
-    && !value.asFunctionObject()
-    && !value.asArrayObject()) {
+    if (value->isObject()
+        && !value->asFunctionObject()
+        && !value->asArrayObject()) {
         QVariant v = engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
@@ -505,8 +506,8 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result = QLatin1String("Object");
         }
     } else {
-        QString tmp = value.toQStringNoThrow();
-        if (value.asArrayObject())
+        QString tmp = value->toQStringNoThrow();
+        if (value->asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else
             result.append(tmp);
@@ -719,7 +720,7 @@ void QuickTestResult::setProgramName(const char *name)
 
 void QuickTestResult::setCurrentAppname(const char *appname)
 {
-    QTestResult::setCurrentAppname(appname);
+    QTestResult::setCurrentAppName(appname);
 }
 
 int QuickTestResult::exitCode()

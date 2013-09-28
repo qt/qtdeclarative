@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,36 +39,60 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import QtTest 1.0
+#ifndef QQUICKFRAMEBUFFEROBJECT_H
+#define QQUICKFRAMEBUFFEROBJECT_H
 
-Item {
-    id: root;
-    width: 200
-    height: 200
+#include <QQuickItem>
 
-    TestCase {
-        id: testcase
-        name: "mixedsequential"
-        when: !animation.running
-        function test_endresult() {
-            compare(box.rotationChangeCounter, 1);
-            compare(box.scale, 2);
-            compare(box.rotation, 180);
-            var image = grabImage(root);
-            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
-            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
-        }
-    }
+QT_BEGIN_NAMESPACE
 
-    Box {
-        id: box
-        ParallelAnimation {
-            id: animation
-            NumberAnimation { target: box; property: "scale"; from: 1; to: 2.0; duration: 500; }
-            RotationAnimator { target: box; from: 0; to: 180; duration: 500; }
-            running: true
-            loops: 1;
-        }
-    }
-}
+
+class QOpenGLFramebufferObject;
+class QQuickFramebufferObjectPrivate;
+class QSGFramebufferObjectNode;
+
+class Q_QUICK_EXPORT QQuickFramebufferObject : public QQuickItem
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QQuickFramebufferObject)
+
+    Q_PROPERTY(bool textureFollowsItemSize READ textureFollowsItemSize WRITE setTextureFollowsItemSize NOTIFY textureFollowsItemSizeChanged)
+
+public:
+
+    class Q_QUICK_EXPORT Renderer {
+    protected:
+        Renderer();
+        virtual ~Renderer();
+        virtual void render() = 0;
+        virtual QOpenGLFramebufferObject *createFramebufferObject(const QSize &size);
+        virtual void synchronize(QQuickFramebufferObject *);
+        QOpenGLFramebufferObject *framebufferObject() const;
+        void update();
+        void invalidateFramebufferObject();
+    private:
+        friend class QSGFramebufferObjectNode;
+        friend class QQuickFramebufferObject;
+        void *data;
+    };
+
+    QQuickFramebufferObject(QQuickItem *parent = 0);
+
+    bool textureFollowsItemSize() const;
+    void setTextureFollowsItemSize(bool follows);
+
+    virtual Renderer *createRenderer() const = 0;
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+
+protected:
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+
+Q_SIGNALS:
+    void textureFollowsItemSizeChanged(bool);
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKFRAMEBUFFEROBJECT_H

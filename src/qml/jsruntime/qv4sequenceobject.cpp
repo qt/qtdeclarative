@@ -81,27 +81,31 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
-    return QV4::Value::fromString(engine, element);
+    QV4::Value v;
+    v = engine->newString(element)->asReturnedValue();
+    return v;
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
 {
-    return QV4::Value::fromInt32(element);
+    return QV4::Primitive::fromInt32(element);
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
 {
-    return QV4::Value::fromString(engine, element.toString());
+    QV4::Value v;
+    v = engine->newString(element.toString())->asReturnedValue();
+    return v;
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, qreal element)
 {
-    return QV4::Value::fromDouble(element);
+    return QV4::Primitive::fromDouble(element);
 }
 
 static QV4::Value convertElementToValue(QV4::ExecutionEngine *, bool element)
 {
-    return QV4::Value::fromBoolean(element);
+    return QV4::Primitive::fromBoolean(element);
 }
 
 static QString convertElementToString(const QString &element)
@@ -202,13 +206,13 @@ public:
             generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Value::undefinedValue();
+            return QV4::Primitive::undefinedValue();
         }
         if (m_isReference) {
             if (!m_object) {
                 if (hasProperty)
                     *hasProperty = false;
-                return QV4::Value::undefinedValue();
+                return QV4::Primitive::undefinedValue();
             }
             loadReference();
         }
@@ -220,7 +224,7 @@ public:
         }
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Value::undefinedValue();
+        return QV4::Primitive::undefinedValue();
     }
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)
@@ -376,8 +380,8 @@ public:
             loadReference();
         }
 
-        if (ctx->argumentCount == 1 && ctx->arguments[0].asFunctionObject()) {
-            QV4::Value compareFn = ctx->arguments[0];
+        if (ctx->callData->argc == 1 && ctx->callData->args[0].asFunctionObject()) {
+            QV4::Value compareFn = ctx->callData->args[0];
             CompareFunctor cf(ctx, compareFn);
             std::sort(m_container.begin(), m_container.end(), cf);
         } else {
@@ -391,7 +395,8 @@ public:
 
     static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
     {
-        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        QV4::Scope scope(ctx);
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             ctx->throwTypeError();
 
@@ -405,11 +410,12 @@ public:
 
     static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
     {
-        QQmlSequence<Container> *This = ctx->thisObject.as<QQmlSequence<Container> >();
+        QV4::Scope scope(ctx);
+        QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             ctx->throwTypeError();
 
-        quint32 newLength = ctx->arguments[0].toUInt32();
+        quint32 newLength = ctx->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(ctx, QLatin1String("Index out of range during length set"));
@@ -542,12 +548,12 @@ void SequencePrototype::init()
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
-    QV4::Object *o = ctx->thisObject.asObject();
+    QV4::Object *o = ctx->callData->thisObject.asObject();
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
-    if (ctx->argumentCount >= 2)
-        return ctx->thisObject.asReturnedValue();
+    if (ctx->callData->argc >= 2)
+        return ctx->callData->thisObject.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -557,7 +563,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->thisObject.asReturnedValue();
+    return ctx->callData->thisObject.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -624,15 +630,18 @@ QVariant SequencePrototype::toVariant(QV4::Object *object)
         return QQml##ElementTypeName##List::toVariant(a); \
     } else
 
-QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, bool *succeeded)
 {
     *succeeded = true;
 
-    QV4::ArrayObject *a = array.asArrayObject();
-    if (!a) {
+    if (!array->asArrayObject()) {
         *succeeded = false;
         return QVariant();
     }
+    QV4::Scope scope(array->engine());
+    // ### GC
+    QV4::ArrayObject *a = array->asArrayObject();
+
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }
 

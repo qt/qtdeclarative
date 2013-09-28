@@ -1,14 +1,6 @@
-QT += core-private gui-private qml-private
-TEMPLATE=app
+QT += core-private gui-private qml-private quick-private testlib
 TARGET=tst_qquickanimators
-
-CONFIG += qmltestcase
+CONFIG += testcase
+macx: CONFIG -= app_bundle
 SOURCES += tst_qquickanimators.cpp
 
-TESTDATA = data/*
-
-OTHER_FILES += \
-    data/tst_scale.qml \
-    data/Scale.qml \
-    tst_on.qml \
-    data/tst_nested.qml

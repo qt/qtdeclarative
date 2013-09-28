@@ -281,6 +281,7 @@ public:
         : wm(w)
         , gl(0)
         , sg(QSGContext::createDefaultContext())
+        , animatorDriver(0)
         , pendingUpdate(0)
         , sleeping(false)
         , syncResultedInChanges(false)
@@ -330,6 +331,8 @@ public:
     QOpenGLContext *gl;
     QSGContext *sg;
 
+    QAnimationDriver *animatorDriver;
+
     uint pendingUpdate;
     uint sleeping;
     uint syncResultedInChanges;
@@ -375,6 +378,7 @@ bool QSGRenderThread::event(QEvent *e)
         window.window = se->window;
         window.size = se->size;
         m_windows << window;
+        connect(animatorDriver, SIGNAL(started()), QQuickWindowPrivate::get(se->window)->animationController, SLOT(animationsStarted()));
         return true; }
 
     case WM_Obscure: {
@@ -384,6 +388,7 @@ bool QSGRenderThread::event(QEvent *e)
             if (m_windows.at(i).window == ce->window) {
                 RLDEBUG1("    Render:  - removed one...");
                 m_windows.removeAt(i);
+                disconnect(animatorDriver, SIGNAL(started()), QQuickWindowPrivate::get(ce->window)->animationController, SLOT(animationsStarted()));
                 break;
             }
         }
@@ -584,6 +589,9 @@ void QSGRenderThread::syncAndRender()
 #endif
     RLDEBUG("    Render:  - rendering starting");
 
+    if (animatorDriver->isRunning())
+        animatorDriver->advance();
+
     for (int i=0; i<m_windows.size(); ++i) {
         Window &w = const_cast<Window &>(m_windows.at(i));
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(w.window);
@@ -656,6 +664,10 @@ void QSGRenderThread::processEventsAndWaitForMore()
 void QSGRenderThread::run()
 {
     RLDEBUG1("    Render: run()");
+    animatorDriver = sg->createAnimationDriver(0);
+    animatorDriver->install();
+    QUnifiedTimer::instance(true)->setConsistentTiming(QSGRenderLoop::useConsistentTiming());
+
     while (!shouldExit) {
 
         if (m_windows.size() > 0) {
@@ -682,6 +694,9 @@ void QSGRenderThread::run()
     Q_ASSERT_X(!gl, "QSGRenderThread::run()", "The OpenGL context should be cleaned up before exiting the render thread...");
 
     RLDEBUG1("    Render: run() completed...");
+
+    delete animatorDriver;
+    animatorDriver = 0;
 }
 
 QSGThreadedRenderLoop::QSGThreadedRenderLoop()

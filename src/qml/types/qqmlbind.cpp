@@ -76,7 +76,7 @@ public:
 /*!
     \qmltype Binding
     \instantiates QQmlBind
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \ingroup qtquick-interceptors
     \brief Enables the arbitrary creation of property bindings
 

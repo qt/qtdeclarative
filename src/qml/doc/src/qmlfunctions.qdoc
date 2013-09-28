@@ -414,7 +414,7 @@
 */
 
 /*!
-  \fn int qmlProtectModule(const QString &uri, int versionMajor);
+  \fn bool qmlProtectModule(const char* uri, int majVersion);
   \relates QQmlEngine
 
   This function protects a module from having types registered into it. This
@@ -434,7 +434,9 @@
 
   #include <QtQml> to use this function.
 
-  Returns true if the module was found and locked, otherwise returns false.
-  The module must contain exported types in order to be found.
+  Returns true if the module with \a uri as a \l{Identified Modules}
+  {module identifier} and \a majVersion as a major version number was found
+  and locked, otherwise returns false. The module must contain exported types
+  in order to be found.
 */
 

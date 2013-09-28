@@ -446,12 +446,14 @@ void tst_QQmlProfilerService::scenegraphData()
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
     QVERIFY(m_client->traceMessages.count());
+    qDebug() << "XXX" << m_client->traceMessages.count();
 
     // check that at least one frame was rendered
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
     // since the rendering happens in a different thread, there could be other unrelated events interleaved
     int loopcheck = 0;
     foreach (const QQmlProfilerData &msg, m_client->traceMessages) {
+        qDebug() << (msg.messageType == QQmlProfilerClient::SceneGraphFrame) << msg.messageType << msg.detailType;
         if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
             if (loopcheck == 0 && msg.detailType == QQmlProfilerClient::SceneGraphContextFrame)
                 loopcheck = 1;

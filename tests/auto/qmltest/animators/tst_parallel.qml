@@ -48,29 +48,26 @@ Item {
     height: 200
 
     TestCase {
-        id: testCase
-        name: "x"
+        id: testcase
+        name: "animators-parallel"
         when: !animation.running
         function test_endresult() {
-            compare(box.xChangeCounter, 1);
-            compare(box.x, 100);
+            compare(box.rotationChangeCounter, 1);
+            compare(box.scaleChangeCounter, 1);
+            compare(box.scale, 2);
+            compare(box.rotation, 180);
             var image = grabImage(root);
-            compare(image.pixel(100, 50), Qt.rgba(1, 0, 0));
-            compare(image.pixel(99, 50), Qt.rgba(1, 1, 1)); // outside on the left
+            compare(image.pixel(0, 0), Qt.rgba(0, 0, 1, 1));
+            compare(image.pixel(199, 199), Qt.rgba(1, 0, 0, 1));
         }
     }
 
     Box {
         id: box
-
-        anchors.centerIn: undefined
-
-        XAnimator {
+        ParallelAnimation {
             id: animation
-            target: box
-            from: 0;
-            to: 100
-            duration: 1000
+            ScaleAnimator { target: box; from: 1; to: 2.0; duration: 100; }
+            RotationAnimator { target: box; from: 0; to: 180; duration: 100; }
             running: true
         }
     }

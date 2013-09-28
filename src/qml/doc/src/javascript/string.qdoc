@@ -27,7 +27,7 @@
 
 /*!
     \qmltype String
-    \inqmlmodule QtQml 2
+    \inqmlmodule QtQml
     \brief The String object represents a string value
 
     The QML String object extends the JS String object with

@@ -53,7 +53,7 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
     Q_MANAGED
     EvalFunction(ExecutionContext *scope);
 
-    ReturnedValue evalCall(Value thisObject, Value *args, int argc, bool directCall);
+    ReturnedValue evalCall(CallData *callData, bool directCall);
 
     using Managed::construct;
     static ReturnedValue call(Managed *that, CallData *callData);

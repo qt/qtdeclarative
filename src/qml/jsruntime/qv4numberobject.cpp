@@ -60,36 +60,38 @@ ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    ScopedValue d(scope, QV4::Value::fromDouble(dbl));
+    ScopedValue d(scope, QV4::Primitive::fromDouble(dbl));
     return Encode(m->engine()->newNumberObject(d));
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Value::fromDouble(dbl).asReturnedValue();
+    return Primitive::fromDouble(dbl).asReturnedValue();
 }
 
-void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
+void NumberPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 {
-    ctor.objectValue()->defineReadonlyProperty(engine->id_prototype, Value::fromObject(this));
-    ctor.objectValue()->defineReadonlyProperty(engine->id_length, Value::fromInt32(1));
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
 
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(qSNaN()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
+    ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
 
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor.objectValue()->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
+    ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    defineDefaultProperty(QStringLiteral("constructor"), ctor);
+    defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString, method_toString);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
     defineDefaultProperty(engine->id_valueOf, method_valueOf);
@@ -100,9 +102,9 @@ void NumberPrototype::init(ExecutionEngine *engine, const Value &ctor)
 
 inline Value thisNumberValue(ExecutionContext *ctx)
 {
-    if (ctx->thisObject.isNumber())
-        return ctx->thisObject;
-    NumberObject *n = ctx->thisObject.asNumberObject();
+    if (ctx->callData->thisObject.isNumber())
+        return ctx->callData->thisObject;
+    NumberObject *n = ctx->callData->thisObject.asNumberObject();
     if (!n)
         ctx->throwTypeError();
     return n->value;
@@ -112,8 +114,8 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
     double num = thisNumberValue(ctx).asDouble();
 
-    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
-        int radix = ctx->arguments[0].toInt32();
+    if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
+        int radix = ctx->callData->args[0].toInt32();
         if (radix < 2 || radix > 36) {
             ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
@@ -121,9 +123,9 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
         }
 
         if (std::isnan(num)) {
-            return Value::fromString(ctx, QStringLiteral("NaN")).asReturnedValue();
+            return ctx->engine->newString(QStringLiteral("NaN"))->asReturnedValue();
         } else if (qIsInf(num)) {
-            return Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity")).asReturnedValue();
+            return ctx->engine->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity"))->asReturnedValue();
         }
 
         if (radix != 10) {
@@ -134,7 +136,7 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
                 num = -num;
             }
             double frac = num - ::floor(num);
-            num = Value::toInteger(num);
+            num = Primitive::toInteger(num);
             do {
                 char c = (char)::fmod(num, radix);
                 c = (c < 10) ? (c + '0') : (c - 10 + 'a');
@@ -153,20 +155,20 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
             }
             if (negative)
                 str.prepend(QLatin1Char('-'));
-            return Value::fromString(ctx, str).asReturnedValue();
+            return ctx->engine->newString(str)->asReturnedValue();
         }
     }
 
-    String *str = Value::fromDouble(num).toString(ctx);
-    return Value::fromString(str).asReturnedValue();
+    return Primitive::fromDouble(num).toString(ctx)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     Value v = thisNumberValue(ctx);
 
-    String *str = v.toString(ctx);
-    return Value::fromString(str).asReturnedValue();
+    ScopedString str(scope, v.toString(ctx));
+    return str.asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_valueOf(SimpleCallContext *ctx)
@@ -180,14 +182,14 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 
     double fdigits = 0;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->arguments[0].toInteger();
+    if (ctx->callData->argc > 0)
+        fdigits = ctx->callData->args[0].toInteger();
 
     if (std::isnan(fdigits))
         fdigits = 0;
 
     if (fdigits < 0 || fdigits > 20)
-        ctx->throwRangeError(ctx->thisObject);
+        ctx->throwRangeError(ctx->callData->thisObject);
 
     QString str;
     if (std::isnan(v))
@@ -198,20 +200,21 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
         str = QString::number(v, 'f', int (fdigits));
     else
         return __qmljs_string_from_number(ctx, v)->asReturnedValue();
-    return Value::fromString(ctx, str).asReturnedValue();
+    return ctx->engine->newString(str)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
+    Scope scope(ctx);
     double d = thisNumberValue(ctx).asDouble();
 
     int fdigits = -1;
 
-    if (ctx->argumentCount && !ctx->arguments[0].isUndefined()) {
-        int fdigits = ctx->arguments[0].toInt32();
+    if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
+        int fdigits = ctx->callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
-            String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range"));
-            ctx->throwRangeError(Value::fromString(error));
+            ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
+            ctx->throwRangeError(error);
         }
     }
 
@@ -220,7 +223,7 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(d, fdigits, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
@@ -229,13 +232,13 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 
     ScopedValue v(scope, thisNumberValue(ctx));
 
-    if (!ctx->argumentCount || ctx->arguments[0].isUndefined())
+    if (!ctx->callData->argc || ctx->callData->args[0].isUndefined())
         return __qmljs_to_string(v, ctx);
 
-    double precision = ctx->arguments[0].toInt32();
+    double precision = ctx->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
-        String *error = ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range"));
-        ctx->throwRangeError(Value::fromString(error));
+        ScopedString error(scope, ctx->engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
+        ctx->throwRangeError(error);
     }
 
     char str[100];
@@ -243,5 +246,5 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
     double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
     QString result = QString::fromLatin1(builder.Finalize());
 
-    return Value::fromString(ctx, result).asReturnedValue();
+    return ctx->engine->newString(result)->asReturnedValue();
 }

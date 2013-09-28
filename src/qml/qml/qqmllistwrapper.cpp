@@ -69,24 +69,26 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId,
         return Encode::null();
 
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlListWrapper *r = new (v4->memoryManager) QmlListWrapper(v8);
+    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
     r->object = object;
     r->propertyType = propType;
     void *args[] = { &r->property, 0 };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
+    Scope scope(v4);
 
-    QmlListWrapper *r = new (v4->memoryManager) QmlListWrapper(v8);
+    Scoped<QmlListWrapper> r(scope, new (v4->memoryManager) QmlListWrapper(v8));
     r->object = prop.object;
     r->property = prop;
     r->propertyType = propType;
-    return Value::fromObject(r).asReturnedValue();
+    return r.asReturnedValue();
 }
 
 QVariant QmlListWrapper::toVariant() const
@@ -107,7 +109,7 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
     if (name->isEqualTo(v4->id_length) && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
-        return Value::fromUInt32(count).asReturnedValue();
+        return Primitive::fromUInt32(count).asReturnedValue();
     }
 
     uint idx = name->asArrayIndex();
@@ -128,7 +130,7 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
     if (index < count && w->property.at)
         return QV4::QObjectWrapper::wrap(e, w->property.at(&w->property, index));
 
-    return Value::undefinedValue().asReturnedValue();
+    return Primitive::undefinedValue().asReturnedValue();
 }
 
 void QmlListWrapper::put(Managed *m, const StringRef name, const ValueRef value)

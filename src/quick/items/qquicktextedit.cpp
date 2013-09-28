@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TextEdit
     \instantiates QQuickTextEdit
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item
@@ -1302,7 +1302,7 @@ void QQuickTextEdit::componentComplete()
 
 /*!
     \qmlproperty bool QtQuick2::TextEdit::selectByKeyboard
-    \since QtQuick 2.1
+    \since 5.1
 
     Defaults to true when the editor is editable, and false
     when read-only.
@@ -1861,7 +1861,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         break;
 
                     QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
-                    if (currentNodeSize > nodeBreakingSize || *lowerBound > nodeStart) {
+                    if (currentNodeSize > nodeBreakingSize || lowerBound == frameBoundaries.constEnd() || *lowerBound > nodeStart) {
                         currentNodeSize = 0;
                         d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
                         node = d->createTextNode();
@@ -2484,7 +2484,7 @@ void QQuickTextEdit::remove(int start, int end)
 
 /*!
     \qmlproperty TextDocument QtQuick2::TextEdit::textDocument
-    \since QtQuick 2.1
+    \since 5.1
 
     Returns the QQuickTextDocument of this TextEdit.
     It can be used to implement syntax highlighting using
@@ -2509,7 +2509,7 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
 
 /*!
     \qmlsignal QtQuick2::TextEdit::onLinkHovered(string link)
-    \since QtQuick 2.2
+    \since 5.2
 
     This handler is called when the user hovers a link embedded in the text.
     The link must be in rich text or HTML format and the
@@ -2520,7 +2520,7 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
 
 /*!
     \qmlproperty string QtQuick2::TextEdit::hoveredLink
-    \since QtQuick 2.2
+    \since 5.2
 
     This property contains the link string when user hovers a link
     embedded in the text. The link must be in rich text or HTML format
@@ -2568,7 +2568,7 @@ void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
 
 /*!
     \qmlmethod void QtQuick2::TextEdit::append(string text)
-    \since QtQuick 2.2
+    \since 5.2
 
     Appends a new paragraph with \a text to the end of the TextEdit.
 

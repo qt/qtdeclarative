@@ -85,7 +85,7 @@ struct Print: FunctionObject
             std::cout << qPrintable(s);
         }
         std::cout << std::endl;
-        return Value::undefinedValue().asReturnedValue();
+        return Encode::undefined();
     }
 
     static const ManagedVTable static_vtbl;
@@ -103,7 +103,7 @@ struct GC: public FunctionObject
     static ReturnedValue call(Managed *m, CallData *)
     {
         m->engine()->memoryManager->runGC();
-        return Value::undefinedValue().asReturnedValue();
+        return Encode::undefined();
     }
 
     static const ManagedVTable static_vtbl;

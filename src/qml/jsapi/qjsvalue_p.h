@@ -69,22 +69,21 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QJSValuePrivate : public QV4::PersistentValuePrivate
 {
 public:
-    QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::Value &v)
-        : PersistentValuePrivate(v, engine)
+    QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::ValueRef v)
+        : PersistentValuePrivate(v.asReturnedValue(), engine)
     {
         Q_ASSERT(!value.isEmpty());
     }
-    QJSValuePrivate(QV4::Object *o)
-        : PersistentValuePrivate(QV4::Value::fromObject(o))
-    { }
-    QJSValuePrivate(QV4::String *s)
-        : PersistentValuePrivate(QV4::Value::fromString(s))
-    { }
+    QJSValuePrivate(QV4::ReturnedValue v)
+        : PersistentValuePrivate(v)
+    {
+        Q_ASSERT(!value.isEmpty());
+    }
     QJSValuePrivate(const QString &s)
-        : PersistentValuePrivate(QV4::Value::undefinedValue())
+        : PersistentValuePrivate(QV4::Encode::undefined())
         , string(0, s)
     {
-        value = QV4::Value::fromString(&string);
+        value.val = QV4::Encode(string.asReturned<QV4::String>());
     }
 
     QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);

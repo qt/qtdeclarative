@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Dialogs 1
     \ingroup dialogs
     \brief Dialog component for displaying popup messages.
-    \since Qt 5.2
+    \since 5.2
 
     The most basic use case for a MessageDialog is a popup alert. It also
     allows the user to respond in various ways depending on which buttons are

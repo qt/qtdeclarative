@@ -100,6 +100,9 @@ protected:
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases();
 
+    bool isComponentType(int typeNameIndex) const
+    { return resolvedTypes.value(typeNameIndex).type == 0; }
+
     int _componentIndex;
     QHash<int, int> _idToObjectIndex;
     QHash<int, int> *_objectIndexToIdInScope;
@@ -127,7 +130,8 @@ public:
 private:
     QObject *createInstance(int index, QObject *parent = 0);
 
-    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache, QObject *scopeObjectForJavaScript);
+    bool populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
+                          QObject *scopeObjectForJavaScript, QQmlPropertyData *valueTypeProperty);
 
     void setupBindings();
     bool setPropertyValue(QQmlPropertyData *property, int index, const QV4::CompiledData::Binding *binding);
@@ -146,6 +150,8 @@ private:
     QQmlCompiledData *compiledData;
 
     QObject *_qobject;
+    QObject *_qobjectForBindings;
+    QQmlPropertyData *_valueTypeProperty; // belongs to _qobjectForBindings's property cache
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;

@@ -309,7 +309,7 @@ void QSmoothedAnimation::init()
 /*!
     \qmltype SmoothedAnimation
     \instantiates QQuickSmoothedAnimation
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation
     \brief Allows a property to smoothly track a value

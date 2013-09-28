@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PathInterpolator
     \instantiates QQuickPathInterpolator
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick
     \ingroup qtquick-animation-control
     \brief Specifies how to manually animate along a path
 

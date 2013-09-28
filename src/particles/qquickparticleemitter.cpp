@@ -488,9 +488,9 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         QV4::Scoped<QV4::ArrayObject> array(scope, v4->newArrayObject(toEmit.size()));
         QV4::ScopedValue v(scope);
         for (int i=0; i<toEmit.size(); i++)
-            array->putIndexed(i, (v = toEmit[i]->v4Value().toValue()));
+            array->putIndexed(i, (v = toEmit[i]->v4Value()));
 
-        emitParticles(QQmlV4Handle(array.asValue()));//A chance for arbitrary JS changes
+        emitParticles(QQmlV4Handle(array));//A chance for arbitrary JS changes
     }
 
     m_last_emission = pt;
