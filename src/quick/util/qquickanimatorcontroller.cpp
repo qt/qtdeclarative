@@ -76,7 +76,8 @@ void QQuickAnimatorController::advance()
 
     for (QSet<QQuickAnimatorJob *>::const_iterator it = activeLeafAnimations.constBegin();
          it != activeLeafAnimations.constEnd(); ++it) {
-        if ((*it)->isTransform()) {
+        QQuickAnimatorJob *job = *it;
+        if (job->isTransform() && job->target()) {
             QQuickTransformAnimatorJob *xform = static_cast<QQuickTransformAnimatorJob *>(*it);
             xform->transformHelper()->apply();
         }
@@ -90,7 +91,9 @@ static void qquick_initialize_helper(QAbstractAnimationJob *job, QQuickAnimatorC
 {
     if (job->isRenderThreadJob()) {
         QQuickAnimatorJob *j = static_cast<QQuickAnimatorJob *>(job);
-        if (j->target() && c->deletedSinceLastFrame.contains(j->target()))
+        if (!j->target())
+            return;
+        else if (c->deletedSinceLastFrame.contains(j->target()))
             j->targetWasDeleted();
         else
             j->initialize(c);
@@ -115,22 +118,28 @@ void QQuickAnimatorController::beforeNodeSync()
         job->start();
     }
     starting.clear();
-    deletedSinceLastFrame.clear();
 
     for (QSet<QQuickAnimatorJob *>::const_iterator it = activeLeafAnimations.constBegin();
          it != activeLeafAnimations.constEnd(); ++it) {
-        if ((*it)->isTransform()) {
+        QQuickAnimatorJob *job = *it;
+        if (!job->target())
+            continue;
+        else if (deletedSinceLastFrame.contains(job->target()))
+            job->targetWasDeleted();
+        else if (job->isTransform()) {
             QQuickTransformAnimatorJob *xform = static_cast<QQuickTransformAnimatorJob *>(*it);
             xform->transformHelper()->sync();
         }
     }
+    deletedSinceLastFrame.clear();
 }
 
 void QQuickAnimatorController::afterNodeSync()
 {
     for (QSet<QQuickAnimatorJob *>::const_iterator it = activeLeafAnimations.constBegin();
          it != activeLeafAnimations.constEnd(); ++it) {
-        if ((*it)->isUniform()) {
+        QQuickAnimatorJob *job = *it;
+        if (job->isUniform() && job->target()) {
             QQuickUniformAnimatorJob *job = static_cast<QQuickUniformAnimatorJob *>(*it);
             job->afterNodeSync();
         }
