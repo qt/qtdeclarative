@@ -6578,6 +6578,7 @@ void tst_QQuickListView::multipleTransitions()
         }
     }
     listview->forceLayout();
+    QTest::qWait(200);
     QCOMPARE(listview->count(), model.count());
 
     // verify all items moved to the correct final positions
