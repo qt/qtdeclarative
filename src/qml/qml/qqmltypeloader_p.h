@@ -511,10 +511,6 @@ public:
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
 
-    bool hasError() const { return m_error.isValid(); }
-    void setError(const QQmlError &error) { m_error = error; }
-    QQmlError error() const { return m_error; }
-
 protected:
     virtual void clear(); // From QQmlCleanup
 
@@ -523,10 +519,9 @@ private:
     friend class QQmlScriptBlob;
 
     bool m_loaded;
-    QByteArray m_programSource;
+    QV4::CompiledData::CompilationUnit *m_precompiledScript;
     QV4::Script *m_program;
     QV4::PersistentValue m_value;
-    QQmlError m_error;
 };
 
 class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlTypeLoader::Blob

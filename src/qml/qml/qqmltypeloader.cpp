@@ -2604,13 +2604,21 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Locati
 }
 
 QQmlScriptData::QQmlScriptData()
-: importCache(0), pragmas(QQmlScript::Object::ScriptBlock::None), m_loaded(false), m_program(0)
+    : importCache(0)
+    , pragmas(QQmlScript::Object::ScriptBlock::None)
+    , m_loaded(false)
+    , m_program(0)
+    , m_precompiledScript(0)
 {
 }
 
 QQmlScriptData::~QQmlScriptData()
 {
     delete m_program;
+    if (m_precompiledScript) {
+        m_precompiledScript->deref();
+        m_precompiledScript = 0;
+    }
 }
 
 void QQmlScriptData::clear()
@@ -2663,7 +2671,8 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     m_metadata = QQmlScript::Parser::extractMetaData(m_source, &metaDataError);
     if (metaDataError.isValid()) {
         metaDataError.setUrl(finalUrl());
-        m_scriptData->setError(metaDataError);
+        setError(metaDataError);
+        return;
     }
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
@@ -2726,8 +2735,17 @@ void QQmlScriptBlob::done()
     m_imports.populateCache(m_scriptData->importCache);
 
     m_scriptData->pragmas = m_metadata.pragmas;
-    m_scriptData->m_programSource = m_source.toUtf8();
+
+    QList<QQmlError> errors;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
+    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, /*parseAsBinding*/true, &errors);
+    if (m_scriptData->m_precompiledScript)
+        m_scriptData->m_precompiledScript->ref();
     m_source.clear();
+    if (!errors.isEmpty()) {
+        setError(errors);
+        return;
+    }
 }
 
 void QQmlScriptBlob::scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace)

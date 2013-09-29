@@ -2577,6 +2577,11 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
     _errors << error;
 }
 
+QList<QQmlError> Codegen::errors() const
+{
+    return _errors;
+}
+
 void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
 {
     context->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);

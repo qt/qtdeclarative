@@ -142,6 +142,22 @@ struct CompilationUnitHolder : public QV4::Object
 
 DEFINE_MANAGED_VTABLE(CompilationUnitHolder);
 
+Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit *compilationUnit)
+    : line(0), column(0), scope(v4->rootContext), strictMode(false), inheritContext(true), parsed(false)
+    , qml(qml.asReturnedValue()), vmFunction(0), parseAsBinding(true)
+{
+    parsed = true;
+
+    if (compilationUnit) {
+        vmFunction = compilationUnit->linkToEngine(v4);
+        Q_ASSERT(vmFunction);
+        Scope valueScope(v4);
+        ScopedValue holder(valueScope, Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit)));
+        compilationUnitHolder = holder;
+    } else
+        vmFunction = 0;
+}
+
 Script::~Script()
 {
 }
@@ -262,6 +278,85 @@ Function *Script::function()
     if (!parsed)
         parse();
     return vmFunction;
+}
+
+struct PrecompilingCodeGen : public QQmlJS::Codegen
+{
+    struct CompileError {};
+
+    PrecompilingCodeGen(bool strict)
+        : QQmlJS::Codegen(strict)
+    {}
+
+    virtual void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail)
+    {
+        QQmlJS::Codegen::throwSyntaxError(loc, detail);
+        throw CompileError();
+    }
+
+    virtual void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail)
+    {
+        QQmlJS::Codegen::throwReferenceError(loc, detail);
+        throw CompileError();
+    }
+};
+
+CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, bool parseAsBinding, QList<QQmlError> *reportedErrors)
+{
+    using namespace QQmlJS;
+    using namespace QQmlJS::AST;
+
+    QQmlJS::V4IR::Module module;
+
+    QQmlJS::Engine ee;
+    QQmlJS::Lexer lexer(&ee);
+    lexer.setCode(source, /*line*/1, /*qml mode*/true);
+    QQmlJS::Parser parser(&ee);
+
+    parser.parseProgram();
+
+    QList<QQmlError> errors;
+
+    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
+        if (m.isWarning()) {
+            qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
+            continue;
+        }
+
+        QQmlError error;
+        error.setUrl(url);
+        error.setDescription(m.message);
+        error.setLine(m.loc.startLine);
+        error.setColumn(m.loc.startColumn);
+        errors << error;
+    }
+
+    if (!errors.isEmpty()) {
+        if (reportedErrors)
+            *reportedErrors << errors;
+        return 0;
+    }
+
+    Program *program = AST::cast<Program *>(parser.rootNode());
+    if (!program) {
+        // if parsing was successful, and we have no program, then
+        // we're done...:
+        return 0;
+    }
+
+    PrecompilingCodeGen cg(/*strict mode*/false);
+    try {
+        cg.generateFromProgram(url.toString(), source, program, &module, parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::GlobalCode);
+    } catch (const PrecompilingCodeGen::CompileError &) {
+        if (reportedErrors)
+            *reportedErrors << cg.errors();
+        return 0;
+    }
+
+    Compiler::JSUnitGenerator jsGenerator(&module);
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(engine->iselFactory->create(engine->executableAllocator, &module, &jsGenerator));
+    isel->setUseFastLookups(false);
+    return isel->compile();
 }
 
 ReturnedValue Script::qmlBinding()
