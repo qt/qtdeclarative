@@ -508,8 +508,7 @@ public:
     QList<QQmlScriptBlob *> scripts;
     QQmlScript::Object::ScriptBlock::Pragmas pragmas;
 
-    bool isInitialized() const { return hasEngine(); }
-    void initialize(QQmlEngine *);
+    QV4::PersistentValue scriptValueForContext(QQmlContextData *parentCtxt);
 
 protected:
     virtual void clear(); // From QQmlCleanup
@@ -517,6 +516,8 @@ protected:
 private:
     friend class QQmlVME;
     friend class QQmlScriptBlob;
+
+    void initialize(QQmlEngine *);
 
     bool m_loaded;
     QV4::CompiledData::CompilationUnit *m_precompiledScript;

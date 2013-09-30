@@ -527,6 +527,13 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     }
     context->setIdPropertyData(mapping);
 
+    if (subComponentIndex == -1) {
+        foreach (QQmlScriptData *script, compiledData->scripts)
+            context->importedScripts << script->scriptValueForContext(context);
+    } else if (parentContext) {
+        context->importedScripts = parentContext->importedScripts;
+    }
+
     QObject *instance = createInstance(objectToCreate, parent);
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);

@@ -768,7 +768,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
-            CTXT->importedScripts << run(CTXT, SCRIPTS.at(instr.value));
+            CTXT->importedScripts << SCRIPTS.at(instr.value)->scriptValueForContext(CTXT);
         QML_END_INSTR(StoreImportedScript)
 
         QML_BEGIN_INSTR(StoreScriptString)
@@ -1075,110 +1075,6 @@ void QQmlVME::reset()
     states.clear();
     rootContext = 0;
     creationContext = 0;
-}
-
-// Must be called with a handle scope and context
-void QQmlScriptData::initialize(QQmlEngine *engine)
-{
-    Q_ASSERT(!m_program);
-    Q_ASSERT(engine);
-    Q_ASSERT(!hasEngine());
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
-
-    m_program = new QV4::Script(v4, QV4::ObjectRef::null(), m_precompiledScript);
-
-    addToEngine(engine);
-
-    addref();
-}
-
-QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *script)
-{
-    if (script->m_loaded)
-        return script->m_value;
-
-    QV4::PersistentValue rv;
-
-    Q_ASSERT(parentCtxt && parentCtxt->engine);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
-    QV4::Scope scope(v4);
-
-    bool shared = script->pragmas & QQmlScript::Object::ScriptBlock::Shared;
-
-    QQmlContextData *effectiveCtxt = parentCtxt;
-    if (shared)
-        effectiveCtxt = 0;
-
-    // Create the script context if required
-    QQmlContextData *ctxt = new QQmlContextData;
-    ctxt->isInternal = true;
-    ctxt->isJSContext = true;
-    if (shared)
-        ctxt->isPragmaLibraryContext = true;
-    else
-        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
-    ctxt->url = script->url;
-    ctxt->urlString = script->urlString;
-
-    // For backward compatibility, if there are no imports, we need to use the
-    // imports from the parent context.  See QTBUG-17518.
-    if (!script->importCache->isEmpty()) {
-        ctxt->imports = script->importCache;
-    } else if (effectiveCtxt) {
-        ctxt->imports = effectiveCtxt->imports;
-        ctxt->importedScripts = effectiveCtxt->importedScripts;
-    }
-
-    if (ctxt->imports) {
-        ctxt->imports->addref();
-    }
-
-    if (effectiveCtxt) {
-        ctxt->setParent(effectiveCtxt, true);
-    } else {
-        ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
-    }
-
-    for (int ii = 0; ii < script->scripts.count(); ++ii) {
-        ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
-    }
-
-    if (!script->isInitialized())
-        script->initialize(parentCtxt->engine);
-
-    if (!script->m_program) {
-        if (shared)
-            script->m_loaded = true;
-        return QV4::PersistentValue();
-    }
-
-    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
-    QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
-
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
-    try {
-        script->m_program->qml = qmlglobal;
-        script->m_program->run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
-        if (error.isValid())
-            ep->warning(error);
-    } 
-
-    rv = qmlglobal;
-    if (shared) {
-        script->m_value = rv;
-        script->m_loaded = true;
-    }
-
-    return rv;
 }
 
 #ifdef QML_THREADED_VME_INTERPRETER

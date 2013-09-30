@@ -41,6 +41,8 @@
 
 #include "qqmltypeloader_p.h"
 #include "qqmlabstracturlinterceptor.h"
+#include "qqmlcontextwrapper_p.h"
+#include "qqmlexpression_p.h"
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
@@ -2306,6 +2308,28 @@ void QQmlTypeData::compile()
             }
         }
 
+        // Collect imported scripts
+        m_compiledData->scripts.reserve(m_scripts.count());
+        for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
+            const ScriptReference &script = m_scripts.at(scriptIndex);
+
+            QString qualifier = script.qualifier;
+            QString enclosingNamespace;
+
+            const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
+            if (lastDotIndex != -1) {
+                enclosingNamespace = qualifier.left(lastDotIndex);
+                qualifier = qualifier.mid(lastDotIndex+1);
+            }
+
+            m_compiledData->importCache->add(qualifier, scriptIndex, enclosingNamespace);
+            QQmlScriptData *scriptData = script.script->scriptData();
+            scriptData->addref();
+            m_compiledData->scripts << scriptData;
+        }
+
+        // Compile JS binding expressions and signal handlers
+
         JSCodeGen jsCodeGen;
         jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 
@@ -2314,6 +2338,8 @@ void QQmlTypeData::compile()
         QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &parsedQML->jsModule, &parsedQML->jsGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/false);
+
+        // Generate QML compiled type data structures
 
         QmlUnitGenerator qmlGenerator;
         QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data());
@@ -2330,6 +2356,8 @@ void QQmlTypeData::compile()
         m_compiledData->qmlUnit = qmlUnit; // ownership transferred to m_compiledData
 
         QList<QQmlError> errors;
+
+        // Build property caches and VME meta object data
 
         m_compiledData->datas.reserve(qmlUnit->nObjects);
         m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
@@ -2365,6 +2393,8 @@ void QQmlTypeData::compile()
                 propertyCache->addref();
             }
         }
+
+        // Resolve component boundaries and aliases
 
         if (errors.isEmpty()) {
             // Scan for components, determine their scopes and resolve aliases within the scope.
@@ -2619,6 +2649,109 @@ QQmlScriptData::~QQmlScriptData()
         m_precompiledScript->deref();
         m_precompiledScript = 0;
     }
+}
+
+void QQmlScriptData::initialize(QQmlEngine *engine)
+{
+    Q_ASSERT(!m_program);
+    Q_ASSERT(engine);
+    Q_ASSERT(!hasEngine());
+
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    QV8Engine *v8engine = ep->v8engine();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
+
+    m_program = new QV4::Script(v4, QV4::ObjectRef::null(), m_precompiledScript);
+
+    addToEngine(engine);
+
+    addref();
+}
+
+QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentCtxt)
+{
+    if (m_loaded)
+        return m_value;
+
+    QV4::PersistentValue rv;
+
+    Q_ASSERT(parentCtxt && parentCtxt->engine);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
+    QV8Engine *v8engine = ep->v8engine();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
+    QV4::Scope scope(v4);
+
+    bool shared = pragmas & QQmlScript::Object::ScriptBlock::Shared;
+
+    QQmlContextData *effectiveCtxt = parentCtxt;
+    if (shared)
+        effectiveCtxt = 0;
+
+    // Create the script context if required
+    QQmlContextData *ctxt = new QQmlContextData;
+    ctxt->isInternal = true;
+    ctxt->isJSContext = true;
+    if (shared)
+        ctxt->isPragmaLibraryContext = true;
+    else
+        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
+    ctxt->url = url;
+    ctxt->urlString = urlString;
+
+    // For backward compatibility, if there are no imports, we need to use the
+    // imports from the parent context.  See QTBUG-17518.
+    if (!importCache->isEmpty()) {
+        ctxt->imports = importCache;
+    } else if (effectiveCtxt) {
+        ctxt->imports = effectiveCtxt->imports;
+        ctxt->importedScripts = effectiveCtxt->importedScripts;
+    }
+
+    if (ctxt->imports) {
+        ctxt->imports->addref();
+    }
+
+    if (effectiveCtxt) {
+        ctxt->setParent(effectiveCtxt, true);
+    } else {
+        ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
+    }
+
+    for (int ii = 0; ii < scripts.count(); ++ii) {
+        ctxt->importedScripts << scripts.at(ii)->scriptData()->scriptValueForContext(ctxt);
+    }
+
+    if (!hasEngine())
+        initialize(parentCtxt->engine);
+
+    if (!m_program) {
+        if (shared)
+            m_loaded = true;
+        return QV4::PersistentValue();
+    }
+
+    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
+    QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
+
+    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
+    try {
+        m_program->qml = qmlglobal;
+        m_program->run();
+    } catch (QV4::Exception &e) {
+        e.accept(ctx);
+        QQmlError error;
+        QQmlExpressionPrivate::exceptionToError(e, error);
+        if (error.isValid())
+            ep->warning(error);
+    }
+
+    rv = qmlglobal;
+    if (shared) {
+        m_value = rv;
+        m_loaded = true;
+    }
+
+    return rv;
 }
 
 void QQmlScriptData::clear()
