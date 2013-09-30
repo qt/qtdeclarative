@@ -634,15 +634,33 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             if (!node->statement && !node->binding)
                 COMPILE_EXCEPTION(loc, tr("No property alias location"));
 
+            AST::SourceLocation rhsLoc;
+            if (node->binding)
+                rhsLoc = node->binding->firstSourceLocation();
+            else if (node->statement)
+                rhsLoc = node->statement->firstSourceLocation();
+            else
+                rhsLoc = node->semicolonToken;
+            property->aliasLocation.line = rhsLoc.startLine;
+            property->aliasLocation.column = rhsLoc.startColumn;
+
             QStringList alias;
-            if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node->statement))
+
+            if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement*>(node->statement)) {
                 alias = astNodeToStringList(stmt->expression);
+                if (alias.isEmpty()) {
+                    if (isStatementNodeScript(node->statement)) {
+                        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+                    } else {
+                        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
+                    }
+                }
+            } else {
+                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+            }
 
-            if (node->binding || alias.isEmpty())
-                COMPILE_EXCEPTION(loc, tr("Invalid alias location"));
-
-             if (alias.count() < 1 || alias.count() > 3)
-                COMPILE_EXCEPTION(loc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+            if (alias.count() < 1 || alias.count() > 3)
+                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
 
              property->aliasIdValueIndex = registerString(alias.first());
 
@@ -985,6 +1003,31 @@ QQmlScript::LocationSpan QQmlCodeGenerator::location(AST::SourceLocation start, 
     rv.range.offset = start.offset;
     rv.range.length = end.offset + end.length - start.offset;
     return rv;
+}
+
+bool QQmlCodeGenerator::isStatementNodeScript(AST::Statement *statement)
+{
+    if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(statement)) {
+        AST::ExpressionNode *expr = stmt->expression;
+        if (AST::StringLiteral *lit = AST::cast<AST::StringLiteral *>(expr))
+            return false;
+        else if (expr->kind == AST::Node::Kind_TrueLiteral)
+            return false;
+        else if (expr->kind == AST::Node::Kind_FalseLiteral)
+            return false;
+        else if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(expr))
+            return false;
+        else {
+
+            if (AST::UnaryMinusExpression *unaryMinus = AST::cast<AST::UnaryMinusExpression *>(expr)) {
+               if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(unaryMinus->expression)) {
+                   return false;
+               }
+            }
+        }
+    }
+
+    return true;
 }
 
 QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)

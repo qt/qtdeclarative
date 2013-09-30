@@ -1552,8 +1552,10 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
             const int idIndex = p->aliasIdValueIndex;
             const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
-            if (targetObjectIndex == -1)
-                COMPILE_EXCEPTION(p, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+            if (targetObjectIndex == -1) {
+                recordError(p->aliasLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+                return false;
+            }
             const int targetId = _objectIndexToIdInScope->value(targetObjectIndex, -1);
             Q_ASSERT(targetId != -1);
 
@@ -1596,8 +1598,10 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 QtQml::PropertyResolver resolver(targetCache);
 
                 QQmlPropertyData *targetProperty = resolver.property(property.toString());
-                if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF)
-                    COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
+                    recordError(p->aliasLocation, tr("Invalid alias location"));
+                    return false;
+                }
 
                 propIdx = targetProperty->coreIndex;
                 type = targetProperty->propType;
@@ -1608,15 +1612,19 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 if (!subProperty.isEmpty()) {
                     QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
-                    if (!valueType)
-                        COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                    if (!valueType) {
+                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        return false;
+                    }
 
                     propType = type;
 
                     int valueTypeIndex =
                         valueType->metaObject()->indexOfProperty(subProperty.toString().toUtf8().constData());
-                    if (valueTypeIndex == -1)
-                        COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                    if (valueTypeIndex == -1) {
+                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        return false;
+                    }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
                     propIdx |= (valueTypeIndex << 16);
