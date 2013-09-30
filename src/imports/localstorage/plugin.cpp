@@ -304,7 +304,7 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             rows->sqlQuery = query;
 
             Scoped<Object> resultObject(scope, ctx->engine->newObject());
-            result = resultObject.asValue();
+            result = resultObject.asReturnedValue();
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);

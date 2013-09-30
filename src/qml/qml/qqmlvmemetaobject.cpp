@@ -1085,7 +1085,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
         QV4::ScopedValue newv(scope, QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value));
-        if (QV4::VariantObject *v = newv->as<QV4::VariantObject>())
+        if (QV4::Referenced<QV4::VariantObject> v = newv->asRef<QV4::VariantObject>())
             v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.

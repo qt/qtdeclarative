@@ -392,7 +392,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
-            array->arrayData[ii].value = value;
+            array->arrayData[ii].value = value.asReturnedValue();
             array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);

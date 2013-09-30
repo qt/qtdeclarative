@@ -1560,7 +1560,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
             QV4::ScopedCallData callData(scope, 0);
-            callData->thisObject = activationObject.asValue();
+            callData->thisObject = activationObject.asReturnedValue();
             callback->call(callData);
         }
 

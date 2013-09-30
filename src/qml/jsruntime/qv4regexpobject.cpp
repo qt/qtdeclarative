@@ -243,7 +243,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
 
     ScopedValue r(scope, callData->argument(0));
     ScopedValue f(scope, callData->argument(1));
-    if (RegExpObject *re = r->as<RegExpObject>()) {
+    Scoped<RegExpObject> re(scope, r);
+    if (re) {
         if (!f->isUndefined())
             ctx->throwTypeError();
 
@@ -273,11 +274,11 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    RegExp* re = RegExp::create(ctx->engine, pattern, ignoreCase, multiLine);
-    if (!re->isValid())
+    RegExp *regexp = RegExp::create(ctx->engine, pattern, ignoreCase, multiLine);
+    if (!regexp->isValid())
         ctx->throwSyntaxError(0);
 
-    return Encode(ctx->engine->newRegExpObject(re, global));
+    return Encode(ctx->engine->newRegExpObject(regexp, global));
 }
 
 ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
@@ -341,7 +342,7 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     array->setArrayLengthUnchecked(len);
 
     array->memberData[Index_ArrayIndex].value = Primitive::fromInt32(result);
-    array->memberData[Index_ArrayInput].value = arg;
+    array->memberData[Index_ArrayInput].value = arg.asReturnedValue();
 
     if (r->global)
         r->lastIndexProperty(ctx)->value = Primitive::fromInt32(matchOffsets[1]);

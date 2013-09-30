@@ -61,18 +61,6 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
-template <typename T>
-struct Returned : private T
-{
-    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
-    T *getPointer() { return this; }
-    template<typename X>
-    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
-    template<typename X>
-    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
-    using T::asReturnedValue;
-};
-
 #define Q_MANAGED \
     public: \
         Q_MANAGED_CHECK \

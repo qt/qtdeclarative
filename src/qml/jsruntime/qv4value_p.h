@@ -165,18 +165,6 @@ inline Primitive Primitive::fromUInt32(uint i)
     return v;
 }
 
-inline Value Value::fromObject(Object *o)
-{
-    Value v;
-#if QT_POINTER_SIZE == 8
-    v.o = o;
-#else
-    v.tag = Managed_Type;
-    v.o = o;
-#endif
-    return v;
-}
-
 inline Value Value::fromManaged(Managed *m)
 {
     if (!m)

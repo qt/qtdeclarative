@@ -50,6 +50,18 @@ namespace QV4 {
 
 typedef uint Bool;
 
+template <typename T>
+struct Returned : private T
+{
+    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
+    T *getPointer() { return this; }
+    template<typename X>
+    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
+    template<typename X>
+    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
+    using T::asReturnedValue;
+};
+
 struct Q_QML_EXPORT Value
 {
     /*
@@ -273,7 +285,6 @@ struct Q_QML_EXPORT Value
         return val;
     }
 
-    static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
 
     int toUInt16() const;
@@ -349,9 +360,10 @@ struct SafeValue : public Value
         val = v.val;
         return *this;
     }
-
     template<typename T>
-    Returned<T> *as();
+    inline Returned<T> *as();
+    template<typename T>
+    inline Referenced<T> asRef();
 };
 
 struct Q_QML_EXPORT Primitive : public Value

@@ -152,7 +152,7 @@ Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit
         vmFunction = compilationUnit->linkToEngine(v4);
         Q_ASSERT(vmFunction);
         Scope valueScope(v4);
-        ScopedValue holder(valueScope, Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit)));
+        ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
         compilationUnitHolder = holder;
     } else
         vmFunction = 0;

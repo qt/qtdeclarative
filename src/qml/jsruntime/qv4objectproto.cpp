@@ -185,7 +185,7 @@ ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
     newObject->setPrototype(O->asObject());
 
     if (ctx->callData->argc > 1 && !ctx->callData->args[1].isUndefined()) {
-        ctx->callData->args[0] = newObject.asValue();
+        ctx->callData->args[0] = newObject.asReturnedValue();
         return method_defineProperties(ctx);
     }
 

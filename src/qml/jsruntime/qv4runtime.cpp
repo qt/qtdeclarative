@@ -782,7 +782,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
         }
 
         baseObject = __qmljs_convert_to_object(context, ValueRef(&callData->thisObject));
-        callData->thisObject = baseObject.asValue();
+        callData->thisObject = baseObject.asReturnedValue();
     }
 
     Scoped<FunctionObject> o(scope, baseObject->get(name));

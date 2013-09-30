@@ -285,7 +285,7 @@ bool JsonParser::parseMember(ObjectRef o)
 
     ScopedString s(scope, context->engine->newIdentifier(key));
     Property *p = o->insertMember(s, Attr_Data);
-    p->value = val;
+    p->value = val.asReturnedValue();
 
     END;
     return true;

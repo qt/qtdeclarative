@@ -144,7 +144,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
     if (createProto) {
         Scoped<Object> proto(s, scope->engine->newObject(scope->engine->protoClass));
         proto->memberData[Index_ProtoConstructor].value = this->asReturnedValue();
-        memberData[Index_Prototype].value = proto.asValue();
+        memberData[Index_Prototype].value = proto.asReturnedValue();
     }
 
     ScopedValue v(s, n.asReturnedValue());
@@ -443,7 +443,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     ScopedObject obj(scope, v4->newObject(ic));
 
     ExecutionContext *context = v4->current;
-    callData->thisObject = obj.asValue();
+    callData->thisObject = obj.asReturnedValue();
     ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
     ScopedValue result(scope);
