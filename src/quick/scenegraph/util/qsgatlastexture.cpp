@@ -50,13 +50,16 @@
 
 #include <private/qsgtexture_p.h>
 
+#include <private/qqmlprofilerservice_p.h>
+
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
 
 
-#ifndef QSG_NO_RENDERER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDERER_TIMING").isEmpty();
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
 #endif
 
 namespace QSGAtlasTexture
@@ -331,10 +334,10 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
     // Upload all pending images..
     for (int i=0; i<m_pending_uploads.size(); ++i) {
 
-#ifndef QSG_NO_RENDERER_TIMING
-        QElapsedTimer timer;
-        if (qsg_render_timing)
-            timer.start();
+#ifndef QSG_NO_RENDER_TIMING
+        bool profileFrames = qsg_render_timing || QQmlProfilerService::enabled;
+        if (profileFrames)
+            qsg_renderer_timer.start();
 #endif
 
         if (m_externalFormat == GL_BGRA &&
@@ -343,12 +346,23 @@ bool Atlas::bind(QSGTexture::Filtering filtering)
         } else {
             upload(m_pending_uploads.at(i));
         }
-#ifndef QSG_NO_RENDERER_TIMING
+
+#ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
             printf("   - AtlasTexture(%dx%d), uploaded in %d ms\n",
                    m_pending_uploads.at(i)->image().width(),
                    m_pending_uploads.at(i)->image().height(),
-                   (int) timer.elapsed());
+                   (int) (qsg_renderer_timer.elapsed()));
+        }
+
+        if (QQmlProfilerService::enabled) {
+            QQmlProfilerService::sceneGraphFrame(
+                        QQmlProfilerService::SceneGraphTexturePrepare,
+                        0,  // bind (not relevant)
+                        0,  // convert (not relevant)
+                        0,  // swizzle (not relevant)
+                        qsg_renderer_timer.nsecsElapsed(), // (upload all of the above)
+                        0); // mipmap (not used ever...)
         }
 #endif
     }

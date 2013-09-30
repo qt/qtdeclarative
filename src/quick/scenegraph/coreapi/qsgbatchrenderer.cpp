@@ -46,6 +46,8 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 
+#include <private/qqmlprofilerservice_p.h>
+
 #include <algorithm>
 
 #ifndef GL_DOUBLE
@@ -69,6 +71,10 @@ const bool debug_noalpha    = qgetenv("QSG_RENDERER_DEBUG").contains("noalpha");
 const bool debug_noopaque   = qgetenv("QSG_RENDERER_DEBUG").contains("noopaque");
 const bool debug_noclip     = qgetenv("QSG_RENDERER_DEBUG").contains("noclip");
 
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
+#endif
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
 #define SHADOWNODE_TRAVERSE(NODE) for (QList<Node *>::const_iterator child = NODE->children.constBegin(); child != NODE->children.constEnd(); ++child)
@@ -118,6 +124,11 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (shader)
         return shader;
 
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing  || QQmlProfilerService::enabled)
+        qsg_renderer_timer.start();
+#endif
+
     QSGMaterialShader *s = material->createShader();
 
     QOpenGLShaderProgram *p = s->program();
@@ -151,6 +162,17 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     Q_ASSERT(shader->pos_order >= 0);
     Q_ASSERT(shader->id_zRange >= 0);
 
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
+        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphContextFrame,
+                    qsg_renderer_timer.nsecsElapsed());
+    }
+#endif
+
     rewrittenShaders[type] = shader;
     return shader;
 }
@@ -161,6 +183,11 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     Shader *shader = stockShaders.value(type, 0);
     if (shader)
         return shader;
+
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing  || QQmlProfilerService::enabled)
+        qsg_renderer_timer.start();
+#endif
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
     s->compile();
@@ -173,6 +200,17 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     shader->lastOpacity = 0;
 
     stockShaders[type] = shader;
+
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
+        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphContextFrame,
+                    qsg_renderer_timer.nsecsElapsed());
+    }
+#endif
 
     return shader;
 }
