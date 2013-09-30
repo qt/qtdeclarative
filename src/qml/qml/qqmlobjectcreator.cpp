@@ -1430,9 +1430,10 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
 
-        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(i);
-        if (!cache || isComponentType(obj->inheritedTypeNameIndex)
-            || cache->metaObject() != &QQmlComponent::staticMetaObject)
+        QQmlCompiledData::TypeReference tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        if (!tref.type)
+            continue;
+        if (tref.type->metaObject() != &QQmlComponent::staticMetaObject)
             continue;
 
         componentRoots.append(i);
