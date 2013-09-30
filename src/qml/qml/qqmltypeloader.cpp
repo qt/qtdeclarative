@@ -2278,6 +2278,10 @@ void QQmlTypeData::compile()
 
     if (m_useNewCompiler) {
         m_compiledData->importCache = new QQmlTypeNameCache;
+
+        foreach (const QString &ns, m_namespaces)
+            m_compiledData->importCache->add(ns);
+
         m_imports.populateCache(m_compiledData->importCache);
         m_compiledData->importCache->addref();
 
