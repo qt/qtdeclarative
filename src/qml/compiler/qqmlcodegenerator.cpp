@@ -197,7 +197,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
     bool isType = lastId->name.unicode()->isUpper();
     if (isType) {
         int idx = defineQMLObject(node);
-        appendBinding(AST::SourceLocation(), emptyStringIndex, idx);
+        appendBinding(node->qualifiedTypeNameId->identifierToken, emptyStringIndex, idx);
     } else {
         int idx = defineQMLObject(/*qualfied type name id*/0, node->initializer);
         appendBinding(node->qualifiedTypeNameId, idx);

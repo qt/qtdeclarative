@@ -2297,6 +2297,8 @@ void QQmlTypeData::compile()
                 ref.type = resolvedType->type;
                 Q_ASSERT(ref.type);
             }
+            ref.majorVersion = resolvedType->majorVersion;
+            ref.minorVersion = resolvedType->minorVersion;
             m_compiledData->resolvedTypes.insert(resolvedType.key(), ref);
         }
 
@@ -2423,6 +2425,14 @@ void QQmlTypeData::compile()
                     m_compiledData->listMetaTypeId = typeRef.type->qListTypeId();
                 }
             }
+        }
+
+        // Sanity check property bindings
+        if (errors.isEmpty()) {
+            QQmlPropertyValidator validator(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes,
+                                            m_compiledData->propertyCaches, m_compiledData->objectIndexToIdPerComponent);
+            if (!validator.validate())
+                errors << validator.errors;
         }
 
         if (!errors.isEmpty()) {

@@ -1025,12 +1025,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             return false;
     }
 
-    // Child item:
-    // ...
-    //    Item {
-    //        ...
-    //    }
-    if (!property)
+    if (!property) // ### error
         return true;
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
@@ -1673,4 +1668,79 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         }
     }
     return true;
+}
+
+
+QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+                                             const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                                             const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent)
+    : QQmlCompilePass(url, qmlUnit)
+    , resolvedTypes(resolvedTypes)
+    , propertyCaches(propertyCaches)
+    , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
+{
+}
+
+bool QQmlPropertyValidator::validate()
+{
+    for (int i = 0; i < qmlUnit->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+        if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
+            continue;
+
+        if (isComponent(i))
+            continue;
+
+        QQmlPropertyCache *propertyCache = propertyCaches.value(i);
+        Q_ASSERT(propertyCache);
+
+        if (!validateObject(obj, i, propertyCache))
+            return false;
+    }
+    return true;
+}
+
+bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache)
+{
+    PropertyResolver propertyResolver(propertyCache);
+
+    QQmlPropertyData *defaultProperty = propertyCache->defaultProperty();
+
+    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    for (int i = 0; i < obj->nBindings; ++i, ++binding) {
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
+            || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+            continue;
+
+        const QString name = stringAt(binding->propertyNameIndex);
+
+        bool bindingToDefaultProperty = false;
+
+        bool notInRevision = false;
+        QQmlPropertyData *pd = 0;
+        if (!name.isEmpty()) {
+            pd = propertyResolver.property(name, &notInRevision);
+
+            if (notInRevision) {
+                QString typeName = stringAt(obj->inheritedTypeNameIndex);
+                QQmlCompiledData::TypeReference type = resolvedTypes.value(objectIndex);
+                if (type.type) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
+                } else {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
+                }
+            }
+        } else {
+           pd = defaultProperty;
+           bindingToDefaultProperty = true;
+        }
+
+        if (!pd) {
+            if (bindingToDefaultProperty) {
+                COMPILE_EXCEPTION(binding, tr("Cannot assign to non-existent default property"));
+            } else {
+                COMPILE_EXCEPTION(binding, tr("Cannot assign to non-existent property \"%1\"").arg(name));
+            }
+        }
+    }
 }

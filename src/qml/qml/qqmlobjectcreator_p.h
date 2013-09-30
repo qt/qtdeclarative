@@ -115,6 +115,27 @@ protected:
     QHash<int, QHash<int, int> > *objectIndexToIdPerComponent;
 };
 
+class QQmlPropertyValidator : public QQmlCompilePass
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
+public:
+    QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+                          const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                          const QList<QQmlPropertyCache *> &propertyCaches,
+                          const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent);
+
+    bool validate();
+
+private:
+    bool validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache);
+
+    bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+
+    const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
+    const QList<QQmlPropertyCache *> &propertyCaches;
+    const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
+};
+
 class QmlObjectCreator : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(QmlObjectCreator)
