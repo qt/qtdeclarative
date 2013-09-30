@@ -41,6 +41,9 @@
     PropertyAnimation demonstrates using a number animation to bounce a circle up and down.
     \snippet animation/basics/property-animation.qml 0
 
+    Animators demonstrates using a animators to bounce an icon up and down.
+    \snippet animation/basics/animators.qml 0
+
     Behaviors demonstrates using behaviors to animate moving a rectangle to whereever you click.
     \snippet animation/behaviors/behavior-example.qml 0
 
