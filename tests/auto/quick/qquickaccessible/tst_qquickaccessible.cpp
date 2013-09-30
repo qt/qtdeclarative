@@ -67,13 +67,9 @@ static int verifyHierarchy(QAccessibleInterface *iface)
 {
     int errorAt = 0;
     static int treelevel = 0;   // for error diagnostics
-    QAccessibleInterface *middleChild, *if2;
-    middleChild = 0;
+    QAccessibleInterface *if2;
     ++treelevel;
     int middle = iface->childCount()/2 + 1;
-    if (iface->childCount() >= 2) {
-        middleChild = iface->child(middle - 1);
-    }
     for (int i = 0; i < iface->childCount() && !errorAt; ++i) {
         if2 = iface->child(i);
         EXPECT(if2 != 0);
@@ -322,7 +318,7 @@ QAccessibleInterface *topLevelChildAt(QAccessibleInterface *iface, int x, int y)
         return 0;
 
     QAccessibleInterface *childOfChild;
-    while (childOfChild = child->childAt(x, y)) {
+    while ( ( childOfChild = child->childAt(x, y)) ) {
         child = childOfChild;
     }
     return child;
