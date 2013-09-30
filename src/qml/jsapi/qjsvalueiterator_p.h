@@ -55,12 +55,12 @@ public:
     QJSValueIteratorPrivate(const QJSValue &v);
 
     QJSValue value;
-    QV4::ObjectIterator iterator;
+    QV4::PersistentValue iterator;
     QV4::PropertyAttributes currentAttributes;
-    QV4::String *currentName;
+    QV4::SafeString currentName;
     uint currentIndex;
     QV4::PropertyAttributes nextAttributes;
-    QV4::String *nextName;
+    QV4::SafeString nextName;
     uint nextIndex;
 };
 

@@ -646,12 +646,10 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
         return QV4::Object::query(m, name);
 }
 
-Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
+Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
 {
-    *name = 0;
+    name = (String *)0;
     *index = UINT_MAX;
-
-    QV4::Scope scope(m->engine());
 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
 
@@ -661,22 +659,20 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
     const QMetaObject *mo = that->m_object->metaObject();
     const int propertyCount = mo->propertyCount();
     if (it->arrayIndex < propertyCount) {
-        ScopedString n(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
-        *name = n.getPointer();
+        name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(n);
+        it->tmpDynamicProperty.value = that->get(name);
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
     if (it->arrayIndex < propertyCount + methodCount) {
-        ScopedString n(scope, that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name())));
-        *name = n.getPointer();
+        name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
         ++it->arrayIndex;
         if (attributes)
             *attributes = QV4::Attr_Data;
-        it->tmpDynamicProperty.value = that->get(n);
+        it->tmpDynamicProperty.value = that->get(name);
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attributes);

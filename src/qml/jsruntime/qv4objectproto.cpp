@@ -222,14 +222,12 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
     Scoped<Object> o(scope, ctx->argument(1), Scoped<Object>::Convert);
     ScopedValue val(scope);
 
-    ObjectIterator it(o.getPointer(), ObjectIterator::EnumerableOnly);
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
+    ScopedString name(scope);
     while (1) {
         uint index;
-        ScopedString name(scope);
         PropertyAttributes attrs;
-        String *tmp = 0;
-        Property *pd = it.next(&tmp, &index, &attrs);
-        name = tmp;
+        Property *pd = it.next(name, &index, &attrs);
         if (!pd)
             break;
         Property n;
@@ -375,7 +373,7 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
 
     Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
-    ObjectIterator it(o.getPointer(), ObjectIterator::EnumerableOnly);
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
     while (1) {
         name = it.nextPropertyNameAsString();
@@ -652,7 +650,7 @@ Returned<ArrayObject> *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4,
     Scoped<ArrayObject> array(scope, v4->newArrayObject());
     ScopedObject O(scope, o);
     if (O) {
-        ObjectIterator it(O.getPointer(), ObjectIterator::NoFlags);
+        ObjectIterator it(scope, O, ObjectIterator::NoFlags);
         ScopedValue name(scope);
         while (1) {
             name = it.nextPropertyNameAsString();

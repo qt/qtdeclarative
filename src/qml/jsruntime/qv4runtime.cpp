@@ -544,7 +544,7 @@ ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const Value
     Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
         o = in;
-    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o.getPointer()));
+    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o));
     return it.asReturnedValue();
 }
 

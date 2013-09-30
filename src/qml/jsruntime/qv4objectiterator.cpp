@@ -45,22 +45,40 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(Object *o, uint flags)
-    : object(o)
-    , current(o)
+ObjectIterator::ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const ObjectRef o, uint flags)
+    : object(*scratch1)
+    , current(*scratch2)
     , arrayNode(0)
     , arrayIndex(0)
     , memberIndex(0)
     , flags(flags)
 {
+    object = o;
+    current = o;
     tmpDynamicProperty.value = Primitive::undefinedValue();
 }
 
-Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *attrs)
+ObjectIterator::ObjectIterator(Scope &scope, const ObjectRef o, uint flags)
+    : object(*static_cast<SafeObject *>(scope.alloc(1)))
+    , current(*static_cast<SafeObject *>(scope.alloc(1)))
+    , arrayNode(0)
+    , arrayIndex(0)
+    , memberIndex(0)
+    , flags(flags)
 {
-    Property *p = 0;
-    *name = 0;
+    object = o;
+    current = o;
+    tmpDynamicProperty.value = Primitive::undefinedValue();
+}
+
+Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *attrs)
+{
+    name = (String *)0;
     *index = UINT_MAX;
+    if (!object)
+        return 0;
+
+    Property *p = 0;
     while (1) {
         if (!current)
             break;
@@ -69,10 +87,8 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
             // check the property is not already defined earlier in the proto chain
             if (current != object) {
                 Property *pp;
-                if (*name) {
-                    Scope scope(object->engine());
-                    ScopedString n(scope, *name);
-                    pp = object->__getPropertyDescriptor__(n);
+                if (name) {
+                    pp = object->__getPropertyDescriptor__(name);
                 } else {
                     assert (*index != UINT_MAX);
                     pp = object->__getPropertyDescriptor__(*index);
@@ -86,7 +102,7 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
         if (flags & WithProtoChain)
             current = current->prototype();
         else
-            current = 0;
+            current = (Object *)0;
 
         arrayIndex = 0;
         memberIndex = 0;
@@ -94,38 +110,74 @@ Property *ObjectIterator::next(String **name, uint *index, PropertyAttributes *a
     return 0;
 }
 
-ReturnedValue ObjectIterator::nextPropertyName(Value *value)
+ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
 {
+    if (!object)
+        return Encode::null();
+
     PropertyAttributes attrs;
     uint index;
-    String *name;
-    Property *p = next(&name, &index, &attrs);
+    Scope scope(object->engine());
+    ScopedString name(scope);
+    Property *p = next(name, &index, &attrs);
     if (!p)
         return Encode::null();
 
-    if (value)
-        *value = Value::fromReturnedValue(object->getValue(p, attrs));
+    value = Value::fromReturnedValue(object->getValue(p, attrs));
 
-    if (name)
+    if (!!name)
         return name->asReturnedValue();
     assert(index < UINT_MAX);
     return Encode(index);
 }
 
-ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
+ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
 {
+    if (!object)
+        return Encode::null();
+
     PropertyAttributes attrs;
     uint index;
-    String *name;
-    Property *p = next(&name, &index, &attrs);
+    Scope scope(object->engine());
+    ScopedString name(scope);
+    Property *p = next(name, &index, &attrs);
     if (!p)
         return Encode::null();
 
-    if (value)
-        *value = Value::fromReturnedValue(object->getValue(p, attrs));
+    value = Value::fromReturnedValue(object->getValue(p, attrs));
 
-    if (name)
+    if (!!name)
         return name->asReturnedValue();
     assert(index < UINT_MAX);
     return Encode(object->engine()->newString(QString::number(index)));
+}
+
+ReturnedValue ObjectIterator::nextPropertyNameAsString()
+{
+    if (!object)
+        return Encode::null();
+
+    PropertyAttributes attrs;
+    uint index;
+    Scope scope(object->engine());
+    ScopedString name(scope);
+    Property *p = next(name, &index, &attrs);
+    if (!p)
+        return Encode::null();
+
+    if (!!name)
+        return name->asReturnedValue();
+    assert(index < UINT_MAX);
+    return Encode(object->engine()->newString(QString::number(index)));
+}
+
+
+DEFINE_MANAGED_VTABLE(ForEachIteratorObject);
+
+void ForEachIteratorObject::markObjects(Managed *that)
+{
+    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
+    o->workArea[0].mark();
+    o->workArea[1].mark();
+    Object::markObjects(that);
 }

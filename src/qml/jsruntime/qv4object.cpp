@@ -544,10 +544,10 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         l->setter = Lookup::setterInsert2;
 }
 
-Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
-    *name = 0;
+    name = (String *)0;
     *index = UINT_MAX;
 
     if (!it->arrayIndex)
@@ -595,7 +595,7 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
         PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            *name = n;
+            name = n;
             if (attrs)
                 *attrs = a;
             return p;
@@ -1434,15 +1434,4 @@ QStringList ArrayObject::toQStringList() const
         result.append(v->toString(engine->current)->toQString());
     }
     return result;
-}
-
-
-DEFINE_MANAGED_VTABLE(ForEachIteratorObject);
-
-void ForEachIteratorObject::markObjects(Managed *that)
-{
-    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
-    Object::markObjects(that);
-    if (o->it.object)
-        o->it.object->mark();
 }

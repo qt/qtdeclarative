@@ -613,16 +613,15 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::ObjectRef o,
 
     visitedObjects.insert(o);
 
-    QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedValue name(scope);
+    QV4::ScopedValue val(scope);
     while (1) {
-        QV4::Value v;
-        name = it.nextPropertyNameAsString(&v);
+        name = it.nextPropertyNameAsString(val);
         if (name->isNull())
             break;
 
         QString key = name->toQStringNoThrow();
-        QV4::ScopedValue val(scope, v);
         result.insert(key, variantFromJS(val, visitedObjects));
     }
 

@@ -276,14 +276,13 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
                     query.bindValue(ii, engine->toVariant((v = array->getIndexed(ii)), -1));
             } else if (values->asObject()) {
                 ScopedObject object(scope, values);
-                ObjectIterator it(object.getPointer(), ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
+                ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);
+                QV4::ScopedValue val(scope);
                 while (1) {
-                    Value value;
-                    key = it.nextPropertyName(&value);
+                    key = it.nextPropertyName(val);
                     if (key->isNull())
                         break;
-                    QV4::ScopedValue val(scope, value);
                     QVariant v = engine->toVariant(val, -1);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);

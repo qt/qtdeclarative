@@ -463,9 +463,18 @@ struct Referenced {
     Referenced &operator=(const Referenced &o)
     { *ptr = *o.ptr; return *this; }
     Referenced &operator=(T *t)
-    { ptr->val = t->asReturnedValue(); return *this; }
-    Referenced &operator=(const Returned<T> *t) {
-        ptr->val = t->getPointer()->asReturnedValue();
+    {
+#if QT_POINTER_SIZE == 4
+        ptr->tag = Value::Managed_Type;
+#endif
+        ptr->m = t;
+        return *this;
+    }
+    Referenced &operator=(Returned<T> *t) {
+#if QT_POINTER_SIZE == 4
+        ptr->tag = Value::Managed_Type;
+#endif
+        ptr->m = t->getPointer();
         return *this;
     }
 

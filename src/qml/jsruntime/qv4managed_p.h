@@ -108,7 +108,7 @@ struct ManagedVTable
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     bool (*isEqualTo)(Managed *m, Managed *other);
-    Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
+    Property *(*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
     const char *className;
 };
 
@@ -278,8 +278,7 @@ public:
 
     bool isEqualTo(Managed *other)
     { return vtbl->isEqualTo(this, other); }
-    Property *advanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
-    { return vtbl->advanceIterator(this, it, name, index, attributes); }
+    Property *advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const ValueRef value);

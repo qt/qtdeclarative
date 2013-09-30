@@ -147,9 +147,9 @@ void QmlListWrapper::destroy(Managed *that)
     w->~QmlListWrapper();
 }
 
-Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
 {
-    *name = 0;
+    name = (String *)0;
     *index = UINT_MAX;
     QmlListWrapper *w = m->as<QmlListWrapper>();
     quint32 count = w->property.count ? w->property.count(&w->property) : 0;

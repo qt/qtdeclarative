@@ -277,9 +277,9 @@ public:
         return (signedIdx < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
-    Property *containerAdvanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    Property *containerAdvanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
     {
-        *name = 0;
+        name = (String *)0;
         *index = UINT_MAX;
 
         if (m_isReference) {
@@ -500,7 +500,7 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index); }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static Property *advanceIterator(Managed *that, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    static Property *advanceIterator(Managed *that, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
     { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, attrs); }
 
     static void destroy(Managed *that)

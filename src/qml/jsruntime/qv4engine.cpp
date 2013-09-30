@@ -42,6 +42,7 @@
 #include <qv4value_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
+#include <qv4objectiterator_p.h>
 #include <qv4arrayobject_p.h>
 #include <qv4booleanobject_p.h>
 #include <qv4globalobject_p.h>
@@ -535,7 +536,7 @@ Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
+Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
 {
     Object *obj = new (memoryManager) ForEachIteratorObject(ctx, o);
     return obj->asReturned<Object>();

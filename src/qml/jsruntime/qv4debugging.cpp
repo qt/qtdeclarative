@@ -245,7 +245,7 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
         return;
     }
 
-    Object *o = v.objectValue();
+    ScopedObject o(scope, v);
     if (!o)
         return;
 

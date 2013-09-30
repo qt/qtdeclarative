@@ -1557,14 +1557,13 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     if (!o)
         return false;
 
-    QV4::ObjectIterator it(o.getPointer(), QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
     QV4::ScopedValue propertyName(scope);
+    QV4::ScopedValue v(scope);
     while (1) {
-        QV4::Value value;
-        propertyName = it.nextPropertyNameAsString(&value);
+        propertyName = it.nextPropertyNameAsString(v);
         if (propertyName->isNull())
             break;
-        QV4::ScopedValue v(scope, value);
         cacheItem->setValue(propertyName->toQStringNoThrow(), m_cacheMetaType->v8Engine->toVariant(v, QVariant::Invalid));
     }
 

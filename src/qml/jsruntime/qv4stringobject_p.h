@@ -62,7 +62,7 @@ struct StringObject: Object {
 
 protected:
     StringObject(InternalClass *ic);
-    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs);
     static void markObjects(Managed *that);
 };
 

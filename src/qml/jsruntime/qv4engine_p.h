@@ -301,7 +301,7 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Returned<Object> *newVariantObject(const QVariant &v);
 
-    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o);
 
     Returned<Object> *qmlContextObject() const;
 

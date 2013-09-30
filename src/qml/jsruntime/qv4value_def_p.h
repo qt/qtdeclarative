@@ -386,6 +386,8 @@ struct Safe : public SafeValue
 
     Safe &operator =(const Safe<T> &t);
 
+    bool operator!() const { return !managed(); }
+
     // ### GC: remove me
     operator T*() { return static_cast<T *>(managed()); }
     Value *operator->() { return this; }
