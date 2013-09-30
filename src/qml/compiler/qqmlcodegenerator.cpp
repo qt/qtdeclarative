@@ -1221,11 +1221,12 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             continue;
         }
 
-        if (binding->type != QV4::CompiledData::Binding::Type_Script)
-            continue;
-
         if (!QQmlCodeGenerator::isSignalPropertyName(propertyName))
             continue;
+
+        if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+            COMPILE_EXCEPTION(binding->location, tr("Incorrectly specified signal assignment"));
+        }
 
         PropertyResolver resolver(propertyCache);
 
