@@ -699,12 +699,12 @@ void InstructionSelection::run(int functionIndex)
     _as = oldAssembler;
 }
 
-void *InstructionSelection::addConstantTable(QVector<Value> *values)
+void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
 {
     compilationUnit->constantValues.append(*values);
     values->clear();
 
-    QVector<QV4::Value> &finalValues = compilationUnit->constantValues.last();
+    QVector<QV4::Primitive> &finalValues = compilationUnit->constantValues.last();
     finalValues.squeeze();
     return finalValues.data();
 }
@@ -1872,14 +1872,14 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
 
 QT_BEGIN_NAMESPACE
 namespace QV4 {
-bool operator==(const Value &v1, const Value &v2)
+bool operator==(const Primitive &v1, const Primitive &v2)
 {
     return v1.rawValue() == v2.rawValue();
 }
 } // QV4 namespace
 QT_END_NAMESPACE
 
-int Assembler::ConstantTable::add(const Value &v)
+int Assembler::ConstantTable::add(const Primitive &v)
 {
     int idx = _values.indexOf(v);
     if (idx == -1) {
@@ -1895,12 +1895,12 @@ Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(V4IR::Cons
     return loadValueAddress(convertToValue(c), baseReg);
 }
 
-Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(const Value &v,
+Assembler::ImplicitAddress Assembler::ConstantTable::loadValueAddress(const Primitive &v,
                                                                       RegisterID baseReg)
 {
     _toPatch.append(_as->moveWithPatch(TrustedImmPtr(0), baseReg));
     ImplicitAddress addr(baseReg);
-    addr.offset = add(v) * sizeof(QV4::Value);
+    addr.offset = add(v) * sizeof(QV4::Primitive);
     Q_ASSERT(addr.offset >= 0);
     return addr;
 }

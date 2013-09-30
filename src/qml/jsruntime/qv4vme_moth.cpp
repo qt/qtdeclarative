@@ -135,7 +135,7 @@ static VMStats vmStats;
 #endif // WITH_STATS
 
 static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
-                                     QV4::Value* stack,
+                                     QV4::SafeValue* stack,
                                      const Param &param
 #if !defined(QT_NO_DEBUG)
                                      , unsigned stackSize
@@ -220,7 +220,7 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 #define STOREVALUE(param, value) VALUE(param) = QV4::Value::fromReturnedValue((value))
 
 QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
-                            QV4::Value *stack, unsigned stackSize
+                            QV4::SafeValue *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -311,7 +311,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = context->engine->stackPush(stackSize);
-        memset(stack, 0, stackSize * sizeof(QV4::Value));
+        memset(stack, 0, stackSize * sizeof(QV4::SafeValue));
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
@@ -456,12 +456,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
+        QV4::SafeValue *args = stack + instr.args;
         STOREVALUE(instr.result, __qmljs_builtin_define_array(context, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
-        QV4::Value *args = stack + instr.args;
+        QV4::SafeValue *args = stack + instr.args;
     STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 

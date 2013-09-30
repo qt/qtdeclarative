@@ -250,7 +250,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml,
 
     this->function = function;
     this->callData = reinterpret_cast<CallData *>(this + 1);
-    this->callData->tag = QV4::Value::Integer_Type;
+    this->callData->tag = QV4::Value::_Integer_Type;
     this->callData->argc = 0;
     this->callData->thisObject = Primitive::undefinedValue();
 

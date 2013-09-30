@@ -100,19 +100,29 @@ void NumberPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
     defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision);
 }
 
-inline Value thisNumberValue(ExecutionContext *ctx)
+inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
 {
     if (ctx->callData->thisObject.isNumber())
-        return ctx->callData->thisObject;
+        return ctx->callData->thisObject.asReturnedValue();
     NumberObject *n = ctx->callData->thisObject.asNumberObject();
     if (!n)
         ctx->throwTypeError();
-    return n->value;
+    return n->value.asReturnedValue();
+}
+
+inline double thisNumber(ExecutionContext *ctx)
+{
+    if (ctx->callData->thisObject.isNumber())
+        return ctx->callData->thisObject.asDouble();
+    NumberObject *n = ctx->callData->thisObject.asNumberObject();
+    if (!n)
+        ctx->throwTypeError();
+    return n->value.asDouble();
 }
 
 ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 {
-    double num = thisNumberValue(ctx).asDouble();
+    double num = thisNumber(ctx);
 
     if (ctx->callData->argc && !ctx->callData->args[0].isUndefined()) {
         int radix = ctx->callData->args[0].toInt32();
@@ -165,20 +175,20 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
 ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    Value v = thisNumberValue(ctx);
+    ScopedValue v(scope, thisNumberValue(ctx));
 
-    ScopedString str(scope, v.toString(ctx));
+    ScopedString str(scope, v->toString(ctx));
     return str.asReturnedValue();
 }
 
 ReturnedValue NumberPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    return thisNumberValue(ctx).asReturnedValue();
+    return thisNumberValue(ctx);
 }
 
 ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 {
-    double v = thisNumberValue(ctx).asDouble();
+    double v = thisNumber(ctx);
 
     double fdigits = 0;
 
@@ -206,7 +216,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
 ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-    double d = thisNumberValue(ctx).asDouble();
+    double d = thisNumber(ctx);
 
     int fdigits = -1;
 
@@ -229,7 +239,6 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
 ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
-
     ScopedValue v(scope, thisNumberValue(ctx));
 
     if (!ctx->callData->argc || ctx->callData->args[0].isUndefined())

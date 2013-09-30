@@ -72,7 +72,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     // Coderef + execution engine
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
-    QList<QVector<QV4::Value> > constantValues;
+    QList<QVector<QV4::Primitive> > constantValues;
     QVector<int> codeSizes; // corresponding to the endOfCode labels. MacroAssemblerCodeRef's size may
                             // be larger, as for example on ARM we append the exception handling table.
 };
@@ -387,14 +387,14 @@ public:
     public:
         ConstantTable(Assembler *as): _as(as) {}
 
-        int add(const QV4::Value &v);
+        int add(const QV4::Primitive &v);
         ImplicitAddress loadValueAddress(V4IR::Const *c, RegisterID baseReg);
-        ImplicitAddress loadValueAddress(const QV4::Value &v, RegisterID baseReg);
+        ImplicitAddress loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
         void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
 
     private:
         Assembler *_as;
-        QVector<QV4::Value> _values;
+        QVector<QV4::Primitive> _values;
         QVector<DataLabelPtr> _toPatch;
     };
 
@@ -1361,7 +1361,7 @@ public:
 
     virtual void run(int functionIndex);
 
-    void *addConstantTable(QVector<QV4::Value> *values);
+    void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 

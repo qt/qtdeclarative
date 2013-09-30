@@ -123,7 +123,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     if (!p)
         return Encode::null();
 
-    value = Value::fromReturnedValue(object->getValue(p, attrs));
+    value = object->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -144,7 +144,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     if (!p)
         return Encode::null();
 
-    value = Value::fromReturnedValue(object->getValue(p, attrs));
+    value = object->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();

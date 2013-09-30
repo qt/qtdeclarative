@@ -579,12 +579,6 @@ void MemoryManager::unprotect(Managed *m)
         m_d->protectedObject.remove(m);
 }
 
-static inline void add(QVector<Managed *> &values, const Value &v)
-{
-    if (Object *o = v.asObject())
-        values.append(o);
-}
-
 void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 {
     m_d->engine = engine;

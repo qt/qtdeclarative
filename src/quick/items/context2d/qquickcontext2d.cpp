@@ -906,7 +906,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
 
 
 
-    QV4::Value pixelData;
+    QV4::SafeValue pixelData;
 };
 
 DEFINE_MANAGED_VTABLE(QQuickJSContext2DImageData);
@@ -2975,7 +2975,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::SimpleCallC
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
         } else if (QQuickJSContext2DImageData *imageData = arg->as<QQuickJSContext2DImageData>()) {
-            QQuickJSContext2DPixelData *pix = imageData->pixelData.as<QQuickJSContext2DPixelData>();
+            QV4::Scoped<QQuickJSContext2DPixelData> pix(scope, imageData->pixelData.as<QQuickJSContext2DPixelData>());
             if (pix && !pix->image.isNull()) {
                 pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
             } else {
@@ -3240,7 +3240,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::Simpl
     if (ctx->callData->argc == 1) {
         QV4::ScopedValue arg0(scope, ctx->callData->args[0]);
         if (QQuickJSContext2DImageData *imgData = arg0->as<QQuickJSContext2DImageData>()) {
-            QQuickJSContext2DPixelData *pa = imgData->pixelData.as<QQuickJSContext2DPixelData>();
+            QV4::Scoped<QQuickJSContext2DPixelData> pa(scope, imgData->pixelData.as<QQuickJSContext2DPixelData>());
             if (pa) {
                 qreal w = pa->image.width();
                 qreal h = pa->image.height();
@@ -3320,7 +3320,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(QV4::SimpleCa
     if (!imageData)
         return ctx->callData->thisObject.asReturnedValue();
 
-    QQuickJSContext2DPixelData *pixelArray = imageData->pixelData.as<QQuickJSContext2DPixelData>();
+    QV4::Scoped<QQuickJSContext2DPixelData> pixelArray(scope, imageData->pixelData.as<QQuickJSContext2DPixelData>());
     if (pixelArray) {
         w = pixelArray->image.width();
         h = pixelArray->image.height();

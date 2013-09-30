@@ -52,7 +52,7 @@ namespace QV4 {
 struct StringObject: Object {
     Q_MANAGED
 
-    Value value;
+    SafeValue value;
     mutable Property tmpProperty;
     StringObject(ExecutionEngine *engine, const ValueRef value);
 
