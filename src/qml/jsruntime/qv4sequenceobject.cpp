@@ -79,33 +79,29 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl())
 
-static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
-    QV4::Value v;
-    v = engine->newString(element)->asReturnedValue();
-    return v;
+    return engine->newString(element)->asReturnedValue();
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionEngine *, int element)
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, int element)
 {
-    return QV4::Primitive::fromInt32(element);
+    return QV4::Encode(element);
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
 {
-    QV4::Value v;
-    v = engine->newString(element.toString())->asReturnedValue();
-    return v;
+    return engine->newString(element.toString())->asReturnedValue();
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionEngine *, qreal element)
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, qreal element)
 {
-    return QV4::Primitive::fromDouble(element);
+    return QV4::Encode(element);
 }
 
-static QV4::Value convertElementToValue(QV4::ExecutionEngine *, bool element)
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, bool element)
 {
-    return QV4::Primitive::fromBoolean(element);
+    return QV4::Encode(element);
 }
 
 static QString convertElementToString(const QString &element)
@@ -199,20 +195,20 @@ public:
         defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     }
 
-    QV4::Value containerGetIndexed(uint index, bool *hasProperty)
+    QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty)
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
             generateWarning(engine()->current, QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
-            return QV4::Primitive::undefinedValue();
+            return Encode::undefined();
         }
         if (m_isReference) {
             if (!m_object) {
                 if (hasProperty)
                     *hasProperty = false;
-                return QV4::Primitive::undefinedValue();
+                return Encode::undefined();
             }
             loadReference();
         }
@@ -224,7 +220,7 @@ public:
         }
         if (hasProperty)
             *hasProperty = false;
-        return QV4::Primitive::undefinedValue();
+        return Encode::undefined();
     }
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)
@@ -351,25 +347,25 @@ public:
 
     struct CompareFunctor
     {
-        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
+        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::ValueRef compareFn)
             : m_ctx(ctx), m_compareFn(compareFn)
         {}
 
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
-            QV4::Managed *fun = this->m_compareFn.asManaged();
-            Scope scope(fun->engine());
+            QV4::Scope scope(m_ctx);
+            ScopedObject compare(scope, m_compareFn);
             ScopedCallData callData(scope, 2);
             callData->args[0] = convertElementToValue(this->m_ctx->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->engine, rhs);
-            callData->thisObject = QV4::Value::fromObject(this->m_ctx->engine->globalObject);
-            QV4::ScopedValue result(scope, fun->call(callData));
+            callData->thisObject = this->m_ctx->engine->globalObject;
+            QV4::ScopedValue result(scope, compare->call(callData));
             return result->toNumber() < 0;
         }
 
     private:
         QV4::ExecutionContext *m_ctx;
-        QV4::Value m_compareFn;
+        QV4::ValueRef m_compareFn;
     };
 
     void sort(QV4::SimpleCallContext *ctx)
@@ -380,9 +376,9 @@ public:
             loadReference();
         }
 
+        QV4::Scope scope(ctx);
         if (ctx->callData->argc == 1 && ctx->callData->args[0].asFunctionObject()) {
-            QV4::Value compareFn = ctx->callData->args[0];
-            CompareFunctor cf(ctx, compareFn);
+            CompareFunctor cf(ctx, ctx->callData->args[0]);
             std::sort(m_container.begin(), m_container.end(), cf);
         } else {
             DefaultCompareFunctor cf;
@@ -495,7 +491,7 @@ private:
     bool m_isReference;
 
     static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty).asReturnedValue(); }
+    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
     static void putIndexed(Managed *that, uint index, const QV4::ValueRef value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
@@ -652,7 +648,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         return qMetaTypeId<SequenceType>(); \
     } else
 
-int SequencePrototype::metaTypeForSequence(QV4::Object *object)
+int SequencePrototype::metaTypeForSequence(QV4::ObjectRef object)
 {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
     /*else*/ {

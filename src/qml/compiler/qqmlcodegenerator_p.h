@@ -247,6 +247,8 @@ public:
 
     QString stringAt(int index) const { return jsGenerator->strings.at(index); }
 
+    static bool isStatementNodeScript(AST::Statement *statement);
+
     QList<QQmlError> errors;
 
     QList<QV4::CompiledData::Import*> _imports;

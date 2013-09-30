@@ -45,6 +45,8 @@
 #include "qv4engine_p.h"
 #include "qv4functionobject_p.h"
 
+#include <QQmlError>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -54,9 +56,9 @@ struct ExecutionContext;
 struct QmlBindingWrapper : FunctionObject {
     Q_MANAGED
 
-    QmlBindingWrapper(ExecutionContext *scope, Function *f, Object *qml);
+    QmlBindingWrapper(ExecutionContext *scope, Function *f, ObjectRef qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-    QmlBindingWrapper(ExecutionContext *scope, Object *qml);
+    QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml);
 
     static ReturnedValue call(Managed *that, CallData *);
     static void markObjects(Managed *m);
@@ -77,6 +79,7 @@ struct Q_QML_EXPORT Script {
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
         , qml(qml.asReturnedValue()), vmFunction(0), parseAsBinding(true) {}
+    Script(ExecutionEngine *engine, ObjectRef qml, CompiledData::CompilationUnit *compilationUnit);
     ~Script();
     QString sourceFile;
     int line;
@@ -97,6 +100,9 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
+    static CompiledData::CompilationUnit *precompile(ExecutionEngine *engine, const QUrl &url, const QString &source,
+                                                     bool parseAsBinding,
+                                                     QList<QQmlError> *reportedErrors = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, ObjectRef scopeObject);
 };

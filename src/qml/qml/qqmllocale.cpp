@@ -116,9 +116,9 @@ DEFINE_MANAGED_VTABLE(QQmlLocaleData);
     if (!r) \
         V4THROW_ERROR("Not a valid Locale object")
 
-static bool isLocaleObject(const QV4::Value &val)
+static bool isLocaleObject(const QV4::ValueRef val)
 {
-    return val.as<QQmlLocaleData>();
+    return val->as<QQmlLocaleData>();
 }
 
 //--------------

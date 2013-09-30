@@ -690,7 +690,11 @@ QJSValue QJSValue::prototype() const
 */
 void QJSValue::setPrototype(const QJSValue& prototype)
 {
-    Object *o = d->value.asObject();
+    ExecutionEngine *v4 = d->engine;
+    if (!v4)
+        return;
+    Scope scope(v4);
+    ScopedObject o(scope, d->value);
     if (!o)
         return;
     if (prototype.d->value.isNull()) {
@@ -698,14 +702,14 @@ void QJSValue::setPrototype(const QJSValue& prototype)
         return;
     }
 
-    Object *p = prototype.d->value.asObject();
+    ScopedObject p(scope, prototype.d->value);
     if (!p)
         return;
     if (o->engine() != p->engine()) {
         qWarning("QJSValue::setPrototype() failed: cannot set a prototype created in a different engine");
         return;
     }
-    if (!o->setPrototype(p))
+    if (!o->setPrototype(p.getPointer()))
         qWarning("QJSValue::setPrototype() failed: cyclic prototype value");
 }
 
@@ -841,7 +845,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
         return QJSValue();
 
     QV4::Scope scope(engine);
-    Object *o = d->value.asObject();
+    ScopedObject o(scope, d->value);
     if (!o)
         return QJSValue();
 

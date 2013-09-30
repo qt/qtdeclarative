@@ -2261,7 +2261,7 @@ void tst_qqmlecmascript::regExpBug()
     }
 }
 
-static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const char *source)
+static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2288,7 +2288,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
 }
 
 static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
-                                  const char *source, const QV4::Value &result)
+                                  const char *source, const QV4::ValueRef result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
                              QLatin1String(source) + QLatin1String(" })");
@@ -2305,19 +2305,18 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
             return false;
 
         QV4::ScopedValue value(scope);
-        QV4::ScopedValue res(scope, result);
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
         value = function->call(d);
-        return __qmljs_strict_equal(value, res);
+        return __qmljs_strict_equal(value, result);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
     return false;
 }
 
-static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
+static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,
                                              const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") + 
@@ -2331,16 +2330,15 @@ static inline QV4::Value evaluate(QV8Engine *engine, const QV4::Value & o,
     try {
         QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
         if (!function)
-            return QV4::Primitive::undefinedValue();
+            return QV4::Encode::undefined();
         QV4::ScopedCallData d(scope, 1);
         d->args[0] = o;
         d->thisObject = engine->global();
-        QV4::ScopedValue value(scope, function->call(d));
-        return value;
+        return function->call(d);
     } catch (QV4::Exception &e) {
         e.accept(ctx);
     }
-    return QV4::Primitive::undefinedValue();
+    return QV4::Encode::undefined();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
@@ -2359,7 +2357,8 @@ void tst_qqmlecmascript::callQtInvokables()
     QV8Engine *engine = ep->v8engine();
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
+    QV4::ScopedValue qobjectwrapper(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
+    QV4::ScopedValue object(scope, qobjectwrapper);
 
     // Non-existent methods
     o->reset();
@@ -2434,8 +2433,7 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QObject()"));
-    QV4::QObjectWrapper *qobjectWrapper = ret->as<QV4::QObjectWrapper>();
+    QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, EVALUATE("object.method_NoArgs_QObject()"));
     QVERIFY(qobjectWrapper);
     QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
@@ -2451,16 +2449,16 @@ void tst_qqmlecmascript::callQtInvokables()
 
     o->reset();
     {
-    QV4::Value ret = EVALUATE("object.method_NoArgs_QScriptValue()");
-    QVERIFY(ret.isString());
-    QCOMPARE(ret.toQStringNoThrow(), QString("Hello world"));
+    QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QScriptValue()"));
+    QVERIFY(ret->isString());
+    QCOMPARE(ret->toQStringNoThrow(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
     QCOMPARE(o->actuals().count(), 0);
     }
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::Value::fromReturnedValue(engine->toString("QML rocks"))));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::ScopedValue(scope, engine->toString("QML rocks"))));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 7);
     QCOMPARE(o->actuals().count(), 0);
@@ -3934,6 +3932,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
 void tst_qqmlecmascript::importScripts_data()
 {
     QTest::addColumn<QUrl>("testfile");
+    QTest::addColumn<bool>("compilationShouldSucceed");
     QTest::addColumn<QString>("errorMessage");
     QTest::addColumn<QStringList>("warningMessages");
     QTest::addColumn<QStringList>("propertyNames");
@@ -3941,6 +3940,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("basic functionality")
             << testFileUrl("jsimport/testImport.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("importedScriptStringValue")
@@ -3954,6 +3954,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import scoping")
             << testFileUrl("jsimport/testImportScoping.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("componentError"))
@@ -3961,6 +3962,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("parent scope shouldn't be inherited by import with imports")
             << testFileUrl("jsimportfail/failOne.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/failOne.qml").toString() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined")))
             << (QStringList() << QLatin1String("importScriptFunctionValue"))
@@ -3968,6 +3970,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("javascript imports in an import should be private to the import scope")
             << testFileUrl("jsimportfail/failTwo.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/failTwo.qml").toString() + QLatin1String(":6: ReferenceError: ImportOneJs is not defined")))
             << (QStringList() << QLatin1String("importScriptFunctionValue"))
@@ -3975,6 +3978,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("module imports in an import should be private to the import scope")
             << testFileUrl("jsimportfail/failThree.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/failThree.qml").toString() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined")))
             << (QStringList() << QLatin1String("importedModuleAttachedPropertyValue"))
@@ -3982,6 +3986,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("typenames in an import should be private to the import scope")
             << testFileUrl("jsimportfail/failFour.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/failFour.qml").toString() + QLatin1String(":6: ReferenceError: JsQtTest is not defined")))
             << (QStringList() << QLatin1String("importedModuleEnumValue"))
@@ -3989,6 +3994,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import with imports has it's own activation scope")
             << testFileUrl("jsimportfail/failFive.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/importWithImports.js").toString() + QLatin1String(":8: ReferenceError: Component is not defined")))
             << (QStringList() << QLatin1String("componentError"))
@@ -3996,6 +4002,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import pragma library script")
             << testFileUrl("jsimport/testImportPragmaLibrary.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
@@ -4003,6 +4010,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("pragma library imports shouldn't inherit parent imports or scope")
             << testFileUrl("jsimportfail/testImportPragmaLibrary.qml")
+            << true /* compilation should succeed */
             << QString()
             << (QStringList() << QString(testFileUrl("jsimportfail/importPragmaLibrary.js").toString() + QLatin1String(":6: ReferenceError: Component is not defined")))
             << (QStringList() << QLatin1String("testValue"))
@@ -4010,6 +4018,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import pragma library script which has an import")
             << testFileUrl("jsimport/testImportPragmaLibraryWithImports.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
@@ -4017,6 +4026,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import pragma library script which has a pragma library import")
             << testFileUrl("jsimport/testImportPragmaLibraryWithPragmaLibraryImports.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
@@ -4024,6 +4034,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import singleton type into js import")
             << testFileUrl("jsimport/testImportSingletonType.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
@@ -4031,6 +4042,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import module which exports a script")
             << testFileUrl("jsimport/testJsImport.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("importedScriptStringValue")
@@ -4042,6 +4054,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("import module which exports a script which imports a remote module")
             << testFileUrl("jsimport/testJsRemoteImport.qml")
+            << true /* compilation should succeed */
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("importedScriptStringValue")
@@ -4053,6 +4066,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed import statement")
             << testFileUrl("jsimportfail/malformedImport.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1:1: Syntax error"))
             << QStringList()
@@ -4060,6 +4074,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed file name")
             << testFileUrl("jsimportfail/malformedFile.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedFile.js").toString() + QLatin1String(":1:9: Imported file must be a script"))
             << QStringList()
@@ -4067,6 +4082,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("missing file qualifier")
             << testFileUrl("jsimportfail/missingFileQualifier.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/missingFileQualifier.js").toString() + QLatin1String(":1:1: File import requires a qualifier"))
             << QStringList()
@@ -4074,6 +4090,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed file qualifier")
             << testFileUrl("jsimportfail/malformedFileQualifier.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.js").toString() + QLatin1String(":1:20: File import requires a qualifier"))
             << QStringList()
@@ -4081,6 +4098,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed module qualifier 2")
             << testFileUrl("jsimportfail/malformedFileQualifier.2.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.2.js").toString() + QLatin1String(":1:1: Invalid import qualifier"))
             << QStringList()
@@ -4088,6 +4106,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed module uri")
             << testFileUrl("jsimportfail/malformedModule.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedModule.js").toString() + QLatin1String(":1:17: Invalid module URI"))
             << QStringList()
@@ -4095,6 +4114,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("missing module version")
             << testFileUrl("jsimportfail/missingModuleVersion.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/missingModuleVersion.js").toString() + QLatin1String(":1:17: Module import requires a version"))
             << QStringList()
@@ -4102,6 +4122,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed module version")
             << testFileUrl("jsimportfail/malformedModuleVersion.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedModuleVersion.js").toString() + QLatin1String(":1:17: Module import requires a version"))
             << QStringList()
@@ -4109,6 +4130,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("missing module qualifier")
             << testFileUrl("jsimportfail/missingModuleQualifier.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/missingModuleQualifier.js").toString() + QLatin1String(":1:1: Module import requires a qualifier"))
             << QStringList()
@@ -4116,6 +4138,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed module qualifier")
             << testFileUrl("jsimportfail/malformedModuleQualifier.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.js").toString() + QLatin1String(":1:21: Module import requires a qualifier"))
             << QStringList()
@@ -4123,6 +4146,7 @@ void tst_qqmlecmascript::importScripts_data()
 
     QTest::newRow("malformed module qualifier 2")
             << testFileUrl("jsimportfail/malformedModuleQualifier.2.qml")
+            << false /* compilation should succeed */
             << QString()
             << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.2.js").toString() + QLatin1String(":1:1: Invalid import qualifier"))
             << QStringList()
@@ -4132,8 +4156,9 @@ void tst_qqmlecmascript::importScripts_data()
 void tst_qqmlecmascript::importScripts()
 {
     QFETCH(QUrl, testfile);
+    QFETCH(bool, compilationShouldSucceed);
     QFETCH(QString, errorMessage);
-    QFETCH(QStringList, warningMessages);
+    QFETCH(QStringList, warningMessages); // error messages if !compilationShouldSucceed
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
@@ -4151,11 +4176,19 @@ void tst_qqmlecmascript::importScripts()
     if (!errorMessage.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
-    if (warningMessages.size())
+    if (compilationShouldSucceed && warningMessages.size())
         foreach (const QString &warning, warningMessages)
             QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
-    QTRY_VERIFY(component.isReady());
+    if (compilationShouldSucceed)
+        QTRY_VERIFY(component.isReady());
+    else {
+        QVERIFY(component.isError());
+        QCOMPARE(warningMessages.size(), 1);
+        QCOMPARE(component.errors().count(), 2);
+        QCOMPARE(component.errors().at(1).toString(), warningMessages.first());
+        return;
+    }
 
     QObject *object = component.create();
     if (!errorMessage.isEmpty()) {
@@ -6655,26 +6688,12 @@ void tst_qqmlecmascript::qtbug_22843()
     fileName += QLatin1String(".qml");
 
     QQmlComponent component(&engine, testFileUrl(fileName));
-    QString url = component.url().toString();
-    QString warning1 = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
-    QString warning2 = url + QLatin1String(":5: TypeError: Cannot call method 'func' of undefined");
 
-    qRegisterMetaType<QList<QQmlError> >("QList<QQmlError>");
-    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
-    for (int x = 0; x < 3; ++x) {
-        warningsSpy.clear();
-        // For libraries, only the first import attempt should produce a
-        // SyntaxError warning; subsequent component creation should not
-        // attempt to reload the script.
-        bool expectSyntaxError = !library || (x == 0);
-        if (expectSyntaxError)
-            QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
-        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
-        QObject *object = component.create();
-        QVERIFY(object != 0);
-        QCOMPARE(warningsSpy.count(), 1 + (expectSyntaxError?1:0));
-        delete object;
-    }
+    QString url = component.url().toString();
+    QString expectedError = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
+
+    QVERIFY(component.isError());
+    QCOMPARE(component.errors().value(1).toString(), expectedError);
 }
 
 

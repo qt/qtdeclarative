@@ -606,7 +606,7 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
     return roleIndex;
 }
 
-int ListModel::setExistingProperty(int elementIndex, const QString &key, const QV4::Value &data, QV8Engine *eng)
+int ListModel::setExistingProperty(int elementIndex, const QString &key, const QV4::ValueRef data, QV8Engine *eng)
 {
     int roleIndex = -1;
 
@@ -1162,7 +1162,7 @@ int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant
     return roleIndex;
 }
 
-int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d, QV8Engine *eng)
+int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::ValueRef d, QV8Engine *eng)
 {
     // Check if this key exists yet
     int roleIndex = -1;
@@ -1170,12 +1170,13 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
     QV4::Scope scope(QV8Engine::getV4(eng));
 
     // Add the value now
-    if (QV4::String *s = d.asString()) {
-        QString qstr = s->toQString();
+    if (d->asString()) {
+        QString qstr = d->toQString();
         roleIndex = setStringProperty(role, qstr);
-    } else if (d.isNumber()) {
-        roleIndex = setDoubleProperty(role, d.asDouble());
-    } else if (QV4::ArrayObject *a = d.asArrayObject()) {
+    } else if (d->isNumber()) {
+        roleIndex = setDoubleProperty(role, d->asDouble());
+    } else if (d->asArrayObject()) {
+        QV4::ScopedArrayObject a(scope, d);
         if (role.type == ListLayout::Role::List) {
             QV4::Scope scope(a->engine());
             QV4::Scoped<QV4::Object> o(scope);
@@ -1190,12 +1191,13 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         } else {
             qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(role.name).arg(roleTypeName(role.type)).arg(roleTypeName(ListLayout::Role::List));
         }
-    } else if (d.isBoolean()) {
-        roleIndex = setBoolProperty(role, d.booleanValue());
-    } else if (QV4::DateObject *dd = d.asDateObject()) {
-        QDateTime dt = dd->toQDateTime();;
+    } else if (d->isBoolean()) {
+        roleIndex = setBoolProperty(role, d->booleanValue());
+    } else if (d->asDateObject()) {
+        QV4::Scoped<QV4::DateObject> dd(scope, d);
+        QDateTime dt = dd->toQDateTime();
         roleIndex = setDateTimeProperty(role, dt);
-    } else if (d.isObject()) {
+    } else if (d->isObject()) {
         QV4::ScopedObject o(scope, d);
         QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>();
         if (role.type == ListLayout::Role::QObject && wrapper) {
@@ -1204,7 +1206,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         } else if (role.type == ListLayout::Role::VariantMap) {
             roleIndex = setVariantMapProperty(role, o, eng);
         }
-    } else if (d.isUndefined() || d.isNull()) {
+    } else if (d->isNullOrUndefined()) {
         clearProperty(role);
     }
 

@@ -75,7 +75,7 @@ QTextStream qout(stdout, QIODevice::WriteOnly);
 
 void showMeTheCode(Function *function)
 {
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
     if (showCode) {
         QVector<Stmt *> code;
         QHash<Stmt *, BasicBlock *> leader;
@@ -795,6 +795,15 @@ void convertToSSA(Function *function, const DominatorTree &df)
     VariableRenamer(function).run();
 }
 
+struct UntypedTemp {
+    Temp temp;
+    UntypedTemp(const Temp &t): temp(t) {}
+};
+inline uint qHash(const UntypedTemp &t, uint seed = 0) Q_DECL_NOTHROW
+{ return t.temp.index ^ (t.temp.kind | (t.temp.scope << 3)) ^ seed; }
+inline bool operator==(const UntypedTemp &t1, const UntypedTemp &t2) Q_DECL_NOTHROW
+{ return t1.temp.index == t2.temp.index && t1.temp.scope == t2.temp.scope && t1.temp.kind == t2.temp.kind; }
+
 class DefUsesCalculator: public StmtVisitor, public ExprVisitor {
 public:
     struct DefUse {
@@ -809,7 +818,7 @@ public:
 
 private:
     const bool _variablesCanEscape;
-    QHash<Temp, DefUse> _defUses;
+    QHash<UntypedTemp, DefUse> _defUses;
     QHash<Stmt *, QList<Temp> > _usesPerStatement;
 
     BasicBlock *_block;
@@ -863,7 +872,7 @@ public:
             }
         }
 
-        QMutableHashIterator<Temp, DefUse> it(_defUses);
+        QMutableHashIterator<UntypedTemp, DefUse> it(_defUses);
         while (it.hasNext()) {
             it.next();
             if (!it.value().defStmt)
@@ -871,8 +880,19 @@ public:
         }
     }
 
+    void addTemp(Temp *newTemp, Stmt *defStmt, BasicBlock *defBlock)
+    {
+        DefUse &defUse = _defUses[*newTemp];
+        defUse.defStmt = defStmt;
+        defUse.blockOfStatement = defBlock;
+    }
+
     QList<Temp> defs() const {
-        return _defUses.keys();
+        QList<Temp> res;
+        res.reserve(_defUses.size());
+        foreach (const UntypedTemp &t, _defUses.keys())
+            res.append(t.temp);
+        return res;
     }
 
     void removeDef(const Temp &var) {
@@ -881,6 +901,9 @@ public:
 
     void addUses(const Temp &variable, const QList<Stmt *> &newUses)
     { _defUses[variable].uses.append(newUses); }
+
+    void addUse(const Temp &variable, Stmt * newUse)
+    { _defUses[variable].uses.append(newUse); }
 
     int useCount(const Temp &variable) const
     { return _defUses[variable].uses.size(); }
@@ -919,9 +942,9 @@ public:
 
     void dump() const
     {
-        foreach (const Temp &var, _defUses.keys()) {
+        foreach (const UntypedTemp &var, _defUses.keys()) {
             const DefUse &du = _defUses[var];
-            var.dump(qout);
+            var.temp.dump(qout);
             qout<<" -> defined in block "<<du.blockOfStatement->index<<", statement: ";
             du.defStmt->dump(qout);
             qout<<endl<<"     uses:"<<endl;
@@ -1462,7 +1485,6 @@ protected:
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
     virtual void visitMove(Move *s) {
         TypingResult sourceTy = run(s->source);
-        Q_ASSERT(s->op == OpInvalid);
         if (Temp *t = s->target->asTemp()) {
             setType(t, sourceTy.type);
             _ty = sourceTy;
@@ -1512,7 +1534,30 @@ protected:
     }
 };
 
+void convertConst(Const *c, Type targetType)
+{
+    switch (targetType) {
+    case DoubleType:
+        break;
+    case SInt32Type:
+        c->value = QV4::Primitive::toInt32(c->value);
+        break;
+    case UInt32Type:
+        c->value = QV4::Primitive::toUInt32(c->value);
+        break;
+    case BoolType:
+        c->value = !(c->value == 0 || std::isnan(c->value));
+        break;
+    default:
+        Q_UNIMPLEMENTED();
+        Q_ASSERT(!"Unimplemented!");
+        break;
+    }
+    c->type = targetType;
+}
+
 class TypePropagation: public StmtVisitor, public ExprVisitor {
+    DefUsesCalculator &_defUses;
     Type _ty;
     Function *_f;
 
@@ -1563,7 +1608,7 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
     }
 
 public:
-    TypePropagation() : _ty(UnknownType) {}
+    TypePropagation(DefUsesCalculator &defUses) : _defUses(defUses), _ty(UnknownType) {}
 
     void run(Function *f) {
         _f = f;
@@ -1579,37 +1624,23 @@ public:
                 if (conversion.stmt->asMove() && conversion.stmt->asMove()->source->asTemp()) {
                     *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
                 } else if (Const *c = (*conversion.expr)->asConst()) {
-                    switch (conversion.targetType) {
-                    case DoubleType:
-                        break;
-                    case SInt32Type:
-                        c->value = QV4::Primitive::toInt32(c->value);
-                        break;
-                    case UInt32Type:
-                        c->value = QV4::Primitive::toUInt32(c->value);
-                        break;
-                    case BoolType:
-                        c->value = !(c->value == 0 || std::isnan(c->value));
-                        break;
-                    default:
-                        Q_UNIMPLEMENTED();
-                        Q_ASSERT(!"Unimplemented!");
-                        break;
-                    }
-                    c->type = conversion.targetType;
-                } else {
+                    convertConst(c, conversion.targetType);
+                } else if (Temp *t = (*conversion.expr)->asTemp()) {
                     Temp *target = bb->TEMP(bb->newTemp());
                     target->type = conversion.targetType;
-                    Expr *convert = bb->CONVERT(*conversion.expr, conversion.targetType);
+                    Expr *convert = bb->CONVERT(t, conversion.targetType);
                     Move *convCall = f->New<Move>();
-                    convCall->init(target, convert, OpInvalid);
+                    convCall->init(target, convert);
+                    _defUses.addTemp(target, convCall, bb);
+                    _defUses.addUse(*t, convCall);
 
                     Temp *source = bb->TEMP(target->index);
                     source->type = conversion.targetType;
-                    *conversion.expr = source;
+                    _defUses.removeUse(conversion.stmt, *t);
+                    _defUses.addUse(*source, conversion.stmt);
 
                     if (Phi *phi = conversion.stmt->asPhi()) {
-                        int idx = phi->d->incoming.indexOf(*conversion.expr);
+                        int idx = phi->d->incoming.indexOf(t);
                         Q_ASSERT(idx != -1);
                         QVector<Stmt *> &stmts = bb->in[idx]->statements;
                         stmts.insert(stmts.size() - 1, convCall);
@@ -1617,6 +1648,10 @@ public:
                         int idx = bb->statements.indexOf(conversion.stmt);
                         bb->statements.insert(idx, convCall);
                     }
+
+                    *conversion.expr = source;
+                } else {
+                    Q_UNREACHABLE();
                 }
             }
         }
@@ -2000,6 +2035,7 @@ public:
         qSwap(_replacement, replacement);
 
         QList<Stmt *> uses = _defUses.uses(*_toReplace);
+//        qout << "        " << uses.size() << " uses:"<<endl;
         QVector<Stmt *> result;
         result.reserve(uses.size());
         foreach (Stmt *use, uses) {
@@ -2276,6 +2312,21 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                 continue;
             }
         } else  if (Move *m = s->asMove()) {
+            if (Convert *convert = m->source->asConvert()) {
+                if (Const *sourceConst = convert->expr->asConst()) {
+                    convertConst(sourceConst, convert->type);
+                    m->source = sourceConst;
+                    W += m;
+                    continue;
+                } else if (Temp *sourceTemp = convert->expr->asTemp()) {
+                    if (sourceTemp->type == convert->type) {
+                        m->source = sourceTemp;
+                        W += m;
+                        continue;
+                    }
+                }
+            }
+
             if (Temp *targetTemp = unescapableTemp(m->target, variablesCanEscape)) {
                 // constant propagation:
                 if (Const *sourceConst = m->source->asConst()) {
@@ -2334,12 +2385,6 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                                 }
 
                                 constOperand->value = -constOperand->value;
-                                if (canConvertToSignedInteger(constOperand->value))
-                                    constOperand->type = SInt32Type;
-                                else if (canConvertToUnsignedInteger(constOperand->value))
-                                    constOperand->type = UInt32Type;
-                                else
-                                    constOperand->type = DoubleType;
                                 doneSomething = true;
                                 break;
                             case OpUPlus:
@@ -2813,18 +2858,22 @@ void Optimizer::run()
         DeadCodeElimination(defUses, function).run();
 //        showMeTheCode(function);
 
+//        qout << "Running type inference..." << endl;
+        TypeInference(defUses).run(function);
+//        showMeTheCode(function);
+
+//        qout << "Doing type propagation..." << endl;
+        TypePropagation(defUses).run(function);
+//        showMeTheCode(function);
+
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
             optimizeSSA(function, defUses);
 //            showMeTheCode(function);
         }
 
-//        qout << "Running type inference..." << endl;
-        TypeInference(defUses).run(function);
-//        showMeTheCode(function);
-
-//        qout << "Doing type propagation..." << endl;
-        TypePropagation().run(function);
+//        qout << "Doing block merging..." << endl;
+//        mergeBasicBlocks(function);
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
@@ -2988,7 +3037,7 @@ void MoveMapping::insertMoves(BasicBlock *bb, Function *function, bool atEnd) co
     int insertionPoint = atEnd ? bb->statements.size() - 1 : 0;
     foreach (const Move &m, _moves) {
         V4IR::Move *move = function->New<V4IR::Move>();
-        move->init(m.to, m.from, OpInvalid);
+        move->init(m.to, m.from);
         move->id = m.id;
         move->swap = m.needsSwap;
         bb->statements.insert(insertionPoint++, move);

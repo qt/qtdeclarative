@@ -546,8 +546,6 @@ void Move::dump(QTextStream &out, Mode mode)
 
     target->dump(out);
     out << ' ';
-    if (op != OpInvalid)
-        out << opname(op);
     if (swap)
         out << "<=> ";
     else
@@ -836,13 +834,13 @@ Stmt *BasicBlock::EXP(Expr *expr)
     return s;
 }
 
-Stmt *BasicBlock::MOVE(Expr *target, Expr *source, AluOp op)
+Stmt *BasicBlock::MOVE(Expr *target, Expr *source)
 { 
     if (isTerminated())
         return 0;
 
     Move *s = function->New<Move>();
-    s->init(target, source, op);
+    s->init(target, source);
     appendStatement(s);
     return s;
 }

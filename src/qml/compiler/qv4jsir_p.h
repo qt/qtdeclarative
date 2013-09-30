@@ -577,14 +577,12 @@ struct Exp: Stmt {
 struct Move: Stmt {
     Expr *target; // LHS - Temp, Name, Member or Subscript
     Expr *source;
-    AluOp op;
     bool swap;
 
-    void init(Expr *target, Expr *source, AluOp op)
+    void init(Expr *target, Expr *source)
     {
         this->target = target;
         this->source = source;
-        this->op = op;
         this->swap = false;
     }
 
@@ -826,7 +824,7 @@ struct BasicBlock {
 
     Stmt *EXP(Expr *expr);
 
-    Stmt *MOVE(Expr *target, Expr *source, AluOp op = V4IR::OpInvalid);
+    Stmt *MOVE(Expr *target, Expr *source);
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);

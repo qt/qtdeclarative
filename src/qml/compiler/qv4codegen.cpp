@@ -655,24 +655,23 @@ void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
 {
     assert(target->isLValue());
 
-    // TODO: verify the rest of the function for when op == OpInvalid
     if (op != V4IR::OpInvalid) {
-        move(target, binop(op, target, source), V4IR::OpInvalid);
+        move(target, binop(op, target, source));
         return;
     }
 
-    if (!source->asTemp() && !source->asConst() && (op != V4IR::OpInvalid || ! target->asTemp())) {
+    if (!source->asTemp() && !source->asConst() && !target->asTemp()) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
-    if (source->asConst() && (!target->asTemp() || op != V4IR::OpInvalid)) {
+    if (source->asConst() && !target->asTemp()) {
         unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
 
-    _block->MOVE(target, source, op);
+    _block->MOVE(target, source);
 }
 
 void Codegen::cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
@@ -2576,6 +2575,11 @@ void Codegen::throwReferenceError(const SourceLocation &loc, const QString &deta
     error.setLine(loc.startLine);
     error.setColumn(loc.startColumn);
     _errors << error;
+}
+
+QList<QQmlError> Codegen::errors() const
+{
+    return _errors;
 }
 
 void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)

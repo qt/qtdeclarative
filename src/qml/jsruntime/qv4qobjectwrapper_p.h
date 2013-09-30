@@ -126,16 +126,16 @@ struct QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static Value create(QV4::ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal = Primitive::undefinedValue());
+    static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
 
     int methodIndex() const { return m_index; }
     QObject *object() const { return m_object.data(); }
 
 private:
-    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const QV4::Value &qmlGlobal);
+    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
 
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
-    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
+    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const ValueRef args, int argc);
 
     QPointer<QObject> m_object;
     int m_index;

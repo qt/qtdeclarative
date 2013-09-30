@@ -100,12 +100,12 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
     return (QQmlXMLHttpRequestData *)engine->xmlHttpRequestData();
 }
 
-static ReturnedValue constructMeObject(const Value &thisObj, QV8Engine *e)
+static ReturnedValue constructMeObject(const ValueRef thisObj, QV8Engine *e)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
     Scoped<Object> meObj(scope, v4->newObject());
-    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), ScopedValue(scope, thisObj));
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), thisObj);
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
     meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
     return meObj.asReturnedValue();
@@ -1557,7 +1557,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         if (!activationObject)
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
 
-        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject.asValue());
+        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
             QV4::ScopedCallData callData(scope, 0);
             callData->thisObject = activationObject.asValue();

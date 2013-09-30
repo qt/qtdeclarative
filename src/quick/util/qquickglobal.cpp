@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -328,61 +328,61 @@ public:
 
         QV4::ScopedString s(scope);
 
-        QV4::Value vbold = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("bold")))));
-        QV4::Value vcap = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("capitalization")))));
-        QV4::Value vfam = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("family")))));
-        QV4::Value vital = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("italic")))));
-        QV4::Value vlspac = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("letterSpacing")))));
-        QV4::Value vpixsz = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("pixelSize")))));
-        QV4::Value vpntsz = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("pointSize")))));
-        QV4::Value vstrk = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("strikeout")))));
-        QV4::Value vundl = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("underline")))));
-        QV4::Value vweight = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("weight")))));
-        QV4::Value vwspac = QV4::Value::fromReturnedValue(obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
+        QV4::ScopedValue vbold(scope, obj->get((s = v4->newString(QStringLiteral("bold")))));
+        QV4::ScopedValue vcap(scope, obj->get((s = v4->newString(QStringLiteral("capitalization")))));
+        QV4::ScopedValue vfam(scope, obj->get((s = v4->newString(QStringLiteral("family")))));
+        QV4::ScopedValue vital(scope, obj->get((s = v4->newString(QStringLiteral("italic")))));
+        QV4::ScopedValue vlspac(scope, obj->get((s = v4->newString(QStringLiteral("letterSpacing")))));
+        QV4::ScopedValue vpixsz(scope, obj->get((s = v4->newString(QStringLiteral("pixelSize")))));
+        QV4::ScopedValue vpntsz(scope, obj->get((s = v4->newString(QStringLiteral("pointSize")))));
+        QV4::ScopedValue vstrk(scope, obj->get((s = v4->newString(QStringLiteral("strikeout")))));
+        QV4::ScopedValue vundl(scope, obj->get((s = v4->newString(QStringLiteral("underline")))));
+        QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight")))));
+        QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
 
         // pull out the values, set ok to true if at least one valid field is given.
-        if (vbold.isBoolean()) {
-            retn.setBold(vbold.booleanValue());
+        if (vbold->isBoolean()) {
+            retn.setBold(vbold->booleanValue());
             if (ok) *ok = true;
         }
-        if (vcap.isInt32()) {
-            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap.integerValue()));
+        if (vcap->isInt32()) {
+            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap->integerValue()));
             if (ok) *ok = true;
         }
-        if (vfam.isString()) {
-            retn.setFamily(vfam.toQStringNoThrow());
+        if (vfam->isString()) {
+            retn.setFamily(vfam->toQString());
             if (ok) *ok = true;
         }
-        if (vital.isBoolean()) {
-            retn.setItalic(vital.booleanValue());
+        if (vital->isBoolean()) {
+            retn.setItalic(vital->booleanValue());
             if (ok) *ok = true;
         }
-        if (vlspac.isNumber()) {
-            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.asDouble());
+        if (vlspac->isNumber()) {
+            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac->asDouble());
             if (ok) *ok = true;
         }
-        if (vpixsz.isInt32()) {
-            retn.setPixelSize(vpixsz.integerValue());
+        if (vpixsz->isInt32()) {
+            retn.setPixelSize(vpixsz->integerValue());
             if (ok) *ok = true;
         }
-        if (vpntsz.isNumber()) {
-            retn.setPointSize(vpntsz.asDouble());
+        if (vpntsz->isNumber()) {
+            retn.setPointSize(vpntsz->asDouble());
             if (ok) *ok = true;
         }
-        if (vstrk.isBoolean()) {
-            retn.setStrikeOut(vstrk.booleanValue());
+        if (vstrk->isBoolean()) {
+            retn.setStrikeOut(vstrk->booleanValue());
             if (ok) *ok = true;
         }
-        if (vundl.isBoolean()) {
-            retn.setUnderline(vundl.booleanValue());
+        if (vundl->isBoolean()) {
+            retn.setUnderline(vundl->booleanValue());
             if (ok) *ok = true;
         }
-        if (vweight.isInt32()) {
-            retn.setWeight(static_cast<QFont::Weight>(vweight.integerValue()));
+        if (vweight->isInt32()) {
+            retn.setWeight(static_cast<QFont::Weight>(vweight->integerValue()));
             if (ok) *ok = true;
         }
-        if (vwspac.isNumber()) {
-            retn.setWordSpacing(vwspac.asDouble());
+        if (vwspac->isNumber()) {
+            retn.setWordSpacing(vwspac->asDouble());
             if (ok) *ok = true;
         }
 

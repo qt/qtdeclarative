@@ -138,12 +138,12 @@ void RegExp::markObjects(Managed *that)
 
 ReturnedValue RegExp::get(Managed *, const StringRef, bool *)
 {
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 ReturnedValue RegExp::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void RegExp::put(Managed *m, const StringRef name, const ValueRef value)

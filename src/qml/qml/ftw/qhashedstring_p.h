@@ -56,7 +56,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <private/qv4string_p.h>
-#include <private/qv4value_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include <private/qflagpointer_p.h>
 
@@ -232,8 +232,8 @@ public:
     inline char *cStrData() const { return (char *)ckey; }
     inline quint16 *utf16Data() const { return (quint16 *)strData->data(); }
 
-    inline bool equals(const QV4::Value &string) const {
-        QString s = string.toQStringNoThrow();
+    inline bool equals(const QV4::ValueRef string) const {
+        QString s = string->toQStringNoThrow();
         if (isQString()) {
             QStringDataPtr dd;
             dd.ptr = strData;

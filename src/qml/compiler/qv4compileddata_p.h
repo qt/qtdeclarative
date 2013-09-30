@@ -336,6 +336,7 @@ struct Property
     quint32 aliasPropertyValueIndex;
     quint32 flags; // readonly
     Location location;
+    Location aliasLocation; // If type == Alias
 };
 
 struct Object

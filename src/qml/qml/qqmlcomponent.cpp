@@ -1122,9 +1122,9 @@ public:
 
     QV8Engine *v8;
     QPointer<QObject> parent;
-    QV4::Value valuemap;
+    QV4::SafeValue valuemap;
     QV4::SafeValue qmlGlobal;
-    QV4::Value m_statusChanged;
+    QV4::SafeValue m_statusChanged;
 protected:
     virtual void statusChanged(Status);
     virtual void setInitialState(QObject *);
@@ -1385,7 +1385,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 }
 
 // XXX used by QSGLoader
-void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::ValueRef qmlGlobal, const QV4::Value &valuemap, QObject *toCreate)
+void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::ValueRef qmlGlobal, const QV4::ValueRef valuemap, QObject *toCreate)
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
@@ -1395,7 +1395,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->asObject());
 
-    if (!valuemap.isUndefined()) {
+    if (!valuemap->isUndefined()) {
         QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
         QV4::Scoped<QV4::FunctionObject>  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
@@ -1503,7 +1503,7 @@ void QmlIncubatorObject::setInitialState(QObject *o)
         QV4::Scoped<QV4::FunctionObject> f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobal));
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = v4->globalObject;
-        callData->args[0] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, o));
+        callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);
         callData->args[1] = valuemap;
         f->call(callData);
     }
@@ -1533,11 +1533,10 @@ void QmlIncubatorObject::statusChanged(Status s)
         QQmlData::get(object())->indestructible = false;
     }
 
-    QV4::Value callback = m_statusChanged;
-
-    if (QV4::FunctionObject *f = callback.asFunctionObject()) {
-        QV4::ExecutionContext *ctx = f->engine()->current;
-        QV4::Scope scope(ctx);
+    QV4::Scope scope(QV8Engine::getV4(v8));
+    QV4::ScopedFunctionObject f(scope, m_statusChanged);
+    if (f) {
+        QV4::ExecutionContext *ctx = scope.engine->current;
         try {
             QV4::ScopedCallData callData(scope, 1);
             callData->thisObject = this;

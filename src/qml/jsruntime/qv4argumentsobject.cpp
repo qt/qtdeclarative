@@ -147,15 +147,14 @@ DEFINE_MANAGED_VTABLE(ArgumentsGetterFunction);
 
 ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
-    ArgumentsGetterFunction *g = static_cast<ArgumentsGetterFunction *>(getter);
-    Object *that = callData->thisObject.asObject();
-    if (!that)
-        getter->engine()->current->throwTypeError();
-    ArgumentsObject *o = that->asArgumentsObject();
+    ExecutionEngine *v4 = getter->engine();
+    Scope scope(v4);
+    Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
+    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        getter->engine()->current->throwTypeError();
+        v4->current->throwTypeError();
 
-    assert(g->index < o->context->callData->argc);
+    Q_ASSERT(g->index < o->context->callData->argc);
     return o->context->argument(g->index);
 }
 
@@ -163,17 +162,16 @@ DEFINE_MANAGED_VTABLE(ArgumentsSetterFunction);
 
 ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {
-    ArgumentsSetterFunction *s = static_cast<ArgumentsSetterFunction *>(setter);
-    Object *that = callData->thisObject.asObject();
-    if (!that)
-        setter->engine()->current->throwTypeError();
-    ArgumentsObject *o = that->asArgumentsObject();
+    ExecutionEngine *v4 = setter->engine();
+    Scope scope(v4);
+    Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
+    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        setter->engine()->current->throwTypeError();
+        v4->current->throwTypeError();
 
-    assert(s->index < o->context->callData->argc);
+    Q_ASSERT(s->index < o->context->callData->argc);
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void ArgumentsObject::markObjects(Managed *that)

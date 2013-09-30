@@ -296,12 +296,12 @@ static QVariant variantFromString(const QString &string)
 
 #define QML_STORE_VAR(name, value) \
     QML_BEGIN_INSTR(name) \
-        QV4::Value v4value = value; \
+        QV4::ValueRef valueref = value; \
         QObject *target = objects.top(); \
         CLEAN_PROPERTY(target, instr.propertyIndex); \
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(target); \
         Q_ASSERT(vmemo); \
-        vmemo->setVMEProperty(instr.propertyIndex, v4value); \
+        vmemo->setVMEProperty(instr.propertyIndex, valueref); \
     QML_END_INSTR(name)
 
 #define QML_STORE_POINTER(name, value) \
@@ -339,6 +339,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
     QQmlEngine *engine = states.at(0).context->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    QV4::ExecutionEngine *v4 = ep->v4engine();
+    QV4::Scope valueScope(v4);
+    QV4::ScopedValue tmpValue(valueScope);
 
     int status = -1; // needed for dbus
     QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::BypassInterceptor |
@@ -372,7 +375,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         // Store a created object in a property.  These all pop from the objects stack.
         QML_STORE_VALUE(StoreObject, QObject *, objects.pop());
         QML_STORE_VALUE(StoreVariantObject, QVariant, QVariant::fromValue(objects.pop()));
-        QML_STORE_VAR(StoreVarObject, QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop())));
+        QML_STORE_VAR(StoreVarObject, (tmpValue = QV4::QObjectWrapper::wrap(ep->v4engine(), objects.pop())));
 
         // Store a literal value in a corresponding property
         QML_STORE_VALUE(StoreFloat, float, instr.value);
@@ -420,7 +423,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         // Store a literal value in a var property.
         // We deliberately do not use string converters here
-        QML_STORE_VAR(StoreVar, QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
+        QML_STORE_VAR(StoreVar, (tmpValue = ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value))));
         QML_STORE_VAR(StoreVarInteger, QV4::Primitive::fromInt32(instr.value));
         QML_STORE_VAR(StoreVarDouble, QV4::Primitive::fromDouble(instr.value));
         QML_STORE_VAR(StoreVarBool, QV4::Primitive::fromBoolean(instr.value));
@@ -765,7 +768,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
-            CTXT->importedScripts << run(CTXT, SCRIPTS.at(instr.value));
+            CTXT->importedScripts << SCRIPTS.at(instr.value)->scriptValueForContext(CTXT);
         QML_END_INSTR(StoreImportedScript)
 
         QML_BEGIN_INSTR(StoreScriptString)
@@ -1072,136 +1075,6 @@ void QQmlVME::reset()
     states.clear();
     rootContext = 0;
     creationContext = 0;
-}
-
-// Must be called with a handle scope and context
-void QQmlScriptData::initialize(QQmlEngine *engine)
-{
-    Q_ASSERT(!m_program);
-    Q_ASSERT(engine);
-    Q_ASSERT(!hasEngine());
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
-
-    // If compilation throws an error, a surrounding catch will record it.
-    // pass 0 as the QML object, we set it later before calling run()
-    QV4::Script *program = new QV4::Script(v4, QV4::ObjectRef::null(), m_programSource, urlString, 1);
-    try {
-        program->parse();
-    } catch (QV4::Exception &) {
-        delete program;
-        throw;
-    }
-
-    m_program = program;
-    m_programSource.clear(); // We don't need this anymore
-
-    addToEngine(engine);
-
-    addref();
-}
-
-QV4::PersistentValue QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptData *script)
-{
-    if (script->m_loaded)
-        return script->m_value;
-
-    QV4::PersistentValue rv;
-
-    Q_ASSERT(parentCtxt && parentCtxt->engine);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
-    QV4::Scope scope(v4);
-
-    if (script->hasError()) {
-        ep->warning(script->error());
-        return rv;
-    }
-
-    bool shared = script->pragmas & QQmlScript::Object::ScriptBlock::Shared;
-
-    QQmlContextData *effectiveCtxt = parentCtxt;
-    if (shared)
-        effectiveCtxt = 0;
-
-    // Create the script context if required
-    QQmlContextData *ctxt = new QQmlContextData;
-    ctxt->isInternal = true;
-    ctxt->isJSContext = true;
-    if (shared)
-        ctxt->isPragmaLibraryContext = true;
-    else
-        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
-    ctxt->url = script->url;
-    ctxt->urlString = script->urlString;
-
-    // For backward compatibility, if there are no imports, we need to use the
-    // imports from the parent context.  See QTBUG-17518.
-    if (!script->importCache->isEmpty()) {
-        ctxt->imports = script->importCache;
-    } else if (effectiveCtxt) {
-        ctxt->imports = effectiveCtxt->imports;
-        ctxt->importedScripts = effectiveCtxt->importedScripts;
-    }
-
-    if (ctxt->imports) {
-        ctxt->imports->addref();
-    }
-
-    if (effectiveCtxt) {
-        ctxt->setParent(effectiveCtxt, true);
-    } else {
-        ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
-    }
-
-    for (int ii = 0; ii < script->scripts.count(); ++ii) {
-        ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
-    }
-
-    if (!script->isInitialized()) {
-        QV4::ExecutionContext *ctx = QV8Engine::getV4(parentCtxt->engine)->current;
-        try {
-            script->initialize(parentCtxt->engine);
-        } catch (QV4::Exception &e) {
-            e.accept(ctx);
-            QQmlError error;
-            QQmlExpressionPrivate::exceptionToError(e, error);
-            if (error.isValid())
-                ep->warning(error);
-        }
-    }
-
-    if (!script->m_program) {
-        if (shared)
-            script->m_loaded = true;
-        return QV4::PersistentValue();
-    }
-
-    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
-    QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
-
-    QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
-    try {
-        script->m_program->qml = qmlglobal;
-        script->m_program->run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
-        if (error.isValid())
-            ep->warning(error);
-    } 
-
-    rv = qmlglobal;
-    if (shared) {
-        script->m_value = rv;
-        script->m_loaded = true;
-    }
-
-    return rv;
 }
 
 #ifdef QML_THREADED_VME_INTERPRETER

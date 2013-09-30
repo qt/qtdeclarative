@@ -67,7 +67,7 @@ ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)
 {
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    return Primitive::fromDouble(dbl).asReturnedValue();
+    return Encode(dbl);
 }
 
 void NumberPrototype::init(ExecutionEngine *engine, ObjectRef ctor)

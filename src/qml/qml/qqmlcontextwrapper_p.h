@@ -74,11 +74,11 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
 
     static QQmlContextData *callingContext(ExecutionEngine *v4);
-    static void takeContextOwnership(const QV4::Value &qmlglobal);
+    static void takeContextOwnership(const ValueRef qmlglobal);
 
     inline QObject *getScopeObject() const { return scopeObject; }
     inline QQmlContextData *getContext() const { return context; }
-    static QQmlContextData *getContext(const Value &value);
+    static QQmlContextData *getContext(const ValueRef value);
 
     void setReadOnly(bool b) { readOnly = b; }
 

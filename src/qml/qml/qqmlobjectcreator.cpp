@@ -527,6 +527,13 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     }
     context->setIdPropertyData(mapping);
 
+    if (subComponentIndex == -1) {
+        foreach (QQmlScriptData *script, compiledData->scripts)
+            context->importedScripts << script->scriptValueForContext(context);
+    } else if (parentContext) {
+        context->importedScripts = parentContext->importedScripts;
+    }
+
     QObject *instance = createInstance(objectToCreate, parent);
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
@@ -535,8 +542,6 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
         ddata->compiledData->addref();
 
         context->contextObject = instance;
-
-        QQmlEnginePrivate::get(engine)->registerInternalCompositeType(compiledData);
     }
     return instance;
 }
@@ -586,7 +591,7 @@ void QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::C
             QString stringValue = binding->valueAsString(&qmlUnit->header);
             if (property->isVarProperty()) {
                 QV4::ScopedString s(scope, v4->newString(stringValue));
-                _vmeMetaObject->setVMEProperty(property->coreIndex, s.asValue());
+                _vmeMetaObject->setVMEProperty(property->coreIndex, s);
             } else {
                 QVariant value = QQmlStringConverters::variantFromString(stringValue);
                 argv[0] = &value;
@@ -1020,12 +1025,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
             return false;
     }
 
-    // Child item:
-    // ...
-    //    Item {
-    //        ...
-    //    }
-    if (!property)
+    if (!property) // ### error
         return true;
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
@@ -1373,8 +1373,8 @@ bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPoi
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope valueScope(v4);
-    QV4::ScopedValue scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobjectForBindings));
-    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject->asObject()));
+    QV4::ScopedObject scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _qobjectForBindings));
+    QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject));
     QV4::ExecutionContext *qmlContext = qmlBindingWrapper->context();
 
     qSwap(_qmlContext, qmlContext);
@@ -1430,9 +1430,10 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
 
-        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(i);
-        if (!cache || isComponentType(obj->inheritedTypeNameIndex)
-            || cache->metaObject() != &QQmlComponent::staticMetaObject)
+        QQmlCompiledData::TypeReference tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        if (!tref.type)
+            continue;
+        if (tref.type->metaObject() != &QQmlComponent::staticMetaObject)
             continue;
 
         componentRoots.append(i);
@@ -1551,8 +1552,10 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
             const int idIndex = p->aliasIdValueIndex;
             const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
-            if (targetObjectIndex == -1)
-                COMPILE_EXCEPTION(p, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+            if (targetObjectIndex == -1) {
+                recordError(p->aliasLocation, tr("Invalid alias reference. Unable to find id \"%1\"").arg(stringAt(idIndex)));
+                return false;
+            }
             const int targetId = _objectIndexToIdInScope->value(targetObjectIndex, -1);
             Q_ASSERT(targetId != -1);
 
@@ -1595,8 +1598,10 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 QtQml::PropertyResolver resolver(targetCache);
 
                 QQmlPropertyData *targetProperty = resolver.property(property.toString());
-                if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF)
-                    COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
+                    recordError(p->aliasLocation, tr("Invalid alias location"));
+                    return false;
+                }
 
                 propIdx = targetProperty->coreIndex;
                 type = targetProperty->propType;
@@ -1607,15 +1612,19 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 if (!subProperty.isEmpty()) {
                     QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
-                    if (!valueType)
-                        COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                    if (!valueType) {
+                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        return false;
+                    }
 
                     propType = type;
 
                     int valueTypeIndex =
                         valueType->metaObject()->indexOfProperty(subProperty.toString().toUtf8().constData());
-                    if (valueTypeIndex == -1)
-                        COMPILE_EXCEPTION(p, tr("Invalid alias location"));
+                    if (valueTypeIndex == -1) {
+                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        return false;
+                    }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
                     propIdx |= (valueTypeIndex << 16);
@@ -1668,4 +1677,79 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
         }
     }
     return true;
+}
+
+
+QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
+                                             const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
+                                             const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent)
+    : QQmlCompilePass(url, qmlUnit)
+    , resolvedTypes(resolvedTypes)
+    , propertyCaches(propertyCaches)
+    , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
+{
+}
+
+bool QQmlPropertyValidator::validate()
+{
+    for (int i = 0; i < qmlUnit->nObjects; ++i) {
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
+        if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
+            continue;
+
+        if (isComponent(i))
+            continue;
+
+        QQmlPropertyCache *propertyCache = propertyCaches.value(i);
+        Q_ASSERT(propertyCache);
+
+        if (!validateObject(obj, i, propertyCache))
+            return false;
+    }
+    return true;
+}
+
+bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache)
+{
+    PropertyResolver propertyResolver(propertyCache);
+
+    QQmlPropertyData *defaultProperty = propertyCache->defaultProperty();
+
+    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    for (int i = 0; i < obj->nBindings; ++i, ++binding) {
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
+            || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+            continue;
+
+        const QString name = stringAt(binding->propertyNameIndex);
+
+        bool bindingToDefaultProperty = false;
+
+        bool notInRevision = false;
+        QQmlPropertyData *pd = 0;
+        if (!name.isEmpty()) {
+            pd = propertyResolver.property(name, &notInRevision);
+
+            if (notInRevision) {
+                QString typeName = stringAt(obj->inheritedTypeNameIndex);
+                QQmlCompiledData::TypeReference type = resolvedTypes.value(objectIndex);
+                if (type.type) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
+                } else {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
+                }
+            }
+        } else {
+           pd = defaultProperty;
+           bindingToDefaultProperty = true;
+        }
+
+        if (!pd) {
+            if (bindingToDefaultProperty) {
+                COMPILE_EXCEPTION(binding, tr("Cannot assign to non-existent default property"));
+            } else {
+                COMPILE_EXCEPTION(binding, tr("Cannot assign to non-existent property \"%1\"").arg(name));
+            }
+        }
+    }
 }

@@ -3243,7 +3243,7 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
             continue;
 
         if (!p->defaultValue)
-            COMPILE_EXCEPTION(obj, tr("No property alias location"));
+            COMPILE_EXCEPTION(p, tr("No property alias location"));
 
         if (!p->defaultValue->values.isOne() ||
             p->defaultValue->values.first()->object ||

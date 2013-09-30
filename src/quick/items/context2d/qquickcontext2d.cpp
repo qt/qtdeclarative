@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -127,9 +127,9 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
                                        V4THROW_ERROR("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-QColor qt_color_from_string(const QV4::Value &name)
+QColor qt_color_from_string(const QV4::ValueRef name)
 {
-    QByteArray str = name.toQStringNoThrow().toUtf8();
+    QByteArray str = name->toQString().toUtf8();
 
     char *p = str.data();
     int len = str.length();
@@ -911,7 +911,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
 
 DEFINE_MANAGED_VTABLE(QQuickJSContext2DImageData);
 
-static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
+static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
     QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
@@ -928,9 +928,9 @@ static QV4::Value qt_create_image_data(qreal w, qreal h, QV8Engine* engine, cons
         pixelData->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
-    QQuickJSContext2DImageData *imageData = new (v4->memoryManager) QQuickJSContext2DImageData(v4);
+    QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, new (v4->memoryManager) QQuickJSContext2DImageData(v4));
     imageData->pixelData = pixelData.asValue();
-    return QV4::Value::fromObject(imageData);
+    return imageData.asReturnedValue();
 }
 
 //static script functions
@@ -3244,11 +3244,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::Simpl
             if (pa) {
                 qreal w = pa->image.width();
                 qreal h = pa->image.height();
-                return qt_create_image_data(w, h, engine, QImage()).asReturnedValue();
+                return qt_create_image_data(w, h, engine, QImage());
             }
         } else if (arg0->isString()) {
             QImage image = r->context->createPixmap(QUrl(arg0->toQStringNoThrow()))->image();
-            return qt_create_image_data(image.width(), image.height(), engine, image).asReturnedValue();
+            return qt_create_image_data(image.width(), image.height(), engine, image);
         }
     } else if (ctx->callData->argc == 2) {
         qreal w = ctx->callData->args[0].toNumber();
@@ -3258,7 +3258,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::Simpl
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
 
         if (w > 0 && h > 0)
-            return qt_create_image_data(w, h, engine, QImage()).asReturnedValue();
+            return qt_create_image_data(w, h, engine, QImage());
         else
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
     }
@@ -3288,9 +3288,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(QV4::SimpleCa
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
 
         QImage image = r->context->canvas()->toImage(QRectF(x, y, w, h));
-        QV4::Value imageData = qt_create_image_data(w, h, engine, image);
-
-        return imageData.asReturnedValue();
+        return qt_create_image_data(w, h, engine, image);
     }
     return QV4::Encode::null();
 }

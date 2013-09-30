@@ -414,7 +414,8 @@ protected:
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
-    QList<QQmlError> errors();
+public:
+    QList<QQmlError> errors() const;
 
 protected:
     Result _expr;

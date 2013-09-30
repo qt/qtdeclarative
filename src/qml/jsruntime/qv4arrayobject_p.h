@@ -64,7 +64,7 @@ struct ArrayPrototype: ArrayObject
 
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static uint getLength(ExecutionContext *ctx, Object *o);
+    static uint getLength(ExecutionContext *ctx, ObjectRef o);
 
     static ReturnedValue method_isArray(SimpleCallContext *ctx);
     static ReturnedValue method_toString(SimpleCallContext *ctx);

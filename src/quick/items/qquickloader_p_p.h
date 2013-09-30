@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -97,7 +97,7 @@ public:
     void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
     QUrl resolveSourceUrl(QQmlV4Function *args);
-    QV4::Value extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
+    QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
 
     virtual qreal getImplicitWidth() const;
     virtual qreal getImplicitHeight() const;

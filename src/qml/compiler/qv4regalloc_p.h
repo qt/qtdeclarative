@@ -84,7 +84,7 @@ private:
     void tryAllocateFreeReg(LifeTimeInterval &current, const int position);
     void allocateBlockedReg(LifeTimeInterval &current, const int position);
     void longestAvailableReg(const QVector<int> &nextUses, int &reg, int &nextUsePos_reg,
-                             int lastUse = -1) const;
+                             int lastUse) const;
     int nextIntersection(const LifeTimeInterval &current, const LifeTimeInterval &another,
                          const int position) const;
     int nextUse(const V4IR::Temp &t, int startPosition) const;

@@ -151,7 +151,6 @@ private:
                  , void *const**storeJumpTable = 0
 #endif
                 );
-    QV4::PersistentValue run(QQmlContextData *, QQmlScriptData *);
 
 #ifdef QML_THREADED_VME_INTERPRETER
     static void *const*instructionJumpTable();

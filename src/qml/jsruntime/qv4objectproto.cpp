@@ -91,7 +91,7 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
             obj->setPrototype(proto.getPointer());
         return obj.asReturnedValue();
     }
-    return Value::fromReturnedValue(__qmljs_to_object(v4->current, ValueRef(&callData->args[0]))).asReturnedValue();
+    return __qmljs_to_object(v4->current, ValueRef(&callData->args[0]));
 }
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
@@ -220,6 +220,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     Scoped<Object> o(scope, ctx->argument(1), Scoped<Object>::Convert);
+    ScopedValue val(scope);
 
     ObjectIterator it(o.getPointer(), ObjectIterator::EnumerableOnly);
     while (1) {
@@ -233,7 +234,8 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
             break;
         Property n;
         PropertyAttributes nattrs;
-        toPropertyDescriptor(ctx, Value::fromReturnedValue(o->getValue(pd, attrs)), &n, &nattrs);
+        val = o->getValue(pd, attrs);
+        toPropertyDescriptor(ctx, val, &n, &nattrs);
         bool ok;
         if (name)
             ok = O->__defineOwnProperty__(ctx, name, n, nattrs);
@@ -541,7 +543,7 @@ ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Property *desc, PropertyAttributes *attrs)
+void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef v, Property *desc, PropertyAttributes *attrs)
 {
     Scope scope(ctx);
     ScopedObject o(scope, v);
@@ -551,12 +553,13 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     attrs->clear();
     desc->setGetter(0);
     desc->setSetter(0);
+    ScopedValue tmp(scope);
 
     if (o->__hasProperty__(ctx->engine->id_enumerable))
-        attrs->setEnumerable(Value::fromReturnedValue(o->get(ctx->engine->id_enumerable)).toBoolean());
+        attrs->setEnumerable((tmp = o->get(ctx->engine->id_enumerable))->toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_configurable))
-        attrs->setConfigurable(Value::fromReturnedValue(o->get(ctx->engine->id_configurable)).toBoolean());
+        attrs->setConfigurable((tmp = o->get(ctx->engine->id_configurable))->toBoolean());
 
     if (o->__hasProperty__(ctx->engine->id_get)) {
         ScopedValue get(scope, o->get(ctx->engine->id_get));
@@ -587,7 +590,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_writable)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        attrs->setWritable(Value::fromReturnedValue(o->get(ctx->engine->id_writable)).toBoolean());
+        attrs->setWritable((tmp = o->get(ctx->engine->id_writable))->toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Primitive::undefinedValue();
     }
@@ -595,7 +598,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, Value v, Prope
     if (o->__hasProperty__(ctx->engine->id_value)) {
         if (attrs->isAccessor())
             ctx->throwTypeError();
-        desc->value = Value::fromReturnedValue(o->get(ctx->engine->id_value));
+        desc->value = o->get(ctx->engine->id_value);
         attrs->setType(PropertyAttributes::Data);
     }
 
@@ -613,7 +616,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
     Scope scope(engine);
     // Let obj be the result of creating a new object as if by the expression new Object() where Object
     // is the standard built-in constructor with that name.
-    Scoped<Object> o(scope, engine->newObject());
+    ScopedObject o(scope, engine->newObject());
     ScopedString s(scope);
 
     Property pd;
@@ -625,10 +628,10 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
         s = engine->newString(QStringLiteral("writable"));
         o->__defineOwnProperty__(ctx, s, pd, Attr_Data);
     } else {
-        pd.value = desc->getter() ? Value::fromObject(desc->getter()) : Primitive::undefinedValue();
+        pd.value = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("get"));
         o->__defineOwnProperty__(ctx, s, pd, Attr_Data);
-        pd.value = desc->setter() ? Value::fromObject(desc->setter()) : Primitive::undefinedValue();
+        pd.value = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("set"));
         o->__defineOwnProperty__(ctx, s, pd, Attr_Data);
     }

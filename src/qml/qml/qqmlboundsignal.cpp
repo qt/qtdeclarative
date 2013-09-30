@@ -199,35 +199,31 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
         int argCount = argsTypes ? *argsTypes : 0;
 
-        QV4::Value *args = (QV4::Value *)alloca(qMax(argCount, (int)QV4::Global::ReservedArgumentCount)*sizeof(QV4::Value));
-#ifndef QT_NO_DEBUG
-        for (int ii = 0; ii < qMax(argCount, (int)QV4::Global::ReservedArgumentCount); ++ii)
-            args[ii] = QV4::Primitive::undefinedValue();
-#endif
+        QV4::ScopedValue f(scope, m_v8function.value());
+        QV4::ScopedCallData callData(scope, argCount);
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
             //### ideally we would use metaTypeToJS, however it currently gives different results
             //    for several cases (such as QVariant type and QObject-derived types)
             //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
             if (type == QMetaType::QVariant) {
-                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(*((QVariant *)a[ii + 1])));
+                callData->args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-                args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+                callData->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
             } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-                args[ii] = QV4::Value::fromReturnedValue(*reinterpret_cast<QQmlV4Handle *>(a[ii + 1]));
+                callData->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
             } else if (ep->isQObject(type)) {
                 if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                    args[ii] = QV4::Primitive::nullValue();
+                    callData->args[ii] = QV4::Primitive::nullValue();
                 else
-                    args[ii] = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1])));
+                    callData->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
             } else {
-                args[ii] = QV4::Value::fromReturnedValue(engine->fromVariant(QVariant(type, a[ii + 1])));
+                callData->args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
             }
         }
 
-        QV4::ScopedValue f(scope, m_v8function.value());
-        QQmlJavaScriptExpression::evaluate(context(), f, argCount, args, 0);
+        QQmlJavaScriptExpression::evaluate(context(), f, callData, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

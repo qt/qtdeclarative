@@ -101,11 +101,17 @@ public:
     struct TypeReference 
     {
         TypeReference()
-        : type(0), typePropertyCache(0), component(0) {}
+            : type(0), typePropertyCache(0), component(0)
+            , majorVersion(0)
+            , minorVersion(0)
+        {}
 
         QQmlType *type;
         QQmlPropertyCache *typePropertyCache;
         QQmlCompiledData *component;
+
+        int majorVersion;
+        int minorVersion;
 
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
@@ -145,6 +151,7 @@ public:
     QHash<int, int> objectIndexToIdForRoot;
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+    bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }
     // ---
 
     struct Instruction {

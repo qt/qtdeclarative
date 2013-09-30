@@ -358,7 +358,6 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
     }
 }
 
-
 void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);
@@ -543,7 +542,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     JSC::MacroAssemblerCodeRef codeRef;
 
-    static bool showCode = !qgetenv("SHOW_CODE").isNull();
+    static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
     if (showCode) {
 #if OS(LINUX) && !defined(Q_OS_ANDROID)
         char* disasmOutput = 0;
@@ -1128,7 +1127,9 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
         }
     }
 
-    _as->copyValue(targetTemp, sourceTemp);
+    // The target is not a physical register, nor is the source. So we can do a memory-to-memory copy:
+    _as->memcopyValue(_as->loadTempAddress(Assembler::ReturnValueRegister, targetTemp), sourceTemp,
+                      Assembler::ScratchRegister);
 }
 
 void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
@@ -1366,88 +1367,6 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
 
     if (done.isSet())
         done.link(_as);
-}
-
-void InstructionSelection::inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName)
-{
-    InplaceBinOpName op = 0;
-    const char *opName = 0;
-    switch (oper) {
-    case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
-    case V4IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_name); break;
-    case V4IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_name); break;
-    case V4IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_name); break;
-    case V4IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_name); break;
-    case V4IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_name); break;
-    case V4IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_name); break;
-    case V4IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_name); break;
-    case V4IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_name); break;
-    case V4IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_name); break;
-    case V4IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_name); break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-    if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
-                                     Assembler::PointerToString(targetName), Assembler::Reference(rightSource));
-    }
-}
-
-void InstructionSelection::inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp)
-{
-    InplaceBinOpElement op = 0;
-    const char *opName = 0;
-    switch (oper) {
-    case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
-    case V4IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_element); break;
-    case V4IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_element); break;
-    case V4IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_element); break;
-    case V4IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_element); break;
-    case V4IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_element); break;
-    case V4IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_element); break;
-    case V4IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_element); break;
-    case V4IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_element); break;
-    case V4IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_element); break;
-    case V4IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_element); break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
-                                     Assembler::Reference(targetBaseTemp), Assembler::Reference(targetIndexTemp),
-                                     Assembler::Reference(source));
-    }
-}
-
-void InstructionSelection::inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName)
-{
-    InplaceBinOpMember op = 0;
-    const char *opName = 0;
-    switch (oper) {
-    case V4IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
-    case V4IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_member); break;
-    case V4IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_member); break;
-    case V4IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_member); break;
-    case V4IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_member); break;
-    case V4IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_member); break;
-    case V4IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_member); break;
-    case V4IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_member); break;
-    case V4IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_member); break;
-    case V4IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_member); break;
-    case V4IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_member); break;
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    if (op) {
-        _as->generateFunctionCallImp(Assembler::Void, opName, op, Assembler::ContextRegister,
-                                     Assembler::Reference(targetBase), Assembler::PointerToString(targetName),
-                                     Assembler::Reference(source));
-    }
 }
 
 void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
@@ -1910,7 +1829,11 @@ int InstructionSelection::prepareVariableArguments(V4IR::ExprList* args)
     for (V4IR::ExprList *it = args; it; it = it->next, ++i) {
         V4IR::Expr *arg = it->expr;
         Q_ASSERT(arg != 0);
-        _as->copyValue(_as->stackLayout().argumentAddressForCall(i), arg);
+        Pointer dst(_as->stackLayout().argumentAddressForCall(i));
+        if (arg->asTemp() && arg->asTemp()->kind != V4IR::Temp::PhysicalRegister)
+            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+        else
+            _as->copyValue(dst, arg);
     }
 
     return argc;
@@ -1937,7 +1860,11 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     for (V4IR::ExprList *it = args; it; it = it->next, ++i) {
         V4IR::Expr *arg = it->expr;
         Q_ASSERT(arg != 0);
-        _as->copyValue(_as->stackLayout().argumentAddressForCall(i), arg);
+        Pointer dst(_as->stackLayout().argumentAddressForCall(i));
+        if (arg->asTemp() && arg->asTemp()->kind != V4IR::Temp::PhysicalRegister)
+            _as->memcopyValue(dst, arg->asTemp(), Assembler::ScratchRegister);
+        else
+            _as->copyValue(dst, arg);
     }
     return argc;
 }

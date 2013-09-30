@@ -937,7 +937,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    callData->args[ii] = QV4::Value::fromReturnedValue(ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]));
+                    callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::ScopedValue result(scope);
                 QV4::ExecutionContext *ctx = function->engine()->current;
@@ -1023,7 +1023,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
     }
 }
 
-void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
+void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::ValueRef value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
     if (!ensureVarPropertiesAllocated())
@@ -1040,8 +1040,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
 
-    QV4::ScopedValue v(scope, value);
-    QV4::ScopedObject o(scope, v);
+    QV4::ScopedObject o(scope, value);
     if (o) {
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
@@ -1064,7 +1063,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     }
 
     // Write the value and emit change signal as appropriate.
-    vp->putIndexed(id - firstVarPropertyIndex, v);
+    vp->putIndexed(id - firstVarPropertyIndex, value);
     activate(object, methodOffset() + id, 0);
 }
 
@@ -1202,7 +1201,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
     return readVarProperty(index - propOffset());
 }
 
-void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
+void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::ValueRef v)
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());

@@ -808,6 +808,15 @@ public:
     template <typename Result>
     void copyValue(Result result, V4IR::Expr* source);
 
+    // The scratch register is used to calculate the temp address for the source.
+    void memcopyValue(Pointer target, V4IR::Temp *sourceTemp, RegisterID scratchRegister)
+    {
+        Q_ASSERT(sourceTemp->kind != V4IR::Temp::PhysicalRegister);
+        Q_ASSERT(target.base != scratchRegister);
+        JSC::MacroAssembler::loadDouble(loadTempAddress(scratchRegister, sourceTemp), FPGpr0);
+        JSC::MacroAssembler::storeDouble(FPGpr0, target);
+    }
+
     void storeValue(QV4::Value value, RegisterID destination)
     {
         Q_UNUSED(value);
@@ -1215,9 +1224,12 @@ public:
     {
         if (V4IR::Const *c = e->asConst()) {
 #if QT_POINTER_SIZE == 8
-            load64(constantTable().loadValueAddress(c, ScratchRegister), ReturnValueRegister);
-            move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
-            xor64(ScratchRegister, ReturnValueRegister);
+            union {
+                double d;
+                int64_t i;
+            } u;
+            u.d = c->value;
+            move(TrustedImm64(u.i), ReturnValueRegister);
             move64ToDouble(ReturnValueRegister, target);
 #else
             JSC::MacroAssembler::loadDouble(constantTable().loadValueAddress(c, ScratchRegister), target);
@@ -1391,9 +1403,6 @@ protected:
     virtual void swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);
     virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target);
-    virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName);
-    virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp);
-    virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName);
 
     typedef Assembler::Address Address;
     typedef Assembler::Pointer Pointer;

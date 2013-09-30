@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -55,6 +55,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef GL_FRAMEBUFFER_SRGB
+#define GL_FRAMEBUFFER_SRGB 0x8DB9
+#endif
+
 class QSGTextMaskMaterialData : public QSGMaterialShader
 {
 public:
@@ -74,6 +78,8 @@ protected:
     int m_matrix_id;
     int m_color_id;
     int m_textureScale_id;
+
+    uint m_useSRGB : 1;
 
     QFontEngineGlyphCache::Type m_cacheType;
 };
@@ -109,15 +115,9 @@ char const *const *QSGTextMaskMaterialData::attributeNames() const
 }
 
 QSGTextMaskMaterialData::QSGTextMaskMaterialData(QFontEngineGlyphCache::Type cacheType)
-    : m_cacheType(cacheType)
+    : m_useSRGB(false)
+    , m_cacheType(cacheType)
 {
-}
-
-void QSGTextMaskMaterialData::initialize()
-{
-    m_matrix_id = program()->uniformLocation("matrix");
-    m_color_id = program()->uniformLocation("color");
-    m_textureScale_id = program()->uniformLocation("textureScale");
 }
 
 static inline qreal fontSmoothingGamma()
@@ -126,35 +126,50 @@ static inline qreal fontSmoothingGamma()
     return fontSmoothingGamma;
 }
 
+void QSGTextMaskMaterialData::initialize()
+{
+    m_matrix_id = program()->uniformLocation("matrix");
+    m_color_id = program()->uniformLocation("color");
+    m_textureScale_id = program()->uniformLocation("textureScale");
+
+    // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
+    // but using sRGB looks okay.
+    if (strstr((const char *) glGetString(GL_EXTENSIONS), "GL_ARB_framebuffer_sRGB")
+            && m_cacheType == QFontEngineGlyphCache::Raster_RGBMask
+            && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
+        m_useSRGB = true;
+    }
+}
+
 void QSGTextMaskMaterialData::activate()
 {
-    QSGMaterialShader::activate();
-
     if (m_cacheType == QFontEngineGlyphCache::Raster_RGBMask)
         glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
-#if !defined(QT_OPENGL_ES_2) && defined(GL_ARB_framebuffer_sRGB)
-    // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
-    // but using sRGB looks okay.
-    if (m_cacheType == QFontEngineGlyphCache::Raster_RGBMask
-            && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
+    if (m_useSRGB)
         glEnable(GL_FRAMEBUFFER_SRGB);
-    }
-#endif
 }
 
 void QSGTextMaskMaterialData::deactivate()
 {
-    QSGMaterialShader::deactivate();
     if (m_cacheType == QFontEngineGlyphCache::Raster_RGBMask)
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-#if !defined(QT_OPENGL_ES_2) && defined(GL_ARB_framebuffer_sRGB)
-    if (m_cacheType == QFontEngineGlyphCache::Raster_RGBMask
-            && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
+    if (m_useSRGB)
         glDisable(GL_FRAMEBUFFER_SRGB);
-    }
-#endif
+}
+
+static inline qreal qt_sRGB_to_linear_RGB(qreal f)
+{
+    return f > 0.04045 ? qPow((f + 0.055) / 1.055, 2.4) : f / 12.92;
+}
+
+static inline QVector4D qt_sRGB_to_linear_RGB(const QColor &color)
+{
+    return QVector4D(qt_sRGB_to_linear_RGB(color.redF()),
+                     qt_sRGB_to_linear_RGB(color.greenF()),
+                     qt_sRGB_to_linear_RGB(color.blueF()),
+                     color.alphaF());
 }
 
 void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -165,15 +180,17 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
 
     if (oldMaterial == 0 || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
         QColor c = material->color();
-        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
+        QVector4D color = m_useSRGB
+                ? qt_sRGB_to_linear_RGB(c)
+                : QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF());
         color *= state.opacity();
         program()->setUniformValue(m_color_id, color);
 
         if (oldMaterial == 0 || material->color() != oldMaterial->color()) {
-            state.context()->functions()->glBlendColor(c.redF(),
-                                                       c.greenF(),
-                                                       c.blueF(),
-                                                       c.alphaF());
+            state.context()->functions()->glBlendColor(color.x(),
+                                                       color.y(),
+                                                       color.z(),
+                                                       color.w());
         }
     }
 

@@ -78,7 +78,7 @@ public:
     void initializePrototype();
 
     int parseGroups(const QStringList &groupNames) const;
-    int parseGroups(const QV4::Value &groupNames) const;
+    int parseGroups(const QV4::ValueRef groupNames) const;
 
     QPointer<QQmlDelegateModel> model;
     const int groupCount;
@@ -136,9 +136,9 @@ public:
     static QV4::ReturnedValue get_model(QV4::SimpleCallContext *ctx);
     static QV4::ReturnedValue get_groups(QV4::SimpleCallContext *ctx);
     static QV4::ReturnedValue set_groups(QV4::SimpleCallContext *ctx);
-    static QV4::ReturnedValue get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &);
-    static QV4::ReturnedValue set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
-    static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
+    static QV4::ReturnedValue get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::ValueRef);
+    static QV4::ReturnedValue set_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::ValueRef arg);
+    static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::ValueRef arg);
 
     QV4::ExecutionEngine *v4;
     QQmlDelegateModelItemMetaType * const metaType;
@@ -226,7 +226,7 @@ public:
     void initPackage(int index, QQuickPackage *package);
     void destroyingPackage(QQuickPackage *package);
 
-    bool parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const;
+    bool parseIndex(const QV4::ValueRef value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
             QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
@@ -289,7 +289,7 @@ public:
     void emitChanges();
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
-    bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
+    bool insert(Compositor::insert_iterator &before, const QV4::ValueRef object, int groups);
 
     static void group_append(QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group);
     static int group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);

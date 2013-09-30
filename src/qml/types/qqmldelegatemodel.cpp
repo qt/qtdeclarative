@@ -63,10 +63,10 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
 {
     Q_MANAGED
 
-    QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg);
+    QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg);
     uint flag;
 
-    DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
+    DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
         : FunctionObject(scope, /*name*/0)
         , code(code)
         , flag(flag)
@@ -105,8 +105,8 @@ public:
     QQmlDelegateModelEngineData(QV8Engine *engine);
     ~QQmlDelegateModelEngineData();
 
-    QV4::Value array(QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes);
-    QV4::Value array(QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes);
+    QV4::ReturnedValue array(QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes);
+    QV4::ReturnedValue array(QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes);
 
     QV4::PersistentValue changeProto;
 };
@@ -1540,7 +1540,7 @@ QQmlDelegateModelAttached *QQmlDelegateModel::qmlAttachedProperties(QObject *obj
     return new QQmlDelegateModelAttached(obj);
 }
 
-bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups)
+bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const QV4::ValueRef object, int groups)
 {
     if (!m_context->isValid())
         return false;
@@ -1548,13 +1548,16 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     QQmlDelegateModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), -1);
     if (!cacheItem)
         return false;
-    QV4::Object *o = object.asObject();
+    QV4::ExecutionEngine *v4 = object->engine();
+    if (!v4)
+        return false;
+
+    QV4::Scope scope(v4);
+    QV4::ScopedObject o(scope, object);
     if (!o)
         return false;
 
-    QV4::Scope scope(o->engine());
-
-    QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ObjectIterator it(o.getPointer(), QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
     QV4::ScopedValue propertyName(scope);
     while (1) {
         QV4::Value value;
@@ -1677,21 +1680,27 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QStringList &groups) const
     return groupFlags;
 }
 
-int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
+int QQmlDelegateModelItemMetaType::parseGroups(const QV4::ValueRef groups) const
 {
     int groupFlags = 0;
-    if (QV4::String *s = groups.asString()) {
+    QV4::Scope scope(QV8Engine::getV4(v8Engine));
+
+    QV4::ScopedString s(scope, groups);
+    if (s) {
         const QString groupName = s->toQString();
         int index = groupNames.indexOf(groupName);
         if (index != -1)
             groupFlags |= 2 << index;
-    } else if (QV4::ArrayObject *array = groups.asArrayObject()) {
-        QV4::Scope scope(array->engine());
+        return groupFlags;
+    }
+
+    QV4::ScopedArrayObject array(scope, groups);
+    if (array) {
         QV4::ScopedValue v(scope);
         uint arrayLength = array->arrayLength();
         for (uint i = 0; i < arrayLength; ++i) {
             v = array->getIndexed(i);
-            const QString groupName = v->toQStringNoThrow();
+            const QString groupName = v->toQString();
             int index = groupNames.indexOf(groupName);
             if (index != -1)
                 groupFlags |= 2 << index;
@@ -1748,19 +1757,19 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
+QV4::ReturnedValue QQmlDelegateModelItem::get_member(QQmlDelegateModelItem *thisItem, uint flag, const QV4::ValueRef)
 {
     return QV4::Encode(bool(thisItem->groups & (1 << flag)));
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cacheItem, uint flag, const QV4::Value &arg)
+QV4::ReturnedValue QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cacheItem, uint flag, const QV4::ValueRef arg)
 {
     if (!cacheItem->metaType->model)
         return QV4::Encode::undefined();
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(cacheItem->metaType->model);
 
-    bool member = arg.toBoolean();
+    bool member = arg->toBoolean();
     uint groupFlag = (1 << flag);
     if (member == ((cacheItem->groups & groupFlag) != 0))
         return QV4::Encode::undefined();
@@ -1774,7 +1783,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cach
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
+QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::ValueRef)
 {
     return QV4::Encode((int)thisItem->groupIndex(Compositor::Group(flag)));
 }
@@ -2404,12 +2413,21 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     return QQmlV4Handle(o);
 }
 
-bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const
+bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::ValueRef value, int *index, Compositor::Group *group) const
 {
-    if (value.isNumber()) {
-        *index = value.toInt32();
+    if (value->isNumber()) {
+        *index = value->toInt32();
         return true;
-    } else if (QQmlDelegateModelItemObject *object = value.as<QQmlDelegateModelItemObject>()) {
+    }
+
+    QV4::ExecutionEngine *v4 = value->engine();
+    if (!v4)
+        return false;
+
+    QV4::Scope scope(v4);
+    QV4::Scoped<QQmlDelegateModelItemObject> object(scope, value);
+
+    if (object) {
         QQmlDelegateModelItem * const cacheItem = object->item;
         if (QQmlDelegateModelPrivate *model = cacheItem->metaType->model
                 ? QQmlDelegateModelPrivate::get(cacheItem->metaType->model)
@@ -3275,20 +3293,16 @@ QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()
 {
 }
 
-QV4::Value QQmlDelegateModelEngineData::array(
-        QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
+QV4::ReturnedValue QQmlDelegateModelEngineData::array(QV8Engine *engine, const QVector<QQmlChangeSet::Remove> &changes)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Object *array = new (v4->memoryManager) QQmlDelegateModelGroupRemoveArray(v4, changes);
-    return QV4::Value::fromObject(array);
+    return (new (v4->memoryManager) QQmlDelegateModelGroupRemoveArray(v4, changes))->asReturnedValue();
 }
 
-QV4::Value QQmlDelegateModelEngineData::array(
-        QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
+QV4::ReturnedValue QQmlDelegateModelEngineData::array(QV8Engine *engine, const QVector<QQmlChangeSet::Insert> &changes)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Object *array = new (v4->memoryManager) QQmlDelegateModelGroupInsertArray(v4, changes);
-    return QV4::Value::fromObject(array);
+    return (new (v4->memoryManager) QQmlDelegateModelGroupInsertArray(v4, changes))->asReturnedValue();
 }
 
 QT_END_NAMESPACE

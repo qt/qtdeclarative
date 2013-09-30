@@ -152,9 +152,6 @@ public: // to implement by subclasses:
     virtual void swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
     virtual void unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;
     virtual void binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target) = 0;
-    virtual void inplaceNameOp(V4IR::AluOp oper, V4IR::Temp *rightSource, const QString &targetName) = 0;
-    virtual void inplaceElementOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBaseTemp, V4IR::Temp *targetIndexTemp) = 0;
-    virtual void inplaceMemberOp(V4IR::AluOp oper, V4IR::Temp *source, V4IR::Temp *targetBase, const QString &targetName) = 0;
 
 protected:
     virtual void callBuiltin(V4IR::Call *c, V4IR::Temp *result);

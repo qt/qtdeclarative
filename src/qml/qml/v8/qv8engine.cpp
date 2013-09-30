@@ -205,7 +205,7 @@ static QV4::ReturnedValue arrayFromVariantList(QV8Engine *engine, const QVariant
     int len = list.count();
     a->arrayReserve(len);
     for (int ii = 0; ii < len; ++ii) {
-        a->arrayData[ii].value = QV4::Value::fromReturnedValue(engine->fromVariant(list.at(ii)));
+        a->arrayData[ii].value = engine->fromVariant(list.at(ii));
         a->arrayDataLen = ii + 1;
     }
     a->setArrayLengthUnchecked(len);
@@ -319,7 +319,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
             a->arrayReserve(list.count());
             for (int ii = 0; ii < list.count(); ++ii) {
-                a->arrayData[ii].value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii)));
+                a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
                 a->arrayDataLen = ii + 1;
             }
             a->setArrayLengthUnchecked(list.count());
@@ -467,7 +467,7 @@ void QV8Engine::freezeObject(const QV4::ValueRef value)
     QV4::ScopedFunctionObject f(scope, m_freezeObject.value());
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = value;
-    callData->thisObject = QV4::Value::fromObject(m_v4Engine->globalObject);
+    callData->thisObject = m_v4Engine->globalObject;
     f->call(callData);
 }
 
@@ -535,7 +535,7 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
     QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
     for (int i = 0; i < lst.size(); i++) {
-        a->arrayData[i].value = QV4::Value::fromReturnedValue(variantToJS(lst.at(i)));
+        a->arrayData[i].value = variantToJS(lst.at(i));
         a->arrayDataLen = i + 1;
     }
     a->setArrayLengthUnchecked(lst.size());
@@ -586,7 +586,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
         s = m_v4Engine->newIdentifier(it.key());
         QV4::Property *p = o->insertMember(s, QV4::Attr_Data);
-        p->value = QV4::Value::fromReturnedValue(variantToJS(it.value()));
+        p->value = variantToJS(it.value());
     }
     return o.asReturnedValue();
 }

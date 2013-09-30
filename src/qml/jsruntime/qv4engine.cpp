@@ -82,7 +82,7 @@ static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
     ctx->throwTypeError();
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)

@@ -255,7 +255,7 @@ ReturnedValue __qmljs_delete_subscript(ExecutionContext *ctx, const ValueRef bas
     if (o) {
         uint n = index->asArrayIndex();
         if (n < UINT_MAX) {
-            return Primitive::fromBoolean(o->deleteIndexedProperty(n)).asReturnedValue();
+            return Encode((bool)o->deleteIndexedProperty(n));
         }
     }
 
@@ -291,7 +291,7 @@ QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
-    return Primitive::fromDouble(x + y).asReturnedValue();
+    return Encode(x + y);
 }
 
 QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -301,7 +301,7 @@ QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left
         ctx->throwTypeError();
 
     bool r = o->hasInstance(left);
-    return Primitive::fromBoolean(r).asReturnedValue();
+    return Encode(r);
 }
 
 QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
@@ -311,217 +311,7 @@ QV4::ReturnedValue __qmljs_in(ExecutionContext *ctx, const ValueRef left, const 
     Scope scope(ctx);
     ScopedString s(scope, left->toString(ctx));
     bool r = right->objectValue()->__hasProperty__(s);
-    return Primitive::fromBoolean(r).asReturnedValue();
-}
-
-static void inplaceBitOp(ExecutionContext *ctx, const StringRef name, const ValueRef value, BinOp op)
-{
-    Scope scope(ctx);
-    ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope, op(lhs, value));
-    ctx->setProperty(name, result);
-}
-
-
-void __qmljs_inplace_bit_and_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_bit_and);
-}
-
-void __qmljs_inplace_bit_or_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_bit_or);
-}
-
-void __qmljs_inplace_bit_xor_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_bit_xor);
-}
-
-void __qmljs_inplace_add_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    Scope scope(ctx);
-    ScopedValue lhs(scope, ctx->getProperty(name));
-    ScopedValue result(scope, __qmljs_add(ctx, lhs, value));
-    ctx->setProperty(name, result);
-}
-
-void __qmljs_inplace_sub_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_sub);
-}
-
-void __qmljs_inplace_mul_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_mul);
-}
-
-void __qmljs_inplace_div_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_div);
-}
-
-void __qmljs_inplace_mod_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_mod);
-}
-
-void __qmljs_inplace_shl_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_shl);
-}
-
-void __qmljs_inplace_shr_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_shr);
-}
-
-void __qmljs_inplace_ushr_name(ExecutionContext *ctx, const StringRef name, const ValueRef value)
-{
-    inplaceBitOp(ctx, name, value, __qmljs_ushr);
-}
-
-void __qmljs_inplace_bit_and_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_bit_and, index, rhs);
-}
-
-void __qmljs_inplace_bit_or_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_bit_or, index, rhs);
-}
-
-void __qmljs_inplace_bit_xor_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_bit_xor, index, rhs);
-}
-
-void __qmljs_inplace_add_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_add, index, rhs);
-}
-
-void __qmljs_inplace_sub_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_sub, index, rhs);
-}
-
-void __qmljs_inplace_mul_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_mul, index, rhs);
-}
-
-void __qmljs_inplace_div_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_div, index, rhs);
-}
-
-void __qmljs_inplace_mod_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_mod, index, rhs);
-}
-
-void __qmljs_inplace_shl_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_shl, index, rhs);
-}
-
-void __qmljs_inplace_shr_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_shr, index, rhs);
-}
-
-void __qmljs_inplace_ushr_element(ExecutionContext *ctx, const ValueRef base, const ValueRef index, const ValueRef rhs)
-{
-    Object *obj = base->toObject(ctx);
-    obj->inplaceBinOpValue(ctx, __qmljs_ushr, index, rhs);
-}
-
-void __qmljs_inplace_bit_and_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_bit_and, name, rhs);
-}
-
-void __qmljs_inplace_bit_or_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_bit_or, name, rhs);
-}
-
-void __qmljs_inplace_bit_xor_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_bit_xor, name, rhs);
-}
-
-void __qmljs_inplace_add_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_add, name, rhs);
-}
-
-void __qmljs_inplace_sub_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_sub, name, rhs);
-}
-
-void __qmljs_inplace_mul_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_mul, name, rhs);
-}
-
-void __qmljs_inplace_div_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_div, name, rhs);
-}
-
-void __qmljs_inplace_mod_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_mod, name, rhs);
-}
-
-void __qmljs_inplace_shl_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_shl, name, rhs);
-}
-
-void __qmljs_inplace_shr_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_shr, name, rhs);
-}
-
-void __qmljs_inplace_ushr_member(ExecutionContext *ctx, const ValueRef base, const StringRef name, const ValueRef rhs)
-{
-    Scope scope(ctx);
-    ScopedObject o(scope, base->toObject(ctx));
-    o->inplaceBinOp(ctx, __qmljs_ushr, name, rhs);
+    return Encode(r);
 }
 
 double __qmljs_string_to_number(const QString &string)
@@ -584,24 +374,24 @@ ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)
     ExecutionContext *ctx = engine->current;
     Scope scope(ctx);
     ScopedCallData callData(scope, 0);
-    callData->thisObject = Value::fromObject(object);
+    callData->thisObject = object;
 
     ScopedValue conv(scope, object->get(*meth1));
     if (FunctionObject *o = conv->asFunctionObject()) {
-        Value r = Value::fromReturnedValue(o->call(callData));
-        if (r.isPrimitive())
-            return r.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     conv = object->get(*meth2);
     if (FunctionObject *o = conv->asFunctionObject()) {
-        Value r = Value::fromReturnedValue(o->call(callData));
-        if (r.isPrimitive())
-            return r.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     ctx->throwTypeError();
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 Bool __qmljs_to_boolean(const ValueRef value)
@@ -674,7 +464,7 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
                 if (idx >= (uint)str->toQString().length()) {
-                    return Primitive::undefinedValue().asReturnedValue();
+                    return Encode::undefined();
                 }
                 const QString s = str->toQString().mid(idx, 1);
                 return scope.engine->newString(s)->asReturnedValue();
@@ -813,11 +603,9 @@ uint __qmljs_equal_helper(const ValueRef x, const ValueRef y)
         double dx = __qmljs_to_number(x);
         return dx == y->asDouble();
     } else if (x->isBoolean()) {
-        Value nx = Primitive::fromDouble((double) x->booleanValue());
-        return __qmljs_cmp_eq(ValueRef(&nx), y);
+        return __qmljs_cmp_eq(Primitive::fromDouble((double) x->booleanValue()), y);
     } else if (y->isBoolean()) {
-        Value ny = Primitive::fromDouble((double) y->booleanValue());
-        return __qmljs_cmp_eq(x, ValueRef(&ny));
+        return __qmljs_cmp_eq(x, Primitive::fromDouble((double) y->booleanValue()));
     } else if ((x->isNumber() || x->isString()) && y->isObject()) {
         Scope scope(y->objectValue()->engine());
         ScopedValue py(scope, __qmljs_to_primitive(y, PREFERREDTYPE_HINT));
@@ -961,16 +749,16 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(context);
 
-    Object *base;
-    ScopedValue func(scope, context->getPropertyAndBase(name, &base));
+    ScopedObject base(scope);
+    ScopedValue func(scope, context->getPropertyAndBase(name, base));
     if (base)
-        callData->thisObject = Value::fromObject(base);
+        callData->thisObject = base;
 
     FunctionObject *o = func->asFunctionObject();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
         if (base)
-            objectAsString = Value::fromObject(base).toQStringNoThrow();
+            objectAsString = ScopedValue(scope, base.asReturnedValue())->toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         context->throwTypeError(msg);
     }
@@ -1021,11 +809,11 @@ ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
 {
     Scope scope(context);
-    Object *baseObject = callData->thisObject.toObject(context);
-    callData->thisObject = Value::fromObject(baseObject);
+    ScopedObject baseObject(scope, callData->thisObject.toObject(context));
+    callData->thisObject = baseObject;
 
     ScopedString s(scope, index->toString(context));
-    Scoped<Object> o(scope, baseObject->get(s));
+    ScopedObject o(scope, baseObject->get(s));
     if (!o)
         context->throwTypeError();
 
@@ -1148,7 +936,8 @@ QV4::ReturnedValue __qmljs_builtin_typeof_element(ExecutionContext *context, con
 
 ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionContext *ctx)
 {
-    Object *obj = o->toObject(ctx);
+    Scope scope(ctx);
+    ScopedObject obj(scope, o->toObject(ctx));
     return ctx->newWithContext(obj);
 }
 
@@ -1247,11 +1036,11 @@ QV4::ReturnedValue __qmljs_increment(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->isInteger())
-        return Primitive::fromInt32(value->integerValue() + 1).asReturnedValue();
+    if (value->isInteger() && value->integerValue() < INT_MAX)
+        return Encode(value->integerValue() + 1);
     else {
         double d = value->toNumber();
-        return Primitive::fromDouble(d + 1).asReturnedValue();
+        return Encode(d + 1.);
     }
 }
 
@@ -1259,11 +1048,11 @@ QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->isInteger())
-        return Primitive::fromInt32(value->integerValue() - 1).asReturnedValue();
+    if (value->isInteger() && value->integerValue() > INT_MIN)
+        return Encode(value->integerValue() - 1);
     else {
         double d = value->toNumber();
-        return Primitive::fromDouble(d - 1).asReturnedValue();
+        return Encode(d - 1.);
     }
 }
 

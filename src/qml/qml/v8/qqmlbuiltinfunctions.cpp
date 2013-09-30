@@ -1072,10 +1072,10 @@ use \l{QtQml2::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
 {
-    const QString invalidArgs = QStringLiteral("Qt.createComponent(): Invalid arguments");
-    const QString invalidParent = QStringLiteral("Qt.createComponent(): Invalid parent object");
     if (ctx->callData->argc < 1 || ctx->callData->argc > 3)
-        ctx->throwError(invalidArgs);
+        ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
+
+    Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
     QQmlEngine *engine = v8engine->engine();
@@ -1095,31 +1095,32 @@ ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
 
     int consumedCount = 1;
     if (ctx->callData->argc > 1) {
-        Value lastArg = ctx->callData->args[ctx->callData->argc-1];
+        ScopedValue lastArg(scope, ctx->callData->args[ctx->callData->argc-1]);
 
         // The second argument could be the mode enum
         if (ctx->callData->args[1].isInteger()) {
             int mode = ctx->callData->args[1].integerValue();
             if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
-                ctx->throwError(invalidArgs);
+                ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
             compileMode = QQmlComponent::CompilationMode(mode);
             consumedCount += 1;
         } else {
             // The second argument could be the parent only if there are exactly two args
-            if ((ctx->callData->argc != 2) || !(lastArg.isObject() || lastArg.isNull()))
-                ctx->throwError(invalidArgs);
+            if ((ctx->callData->argc != 2) || !(lastArg->isObject() || lastArg->isNull()))
+                ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
         }
 
         if (consumedCount < ctx->callData->argc) {
-            if (lastArg.isObject()) {
-                if (QV4::QObjectWrapper *qobjectWrapper = lastArg.as<QV4::QObjectWrapper>())
+            if (lastArg->isObject()) {
+                Scoped<QObjectWrapper> qobjectWrapper(scope, lastArg);
+                if (qobjectWrapper)
                     parentArg = qobjectWrapper->object();
                 if (!parentArg)
-                    ctx->throwError(invalidParent);
-            } else if (lastArg.isNull()) {
+                    ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
+            } else if (lastArg->isNull()) {
                 parentArg = 0;
             } else {
-                ctx->throwError(invalidParent);
+                ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid parent object"));
             }
         }
     }
@@ -1365,11 +1366,10 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallCont
         if (i != 0)
             result.append(QLatin1Char(' '));
 
-        QV4::Value value = ctx->callData->args[i];
-        if (value.asArrayObject())
-            result.append(QStringLiteral("[") + value.toQStringNoThrow() + QStringLiteral("]"));
+        if (ctx->callData->args[i].asArrayObject())
+            result.append(QStringLiteral("[") + ctx->callData->args[i].toQStringNoThrow() + QStringLiteral("]"));
         else
-            result.append(value.toQStringNoThrow());
+            result.append(ctx->callData->args[i].toQStringNoThrow());
     }
 
     if (printStack) {
@@ -1836,19 +1836,21 @@ QV4::ReturnedValue GlobalExtensions::method_gc(SimpleCallContext *ctx)
 
 ReturnedValue GlobalExtensions::method_string_arg(SimpleCallContext *ctx)
 {
-    QString value = ctx->callData->thisObject.toQStringNoThrow();
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("String.arg(): Invalid arguments");
 
-    QV4::Value arg = ctx->callData->args[0];
-    if (arg.isInteger())
-        return ctx->engine->newString(value.arg(arg.integerValue()))->asReturnedValue();
-    else if (arg.isDouble())
-        return ctx->engine->newString(value.arg(arg.doubleValue()))->asReturnedValue();
-    else if (arg.isBoolean())
-        return ctx->engine->newString(value.arg(arg.booleanValue()))->asReturnedValue();
+    QString value = ctx->callData->thisObject.toQString();
 
-    return ctx->engine->newString(value.arg(arg.toQStringNoThrow()))->asReturnedValue();
+    QV4::Scope scope(ctx);
+    QV4::ScopedValue arg(scope, ctx->callData->args[0]);
+    if (arg->isInteger())
+        return ctx->engine->newString(value.arg(arg->integerValue()))->asReturnedValue();
+    else if (arg->isDouble())
+        return ctx->engine->newString(value.arg(arg->doubleValue()))->asReturnedValue();
+    else if (arg->isBoolean())
+        return ctx->engine->newString(value.arg(arg->booleanValue()))->asReturnedValue();
+
+    return ctx->engine->newString(value.arg(arg->toQString()))->asReturnedValue();
 }
 
 

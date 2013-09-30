@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -663,7 +663,7 @@ void QQuickCanvasItem::updatePolish()
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
         QV4::Scope scope(v4);
         QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, this));
+        callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
         foreach (int key, animationCallbacks.keys()) {
             QV4::ScopedFunctionObject f(scope, animationCallbacks.value(key).value());

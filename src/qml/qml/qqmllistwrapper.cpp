@@ -158,7 +158,7 @@ Property *QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
             *attrs = QV4::Attr_Data;
         *index = it->arrayIndex;
         ++it->arrayIndex;
-        it->tmpDynamicProperty.value = QV4::Value::fromReturnedValue(QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index)));
+        it->tmpDynamicProperty.value = QV4::QObjectWrapper::wrap(w->engine(), w->property.at(&w->property, *index));
         return &it->tmpDynamicProperty;
     }
     return QV4::Object::advanceIterator(m, it, name, index, attrs);
