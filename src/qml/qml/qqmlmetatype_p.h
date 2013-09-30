@@ -61,8 +61,6 @@
 #include <QtCore/qbitarray.h>
 #include <QtQml/qjsvalue.h>
 
-#include <private/qv4string_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QQmlType;
@@ -73,6 +71,8 @@ class QQmlTypeModule;
 class QHashedString;
 class QHashedStringRef;
 class QReadWriteLock;
+
+namespace QV4 { struct String; }
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
