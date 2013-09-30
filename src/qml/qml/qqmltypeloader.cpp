@@ -2408,6 +2408,23 @@ void QQmlTypeData::compile()
                 errors << resolver.errors;
         }
 
+        if (errors.isEmpty()) {
+            // Add to type registry of composites
+            if (m_compiledData->isCompositeType())
+                QQmlEnginePrivate::get(engine)->registerInternalCompositeType(m_compiledData);
+            else {
+                const QV4::CompiledData::Object *obj = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
+                QQmlCompiledData::TypeReference typeRef = m_compiledData->resolvedTypes.value(obj->inheritedTypeNameIndex);
+                if (typeRef.component) {
+                    m_compiledData->metaTypeId = typeRef.component->metaTypeId;
+                    m_compiledData->listMetaTypeId = typeRef.component->listMetaTypeId;
+                } else {
+                    m_compiledData->metaTypeId = typeRef.type->typeId();
+                    m_compiledData->listMetaTypeId = typeRef.type->qListTypeId();
+                }
+            }
+        }
+
         if (!errors.isEmpty()) {
             setError(errors);
             m_compiledData->release();

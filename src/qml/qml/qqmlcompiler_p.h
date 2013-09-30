@@ -145,6 +145,7 @@ public:
     QHash<int, int> objectIndexToIdForRoot;
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
+    bool isCompositeType() const { return !datas.at(qmlUnit->indexOfRootObject).isEmpty(); }
     // ---
 
     struct Instruction {
