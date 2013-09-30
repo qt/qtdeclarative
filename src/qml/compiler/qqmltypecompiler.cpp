@@ -323,33 +323,87 @@ bool QQmlPropertyCacheCreator::buildMetaObjects()
     propertyCaches.resize(qmlObjects.count());
     vmeMetaObjects.resize(qmlObjects.count());
 
-    for (int i = 0; i < qmlObjects.count(); ++i) {
-        const QtQml::QmlObject *obj = qmlObjects.at(i);
-
-        // If the object has no type, then it's probably a nested object definition as part
-        // of a group property.
-        const bool objectHasType = !stringAt(obj->inheritedTypeNameIndex).isEmpty();
-        if (objectHasType) {
-            QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
-            QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-            Q_ASSERT(baseTypeCache);
-
-            bool needVMEMetaObject = obj->properties->count != 0 || obj->qmlSignals->count != 0 || obj->functions->count != 0;
-            if (needVMEMetaObject) {
-                if (!createMetaObject(i, obj, baseTypeCache))
-                    return false;
-            } else {
-                propertyCaches[i] = baseTypeCache;
-                baseTypeCache->addref();
-            }
-        }
-    }
+    if (!buildMetaObjectRecursively(compiler->rootObjectIndex(), /*referencing object*/-1, /*instantiating binding*/0))
+        return false;
 
     compiler->setVMEMetaObjects(vmeMetaObjects);
     compiler->setPropertyCaches(propertyCaches);
     propertyCaches.clear();
 
     return true;
+}
+
+bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding)
+{
+    const QmlObject *obj = qmlObjects.at(objectIndex);
+
+    QQmlPropertyCache *baseTypeCache = 0;
+
+    bool needVMEMetaObject = obj->properties->count != 0 || obj->qmlSignals->count != 0 || obj->functions->count != 0;
+    if (!needVMEMetaObject) {
+        for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next) {
+            if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
+
+                // On assignments are implemented using value interceptors, which require a VME meta object.
+                needVMEMetaObject = true;
+
+                // If the on assignment is inside a group property, we need to distinguish between QObject based
+                // group properties and value type group properties. For the former the base type is derived from
+                // the property that references us, for the latter we only need a meta-object on the referencing object
+                // because interceptors can't go to the shared value type instances.
+                if (instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+                    QQmlPropertyCache *parentCache = propertyCaches.at(referencingObjectIndex);
+                    Q_ASSERT(parentCache);
+                    Q_ASSERT(!stringAt(instantiatingBinding->propertyNameIndex).isEmpty());
+
+                    bool notInRevision = false;
+                    QQmlPropertyData *pd = PropertyResolver(parentCache).property(stringAt(instantiatingBinding->propertyNameIndex), &notInRevision);
+                    Q_ASSERT(pd);
+                    if (QQmlValueTypeFactory::isValueType(pd->propType)) {
+                        needVMEMetaObject = false;
+                        if (!ensureMetaObject(referencingObjectIndex))
+                            return false;
+                    } else if (pd->isQObject()) {
+                        baseTypeCache = enginePrivate->rawPropertyCacheForType(pd->propType);
+                        Q_ASSERT(baseTypeCache);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    QString typeName = stringAt(obj->inheritedTypeNameIndex);
+    if (!typeName.isEmpty()) {
+        QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+        baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        Q_ASSERT(baseTypeCache);
+    }
+
+    if (needVMEMetaObject) {
+        if (!createMetaObject(objectIndex, obj, baseTypeCache))
+            return false;
+    } else if (baseTypeCache) {
+        propertyCaches[objectIndex] = baseTypeCache;
+        baseTypeCache->addref();
+    }
+
+    for (const QtQml::Binding *binding = obj->bindings->first; binding; binding = binding->next)
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object)
+            if (!buildMetaObjectRecursively(binding->value.objectIndex, objectIndex, binding))
+                return false;
+
+    return true;
+}
+
+bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
+{
+    if (!vmeMetaObjects.at(objectIndex).isEmpty())
+        return true;
+    const QtQml::QmlObject *obj = qmlObjects.at(objectIndex);
+    QQmlCompiledData::TypeReference typeRef = resolvedTypes->value(obj->inheritedTypeNameIndex);
+    QQmlPropertyCache *baseTypeCache = typeRef.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+    return createMetaObject(objectIndex, obj, baseTypeCache);
 }
 
 bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache)

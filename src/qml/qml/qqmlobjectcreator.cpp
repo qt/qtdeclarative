@@ -54,6 +54,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlscriptstring_p.h>
+#include <private/qqmlpropertyvalueinterceptor_p.h>
 
 QT_USE_NAMESPACE
 
@@ -670,7 +671,7 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
 
     QObject *createdSubObject = 0;
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        createdSubObject = createInstance(binding->value.objectIndex, _qobject);
+        createdSubObject = createInstance(binding->value.objectIndex, _bindingTarget);
         if (!createdSubObject)
             return false;
     }
@@ -728,7 +729,8 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
         }
     }
 
-    if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression))
+    if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+        && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment))
         removeBindingOnProperty(_bindingTarget, property->coreIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
@@ -767,6 +769,43 @@ bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingI
     }
 
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+        if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
+            // ### determine value source and interceptor casts ahead of time.
+            QQmlType *type = 0;
+            const QMetaObject *mo = createdSubObject->metaObject();
+            while (mo && !type) {
+                type = QQmlMetaType::qmlType(mo);
+                mo = mo->superClass();
+            }
+            Q_ASSERT(type);
+
+            QQmlPropertyData targetCorePropertyData = *property;
+            if (_valueTypeProperty)
+                targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
+
+            int valueSourceCast = type->propertyValueSourceCast();
+            if (valueSourceCast != -1) {
+                QQmlPropertyValueSource *vs = reinterpret_cast<QQmlPropertyValueSource *>(reinterpret_cast<char *>(createdSubObject) + valueSourceCast);
+                QObject *target = createdSubObject->parent();
+                vs->setTarget(QQmlPropertyPrivate::restore(target, targetCorePropertyData, context));
+                return true;
+            }
+            int valueInterceptorCast = type->propertyValueInterceptorCast();
+            if (valueInterceptorCast != -1) {
+                QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(createdSubObject) + valueInterceptorCast);
+                QObject *target = createdSubObject->parent();
+
+                QQmlProperty prop =
+                    QQmlPropertyPrivate::restore(target, targetCorePropertyData, context);
+                vi->setTarget(prop);
+                QQmlVMEMetaObject *mo = QQmlVMEMetaObject::get(target);
+                Q_ASSERT(mo);
+                mo->registerInterceptor(prop.index(), QQmlPropertyPrivate::valueTypeCoreIndex(prop), vi);
+                return true;
+            }
+            return false;
+        }
+
         QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
                                                                    QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;
@@ -1029,6 +1068,23 @@ QQmlContextData *QmlObjectCreator::finalize()
             }
         }
         allParserStatusCallbacks.clear();
+    }
+
+    {
+    QQmlTrace trace("VME Finalize Callbacks");
+    for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
+        QQmlEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
+        QObject *obj = callback.first;
+        if (obj) {
+            void *args[] = { 0 };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
+        }
+#if 0 // ###
+        if (watcher.hasRecursed())
+            return 0;
+#endif
+    }
+    finalizeCallbacks.clear();
     }
 
     {

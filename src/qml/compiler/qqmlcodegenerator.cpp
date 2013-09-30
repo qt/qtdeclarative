@@ -230,7 +230,7 @@ bool QQmlCodeGenerator::visit(AST::UiObjectDefinition *node)
 bool QQmlCodeGenerator::visit(AST::UiObjectBinding *node)
 {
     int idx = defineQMLObject(node->qualifiedTypeNameId, node->initializer);
-    appendBinding(node->qualifiedId, idx);
+    appendBinding(node->qualifiedId, idx, node->hasOnToken);
     return false;
 }
 
@@ -850,13 +850,13 @@ void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, AST::Statement *
     qSwap(_object, object);
 }
 
-void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex)
+void QQmlCodeGenerator::appendBinding(AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
 {
     QmlObject *object = 0;
     if (!resolveQualifiedId(&name, &object))
         return;
     qSwap(_object, object);
-    appendBinding(name->identifierToken, registerString(name->name.toString()), objectIndex);
+    appendBinding(name->identifierToken, registerString(name->name.toString()), objectIndex, /*isListItem*/false, isOnAssignment);
     qSwap(_object, object);
 }
 
@@ -879,9 +879,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
     _object->bindings->append(binding);
 }
 
-void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem)
+void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
-    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex, isListItem))
+    if (!sanityCheckPropertyName(nameLocation, propertyNameIndex, isListItem | isOnAssignment))
         return;
 
     if (stringAt(propertyNameIndex) == QStringLiteral("id")) {
@@ -900,6 +900,9 @@ void QQmlCodeGenerator::appendBinding(const AST::SourceLocation &nameLocation, i
         binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
     else
         binding->type = QV4::CompiledData::Binding::Type_Object;
+
+    if (isOnAssignment)
+        binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
 
     binding->value.objectIndex = objectIndex;
     _object->bindings->append(binding);
@@ -981,14 +984,14 @@ bool QQmlCodeGenerator::resolveQualifiedId(AST::UiQualifiedId **nameToResolve, Q
     return true;
 }
 
-bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItem)
+bool QQmlCodeGenerator::sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItemOnOrAssignment)
 {
     const QString &name = jsGenerator->strings.at(nameIndex);
     if (name.isEmpty())
         return true;
 
     // List items are implement by multiple bindings to the same name, so allow duplicates.
-    if (!isListItem) {
+    if (!isListItemOnOrAssignment) {
         if (_propertyNames.contains(name))
             COMPILE_EXCEPTION(nameLocation, tr("Duplicate property name"));
 

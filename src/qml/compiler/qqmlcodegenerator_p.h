@@ -257,9 +257,9 @@ public:
     void setBindingValue(QV4::CompiledData::Binding *binding, AST::Statement *statement);
 
     void appendBinding(AST::UiQualifiedId *name, AST::Statement *value);
-    void appendBinding(AST::UiQualifiedId *name, int objectIndex);
+    void appendBinding(AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
     void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, AST::Statement *value);
-    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem = false);
+    void appendBinding(const AST::SourceLocation &nameLocation, int propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     bool setId(AST::Statement *value);
 
@@ -267,7 +267,7 @@ public:
     // with the object any right-hand-side of a binding should apply to.
     bool resolveQualifiedId(AST::UiQualifiedId **nameToResolve, QmlObject **object);
 
-    bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItem = false);
+    bool sanityCheckPropertyName(const AST::SourceLocation &nameLocation, int nameIndex, bool isListItemOnOrAssignment = false);
 
     void recordError(const AST::SourceLocation &location, const QString &description);
 

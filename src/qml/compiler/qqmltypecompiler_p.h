@@ -125,6 +125,8 @@ public:
 
     bool buildMetaObjects();
 protected:
+    bool buildMetaObjectRecursively(int objectIndex, int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding);
+    bool ensureMetaObject(int objectIndex);
     bool createMetaObject(int objectIndex, const QtQml::QmlObject *obj, QQmlPropertyCache *baseTypeCache);
 
     QQmlEnginePrivate *enginePrivate;

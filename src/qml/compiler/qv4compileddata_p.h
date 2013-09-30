@@ -280,7 +280,8 @@ struct Q_QML_EXPORT Binding
     };
 
     enum Flags {
-        IsSignalHandlerExpression = 0x1
+        IsSignalHandlerExpression = 0x1,
+        IsOnAssignment = 0x2
     };
 
     quint32 flags : 16;
