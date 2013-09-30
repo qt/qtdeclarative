@@ -49,7 +49,6 @@
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
-#include <QtQuick/QSGFlatColorMaterial>
 #include <QtQuick/private/qsgatlastexture_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
@@ -77,11 +76,6 @@ DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-
-#ifndef QSG_NO_RENDER_TIMING
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
-static QElapsedTimer qsg_renderer_timer;
-#endif
 
 /*
     Comments about this class from Gunnar:
@@ -129,7 +123,6 @@ public:
 
     QOpenGLContext *gl;
 
-    QHash<QSGMaterialType *, QSGMaterialShader *> materials;
     QMutex textureMutex;
     QHash<QQuickTextureFactory *, QSGTexture *> textures;
     QSGDepthStencilBufferManager *depthStencilBufferManager;
@@ -207,8 +200,6 @@ void QSGContext::invalidate()
     qDeleteAll(d->textures.values());
     d->textures.clear();
     d->textureMutex.unlock();
-    qDeleteAll(d->materials.values());
-    d->materials.clear();
     delete d->depthStencilBufferManager;
     d->depthStencilBufferManager = 0;
     delete d->distanceFieldCacheManager;
@@ -319,35 +310,8 @@ void QSGContext::initialize(QOpenGLContext *context)
     Q_ASSERT(!d->gl);
     d->gl = context;
 
-    precompileMaterials();
-
     emit initialized();
 }
-
-#define QSG_PRECOMPILE_MATERIAL(name) { name m; prepareMaterial(&m); }
-
-/*
- * Some glsl compilers take their time compiling materials, and
- * the way the scene graph is being processed, these materials
- * get compiled when they are first taken into use. This can
- * easily lead to skipped frames. By precompiling the most
- * common materials, we potentially add a few milliseconds to the
- * start up, and reduce the chance of avoiding skipped frames
- * later on.
- */
-void QSGContext::precompileMaterials()
-{
-    if (qEnvironmentVariableIsEmpty("QSG_NO_MATERIAL_PRELOADING")) {
-        QSG_PRECOMPILE_MATERIAL(QSGVertexColorMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGFlatColorMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGOpaqueTextureMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGTextureMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGSmoothTextureMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGSmoothColorMaterial);
-        QSG_PRECOMPILE_MATERIAL(QSGDistanceFieldTextMaterial);
-    }
-}
-
 
 /*!
     Returns if the scene graph context is ready or not, meaning that it has a valid
@@ -565,44 +529,6 @@ QSGDepthStencilBufferManager *QSGContext::depthStencilBufferManager()
         d->depthStencilBufferManager = new QSGDepthStencilBufferManager(d->gl);
     return d->depthStencilBufferManager;
 }
-
-
-/*!
-    Returns a material shader for the given material.
- */
-
-QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
-{
-    Q_D(QSGContext);
-    QSGMaterialType *type = material->type();
-    QSGMaterialShader *shader = d->materials.value(type);
-    if (shader)
-        return shader;
-
-#ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing  || QQmlProfilerService::enabled)
-        qsg_renderer_timer.start();
-#endif
-
-    shader = material->createShader();
-    shader->compile();
-    shader->initialize();
-    d->materials[type] = shader;
-
-#ifndef QSG_NO_RENDER_TIMING
-    if (qsg_render_timing)
-        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
-
-    if (QQmlProfilerService::enabled) {
-        QQmlProfilerService::sceneGraphFrame(
-                    QQmlProfilerService::SceneGraphContextFrame,
-                    qsg_renderer_timer.nsecsElapsed());
-    }
-#endif
-
-    return shader;
-}
-
 
 
 /*!
