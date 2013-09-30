@@ -878,7 +878,7 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueR
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 {
-    Exception::throwException(context, *value);
+    Exception::throwException(context, value);
 }
 
 ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
@@ -943,7 +943,7 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionCon
 
 ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->newCatchContext(exceptionVarName.getPointer(), *exceptionValue);
+    return ctx->newCatchContext(exceptionVarName, exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)

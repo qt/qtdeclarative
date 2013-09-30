@@ -273,7 +273,6 @@ struct Q_QML_EXPORT Value
         return val;
     }
 
-    static Value emptyValue();
     static Value fromObject(Object *o);
     static Value fromManaged(Managed *o);
 
@@ -357,6 +356,7 @@ struct SafeValue : public Value
 
 struct Q_QML_EXPORT Primitive : public Value
 {
+    static Primitive emptyValue();
     static Primitive fromBoolean(bool b);
     static Primitive fromInt32(int i);
     static Primitive undefinedValue();

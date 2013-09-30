@@ -51,7 +51,7 @@
 
 using namespace QV4;
 
-CallContext *ExecutionContext::newCallContext(void *stackSpace, Value *locals, FunctionObject *function, CallData *callData)
+CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *function, CallData *callData)
 {
     CallContext *c = (CallContext *)stackSpace;
 #ifndef QT_NO_DEBUG
@@ -121,13 +121,13 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
         c->lookups = c->compilationUnit->runtimeLookups;
     }
 
-    c->locals = (Value *)(c + 1);
+    c->locals = (SafeValue *)(c + 1);
 
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
 
     c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
-    ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(Value));
+    ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(SafeValue));
     if (callData->argc < function->formalParameterCount)
         std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
@@ -143,7 +143,7 @@ WithContext *ExecutionContext::newWithContext(ObjectRef with)
     return w;
 }
 
-CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+CatchContext *ExecutionContext::newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
     CatchContext *c = static_cast<CatchContext *>(engine->memoryManager->allocContext(sizeof(CatchContext)));
     engine->current = c;
@@ -214,9 +214,9 @@ void GlobalContext::initGlobalContext(ExecutionEngine *eng)
 {
     initBaseContext(Type_GlobalContext, eng, /*parentContext*/0);
     callData = reinterpret_cast<CallData *>(this + 1);
-    callData->tag = QV4::Value::Integer_Type;
+    callData->tag = QV4::Value::_Integer_Type;
     callData->argc = 0;
-    callData->thisObject = Value::fromObject(eng->globalObject);
+    callData->thisObject = eng->globalObject;
     global = 0;
 }
 
@@ -231,7 +231,7 @@ void WithContext::initWithContext(ExecutionContext *p, ObjectRef with)
     withObject = with.getPointer();
 }
 
-void CatchContext::initCatchContext(ExecutionContext *p, String *exceptionVarName, const Value &exceptionValue)
+void CatchContext::initCatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue)
 {
     initBaseContext(Type_CatchContext, p->engine, p);
     strictMode = p->strictMode;
@@ -268,7 +268,7 @@ void CallContext::initQmlContext(ExecutionContext *parentContext, ObjectRef qml,
         lookups = compilationUnit->runtimeLookups;
     }
 
-    locals = (Value *)(this + 1);
+    locals = (SafeValue *)(this + 1);
     if (function->varCount)
         std::fill(locals, locals + function->varCount, Primitive::undefinedValue());
 }
@@ -286,7 +286,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
                 return w->withObject->deleteProperty(name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->stringValue()->isEqualTo(name))
                 return false;
         } else if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
@@ -343,8 +343,7 @@ void ExecutionContext::mark()
         w->withObject->mark();
     } else if (type == Type_CatchContext) {
         CatchContext *c = static_cast<CatchContext *>(this);
-        if (c->exceptionVarName)
-            c->exceptionVarName->mark();
+        c->exceptionVarName->mark();
         c->exceptionValue.mark();
     } else if (type == Type_GlobalContext) {
         GlobalContext *g = static_cast<GlobalContext *>(this);
@@ -362,7 +361,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
                 w->put(name, value);
                 return;
             }
-        } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
+        } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->stringValue()->isEqualTo(name)) {
             static_cast<CatchContext *>(ctx)->exceptionValue = *value;
             return;
         } else {
@@ -423,7 +422,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->stringValue()->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -488,7 +487,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->stringValue()->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -553,7 +552,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->stringValue()->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -579,7 +578,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
             }
             if (f->function && f->function->isNamedExpression()
                 && name->isEqualTo(f->function->name))
-                return Value::fromObject(c->function).asReturnedValue();
+                return c->function->asReturnedValue();
         }
 
         else if (ctx->type == Type_GlobalContext) {

@@ -41,6 +41,7 @@
 
 #include "qv4exception_p.h"
 
+#include <private/qv4scopedvalue_p.h>
 #include <unwind.h>
 #include <cxxabi.h>
 #include <bits/atomic_word.h>
@@ -108,7 +109,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Exception::throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue)
+void Exception::throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue)
 {
     void *rawException = abi::__cxa_allocate_exception(sizeof(QV4::Exception));
     gcc_refcounted_compatible_exception *refCountedException = reinterpret_cast<gcc_refcounted_compatible_exception *>(rawException) - 1;

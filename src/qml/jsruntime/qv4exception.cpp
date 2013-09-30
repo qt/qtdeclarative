@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 
-void Exception::throwException(ExecutionContext *context, const Value &value)
+void Exception::throwException(ExecutionContext *context, const ValueRef value)
 {
     if (context->engine->debugger)
         context->engine->debugger->aboutToThrow(value);
@@ -86,13 +86,13 @@ void Exception::throwException(ExecutionContext *context, const Value &value)
     throwInternal(context, value);
 }
 
-Exception::Exception(ExecutionContext *throwingContext, const Value &exceptionValue)
+Exception::Exception(ExecutionContext *throwingContext, const ValueRef exceptionValue)
     : e(throwingContext->engine)
 {
     e->exceptionValue = exceptionValue;
     this->throwingContext = throwingContext->engine->current;
     accepted = false;
-    if (ErrorObject *error = exceptionValue.asErrorObject())
+    if (ErrorObject *error = exceptionValue->asErrorObject())
         m_stackTrace = error->stackTrace;
     else
         m_stackTrace = throwingContext->engine->stackTrace();
@@ -122,7 +122,7 @@ void Exception::partiallyUnwindContext(ExecutionContext *catchingContext)
 }
 
 #if !defined(V4_CXX_ABI_EXCEPTION)
-void Exception::throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue)
+void Exception::throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue)
 {
     throw Exception(throwingContext, exceptionValue);
 }

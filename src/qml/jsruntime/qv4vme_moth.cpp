@@ -160,7 +160,7 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 
     if (param.isValue()) {
         VMSTATS(paramIsValue);
-        return const_cast<QV4::Value *>(&param.value);
+        return const_cast<QV4::Value *>(&static_cast<const QV4::Value &>(param.value));
     } else if (param.isArgument()) {
         VMSTATS(paramIsArg);
         QV4::ExecutionContext *c = context;

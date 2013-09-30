@@ -2223,8 +2223,8 @@ bool tryOptimizingComparison(Expr *&expr)
     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
         return false;
 
-    QV4::Value l = convertToValue(leftConst);
-    QV4::Value r = convertToValue(rightConst);
+    QV4::Primitive l = convertToValue(leftConst);
+    QV4::Primitive r = convertToValue(rightConst);
 
     switch (b->op) {
     case OpGt:
@@ -2439,8 +2439,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
                         continue;
 
-                    QV4::Value lc = convertToValue(leftConst);
-                    QV4::Value rc = convertToValue(rightConst);
+                    QV4::Primitive lc = convertToValue(leftConst);
+                    QV4::Primitive rc = convertToValue(rightConst);
                     double l = __qmljs_to_number(&lc);
                     double r = __qmljs_to_number(&rc);
 

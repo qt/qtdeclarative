@@ -601,7 +601,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     }
 
     if (attrs->isGeneric())
-        desc->value = Value::emptyValue();
+        desc->value = Primitive::emptyValue();
 }
 
 

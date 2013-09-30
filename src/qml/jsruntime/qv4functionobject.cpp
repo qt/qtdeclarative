@@ -385,11 +385,11 @@ ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
-    QVector<Value> boundArgs;
+    QVector<SafeValue> boundArgs;
     for (uint i = 1; i < ctx->callData->argc; ++i)
         boundArgs += ctx->callData->args[i];
 
-    return ctx->engine->newBoundFunction(ctx->engine->rootContext, target.getPointer(), boundThis, boundArgs)->asReturnedValue();
+    return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
 }
 
 DEFINE_MANAGED_VTABLE(ScriptFunction);
@@ -663,13 +663,13 @@ DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_MANAGED_VTABLE(BoundFunction);
 
-BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
     : FunctionObject(scope, 0)
     , target(target)
-    , boundThis(boundThis)
     , boundArgs(boundArgs)
 {
     vtbl = &static_vtbl;
+    this->boundThis = boundThis;
 
     Scope s(scope);
     ScopedValue protectThis(s, this);

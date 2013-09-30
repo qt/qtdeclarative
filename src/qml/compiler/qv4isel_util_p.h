@@ -63,11 +63,11 @@ inline bool canConvertToUnsignedInteger(double value)
     return uval == value && !(value == 0 && isNegative(value));
 }
 
-inline QV4::Value convertToValue(V4IR::Const *c)
+inline QV4::Primitive convertToValue(V4IR::Const *c)
 {
     switch (c->type) {
     case V4IR::MissingType:
-        return QV4::Value::emptyValue();
+        return QV4::Primitive::emptyValue();
     case V4IR::NullType:
         return QV4::Primitive::nullValue();
     case V4IR::UndefinedType:

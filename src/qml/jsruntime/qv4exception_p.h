@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Q_QML_EXPORT Exception {
-    static void Q_NORETURN throwException(ExecutionContext *throwingContext, const Value &exceptionValue);
+    static void Q_NORETURN throwException(ExecutionContext *throwingContext, const ValueRef exceptionValue);
 
     ~Exception();
 
@@ -66,13 +66,13 @@ struct Q_QML_EXPORT Exception {
 private:
     void *operator new(size_t, void *p) { return p; }
 
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
+    explicit Exception(ExecutionContext *throwingContext, const ValueRef exceptionValue);
 
     ExecutionEngine *e;
     ExecutionContext *throwingContext;
     bool accepted;
     ExecutionEngine::StackTrace m_stackTrace;
-    static void Q_NORETURN throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue);
+    static void Q_NORETURN throwInternal(ExecutionContext *throwingContext, const ValueRef exceptionValue);
 };
 
 } // namespace QV4

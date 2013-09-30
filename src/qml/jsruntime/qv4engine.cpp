@@ -367,9 +367,9 @@ Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *
     return f->asReturned<FunctionObject>();
 }
 
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
 {
-    assert(target);
+    Q_ASSERT(target);
 
     BoundFunction *f = new (memoryManager) BoundFunction(scope, target, boundThis, boundArgs);
     return f->asReturned<BoundFunction>();
@@ -441,7 +441,7 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
 }
 
 
-Returned<DateObject> *ExecutionEngine::newDateObject(const Value &value)
+Returned<DateObject> *ExecutionEngine::newDateObject(const ValueRef value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
     return object->asReturned<DateObject>();

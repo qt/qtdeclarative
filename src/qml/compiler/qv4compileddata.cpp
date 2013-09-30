@@ -81,9 +81,9 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
 
-    runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
+    runtimeRegularExpressions = new QV4::SafeValue[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
-    memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::Value));
+    memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::SafeValue));
     for (int i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
         int flags = 0;
@@ -93,8 +93,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= QQmlJS::V4IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= QQmlJS::V4IR::RegExp::RegExp_Multiline;
-        QV4::RegExpObject *obj = engine->newRegExpObject(data->stringAt(re->stringIndex), flags)->getPointer();
-        runtimeRegularExpressions[i] = QV4::Value::fromObject(obj);
+        runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
     }
 
     if (data->lookupTableSize) {

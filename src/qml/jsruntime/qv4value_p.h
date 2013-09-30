@@ -121,9 +121,9 @@ inline Primitive Primitive::nullValue()
     return v;
 }
 
-inline Value Value::emptyValue()
+inline Primitive Primitive::emptyValue()
 {
-    Value v;
+    Primitive v;
     v.tag = Value::Empty_Type;
     v.uint_32 = 0;
     return v;

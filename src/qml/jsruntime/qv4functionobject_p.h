@@ -225,10 +225,10 @@ struct SimpleScriptFunction: FunctionObject {
 struct BoundFunction: FunctionObject {
     Q_MANAGED
     FunctionObject *target;
-    Value boundThis;
-    QVector<Value> boundArgs;
+    SafeValue boundThis;
+    QVector<SafeValue> boundArgs;
 
-    BoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
+    BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs);
     ~BoundFunction() {}
 
 

@@ -1283,7 +1283,7 @@ void Object::arrayReserve(uint n)
         arrayData = newArrayData;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
-                arrayData[i].value = Value::emptyValue();
+                arrayData[i].value = Primitive::emptyValue();
                 arrayData[i].value = Primitive::fromInt32(i + 1);
             }
         } else {
@@ -1363,7 +1363,7 @@ bool Object::setArrayLength(uint newLen) {
                     } else {
                         arrayAttributes[it - arrayData].clear();
                     }
-                    it->value = Value::emptyValue();
+                    it->value = Primitive::emptyValue();
                 }
             }
             arrayDataLen = newLen;

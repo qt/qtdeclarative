@@ -280,12 +280,12 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     case V4IR::Temp::Formal:
     case V4IR::Temp::ScopedFormal: {
         loadPtr(Address(context, qOffsetOf(CallContext, callData)), reg);
-        offset = sizeof(CallData) + (t->index - 1) * sizeof(Value);
+        offset = sizeof(CallData) + (t->index - 1) * sizeof(SafeValue);
     } break;
     case V4IR::Temp::Local:
     case V4IR::Temp::ScopedLocal: {
         loadPtr(Address(context, qOffsetOf(CallContext, locals)), reg);
-        offset = t->index * sizeof(Value);
+        offset = t->index * sizeof(SafeValue);
     } break;
     case V4IR::Temp::StackSlot: {
         return stackSlotPointer(t);
@@ -351,14 +351,14 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
         storeDouble(FPGpr0, result);
 #endif
     } else if (V4IR::Const *c = source->asConst()) {
-        QV4::Value v = convertToValue(c);
+        QV4::Primitive v = convertToValue(c);
         storeValue(v, result);
     } else {
         Q_UNREACHABLE();
     }
 }
 
-void Assembler::storeValue(QV4::Value value, V4IR::Temp* destination)
+void Assembler::storeValue(QV4::Primitive value, V4IR::Temp* destination)
 {
     Address addr = loadTempAddress(ScratchRegister, destination);
     storeValue(value, addr);
@@ -664,7 +664,7 @@ void InstructionSelection::run(int functionIndex)
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
     _as->loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
-    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
@@ -1189,19 +1189,19 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
         _as->load32(addr, Assembler::ScratchRegister);
         _as->store32((Assembler::RegisterID) registerTemp->index, addr);
         addr.offset += 4;
-        QV4::Value tag;
+        quint32 tag;
         switch (registerTemp->type) {
         case V4IR::BoolType:
-            tag = QV4::Primitive::fromBoolean(false);
+            tag = QV4::Value::_Boolean_Type;
             break;
         case V4IR::SInt32Type:
-            tag = QV4::Primitive::fromInt32(0);
+            tag = QV4::Value::_Integer_Type;
             break;
         default:
-            tag = QV4::Primitive::undefinedValue();
+            tag = QV4::Value::Undefined_Type;
             Q_UNREACHABLE();
         }
-        _as->store32(Assembler::TrustedImm32(tag.tag), addr);
+        _as->store32(Assembler::TrustedImm32(tag), addr);
         _as->move(Assembler::ScratchRegister, (Assembler::RegisterID) registerTemp->index);
     }
 }
@@ -1774,19 +1774,19 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
             } else {
                 _as->zeroExtend32ToPtr((Assembler::RegisterID) t->index,
                                        Assembler::ReturnValueRegister);
-                QV4::Value upper;
+                quint64 tag;
                 switch (t->type) {
                 case V4IR::SInt32Type:
-                    upper = QV4::Primitive::fromInt32(0);
+                    tag = QV4::Value::_Integer_Type;
                     break;
                 case V4IR::BoolType:
-                    upper = QV4::Primitive::fromBoolean(false);
+                    tag = QV4::Value::_Boolean_Type;
                     break;
                 default:
-                    upper = QV4::Primitive::undefinedValue();
+                    tag = QV4::Value::Undefined_Type;
                     Q_UNREACHABLE();
                 }
-                _as->or64(Assembler::TrustedImm64(((int64_t) upper.tag) << 32),
+                _as->or64(Assembler::TrustedImm64(tag << 32),
                           Assembler::ReturnValueRegister);
             }
         } else {
@@ -1794,7 +1794,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         }
 #endif
     } else if (V4IR::Const *c = s->expr->asConst()) {
-        QV4::Value retVal = convertToValue(c);
+        QV4::Primitive retVal = convertToValue(c);
 #if CPU(X86)
         _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
         _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
@@ -1810,7 +1810,7 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     }
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
+    _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);
     _as->loadPtr(Address(Assembler::ContextRegister, qOffsetOf(ExecutionContext, engine)), Assembler::ScratchRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
@@ -1847,7 +1847,7 @@ int InstructionSelection::prepareCallData(V4IR::ExprList* args, V4IR::Expr *this
     }
 
     Pointer p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, tag));
-    _as->store32(Assembler::TrustedImm32(QV4::Value::Integer_Type), p);
+    _as->store32(Assembler::TrustedImm32(QV4::Value::_Integer_Type), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, argc));
     _as->store32(Assembler::TrustedImm32(argc), p);
     p = _as->stackLayout().callDataAddress(qOffsetOf(CallData, thisObject));

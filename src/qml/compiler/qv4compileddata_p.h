@@ -467,7 +467,7 @@ struct Q_QML_EXPORT CompilationUnit
 
     QV4::SafeString *runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
-    QV4::Value *runtimeRegularExpressions;
+    QV4::SafeValue *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
 //    QVector<QV4::Function *> runtimeFunctionsSortedByAddress;

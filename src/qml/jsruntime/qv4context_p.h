@@ -112,10 +112,10 @@ struct Q_QML_EXPORT ExecutionContext
         interpreterInstructionPointer = 0;
     }
 
-    CallContext *newCallContext(void *stackSpace, Value *locals, FunctionObject *f, CallData *callData);
+    CallContext *newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *f, CallData *callData);
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
-    CatchContext *newCatchContext(String* exceptionVarName, const QV4::Value &exceptionValue);
+    CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
     CallContext *newQmlContext(FunctionObject *f, ObjectRef qml);
 
     String * const *formals() const;
@@ -163,7 +163,7 @@ struct CallContext : public SimpleCallContext
     void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
     bool needsOwnArguments() const;
 
-    Value *locals;
+    SafeValue *locals;
     Object *activation;
 };
 
@@ -176,10 +176,10 @@ struct GlobalContext : public ExecutionContext
 
 struct CatchContext : public ExecutionContext
 {
-    void initCatchContext(ExecutionContext *p, String *exceptionVarName, const QV4::Value &exceptionValue);
+    void initCatchContext(ExecutionContext *p, const StringRef exceptionVarName, const ValueRef exceptionValue);
 
-    String *exceptionVarName;
-    Value exceptionValue;
+    SafeString exceptionVarName;
+    SafeValue exceptionValue;
 };
 
 struct WithContext : public ExecutionContext
