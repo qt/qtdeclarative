@@ -408,8 +408,8 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
         return false;
     }
 
-    import->location.line = node->importIdToken.startLine;
-    import->location.column = node->importIdToken.startColumn;
+    import->location.line = node->importToken.startLine;
+    import->location.column = node->importToken.startColumn;
 
     import->uriIndex = registerString(uri);
 
