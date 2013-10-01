@@ -1503,11 +1503,19 @@ protected:
         _ty = run(s->d->incoming[0]);
         for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
             TypingResult ty = run(s->d->incoming[i]);
+            if (!ty.fullyTyped && _ty.fullyTyped) {
+                // When one of the temps not fully typed, we already know that we cannot completely type this node.
+                // So, pick the type we calculated upto this point, and wait until the unknown one will be typed.
+                // At that point, this statement will be re-scheduled, and then we can fully type this node.
+                _ty.fullyTyped = false;
+                break;
+            }
             _ty.type |= ty.type;
             _ty.fullyTyped &= ty.fullyTyped;
         }
 
         switch (_ty.type) {
+        case UnknownType:
         case UndefinedType:
         case NullType:
         case BoolType:
