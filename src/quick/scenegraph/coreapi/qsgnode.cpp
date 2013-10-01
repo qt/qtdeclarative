@@ -1323,8 +1323,8 @@ void QSGOpacityNode::setOpacity(qreal opacity)
         return;
     DirtyState dirtyState = DirtyOpacity;
 
-    if ((m_opacity < OPACITY_THRESHOLD && opacity > OPACITY_THRESHOLD)
-        || (m_opacity > OPACITY_THRESHOLD && opacity < OPACITY_THRESHOLD))
+    if ((m_opacity < OPACITY_THRESHOLD && opacity >= OPACITY_THRESHOLD)     // blocked to unblocked
+        || (m_opacity >= OPACITY_THRESHOLD && opacity < OPACITY_THRESHOLD)) // unblocked to blocked
         dirtyState |= DirtySubtreeBlocked;
 
     m_opacity = opacity;
