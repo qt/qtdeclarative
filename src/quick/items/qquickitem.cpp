@@ -732,7 +732,7 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {
-            currentItem->setFocus(true);
+            currentItem->forceActiveFocus(Qt::OtherFocusReason);
         } else {
             QObject *attached =
                 qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(currentItem, false);
