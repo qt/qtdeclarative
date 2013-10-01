@@ -133,7 +133,7 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, ObjectRef o)
 
 ReturnedValue ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 {
-    bool isArray = ctx->callData->argc ? ctx->callData->args[0].asArrayObject() : false;
+    bool isArray = ctx->callData->argc && ctx->callData->args[0].asArrayObject();
     return Encode(isArray);
 }
 
