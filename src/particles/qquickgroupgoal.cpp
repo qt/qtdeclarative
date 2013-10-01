@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 */
 /*!
-    \qmlproperty string QtQuick.Particles2::GroupGoal::goalState
+    \qmlproperty string QtQuick.Particles::GroupGoal::goalState
 
     The name of the group which the affected particles should move to.
 
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     on that path for their respective durations.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::GroupGoal::jump
+    \qmlproperty bool QtQuick.Particles::GroupGoal::jump
 
     If true, affected particles will jump directly to the target group instead of taking the
     the shortest valid path to get there. They will also not finish their current state,

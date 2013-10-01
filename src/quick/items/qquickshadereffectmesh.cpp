@@ -161,7 +161,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
 }
 
 /*!
-    \qmlproperty size QtQuick2::GridMesh::resolution
+    \qmlproperty size QtQuick::GridMesh::resolution
 
     This property holds the grid resolution. The resolution's width and height
     specify the number of cells or spacings between vertices horizontally and

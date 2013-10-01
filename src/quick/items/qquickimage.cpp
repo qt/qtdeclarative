@@ -176,7 +176,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Image::fillMode
+    \qmlproperty enumeration QtQuick::Image::fillMode
 
     Set this property to define what happens when the source image has a different size
     than the item.
@@ -289,8 +289,8 @@ void QQuickImage::setFillMode(FillMode mode)
 
 /*!
 
-    \qmlproperty real QtQuick2::Image::paintedWidth
-    \qmlproperty real QtQuick2::Image::paintedHeight
+    \qmlproperty real QtQuick::Image::paintedWidth
+    \qmlproperty real QtQuick::Image::paintedHeight
 
     These properties hold the size of the image that is actually painted.
     In most cases it is the same as \c width and \c height, but when using a
@@ -311,7 +311,7 @@ qreal QQuickImage::paintedHeight() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Image::status
+    \qmlproperty enumeration QtQuick::Image::status
 
     This property holds the status of image loading.  It can be one of:
     \list
@@ -348,7 +348,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty real QtQuick2::Image::progress
+    \qmlproperty real QtQuick::Image::progress
 
     This property holds the progress of image loading, from 0.0 (nothing loaded)
     to 1.0 (finished).
@@ -357,7 +357,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Image::smooth
+    \qmlproperty bool QtQuick::Image::smooth
 
     This property holds whether the image is smoothly filtered when scaled or
     transformed.  Smooth filtering gives better visual quality, but it may be slower
@@ -368,7 +368,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty QSize QtQuick2::Image::sourceSize
+    \qmlproperty QSize QtQuick::Image::sourceSize
 
     This property holds the actual width and height of the loaded image.
 
@@ -419,7 +419,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty url QtQuick2::Image::source
+    \qmlproperty url QtQuick::Image::source
 
     Image can handle any image format supported by Qt, loaded from any URL scheme supported by Qt.
 
@@ -429,7 +429,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Image::asynchronous
+    \qmlproperty bool QtQuick::Image::asynchronous
 
     Specifies that images on the local filesystem should be loaded
     asynchronously in a separate thread.  The default value is
@@ -444,7 +444,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Image::cache
+    \qmlproperty bool QtQuick::Image::cache
 
     Specifies whether the image should be cached. The default value is
     true. Setting \a cache to false is useful when dealing with large images,
@@ -452,7 +452,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Image::mirror
+    \qmlproperty bool QtQuick::Image::mirror
 
     This property holds whether the image should be horizontally inverted
     (effectively displaying a mirrored image).
@@ -461,8 +461,8 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty enumeration QtQuick2::Image::horizontalAlignment
-    \qmlproperty enumeration QtQuick2::Image::verticalAlignment
+    \qmlproperty enumeration QtQuick::Image::horizontalAlignment
+    \qmlproperty enumeration QtQuick::Image::verticalAlignment
 
     Sets the horizontal and vertical alignment of the image. By default, the image is center aligned.
 

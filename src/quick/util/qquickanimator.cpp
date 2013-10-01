@@ -90,7 +90,7 @@ QQuickAnimator::QQuickAnimator(QObject *parent)
 }
 
 /*!
-   \qmlproperty QtQuick2::Item QtQuick2::Animator::target
+   \qmlproperty QtQuick::Item QtQuick::Animator::target
 
    This property holds the target item of the animator.
 
@@ -113,7 +113,7 @@ QQuickItem *QQuickAnimator::targetItem() const
 }
 
 /*!
-    \qmlproperty int QtQuick2::Animator::duration
+    \qmlproperty int QtQuick::Animator::duration
     This property holds the duration of the animation in milliseconds.
 
     The default value is 250.
@@ -134,12 +134,12 @@ int QQuickAnimator::duration() const
 }
 
 /*!
-    \qmlpropertygroup QtQuick2::Animator::easing
-    \qmlproperty enumeration QtQuick2::Animator::easing.type
-    \qmlproperty real QtQuick2::Animator::easing.amplitude
-    \qmlproperty real QtQuick2::Animator::easing.overshoot
-    \qmlproperty real QtQuick2::Animator::easing.period
-    \qmlproperty list<real> QtQuick2::Animator::easing.bezierCurve
+    \qmlpropertygroup QtQuick::Animator::easing
+    \qmlproperty enumeration QtQuick::Animator::easing.type
+    \qmlproperty real QtQuick::Animator::easing.amplitude
+    \qmlproperty real QtQuick::Animator::easing.overshoot
+    \qmlproperty real QtQuick::Animator::easing.period
+    \qmlproperty list<real> QtQuick::Animator::easing.bezierCurve
     \include qquickanimation.cpp propertyanimation.easing
 */
 
@@ -159,7 +159,7 @@ QEasingCurve QQuickAnimator::easing() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::Animator::to
+    \qmlproperty real QtQuick::Animator::to
     This property holds the end value for the animation.
 
     If the Animator is defined within a \l Transition or \l Behavior,
@@ -185,7 +185,7 @@ qreal QQuickAnimator::to() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::Animator::from
+    \qmlproperty real QtQuick::Animator::from
     This property holds the starting value for the animation.
 
     If the Animator is defined within a \l Transition or \l Behavior,
@@ -456,7 +456,7 @@ QQuickAnimatorJob *QQuickRotationAnimator::createJob() const {
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::RotationAnimator::direction
+    \qmlproperty enumeration QtQuick::RotationAnimator::direction
     This property holds the direction of the rotation.
 
     Possible values are:
@@ -521,7 +521,7 @@ QQuickUniformAnimator::QQuickUniformAnimator(QObject *parent)
 }
 
 /*!
-   \qmlproperty string QtQuick2::UniformAnimator::uniform
+   \qmlproperty string QtQuick::UniformAnimator::uniform
    This property holds the name of the uniform to animate.
 
    The value of the uniform must correspond to both a property

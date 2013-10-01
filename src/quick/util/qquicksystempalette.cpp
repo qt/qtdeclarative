@@ -95,7 +95,7 @@ QQuickSystemPalette::~QQuickSystemPalette()
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::window
+    \qmlproperty color QtQuick::SystemPalette::window
     The window (general background) color of the current color group.
 
     \sa QPalette::ColorRole
@@ -107,7 +107,7 @@ QColor QQuickSystemPalette::window() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::windowText
+    \qmlproperty color QtQuick::SystemPalette::windowText
     The window text (general foreground) color of the current color group.
 
     \sa QPalette::ColorRole
@@ -119,7 +119,7 @@ QColor QQuickSystemPalette::windowText() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::base
+    \qmlproperty color QtQuick::SystemPalette::base
     The base color of the current color group.
 
     \sa QPalette::ColorRole
@@ -131,7 +131,7 @@ QColor QQuickSystemPalette::base() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::text
+    \qmlproperty color QtQuick::SystemPalette::text
     The text color of the current color group.
 
     \sa QPalette::ColorRole
@@ -143,7 +143,7 @@ QColor QQuickSystemPalette::text() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::alternateBase
+    \qmlproperty color QtQuick::SystemPalette::alternateBase
     The alternate base color of the current color group.
 
     \sa QPalette::ColorRole
@@ -155,7 +155,7 @@ QColor QQuickSystemPalette::alternateBase() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::button
+    \qmlproperty color QtQuick::SystemPalette::button
     The button color of the current color group.
 
     \sa QPalette::ColorRole
@@ -167,7 +167,7 @@ QColor QQuickSystemPalette::button() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::buttonText
+    \qmlproperty color QtQuick::SystemPalette::buttonText
     The button text foreground color of the current color group.
 
     \sa QPalette::ColorRole
@@ -179,7 +179,7 @@ QColor QQuickSystemPalette::buttonText() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::light
+    \qmlproperty color QtQuick::SystemPalette::light
     The light color of the current color group.
 
     \sa QPalette::ColorRole
@@ -191,7 +191,7 @@ QColor QQuickSystemPalette::light() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::midlight
+    \qmlproperty color QtQuick::SystemPalette::midlight
     The midlight color of the current color group.
 
     \sa QPalette::ColorRole
@@ -203,7 +203,7 @@ QColor QQuickSystemPalette::midlight() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::dark
+    \qmlproperty color QtQuick::SystemPalette::dark
     The dark color of the current color group.
 
     \sa QPalette::ColorRole
@@ -215,7 +215,7 @@ QColor QQuickSystemPalette::dark() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::mid
+    \qmlproperty color QtQuick::SystemPalette::mid
     The mid color of the current color group.
 
     \sa QPalette::ColorRole
@@ -227,7 +227,7 @@ QColor QQuickSystemPalette::mid() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::shadow
+    \qmlproperty color QtQuick::SystemPalette::shadow
     The shadow color of the current color group.
 
     \sa QPalette::ColorRole
@@ -239,7 +239,7 @@ QColor QQuickSystemPalette::shadow() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::highlight
+    \qmlproperty color QtQuick::SystemPalette::highlight
     The highlight color of the current color group.
 
     \sa QPalette::ColorRole
@@ -251,7 +251,7 @@ QColor QQuickSystemPalette::highlight() const
 }
 
 /*!
-    \qmlproperty color QtQuick2::SystemPalette::highlightedText
+    \qmlproperty color QtQuick::SystemPalette::highlightedText
     The highlighted text color of the current color group.
 
     \sa QPalette::ColorRole
@@ -263,7 +263,7 @@ QColor QQuickSystemPalette::highlightedText() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::SystemPalette::colorGroup
+    \qmlproperty enumeration QtQuick::SystemPalette::colorGroup
 
     The color group of the palette. This can be one of:
 

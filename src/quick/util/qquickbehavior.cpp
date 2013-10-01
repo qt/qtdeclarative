@@ -115,7 +115,7 @@ QQuickBehavior::~QQuickBehavior()
 }
 
 /*!
-    \qmlproperty Animation QtQuick2::Behavior::animation
+    \qmlproperty Animation QtQuick::Behavior::animation
     \default
 
     This property holds the animation to run when the behavior is triggered.
@@ -150,7 +150,7 @@ void QQuickBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbst
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Behavior::enabled
+    \qmlproperty bool QtQuick::Behavior::enabled
 
     This property holds whether the behavior will be triggered when the tracked
     property changes value.

@@ -574,14 +574,14 @@ QQuickPathView::~QQuickPathView()
 }
 
 /*!
-    \qmlattachedproperty PathView QtQuick2::PathView::view
+    \qmlattachedproperty PathView QtQuick::PathView::view
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate.
 */
 
 /*!
-    \qmlattachedproperty bool QtQuick2::PathView::onPath
+    \qmlattachedproperty bool QtQuick::PathView::onPath
     This attached property holds whether the item is currently on the path.
 
     If a pathItemCount has been set, it is possible that some items may
@@ -601,7 +601,7 @@ QQuickPathView::~QQuickPathView()
 */
 
 /*!
-    \qmlattachedproperty bool QtQuick2::PathView::isCurrentItem
+    \qmlattachedproperty bool QtQuick::PathView::isCurrentItem
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
@@ -612,7 +612,7 @@ QQuickPathView::~QQuickPathView()
 */
 
 /*!
-    \qmlproperty model QtQuick2::PathView::model
+    \qmlproperty model QtQuick::PathView::model
     This property holds the model providing data for the view.
 
     The model provides a set of data that is used to create the items for the view.
@@ -692,7 +692,7 @@ void QQuickPathView::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int QtQuick2::PathView::count
+    \qmlproperty int QtQuick::PathView::count
     This property holds the number of items in the model.
 */
 int QQuickPathView::count() const
@@ -702,7 +702,7 @@ int QQuickPathView::count() const
 }
 
 /*!
-    \qmlproperty Path QtQuick2::PathView::path
+    \qmlproperty Path QtQuick::PathView::path
     This property holds the path used to lay out the items.
     For more information see the \l Path documentation.
 */
@@ -735,7 +735,7 @@ void QQuickPathView::setPath(QQuickPath *path)
 }
 
 /*!
-    \qmlproperty int QtQuick2::PathView::currentIndex
+    \qmlproperty int QtQuick::PathView::currentIndex
     This property holds the index of the current item.
 */
 int QQuickPathView::currentIndex() const
@@ -784,7 +784,7 @@ void QQuickPathView::setCurrentIndex(int idx)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::PathView::currentItem
+    \qmlproperty Item QtQuick::PathView::currentItem
     This property holds the current item in the view.
 */
 QQuickItem *QQuickPathView::currentItem() const
@@ -794,7 +794,7 @@ QQuickItem *QQuickPathView::currentItem() const
 }
 
 /*!
-    \qmlmethod QtQuick2::PathView::incrementCurrentIndex()
+    \qmlmethod QtQuick::PathView::incrementCurrentIndex()
 
     Increments the current index.
 
@@ -808,7 +808,7 @@ void QQuickPathView::incrementCurrentIndex()
 }
 
 /*!
-    \qmlmethod QtQuick2::PathView::decrementCurrentIndex()
+    \qmlmethod QtQuick::PathView::decrementCurrentIndex()
 
     Decrements the current index.
 
@@ -822,7 +822,7 @@ void QQuickPathView::decrementCurrentIndex()
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathView::offset
+    \qmlproperty real QtQuick::PathView::offset
 
     The offset specifies how far along the path the items are from their initial positions.
     This is a real number that ranges from 0.0 to the count of items in the model.
@@ -863,7 +863,7 @@ void QQuickPathViewPrivate::setAdjustedOffset(qreal o)
 }
 
 /*!
-    \qmlproperty Component QtQuick2::PathView::highlight
+    \qmlproperty Component QtQuick::PathView::highlight
     This property holds the component to use as the highlight.
 
     An instance of the highlight component will be created for each view.
@@ -904,7 +904,7 @@ void QQuickPathView::setHighlight(QQmlComponent *highlight)
 }
 
 /*!
-  \qmlproperty Item QtQuick2::PathView::highlightItem
+  \qmlproperty Item QtQuick::PathView::highlightItem
 
   \c highlightItem holds the highlight item, which was created
   from the \l highlight component.
@@ -917,9 +917,9 @@ QQuickItem *QQuickPathView::highlightItem()
     return d->highlightItem;
 }
 /*!
-    \qmlproperty real QtQuick2::PathView::preferredHighlightBegin
-    \qmlproperty real QtQuick2::PathView::preferredHighlightEnd
-    \qmlproperty enumeration QtQuick2::PathView::highlightRangeMode
+    \qmlproperty real QtQuick::PathView::preferredHighlightBegin
+    \qmlproperty real QtQuick::PathView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick::PathView::highlightRangeMode
 
     These properties set the preferred range of the highlight (current item)
     within the view. The preferred values must be in the range 0.0-1.0.
@@ -1011,7 +1011,7 @@ void QQuickPathView::setHighlightRangeMode(HighlightRangeMode mode)
 }
 
 /*!
-    \qmlproperty int QtQuick2::PathView::highlightMoveDuration
+    \qmlproperty int QtQuick::PathView::highlightMoveDuration
     This property holds the move animation duration of the highlight delegate.
 
     If the highlightRangeMode is StrictlyEnforceRange then this property
@@ -1035,7 +1035,7 @@ void QQuickPathView::setHighlightMoveDuration(int duration)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathView::dragMargin
+    \qmlproperty real QtQuick::PathView::dragMargin
     This property holds the maximum distance from the path that initiate mouse dragging.
 
     By default the path can only be dragged by clicking on an item.  If
@@ -1058,7 +1058,7 @@ void QQuickPathView::setDragMargin(qreal dragMargin)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathView::flickDeceleration
+    \qmlproperty real QtQuick::PathView::flickDeceleration
     This property holds the rate at which a flick will decelerate.
 
     The default is 100.
@@ -1079,7 +1079,7 @@ void QQuickPathView::setFlickDeceleration(qreal dec)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathView::maximumFlickVelocity
+    \qmlproperty real QtQuick::PathView::maximumFlickVelocity
     This property holds the approximate maximum velocity that the user can flick the view in pixels/second.
 
     The default value is platform dependent.
@@ -1101,7 +1101,7 @@ void QQuickPathView::setMaximumFlickVelocity(qreal vel)
 
 
 /*!
-    \qmlproperty bool QtQuick2::PathView::interactive
+    \qmlproperty bool QtQuick::PathView::interactive
 
     A user cannot drag or flick a PathView that is not interactive.
 
@@ -1126,7 +1126,7 @@ void QQuickPathView::setInteractive(bool interactive)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PathView::moving
+    \qmlproperty bool QtQuick::PathView::moving
 
     This property holds whether the view is currently moving
     due to the user either dragging or flicking the view.
@@ -1138,7 +1138,7 @@ bool QQuickPathView::isMoving() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PathView::flicking
+    \qmlproperty bool QtQuick::PathView::flicking
 
     This property holds whether the view is currently moving
     due to the user flicking the view.
@@ -1150,7 +1150,7 @@ bool QQuickPathView::isFlicking() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PathView::dragging
+    \qmlproperty bool QtQuick::PathView::dragging
 
     This property holds whether the view is currently moving
     due to the user dragging the view.
@@ -1162,14 +1162,14 @@ bool QQuickPathView::isDragging() const
 }
 
 /*!
-    \qmlsignal QtQuick2::PathView::onMovementStarted()
+    \qmlsignal QtQuick::PathView::onMovementStarted()
 
     This handler is called when the view begins moving due to user
     interaction.
 */
 
 /*!
-    \qmlsignal QtQuick2::PathView::onMovementEnded()
+    \qmlsignal QtQuick::PathView::onMovementEnded()
 
     This handler is called when the view stops moving due to user
     interaction.  If a flick was generated, this handler will
@@ -1179,7 +1179,7 @@ bool QQuickPathView::isDragging() const
 */
 
 /*!
-    \qmlsignal QtQuick2::PathView::onFlickStarted()
+    \qmlsignal QtQuick::PathView::onFlickStarted()
 
     This handler is called when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
@@ -1187,20 +1187,20 @@ bool QQuickPathView::isDragging() const
 */
 
 /*!
-    \qmlsignal QtQuick2::PathView::onFlickEnded()
+    \qmlsignal QtQuick::PathView::onFlickEnded()
 
     This handler is called when the view stops moving due to a flick.
 */
 
 /*!
-    \qmlsignal QtQuick2::PathView::onDragStarted()
+    \qmlsignal QtQuick::PathView::onDragStarted()
 
     This handler is called when the view starts to be dragged due to user
     interaction.
 */
 
 /*!
-    \qmlsignal QtQuick2::PathView::onDragEnded()
+    \qmlsignal QtQuick::PathView::onDragEnded()
 
     This handler is called when the user stops dragging the view.
 
@@ -1209,7 +1209,7 @@ bool QQuickPathView::isDragging() const
 */
 
 /*!
-    \qmlproperty Component QtQuick2::PathView::delegate
+    \qmlproperty Component QtQuick::PathView::delegate
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -1259,7 +1259,7 @@ void QQuickPathView::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-  \qmlproperty int QtQuick2::PathView::pathItemCount
+  \qmlproperty int QtQuick::PathView::pathItemCount
   This property holds the number of items visible on the path at any one time.
 
   Setting pathItemCount to undefined will show all items on the path.
@@ -1298,7 +1298,7 @@ void QQuickPathView::resetPathItemCount()
 }
 
 /*!
-    \qmlproperty int QtQuick2::PathView::cacheItemCount
+    \qmlproperty int QtQuick::PathView::cacheItemCount
     This property holds the maximum number of items to cache off the path.
 
     For example, a PathView with a model containing 20 items, a pathItemCount
@@ -1335,7 +1335,7 @@ void QQuickPathView::setCacheItemCount(int i)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::PathView::snapMode
+    \qmlproperty enumeration QtQuick::PathView::snapMode
 
     This property determines how the items will settle following a drag or flick.
     The possible values are:
@@ -1370,7 +1370,7 @@ void QQuickPathView::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlmethod QtQuick2::PathView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod QtQuick::PathView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:
@@ -1458,7 +1458,7 @@ void QQuickPathView::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod int QtQuick2::PathView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::PathView::indexAt(int x, int y)
 
     Returns the index of the item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, -1 is returned.
@@ -1482,7 +1482,7 @@ int QQuickPathView::indexAt(qreal x, qreal y) const
 }
 
 /*!
-    \qmlmethod Item QtQuick2::PathView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::PathView::itemAt(int x, int y)
 
     Returns the item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, null is returned.

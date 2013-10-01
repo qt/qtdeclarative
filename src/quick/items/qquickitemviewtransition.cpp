@@ -856,7 +856,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
   */
 
 /*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::index
+    \qmlattachedproperty list QtQuick::ViewTransition::index
 
     This attached property holds the index of the item that is being
     transitioned.
@@ -866,7 +866,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 
 /*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::item
+    \qmlattachedproperty list QtQuick::ViewTransition::item
 
     This attached property holds the item that is being transitioned.
 
@@ -875,7 +875,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 
 /*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::destination
+    \qmlattachedproperty list QtQuick::ViewTransition::destination
 
     This attached property holds the final destination position for the transitioned
     item within the view.
@@ -884,7 +884,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 
 /*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::targetIndexes
+    \qmlattachedproperty list QtQuick::ViewTransition::targetIndexes
 
     This attached property holds a list of the indexes of the items in view
     that are the target of the relevant operation.
@@ -901,11 +901,11 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \note The targetIndexes list only contains the indexes of items that are actually
     in view, or will be in the view once the relevant operation completes.
 
-    \sa QtQuick2::ViewTransition::targetIndexes
+    \sa QtQuick::ViewTransition::targetIndexes
 */
 
 /*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::targetItems
+    \qmlattachedproperty list QtQuick::ViewTransition::targetItems
 
     This attached property holds the list of items in view that are the
     target of the relevant operation.
@@ -928,7 +928,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     they should not be used by ScriptAction objects in the Transition, which are
     not evaluated until the transition is run.
 
-    \sa QtQuick2::ViewTransition::targetIndexes
+    \sa QtQuick::ViewTransition::targetIndexes
 */
 QQmlListProperty<QObject> QQuickViewTransitionAttached::targetItems()
 {

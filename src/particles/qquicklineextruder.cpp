@@ -53,7 +53,7 @@
 */
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::LineShape::mirrored
+    \qmlproperty bool QtQuick.Particles::LineShape::mirrored
 
     By default, the line goes from (0,0) to (width, height) of the item that
     this shape is being applied to.

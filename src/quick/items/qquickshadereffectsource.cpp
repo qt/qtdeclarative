@@ -619,7 +619,7 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::ShaderEffectSource::wrapMode
+    \qmlproperty enumeration QtQuick::ShaderEffectSource::wrapMode
 
     This property defines the OpenGL wrap modes associated with the texture.
     Modifying this property makes most sense when the item is used as a
@@ -651,7 +651,7 @@ void QQuickShaderEffectSource::setWrapMode(WrapMode mode)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ShaderEffectSource::sourceItem
+    \qmlproperty Item QtQuick::ShaderEffectSource::sourceItem
 
     This property holds the item to be rendered into the texture.
     Setting this to null while \l live is true, will release the texture
@@ -712,7 +712,7 @@ void QQuickShaderEffectSource::sourceItemDestroyed(QObject *item)
 
 
 /*!
-    \qmlproperty rect QtQuick2::ShaderEffectSource::sourceRect
+    \qmlproperty rect QtQuick::ShaderEffectSource::sourceRect
 
     This property defines which rectangular area of the \l sourceItem to
     render into the texture. The source rectangle can be larger than
@@ -735,7 +735,7 @@ void QQuickShaderEffectSource::setSourceRect(const QRectF &rect)
 }
 
 /*!
-    \qmlproperty size QtQuick2::ShaderEffectSource::textureSize
+    \qmlproperty size QtQuick::ShaderEffectSource::textureSize
 
     This property holds the requested size of the texture. If it is empty,
     which is the default, the size of the source rectangle is used.
@@ -760,7 +760,7 @@ void QQuickShaderEffectSource::setTextureSize(const QSize &size)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::ShaderEffectSource::format
+    \qmlproperty enumeration QtQuick::ShaderEffectSource::format
 
     This property defines the internal OpenGL format of the texture.
     Modifying this property makes most sense when the item is used as a
@@ -791,7 +791,7 @@ void QQuickShaderEffectSource::setFormat(QQuickShaderEffectSource::Format format
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ShaderEffectSource::live
+    \qmlproperty bool QtQuick::ShaderEffectSource::live
 
     If this property is true, the texture is updated whenever the
     \l sourceItem updates. Otherwise, it will be a frozen image, even if
@@ -813,7 +813,7 @@ void QQuickShaderEffectSource::setLive(bool live)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ShaderEffectSource::hideSource
+    \qmlproperty bool QtQuick::ShaderEffectSource::hideSource
 
     If this property is true, the \l sourceItem is hidden, though it will still
     be rendered into the texture. As opposed to hiding the \l sourceItem by
@@ -842,7 +842,7 @@ void QQuickShaderEffectSource::setHideSource(bool hide)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ShaderEffectSource::mipmap
+    \qmlproperty bool QtQuick::ShaderEffectSource::mipmap
 
     If this property is true, mipmaps are generated for the texture.
 
@@ -865,7 +865,7 @@ void QQuickShaderEffectSource::setMipmap(bool enabled)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ShaderEffectSource::recursive
+    \qmlproperty bool QtQuick::ShaderEffectSource::recursive
 
     Set this property to true if the ShaderEffectSource has a dependency on
     itself. ShaderEffectSources form a dependency chain, where one
@@ -896,7 +896,7 @@ void QQuickShaderEffectSource::setRecursive(bool enabled)
 }
 
 /*!
-    \qmlmethod QtQuick2::ShaderEffectSource::scheduleUpdate()
+    \qmlmethod QtQuick::ShaderEffectSource::scheduleUpdate()
 
     Schedules a re-rendering of the texture for the next frame.
     Use this to update the texture when \l live is false.

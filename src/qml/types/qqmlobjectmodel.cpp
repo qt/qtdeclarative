@@ -181,7 +181,7 @@ public:
 
     For full details about the type, see the \l ObjectModel documentation.
 
-    \sa {QtQml.Models2::ObjectModel}
+    \sa {QtQml.Models::ObjectModel}
 */
 
 QQmlObjectModel::QQmlObjectModel(QObject *parent)
@@ -190,7 +190,7 @@ QQmlObjectModel::QQmlObjectModel(QObject *parent)
 }
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::ObjectModel::index
+    \qmlattachedproperty int QtQml.Models::ObjectModel::index
     This attached property holds the index of this delegate's item within the model.
 
     It is attached to each instance of the delegate.
@@ -208,7 +208,7 @@ QQmlListProperty<QObject> QQmlObjectModel::children()
 }
 
 /*!
-    \qmlproperty int QtQml.Models2::ObjectModel::count
+    \qmlproperty int QtQml.Models::ObjectModel::count
 
     The number of items in the model.  This property is readonly.
 */

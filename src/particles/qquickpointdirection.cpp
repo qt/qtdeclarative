@@ -56,16 +56,16 @@ QT_BEGIN_NAMESPACE
     as well as varying the parameters by x or y component.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::PointDirection::x
+    \qmlproperty real QtQuick.Particles::PointDirection::x
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::PointDirection::y
+    \qmlproperty real QtQuick.Particles::PointDirection::y
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::PointDirection::xVariation
+    \qmlproperty real QtQuick.Particles::PointDirection::xVariation
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::PointDirection::yVariation
+    \qmlproperty real QtQuick.Particles::PointDirection::yVariation
 */
 
 QQuickPointDirection::QQuickPointDirection(QObject *parent) :

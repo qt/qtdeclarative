@@ -98,7 +98,7 @@ QQuickParentAnimation::~QQuickParentAnimation()
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentAnimation::target
+    \qmlproperty Item QtQuick::ParentAnimation::target
     The item to reparent.
 
     When used in a transition, if no target is specified, all
@@ -121,7 +121,7 @@ void QQuickParentAnimation::setTargetObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentAnimation::newParent
+    \qmlproperty Item QtQuick::ParentAnimation::newParent
     The new parent to animate to.
 
     If the ParentAnimation is defined within a \l Transition,
@@ -145,7 +145,7 @@ void QQuickParentAnimation::setNewParent(QQuickItem *newParent)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentAnimation::via
+    \qmlproperty Item QtQuick::ParentAnimation::via
     The item to reparent via. This provides a way to do an unclipped animation
     when both the old parent and new parent are clipped.
 
@@ -447,7 +447,7 @@ QQuickAnchorAnimation::~QQuickAnchorAnimation()
 }
 
 /*!
-    \qmlproperty list<Item> QtQuick2::AnchorAnimation::targets
+    \qmlproperty list<Item> QtQuick::AnchorAnimation::targets
     The items to reanchor.
 
     If no targets are specified all AnchorChanges will be
@@ -460,7 +460,7 @@ QQmlListProperty<QQuickItem> QQuickAnchorAnimation::targets()
 }
 
 /*!
-    \qmlproperty int QtQuick2::AnchorAnimation::duration
+    \qmlproperty int QtQuick::AnchorAnimation::duration
     This property holds the duration of the animation, in milliseconds.
 
     The default value is 250.
@@ -486,10 +486,10 @@ void QQuickAnchorAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::AnchorAnimation::easing.type
-    \qmlproperty real QtQuick2::AnchorAnimation::easing.amplitude
-    \qmlproperty real QtQuick2::AnchorAnimation::easing.overshoot
-    \qmlproperty real QtQuick2::AnchorAnimation::easing.period
+    \qmlproperty enumeration QtQuick::AnchorAnimation::easing.type
+    \qmlproperty real QtQuick::AnchorAnimation::easing.amplitude
+    \qmlproperty real QtQuick::AnchorAnimation::easing.overshoot
+    \qmlproperty real QtQuick::AnchorAnimation::easing.period
     \brief Specifies the easing curve used for the animation
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -596,7 +596,7 @@ QQuickPathAnimation::~QQuickPathAnimation()
 }
 
 /*!
-    \qmlproperty int QtQuick2::PathAnimation::duration
+    \qmlproperty int QtQuick::PathAnimation::duration
     This property holds the duration of the animation, in milliseconds.
 
     The default value is 250.
@@ -622,11 +622,11 @@ void QQuickPathAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::PathAnimation::easing.type
-    \qmlproperty real QtQuick2::PathAnimation::easing.amplitude
-    \qmlproperty list<real> QtQuick2::PathAnimation::easing.bezierCurve
-    \qmlproperty real QtQuick2::PathAnimation::easing.overshoot
-    \qmlproperty real QtQuick2::PathAnimation::easing.period
+    \qmlproperty enumeration QtQuick::PathAnimation::easing.type
+    \qmlproperty real QtQuick::PathAnimation::easing.amplitude
+    \qmlproperty list<real> QtQuick::PathAnimation::easing.bezierCurve
+    \qmlproperty real QtQuick::PathAnimation::easing.overshoot
+    \qmlproperty real QtQuick::PathAnimation::easing.period
     \brief the easing curve used for the animation.
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -652,7 +652,7 @@ void QQuickPathAnimation::setEasing(const QEasingCurve &e)
 }
 
 /*!
-    \qmlproperty Path QtQuick2::PathAnimation::path
+    \qmlproperty Path QtQuick::PathAnimation::path
     This property holds the path to animate along.
 
     For more information on defining a path see the \l Path documentation.
@@ -674,7 +674,7 @@ void QQuickPathAnimation::setPath(QQuickPath *path)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::PathAnimation::target
+    \qmlproperty Item QtQuick::PathAnimation::target
     This property holds the item to animate.
 */
 QQuickItem *QQuickPathAnimation::target() const
@@ -694,7 +694,7 @@ void QQuickPathAnimation::setTargetObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::PathAnimation::orientation
+    \qmlproperty enumeration QtQuick::PathAnimation::orientation
     This property controls the rotation of the item as it animates along the path.
 
     If a value other than \c Fixed is specified, the PathAnimation will rotate the
@@ -726,7 +726,7 @@ void QQuickPathAnimation::setOrientation(Orientation orientation)
 }
 
 /*!
-    \qmlproperty point QtQuick2::PathAnimation::anchorPoint
+    \qmlproperty point QtQuick::PathAnimation::anchorPoint
     This property holds the anchor point for the item being animated.
 
     By default, the upper-left corner of the target (its 0,0 point)
@@ -751,7 +751,7 @@ void QQuickPathAnimation::setAnchorPoint(const QPointF &point)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathAnimation::orientationEntryDuration
+    \qmlproperty real QtQuick::PathAnimation::orientationEntryDuration
     This property holds the duration (in milliseconds) of the transition in to the orientation.
 
     If an orientation has been specified for the PathAnimation, and the starting
@@ -775,7 +775,7 @@ void QQuickPathAnimation::setOrientationEntryDuration(int duration)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathAnimation::orientationExitDuration
+    \qmlproperty real QtQuick::PathAnimation::orientationExitDuration
     This property holds the duration (in milliseconds) of the transition out of the orientation.
 
     If an orientation and endRotation have been specified for the PathAnimation,
@@ -798,7 +798,7 @@ void QQuickPathAnimation::setOrientationExitDuration(int duration)
 }
 
 /*!
-    \qmlproperty real QtQuick2::PathAnimation::endRotation
+    \qmlproperty real QtQuick::PathAnimation::endRotation
     This property holds the ending rotation for the target.
 
     If an orientation has been specified for the PathAnimation,

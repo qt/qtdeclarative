@@ -220,14 +220,14 @@ struct SpriteVertices {
     For full details, see the \l{Sprite Animation} overview.
 */
 /*!
-    \qmlproperty bool QtQuick2::SpriteSequence::running
+    \qmlproperty bool QtQuick::SpriteSequence::running
 
     Whether the sprite is animating or not.
 
     Default is true
 */
 /*!
-    \qmlproperty bool QtQuick2::SpriteSequence::interpolate
+    \qmlproperty bool QtQuick::SpriteSequence::interpolate
 
     If true, interpolation will occur between sprite frames to make the
     animation appear smoother.
@@ -235,12 +235,12 @@ struct SpriteVertices {
     Default is true.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteSequence::currentSprite
+    \qmlproperty string QtQuick::SpriteSequence::currentSprite
 
     The name of the Sprite which is currently animating.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteSequence::goalSprite
+    \qmlproperty string QtQuick::SpriteSequence::goalSprite
 
     The name of the Sprite which the animation should move to.
 
@@ -252,13 +252,13 @@ struct SpriteVertices {
     If it is possible to return to the goalState from the starting point of the goalState
     it will continue to do so until goalState is set to "" or an unreachable state.
 */
-/*! \qmlmethod QtQuick2::SpriteSequence::jumpTo(string sprite)
+/*! \qmlmethod QtQuick::SpriteSequence::jumpTo(string sprite)
 
     This function causes the SpriteSequence to jump to the specified sprite immediately, intermediate
     sprites are not played. The \a sprite argument is the name of the sprite you wish to jump to.
 */
 /*!
-    \qmlproperty list<Sprite> QtQuick2::SpriteSequence::sprites
+    \qmlproperty list<Sprite> QtQuick::SpriteSequence::sprites
 
     The sprite or sprites to draw. Sprites will be scaled to the size of this item.
 */

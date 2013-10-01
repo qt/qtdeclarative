@@ -150,7 +150,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     The same implementation is now primarily available as DelegateModel in the
     \l{Qt QML Models QML Types}{Qt QML Models} module.
 
-    \sa {QtQml.Models2::DelegateModel}
+    \sa {QtQml.Models::DelegateModel}
 */
 /*!
     \qmltype DelegateModel
@@ -319,7 +319,7 @@ void QQmlDelegateModel::componentComplete()
 }
 
 /*!
-    \qmlproperty model QtQml.Models2::DelegateModel::model
+    \qmlproperty model QtQml.Models::DelegateModel::model
     This property holds the model providing data for the DelegateModel.
 
     The model provides a set of data that is used to create the items
@@ -360,7 +360,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component QtQml.Models2::DelegateModel::delegate
+    \qmlproperty Component QtQml.Models::DelegateModel::delegate
 
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -398,7 +398,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty QModelIndex QtQml.Models2::DelegateModel::rootIndex
+    \qmlproperty QModelIndex QtQml.Models::DelegateModel::rootIndex
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  \c rootIndex allows the children of
@@ -458,7 +458,7 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
 }
 
 /*!
-    \qmlmethod QModelIndex QtQml.Models2::DelegateModel::modelIndex(int index)
+    \qmlmethod QModelIndex QtQml.Models::DelegateModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -476,7 +476,7 @@ QVariant QQmlDelegateModel::modelIndex(int idx) const
 }
 
 /*!
-    \qmlmethod QModelIndex QtQml.Models2::DelegateModel::parentModelIndex()
+    \qmlmethod QModelIndex QtQml.Models::DelegateModel::parentModelIndex()
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -494,7 +494,7 @@ QVariant QQmlDelegateModel::parentModelIndex() const
 }
 
 /*!
-    \qmlproperty int QtQml.Models2::DelegateModel::count
+    \qmlproperty int QtQml.Models::DelegateModel::count
 */
 
 int QQmlDelegateModel::count() const
@@ -606,7 +606,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 }
 
 /*!
-    \qmlproperty list<DelegateModelGroup> QtQml.Models2::DelegateModel::groups
+    \qmlproperty list<DelegateModelGroup> QtQml.Models::DelegateModel::groups
 
     This property holds a delegate model's group definitions.
 
@@ -636,7 +636,7 @@ QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
 }
 
 /*!
-    \qmlproperty DelegateModelGroup QtQml.Models2::DelegateModel::items
+    \qmlproperty DelegateModelGroup QtQml.Models::DelegateModel::items
 
     This property holds visual data model's default group to which all new items are added.
 */
@@ -648,7 +648,7 @@ QQmlDelegateModelGroup *QQmlDelegateModel::items()
 }
 
 /*!
-    \qmlproperty DelegateModelGroup QtQml.Models2::DelegateModel::persistedItems
+    \qmlproperty DelegateModelGroup QtQml.Models::DelegateModel::persistedItems
 
     This property holds visual data model's persisted items group.
 
@@ -660,7 +660,7 @@ QQmlDelegateModelGroup *QQmlDelegateModel::items()
     at that time it will be destroyed.  Adding an item to this group will not create a new
     instance.
 
-    Items returned by the \l QtQml.Models2::DelegateModelGroup::create() function are automatically added
+    Items returned by the \l QtQml.Models::DelegateModelGroup::create() function are automatically added
     to this group.
 */
 
@@ -671,7 +671,7 @@ QQmlDelegateModelGroup *QQmlDelegateModel::persistedItems()
 }
 
 /*!
-    \qmlproperty string QtQml.Models2::DelegateModel::filterOnGroup
+    \qmlproperty string QtQml.Models::DelegateModel::filterOnGroup
 
     This property holds the name of the group used to filter the visual data model.
 
@@ -743,7 +743,7 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
 }
 
 /*!
-    \qmlproperty object QtQml.Models2::DelegateModel::parts
+    \qmlproperty object QtQml.Models::DelegateModel::parts
 
     The \a parts property selects a DelegateModel which creates
     delegates from the part named.  This is used in conjunction with
@@ -2022,7 +2022,7 @@ QQmlDelegateModelAttached::QQmlDelegateModelAttached(
 }
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::DelegateModel::model
+    \qmlattachedproperty int QtQml.Models::DelegateModel::model
 
     This attached property holds the visual data model this delegate instance belongs to.
 
@@ -2035,7 +2035,7 @@ QQmlDelegateModel *QQmlDelegateModelAttached::model() const
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQml.Models2::DelegateModel::groups
+    \qmlattachedproperty stringlist QtQml.Models::DelegateModel::groups
 
     This attached property holds the name of DelegateModelGroups the item belongs to.
 
@@ -2069,7 +2069,7 @@ void QQmlDelegateModelAttached::setGroups(const QStringList &groups)
 }
 
 /*!
-    \qmlattachedproperty bool QtQml.Models2::DelegateModel::isUnresolved
+    \qmlattachedproperty bool QtQml.Models::DelegateModel::isUnresolved
 
     This attached property holds whether the visual item is bound to a data model index.
     Returns true if the item is not bound to the model, and false if it is.
@@ -2089,7 +2089,7 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 }
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::DelegateModel::inItems
+    \qmlattachedproperty int QtQml.Models::DelegateModel::inItems
 
     This attached property holds whether the item belongs to the default \l items DelegateModelGroup.
 
@@ -2099,7 +2099,7 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::DelegateModel::itemsIndex
+    \qmlattachedproperty int QtQml.Models::DelegateModel::itemsIndex
 
     This attached property holds the index of the item in the default \l items DelegateModelGroup.
 
@@ -2107,7 +2107,7 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::DelegateModel::inPersistedItems
+    \qmlattachedproperty int QtQml.Models::DelegateModel::inPersistedItems
 
     This attached property holds whether the item belongs to the \l persistedItems DelegateModelGroup.
 
@@ -2119,7 +2119,7 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQml.Models2::DelegateModel::persistedItemsIndex
+    \qmlattachedproperty int QtQml.Models::DelegateModel::persistedItemsIndex
 
     This attached property holds the index of the item in the \l persistedItems DelegateModelGroup.
 
@@ -2221,7 +2221,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     The same implementation is now primarily available as \l DelegateModelGroup
     in the \l{Qt QML Models QML Types}{Qt QML Models} module.
 
-    \sa {QtQml.Models2::DelegateModelGroup}
+    \sa {QtQml.Models::DelegateModelGroup}
 */
 /*!
     \qmltype DelegateModelGroup
@@ -2235,7 +2235,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     items.
 
     The initial set of instantiable delegate items in a DelegateModel is represented
-    by its \l {QtQml.Models2::DelegateModel::items}{items} group, which normally directly reflects
+    by its \l {QtQml.Models::DelegateModel::items}{items} group, which normally directly reflects
     the contents of the model assigned to DelegateModel::model.  This set can be changed to
     the contents of any other member of DelegateModel::groups by assigning the  \l name of that
     DelegateModelGroup to the DelegateModel::filterOnGroup property.
@@ -2280,7 +2280,7 @@ QQmlDelegateModelGroup::~QQmlDelegateModelGroup()
 }
 
 /*!
-    \qmlproperty string QtQml.Models2::DelegateModelGroup::name
+    \qmlproperty string QtQml.Models::DelegateModelGroup::name
 
     This property holds the name of the group.
 
@@ -2305,7 +2305,7 @@ void QQmlDelegateModelGroup::setName(const QString &name)
 }
 
 /*!
-    \qmlproperty int QtQml.Models2::DelegateModelGroup::count
+    \qmlproperty int QtQml.Models::DelegateModelGroup::count
 
     This property holds the number of items in the group.
 */
@@ -2319,7 +2319,7 @@ int QQmlDelegateModelGroup::count() const
 }
 
 /*!
-    \qmlproperty bool QtQml.Models2::DelegateModelGroup::includeByDefault
+    \qmlproperty bool QtQml.Models::DelegateModelGroup::includeByDefault
 
     This property holds whether new items are assigned to this group by default.
 */
@@ -2347,7 +2347,7 @@ void QQmlDelegateModelGroup::setDefaultInclude(bool include)
 }
 
 /*!
-    \qmlmethod object QtQml.Models2::DelegateModelGroup::get(int index)
+    \qmlmethod object QtQml.Models::DelegateModelGroup::get(int index)
 
     Returns a javascript object describing the item at \a index in the group.
 
@@ -2359,9 +2359,9 @@ void QQmlDelegateModelGroup::setDefaultInclude(bool include)
     a delegate
     \li \b groups A list the of names of groups the item is a member of.  This property can be
     written to change the item's membership.
-    \li \b inItems Whether the item belongs to the \l {QtQml.Models2::DelegateModel::items}{items} group.
+    \li \b inItems Whether the item belongs to the \l {QtQml.Models::DelegateModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
-    \li \b itemsIndex The index of the item within the \l {QtQml.Models2::DelegateModel::items}{items} group.
+    \li \b itemsIndex The index of the item within the \l {QtQml.Models::DelegateModel::items}{items} group.
     \li \b {in<GroupName>} Whether the item belongs to the dynamic group \e groupName.  Writing to
     this property will add or remove the item from the group.
     \li \b {<groupName>Index} The index of the item within the dynamic group \e groupName.
@@ -2441,8 +2441,8 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::ValueRef value, int *i
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::insert(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQml.Models2::DelegateModelGroup::insert(jsdict data, var groups = undefined)
+    \qmlmethod QtQml.Models::DelegateModelGroup::insert(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models::DelegateModelGroup::insert(jsdict data, var groups = undefined)
 
     Creates a new entry at \a index in a DelegateModel with the values from \a data that
     correspond to roles in the model assigned to DelegateModel::model.
@@ -2500,9 +2500,9 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::create(int index)
-    \qmlmethod QtQml.Models2::DelegateModelGroup::create(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQml.Models2::DelegateModelGroup::create(jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models::DelegateModelGroup::create(int index)
+    \qmlmethod QtQml.Models::DelegateModelGroup::create(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQml.Models::DelegateModelGroup::create(jsdict data, array groups = undefined)
 
     Returns a reference to the instantiated item at \a index in the group.
 
@@ -2512,7 +2512,7 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
     was called on.
 
     All items returned by create are added to the
-    \l {QtQml.Models2::DelegateModel::persistedItems}{persistedItems} group.  Items in this
+    \l {QtQml.Models::DelegateModel::persistedItems}{persistedItems} group.  Items in this
     group remain instantiated when not referenced by any view.
 */
 
@@ -2576,7 +2576,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::resolve(int from, int to)
+    \qmlmethod QtQml.Models::DelegateModelGroup::resolve(int from, int to)
 
     Binds an unresolved item at \a from to an item in DelegateModel::model at index \a to.
 
@@ -2687,7 +2687,7 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::remove(int index, int count)
+    \qmlmethod QtQml.Models::DelegateModelGroup::remove(int index, int count)
 
     Removes \a count items starting at \a index from the group.
 */
@@ -2761,7 +2761,7 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::addGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models::DelegateModelGroup::addGroups(int index, int count, stringlist groups)
 
     Adds \a count items starting at \a index to \a groups.
 */
@@ -2791,7 +2791,7 @@ void QQmlDelegateModelGroup::addGroups(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::removeGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models::DelegateModelGroup::removeGroups(int index, int count, stringlist groups)
 
     Removes \a count items starting at \a index from \a groups.
 */
@@ -2821,7 +2821,7 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
 
     Sets the \a groups \a count items starting at \a index belong to.
 */
@@ -2851,13 +2851,13 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
+    \qmlmethod QtQml.Models::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
 
     Sets the \a groups \a count items starting at \a index belong to.
 */
 
 /*!
-    \qmlmethod QtQml.Models2::DelegateModelGroup::move(var from, var to, int count)
+    \qmlmethod QtQml.Models::DelegateModelGroup::move(var from, var to, int count)
 
     Moves \a count at \a from in a group \a to a new position.
 */
@@ -2914,7 +2914,7 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
 }
 
 /*!
-    \qmlsignal QtQml.Models2::DelegateModelGroup::onChanged(array removed, array inserted)
+    \qmlsignal QtQml.Models::DelegateModelGroup::onChanged(array removed, array inserted)
 
     This handler is called when items have been removed from or inserted into the group.
 

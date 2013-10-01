@@ -182,7 +182,7 @@ QQuickFontLoader::~QQuickFontLoader()
 }
 
 /*!
-    \qmlproperty url QtQuick2::FontLoader::source
+    \qmlproperty url QtQuick::FontLoader::source
     The url of the font to load.
 */
 QUrl QQuickFontLoader::source() const
@@ -253,7 +253,7 @@ void QQuickFontLoader::updateFontInfo(const QString& name, QQuickFontLoader::Sta
 }
 
 /*!
-    \qmlproperty string QtQuick2::FontLoader::name
+    \qmlproperty string QtQuick::FontLoader::name
 
     This property holds the name of the font family.
     It is set automatically when a font is loaded using the \c url property.
@@ -294,7 +294,7 @@ void QQuickFontLoader::setName(const QString &name)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::FontLoader::status
+    \qmlproperty enumeration QtQuick::FontLoader::status
 
     This property holds the status of font loading.  It can be one of:
     \list

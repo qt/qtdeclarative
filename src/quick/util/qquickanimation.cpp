@@ -109,7 +109,7 @@ QAbstractAnimationJob* QQuickAbstractAnimation::qtAnimation()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Animation::running
+    \qmlproperty bool QtQuick::Animation::running
     This property holds whether the animation is currently running.
 
     The \c running property can be set to declaratively control whether or not
@@ -200,7 +200,7 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
 }
 
 /*!
-    \qmlsignal QtQuick2::Animation::onStarted()
+    \qmlsignal QtQuick::Animation::onStarted()
 
     This signal handler is called when the animation begins.
 
@@ -210,7 +210,7 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
 */
 
 /*!
-    \qmlsignal QtQuick2::Animation::onStopped()
+    \qmlsignal QtQuick::Animation::onStopped()
 
     This signal handler is called when the animation ends.
 
@@ -287,7 +287,7 @@ void QQuickAbstractAnimation::setRunning(bool r)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Animation::paused
+    \qmlproperty bool QtQuick::Animation::paused
     This property holds whether the animation is currently paused.
 
     The \c paused property can be set to declaratively control whether or not
@@ -360,7 +360,7 @@ void QQuickAbstractAnimation::componentFinalized()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Animation::alwaysRunToEnd
+    \qmlproperty bool QtQuick::Animation::alwaysRunToEnd
     This property holds whether the animation should run to completion when it is stopped.
 
     If this true the animation will complete its current iteration when it
@@ -392,7 +392,7 @@ void QQuickAbstractAnimation::setAlwaysRunToEnd(bool f)
 }
 
 /*!
-    \qmlproperty int QtQuick2::Animation::loops
+    \qmlproperty int QtQuick::Animation::loops
     This property holds the number of times the animation should play.
 
     By default, \c loops is 1: the animation will play through once and then stop.
@@ -474,7 +474,7 @@ void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g)
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::start()
+    \qmlmethod QtQuick::Animation::start()
     \brief Starts the animation
 
     If the animation is already running, calling this method has no effect.  The
@@ -486,7 +486,7 @@ void QQuickAbstractAnimation::start()
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::pause()
+    \qmlmethod QtQuick::Animation::pause()
     \brief Pauses the animation
 
     If the animation is already paused or not \c running, calling this method has no effect.
@@ -498,7 +498,7 @@ void QQuickAbstractAnimation::pause()
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::resume()
+    \qmlmethod QtQuick::Animation::resume()
     \brief Resumes a paused animation
 
     If the animation is not paused or not \c running, calling this method has no effect.
@@ -510,7 +510,7 @@ void QQuickAbstractAnimation::resume()
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::stop()
+    \qmlmethod QtQuick::Animation::stop()
     \brief Stops the animation
 
     If the animation is not running, calling this method has no effect.  Both the
@@ -535,7 +535,7 @@ void QQuickAbstractAnimation::stop()
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::restart()
+    \qmlmethod QtQuick::Animation::restart()
     \brief Restarts the animation
 
     This is a convenience method, and is equivalent to calling \c stop() and
@@ -548,7 +548,7 @@ void QQuickAbstractAnimation::restart()
 }
 
 /*!
-    \qmlmethod QtQuick2::Animation::complete()
+    \qmlmethod QtQuick::Animation::complete()
     \brief Stops the animation, jumping to the final property values
 
     If the animation is not running, calling this method has no effect.  The
@@ -685,7 +685,7 @@ QQuickPauseAnimation::~QQuickPauseAnimation()
 }
 
 /*!
-    \qmlproperty int QtQuick2::PauseAnimation::duration
+    \qmlproperty int QtQuick::PauseAnimation::duration
     This property holds the duration of the pause in milliseconds
 
     The default value is 250.
@@ -768,7 +768,7 @@ QQuickColorAnimation::~QQuickColorAnimation()
 }
 
 /*!
-    \qmlproperty color QtQuick2::ColorAnimation::from
+    \qmlproperty color QtQuick::ColorAnimation::from
     This property holds the color value at which the animation should begin.
 
     For example, the following animation is not applied until a color value
@@ -805,7 +805,7 @@ void QQuickColorAnimation::setFrom(const QColor &f)
 }
 
 /*!
-    \qmlproperty color QtQuick2::ColorAnimation::to
+    \qmlproperty color QtQuick::ColorAnimation::to
 
     This property holds the color value at which the animation should end.
 
@@ -911,7 +911,7 @@ QQuickScriptActionPrivate::QQuickScriptActionPrivate()
     : QQuickAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false){}
 
 /*!
-    \qmlproperty script QtQuick2::ScriptAction::script
+    \qmlproperty script QtQuick::ScriptAction::script
     This property holds the script to run.
 */
 QQmlScriptString QQuickScriptAction::script() const
@@ -927,7 +927,7 @@ void QQuickScriptAction::setScript(const QQmlScriptString &script)
 }
 
 /*!
-    \qmlproperty string QtQuick2::ScriptAction::scriptName
+    \qmlproperty string QtQuick::ScriptAction::scriptName
     This property holds the name of the StateChangeScript to run.
 
     This property is only valid when ScriptAction is used as part of a transition.
@@ -1077,10 +1077,10 @@ void QQuickPropertyAction::setProperty(const QString &n)
 }
 
 /*!
-    \qmlproperty Object QtQuick2::PropertyAction::target
-    \qmlproperty list<Object> QtQuick2::PropertyAction::targets
-    \qmlproperty string QtQuick2::PropertyAction::property
-    \qmlproperty string QtQuick2::PropertyAction::properties
+    \qmlproperty Object QtQuick::PropertyAction::target
+    \qmlproperty list<Object> QtQuick::PropertyAction::targets
+    \qmlproperty string QtQuick::PropertyAction::property
+    \qmlproperty string QtQuick::PropertyAction::properties
 
     These properties determine the items and their properties that are
     affected by this action.
@@ -1113,7 +1113,7 @@ QQmlListProperty<QObject> QQuickPropertyAction::targets()
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick2::PropertyAction::exclude
+    \qmlproperty list<Object> QtQuick::PropertyAction::exclude
     This property holds the objects that should not be affected by this action.
 
     \sa targets
@@ -1125,7 +1125,7 @@ QQmlListProperty<QObject> QQuickPropertyAction::exclude()
 }
 
 /*!
-    \qmlproperty any QtQuick2::PropertyAction::value
+    \qmlproperty any QtQuick::PropertyAction::value
     This property holds the value to be set on the property.
 
     If the PropertyAction is defined within a \l Transition or \l Behavior,
@@ -1301,7 +1301,7 @@ void QQuickNumberAnimation::init()
 }
 
 /*!
-    \qmlproperty real QtQuick2::NumberAnimation::from
+    \qmlproperty real QtQuick::NumberAnimation::from
     This property holds the starting value for the animation.
 
     For example, the following animation is not applied until the \c x value
@@ -1339,7 +1339,7 @@ void QQuickNumberAnimation::setFrom(qreal f)
 }
 
 /*!
-    \qmlproperty real QtQuick2::NumberAnimation::to
+    \qmlproperty real QtQuick::NumberAnimation::to
     This property holds the end value for the animation.
 
     If the NumberAnimation is defined within a \l Transition or \l Behavior,
@@ -1394,7 +1394,7 @@ QQuickVector3dAnimation::~QQuickVector3dAnimation()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Vector3dAnimation::from
+    \qmlproperty real QtQuick::Vector3dAnimation::from
     This property holds the starting value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,
@@ -1416,7 +1416,7 @@ void QQuickVector3dAnimation::setFrom(QVector3D f)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Vector3dAnimation::to
+    \qmlproperty real QtQuick::Vector3dAnimation::to
     This property holds the end value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,
@@ -1531,7 +1531,7 @@ QQuickRotationAnimation::~QQuickRotationAnimation()
 }
 
 /*!
-    \qmlproperty real QtQuick2::RotationAnimation::from
+    \qmlproperty real QtQuick::RotationAnimation::from
     This property holds the starting value for the animation.
 
     For example, the following animation is not applied until the \c angle value
@@ -1568,7 +1568,7 @@ void QQuickRotationAnimation::setFrom(qreal f)
 }
 
 /*!
-    \qmlproperty real QtQuick2::RotationAnimation::to
+    \qmlproperty real QtQuick::RotationAnimation::to
     This property holds the end value for the animation..
 
     If the RotationAnimation is defined within a \l Transition or \l Behavior,
@@ -1590,7 +1590,7 @@ void QQuickRotationAnimation::setTo(qreal t)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::RotationAnimation::direction
+    \qmlproperty enumeration QtQuick::RotationAnimation::direction
     This property holds the direction of the rotation.
 
     Possible values are:
@@ -2002,7 +2002,7 @@ QQuickPropertyAnimation::~QQuickPropertyAnimation()
 }
 
 /*!
-    \qmlproperty int QtQuick2::PropertyAnimation::duration
+    \qmlproperty int QtQuick::PropertyAnimation::duration
     This property holds the duration of the animation, in milliseconds.
 
     The default value is 250.
@@ -2028,7 +2028,7 @@ void QQuickPropertyAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty variant QtQuick2::PropertyAnimation::from
+    \qmlproperty variant QtQuick::PropertyAnimation::from
     This property holds the starting value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,
@@ -2055,7 +2055,7 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
 }
 
 /*!
-    \qmlproperty variant QtQuick2::PropertyAnimation::to
+    \qmlproperty variant QtQuick::PropertyAnimation::to
     This property holds the end value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,
@@ -2082,11 +2082,11 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::PropertyAnimation::easing.type
-    \qmlproperty real QtQuick2::PropertyAnimation::easing.amplitude
-    \qmlproperty real QtQuick2::PropertyAnimation::easing.overshoot
-    \qmlproperty real QtQuick2::PropertyAnimation::easing.period
-    \qmlproperty list<real> QtQuick2::PropertyAnimation::easing.bezierCurve
+    \qmlproperty enumeration QtQuick::PropertyAnimation::easing.type
+    \qmlproperty real QtQuick::PropertyAnimation::easing.amplitude
+    \qmlproperty real QtQuick::PropertyAnimation::easing.overshoot
+    \qmlproperty real QtQuick::PropertyAnimation::easing.period
+    \qmlproperty list<real> QtQuick::PropertyAnimation::easing.bezierCurve
 
 //! propertyanimation.easing
     \brief Specifies the easing curve used for the animation
@@ -2355,10 +2355,10 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 }
 
 /*!
-    \qmlproperty string QtQuick2::PropertyAnimation::properties
-    \qmlproperty list<Object> QtQuick2::PropertyAnimation::targets
-    \qmlproperty string QtQuick2::PropertyAnimation::property
-    \qmlproperty Object QtQuick2::PropertyAnimation::target
+    \qmlproperty string QtQuick::PropertyAnimation::properties
+    \qmlproperty list<Object> QtQuick::PropertyAnimation::targets
+    \qmlproperty string QtQuick::PropertyAnimation::property
+    \qmlproperty Object QtQuick::PropertyAnimation::target
 
     These properties are used as a set to determine which properties should be animated.
     The singular and plural forms are functionally identical, e.g.
@@ -2451,7 +2451,7 @@ QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick2::PropertyAnimation::exclude
+    \qmlproperty list<Object> QtQuick::PropertyAnimation::exclude
     This property holds the items not to be affected by this animation.
     \sa PropertyAnimation::targets
 */

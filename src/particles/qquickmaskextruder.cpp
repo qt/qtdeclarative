@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::MaskShape::source
+    \qmlproperty url QtQuick.Particles::MaskShape::source
 
     The image to use as the mask. Areas with non-zero opacity
     will be considered inside the shape.

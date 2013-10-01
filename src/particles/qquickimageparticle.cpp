@@ -615,7 +615,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     other ImageParticles.
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::ImageParticle::source
+    \qmlproperty url QtQuick.Particles::ImageParticle::source
 
     The source image to be used.
 
@@ -638,7 +638,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     and alpha levels to have maximum effect.
 */
 /*!
-    \qmlproperty list<Sprite> QtQuick.Particles2::ImageParticle::sprites
+    \qmlproperty list<Sprite> QtQuick.Particles::ImageParticle::sprites
 
     The sprite or sprites used to draw this particle.
 
@@ -648,7 +648,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     For full details, see the \l{Sprite Animation} overview.
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::ImageParticle::colorTable
+    \qmlproperty url QtQuick.Particles::ImageParticle::colorTable
 
     An image whose color will be used as a 1D texture to determine color over life. E.g. when
     the particle is halfway through its lifetime, it will have the color specified halfway
@@ -657,28 +657,28 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     This color is blended with the color property and the color of the source image.
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::ImageParticle::sizeTable
+    \qmlproperty url QtQuick.Particles::ImageParticle::sizeTable
 
     An image whose opacity will be used as a 1D texture to determine size over life.
 
     This property is expected to be removed shortly, in favor of custom easing curves to determine size over life.
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::ImageParticle::opacityTable
+    \qmlproperty url QtQuick.Particles::ImageParticle::opacityTable
 
     An image whose opacity will be used as a 1D texture to determine size over life.
 
     This property is expected to be removed shortly, in favor of custom easing curves to determine opacity over life.
 */
 /*!
-    \qmlproperty color QtQuick.Particles2::ImageParticle::color
+    \qmlproperty color QtQuick.Particles::ImageParticle::color
 
     If a color is specified, the provided image will be colorized with it.
 
     Default is white (no change).
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::colorVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::colorVariation
 
     This number represents the color variation applied to individual particles.
     Setting colorVariation is the same as setting redVariation, greenVariation,
@@ -691,7 +691,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 0.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::redVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::redVariation
     The variation in the red color channel between particles.
 
     Color is measured, per channel, from 0.0 to 1.0.
@@ -699,7 +699,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 0.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::greenVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::greenVariation
     The variation in the green color channel between particles.
 
     Color is measured, per channel, from 0.0 to 1.0.
@@ -707,7 +707,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 0.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::blueVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::blueVariation
     The variation in the blue color channel between particles.
 
     Color is measured, per channel, from 0.0 to 1.0.
@@ -715,7 +715,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 0.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::alpha
+    \qmlproperty real QtQuick.Particles::ImageParticle::alpha
     An alpha to be applied to the image. This value is multiplied by the value in
     the image, and the value in the color property.
 
@@ -727,7 +727,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 1.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::alphaVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::alphaVariation
     The variation in the alpha channel between particles.
 
     Alpha is measured from 0.0 to 1.0.
@@ -735,33 +735,33 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is 0.0
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotation
+    \qmlproperty real QtQuick.Particles::ImageParticle::rotation
 
     If set the image will be rotated by this many degrees before it is drawn.
 
     The particle coordinates are not transformed.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::rotationVariation
 
     If set the rotation of individual particles will vary by up to this much
     between particles.
 
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVelocity
+    \qmlproperty real QtQuick.Particles::ImageParticle::rotationVelocity
 
     If set particles will rotate at this velocity in degrees/second.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVelocityVariation
+    \qmlproperty real QtQuick.Particles::ImageParticle::rotationVelocityVariation
 
     If set the rotationVelocity of individual particles will vary by up to this much
     between particles.
 
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::ImageParticle::autoRotation
+    \qmlproperty bool QtQuick.Particles::ImageParticle::autoRotation
 
     If set to true then a rotation will be applied on top of the particles rotation, so
     that it faces the direction of travel. So to face away from the direction of travel,
@@ -770,21 +770,21 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is false
 */
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::ImageParticle::xVector
+    \qmlproperty StochasticDirection QtQuick.Particles::ImageParticle::xVector
 
     Allows you to deform the particle image when drawn. The rectangular image will
     be deformed so that the horizontal sides are in the shape of this vector instead
     of (1,0).
 */
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::ImageParticle::yVector
+    \qmlproperty StochasticDirection QtQuick.Particles::ImageParticle::yVector
 
     Allows you to deform the particle image when drawn. The rectangular image will
     be deformed so that the vertical sides are in the shape of this vector instead
     of (0,1).
 */
 /*!
-    \qmlproperty EntryEffect QtQuick.Particles2::ImageParticle::entryEffect
+    \qmlproperty EntryEffect QtQuick.Particles::ImageParticle::entryEffect
 
     This property provides basic and cheap entrance and exit effects for the particles.
     For fine-grained control, see sizeTable and opacityTable.
@@ -799,7 +799,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default value is Fade.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::ImageParticle::spritesInterpolate
+    \qmlproperty bool QtQuick.Particles::ImageParticle::spritesInterpolate
 
     If set to true, sprite particles will interpolate between sprite frames each rendered frame, making
     the sprites look smoother.
@@ -808,7 +808,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 */
 
 /*!
-    \qmlproperty Status QtQuick.Particles2::ImageParticle::status
+    \qmlproperty Status QtQuick.Particles::ImageParticle::status
 
     The status of loading the image.
 */

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     The Age affector only applies to particles which are still alive.
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Age::lifeLeft
+    \qmlproperty int QtQuick.Particles::Age::lifeLeft
 
     The amount of life to set the particle to have. Affected particles
     will advance to a point in their life where they will have this many
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::Age::advancePosition
+    \qmlproperty bool QtQuick.Particles::Age::advancePosition
 
     advancePosition determines whether position, veclocity and acceleration are included in
     the simulated aging done by the affector. If advancePosition is false,

@@ -138,8 +138,8 @@ bool QQuickPen::isValid() const
 */
 
 /*!
-    \qmlproperty real QtQuick2::GradientStop::position
-    \qmlproperty color QtQuick2::GradientStop::color
+    \qmlproperty real QtQuick::GradientStop::position
+    \qmlproperty color QtQuick::GradientStop::color
 
     The position and color properties describe the color used at a given
     position in a gradient, as represented by a gradient stop.
@@ -232,7 +232,7 @@ void QQuickGradientStop::updateGradient()
 */
 
 /*!
-    \qmlproperty list<GradientStop> QtQuick2::Gradient::stops
+    \qmlproperty list<GradientStop> QtQuick::Gradient::stops
     \default
 
     This property holds the gradient stops describing the gradient.
@@ -321,8 +321,8 @@ void QQuickRectangle::doUpdate()
 }
 
 /*!
-    \qmlproperty int QtQuick2::Rectangle::border.width
-    \qmlproperty color QtQuick2::Rectangle::border.color
+    \qmlproperty int QtQuick::Rectangle::border.width
+    \qmlproperty color QtQuick::Rectangle::border.color
 
     The width and color used to draw the border of the rectangle.
 
@@ -340,7 +340,7 @@ QQuickPen *QQuickRectangle::border()
 }
 
 /*!
-    \qmlproperty Gradient QtQuick2::Rectangle::gradient
+    \qmlproperty Gradient QtQuick::Rectangle::gradient
 
     The gradient to use to fill the rectangle.
 
@@ -388,7 +388,7 @@ void QQuickRectangle::resetGradient()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Rectangle::radius
+    \qmlproperty real QtQuick::Rectangle::radius
     This property holds the corner radius used to draw a rounded rectangle.
 
     If radius is non-zero, the rectangle will be painted as a rounded rectangle, otherwise it will be
@@ -413,7 +413,7 @@ void QQuickRectangle::setRadius(qreal radius)
 }
 
 /*!
-    \qmlproperty color QtQuick2::Rectangle::color
+    \qmlproperty color QtQuick::Rectangle::color
     This property holds the color used to fill the rectangle.
 
     The default color is white.

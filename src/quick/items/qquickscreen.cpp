@@ -80,26 +80,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty String QtQuick.Window2::Screen::name
+    \qmlattachedproperty String QtQuick.Window::Screen::name
     \readonly
     \since 5.1
 
     The name of the screen.
 */
 /*!
-    \qmlattachedproperty int QtQuick.Window2::Screen::width
+    \qmlattachedproperty int QtQuick.Window::Screen::width
     \readonly
 
     This contains the width of the screen in pixels.
 */
 /*!
-    \qmlattachedproperty int QtQuick.Window2::Screen::height
+    \qmlattachedproperty int QtQuick.Window::Screen::height
     \readonly
 
     This contains the height of the screen in pixels.
 */
 /*!
-    \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableWidth
+    \qmlattachedproperty int QtQuick.Window::Screen::desktopAvailableWidth
     \readonly
     \since 5.1
 
@@ -113,7 +113,7 @@ QT_BEGIN_NAMESPACE
     \endqml
 */
 /*!
-    \qmlattachedproperty int QtQuick.Window2::Screen::desktopAvailableHeight
+    \qmlattachedproperty int QtQuick.Window::Screen::desktopAvailableHeight
     \readonly
     \since 5.1
 
@@ -127,7 +127,7 @@ QT_BEGIN_NAMESPACE
     \endqml
 */
 /*!
-    \qmlattachedproperty real QtQuick.Window2::Screen::logicalPixelDensity
+    \qmlattachedproperty real QtQuick.Window::Screen::logicalPixelDensity
     \readonly
     \since 5.1
 
@@ -136,7 +136,7 @@ QT_BEGIN_NAMESPACE
     pixels.
 */
 /*!
-    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::primaryOrientation
+    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window::Screen::primaryOrientation
     \readonly
 
     This contains the primary orientation of the screen.  If the
@@ -153,7 +153,7 @@ QT_BEGIN_NAMESPACE
     automatically, so again you will see the primaryOrientation change.
 */
 /*!
-    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::orientation
+    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window::Screen::orientation
     \readonly
 
     This contains the current orientation of the screen, from the accelerometer
@@ -167,7 +167,7 @@ QT_BEGIN_NAMESPACE
     \l Item.transform to rotate your content.
 */
 /*!
-    \qmlattachedmethod int QtQuick.Window2::Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
+    \qmlattachedmethod int QtQuick.Window::Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 
     Returns the rotation angle, in degrees, between the two specified angles.
 */

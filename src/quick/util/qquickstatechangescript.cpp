@@ -92,7 +92,7 @@ QQuickStateChangeScript::~QQuickStateChangeScript()
 }
 
 /*!
-    \qmlproperty script QtQuick2::StateChangeScript::script
+    \qmlproperty script QtQuick::StateChangeScript::script
     This property holds the script to run when the state is current.
 */
 QQmlScriptString QQuickStateChangeScript::script() const
@@ -108,7 +108,7 @@ void QQuickStateChangeScript::setScript(const QQmlScriptString &s)
 }
 
 /*!
-    \qmlproperty string QtQuick2::StateChangeScript::name
+    \qmlproperty string QtQuick::StateChangeScript::name
     This property holds the name of the script. This name can be used by a
     ScriptAction to target a specific script.
 

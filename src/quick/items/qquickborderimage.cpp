@@ -150,7 +150,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty bool QtQuick2::BorderImage::asynchronous
+    \qmlproperty bool QtQuick::BorderImage::asynchronous
 
     Specifies that images on the local filesystem should be loaded
     asynchronously in a separate thread.  The default value is
@@ -176,7 +176,7 @@ QQuickBorderImage::~QQuickBorderImage()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::BorderImage::status
+    \qmlproperty enumeration QtQuick::BorderImage::status
 
     This property describes the status of image loading.  It can be one of:
 
@@ -191,7 +191,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty real QtQuick2::BorderImage::progress
+    \qmlproperty real QtQuick::BorderImage::progress
 
     This property holds the progress of image loading, from 0.0 (nothing loaded)
     to 1.0 (finished).
@@ -200,7 +200,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty bool QtQuick2::BorderImage::smooth
+    \qmlproperty bool QtQuick::BorderImage::smooth
 
     This property holds whether the image is smoothly filtered when scaled or
     transformed.  Smooth filtering gives better visual quality, but it may be slower
@@ -211,7 +211,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty bool QtQuick2::BorderImage::cache
+    \qmlproperty bool QtQuick::BorderImage::cache
 
     Specifies whether the image should be cached. The default value is
     true. Setting \a cache to false is useful when dealing with large images,
@@ -219,7 +219,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty bool QtQuick2::BorderImage::mirror
+    \qmlproperty bool QtQuick::BorderImage::mirror
 
     This property holds whether the image should be horizontally inverted
     (effectively displaying a mirrored image).
@@ -228,7 +228,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty url QtQuick2::BorderImage::source
+    \qmlproperty url QtQuick::BorderImage::source
 
     This property holds the URL that refers to the source image.
 
@@ -256,7 +256,7 @@ QQuickBorderImage::~QQuickBorderImage()
 */
 
 /*!
-    \qmlproperty QSize QtQuick2::BorderImage::sourceSize
+    \qmlproperty QSize QtQuick::BorderImage::sourceSize
 
     This property holds the actual width and height of the loaded image.
 
@@ -350,10 +350,10 @@ void QQuickBorderImage::load()
 }
 
 /*!
-    \qmlproperty int QtQuick2::BorderImage::border.left
-    \qmlproperty int QtQuick2::BorderImage::border.right
-    \qmlproperty int QtQuick2::BorderImage::border.top
-    \qmlproperty int QtQuick2::BorderImage::border.bottom
+    \qmlproperty int QtQuick::BorderImage::border.left
+    \qmlproperty int QtQuick::BorderImage::border.right
+    \qmlproperty int QtQuick::BorderImage::border.top
+    \qmlproperty int QtQuick::BorderImage::border.bottom
 
     The 4 border lines (2 horizontal and 2 vertical) break the image into 9 sections,
     as shown below:
@@ -385,8 +385,8 @@ QQuickScaleGrid *QQuickBorderImage::border()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::BorderImage::horizontalTileMode
-    \qmlproperty enumeration QtQuick2::BorderImage::verticalTileMode
+    \qmlproperty enumeration QtQuick::BorderImage::horizontalTileMode
+    \qmlproperty enumeration QtQuick::BorderImage::verticalTileMode
 
     This property describes how to repeat or stretch the middle parts of the border image.
 

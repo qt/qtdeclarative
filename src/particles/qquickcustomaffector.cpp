@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 //TODO: Move docs (and inheritence) to real base when docs can propagate. Currently this pretends to be the base class!
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::onAffectParticles(Array particles, real dt)
+    \qmlsignal QtQuick.Particles::Affector::onAffectParticles(Array particles, real dt)
 
     This handler is called when particles are selected to be affected. particles contains
     an array of particle objects which can be directly manipulated.
@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Affector::position
+    \qmlproperty StochasticDirection QtQuick.Particles::Affector::position
 
     Affected particles will have their position set to this direction,
     relative to the ParticleSystem. When interpreting directions as points,
@@ -71,21 +71,21 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Affector::velocity
+    \qmlproperty StochasticDirection QtQuick.Particles::Affector::velocity
 
     Affected particles will have their velocity set to this direction.
 */
 
 
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Affector::acceleration
+    \qmlproperty StochasticDirection QtQuick.Particles::Affector::acceleration
 
     Affected particles will have their acceleration set to this direction.
 */
 
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::relative
+    \qmlproperty bool QtQuick.Particles::Affector::relative
 
     Whether the affected particles have their existing position/velocity/acceleration added
     to the new one.

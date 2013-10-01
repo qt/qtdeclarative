@@ -187,12 +187,12 @@ QQuickParentChange::~QQuickParentChange()
 }
 
 /*!
-    \qmlproperty real QtQuick2::ParentChange::x
-    \qmlproperty real QtQuick2::ParentChange::y
-    \qmlproperty real QtQuick2::ParentChange::width
-    \qmlproperty real QtQuick2::ParentChange::height
-    \qmlproperty real QtQuick2::ParentChange::scale
-    \qmlproperty real QtQuick2::ParentChange::rotation
+    \qmlproperty real QtQuick::ParentChange::x
+    \qmlproperty real QtQuick::ParentChange::y
+    \qmlproperty real QtQuick::ParentChange::width
+    \qmlproperty real QtQuick::ParentChange::height
+    \qmlproperty real QtQuick::ParentChange::scale
+    \qmlproperty real QtQuick::ParentChange::rotation
     These properties hold the new position, size, scale, and rotation
     for the item in this state.
 */
@@ -311,7 +311,7 @@ QQuickItem *QQuickParentChange::originalParent() const
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentChange::target
+    \qmlproperty Item QtQuick::ParentChange::target
     This property holds the item to be reparented
 */
 QQuickItem *QQuickParentChange::object() const
@@ -327,7 +327,7 @@ void QQuickParentChange::setObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentChange::parent
+    \qmlproperty Item QtQuick::ParentChange::parent
     This property holds the new parent for the item in this state.
 */
 QQuickItem *QQuickParentChange::parent() const
@@ -938,7 +938,7 @@ QQuickAnchorSet *QQuickAnchorChanges::anchors()
 }
 
 /*!
-    \qmlproperty Item QtQuick2::AnchorChanges::target
+    \qmlproperty Item QtQuick::AnchorChanges::target
     This property holds the \l Item for which the anchor changes will be applied.
 */
 QQuickItem *QQuickAnchorChanges::object() const
@@ -954,13 +954,13 @@ void QQuickAnchorChanges::setObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.left
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.right
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.horizontalCenter
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.top
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.bottom
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.verticalCenter
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.baseline
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.left
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.right
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.horizontalCenter
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.top
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.bottom
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.verticalCenter
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.baseline
 
     These properties change the respective anchors of the item.
 

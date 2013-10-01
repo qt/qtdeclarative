@@ -557,7 +557,7 @@ QQuickPositionerAttached::QQuickPositionerAttached(QObject *parent) : QObject(pa
 }
 
 /*!
-    \qmlattachedproperty int QtQuick2::Positioner::index
+    \qmlattachedproperty int QtQuick::Positioner::index
 
     This property allows the item to determine
     its index within the positioner.
@@ -571,8 +571,8 @@ void QQuickPositionerAttached::setIndex(int index)
 }
 
 /*!
-    \qmlattachedproperty bool QtQuick2::Positioner::isFirstItem
-    \qmlattachedproperty bool QtQuick2::Positioner::isLastItem
+    \qmlattachedproperty bool QtQuick::Positioner::isFirstItem
+    \qmlattachedproperty bool QtQuick::Positioner::isLastItem
 
     These properties allow the item to determine if it
     is the first or last item in the positioner, respectively.
@@ -647,7 +647,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa Row, Grid, Flow, Positioner, ColumnLayout, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Column::populate
+    \qmlproperty Transition QtQuick::Column::populate
 
     This property holds the transition to be run for items that are part of
     this positioner at the time of its creation. The transition is run when the positioner
@@ -660,7 +660,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Column::add
+    \qmlproperty Transition QtQuick::Column::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
@@ -682,7 +682,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Column::move
+    \qmlproperty Transition QtQuick::Column::move
 
     This property holds the transition to run for items that have moved within the
     positioner. For a positioner, this applies to:
@@ -707,7 +707,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-  \qmlproperty real QtQuick2::Column::spacing
+  \qmlproperty real QtQuick::Column::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -801,7 +801,7 @@ void QQuickColumn::reportConflictingAnchors()
     \sa Column, Grid, Flow, Positioner, RowLayout, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Row::populate
+    \qmlproperty Transition QtQuick::Row::populate
 
     This property holds the transition to be run for items that are part of
     this positioner at the time of its creation. The transition is run when the positioner
@@ -814,7 +814,7 @@ void QQuickColumn::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Row::add
+    \qmlproperty Transition QtQuick::Row::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
@@ -836,7 +836,7 @@ void QQuickColumn::reportConflictingAnchors()
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Row::move
+    \qmlproperty Transition QtQuick::Row::move
 
     This property holds the transition to run for items that have moved within the
     positioner. For a positioner, this applies to:
@@ -861,7 +861,7 @@ void QQuickColumn::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-  \qmlproperty real QtQuick2::Row::spacing
+  \qmlproperty real QtQuick::Row::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -874,7 +874,7 @@ QQuickRow::QQuickRow(QQuickItem *parent)
 {
 }
 /*!
-    \qmlproperty enumeration QtQuick2::Row::layoutDirection
+    \qmlproperty enumeration QtQuick::Row::layoutDirection
 
     This property holds the layoutDirection of the row.
 
@@ -911,7 +911,7 @@ void QQuickRow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
     }
 }
 /*!
-    \qmlproperty enumeration QtQuick2::Row::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick::Row::effectiveLayoutDirection
     This property holds the effective layout direction of the row.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -1034,7 +1034,7 @@ void QQuickRow::reportConflictingAnchors()
     \sa Flow, Row, Column, Positioner, GridLayout, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Grid::populate
+    \qmlproperty Transition QtQuick::Grid::populate
 
     This property holds the transition to be run for items that are part of
     this positioner at the time of its creation. The transition is run when the positioner
@@ -1047,7 +1047,7 @@ void QQuickRow::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Grid::add
+    \qmlproperty Transition QtQuick::Grid::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
@@ -1069,7 +1069,7 @@ void QQuickRow::reportConflictingAnchors()
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Grid::move
+    \qmlproperty Transition QtQuick::Grid::move
 
     This property holds the transition to run for items that have moved within the
     positioner. For a positioner, this applies to:
@@ -1094,7 +1094,7 @@ void QQuickRow::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-  \qmlproperty qreal QtQuick2::Grid::spacing
+  \qmlproperty qreal QtQuick::Grid::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The amount of spacing applied will be the same in the
@@ -1126,7 +1126,7 @@ QQuickGrid::QQuickGrid(QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty int QtQuick2::Grid::columns
+    \qmlproperty int QtQuick::Grid::columns
 
     This property holds the number of columns in the grid. The default
     number of columns is 4.
@@ -1136,7 +1136,7 @@ QQuickGrid::QQuickGrid(QQuickItem *parent)
 */
 
 /*!
-    \qmlproperty int QtQuick2::Grid::rows
+    \qmlproperty int QtQuick::Grid::rows
     This property holds the number of rows in the grid.
 
     If the grid does not have enough items to fill the specified
@@ -1162,7 +1162,7 @@ void QQuickGrid::setRows(const int rows)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Grid::flow
+    \qmlproperty enumeration QtQuick::Grid::flow
     This property holds the flow of the layout.
 
     Possible values are:
@@ -1189,7 +1189,7 @@ void QQuickGrid::setFlow(Flow flow)
 }
 
 /*!
-    \qmlproperty qreal QtQuick2::Grid::rowSpacing
+    \qmlproperty qreal QtQuick::Grid::rowSpacing
 
     This property holds the spacing in pixels between rows.
 
@@ -1211,7 +1211,7 @@ void QQuickGrid::setRowSpacing(const qreal rowSpacing)
 }
 
 /*!
-    \qmlproperty qreal QtQuick2::Grid::columnSpacing
+    \qmlproperty qreal QtQuick::Grid::columnSpacing
 
     This property holds the spacing in pixels between columns.
 
@@ -1233,7 +1233,7 @@ void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Grid::layoutDirection
+    \qmlproperty enumeration QtQuick::Grid::layoutDirection
 
     This property holds the layout direction of the layout.
 
@@ -1273,7 +1273,7 @@ void QQuickGrid::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Grid::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick::Grid::effectiveLayoutDirection
     This property holds the effective layout direction of the grid.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -1288,9 +1288,9 @@ Qt::LayoutDirection QQuickGrid::effectiveLayoutDirection() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Grid::horizontalItmeAlignment
-    \qmlproperty enumeration QtQuick2::Grid::verticalItemAlignment
-    \qmlproperty enumeration QtQuick2::Grid::effectiveHorizontalItemAlignment
+    \qmlproperty enumeration QtQuick::Grid::horizontalItmeAlignment
+    \qmlproperty enumeration QtQuick::Grid::verticalItemAlignment
+    \qmlproperty enumeration QtQuick::Grid::effectiveHorizontalItemAlignment
 
     Sets the horizontal and vertical alignment of items in the Grid. By default,
     the items are vertically aligned to the top. Horizontal
@@ -1575,7 +1575,7 @@ void QQuickGrid::reportConflictingAnchors()
   \sa Column, Row, Grid, Positioner, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Flow::populate
+    \qmlproperty Transition QtQuick::Flow::populate
 
     This property holds the transition to be run for items that are part of
     this positioner at the time of its creation. The transition is run when the positioner
@@ -1588,7 +1588,7 @@ void QQuickGrid::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Flow::add
+    \qmlproperty Transition QtQuick::Flow::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
@@ -1610,7 +1610,7 @@ void QQuickGrid::reportConflictingAnchors()
     \sa populate, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-    \qmlproperty Transition QtQuick2::Flow::move
+    \qmlproperty Transition QtQuick::Flow::move
 
     This property holds the transition to run for items that have moved within the
     positioner. For a positioner, this applies to:
@@ -1635,7 +1635,7 @@ void QQuickGrid::reportConflictingAnchors()
     \sa add, ViewTransition, {Qt Quick Examples - Positioners}
 */
 /*!
-  \qmlproperty real QtQuick2::Flow::spacing
+  \qmlproperty real QtQuick::Flow::spacing
 
   spacing is the amount in pixels left empty between each adjacent
   item, and defaults to 0.
@@ -1664,7 +1664,7 @@ QQuickFlow::QQuickFlow(QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Flow::flow
+    \qmlproperty enumeration QtQuick::Flow::flow
     This property holds the flow of the layout.
 
     Possible values are:
@@ -1695,7 +1695,7 @@ void QQuickFlow::setFlow(Flow flow)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Flow::layoutDirection
+    \qmlproperty enumeration QtQuick::Flow::layoutDirection
 
     This property holds the layout direction of the layout.
 
@@ -1731,7 +1731,7 @@ void QQuickFlow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Flow::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick::Flow::effectiveLayoutDirection
     This property holds the effective layout direction of the flow.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,

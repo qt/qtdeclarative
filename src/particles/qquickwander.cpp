@@ -52,26 +52,26 @@ QT_BEGIN_NAMESPACE
 
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Wander::pace
+    \qmlproperty real QtQuick.Particles::Wander::pace
 
     Maximum attribute change per second.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Wander::xVariance
+    \qmlproperty real QtQuick.Particles::Wander::xVariance
 
     Maximum attribute x value (as a result of Wander).
 
     If unset, Wander will not affect x values.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Wander::yVariance
+    \qmlproperty real QtQuick.Particles::Wander::yVariance
 
     Maximum attribute y value (as a result of Wander).
 
     If unset, Wander will not affect y values.
 */
 /*!
-    \qmlproperty AffectableParameter QtQuick.Particles2::Wander::affectedParameter
+    \qmlproperty AffectableParameter QtQuick.Particles::Wander::affectedParameter
 
     What attribute of particles is directly affected.
     \list

@@ -131,7 +131,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Object QtQuick2::PropertyChanges::target
+    \qmlproperty Object QtQuick::PropertyChanges::target
     This property holds the object which contains the properties to be changed.
 */
 
@@ -400,7 +400,7 @@ void QQuickPropertyChanges::setObject(QObject *o)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PropertyChanges::restoreEntryValues
+    \qmlproperty bool QtQuick::PropertyChanges::restoreEntryValues
 
     This property holds whether the previous values should be restored when
     leaving the state.
@@ -504,7 +504,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PropertyChanges::explicit
+    \qmlproperty bool QtQuick::PropertyChanges::explicit
 
     If explicit is set to true, any potential bindings will be interpreted as
     once-off assignments that occur when the state is entered.

@@ -168,7 +168,7 @@ QQuickState::~QQuickState()
 }
 
 /*!
-    \qmlproperty string QtQuick2::State::name
+    \qmlproperty string QtQuick::State::name
     This property holds the name of the state.
 
     Each state should have a unique name within its item.
@@ -199,7 +199,7 @@ bool QQuickState::isWhenKnown() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::State::when
+    \qmlproperty bool QtQuick::State::when
     This property holds when the state should be applied.
 
     This should be set to an expression that evaluates to \c true when you want the state to
@@ -237,7 +237,7 @@ void QQuickState::setWhen(QQmlBinding *when)
 }
 
 /*!
-    \qmlproperty string QtQuick2::State::extend
+    \qmlproperty string QtQuick::State::extend
     This property holds the state that this state extends.
 
     When a state extends another state, it inherits all the changes of that state.
@@ -258,7 +258,7 @@ void QQuickState::setExtends(const QString &extends)
 }
 
 /*!
-    \qmlproperty list<Change> QtQuick2::State::changes
+    \qmlproperty list<Change> QtQuick::State::changes
     This property holds the changes to apply for this state
     \default
 

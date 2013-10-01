@@ -274,7 +274,7 @@ QQuickDragAttached::~QQuickDragAttached()
 }
 
 /*!
-    \qmlattachedproperty bool QtQuick2::Drag::active
+    \qmlattachedproperty bool QtQuick::Drag::active
 
     This property holds whether a drag event sequence is currently active.
 
@@ -319,7 +319,7 @@ void QQuickDragAttached::setActive(bool active)
 }
 
 /*!
-    \qmlattachedproperty Object QtQuick2::Drag::source
+    \qmlattachedproperty Object QtQuick::Drag::source
 
     This property holds an object that is identified to recipients of drag events as
     the source of the events.  By default this is the item Drag property is attached to.
@@ -357,7 +357,7 @@ void QQuickDragAttached::resetSource()
 }
 
 /*!
-    \qmlattachedproperty Object QtQuick2::Drag::target
+    \qmlattachedproperty Object QtQuick::Drag::target
 
     While a drag is active this property holds the last object to accept an
     enter event from the dragged item, if the current drag position doesn't
@@ -375,7 +375,7 @@ QObject *QQuickDragAttached::target() const
 }
 
 /*!
-    \qmlattachedproperty QPointF QtQuick2::Drag::hotSpot
+    \qmlattachedproperty QPointF QtQuick::Drag::hotSpot
 
     This property holds the drag position relative to the top left of the item.
 
@@ -404,7 +404,7 @@ void QQuickDragAttached::setHotSpot(const QPointF &hotSpot)
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQuick2::Drag::keys
+    \qmlattachedproperty stringlist QtQuick::Drag::keys
 
     This property holds a list of keys that can be used by a DropArea to filter drag events.
 
@@ -430,7 +430,7 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQuick2::Drag::mimeData
+    \qmlattachedproperty stringlist QtQuick::Drag::mimeData
     \since 5.2
 
     This property holds a map of mimeData that is used during startDrag.
@@ -452,7 +452,7 @@ void QQuickDragAttached::setMimeData(const QVariantMap &mimeData)
 }
 
 /*!
-    \qmlattachedproperty flags QtQuick2::Drag::supportedActions
+    \qmlattachedproperty flags QtQuick::Drag::supportedActions
 
     This property holds return values of Drag.drop() supported by the drag source.
 
@@ -478,7 +478,7 @@ void QQuickDragAttached::setSupportedActions(Qt::DropActions actions)
 }
 
 /*!
-    \qmlattachedproperty enumeration QtQuick2::Drag::proposedAction
+    \qmlattachedproperty enumeration QtQuick::Drag::proposedAction
 
     This property holds an action that is recommended by the drag source as a
     return value from Drag.drop().
@@ -507,7 +507,7 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
 }
 
 /*!
- \qmlattachedproperty enumeration QtQuick2::Drag::dragType
+ \qmlattachedproperty enumeration QtQuick::Drag::dragType
  \since 5.2
 
  This property indicates whether to automatically start drags, do nothing, or
@@ -571,7 +571,7 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
 }
 
 /*!
-    \qmlattachedmethod void QtQuick2::Drag::start(flags supportedActions)
+    \qmlattachedmethod void QtQuick::Drag::start(flags supportedActions)
 
     Starts sending drag events. Used for starting old-style internal drags. \l startDrag is the
     new-style, preferred method of starting drags.
@@ -607,7 +607,7 @@ void QQuickDragAttached::start(QQmlV4Function *args)
 }
 
 /*!
-    \qmlattachedmethod enumeration QtQuick2::Drag::drop()
+    \qmlattachedmethod enumeration QtQuick::Drag::drop()
 
     Ends a drag sequence by sending a drop event to the target item.
 
@@ -668,7 +668,7 @@ int QQuickDragAttached::drop()
 }
 
 /*!
-    \qmlattachedmethod void QtQuick2::Drag::cancel()
+    \qmlattachedmethod void QtQuick::Drag::cancel()
 
     Ends a drag sequence.
 */
@@ -696,14 +696,14 @@ void QQuickDragAttached::cancel()
 }
 
 /*!
- \qmlsignal QtQuick2::DropArea::onDragStarted()
+ \qmlsignal QtQuick::DropArea::onDragStarted()
 
  This handler is called when a drag is started with the \l startDrag method
  or when it is started automatically using the \l dragType property.
  */
 
 /*!
- \qmlsignal QtQuick2::DropArea::onDragFinished(DropAction action)
+ \qmlsignal QtQuick::DropArea::onDragFinished(DropAction action)
 
  This handler is called when a drag finishes and the drag was started with the
  \l startDrag method or started automatically using the \l dragType property.
@@ -748,7 +748,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
 
 
 /*!
-    \qmlattachedmethod void QtQuick2::Drag::startDrag(flags supportedActions)
+    \qmlattachedmethod void QtQuick::Drag::startDrag(flags supportedActions)
 
     Starts sending drag events.
 

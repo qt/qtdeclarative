@@ -76,12 +76,12 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty string QtQuick.Particles2::TrailEmitter::follow
+    \qmlproperty string QtQuick.Particles::TrailEmitter::follow
 
     The type of logical particle which this is emitting from.
 */
 /*!
-    \qmlproperty qreal QtQuick.Particles2::TrailEmitter::velocityFromMovement
+    \qmlproperty qreal QtQuick.Particles::TrailEmitter::velocityFromMovement
 
     If this value is non-zero, then any movement of the emitter will provide additional
     starting velocity to the particles based on the movement. The additional vector will be the
@@ -91,7 +91,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     Default value is 0.
 */
 /*!
-    \qmlproperty Shape QtQuick.Particles2::TrailEmitter::emitShape
+    \qmlproperty Shape QtQuick.Particles::TrailEmitter::emitShape
 
     As the area of a TrailEmitter is the area it follows, a separate shape can be provided
     to be the shape it emits out of. This shape has width and height specified by emitWidth
@@ -100,7 +100,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     The default shape is a filled Rectangle.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitWidth
+    \qmlproperty real QtQuick.Particles::TrailEmitter::emitWidth
 
     The width in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
     the width will be the current size of the particle being followed.
@@ -108,7 +108,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     Default is 0.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitHeight
+    \qmlproperty real QtQuick.Particles::TrailEmitter::emitHeight
 
     The height in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
     the height will be the current size of the particle being followed.
@@ -116,10 +116,10 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     Default is 0.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
+    \qmlproperty real QtQuick.Particles::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles2::TrailEmitter::onEmitFollowParticles(Array particles, Particle followed)
+    \qmlsignal QtQuick.Particles::TrailEmitter::onEmitFollowParticles(Array particles, Particle followed)
 
     This handler is called when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 

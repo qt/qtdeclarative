@@ -108,8 +108,8 @@ the view and cannot be moved by other means.
 \snippet tutorials/dynamicview/dynamicview2/dynamicview.qml 2
 
 Dragging the content item is enabled by binding it to the MouseArea's
-\l {QtQuick2::MouseArea::drag.target}{drag.target} property.  Because we still want the view to be
-flickable we wait until the MouseArea's \l {QtQuick2::MouseArea::onPressAndHold}{onPressAndHold}
+\l {QtQuick::MouseArea::drag.target}{drag.target} property.  Because we still want the view to be
+flickable we wait until the MouseArea's \l {QtQuick::MouseArea::onPressAndHold}{onPressAndHold}
 handler is triggered before binding the drag target. This way when mouse moves before the hold
 timeout has expired it is interpreted as moving the list and if it moves after it is interpreted as
 dragging an item.  To make it more obvious to the user when an item can be dragged we'll change the
@@ -153,7 +153,7 @@ it is attached to moves.
 
 Drag events are only sent while the active property is true, so in this example the first event
 would be sent when the delegate was held with additional event sents when dragging.  The
-\l {QtQuick2::Drag::hotSpot}{hotSpot} property specifies the relative position of the drag events
+\l {QtQuick::Drag::hotSpot}{hotSpot} property specifies the relative position of the drag events
 within the dragged item, the center of the item in this instance.
 
 Then we use a DropArea in each view item to determine when the hot spot of the dragged item
@@ -165,14 +165,14 @@ to the index of the item it was dragged over.
 To move the items within the view we use a VisualDataModel.  The VisualDataModel type is used by
 the view types to instantiate delegate items from model data and when constructed explicitly can
 be used to filter and re-order the model items provided to ListView.  The
-\l {QtQuick2::VisualDataModel::items}{items} property of VisualDataModel provides access to the
+\l {QtQuick::VisualDataModel::items}{items} property of VisualDataModel provides access to the
 view's items and allows us to change the visible order without modifying the source model.  To
-determine the current visible index of the items we use \l {QtQuick2::VisualDataModel::itemsIndex}
+determine the current visible index of the items we use \l {QtQuick::VisualDataModel::itemsIndex}
 {itemsIndex} property on the VisualDataModel attached property of the delegate item.
 
-To utilize a VisualDataModel with a ListView we bind it to the \l {QtQuick2::ListView::model}{model}
-property of the view and bind the \l {QtQuick2::VisualDataModel::model}{model} and
-\l {QtQuick2::VisualDataModel::delegate}{delegate} to the VisualDataModel.
+To utilize a VisualDataModel with a ListView we bind it to the \l {QtQuick::ListView::model}{model}
+property of the view and bind the \l {QtQuick::VisualDataModel::model}{model} and
+\l {QtQuick::VisualDataModel::delegate}{delegate} to the VisualDataModel.
 
 \snippet tutorials/dynamicview/dynamicview3/dynamicview.qml 4
 
@@ -194,7 +194,7 @@ like this:
 \section2 Walkthrough
 
 Items in a VisualDataModel are filtered into groups represented by the VisualDataGroup type,
-normally all items in the model belong to a default \l {QtQuick2::VisualDataModel::items}{items}
+normally all items in the model belong to a default \l {QtQuick::VisualDataModel::items}{items}
 group but this default can be changed with the includeByDefault property.  To implement our sorting
 we want items to first be added to an unsorted group from where we can transfer them to a sorted
 position in the items group.  To do that we clear includeByDefault on the items group and set it on
@@ -208,7 +208,7 @@ item and then transfer the item to the items group before moving it to the pre-d
 repeat until the unsorted group is empty.
 
 To find the insert position for an item we request a handle for the item from the unsorted group
-with the \l {QtQuick2::VisualDataModel::get} {get} function.  Through the model property on this
+with the \l {QtQuick::VisualDataModel::get} {get} function.  Through the model property on this
 handle we can access the same model data that is available in a delegate instance of that item and
 compare against other items to determine relative position.
 
@@ -220,7 +220,7 @@ of the list.  In this example it can be one of the following:
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 4
 
 A sort is triggered whenever new items are added to the unsorted VisualDataGroup which we are
-notified of by the \l {QtQuick2::VisualDataGroup::onChanged}{onChanged} handler.  If no sort
+notified of by the \l {QtQuick::VisualDataGroup::onChanged}{onChanged} handler.  If no sort
 function is currently selected we simply transfer all items from the unsorted group to the items
 group, otherwise we call sort with the selected sort function.
 
@@ -228,8 +228,8 @@ group, otherwise we call sort with the selected sort function.
 
 Finally when the selected sort order changes we can trigger a full re-sort of the list by moving
 all items from the items group to the unsorted group, which will trigger the
-\l {QtQuick2::VisualDataGroup::onChanged}{onChanged} handler and transfer the items back to the
-items group in correct order.  Note that the \l {QtQuick2::VisualDataGroup::onChanged}{onChanged}
+\l {QtQuick::VisualDataGroup::onChanged}{onChanged} handler and transfer the items back to the
+items group in correct order.  Note that the \l {QtQuick::VisualDataGroup::onChanged}{onChanged}
 handler will not be invoked recursively so there's no issue with it being invoked during a sort.
 
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 6
