@@ -234,8 +234,10 @@ void QSGContext::invalidate()
         QSGAtlasTexture::Texture, but this seemed simpler.
      */
 
-    d->atlasManager->deleteLater();
-    d->atlasManager = 0;
+    if (d->atlasManager) {
+        d->atlasManager->deleteLater();
+        d->atlasManager = 0;
+    }
 }
 
 
