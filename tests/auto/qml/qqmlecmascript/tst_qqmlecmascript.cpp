@@ -54,7 +54,6 @@
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
-#include <private/qv4exception_p.h>
 #include <private/qv4scopedvalue_p.h>
 
 #ifdef Q_CC_MSVC

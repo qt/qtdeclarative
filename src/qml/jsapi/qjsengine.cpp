@@ -49,7 +49,6 @@
 #include "private/qv4mm_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
-#include "private/qv4exception_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>

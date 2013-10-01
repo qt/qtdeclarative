@@ -48,7 +48,6 @@
 #include <qv4argumentsobject_p.h>
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
-#include "qv4exception_p.h"
 
 using namespace QV4;
 
@@ -598,7 +597,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
 
 void ExecutionContext::throwError(const ValueRef value)
 {
-    Exception::throwException(this, value);
+    engine->throwException(value);
 }
 
 void ExecutionContext::throwError(const QString &message)
@@ -647,26 +646,12 @@ void ExecutionContext::throwUnimplemented(const QString &message)
 
 ReturnedValue ExecutionContext::catchException(StackTrace *trace)
 {
-    if (!engine->hasException)
-        Exception::rethrow();
-    while (engine->current != this)
-        engine->popContext();
-    if (trace)
-        *trace = engine->exceptionStackTrace;
-    engine->exceptionStackTrace.clear();
-    engine->hasException = false;
-    ReturnedValue res = engine->exceptionValue.asReturnedValue();
-    engine->exceptionValue = Encode::undefined();
-    return res;
+    return engine->catchException(this, trace);
 }
 
 void ExecutionContext::rethrowException()
 {
-    if (engine->hasException) {
-        while (engine->current != this)
-            engine->popContext();
-    }
-    Exception::rethrow();
+    engine->rethrowException(this);
 }
 
 void ExecutionContext::throwReferenceError(const ValueRef value)

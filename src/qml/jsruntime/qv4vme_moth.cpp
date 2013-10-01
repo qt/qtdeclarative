@@ -43,7 +43,6 @@
 #include "qv4instr_moth_p.h"
 #include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
-#include <private/qv4exception_p.h>
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <iostream>

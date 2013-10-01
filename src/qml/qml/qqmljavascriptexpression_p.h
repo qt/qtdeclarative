@@ -57,7 +57,6 @@
 #include <QtQml/qqmlerror.h>
 #include <private/qqmlengine_p.h>
 #include <private/qpointervaluepair_p.h>
-#include <private/qv4exception_p.h>
 
 QT_BEGIN_NAMESPACE
 

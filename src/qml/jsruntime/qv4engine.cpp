@@ -67,7 +67,6 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
 #include "qv4stacktrace_p.h"
-#include "qv4exception_p.h"
 
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
@@ -808,5 +807,63 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
         m_qmlExtensions = new QmlExtensions;
     return m_qmlExtensions;
 }
+
+void ExecutionEngine::throwException(const ValueRef value)
+{
+    Q_ASSERT(!hasException);
+    hasException = true;
+    exceptionValue = value;
+    QV4::Scope scope(this);
+    QV4::Scoped<ErrorObject> error(scope, value);
+    if (!!error)
+        exceptionStackTrace = error->stackTrace;
+    else
+        exceptionStackTrace = stackTrace();
+
+    if (debugger)
+        debugger->aboutToThrow(value);
+
+    UnwindHelper::prepareForUnwind(current);
+    throwInternal();
+}
+
+void ExecutionEngine::rethrowException(ExecutionContext *intermediateCatchingContext)
+{
+    if (hasException) {
+        while (current != intermediateCatchingContext)
+            popContext();
+    }
+    rethrowInternal();
+}
+
+ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
+{
+    if (!hasException)
+        rethrowInternal();
+    while (current != catchingContext)
+        popContext();
+    if (trace)
+        *trace = exceptionStackTrace;
+    exceptionStackTrace.clear();
+    hasException = false;
+    ReturnedValue res = exceptionValue.asReturnedValue();
+    exceptionValue = Encode::undefined();
+    return res;
+}
+
+#if !defined(V4_CXX_ABI_EXCEPTION)
+struct DummyException
+{};
+
+void ExecutionEngine::throwInternal()
+{
+    throw DummyException();
+}
+
+void ExecutionEngine::rethrowInternal()
+{
+    throw;
+}
+#endif
 
 QT_END_NAMESPACE

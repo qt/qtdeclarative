@@ -38,8 +38,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "qv4engine_p.h"
 
-#include "qv4exception_p.h"
+#if defined(V4_CXX_ABI_EXCEPTION)
 
 // On arm we link libgcc statically and want to avoid exporting the _Unwind* symbols
 #if defined(Q_PROCESSOR_ARM)
@@ -94,22 +95,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Exception::rethrow()
-{
-    cxa_eh_globals *globals = __cxa_get_globals();
-    cxa_exception *exception = globals->caughtExceptions;
-
-    // Make sure we only re-throw our foreign exceptions. For general re-throw
-    // we'd need different code.
-#ifndef __ARM_EABI_UNWINDER__
-    Q_ASSERT(exception->unwindHeader.exception_class == 0x514d4c4a53563400); // QMLJSV40
-#endif
-
-    globals->caughtExceptions = 0;
-    _Unwind_RaiseException(&exception->unwindHeader);
-}
-
-void Exception::throwInternal()
+void ExecutionEngine::throwInternal()
 {
     _Unwind_Exception *exception = (_Unwind_Exception*)malloc(sizeof(_Unwind_Exception));
     memset(exception, 0, sizeof(*exception));
@@ -132,4 +118,21 @@ void Exception::throwInternal()
     std::terminate();
 }
 
+void ExecutionEngine::rethrowInternal()
+{
+    cxa_eh_globals *globals = __cxa_get_globals();
+    cxa_exception *exception = globals->caughtExceptions;
+
+    // Make sure we only re-throw our foreign exceptions. For general re-throw
+    // we'd need different code.
+#ifndef __ARM_EABI_UNWINDER__
+    Q_ASSERT(exception->unwindHeader.exception_class == 0x514d4c4a53563400); // QMLJSV40
+#endif
+
+    globals->caughtExceptions = 0;
+    _Unwind_RaiseException(&exception->unwindHeader);
+}
+
 QT_END_NAMESPACE
+
+#endif

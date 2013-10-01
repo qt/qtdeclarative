@@ -46,7 +46,6 @@
 #include "qv4function_p.h"
 #include "qv4debugging_p.h"
 #include "qv4script_p.h"
-#include "qv4exception_p.h"
 #include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
