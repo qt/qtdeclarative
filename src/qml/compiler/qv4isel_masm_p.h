@@ -1505,7 +1505,13 @@ private:
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
+        Assembler::RegisterID lookupRegister;
+#if CPU(ARM)
+        lookupRegister = JSC::ARMRegisters::r8;
+#else
+        lookupRegister = Assembler::ReturnValueRegister;
+#endif
+        Assembler::Pointer lookupAddr(lookupRegister, index * sizeof(QV4::Lookup));
 
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
