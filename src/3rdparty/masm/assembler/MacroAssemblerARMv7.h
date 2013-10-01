@@ -1015,6 +1015,12 @@ public:
         m_assembler.vmov(fpTempRegister, dataTempRegister, dataTempRegister);
         m_assembler.vcvt_signedToFloatingPoint(dest, fpTempRegisterAsSingle());
     }
+
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, RegisterID /*scratch*/)
+    {
+        m_assembler.vmov(fpTempRegister, src, src);
+        m_assembler.vcvt_unsignedToFloatingPoint(dest, fpTempRegisterAsSingle());
+    }
     
     void convertFloatToDouble(FPRegisterID src, FPRegisterID dst)
     {

@@ -1200,7 +1200,6 @@ public:
     void storeUInt32(RegisterID reg, Pointer addr)
     {
         // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
-#if CPU(X86_64) | CPU(X86)
         Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
         convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
         storeDouble(FPGpr0, addr);
@@ -1208,11 +1207,6 @@ public:
         intRange.link(this);
         storeInt32(reg, addr);
         done.link(this);
-#else
-        Q_ASSERT(!"Not tested on this platform!");
-        Q_UNUSED(reg)
-        Q_UNUSED(addr)
-#endif
     }
 
     void storeUInt32(RegisterID reg, V4IR::Temp *target)
@@ -1472,25 +1466,13 @@ private:
     void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-#if CPU(X86_64) || CPU(X86)
             _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                        (Assembler::FPRegisterID) target->index,
                                        Assembler::ScratchRegister);
-#else
-        Q_ASSERT(!"Not supported on this platform!");
-        Q_UNUSED(source)
-        Q_UNUSED(target)
-#endif
         } else if (target->kind == V4IR::Temp::StackSlot) {
-#if CPU(X86_64) || CPU(X86)
             _as->convertUInt32ToDouble(_as->toUInt32Register(source, Assembler::ScratchRegister),
                                       Assembler::FPGpr0, Assembler::ScratchRegister);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
-#else
-        Q_ASSERT(!"Not supported on this platform!");
-        Q_UNUSED(source)
-        Q_UNUSED(target)
-#endif
         } else {
             Q_UNIMPLEMENTED();
         }

@@ -1935,12 +1935,8 @@ Assembler::Jump InstructionSelection::genTryDoubleConversion(V4IR::Expr *src,
                                   dest);
         return Assembler::Jump();
     case V4IR::UInt32Type:
-#if CPU(X86_64) || CPU(X86)
         _as->convertUInt32ToDouble(_as->toUInt32Register(src, Assembler::ScratchRegister),
                                    dest, Assembler::ReturnValueRegister);
-#else
-        Q_ASSERT(!"Not supported on this platform!");
-#endif
         return Assembler::Jump();
     case V4IR::BoolType:
         // TODO?
