@@ -98,6 +98,11 @@ void Exception::throwException(ExecutionContext *context, const ValueRef value)
 }
 
 #if !defined(V4_CXX_ABI_EXCEPTION)
+void Exception::rethrow()
+{
+    throw;
+}
+
 struct DummyException
 {};
 

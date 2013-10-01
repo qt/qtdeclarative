@@ -51,6 +51,7 @@ namespace QV4 {
 
 struct Q_QML_EXPORT Exception {
     static void Q_NORETURN throwException(ExecutionContext *throwingContext, const ValueRef exceptionValue);
+    static void Q_NORETURN rethrow();
 
 private:
     static void Q_NORETURN throwInternal();

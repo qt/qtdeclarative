@@ -648,7 +648,7 @@ void ExecutionContext::throwUnimplemented(const QString &message)
 ReturnedValue ExecutionContext::catchException(StackTrace *trace)
 {
     if (!engine->hasException)
-        throw;
+        Exception::rethrow();
     while (engine->current != this)
         engine->popContext();
     if (trace)
@@ -666,7 +666,7 @@ void ExecutionContext::rethrowException()
         while (engine->current != this)
             engine->popContext();
     }
-    throw;
+    Exception::rethrow();
 }
 
 void ExecutionContext::throwReferenceError(const ValueRef value)
