@@ -87,16 +87,24 @@
 
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
-    QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
-    if (!item)
-        return QQmlPrivate::IncompatibleObject;
-
     QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent);
-    if (!parentItem)
-        return QQmlPrivate::IncompatibleParent;
-
-    item->setParentItem(parentItem);
-    return QQmlPrivate::Parented;
+    if (parentItem) {
+        QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
+        if (!item)
+            return QQmlPrivate::IncompatibleObject;
+        item->setParentItem(parentItem);
+        return QQmlPrivate::Parented;
+    } else {
+        QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent);
+        if (parentWindow) {
+            QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
+            if (!win)
+                return QQmlPrivate::IncompatibleObject;
+            win->setTransientParent(parentWindow);
+            return QQmlPrivate::Parented;
+        }
+    }
+    return QQmlPrivate::IncompatibleParent;
 }
 
 static bool compareQQuickAnchorLines(const void *p1, const void *p2)
