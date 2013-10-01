@@ -95,13 +95,13 @@ pop lr
 pop r0, r1, r2, r3
 */
 
-#define REG_TO_SP 0b10010000
-#define VSP_MINUS 0b01000000
-#define POP_REG_MULTI 0b10000000
-#define POP_R4_MULTI     0b10100000
-#define POP_R4_R14_MULTI 0b10101000
-#define POP_R0_TO_R3 0b10110001
-#define FINISH 0b10110000
+#define REG_TO_SP ((unsigned int) 0b10010000)
+#define VSP_MINUS ((unsigned int) 0b01000000)
+#define POP_REG_MULTI ((unsigned int) 0b10000000)
+#define POP_R4_MULTI     ((unsigned int) 0b10100000)
+#define POP_R4_R14_MULTI ((unsigned int) 0b10101000)
+#define POP_R0_TO_R3 ((unsigned int) 0b10110001)
+#define FINISH ((unsigned int) 0b10110000)
 
 #define MK_UW_WORD(first, second, third, fourth) \
            (((first) << 24) | \

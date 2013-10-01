@@ -621,6 +621,7 @@ QVariant SequencePrototype::toVariant(QV4::Object *object)
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
 }
 
+#undef SEQUENCE_TO_VARIANT
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
     if (typeHint == qMetaTypeId<SequenceType>()) { \
         return QQml##ElementTypeName##List::toVariant(a); \

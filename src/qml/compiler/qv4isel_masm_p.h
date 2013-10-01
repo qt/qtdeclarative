@@ -1207,6 +1207,8 @@ public:
         done.link(this);
 #else
         Q_ASSERT(!"Not tested on this platform!");
+        Q_UNUSED(reg)
+        Q_UNUSED(addr)
 #endif
     }
 
@@ -1473,6 +1475,8 @@ private:
                                        Assembler::ScratchRegister);
 #else
         Q_ASSERT(!"Not supported on this platform!");
+        Q_UNUSED(source)
+        Q_UNUSED(target)
 #endif
         } else if (target->kind == V4IR::Temp::StackSlot) {
 #if CPU(X86_64) || CPU(X86)
@@ -1481,6 +1485,8 @@ private:
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
 #else
         Q_ASSERT(!"Not supported on this platform!");
+        Q_UNUSED(source)
+        Q_UNUSED(target)
 #endif
         } else {
             Q_UNIMPLEMENTED();
