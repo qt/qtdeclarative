@@ -2357,8 +2357,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QV8Engine *engine = ep->v8engine();
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::ScopedValue qobjectwrapper(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
-    QV4::ScopedValue object(scope, qobjectwrapper);
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
 
     // Non-existent methods
     o->reset();

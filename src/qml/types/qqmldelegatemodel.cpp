@@ -3226,7 +3226,7 @@ public:
         if (!array)
             m->engine()->current->throwTypeError();
 
-        if (name->isEqualTo(m->engine()->id_length)) {
+        if (name->equals(m->engine()->id_length)) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Encode(array->count());

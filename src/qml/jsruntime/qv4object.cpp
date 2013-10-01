@@ -693,7 +693,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->isEqualTo(engine()->id_length)) {
+        else if (isArrayObject() && name->equals(engine()->id_length)) {
             bool ok;
             uint l = value->asArrayLength(&ok);
             if (!ok)
@@ -885,7 +885,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     Property *current;
     PropertyAttributes *cattrs;
 
-    if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
+    if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
         Property *lp = memberData + ArrayObject::LengthPropertyIndex;
         cattrs = internalClass->propertyData.data() + ArrayObject::LengthPropertyIndex;

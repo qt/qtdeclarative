@@ -925,7 +925,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
         v4->current->throwTypeError();
 
     name->makeIdentifier();
-    if (name->isEqualTo(v4->id_length))
+    if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->list.count()).asReturnedValue();
 
     QV8Engine *engine = v4->v8Engine;
@@ -981,7 +981,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
 
     name->makeIdentifier();
 
-    if (name->isEqualTo(v4->id_length))
+    if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }

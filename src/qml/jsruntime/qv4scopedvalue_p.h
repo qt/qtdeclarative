@@ -687,7 +687,7 @@ inline Safe<T> &Safe<T>::operator=(const Safe<T> &t)
 }
 
 template<typename T>
-inline Safe<T>::operator Returned<T> *()
+inline Returned<T> * Safe<T>::ret() const
 {
     return Returned<T>::create(static_cast<T *>(managed()));
 }

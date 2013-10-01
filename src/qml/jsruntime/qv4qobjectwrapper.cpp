@@ -244,7 +244,6 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     vtbl = &static_vtbl;
 
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
-    m_toString = engine->id_toString;
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -278,8 +277,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     QV4:Scope scope(ctx);
     QV4::ScopedString name(scope, n);
 
-    if (name->isEqualTo(m_destroy) || name->isEqualTo(m_toString)) {
-        int index = name->isEqualTo(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+    if (name->equals(m_destroy) || name->equals(scope.engine->id_toString)) {
+        int index = name->equals(m_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
         QV4::ScopedValue method(scope, QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, index));
         if (hasProperty)
             *hasProperty = true;
@@ -640,7 +639,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, StringRef name)
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
     QQmlPropertyData local;
     if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
-        || name->isEqualTo(that->m_destroy) || name->isEqualTo(that->m_toString))
+        || name->equals(const_cast<SafeString &>(that->m_destroy)) || name->equals(engine->id_toString))
         return QV4::Attr_Data;
     else
         return QV4::Object::query(m, name);

@@ -286,7 +286,7 @@ bool ExecutionContext::deleteProperty(const StringRef name)
                 return w->withObject->deleteProperty(name);
         } else if (ctx->type == Type_CatchContext) {
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->stringValue()->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name))
                 return false;
         } else if (ctx->type >= Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx);
@@ -361,7 +361,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
                 w->put(name, value);
                 return;
             }
-        } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->stringValue()->isEqualTo(name)) {
+        } else if (ctx->type == Type_CatchContext && static_cast<CatchContext *>(ctx)->exceptionVarName->isEqualTo(name)) {
             static_cast<CatchContext *>(ctx)->exceptionValue = *value;
             return;
         } else {
@@ -389,7 +389,7 @@ void ExecutionContext::setProperty(const StringRef name, const ValueRef value)
             }
         }
     }
-    if (strictMode || name->isEqualTo(engine->id_this)) {
+    if (strictMode || name->equals(engine->id_this)) {
         ScopedValue n(scope, name.asReturnedValue());
         throwReferenceError(n);
     }
@@ -402,7 +402,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
     ScopedValue v(scope);
     name->makeIdentifier();
 
-    if (name->isEqualTo(engine->id_this))
+    if (name->equals(engine->id_this))
         return callData->thisObject.asReturnedValue();
 
     bool hasWith = false;
@@ -422,7 +422,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->stringValue()->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -444,7 +444,7 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
                     return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
-                && name->isEqualTo(f->function->name))
+                && name->equals(f->function->name))
                 return f.asReturnedValue();
         }
 
@@ -467,7 +467,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
     ScopedValue v(scope);
     name->makeIdentifier();
 
-    if (name->isEqualTo(engine->id_this))
+    if (name->equals(engine->id_this))
         return callData->thisObject.asReturnedValue();
 
     bool hasWith = false;
@@ -487,7 +487,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->stringValue()->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -509,7 +509,7 @@ ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
                     return v.asReturnedValue();
             }
             if (f->function && f->function->isNamedExpression()
-                && name->isEqualTo(f->function->name))
+                && name->equals(f->function->name))
                 return f.asReturnedValue();
         }
 
@@ -531,7 +531,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
     base = (Object *)0;
     name->makeIdentifier();
 
-    if (name->isEqualTo(engine->id_this))
+    if (name->equals(engine->id_this))
         return callData->thisObject.asReturnedValue();
 
     bool hasWith = false;
@@ -552,7 +552,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
         else if (ctx->type == Type_CatchContext) {
             hasCatchScope = true;
             CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->stringValue()->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -577,7 +577,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectR
                 }
             }
             if (f->function && f->function->isNamedExpression()
-                && name->isEqualTo(f->function->name))
+                && name->equals(f->function->name))
                 return c->function->asReturnedValue();
         }
 

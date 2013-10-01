@@ -135,7 +135,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     Scope scope(v4);
     ScopedString that(scope, static_cast<String *>(m));
 
-    if (name->isEqualTo(v4->id_length)) {
+    if (name->equals(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
         return Primitive::fromInt32(that->_text.length()).asReturnedValue();
@@ -258,6 +258,20 @@ uint String::toUInt(bool *ok) const
         return l;
     *ok = false;
     return UINT_MAX;
+}
+
+bool String::equals(const StringRef other) const
+{
+    if (this == other.getPointer())
+        return true;
+    if (hashValue() != other->hashValue())
+        return false;
+    if (identifier && identifier == other->identifier)
+        return true;
+    if (subtype >= StringType_UInt && subtype == other->subtype)
+        return true;
+
+    return toQString() == other->toQString();
 }
 
 void String::makeIdentifierImpl() const

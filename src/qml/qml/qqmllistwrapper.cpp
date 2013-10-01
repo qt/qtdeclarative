@@ -107,7 +107,7 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
     if (!w)
         v4->current->throwTypeError();
 
-    if (name->isEqualTo(v4->id_length) && !w->object.isNull()) {
+    if (name->equals(v4->id_length) && !w->object.isNull()) {
         quint32 count = w->property.count ? w->property.count(&w->property) : 0;
         return Primitive::fromUInt32(count).asReturnedValue();
     }

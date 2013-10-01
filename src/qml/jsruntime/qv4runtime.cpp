@@ -424,14 +424,14 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return ctx->engine->id_undefined;
+        return ctx->engine->id_undefined.ret();
     case Value::Null_Type:
-        return ctx->engine->id_null;
+        return ctx->engine->id_null.ret();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine->id_true;
+            return ctx->engine->id_true.ret();
         else
-            return ctx->engine->id_false;
+            return ctx->engine->id_false.ret();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->asReturned<String>();
@@ -737,7 +737,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
     if (!o)
         context->throwTypeError();
 
-    if (o.getPointer() == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
+    if (o.getPointer() == context->engine->evalFunction && l->name->equals(context->engine->id_eval))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
     return o->call(callData);
@@ -763,7 +763,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
         context->throwTypeError(msg);
     }
 
-    if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
+    if (o == context->engine->evalFunction && name->equals(context->engine->id_eval)) {
         return static_cast<EvalFunction *>(o)->evalCall(callData, true);
     }
 

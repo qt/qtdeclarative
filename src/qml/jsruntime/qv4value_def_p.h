@@ -400,10 +400,10 @@ struct Safe : public SafeValue
 
     bool operator!() const { return !managed(); }
 
-    // ### GC: remove me
-    operator T*() { return static_cast<T *>(managed()); }
-    Value *operator->() { return this; }
-    operator Returned<T> *();
+    T *operator->() { return static_cast<T *>(managed()); }
+    const T *operator->() const { return static_cast<T *>(managed()); }
+    T *getPointer() const { return static_cast<T *>(managed()); }
+    Returned<T> *ret() const;
 };
 typedef Safe<String> SafeString;
 typedef Safe<Object> SafeObject;

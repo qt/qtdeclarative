@@ -102,8 +102,7 @@ private:
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     QPointer<QObject> m_object;
-    String *m_destroy;
-    String *m_toString;
+    SafeString m_destroy;
 
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
