@@ -49,9 +49,41 @@
 #include "qv4engine_p.h"
 #include "qv4unwindhelper_p.h"
 
-#if (defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)) || defined(Q_OS_MAC)
-#define HAVE_GNU_BACKTRACE
-#include <execinfo.h>
+#ifdef V4_CXX_ABI_EXCEPTION
+#include <unwind.h>
+
+struct BacktraceHelper
+{
+    void **array;
+    int maximumSize;
+    int frameCount;
+};
+
+static _Unwind_Reason_Code bt_helper(struct _Unwind_Context *ctx, void *data)
+{
+    BacktraceHelper *helper = reinterpret_cast<BacktraceHelper*>(data);
+
+    if (helper->frameCount != -1) {
+        helper->array[helper->frameCount] = (void*)_Unwind_GetIP(ctx);
+
+        if (helper->frameCount > 0 && helper->array[helper->frameCount] == helper->array[helper->frameCount - 1])
+            return _URC_END_OF_STACK;
+    }
+    ++helper->frameCount;
+    if (helper->frameCount == helper->maximumSize)
+        return _URC_END_OF_STACK;
+    return _URC_NO_REASON;
+}
+
+static int get_backtrace_from_libunwind(void **array, int size)
+{
+    BacktraceHelper helper;
+    helper.array = array;
+    helper.maximumSize = size;
+    helper.frameCount = -1; // To skip this function
+    _Unwind_Backtrace(&bt_helper, &helper);
+    return helper.frameCount;
+}
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -63,10 +95,10 @@ NativeStackTrace::NativeStackTrace(ExecutionContext *context)
     engine = context->engine;
     currentNativeFrame = 0;
 
-#if defined(HAVE_GNU_BACKTRACE)
+#ifdef V4_CXX_ABI_EXCEPTION
     UnwindHelper::prepareForUnwind(context);
 
-    nativeFrameCount = backtrace(&trace[0], sizeof(trace) / sizeof(trace[0]));
+    nativeFrameCount = get_backtrace_from_libunwind(&trace[0], sizeof(trace) / sizeof(trace[0]));
 #elif defined(Q_OS_WIN) && !defined(Q_OS_WINCE)
 
     int machineType = 0;
