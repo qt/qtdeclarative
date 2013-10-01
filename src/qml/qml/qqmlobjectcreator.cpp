@@ -55,6 +55,7 @@
 #include <QQmlComponent>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlcodegenerator_p.h>
+#include <private/qqmlcustomparser_p.h>
 
 QT_USE_NAMESPACE
 
@@ -1237,6 +1238,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
 
     bool isComponent = false;
     QObject *instance = 0;
+    QQmlCustomParser *customParser = 0;
 
     if (compiledData->isComponent(index)) {
         isComponent = true;
@@ -1254,6 +1256,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
+
             const int parserStatusCast = type->parserStatusCast();
             if (parserStatusCast != -1) {
                 QQmlParserStatus *parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
@@ -1261,6 +1264,8 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 _parserStatusCallbacks[index] = parserStatus;
                 parserStatus->d = &_parserStatusCallbacks[index];
             }
+
+            customParser = type->customParser();
         } else {
             Q_ASSERT(typeRef.component);
             if (typeRef.component->qmlUnit->isSingleton())
@@ -1304,6 +1309,11 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     QHash<int, int>::ConstIterator idEntry = objectIndexToId.find(index);
     if (idEntry != objectIndexToId.constEnd())
         context->setIdProperty(idEntry.value(), instance);
+
+    if (customParser) {
+        QByteArray data = compiledData->customParserData.value(index);
+        customParser->setCustomData(instance, data);
+    }
 
     if (!isComponent) {
         QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.value(index);
@@ -1727,11 +1737,13 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
 QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
                                              const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
-                                             const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent)
+                                             const QList<QQmlPropertyCache *> &propertyCaches, const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent,
+                                             QHash<int, QByteArray> *customParserData)
     : QQmlCompilePass(url, qmlUnit)
     , resolvedTypes(resolvedTypes)
     , propertyCaches(propertyCaches)
     , objectIndexToIdPerComponent(objectIndexToIdPerComponent)
+    , customParserData(customParserData)
 {
 }
 
@@ -1756,6 +1768,12 @@ bool QQmlPropertyValidator::validate()
 
 bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj, int objectIndex, QQmlPropertyCache *propertyCache)
 {
+    QQmlCustomParser *customParser = 0;
+    QQmlCompiledData::TypeReference objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
+    if (objectType.type)
+        customParser = objectType.type->customParser();
+    QList<const QV4::CompiledData::Binding*> customBindings;
+
     PropertyResolver propertyResolver(propertyCache);
 
     QQmlPropertyData *defaultProperty = propertyCache->defaultProperty();
@@ -1763,8 +1781,11 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
-            || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
+            || binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+            if (customParser)
+                customBindings << binding;
             continue;
+        }
 
         const QString name = stringAt(binding->propertyNameIndex);
 
@@ -1777,9 +1798,8 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
-                QQmlCompiledData::TypeReference type = resolvedTypes.value(objectIndex);
-                if (type.type) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
+                if (objectType.type) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType.type->module()).arg(objectType.majorVersion).arg(objectType.minorVersion));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
                 }
@@ -1790,6 +1810,10 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
         }
 
         if (!pd) {
+            if (customParser) {
+                customBindings << binding;
+                continue;
+            }
             if (bindingToDefaultProperty) {
                 COMPILE_EXCEPTION(binding, tr("Cannot assign to non-existent default property"));
             } else {
@@ -1798,5 +1822,20 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
         }
     }
 
+    if (customParser && !customBindings.isEmpty()) {
+        customParser->clearErrors();
+        QByteArray data = customParser->compile(qmlUnit, customBindings);
+        customParserData->insert(objectIndex, data);
+        const QList<QQmlError> parserErrors = customParser->errors();
+        if (!parserErrors.isEmpty()) {
+            foreach (QQmlError error, parserErrors) {
+                error.setUrl(url);
+                errors << error;
+            }
+            return false;
+        }
+    }
+
     return true;
 }
+

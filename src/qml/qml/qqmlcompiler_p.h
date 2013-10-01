@@ -157,6 +157,8 @@ public:
     // index in first hash is component index, hash inside maps from object index in that scope to integer id
     QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, int> objectIndexToIdForRoot;
+    // hash key is object index
+    QHash<int, QByteArray> customParserData;
     QVector<int> customParserBindings; // index is binding identifier, value is compiled function index.
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }

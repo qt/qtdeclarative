@@ -1620,7 +1620,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QString elementName = stringAt(obj->inheritedTypeNameIndex);
         if (elementName.isEmpty())
             continue;
-        QQmlPropertyCache *cache = unit->resolvedTypes[obj->inheritedTypeNameIndex].createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        QQmlCompiledData::TypeReference &tr = unit->resolvedTypes[obj->inheritedTypeNameIndex];
+        if (tr.type && tr.type->customParser())
+            continue;
+        QQmlPropertyCache *cache = tr.createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
         if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
             return false;
     }

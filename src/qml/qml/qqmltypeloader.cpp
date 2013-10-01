@@ -2466,7 +2466,8 @@ void QQmlTypeData::compile()
         // Sanity check property bindings
         if (errors.isEmpty()) {
             QQmlPropertyValidator validator(m_compiledData->url, m_compiledData->qmlUnit, m_compiledData->resolvedTypes,
-                                            m_compiledData->propertyCaches, m_compiledData->objectIndexToIdPerComponent);
+                                            m_compiledData->propertyCaches, m_compiledData->objectIndexToIdPerComponent,
+                                            &m_compiledData->customParserData);
             if (!validator.validate())
                 errors << validator.errors;
         }

@@ -251,6 +251,44 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
     return rv;
 }
 
+QByteArray QQmlConnectionsParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+{
+    QByteArray rv;
+    QDataStream ds(&rv, QIODevice::WriteOnly);
+
+    for (int ii = 0; ii < props.count(); ++ii) {
+        const QV4::CompiledData::Binding *binding = props.at(ii);
+        QString propName = qmlUnit->header.stringAt(binding->propertyNameIndex);
+        int propLine = binding->location.line;
+        int propColumn = binding->location.column;
+
+        if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
+            error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
+            return QByteArray();
+        }
+
+
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            const QV4::CompiledData::Object *target = qmlUnit->objectAt(binding->value.objectIndex);
+            if (!qmlUnit->header.stringAt(target->inheritedTypeNameIndex).isEmpty())
+                error(binding, QQmlConnections::tr("Connections: nested objects not allowed"));
+            else
+                error(binding, QQmlConnections::tr("Connections: syntax error"));
+            return QByteArray();
+        } if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+            error(binding, QQmlConnections::tr("Connections: script expected"));
+            return QByteArray();
+        } else {
+            ds << propName;
+            ds << binding->valueAsString(&qmlUnit->header);
+            ds << propLine;
+            ds << propColumn;
+        }
+    }
+
+    return rv;
+}
+
 void QQmlConnectionsParser::setCustomData(QObject *object,
                                             const QByteArray &data)
 {

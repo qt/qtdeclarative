@@ -230,6 +230,13 @@ void QQmlCustomParser::clearErrors()
     exceptions.clear();
 }
 
+QByteArray QQmlCustomParser::compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+{
+    Q_UNUSED(qmlUnit)
+    Q_UNUSED(bindings)
+    return QByteArray();
+}
+
 /*!
     Reports an error with the given \a description.
 
@@ -256,7 +263,6 @@ void QQmlCustomParser::error(const QString& description)
 void QQmlCustomParser::error(const QQmlCustomParserProperty& prop, const QString& description)
 {
     QQmlError error;
-    QString exceptionDescription;
     error.setLine(prop.location().line);
     error.setColumn(prop.location().column);
     error.setDescription(description);
@@ -271,9 +277,22 @@ void QQmlCustomParser::error(const QQmlCustomParserProperty& prop, const QString
 void QQmlCustomParser::error(const QQmlCustomParserNode& node, const QString& description)
 {
     QQmlError error;
-    QString exceptionDescription;
     error.setLine(node.location().line);
     error.setColumn(node.location().column);
+    error.setDescription(description);
+    exceptions << error;
+}
+
+/*!
+    Reports an error in parsing \a binding, with the given \a description.
+
+    An error is generated referring to the position of \a node in the source file.
+*/
+void QQmlCustomParser::error(const QV4::CompiledData::Binding *binding, const QString &description)
+{
+    QQmlError error;
+    error.setLine(binding->location.line);
+    error.setColumn(binding->location.column);
     error.setDescription(description);
     exceptions << error;
 }

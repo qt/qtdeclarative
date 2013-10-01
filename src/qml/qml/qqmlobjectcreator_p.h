@@ -122,7 +122,8 @@ public:
     QQmlPropertyValidator(const QUrl &url, const QV4::CompiledData::QmlUnit *qmlUnit,
                           const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes,
                           const QList<QQmlPropertyCache *> &propertyCaches,
-                          const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent);
+                          const QHash<int, QHash<int, int> > &objectIndexToIdPerComponent,
+                          QHash<int, QByteArray> *customParserData);
 
     bool validate();
 
@@ -134,6 +135,7 @@ private:
     const QHash<int, QQmlCompiledData::TypeReference> &resolvedTypes;
     const QList<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
+    QHash<int, QByteArray> *customParserData;
 };
 
 class QmlObjectCreator : public QQmlCompilePass

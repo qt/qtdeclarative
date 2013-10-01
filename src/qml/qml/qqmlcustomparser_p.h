@@ -126,6 +126,7 @@ public:
     Flags flags() const { return m_flags; }
 
     virtual QByteArray compile(const QList<QQmlCustomParserProperty> &)=0;
+    virtual QByteArray compile(const QV4::CompiledData::QmlUnit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings); // ### make pure virtual
     virtual void setCustomData(QObject *, const QByteArray &)=0;
 
     QList<QQmlError> errors() const { return exceptions; }
@@ -134,6 +135,7 @@ protected:
     void error(const QString& description);
     void error(const QQmlCustomParserProperty&, const QString& description);
     void error(const QQmlCustomParserNode&, const QString& description);
+    void error(const QV4::CompiledData::Binding *binding, const QString& description);
 
     int evaluateEnum(const QByteArray&, bool *ok) const;
 
