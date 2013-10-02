@@ -1378,7 +1378,9 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallCont
     }
 
     QV4::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
     switch (logType) {
     case Log:
         logger.debug("%s", qPrintable(result));
@@ -1419,7 +1421,9 @@ QV4::ReturnedValue ConsoleObject::method_profile(SimpleCallContext *ctx)
     QV4::ExecutionEngine *v4 = ctx->engine;
 
     QV4::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
     if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
 
@@ -1441,7 +1445,9 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(SimpleCallContext *ctx)
     QV4::ExecutionEngine *v4 = ctx->engine;
 
     QV4::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
 
     if (QQmlProfilerService::stopProfiling()) {
         QV8ProfilerService *profiler = QV8ProfilerService::instance();
@@ -1503,7 +1509,8 @@ QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
     QString message = name + QLatin1String(": ") + QString::number(value);
 
     QMessageLogger(qPrintable(scriptName), frame.line,
-                   qPrintable(frame.function)).debug("%s", qPrintable(message));
+                   qPrintable(frame.function))
+        .debug("%s", qPrintable(message));
 
     return QV4::Encode::undefined();
 }
@@ -1518,9 +1525,10 @@ QV4::ReturnedValue ConsoleObject::method_trace(SimpleCallContext *ctx)
     QString stack = jsStack(v4);
 
     QV4::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    QMessageLogger(frame.source.toUtf8().constData(), frame.line,
+                   frame.function.toUtf8().constData())
+        .debug("%s", qPrintable(stack));
 
-    logger.debug("%s", qPrintable(stack));
     return QV4::Encode::undefined();
 }
 
@@ -1548,8 +1556,9 @@ QV4::ReturnedValue ConsoleObject::method_assert(SimpleCallContext *ctx)
         QString stack = jsStack(v4);
 
         QV4::StackFrame frame = v4->currentStackFrame();
-        QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
-        logger.critical("%s\n%s", qPrintable(message), qPrintable(stack));
+        QMessageLogger(frame.source.toUtf8().constData(), frame.line,
+                       frame.function.toUtf8().constData())
+            .critical("%s\n%s",qPrintable(message), qPrintable(stack));
 
     }
     return QV4::Encode::undefined();
