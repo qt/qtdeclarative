@@ -149,7 +149,7 @@ class QQmlJS::Moth::StackSlotAllocator
     QHash<V4IR::Temp, V4IR::LifeTimeInterval> _intervals;
 
 public:
-    StackSlotAllocator(const QList<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
+    StackSlotAllocator(const QVector<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
         : _activeSlots(maxTempCount)
     {
         _intervals.reserve(ranges.size());

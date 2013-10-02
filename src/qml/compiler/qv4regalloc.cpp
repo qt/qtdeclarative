@@ -589,7 +589,7 @@ using namespace QT_PREPEND_NAMESPACE(QQmlJS);
 
 namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
-    QList<LifeTimeInterval> _intervals;
+    QVector<LifeTimeInterval> _intervals;
     Function *_function;
     RegAllocInfo *_info;
     const QHash<V4IR::Temp, int> &_assignedSpillSlots;
@@ -605,7 +605,7 @@ class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QHash<BasicBlock *, QList<LifeTimeInterval> > _liveAtEnd;
 
 public:
-    ResolutionPhase(const QList<LifeTimeInterval> &intervals, Function *function, RegAllocInfo *info,
+    ResolutionPhase(const QVector<LifeTimeInterval> &intervals, Function *function, RegAllocInfo *info,
                     const QHash<V4IR::Temp, int> &assignedSpillSlots,
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
@@ -709,7 +709,7 @@ private:
                     break;
                 if (i.temp() == *phi->targetTemp) {
                     activate(i);
-                    _intervals.removeAt(it);
+                    _intervals.remove(it);
                     break;
                 }
             }
@@ -1073,10 +1073,10 @@ void RegisterAllocator::linearScan()
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
-                _active.removeAt(i);
+                _active.remove(i);
             } else if (!it.covers(position)) {
                 _inactive += it;
-                _active.removeAt(i);
+                _active.remove(i);
             } else {
                 ++i;
             }
@@ -1088,11 +1088,11 @@ void RegisterAllocator::linearScan()
             if (it.end() < position) {
                 if (!it.isFixedInterval())
                     _handled += it;
-                _inactive.removeAt(i);
+                _inactive.remove(i);
             } else if (it.covers(position)) {
                 if (it.reg() != LifeTimeInterval::Invalid) {
                     _active += it;
-                    _inactive.removeAt(i);
+                    _inactive.remove(i);
                 } else {
                     // although this interval is now active, it has no register allocated (always
                     // spilled), so leave it in inactive.
@@ -1380,7 +1380,7 @@ int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
     return -1;
 }
 
-static inline void insertSorted(QList<LifeTimeInterval> &intervals, const LifeTimeInterval &newInterval)
+static inline void insertSorted(QVector<LifeTimeInterval> &intervals, const LifeTimeInterval &newInterval)
 {
     for (int i = 0, ei = intervals.size(); i != ei; ++i) {
         if (LifeTimeInterval::lessThan(newInterval, intervals.at(i))) {

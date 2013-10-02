@@ -2630,7 +2630,7 @@ class LifeRanges {
 
     QHash<BasicBlock *, LiveRegs> _liveIn;
     QHash<Temp, LifeTimeInterval> _intervals;
-    QList<LifeTimeInterval> _sortedRanges;
+    QVector<LifeTimeInterval> _sortedRanges;
 
 public:
     LifeRanges(Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
@@ -2659,7 +2659,7 @@ public:
         std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
     }
 
-    QList<LifeTimeInterval> ranges() const { return _sortedRanges; }
+    QVector<LifeTimeInterval> ranges() const { return _sortedRanges; }
 
     void dump() const
     {
@@ -2966,7 +2966,7 @@ void Optimizer::convertOutOfSSA() {
     }
 }
 
-QList<LifeTimeInterval> Optimizer::lifeRanges() const
+QVector<LifeTimeInterval> Optimizer::lifeRanges() const
 {
     Q_ASSERT(isInSSA());
 
