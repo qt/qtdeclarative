@@ -110,7 +110,7 @@ linux*|mac {
     LIBS += -ldl
 }
 
-!win32:!ios {
+!win32:!ios:!mac {
     *g++*:equals(QT_ARCH, "arm") {
         static_libgcc = $$system($$QMAKE_CXX -print-file-name=libgcc.a)
         LIBS += $$static_libgcc

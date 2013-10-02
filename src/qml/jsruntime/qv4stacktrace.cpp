@@ -49,7 +49,7 @@
 #include "qv4engine_p.h"
 #include "qv4unwindhelper_p.h"
 
-#ifdef V4_CXX_ABI_EXCEPTION
+#if defined(V4_CXX_ABI_EXCEPTION) || defined(Q_OS_DARWIN)
 #include <unwind.h>
 
 struct BacktraceHelper
@@ -95,7 +95,7 @@ NativeStackTrace::NativeStackTrace(ExecutionContext *context)
     engine = context->engine;
     currentNativeFrame = 0;
 
-#ifdef V4_CXX_ABI_EXCEPTION
+#if defined(V4_CXX_ABI_EXCEPTION) || defined(Q_OS_DARWIN)
     UnwindHelper::prepareForUnwind(context);
 
     nativeFrameCount = get_backtrace_from_libunwind(&trace[0], sizeof(trace) / sizeof(trace[0]));
