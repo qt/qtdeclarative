@@ -446,10 +446,13 @@ public:
     }
 
     void registerBlock(V4IR::BasicBlock*, V4IR::BasicBlock *nextBlock);
+    V4IR::BasicBlock *nextBlock() const { return _nextBlock; }
     void jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target);
     void addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump);
     void addPatch(DataLabelPtr patch, Label target);
     void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
+    void generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
+                             V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
 
     Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
@@ -1441,7 +1444,7 @@ protected:
                                    V4IR::Expr *rightSource, V4IR::Temp *target);
     void doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
                      V4IR::Temp *target);
-    Assembler::Jump branchDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
+    Assembler::Jump branchDouble(bool invertCondition, V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
     bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
                           V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
     bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,

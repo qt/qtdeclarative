@@ -262,6 +262,19 @@ void Assembler::addPatch(DataLabelPtr patch, V4IR::BasicBlock *target)
     _labelPatches[target].append(patch);
 }
 
+void Assembler::generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
+                                    V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock)
+{
+    if (trueBlock == _nextBlock) {
+        Jump target = branch32(Equal, reg, TrustedImm32(0));
+        addPatch(falseBlock, target);
+    } else {
+        Jump target = branch32(NotEqual, reg, TrustedImm32(0));
+        addPatch(trueBlock, target);
+        jumpToBlock(currentBlock, falseBlock);
+    }
+}
+
 Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
 {
     int32_t offset = 0;
@@ -1688,19 +1701,14 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
             testBoolean.link(_as);
         }
 
-        Assembler::Jump target = _as->branch32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0));
-        _as->addPatch(s->iftrue, target);
-        _as->jumpToBlock(_block, s->iffalse);
+        _as->generateCJumpOnNonZero(reg, _block, s->iftrue, s->iffalse);
         return;
     } else if (V4IR::Const *c = s->cond->asConst()) {
         // TODO: SSA optimization for constant condition evaluation should remove this.
         // See also visitCJump() in RegAllocInfo.
         generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_to_boolean,
                              Assembler::PointerToValue(c));
-        Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                               Assembler::TrustedImm32(0));
-        _as->addPatch(s->iftrue, target);
-        _as->jumpToBlock(_block, s->iffalse);
+        _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
     } else if (V4IR::Binop *b = s->cond->asBinop()) {
         if (b->left->type == V4IR::DoubleType && b->right->type == V4IR::DoubleType
@@ -1739,10 +1747,7 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
                                          Assembler::PointerToValue(b->left),
                                          Assembler::PointerToValue(b->right));
 
-        Assembler::Jump target = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
-                                               Assembler::TrustedImm32(0));
-        _as->addPatch(s->iftrue, target);
-        _as->jumpToBlock(_block, s->iffalse);
+        _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
     }
     Q_UNREACHABLE();
@@ -2045,7 +2050,7 @@ void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
         break;
     default: {
         Q_ASSERT(target->type == V4IR::BoolType);
-        Assembler::Jump trueCase = branchDouble(oper, leftSource, rightSource);
+        Assembler::Jump trueCase = branchDouble(false, oper, leftSource, rightSource);
         _as->storeBool(false, target);
         Assembler::Jump done = _as->jump();
         trueCase.link(_as);
@@ -2058,8 +2063,8 @@ void InstructionSelection::doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
         _as->storeDouble(Assembler::FPGpr0, target);
 }
 
-Assembler::Jump InstructionSelection::branchDouble(V4IR::AluOp op, V4IR::Expr *left,
-                                                   V4IR::Expr *right)
+Assembler::Jump InstructionSelection::branchDouble(bool invertCondition, V4IR::AluOp op,
+                                                   V4IR::Expr *left, V4IR::Expr *right)
 {
     Q_ASSERT(isPregOrConst(left));
     Q_ASSERT(isPregOrConst(right));
@@ -2078,6 +2083,9 @@ Assembler::Jump InstructionSelection::branchDouble(V4IR::AluOp op, V4IR::Expr *l
     default:
         Q_UNREACHABLE();
     }
+    if (invertCondition)
+        cond = JSC::MacroAssembler::invert(cond);
+
     return _as->branchDouble(cond, _as->toDoubleRegister(left), _as->toDoubleRegister(right));
 }
 
@@ -2087,9 +2095,14 @@ bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4
     if (!isPregOrConst(left) || !isPregOrConst(right))
         return false;
 
-    Assembler::Jump target = branchDouble(op, left, right);
-    _as->addPatch(iftrue, target);
-    _as->jumpToBlock(_block, iffalse);
+    if (_as->nextBlock() == iftrue) {
+        Assembler::Jump target = branchDouble(true, op, left, right);
+        _as->addPatch(iffalse, target);
+    } else {
+        Assembler::Jump target = branchDouble(false, op, left, right);
+        _as->addPatch(iftrue, target);
+        _as->jumpToBlock(_block, iffalse);
+    }
     return true;
 }
 

@@ -438,6 +438,7 @@ union Instr
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
         Param condition;
+        bool invert;
     };
     struct instr_unop {
         MOTH_INSTR_HEADER
