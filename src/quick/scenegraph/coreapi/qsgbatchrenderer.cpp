@@ -848,8 +848,10 @@ void Renderer::nodeChangedBatchRoot(Node *node, Node *root)
     } else if (node->type() == QSGNode::GeometryNodeType) {
         // Only need to change the root as nodeChanged anyway flags a full update.
         Element *e = node->element();
-        if (e)
+        if (e) {
             e->root = root;
+            e->boundsComputed = false;
+        }
     }
 
     SHADOWNODE_TRAVERSE(node)
