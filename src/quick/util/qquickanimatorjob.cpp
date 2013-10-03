@@ -314,6 +314,12 @@ void QQuickTransformAnimatorJob::Helper::sync()
             | QQuickItemPrivate::TransformOrigin;
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+    if (d->extra.isAllocated()
+            && d->extra->layer
+            && d->extra->layer->enabled()) {
+        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
+    }
+
     quint32 dirty = mask & d->dirtyAttributes;
 
     if (!wasSynced) {
@@ -404,6 +410,12 @@ void QQuickOpacityAnimatorJob::initialize(QQuickAnimatorController *controller)
 {
     QQuickAnimatorJob::initialize(controller);
     QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
+    if (d->extra.isAllocated()
+            && d->extra->layer
+            && d->extra->layer->enabled()) {
+        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
+    }
+
     m_opacityNode = d->opacityNode();
     if (!m_opacityNode) {
         m_opacityNode = new QSGOpacityNode();
