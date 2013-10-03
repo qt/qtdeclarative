@@ -563,6 +563,10 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
     QQuickShaderEffectMaterial *material =
             static_cast<QQuickShaderEffectMaterial *>(m_node->material());
     material->uniforms[m_uniformType][m_uniformIndex].value = m_value;
+    // As we're not touching the nodes, we need to explicitly mark it dirty.
+    // Otherwise, the renderer will abort repainting if this was the only
+    // change in the graph currently rendering.
+    m_node->markDirty(QSGNode::DirtyMaterial);
 }
 
 void QQuickUniformAnimatorJob::writeBack()
