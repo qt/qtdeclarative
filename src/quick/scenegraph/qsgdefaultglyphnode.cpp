@@ -112,10 +112,10 @@ void QSGDefaultGlyphNode::update()
     } else {
         QSGStyledTextMaterial *material = new QSGStyledTextMaterial(font);
         if (m_style == QQuickText::Sunken) {
-            material->setStyleShift(QPointF(0, -1));
+            material->setStyleShift(QVector2D(0, -1));
             margins.setTop(1);
         } else if (m_style == QQuickText::Raised) {
-            material->setStyleShift(QPointF(0, 1));
+            material->setStyleShift(QVector2D(0, 1));
             margins.setBottom(1);
         }
         material->setStyleColor(m_styleColor);
