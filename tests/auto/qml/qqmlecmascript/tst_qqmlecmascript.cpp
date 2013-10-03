@@ -5433,6 +5433,8 @@ void tst_qqmlecmascript::sequenceConversionIndexes()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
     QMetaObject::invokeMethod(object, "indexedAccess");
     QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "indexOf");
+    QVERIFY(object->property("success").toBool());
     delete object;
 }
 
