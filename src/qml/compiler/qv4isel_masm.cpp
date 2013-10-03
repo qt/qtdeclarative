@@ -611,7 +611,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 #  if OS(MAC_OS_X)
         char *disasmOutput = memStream.buf.data();
 #  endif
-#  if CPU(X86) || CPU(X86_64)
+#  if CPU(X86) || CPU(X86_64) || CPU(ARM)
         QHash<void*, String*> idents;
         printDisassembledOutputWithCalls(disasmOutput, functions);
 #  endif

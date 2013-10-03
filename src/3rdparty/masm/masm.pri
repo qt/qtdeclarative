@@ -59,6 +59,11 @@ contains(DEFINES, WTF_USE_UDIS86=1) {
     QMAKE_EXTRA_TARGETS += udis86_tab_cfile
 }
 
+# We can always compile these, they have ifdef guards inside
+SOURCES += $$PWD/disassembler/ARMv7Disassembler.cpp
+SOURCES += $$PWD/disassembler/ARMv7/ARMv7DOpcode.cpp
+HEADERS += $$PWD/disassembler/ARMv7/ARMv7DOpcode.h
+
 SOURCES += $$PWD/yarr/*.cpp
 HEADERS += $$PWD/yarr/*.h
 
