@@ -74,13 +74,12 @@ void QQuickAnimatorController::advance()
             running = true;
     }
 
-    for (QSet<QQuickAnimatorJob *>::const_iterator it = activeLeafAnimations.constBegin();
-         it != activeLeafAnimations.constEnd(); ++it) {
-        QQuickAnimatorJob *job = *it;
-        if (job->isTransform() && job->target()) {
-            QQuickTransformAnimatorJob *xform = static_cast<QQuickTransformAnimatorJob *>(*it);
-            xform->transformHelper()->apply();
-        }
+    // It was tempting to only run over the active animations, but we need to push
+    // the values for the transforms that finished in the last frame and those will
+    // have been removed already...
+    for (QHash<QQuickItem *, QQuickTransformAnimatorJob::Helper *>::const_iterator it = transforms.constBegin();
+         it != transforms.constEnd(); ++it) {
+        (*it)->apply();
     }
 
     if (running)
