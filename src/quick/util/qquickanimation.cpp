@@ -982,9 +982,9 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
     d->reversing = (direction == Backward);
     if (!d->name.isEmpty()) {
         for (int ii = 0; ii < actions.count(); ++ii) {
-            QQuickAction &action = actions[ii];
+            QQuickStateAction &action = actions[ii];
 
-            if (action.event && action.event->type() == QQuickActionEvent::Script
+            if (action.event && action.event->type() == QQuickStateActionEvent::Script
                 && static_cast<QQuickStateChangeScript*>(action.event)->name() == d->name) {
                 d->runScriptScript = static_cast<QQuickStateChangeScript*>(action.event)->script();
                 d->hasRunScriptScript = true;
@@ -1162,7 +1162,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
         virtual void doAction()
         {
             for (int ii = 0; ii < actions.count(); ++ii) {
-                const QQuickAction &action = actions.at(ii);
+                const QQuickStateAction &action = actions.at(ii);
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
             }
         }
@@ -1195,7 +1195,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     if (d->value.isValid()) {
         for (int i = 0; i < props.count(); ++i) {
             for (int j = 0; j < targets.count(); ++j) {
-                QQuickAction myAction;
+                QQuickStateAction myAction;
                 myAction.property = d->createProperty(targets.at(j), props.at(i), this);
                 if (myAction.property.isValid()) {
                     myAction.toValue = d->value;
@@ -1203,7 +1203,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
                     data->actions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
-                        QQuickAction &action = actions[ii];
+                        QQuickStateAction &action = actions[ii];
                         if (action.property.object() == myAction.property.object() &&
                             myAction.property.name() == action.property.name()) {
                             modified << action.property;
@@ -1217,7 +1217,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
 
     if (!hasExplicit)
     for (int ii = 0; ii < actions.count(); ++ii) {
-        QQuickAction &action = actions[ii];
+        QQuickStateAction &action = actions[ii];
 
         QObject *obj = action.property.object();
         QString propertyName = action.property.name();
@@ -1228,7 +1228,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
         if ((targets.isEmpty() || targets.contains(obj) || (!same && targets.contains(sObj))) &&
            (!d->exclude.contains(obj)) && (same || (!d->exclude.contains(sObj))) &&
            (props.contains(propertyName) || (!same && props.contains(sPropertyName)))) {
-            QQuickAction myAction = action;
+            QQuickStateAction myAction = action;
 
             if (d->value.isValid())
                 myAction.toValue = d->value;
@@ -2468,7 +2468,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
     if (reverse)
         v = 1 - v;
     for (int ii = 0; ii < actions.count(); ++ii) {
-        QQuickAction &action = actions[ii];
+        QQuickStateAction &action = actions[ii];
 
         if (v == 1.) {
             QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
@@ -2533,7 +2533,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
     if (d->toIsDefined) {
         for (int i = 0; i < props.count(); ++i) {
             for (int j = 0; j < targets.count(); ++j) {
-                QQuickAction myAction;
+                QQuickStateAction myAction;
                 myAction.property = d->createProperty(targets.at(j), props.at(i), this);
                 if (myAction.property.isValid()) {
                     if (d->fromIsDefined) {
@@ -2545,7 +2545,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
                     newActions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
-                        QQuickAction &action = actions[ii];
+                        QQuickStateAction &action = actions[ii];
                         if (action.property.object() == myAction.property.object() &&
                             myAction.property.name() == action.property.name()) {
                             modified << action.property;
@@ -2559,7 +2559,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
 
     if (!hasExplicit)
     for (int ii = 0; ii < actions.count(); ++ii) {
-        QQuickAction &action = actions[ii];
+        QQuickStateAction &action = actions[ii];
 
         QObject *obj = action.property.object();
         QString propertyName = action.property.name();
@@ -2571,7 +2571,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
            (!d->exclude.contains(obj)) && (same || (!d->exclude.contains(sObj))) &&
            (props.contains(propertyName) || (!same && props.contains(sPropertyName))
                || (useType && action.property.propertyType() == d->interpolatorType))) {
-            QQuickAction myAction = action;
+            QQuickStateAction myAction = action;
 
             if (d->fromIsDefined)
                 myAction.fromValue = d->from;

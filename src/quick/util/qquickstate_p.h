@@ -50,16 +50,16 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickActionEvent;
+class QQuickStateActionEvent;
 class QQmlAbstractBinding;
 class QQmlBinding;
 class QQmlExpression;
-class QQuickAction
+class QQuickStateAction
 {
 public:
-    QQuickAction();
-    QQuickAction(QObject *, const QString &, const QVariant &);
-    QQuickAction(QObject *, const QString &,
+    QQuickStateAction();
+    QQuickStateAction(QObject *, const QString &, const QVariant &);
+    QQuickStateAction(QObject *, const QString &,
                        QQmlContext *, const QVariant &);
 
     bool restore:1;
@@ -73,7 +73,7 @@ public:
 
     QQmlAbstractBinding *fromBinding;
     QWeakPointer<QQmlAbstractBinding> toBinding;
-    QQuickActionEvent *event;
+    QQuickStateActionEvent *event;
 
     //strictly for matching
     QObject *specifiedObject;
@@ -82,10 +82,10 @@ public:
     void deleteFromBinding();
 };
 
-class Q_AUTOTEST_EXPORT QQuickActionEvent
+class Q_AUTOTEST_EXPORT QQuickStateActionEvent
 {
 public:
-    virtual ~QQuickActionEvent();
+    virtual ~QQuickStateActionEvent();
 
     enum EventType { Script, SignalHandler, ParentChange, AnchorChanges };
     enum Reason { ActualChange, FastForward };
@@ -97,7 +97,7 @@ public:
     virtual void reverse(Reason reason = ActualChange);
     virtual void saveOriginals() {}
     virtual bool needsCopy() { return false; }
-    virtual void copyOriginals(QQuickActionEvent *) {}
+    virtual void copyOriginals(QQuickStateActionEvent *) {}
 
     virtual bool isRewindable() { return isReversable(); }
     virtual void rewind() {}
@@ -106,7 +106,7 @@ public:
 
     virtual bool changesBindings();
     virtual void clearBindings();
-    virtual bool override(QQuickActionEvent*other);
+    virtual bool override(QQuickStateActionEvent*other);
 };
 
 //### rename to QQuickStateChange?
@@ -119,7 +119,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 public:
     QQuickStateOperation(QObject *parent = 0)
         : QObject(parent) {}
-    typedef QList<QQuickAction> ActionList;
+    typedef QList<QQuickStateAction> ActionList;
 
     virtual ActionList actions();
 
@@ -182,9 +182,9 @@ public:
     bool changeValueInRevertList(QObject *target, const QString &name, const QVariant &revertValue);
     bool changeBindingInRevertList(QObject *target, const QString &name, QQmlAbstractBinding *binding);
     bool removeEntryFromRevertList(QObject *target, const QString &name);
-    void addEntryToRevertList(const QQuickAction &action);
+    void addEntryToRevertList(const QQuickStateAction &action);
     void removeAllEntriesFromRevertList(QObject *target);
-    void addEntriesToRevertList(const QList<QQuickAction> &actions);
+    void addEntriesToRevertList(const QList<QQuickStateAction> &actions);
     QVariant valueInRevertList(QObject *target, const QString &name) const;
     QQmlAbstractBinding *bindingInRevertList(QObject *target, const QString &name) const;
 

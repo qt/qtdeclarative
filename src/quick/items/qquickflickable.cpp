@@ -211,7 +211,7 @@ public:
         axisData->transitionToSet = true;
 
         actions.clear();
-        actions << QQuickAction(fp->contentItem, propName, toPos);
+        actions << QQuickStateAction(fp->contentItem, propName, toPos);
         QQuickTransitionManager::transition(actions, fp->rebound, fp->contentItem);
         return true;
     }

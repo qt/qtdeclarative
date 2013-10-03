@@ -48,7 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickStateChangeScriptPrivate;
-class Q_AUTOTEST_EXPORT QQuickStateChangeScript : public QQuickStateOperation, public QQuickActionEvent
+class Q_AUTOTEST_EXPORT QQuickStateChangeScript : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickStateChangeScript)

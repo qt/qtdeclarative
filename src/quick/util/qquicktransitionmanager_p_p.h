@@ -68,7 +68,7 @@ public:
 
     bool isRunning() const;
 
-    void transition(const QList<QQuickAction> &, QQuickTransition *transition, QObject *defaultTarget = 0);
+    void transition(const QList<QQuickStateAction> &, QQuickTransition *transition, QObject *defaultTarget = 0);
 
     void cancel();
 

@@ -140,13 +140,13 @@ void QQuickStateChangeScript::execute(Reason)
 QQuickStateChangeScript::ActionList QQuickStateChangeScript::actions()
 {
     ActionList rv;
-    QQuickAction a;
+    QQuickStateAction a;
     a.event = this;
     rv << a;
     return rv;
 }
 
-QQuickActionEvent::EventType QQuickStateChangeScript::type() const
+QQuickStateActionEvent::EventType QQuickStateChangeScript::type() const
 {
     return Script;
 }

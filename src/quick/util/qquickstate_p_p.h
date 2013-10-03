@@ -70,7 +70,7 @@ class QQuickSimpleAction
 {
 public:
     enum State { StartState, EndState };
-    QQuickSimpleAction(const QQuickAction &a, State state = StartState)
+    QQuickSimpleAction(const QQuickStateAction &a, State state = StartState)
     {
         m_property = a.property;
         m_specifiedObject = a.specifiedObject;
@@ -157,7 +157,7 @@ public:
         return m_specifiedProperty;
     }
 
-    QQuickActionEvent *event() const
+    QQuickStateActionEvent *event() const
     {
         return m_event;
     }
@@ -173,7 +173,7 @@ private:
     QQmlAbstractBinding::Pointer m_binding;
     QObject *m_specifiedObject;
     QString m_specifiedProperty;
-    QQuickActionEvent *m_event;
+    QQuickStateActionEvent *m_event;
     bool m_reverseEvent;
 };
 
@@ -182,9 +182,9 @@ class QQuickRevertAction
 public:
     QQuickRevertAction() : event(0) {}
     QQuickRevertAction(const QQmlProperty &prop) : property(prop), event(0) {}
-    QQuickRevertAction(QQuickActionEvent *e) : event(e) {}
+    QQuickRevertAction(QQuickStateActionEvent *e) : event(e) {}
     QQmlProperty property;
-    QQuickActionEvent *event;
+    QQuickStateActionEvent *event;
 };
 
 class QQuickStateOperationPrivate : public QObjectPrivate

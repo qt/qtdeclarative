@@ -220,7 +220,7 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
 
     if (actions.size()) {
         for (int i=0; i<actions.size(); ++i) {
-            QQuickAction &action = actions[i];
+            QQuickStateAction &action = actions[i];
             if (action.property.name() != propertyName)
                 continue;
             modified << action.property;

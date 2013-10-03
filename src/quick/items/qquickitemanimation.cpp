@@ -221,7 +221,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         virtual void doAction()
         {
             for (int ii = 0; ii < actions.count(); ++ii) {
-                const QQuickAction &action = actions.at(ii);
+                const QQuickStateAction &action = actions.at(ii);
                 if (reverse)
                     action.event->reverse();
                 else
@@ -236,7 +236,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
     bool hasExplicit = false;
     if (d->target && d->newParent) {
         data->reverse = false;
-        QQuickAction myAction;
+        QQuickStateAction myAction;
         QQuickParentChange *pc = new QQuickParentChange;
         pc->setObject(d->target);
         pc->setParent(d->newParent);
@@ -246,7 +246,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         hasExplicit = true;
         if (d->via) {
             viaData->reverse = false;
-            QQuickAction myVAction;
+            QQuickStateAction myVAction;
             QQuickParentChange *vpc = new QQuickParentChange;
             vpc->setObject(d->target);
             vpc->setParent(d->via);
@@ -260,12 +260,12 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     if (!hasExplicit)
     for (int i = 0; i < actions.size(); ++i) {
-        QQuickAction &action = actions[i];
-        if (action.event && action.event->type() == QQuickActionEvent::ParentChange
+        QQuickStateAction &action = actions[i];
+        if (action.event && action.event->type() == QQuickStateActionEvent::ParentChange
             && (!d->target || static_cast<QQuickParentChange*>(action.event)->object() == d->target)) {
 
             QQuickParentChange *pc = static_cast<QQuickParentChange*>(action.event);
-            QQuickAction myAction = action;
+            QQuickStateAction myAction = action;
             data->reverse = action.reverseEvent;
 
             //### this logic differs from PropertyAnimation
@@ -285,18 +285,18 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
             if (d->via) {
                 viaData->reverse = false;
-                QQuickAction myAction;
+                QQuickStateAction myAction;
                 QQuickParentChange *vpc = new QQuickParentChange;
                 vpc->setObject(pc->object());
                 vpc->setParent(d->via);
                 myAction.event = vpc;
                 viaData->pc << vpc;
                 viaData->actions << myAction;
-                QQuickAction dummyAction;
-                QQuickAction &xAction = pc->xIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
-                QQuickAction &yAction = pc->yIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
-                QQuickAction &sAction = pc->scaleIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
-                QQuickAction &rAction = pc->rotationIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
+                QQuickStateAction dummyAction;
+                QQuickStateAction &xAction = pc->xIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
+                QQuickStateAction &yAction = pc->yIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
+                QQuickStateAction &sAction = pc->scaleIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
+                QQuickStateAction &rAction = pc->rotationIsSet() && i < actions.size()-1 ? actions[++i] : dummyAction;
                 QQuickItem *target = pc->object();
                 QQuickItem *targetParent = action.reverseEvent ? pc->originalParent() : pc->parent();
 
@@ -535,8 +535,8 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     data->fromDefined = false;
 
     for (int ii = 0; ii < actions.count(); ++ii) {
-        QQuickAction &action = actions[ii];
-        if (action.event && action.event->type() == QQuickActionEvent::AnchorChanges
+        QQuickStateAction &action = actions[ii];
+        if (action.event && action.event->type() == QQuickStateActionEvent::AnchorChanges
             && (d->targets.isEmpty() || d->targets.contains(static_cast<QQuickAnchorChanges*>(action.event)->object()))) {
             data->actions << static_cast<QQuickAnchorChanges*>(action.event)->additionalActions();
         }
@@ -868,7 +868,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
     int origModifiedSize = modified.count();
 
     for (int i = 0; i < actions.count(); ++i) {
-        QQuickAction &action = actions[i];
+        QQuickStateAction &action = actions[i];
         if (action.event)
             continue;
         if (action.specifiedObject == target && action.property.name() == QLatin1String("x")) {

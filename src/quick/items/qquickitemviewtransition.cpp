@@ -127,8 +127,8 @@ void QQuickItemViewTransitionJob::startTransition(QQuickItemViewTransitionableIt
     }
 
     QQuickStateOperation::ActionList actions;
-    actions << QQuickAction(item->item, QLatin1String("x"), QVariant(to.x()));
-    actions << QQuickAction(item->item, QLatin1String("y"), QVariant(to.y()));
+    actions << QQuickStateAction(item->item, QLatin1String("x"), QVariant(to.x()));
+    actions << QQuickStateAction(item->item, QLatin1String("y"), QVariant(to.y()));
 
     m_transitioner->runningJobs << this;
     QQuickTransitionManager::transition(actions, trans, item->item);

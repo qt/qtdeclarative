@@ -202,7 +202,7 @@ void QQuickBehavior::write(const QVariant &value)
     const QVariant &currentValue = d->property.read();
 
     QQuickStateOperation::ActionList actions;
-    QQuickAction action;
+    QQuickStateAction action;
     action.property = d->property;
     action.fromValue = currentValue;
     action.toValue = value;
