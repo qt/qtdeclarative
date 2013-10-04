@@ -168,6 +168,7 @@ private:
     const QList<QByteArray> vmeMetaObjectData;
     QHash<int, int> objectIndexToId;
     QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
+    QLinkedList<QVector<QQmlParserStatus*> > allParserStatusCallbacks;
     QQmlCompiledData *compiledData;
 
     QObject *_qobject;
@@ -180,6 +181,7 @@ private:
     QVector<QQmlAbstractBinding*> _createdBindings;
     QQmlListProperty<void> _currentList;
     QV4::ExecutionContext *_qmlContext;
+    QVector<QQmlParserStatus*> _parserStatusCallbacks;
 };
 
 QT_END_NAMESPACE

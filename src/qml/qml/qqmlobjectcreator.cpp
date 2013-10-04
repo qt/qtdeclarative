@@ -537,6 +537,10 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
         context->importedScripts = parentContext->importedScripts;
     }
 
+    QVector<QQmlParserStatus*> parserStatusCallbacks;
+    parserStatusCallbacks.resize(qmlUnit->nObjects);
+    qSwap(_parserStatusCallbacks, parserStatusCallbacks);
+
     QObject *instance = createInstance(objectToCreate, parent);
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
@@ -546,6 +550,10 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
 
         context->contextObject = instance;
     }
+
+    qSwap(_parserStatusCallbacks, parserStatusCallbacks);
+    allParserStatusCallbacks.prepend(parserStatusCallbacks);
+
     return instance;
 }
 
@@ -1242,6 +1250,13 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
             }
+            const int parserStatusCast = type->parserStatusCast();
+            if (parserStatusCast != -1) {
+                QQmlParserStatus *parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
+                parserStatus->classBegin();
+                _parserStatusCallbacks[index] = parserStatus;
+                parserStatus->d = &_parserStatusCallbacks[index];
+            }
         } else {
             Q_ASSERT(typeRef.component);
             if (typeRef.component->qmlUnit->isSingleton())
@@ -1258,6 +1273,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             if (subCreator.componentAttached)
                 subCreator.componentAttached->add(&componentAttached);
             allCreatedBindings << subCreator.allCreatedBindings;
+            allParserStatusCallbacks << subCreator.allParserStatusCallbacks;
         }
         // ### use no-event variant
         if (parent)
@@ -1319,6 +1335,28 @@ void QmlObjectCreator::finalize()
                           QQmlPropertyPrivate::DontRemoveBinding);
         }
     }
+    }
+
+    if (true /* ### componentCompleteEnabled()*/) { // the qml designer does the component complete later
+        QQmlTrace trace("VME Component Complete");
+        for (QLinkedList<QVector<QQmlParserStatus*> >::ConstIterator it = allParserStatusCallbacks.constBegin(), end = allParserStatusCallbacks.constEnd();
+             it != end; ++it) {
+            const QVector<QQmlParserStatus *> &parserStatusCallbacks = *it;
+            for (int i = parserStatusCallbacks.count() - 1; i >= 0; --i) {
+                QQmlParserStatus *status = parserStatusCallbacks.at(i);
+
+                if (status && status->d) {
+                    status->d = 0;
+                    status->componentComplete();
+                }
+
+    #if 0 // ###
+                if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+                    return 0;
+    #endif
+            }
+        }
+        allParserStatusCallbacks.clear();
     }
 
     {
