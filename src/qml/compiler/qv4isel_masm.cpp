@@ -667,6 +667,8 @@ void InstructionSelection::run(int functionIndex)
         ConvertTemps().toStackSlots(_function);
     }
     V4IR::Optimizer::showMeTheCode(_function);
+    QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    qSwap(_removableJumps, removableJumps);
 
     Assembler* oldAssembler = _as;
     _as = new Assembler(this, _function, executableAllocator, 6); // 6 == max argc for calls to built-ins with an argument array
@@ -715,6 +717,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_reentryBlocks, reentryBlocks);
     delete _as;
     _as = oldAssembler;
+    qSwap(_removableJumps, removableJumps);
 }
 
 void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
@@ -1675,7 +1678,8 @@ void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *arg
 
 void InstructionSelection::visitJump(V4IR::Jump *s)
 {
-    _as->jumpToBlock(_block, s->target);
+    if (!_removableJumps.contains(s))
+        _as->jumpToBlock(_block, s->target);
 }
 
 void InstructionSelection::visitCJump(V4IR::CJump *s)

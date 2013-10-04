@@ -141,6 +141,8 @@ public:
 
     QVector<LifeTimeInterval> lifeRanges() const;
 
+    QSet<V4IR::Jump *> calculateOptionalJumps();
+
     static void showMeTheCode(Function *function);
 
 private:

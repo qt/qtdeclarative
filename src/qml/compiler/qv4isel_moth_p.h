@@ -175,6 +175,7 @@ private:
     uchar *_codeEnd;
 
     StackSlotAllocator *_stackSlotAllocator;
+    QSet<V4IR::Jump *> _removableJumps;
     V4IR::Stmt *_currentStatement;
 
     CompilationUnit *compilationUnit;

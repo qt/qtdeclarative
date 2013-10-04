@@ -252,7 +252,11 @@ void InstructionSelection::run(int functionIndex)
         stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
         opt.convertOutOfSSA();
     }
+
     qSwap(_stackSlotAllocator, stackSlotAllocator);
+    QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    qSwap(_removableJumps, removableJumps);
+
     V4IR::Stmt *cs = 0;
     qSwap(_currentStatement, cs);
 
@@ -289,6 +293,7 @@ void InstructionSelection::run(int functionIndex)
     codeRefs.insert(_function, squeezeCode());
 
     qSwap(_currentStatement, cs);
+    qSwap(_removableJumps, removableJumps);
     qSwap(_stackSlotAllocator, stackSlotAllocator);
     delete stackSlotAllocator;
     qSwap(_function, function);
@@ -628,6 +633,8 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
 void InstructionSelection::visitJump(V4IR::Jump *s)
 {
     if (s->target == _nextBlock)
+        return;
+    if (_removableJumps.contains(s))
         return;
 
     Instruction::Jump jump;

@@ -1550,6 +1550,7 @@ private:
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
+    QSet<V4IR::Jump *> _removableJumps;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 

@@ -2976,6 +2976,45 @@ QVector<LifeTimeInterval> Optimizer::lifeRanges() const
     return lifeRanges.ranges();
 }
 
+QSet<Jump *> Optimizer::calculateOptionalJumps()
+{
+    QSet<Jump *> optional;
+    QSet<BasicBlock *> reachableWithoutJump;
+
+    const int maxSize = function->basicBlocks.size();
+    optional.reserve(maxSize);
+    reachableWithoutJump.reserve(maxSize);
+
+    for (int i = function->basicBlocks.size() - 1; i >= 0; --i) {
+        BasicBlock *bb = function->basicBlocks[i];
+
+        if (Jump *jump = bb->statements.last()->asJump()) {
+            if (reachableWithoutJump.contains(jump->target)) {
+                if (bb->statements.size() > 1)
+                    reachableWithoutJump.clear();
+                optional.insert(jump);
+                reachableWithoutJump.insert(bb);
+                continue;
+            }
+        }
+
+        reachableWithoutJump.clear();
+        reachableWithoutJump.insert(bb);
+    }
+
+#if 0
+    QTextStream out(stdout, QIODevice::WriteOnly);
+    out << "Jumps to ignore:" << endl;
+    foreach (Jump *j, removed) {
+        out << "\t" << j->id << ": ";
+        j->dump(out, Stmt::MIR);
+        out << endl;
+    }
+#endif
+
+    return optional;
+}
+
 void Optimizer::showMeTheCode(Function *function)
 {
     ::showMeTheCode(function);
