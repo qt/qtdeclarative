@@ -2370,20 +2370,20 @@ bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
             _as->storeInt32(targetReg, target);
     } return true;
     case V4IR::OpLShift:
-        Q_ASSERT(rightSource->type == V4IR::UInt32Type);
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
         _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
                   Assembler::ReturnValueRegister);
-        _as->move(_as->toUInt32Register(rightSource, Assembler::ScratchRegister),
+        _as->move(_as->toInt32Register(rightSource, Assembler::ScratchRegister),
                   Assembler::ScratchRegister);
         _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
         _as->lshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
         _as->storeInt32(Assembler::ReturnValueRegister, target);
         return true;
     case V4IR::OpRShift:
-        Q_ASSERT(rightSource->type == V4IR::UInt32Type);
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
         _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
                   Assembler::ReturnValueRegister);
-        _as->move(_as->toUInt32Register(rightSource, Assembler::ScratchRegister),
+        _as->move(_as->toInt32Register(rightSource, Assembler::ScratchRegister),
                   Assembler::ScratchRegister);
         _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
         _as->rshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
