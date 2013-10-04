@@ -187,34 +187,30 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
     return pluginInfo;
 }
 
-// Construct a file system path from a module uri and version.
-// Special case for 1.x: QtQuick.Dialogs 1.x -> QtQuick/Dialogs
-// Genral casefor y.x:  QtQuick.Dialogs y.x -> QtQuick/Dialogs.y
-QString localPathForModule(const QString &moduleUri, const QString &version)
+// Search for a given qml import in g_qmlImportPaths.
+QString resolveImportPath(const QString &uri, const QString &version)
 {
-    QString path;
-    foreach (const QString &part, moduleUri.split(QLatin1Char('.')))
-        path += QLatin1Char('/') + part;
+    // Create path from uri (QtQuick.Controls -> QtQuick/Controls)
+    QString path = uri;
+    path.replace(QLatin1Char('.'), QLatin1Char('/'));
+    // search for the most spesifc version first
+    QString versionedName = path + QLatin1Char('.') + version;
+    while (true) {
+        // look in all g_qmlImportPaths
+        foreach (const QString &qmlImportPath, g_qmlImportPaths) {
+            QString candidatePath = QDir::cleanPath(qmlImportPath + QLatin1Char('/') + versionedName);
+            if (QDir(candidatePath).exists())
+                return candidatePath; // import found
+        }
 
-    if (version.startsWith(QLatin1String("1.")))
-        return path;
-
-    if (version.contains(QLatin1Char('.')))
-        path += QLatin1Char('.') + version.split(QLatin1Char('.')).at(0);
-    else
-        path += QLatin1Char('.') + version;
-    return path;
-}
-
-// Search for a given qml import in g_qmlImportPaths
-QString findPathForImport(const QString&localModulePath)
-{
-    foreach (const QString &qmlImportPath, g_qmlImportPaths) {
-        QString candidatePath = QDir::cleanPath(qmlImportPath + QLatin1Char('/') + localModulePath);
-        if (QDir(candidatePath).exists())
-            return candidatePath;
+        // remove the last version digit; stop if there are none left
+        int lastDot = versionedName.lastIndexOf(QLatin1Char('.'));
+        if (lastDot == -1)
+            break;
+        versionedName = versionedName.mid(0, lastDot);
     }
-    return QString();
+
+    return QString(); // not found
 }
 
 // Find absolute file system paths and plugins for a list of modules.
@@ -225,7 +221,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
     foreach (QVariant importVariant, imports) {
         QVariantMap import = qvariant_cast<QVariantMap>(importVariant);
         if (import[QStringLiteral("type")] == QStringLiteral("module")) {
-            import[QStringLiteral("path")] = findPathForImport(localPathForModule(import[QStringLiteral("name")].toString(), import[QStringLiteral("version")].toString()));
+            import[QStringLiteral("path")] = resolveImportPath(import[QStringLiteral("name")].toString(), import[QStringLiteral("version")].toString());
             QVariantMap plugininfo = pluginsForModulePath(import[QStringLiteral("path")].toString());
             QString plugins = plugininfo[QStringLiteral("plugins")].toString();
             QString classnames = plugininfo[QStringLiteral("classnames")].toString();
