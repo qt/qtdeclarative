@@ -121,7 +121,8 @@ static unsigned int extbl[] = {
     MK_UW_WORD(0b00001111,
                FINISH,
                FINISH,
-               FINISH)
+               FINISH),
+    0 // no additional entries
 };
 
 static unsigned write_prel31(unsigned *addr, void *ptr)
