@@ -262,27 +262,48 @@ void Assembler::addPatch(DataLabelPtr patch, V4IR::BasicBlock *target)
 }
 
 void Assembler::generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
-                                    V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock)
+                                       V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock)
+{
+    generateCJumpOnCompare(NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
+}
+
+void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left,TrustedImm32 right,
+                                       V4IR::BasicBlock *currentBlock,  V4IR::BasicBlock *trueBlock,
+                                       V4IR::BasicBlock *falseBlock)
 {
     if (trueBlock == _nextBlock) {
-        Jump target = branch32(Equal, reg, TrustedImm32(0));
+        Jump target = branch32(invert(cond), left, right);
         addPatch(falseBlock, target);
     } else {
-        Jump target = branch32(NotEqual, reg, TrustedImm32(0));
+        Jump target = branch32(cond, left, right);
         addPatch(trueBlock, target);
         jumpToBlock(currentBlock, falseBlock);
     }
 }
 
-Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
+void Assembler::generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
+                                       V4IR::BasicBlock *currentBlock,  V4IR::BasicBlock *trueBlock,
+                                       V4IR::BasicBlock *falseBlock)
+{
+    if (trueBlock == _nextBlock) {
+        Jump target = branch32(invert(cond), left, right);
+        addPatch(falseBlock, target);
+    } else {
+        Jump target = branch32(cond, left, right);
+        addPatch(trueBlock, target);
+        jumpToBlock(currentBlock, falseBlock);
+    }
+}
+
+Assembler::Pointer Assembler::loadTempAddress(RegisterID baseReg, V4IR::Temp *t)
 {
     int32_t offset = 0;
     int scope = t->scope;
     RegisterID context = ContextRegister;
     if (scope) {
-        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext, outer)), ScratchRegister);
+        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext, outer)), baseReg);
         --scope;
-        context = ScratchRegister;
+        context = baseReg;
         while (scope) {
             loadPtr(Address(context, qOffsetOf(ExecutionContext, outer)), context);
             --scope;
@@ -291,12 +312,12 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     switch (t->kind) {
     case V4IR::Temp::Formal:
     case V4IR::Temp::ScopedFormal: {
-        loadPtr(Address(context, qOffsetOf(CallContext, callData)), reg);
+        loadPtr(Address(context, qOffsetOf(CallContext, callData)), baseReg);
         offset = sizeof(CallData) + (t->index - 1) * sizeof(SafeValue);
     } break;
     case V4IR::Temp::Local:
     case V4IR::Temp::ScopedLocal: {
-        loadPtr(Address(context, qOffsetOf(CallContext, locals)), reg);
+        loadPtr(Address(context, qOffsetOf(CallContext, locals)), baseReg);
         offset = t->index * sizeof(SafeValue);
     } break;
     case V4IR::Temp::StackSlot: {
@@ -305,7 +326,7 @@ Assembler::Pointer Assembler::loadTempAddress(RegisterID reg, V4IR::Temp *t)
     default:
         Q_UNREACHABLE();
     }
-    return Pointer(reg, offset);
+    return Pointer(baseReg, offset);
 }
 
 Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
@@ -1376,6 +1397,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
     if (leftSource->type != V4IR::StringType && rightSource->type != V4IR::StringType)
         done = genInlineBinop(oper, leftSource, rightSource, target);
 
+    // TODO: inline var===null and var!==null
     const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
     if (info.fallbackImplementation) {
         _as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
@@ -1725,6 +1747,11 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
         if (b->left->type == V4IR::DoubleType && b->right->type == V4IR::DoubleType
                 && visitCJumpDouble(b->op, b->left, b->right, s->iftrue, s->iffalse))
             return;
+
+        if (b->op == V4IR::OpStrictEqual || b->op == V4IR::OpStrictNotEqual) {
+            visitCJumpStrict(b, s->iftrue, s->iffalse);
+            return;
+        }
 
         CmpOp op = 0;
         CmpOpContext opContext = 0;
@@ -2143,6 +2170,133 @@ bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4
         _as->addPatch(iftrue, target);
         _as->jumpToBlock(_block, iffalse);
     }
+    return true;
+}
+
+void InstructionSelection::visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock,
+                                            V4IR::BasicBlock *falseBlock)
+{
+    if (visitCJumpStrictNullUndefined(V4IR::NullType, binop, trueBlock, falseBlock))
+        return;
+    if (visitCJumpStrictNullUndefined(V4IR::UndefinedType, binop, trueBlock, falseBlock))
+        return;
+    if (visitCJumpStrictBool(binop, trueBlock, falseBlock))
+        return;
+
+    QV4::BinOp op;
+    const char *opName;
+    if (binop->op == V4IR::OpStrictEqual) {
+        op = __qmljs_se;
+        opName = "__qmljs_se";
+    } else {
+        op = __qmljs_sne;
+        opName = "__qmljs_sne";
+    }
+
+    V4IR::Expr *left = binop->left;
+    V4IR::Expr *right = binop->right;
+
+    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op,
+                                 Assembler::PointerToValue(left), Assembler::PointerToValue(right));
+    _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, trueBlock, falseBlock);
+}
+
+// Only load the non-null temp.
+bool InstructionSelection::visitCJumpStrictNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
+                                                         V4IR::BasicBlock *trueBlock,
+                                                         V4IR::BasicBlock *falseBlock)
+{
+    Q_ASSERT(nullOrUndef == V4IR::NullType || nullOrUndef == V4IR::UndefinedType);
+
+    V4IR::Expr *varSrc = 0;
+    if (binop->left->type == V4IR::VarType && binop->right->type == nullOrUndef)
+        varSrc = binop->left;
+    else if (binop->left->type == nullOrUndef && binop->right->type == V4IR::VarType)
+        varSrc = binop->right;
+    if (!varSrc)
+        return false;
+
+    if (varSrc->asTemp() && varSrc->asTemp()->kind == V4IR::Temp::PhysicalRegister) {
+        _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    if (V4IR::Const *c = varSrc->asConst()) {
+        if (c->type == nullOrUndef)
+            _as->jumpToBlock(_block, trueBlock);
+        else
+            _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    V4IR::Temp *t = varSrc->asTemp();
+    Q_ASSERT(t);
+
+    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+    tagAddr.offset += 4;
+    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    _as->load32(tagAddr, tagReg);
+
+    Assembler::RelationalCondition cond = binop->op == V4IR::OpStrictEqual ? Assembler::Equal
+                                                                           : Assembler::NotEqual;
+    const Assembler::TrustedImm32 tag(nullOrUndef == V4IR::NullType ? QV4::Value::_Null_Type
+                                                                    : QV4::Value::Undefined_Type);
+    _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
+    return true;
+}
+
+bool InstructionSelection::visitCJumpStrictBool(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock,
+                                                V4IR::BasicBlock *falseBlock)
+{
+    V4IR::Expr *boolSrc = 0, *otherSrc = 0;
+    if (binop->left->type == V4IR::BoolType) {
+        boolSrc = binop->left;
+        otherSrc = binop->right;
+    } else if (binop->right->type == V4IR::BoolType) {
+        boolSrc = binop->right;
+        otherSrc = binop->left;
+    } else {
+        // neither operands are statically typed as bool, so bail out.
+        return false;
+    }
+
+    Assembler::RelationalCondition cond = binop->op == V4IR::OpStrictEqual ? Assembler::Equal
+                                                                           : Assembler::NotEqual;
+
+    if (otherSrc->type == V4IR::BoolType) { // both are boolean
+        Assembler::RegisterID one = _as->toBoolRegister(boolSrc, Assembler::ReturnValueRegister);
+        Assembler::RegisterID two = _as->toBoolRegister(otherSrc, Assembler::ScratchRegister);
+        _as->generateCJumpOnCompare(cond, one, two, _block, trueBlock, falseBlock);
+        return true;
+    }
+
+    if (otherSrc->type != V4IR::VarType) {
+        _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    V4IR::Temp *otherTemp = otherSrc->asTemp();
+    Q_ASSERT(otherTemp); // constants cannot have "var" type
+    Q_ASSERT(otherTemp->kind != V4IR::Temp::PhysicalRegister);
+
+    Assembler::Pointer otherAddr = _as->loadTempAddress(Assembler::ReturnValueRegister, otherTemp);
+    otherAddr.offset += 4; // tag address
+
+    // check if the tag of the var operand is indicates 'boolean'
+    _as->load32(otherAddr, Assembler::ScratchRegister);
+    Assembler::Jump noBool = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                           Assembler::TrustedImm32(QV4::Value::_Boolean_Type));
+    if (binop->op == V4IR::OpStrictEqual)
+        _as->addPatch(falseBlock, noBool);
+    else
+        _as->addPatch(trueBlock, noBool);
+
+    // ok, both are boolean, so let's load them and compare them.
+    otherAddr.offset -= 4; // int_32 address
+    _as->load32(otherAddr, Assembler::ReturnValueRegister);
+    Assembler::RegisterID boolReg = _as->toBoolRegister(boolSrc, Assembler::ScratchRegister);
+    _as->generateCJumpOnCompare(cond, boolReg, Assembler::ReturnValueRegister, _block, trueBlock,
+                                falseBlock);
     return true;
 }
 

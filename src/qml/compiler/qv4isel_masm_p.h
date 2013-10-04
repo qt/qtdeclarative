@@ -453,8 +453,14 @@ public:
     void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
     void generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
                              V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm32 right,
+                                V4IR::BasicBlock *currentBlock, V4IR::BasicBlock *trueBlock,
+                                V4IR::BasicBlock *falseBlock);
+    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
+                                V4IR::BasicBlock *currentBlock, V4IR::BasicBlock *trueBlock,
+                                V4IR::BasicBlock *falseBlock);
 
-    Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
+    Pointer loadTempAddress(RegisterID baseReg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(V4IR::Temp *t) const
@@ -1245,6 +1251,11 @@ public:
         return target;
     }
 
+    RegisterID toBoolRegister(V4IR::Expr *e, RegisterID scratchReg)
+    {
+        return toInt32Register(e, scratchReg);
+    }
+
     RegisterID toInt32Register(V4IR::Expr *e, RegisterID scratchReg)
     {
         if (V4IR::Const *c = e->asConst()) {
@@ -1441,6 +1452,10 @@ protected:
     Assembler::Jump branchDouble(bool invertCondition, V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
     bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
                           V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    void visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
+                                       V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictBool(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
     bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
                     V4IR::Temp *target);
 

@@ -424,7 +424,12 @@ protected: // IRDecoder
     {
         bool needsCall = true;
 
-        if (leftSource->type == DoubleType && rightSource->type == DoubleType) {
+        if (oper == OpStrictEqual || oper == OpStrictNotEqual) {
+            bool noCall = leftSource->type == NullType || rightSource->type == NullType
+                    || leftSource->type == UndefinedType || rightSource->type == UndefinedType
+                    || leftSource->type == BoolType || rightSource->type == BoolType;
+            needsCall = !noCall;
+        } else if (leftSource->type == DoubleType && rightSource->type == DoubleType) {
             if (oper == OpMul || oper == OpAdd || oper == OpDiv || oper == OpSub
                     || (oper >= OpGt && oper <= OpStrictNotEqual)) {
                 needsCall = false;
@@ -438,25 +443,6 @@ protected: // IRDecoder
                 needsCall = false;
             }
         }
-
-#if 0 // TODO: change masm to generate code
-        switch (leftSource->type) {
-        case DoubleType:
-        case SInt32Type:
-        case UInt32Type:
-            switch (rightSource->type) {
-            case DoubleType:
-            case SInt32Type:
-            case UInt32Type:
-                if (oper != OpMod)
-                    needsCall = false;
-            default:
-                break;
-            } break;
-        default:
-            break;
-        }
-#endif
 
         addDef(target);
 

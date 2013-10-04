@@ -139,6 +139,7 @@ struct RuntimeCounters::Data {
     };
 
     void dump() const {
+        QTextStream outs(stderr, QIODevice::WriteOnly);
         QList<Line> lines;
         foreach (const char *func, counters.keys()) {
             const Counters &fCount = counters[func];
@@ -154,9 +155,13 @@ struct RuntimeCounters::Data {
             }
         }
         qSort(lines.begin(), lines.end(), Line::less);
-        qDebug() << "Counters:";
+        outs << lines.size() << " counters:" << endl;
         foreach (const Line &line, lines)
-            qDebug("%10ld | %s | %s | %s", line.count, line.func, pretty(line.tag1), pretty(line.tag2));
+            outs << qSetFieldWidth(10) << line.count << qSetFieldWidth(0)
+                 << " | " << line.func
+                 << " | " << pretty(line.tag1)
+                 << " | " << pretty(line.tag2)
+                 << endl;
     }
 };
 
@@ -172,6 +177,7 @@ RuntimeCounters::RuntimeCounters()
 RuntimeCounters::~RuntimeCounters()
 {
     d->dump();
+    delete d;
 }
 
 void RuntimeCounters::count(const char *func, uint tag)
