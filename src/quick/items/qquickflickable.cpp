@@ -1246,15 +1246,6 @@ void QQuickFlickable::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
     if (d->interactive) {
-        if (d->delayedPressEvent) {
-            // A move beyond the threshold replays the press to give nested Flickables
-            // the opportunity to grab the gesture.
-            QPointF delta = event->localPos() - d->delayedPressEvent->localPos();
-            if (QQuickWindowPrivate::dragOverThreshold(qAbs(delta.x()), Qt::XAxis, event)
-                || QQuickWindowPrivate::dragOverThreshold(qAbs(delta.y()), Qt::YAxis, event)) {
-                d->replayDelayedPress();
-            }
-        }
         d->handleMouseMoveEvent(event);
         event->accept();
     } else {

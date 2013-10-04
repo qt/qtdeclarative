@@ -414,6 +414,23 @@ void tst_qquickflickable::pressDelay()
     // On release the clicked signal should be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
     QCOMPARE(clickedSpy.count(),1);
+
+    // QTBUG-31168
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(150, 110));
+
+    // The press should not occur immediately
+    QVERIFY(mouseArea->property("pressed").toBool() == false);
+
+    QTest::mouseMove(window.data(), QPoint(150, 190));
+
+    // As we moved pass the drag threshold, we should never receive the press
+    QVERIFY(mouseArea->property("pressed").toBool() == false);
+    QTest::qWait(200);
+    QVERIFY(mouseArea->property("pressed").toBool() == false);
+
+    // On release the clicked signal should *not* be emitted
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 190));
+    QCOMPARE(clickedSpy.count(),1);
 }
 
 // QTBUG-17361
