@@ -1372,7 +1372,9 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
             return;
     }
 
-    Assembler::Jump done = genInlineBinop(oper, leftSource, rightSource, target);
+    Assembler::Jump done;
+    if (leftSource->type != V4IR::StringType && rightSource->type != V4IR::StringType)
+        done = genInlineBinop(oper, leftSource, rightSource, target);
 
     const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
     if (info.fallbackImplementation) {
