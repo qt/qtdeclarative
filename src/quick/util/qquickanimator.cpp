@@ -73,6 +73,10 @@ QT_BEGIN_NAMESPACE
     also be treated as an Animator and be run on the scene graph's rendering
     thread when possible.
 
+    The Animator types can be used for animations during transitions, but
+    they do not support the \l {Transition::reversible}{reversible}
+    property.
+
     The Animator type cannot be used directly in a QML file. It exists
     to provide a set of common properties and methods, available across all the
     other animator types that inherit from it. Attempting to use the Animator
@@ -263,7 +267,7 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
 
 QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
                                                   QQmlProperties &modified,
-                                                  TransitionDirection,
+                                                  TransitionDirection direction,
                                                   QObject *)
 {
     Q_D(QQuickAnimator);
@@ -272,6 +276,10 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
         qDebug() << Q_FUNC_INFO << "property name conflict...";
         return 0;
     }
+
+    // The animation system cannot handle backwards uncontrolled animations.
+    if (direction == Backward)
+        return 0;
 
     QQuickAnimatorJob *job = createJob();
     if (!job)
