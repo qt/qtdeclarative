@@ -143,7 +143,7 @@ public:
     QmlObjectCreator(QQmlContextData *contextData, QQmlCompiledData *compiledData);
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0);
-    void finalize();
+    QQmlContextData *finalize();
 
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
@@ -170,6 +170,7 @@ private:
     QLinkedList<QVector<QQmlAbstractBinding*> > allCreatedBindings;
     QLinkedList<QVector<QQmlParserStatus*> > allParserStatusCallbacks;
     QQmlCompiledData *compiledData;
+    QQmlContextData *rootContext;
 
     QObject *_qobject;
     QObject *_qobjectForBindings;

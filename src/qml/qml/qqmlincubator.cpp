@@ -46,6 +46,7 @@
 #include "qqmlcompiler_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlmemoryprofiler_p.h"
+#include "qqmlobjectcreator_p.h"
 
 // XXX TODO 
 //   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and 
@@ -292,7 +293,14 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 
     if (progress == QQmlIncubatorPrivate::Execute) {
         enginePriv->referenceScarceResources();
-        QObject *tresult = vme.execute(&errors, i);
+        QObject *tresult = 0;
+        if (enginePriv->useNewCompiler) {
+            tresult = creator->create(subComponentToCreate);
+            if (!tresult)
+                errors = creator->errors;
+        } else {
+            tresult = vme.execute(&errors, i);
+        }
         enginePriv->dereferenceScarceResources();
 
         if (watcher.hasRecursed())
@@ -335,7 +343,11 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
             if (watcher.hasRecursed())
                 return;
 
-            QQmlContextData *ctxt = vme.complete(i);
+            QQmlContextData *ctxt = 0;
+            if (enginePriv->useNewCompiler)
+                ctxt = creator->finalize();
+            else
+                ctxt = vme.complete(i);
             if (ctxt) {
                 rootContext = ctxt;
                 progress = QQmlIncubatorPrivate::Completed;
@@ -566,6 +578,7 @@ void QQmlIncubator::clear()
 
     d->vme.reset();
     d->vmeGuard.clear();
+    d->creator.reset(0);
 
     Q_ASSERT(d->compiledData == 0);
     Q_ASSERT(d->waitingOnMe.data() == 0);

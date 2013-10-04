@@ -1863,11 +1863,16 @@ void QQmlDelegateModelItem::incubateObject(
 
     incubatorPriv->compiledData = componentPriv->cc;
     incubatorPriv->compiledData->addref();
-    incubatorPriv->vme.init(
-            context,
-            componentPriv->cc,
-            componentPriv->start,
-            componentPriv->creationContext);
+    if (enginePriv->useNewCompiler) {
+        incubatorPriv->creator.reset(new QmlObjectCreator(context, componentPriv->cc));
+        incubatorPriv->subComponentToCreate = componentPriv->start;
+    } else {
+        incubatorPriv->vme.init(
+                context,
+                componentPriv->cc,
+                componentPriv->start,
+                componentPriv->creationContext);
+    }
 
     enginePriv->incubate(*incubationTask, forContext);
 }

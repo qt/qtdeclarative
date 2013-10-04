@@ -478,6 +478,7 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , propertyCaches(compiledData->propertyCaches)
     , vmeMetaObjectData(compiledData->datas)
     , compiledData(compiledData)
+    , rootContext(0)
     , _qobject(0)
     , _qobjectForBindings(0)
     , _valueTypeProperty(0)
@@ -511,6 +512,9 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     context->imports = compiledData->importCache;
     context->imports->addref();
     context->setParent(parentContext);
+
+    if (!rootContext)
+        rootContext = context;
 
     QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
     for (QHash<int, int>::ConstIterator it = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
@@ -1312,7 +1316,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     return instance;
 }
 
-void QmlObjectCreator::finalize()
+QQmlContextData *QmlObjectCreator::finalize()
 {
     {
     QQmlTrace trace("VME Binding Enable");
@@ -1377,6 +1381,8 @@ void QmlObjectCreator::finalize()
 #endif
     }
     }
+
+    return rootContext;
 }
 
 bool QmlObjectCreator::populateInstance(int index, QObject *instance, QQmlRefPointer<QQmlPropertyCache> cache,
