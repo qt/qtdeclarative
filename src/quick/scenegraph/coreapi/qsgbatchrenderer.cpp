@@ -303,6 +303,8 @@ void Updater::updateStates(QSGNode *n)
             qDebug() << " - transforms have changed";
         if (sn->dirtyState & (QSGNode::DirtyOpacity << 16))
             qDebug() << " - opacity has changed";
+        if (sn->dirtyState & (QSGNode::DirtyForceUpdate << 16))
+            qDebug() << " - forceupdate";
     }
 
     visitNode(sn);
@@ -316,6 +318,10 @@ void Updater::visitNode(Node *n)
     int count = m_added;
     if (n->dirtyState & QSGNode::DirtyNodeAdded)
         ++m_added;
+
+    int force = m_force_update;
+    if (n->dirtyState & QSGNode::DirtyForceUpdate)
+        ++m_force_update;
 
     switch (n->type()) {
     case QSGNode::OpacityNodeType:
@@ -340,6 +346,7 @@ void Updater::visitNode(Node *n)
     }
 
     m_added = count;
+    m_force_update = force;
     n->dirtyState = 0;
 }
 
@@ -1103,7 +1110,8 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     QSGNode::DirtyState dirtyChain = state & (QSGNode::DirtyNodeAdded
                                               | QSGNode::DirtyOpacity
                                               | QSGNode::DirtyMatrix
-                                              | QSGNode::DirtySubtreeBlocked);
+                                              | QSGNode::DirtySubtreeBlocked
+                                              | QSGNode::DirtyForceUpdate);
     if (dirtyChain != 0) {
         dirtyChain = QSGNode::DirtyState(dirtyChain << 16);
         Node *sn = shadowNode->parent;
