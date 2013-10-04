@@ -295,6 +295,16 @@ public:
         m_assembler.xorq_ir(imm.m_value, srcDest);
     }
 
+    void urshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.shrq_i8r(imm.m_value, dest);
+    }
+
+    void lshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.shlq_i8r(imm.m_value, dest);
+    }
+
     void load64(ImplicitAddress address, RegisterID dest)
     {
         m_assembler.movq_mr(address.offset, address.base, dest);

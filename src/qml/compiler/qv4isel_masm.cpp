@@ -1590,15 +1590,60 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
 {
     switch (source->type) {
     case V4IR::VarType: {
+
+#if QT_POINTER_SIZE == 8
+        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        _as->load64(addr, Assembler::ScratchRegister);
+        _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+
+        // check if it's a number
+        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsNumber_Shift), Assembler::ScratchRegister);
+        Assembler::Jump fallback = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
+        // we have a number
+        _as->urshift64(Assembler::TrustedImm32(1), Assembler::ScratchRegister);
+        Assembler::Jump isInt = _as->branch32(Assembler::Equal, Assembler::ScratchRegister, Assembler::TrustedImm32(0));
+
+        // it's a double
+        _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ScratchRegister);
+        _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->move64ToDouble(Assembler::ReturnValueRegister, Assembler::FPGpr0);
+        Assembler::Jump success =
+                _as->branchTruncateDoubleToInt32(Assembler::FPGpr0, Assembler::ReturnValueRegister,
+                                                 Assembler::BranchIfTruncateSuccessful);
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_double_to_int32,
+                             Assembler::PointerToValue(source));
+        Assembler::Jump converted = _as->jump();
+
+        // not an int:
+        fallback.link(_as);
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_int32,
+                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+
+        isInt.link(_as);
+        success.link(_as);
+        converted.link(_as);
+        if (target->kind == V4IR::Temp::StackSlot) {
+//            _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), Assembler::ScratchRegister);
+//            _as->lshift64(Assembler::TrustedImm32(32), Assembler::ScratchRegister);
+//            _as->or64(Assembler::ScratchRegister, Assembler::ReturnValueRegister, Assembler::ScratchRegister);
+//            _as->store64(Assembler::ScratchRegister, target);
+            Assembler::Pointer targetAddr = _as->stackSlotPointer(target);
+            _as->store32(Assembler::ReturnValueRegister, targetAddr);
+            targetAddr.offset += 4;
+            _as->store32(Assembler::TrustedImm32(Value::_Integer_Type), targetAddr);
+        } else {
+            _as->storeInt32(Assembler::ReturnValueRegister, target);
+        }
+#else
         // load the tag:
-        Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        Assembler::Pointer tagAddr = addr;
         tagAddr.offset += 4;
-        _as->load32(tagAddr, Assembler::ScratchRegister);
+        _as->load32(tagAddr, Assembler::ReturnValueRegister);
 
         // check if it's an int32:
-        Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+        Assembler::Jump fallback = _as->branch32(Assembler::NotEqual, Assembler::ReturnValueRegister,
                                                 Assembler::TrustedImm32(Value::_Integer_Type));
-        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
         if (target->kind == V4IR::Temp::StackSlot) {
             _as->load32(addr, Assembler::ScratchRegister);
             Assembler::Pointer targetAddr = _as->stackSlotPointer(target);
@@ -1611,12 +1656,14 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
         Assembler::Jump intDone = _as->jump();
 
         // not an int:
-        isNoInt.link(_as);
+        fallback.link(_as);
         generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_int32,
                              _as->loadTempAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
 
         intDone.link(_as);
+#endif
+
     } break;
     case V4IR::DoubleType: {
         Assembler::FPRegisterID reg = _as->toDoubleRegister(source);

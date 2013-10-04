@@ -200,10 +200,17 @@ inline bool Value::toBoolean() const
 
 inline uint Value::asArrayIndex() const
 {
+#if QT_POINTER_SIZE == 8
+    if (!isNumber())
+        return UINT_MAX;
+    if (isInteger())
+        return int_32 >= 0 ? (uint)int_32 : UINT_MAX;
+#else
     if (isInteger() && int_32 >= 0)
         return (uint)int_32;
     if (!isDouble())
         return UINT_MAX;
+#endif
     double d = doubleValue();
     uint idx = (uint)d;
     if (idx != d)
