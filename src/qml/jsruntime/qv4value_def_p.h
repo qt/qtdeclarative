@@ -338,6 +338,64 @@ struct Q_QML_EXPORT Value
     inline void mark() const;
 };
 
+inline Managed *Value::asManaged() const
+{
+    if (isManaged())
+        return managed();
+    return 0;
+}
+
+inline String *Value::asString() const
+{
+    if (isString())
+        return stringValue();
+    return 0;
+}
+
+struct Q_QML_EXPORT Primitive : public Value
+{
+    static Primitive emptyValue();
+    static Primitive fromBoolean(bool b);
+    static Primitive fromInt32(int i);
+    static Primitive undefinedValue();
+    static Primitive nullValue();
+    static Primitive fromDouble(double d);
+    static Primitive fromUInt32(uint i);
+
+    static double toInteger(double fromNumber);
+    static int toInt32(double value);
+    static unsigned int toUInt32(double value);
+
+    inline operator ValueRef();
+    Value asValue() const { return *this; }
+};
+
+inline Primitive Primitive::undefinedValue()
+{
+    Primitive v;
+#if QT_POINTER_SIZE == 8
+    v.val = quint64(Undefined_Type) << Tag_Shift;
+#else
+    v.tag = Undefined_Type;
+    v.int_32 = 0;
+#endif
+    return v;
+}
+
+inline Value Value::fromManaged(Managed *m)
+{
+    if (!m)
+        return QV4::Primitive::undefinedValue();
+    Value v;
+#if QT_POINTER_SIZE == 8
+    v.m = m;
+#else
+    v.tag = Managed_Type;
+    v.m = m;
+#endif
+    return v;
+}
+
 struct SafeValue : public Value
 {
     SafeValue &operator =(const ScopedValue &v);
@@ -364,24 +422,6 @@ struct SafeValue : public Value
     inline Returned<T> *as();
     template<typename T>
     inline Referenced<T> asRef();
-};
-
-struct Q_QML_EXPORT Primitive : public Value
-{
-    static Primitive emptyValue();
-    static Primitive fromBoolean(bool b);
-    static Primitive fromInt32(int i);
-    static Primitive undefinedValue();
-    static Primitive nullValue();
-    static Primitive fromDouble(double d);
-    static Primitive fromUInt32(uint i);
-
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
-
-    inline operator ValueRef();
-    Value asValue() const { return *this; }
 };
 
 template <typename T>

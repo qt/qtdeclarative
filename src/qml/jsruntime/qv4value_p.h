@@ -77,13 +77,6 @@ inline bool Value::isPrimitive() const
     return !isObject();
 }
 
-inline Managed *Value::asManaged() const
-{
-    if (isManaged())
-        return managed();
-    return 0;
-}
-
 inline ExecutionEngine *Value::engine() const {
     Managed *m = asManaged();
     return m ? m->engine() : 0;
@@ -95,18 +88,6 @@ inline void Value::mark() const {
     Managed *m = asManaged();
     if (m)
         m->mark();
-}
-
-inline Primitive Primitive::undefinedValue()
-{
-    Primitive v;
-#if QT_POINTER_SIZE == 8
-    v.val = quint64(Undefined_Type) << Tag_Shift;
-#else
-    v.tag = Undefined_Type;
-    v.int_32 = 0;
-#endif
-    return v;
 }
 
 inline Primitive Primitive::nullValue()
@@ -162,20 +143,6 @@ inline Primitive Primitive::fromUInt32(uint i)
     } else {
         v.setDouble(i);
     }
-    return v;
-}
-
-inline Value Value::fromManaged(Managed *m)
-{
-    if (!m)
-        return QV4::Primitive::undefinedValue();
-    Value v;
-#if QT_POINTER_SIZE == 8
-    v.m = m;
-#else
-    v.tag = Managed_Type;
-    v.m = m;
-#endif
     return v;
 }
 
@@ -268,13 +235,6 @@ inline uint Value::asArrayLength(bool *ok) const
         return UINT_MAX;
     }
     return idx;
-}
-
-inline String *Value::asString() const
-{
-    if (isString())
-        return stringValue();
-    return 0;
 }
 
 inline Object *Value::asObject() const
