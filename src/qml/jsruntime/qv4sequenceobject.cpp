@@ -455,7 +455,7 @@ public:
     QVariant toVariant() const
     { return QVariant::fromValue<Container>(m_container); }
 
-    static QVariant toVariant(QV4::ArrayObject *array)
+    static QVariant toVariant(QV4::ArrayObjectRef array)
     {
         QV4::Scope scope(array->engine());
         Container result;
@@ -544,12 +544,13 @@ void SequencePrototype::init()
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
-    QV4::Object *o = ctx->callData->thisObject.asObject();
+    QV4::Scope scope(ctx);
+    QV4::ScopedObject o(scope, ctx->callData->thisObject);
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
     if (ctx->callData->argc >= 2)
-        return ctx->callData->thisObject.asReturnedValue();
+        return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -559,7 +560,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->callData->thisObject.asReturnedValue();
+    return o.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -615,7 +616,7 @@ ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const
         return list->toVariant(); \
     else
 
-QVariant SequencePrototype::toVariant(QV4::Object *object)
+QVariant SequencePrototype::toVariant(ObjectRef object)
 {
     Q_ASSERT(object->isListType());
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
@@ -636,8 +637,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         return QVariant();
     }
     QV4::Scope scope(array->engine());
-    // ### GC
-    QV4::ArrayObject *a = array->asArrayObject();
+    QV4::ScopedArrayObject a(scope, array);
 
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }

@@ -209,12 +209,12 @@ public:
     };
 
     const Role *getRoleOrCreate(const QString &key, const QVariant &data);
-    const Role &getRoleOrCreate(const QV4::String *key, Role::DataType type);
+    const Role &getRoleOrCreate(const QV4::StringRef key, Role::DataType type);
     const Role &getRoleOrCreate(const QString &key, Role::DataType type);
 
     const Role &getExistingRole(int index) { return *roles.at(index); }
     const Role *getExistingRole(const QString &key);
-    const Role *getExistingRole(const QV4::String *key);
+    const Role *getExistingRole(const QV4::StringRef key);
 
     int roleCount() const { return roles.count(); }
 

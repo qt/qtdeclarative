@@ -150,7 +150,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
         } else if (object->isListType())
-            return QV4::SequencePrototype::toVariant(object.getPointer());
+            return QV4::SequencePrototype::toVariant(object);
     }
 
     if (value->asArrayObject()) {
@@ -858,9 +858,9 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else if (QV4::Object *o = value->asObject()) {
+        } else if (value->isObject()) {
             // Look in the prototype chain.
-            QV4::Object *proto = o->prototype();
+            QV4::ScopedObject proto(scope, value->objectValue()->prototype());
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
