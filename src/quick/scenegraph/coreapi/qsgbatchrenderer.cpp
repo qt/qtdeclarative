@@ -648,6 +648,21 @@ bool Batch::isTranslateOnlyToRoot() const {
     return only;
 }
 
+/*
+ * Iterates through all the nodes in the batch and returns true if the
+ * nodes are all "2D safe" meaning that they can be merged and that
+ * the value in the z coordinate is of no consequence.
+ */
+bool Batch::allMatricesAre2DSafe() const {
+    Element *e = first;
+    while (e) {
+        if (!QMatrix4x4_Accessor::is2DSafe(*e->node->matrix()))
+            return false;
+        e = e->nextInBatch;
+    }
+    return true;
+}
+
 static int qsg_countNodesInBatch(const Batch *batch)
 {
     int sum = 0;
@@ -1597,11 +1612,11 @@ void Renderer::uploadBatch(Batch *b)
         bool canMerge = (g->drawingMode() == GL_TRIANGLES || g->drawingMode() == GL_TRIANGLE_STRIP)
                         && b->positionAttribute >= 0
                         && g->indexType() == GL_UNSIGNED_SHORT
-                        && QMatrix4x4_Accessor::is2DSafe(*gn->matrix())
                         && (gn->activeMaterial()->flags() & QSGMaterial::CustomCompileStep) == 0
                         && (((gn->activeMaterial()->flags() & QSGMaterial::RequiresDeterminant) == 0)
                             || (((gn->activeMaterial()->flags() & QSGMaterial_RequiresFullMatrixBit) == 0) && b->isTranslateOnlyToRoot())
-                            );
+                            )
+                        && b->allMatricesAre2DSafe();
 
         b->merged = canMerge;
 

@@ -57,7 +57,6 @@ struct Vec;
 struct Rect;
 struct Buffer;
 struct Chunk;
-struct AlphaChunk;
 struct Batch;
 struct Node;
 class Updater;
@@ -243,6 +242,7 @@ struct Batch
     void cleanupRemovedElements();
 
     bool isTranslateOnlyToRoot() const;
+    bool allMatricesAre2DSafe() const;
 
     // pseudo-constructor...
     void init() {
