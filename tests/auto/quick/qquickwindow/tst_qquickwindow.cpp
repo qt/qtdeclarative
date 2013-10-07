@@ -948,9 +948,6 @@ void tst_qquickwindow::grab()
 {
     QFETCH(bool, visible);
 
-    if (!visible)
-        QSKIP("Blocking CI - QTBUG-33516");
-
     QQuickWindow window;
     window.setColor(Qt::red);
 
