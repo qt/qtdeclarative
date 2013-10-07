@@ -79,6 +79,7 @@ public:
         m_context = new QOpenGLContext();
         m_context->setShareContext(context);
         m_context->setFormat(context->format());
+        m_context->create();
         m_context->moveToThread(this);
 
         // We need a non-visible surface to make current in the other thread
@@ -93,9 +94,6 @@ public:
 public slots:
     void renderNext()
     {
-        if (!m_context->isValid())
-            m_context->create();
-
         m_context->makeCurrent(m_fakeSurface);
 
         if (!m_renderFbo) {
@@ -234,29 +232,21 @@ ThreadRenderer::ThreadRenderer()
     : m_renderThread(0)
 {
     setFlag(ItemHasContents, true);
-    polish();
-}
-
-void ThreadRenderer::updatePolish()
-{
-    if (!window() || !window()->openglContext())
-        return;
-
-    m_renderThread = new RenderThread(QSize(512, 512), window()->openglContext());
-    m_renderThread->moveToThread(m_renderThread);
-    m_renderThread->start();
-    connect(window(), SIGNAL(sceneGraphInvalidated()), m_renderThread, SLOT(shutDown()), Qt::QueuedConnection);
 }
 
 QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    if (!m_renderThread) {
-        polish();
-        update();
-        return 0;
-    }
-
     TextureNode *node = static_cast<TextureNode *>(oldNode);
+
+    if (!m_renderThread) {
+        QOpenGLContext *current = window()->openglContext();
+        current->doneCurrent();
+        m_renderThread = new RenderThread(QSize(512, 512), current);
+        current->makeCurrent(window());
+        m_renderThread->moveToThread(m_renderThread);
+        m_renderThread->start();
+        connect(window(), SIGNAL(sceneGraphInvalidated()), m_renderThread, SLOT(shutDown()), Qt::QueuedConnection);
+    }
 
     if (!node) {
         node = new TextureNode(window());

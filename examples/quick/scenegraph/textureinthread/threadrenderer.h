@@ -54,9 +54,6 @@ public:
 
     static QList<QThread *> threads;
 
-public slots:
-    void updatePolish();
-
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
