@@ -105,6 +105,7 @@ tools/activeqt/testcon/testcon.tlb
 translations/*.qm
 translations/*_untranslated.ts
 qrc_*.cpp
+src/imports/dialogs/dialogs.qrc
 
 # Test generated files
 QObject.log

@@ -58,11 +58,12 @@
 #include <qpa/qplatformintegration.h>
 
 //#define PURE_QML_ONLY
+//#define DEBUG_REGISTRATION
 
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQuick.Dialogs 1
+    \qmlmodule QtQuick.Dialogs 1.1
     \title Qt Quick Dialogs QML Types
     \ingroup qmlmodules
     \brief Provides QML types for standard file, color picker and message dialogs
@@ -82,23 +83,38 @@ class QtQuick2DialogsPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    QtQuick2DialogsPlugin() : QQmlExtensionPlugin() { }
+    QtQuick2DialogsPlugin() : QQmlExtensionPlugin(), m_useResources(true) { }
 
-    virtual void initializeEngine(QQmlEngine *engine, const char * /*uri*/) {
-        //qDebug() << Q_FUNC_INFO << uri << m_decorationComponentUrl;
+    virtual void initializeEngine(QQmlEngine *engine, const char * uri) {
+#ifdef DEBUG_REGISTRATION
+        qDebug() << Q_FUNC_INFO << uri << m_decorationComponentUrl;
+#else
+        Q_UNUSED(uri)
+#endif
         QQuickAbstractDialog::m_decorationComponent =
             new QQmlComponent(engine, m_decorationComponentUrl, QQmlComponent::Asynchronous);
     }
 
     virtual void registerTypes(const char *uri) {
+#ifdef DEBUG_REGISTRATION
+        qDebug() << Q_FUNC_INFO << uri;
+#endif
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Dialogs"));
         bool hasTopLevelWindows = QGuiApplicationPrivate::platformIntegration()->
             hasCapability(QPlatformIntegration::MultipleWindows);
         QDir qmlDir(baseUrl().toLocalFile());
-        m_decorationComponentUrl = QUrl::fromLocalFile(qmlDir.filePath(QString("qml/DefaultWindowDecoration.qml")));
         QDir widgetsDir(baseUrl().toLocalFile());
         // TODO: find the directory by searching rather than assuming a relative path
         widgetsDir.cd("../PrivateWidgets");
+
+        // If at least one file was actually installed, then use installed qml files instead of resources.
+        // This makes debugging and incremental development easier, whereas the "normal" installation
+        // uses resources to save space and cut down on the number of files to deploy.
+        if (qmlDir.exists(QString("DefaultFileDialog.qml")))
+            m_useResources = false;
+        m_decorationComponentUrl = m_useResources ?
+            QUrl("qrc:/QtQuick/Dialogs/qml/DefaultWindowDecoration.qml") :
+            QUrl::fromLocalFile(qmlDir.filePath(QString("qml/DefaultWindowDecoration.qml")));
 
         // Prefer the QPA dialog helpers if the platform supports them.
         // Else if there is a QWidget-based implementation, check whether it's
@@ -143,8 +159,9 @@ protected:
     template <class WrapperType>
     void registerWidgetOrQmlImplementation(QDir widgetsDir, QDir qmlDir,
             const char *qmlName, const char *uri, bool hasTopLevelWindows, int versionMajor, int versionMinor) {
-        //qDebug() << Q_FUNC_INFO << qmlDir << qmlName << uri;
-        bool needQml = true;
+        // qDebug() << "QtQuick2DialogsPlugin::registerWidgetOrQmlImplementation" << uri << qmlName << ": QML in" << qmlDir.absolutePath()
+        // << "using resources?" << m_useResources << "; widgets in" << widgetsDir.absolutePath();
+        bool needQmlImplementation = true;
 
 #ifdef PURE_QML_ONLY
         Q_UNUSED(widgetsDir)
@@ -154,22 +171,32 @@ protected:
         // widget-free QGuiApplication), assume that the widget-based dialog will work.
         if (hasTopLevelWindows && widgetsDir.exists("qmldir") &&
                 !qstrcmp(QCoreApplication::instance()->metaObject()->className(), "QApplication")) {
-            QString dialogQmlPath = qmlDir.filePath(QString("Widget%1.qml").arg(qmlName));
-            if (qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, versionMajor, versionMinor, qmlName) >= 0)
-                needQml = false;
-            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" << !needQml;
+            QUrl dialogQmlPath =  m_useResources ?
+                QUrl(QString("qrc:/QtQuick/Dialogs/Widget%1.qml").arg(qmlName)) :
+                QUrl::fromLocalFile(qmlDir.filePath(QString("Widget%1.qml").arg(qmlName)));
+            if (qmlRegisterType(dialogQmlPath, uri, versionMajor, versionMinor, qmlName) >= 0) {
+                needQmlImplementation = false;
+#ifdef DEBUG_REGISTRATION
+                qDebug() << "    registering" << qmlName << " as " << dialogQmlPath << "success?" << !needQmlImplementation;
+#endif
+            }
         }
 #endif
-        if (needQml) {
+        if (needQmlImplementation) {
             QByteArray abstractTypeName = QByteArray("Abstract") + qmlName;
             qmlRegisterType<WrapperType>(uri, versionMajor, versionMinor, abstractTypeName); // implementation wrapper
-            QString dialogQmlPath = qmlDir.filePath(QString("Default%1.qml").arg(qmlName));
-            // qDebug() << "registering" << qmlName << " as " << dialogQmlPath << "success?" <<
-            qmlRegisterType(QUrl::fromLocalFile(dialogQmlPath), uri, versionMajor, versionMinor, qmlName);
+            QUrl dialogQmlPath =  m_useResources ?
+                QUrl(QString("qrc:/QtQuick/Dialogs/Default%1.qml").arg(qmlName)) :
+                QUrl::fromLocalFile(qmlDir.filePath(QString("Default%1.qml").arg(qmlName)));
+#ifdef DEBUG_REGISTRATION
+            qDebug() << "    registering" << qmlName << " as " << dialogQmlPath << "success?" <<
+#endif
+            qmlRegisterType(dialogQmlPath, uri, versionMajor, versionMinor, qmlName);
         }
     }
 
     QUrl m_decorationComponentUrl;
+    bool m_useResources;
 };
 
 QT_END_NAMESPACE
