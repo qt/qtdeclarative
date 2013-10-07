@@ -169,9 +169,9 @@ struct MemoryManager::Data
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
-        scribble = !qgetenv("MM_SCRIBBLE").isEmpty();
-        aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = !qgetenv("MM_EXACT_GC").isEmpty();
+        scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
+        aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
+        exactGC = !qgetenv("QV4_MM_EXACT_GC").isEmpty();
         if (aggressiveGC)
             qDebug() << "Using aggressive garbage collection";
         if (exactGC)
