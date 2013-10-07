@@ -51,15 +51,17 @@ QT_BEGIN_NAMESPACE
 #define QML_VIEW_DEFAULTCACHEBUFFER 320
 #endif
 
-FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own)
+FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own, QQuickItemViewAttached *attached)
     : item(i)
     , view(v)
     , transitionableItem(0)
-    , attached(0)
+    , attached(attached)
     , ownItem(own)
     , releaseAfterTransition(false)
     , trackGeom(false)
 {
+    if (attached) // can be null for default components (see createComponentItem)
+        attached->setView(view);
 }
 
 FxViewItem::~FxViewItem()

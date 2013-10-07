@@ -42,8 +42,6 @@
 #ifndef QQUICKGRIDVIEW_P_H
 #define QQUICKGRIDVIEW_P_H
 
-#include <QtCore/qpointer.h>
-
 #include "qquickitemview_p.h"
 
 
@@ -118,23 +116,8 @@ class QQuickGridViewAttached : public QQuickItemViewAttached
     Q_OBJECT
 public:
     QQuickGridViewAttached(QObject *parent)
-        : QQuickItemViewAttached(parent), m_view(0) {}
+        : QQuickItemViewAttached(parent) {}
     ~QQuickGridViewAttached() {}
-
-    Q_PROPERTY(QQuickGridView *view READ view NOTIFY viewChanged)
-    QQuickGridView *view() { return m_view; }
-    void setView(QQuickGridView *view) {
-        if (view != m_view) {
-            m_view = view;
-            Q_EMIT viewChanged();
-        }
-    }
-
-Q_SIGNALS:
-    void viewChanged();
-
-public:
-    QPointer<QQuickGridView> m_view;
 };
 
 
