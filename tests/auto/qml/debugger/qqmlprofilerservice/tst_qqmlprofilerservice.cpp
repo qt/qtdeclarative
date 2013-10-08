@@ -313,7 +313,7 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
     m_process->start(QStringList() << arguments);
     QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
 
-    QQmlDebugConnection *m_connection = new QQmlDebugConnection();
+    m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerClient(m_connection);
 
     const int port = m_process->debugPort();
@@ -327,8 +327,11 @@ void tst_QQmlProfilerService::cleanup()
         qDebug() << "Application Output:" << m_process->output();
     }
     delete m_process;
-    delete m_connection;
+    m_process = 0;
     delete m_client;
+    m_client = 0;
+    delete m_connection;
+    m_connection = 0;
 }
 
 void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
