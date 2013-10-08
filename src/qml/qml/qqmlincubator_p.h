@@ -99,6 +99,7 @@ public:
 
     void clear();
 
+    void forceCompletion(QQmlVME::Interrupt &i);
     void incubate(QQmlVME::Interrupt &i);
 };
 

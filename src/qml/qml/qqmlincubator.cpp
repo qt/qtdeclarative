@@ -253,6 +253,16 @@ void QQmlIncubationController::incubatingObjectCountChanged(int incubatingObject
     Q_UNUSED(incubatingObjectCount);
 }
 
+void QQmlIncubatorPrivate::forceCompletion(QQmlVME::Interrupt &i)
+{
+    while (QQmlIncubator::Loading == status) {
+        while (QQmlIncubator::Loading == status && !waitingFor.isEmpty())
+            static_cast<QQmlIncubatorPrivate *>(waitingFor.first())->forceCompletion(i);
+        if (QQmlIncubator::Loading == status)
+            incubate(i);
+    }
+}
+
 void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 {
     if (!compiledData)
@@ -587,12 +597,7 @@ returns, the incubator will not be in the Loading state.
 void QQmlIncubator::forceCompletion()
 {
     QQmlVME::Interrupt i;
-    while (Loading == status()) {
-        while (Loading == status() && !d->waitingFor.isEmpty())
-            static_cast<QQmlIncubatorPrivate *>(d->waitingFor.first())->incubate(i);
-        if (Loading == status())
-            d->incubate(i);
-    }
+    d->forceCompletion(i);
 }
 
 /*!
