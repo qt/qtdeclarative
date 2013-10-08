@@ -35,5 +35,7 @@ sourcedirs += ..
 
 imagedirs += images
 
+excludedirs += ../qml
+
 navigation.landingpage = "Qt Quick Dialogs"
 navigation.qmltypespage = "Qt Quick Dialogs QML Types"
