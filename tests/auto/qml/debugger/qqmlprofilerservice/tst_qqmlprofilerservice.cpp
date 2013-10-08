@@ -323,8 +323,10 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 void tst_QQmlProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
-        qDebug() << "Process State:" << m_process->state();
-        qDebug() << "Application Output:" << m_process->output();
+        qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
+        qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
+        qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
+        qDebug() << "Client State:" << (m_client ? m_client->stateString() : QLatin1String("null"));
     }
     delete m_process;
     m_process = 0;
@@ -337,6 +339,7 @@ void tst_QQmlProfilerService::cleanup()
 void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 {
     connect(true, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -356,6 +359,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
 {
     connect(true, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(false);
@@ -377,6 +381,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
 void tst_QQmlProfilerService::nonBlockingConnect()
 {
     connect(false, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -395,6 +400,7 @@ void tst_QQmlProfilerService::nonBlockingConnect()
 void tst_QQmlProfilerService::pixmapCacheData()
 {
     connect(true, "pixmapCacheTest.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -440,6 +446,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
 void tst_QQmlProfilerService::scenegraphData()
 {
     connect(true, "scenegraphTest.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -473,6 +480,7 @@ void tst_QQmlProfilerService::scenegraphData()
 void tst_QQmlProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);

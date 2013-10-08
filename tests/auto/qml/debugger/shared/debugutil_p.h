@@ -107,6 +107,7 @@ signals:
 private slots:
     void timeout();
     void processAppOutput();
+    void processError(QProcess::ProcessError error);
 
 private:
     QString m_executable;

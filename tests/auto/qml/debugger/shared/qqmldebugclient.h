@@ -66,6 +66,8 @@ public:
     void close();
     bool waitForConnected(int msecs = 30000);
 
+    QString stateString() const;
+
 signals:
     void connected();
     void stateChanged(QAbstractSocket::SocketState socketState);
@@ -98,6 +100,7 @@ public:
     QString name() const;
     float serviceVersion() const;
     State state() const;
+    QString stateString() const;
 
     virtual void sendMessage(const QByteArray &);
 
