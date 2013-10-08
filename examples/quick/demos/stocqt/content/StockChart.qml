@@ -48,8 +48,8 @@ Rectangle {
 
     property var _months: [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
     property var stockModel: null
-    property var startDate
-    property var endDate
+    property var startDate: new Date()
+    property var endDate: new Date()
     property var settings
 
     function update() {
@@ -228,6 +228,7 @@ Rectangle {
 
             last = stockModel.indexOf(chart.endDate)
             first = last - (chart.endDate.getTime() - chart.startDate.getTime())/86400000;
+            first = Math.max(first, 0);
             console.log("painting...  first:" + first + ", last:" + last);
 
             var highestPrice = stockModel.highestPrice;

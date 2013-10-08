@@ -52,17 +52,23 @@ ListView {
     boundsBehavior: Flickable.StopAtBounds
     currentIndex: 1
 
+    Timer {
+        id: updateTimer
+        interval: 500
+        onTriggered: stock.updateStock()
+    }
+
     StockModel {
         id: stock
         stockId: listView.currentStockId
         stockName: listView.currentStockName
         startDate: settings.startDate
         endDate: settings.endDate
-        onStockIdChanged: updateStock()
-        onStartDateChanged: updateStock()
-        onEndDateChanged: updateStock()
+        onStockIdChanged: updateTimer.restart()
+        onStartDateChanged: updateTimer.restart()
+        onEndDateChanged: updateTimer.restart()
         onDataReady: {
-            root.currentIndex = 1
+            root.positionViewAtIndex(1, ListView.SnapPosition)
             stockView.update()
         }
     }
