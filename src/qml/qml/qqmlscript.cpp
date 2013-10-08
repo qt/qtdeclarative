@@ -202,7 +202,7 @@ QQmlScript::Object::DynamicSignal::DynamicSignal()
 }
 
 QQmlScript::Object::DynamicSlot::DynamicSlot()
-: nextSlot(0), nameIndex(-1)
+: funcDecl(0), nextSlot(0), nameIndex(-1)
 {
 }
 
@@ -1284,9 +1284,8 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
         AST::SourceLocation loc = funDecl->rparenToken;
         loc.offset = loc.end();
         loc.startColumn += 1;
-        QString body = textAt(loc, funDecl->rbraceToken);
         slot->name = funDecl->name;
-        slot->body = body;
+        slot->funcDecl = funDecl;
         obj->dynamicSlots.append(slot);
 
     } else {

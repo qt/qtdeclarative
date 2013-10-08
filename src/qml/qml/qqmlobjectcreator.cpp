@@ -445,9 +445,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIndex) {
         const QV4::CompiledData::Function *s = qmlUnit->header.functionAt(*functionIndex);
 
-        VMD::MethodData methodData = { int(s->nFormals),
-                                       /* body offset*/0,
-                                       /* body length*/0,
+        VMD::MethodData methodData = { /* runtimeFunctionIndex*/ 0, // ###
+                                       int(s->nFormals),
                                        /* s->location.start.line */0 }; // ###
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();

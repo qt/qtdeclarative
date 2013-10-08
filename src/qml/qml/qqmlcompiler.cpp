@@ -811,6 +811,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->unitRoot = root;
     this->output = out;
     this->functionsToCompile.clear();
+    this->compiledMetaMethods.clear();
 
     // Compile types
     const QList<QQmlTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
@@ -953,6 +954,13 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
                 functionsToCompile.append(binding.expression.asAST());
                 binding.compiledIndex = runtimeFunctionIndices[binding.compiledIndex];
             }
+        }
+
+        foreach (const CompiledMetaMethod &cmm, compiledMetaMethods) {
+            typedef QQmlVMEMetaData VMD;
+            VMD *vmd = (QQmlVMEMetaData *)cmm.obj->synthdata.data();
+            VMD::MethodData &md = *(vmd->methodData() + cmm.methodIndex);
+            md.runtimeFunctionIndex = runtimeFunctionIndices.at(cmm.compiledFunctionIndex);
         }
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
@@ -3234,24 +3242,8 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
     // Dynamic slot data - comes after the property data
     for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
-        int paramCount = s->parameterNames.count();
-
-        QString funcScript;
-        int namesSize = 0;
-        if (paramCount) namesSize += s->parameterNamesLength() + (paramCount - 1 /* commas */);
-        funcScript.reserve(strlen("(function ") + s->name.length() + 1 /* lparen */ +
-                           namesSize + 1 /* rparen */ + s->body.length() + 1 /* rparen */);
-        funcScript = QLatin1String("(function ") + s->name.toString() + QLatin1Char('(');
-        for (int jj = 0; jj < paramCount; ++jj) {
-            if (jj) funcScript.append(QLatin1Char(','));
-            funcScript.append(QLatin1String(s->parameterNames.at(jj)));
-        }
-        funcScript += QLatin1Char(')') + s->body + QLatin1Char(')');
-
-        QByteArray utf8 = funcScript.toUtf8();
-        VMD::MethodData methodData = { s->parameterNames.count(),
-                                       dynamicData.size(),
-                                       utf8.length(),
+        VMD::MethodData methodData = { /*runtimeFunctionIndex*/ 0, // To be filled in later
+                                       s->parameterNames.count(),
                                        s->location.start.line };
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
@@ -3259,7 +3251,12 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         vmd->methodCount++;
         md = methodData;
 
-        dynamicData.append((const char *)utf8.constData(), utf8.length());
+        CompiledMetaMethod cmm;
+        cmm.obj = obj;
+        cmm.methodIndex = vmd->methodCount - 1;
+        functionsToCompile.append(s->funcDecl);
+        cmm.compiledFunctionIndex = functionsToCompile.count() - 1;
+        compiledMetaMethods.append(cmm);
     }
 
     if (aliasCount)

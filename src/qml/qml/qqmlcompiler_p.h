@@ -463,6 +463,13 @@ private:
 
     QList<QQmlJS::AST::Node*> functionsToCompile;
     QList<QQmlCompilerTypes::JSBindingReference*> allBindingReferenceRoots;
+    struct CompiledMetaMethod
+    {
+        QQmlScript::Object *obj;
+        int methodIndex;
+        int compiledFunctionIndex; // index in functionToCompile
+    };
+    QList<CompiledMetaMethod> compiledMetaMethods;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

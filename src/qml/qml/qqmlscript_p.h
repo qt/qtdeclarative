@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 class QByteArray;
 class QQmlPropertyCache;
-namespace QQmlJS { class Engine; namespace AST { class Node; class StringLiteral; class UiProgram; } }
+namespace QQmlJS { class Engine; namespace AST { class Node; class StringLiteral; class UiProgram; class FunctionDeclaration; } }
 namespace QQmlCompilerTypes { struct BindingReference; struct ComponentCompileState; }
 
 namespace QQmlScript {
@@ -433,8 +433,8 @@ public:
     {
         DynamicSlot();
 
+        QQmlJS::AST::FunctionDeclaration *funcDecl;
         QHashedStringRef name;
-        QString body;
         QList<QByteArray> parameterNames;
         LocationSpan location;
 

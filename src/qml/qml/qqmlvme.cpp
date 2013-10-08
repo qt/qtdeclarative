@@ -714,7 +714,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             const QQmlVMEMetaData *data = 
                 (const QQmlVMEMetaData *)DATAS.at(instr.aliasData).constData();
 
-            (void)new QQmlVMEMetaObject(target, propertyCache, data);
+            QV4::ExecutionContext *qmlContext = qmlBindingContext(engine, QV8Engine::getV4(engine), qmlBindingWrappers, CTXT, target, objects.count() - 1);
+            (void)new QQmlVMEMetaObject(target, propertyCache, data, qmlContext, COMP);
 
             QQmlData *ddata = QQmlData::get(target, true);
             if (ddata->propertyCache) ddata->propertyCache->release();
