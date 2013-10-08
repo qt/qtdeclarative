@@ -1303,7 +1303,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
 
 
 QQmlScript::Parser::Parser()
-: root(0), data(0)
+: root(0), _qmlRoot(0), data(0)
 {
 
 }
@@ -1379,6 +1379,8 @@ bool QQmlScript::Parser::parse(const QString &qmlcode, const QByteArray & /* pre
         for(int ii = 0; ii < _errors.count(); ++ii)
             _errors[ii].setUrl(url);
     }
+
+    _qmlRoot = parser.ast();
 
     return _errors.isEmpty();
 }
@@ -1759,6 +1761,7 @@ void QQmlScript::Parser::clear()
     }
 
     _pool.clear();
+    _qmlRoot = 0;
 }
 
 int QQmlScript::Parser::findOrCreateTypeId(const QString &name, Object *object)
@@ -1780,6 +1783,11 @@ void QQmlScript::Parser::setTree(QQmlScript::Object *tree)
     Q_ASSERT(! root);
 
     root = tree;
+}
+
+Engine *QQmlScript::Parser::jsEngine() const
+{
+    return data ? &data->engine : 0;
 }
 
 QT_END_NAMESPACE

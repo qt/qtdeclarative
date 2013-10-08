@@ -63,6 +63,7 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
 #include "private/qv4identifier_p.h"
+#include <private/qqmljsastfwd_p.h>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -459,6 +460,9 @@ private:
     QQmlTypeData *unit;
     int cachedComponentTypeRef;
     int cachedTranslationContextIndex;
+
+    QList<QQmlJS::AST::Node*> functionsToCompile;
+    QList<QQmlCompilerTypes::JSBindingReference*> allBindingReferenceRoots;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

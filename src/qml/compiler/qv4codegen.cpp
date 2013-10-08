@@ -1842,7 +1842,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             V4IR::Function *function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                     member.function->body ? member.function->body->elements : 0);
-            if (! _env->parent) {
+            if (! _env->parent || _env->compilationMode == QmlBinding) {
                 move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
                      _block->CLOSURE(function));
             } else {

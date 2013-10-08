@@ -226,6 +226,18 @@ static QVariant variantFromString(const QString &string)
     return QQmlStringConverters::variantFromString(string);
 }
 
+static QV4::ExecutionContext *qmlBindingContext(QQmlEngine *engine, QV4::ExecutionEngine *v4, QV4::SafeValue *qmlBindingWrappers, QQmlContextData *context, QObject *scope, int objIdx)
+{
+    QV4::Scope valueScope(v4);
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, qmlBindingWrappers[objIdx]);
+    if (!wrapper) {
+        QV4::ScopedObject scopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, scope));
+        wrapper = new (v4->memoryManager) QV4::QmlBindingWrapper(v4->rootContext, scopeObject);
+        qmlBindingWrappers[objIdx] = wrapper;
+    }
+    return wrapper->context();
+}
+
 // XXX we probably need some form of "work count" here to prevent us checking this 
 // for every instruction.
 #define QML_BEGIN_INSTR_COMMON(I) { \
@@ -343,6 +355,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
     QV4::ExecutionEngine *v4 = ep->v4engine();
     QV4::Scope valueScope(v4);
     QV4::ScopedValue tmpValue(valueScope);
+    QV4::SafeValue *qmlBindingWrappers = valueScope.alloc(objects.capacity());
+    std::fill(qmlBindingWrappers, qmlBindingWrappers + objects.capacity(), QV4::Primitive::undefinedValue());
 
     int status = -1; // needed for dbus
     QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::BypassInterceptor |
@@ -546,6 +560,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             ddata->outerContext = CTXT;
             ddata->lineNumber = instr.line;
             ddata->columnNumber = instr.column;
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(CompleteQMLObject)
 
         QML_BEGIN_INSTR(CreateCppObject)
@@ -618,6 +633,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 ddata->parentFrozen = true;
             }
             objects.push(o);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(CreateCppObject)
 
         QML_BEGIN_INSTR(CreateSimpleObject)
@@ -647,6 +663,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             ddata->parentFrozen = true;
             objects.push(o);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(CreateSimpleObject)
 
         QML_BEGIN_INSTR(SetId)
@@ -685,6 +702,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlComponentPrivate::get(qcomp)->creationContext = CTXT;
 
             objects.push(qcomp);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
             INSTRUCTIONSTREAM += instr.count;
         QML_END_INSTR(CreateComponent)
 
@@ -810,9 +828,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreBinding);
 
-            QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value),
-                                                context, CTXT, COMP->name, instr.line,
-                                                instr.column);
+            QV4::ExecutionContext *qmlContext = qmlBindingContext(engine, QV8Engine::getV4(engine), qmlBindingWrappers, CTXT, context, objects.count() - 1 - instr.context);
+
+            QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.functionIndex];
+
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+
+            QQmlBinding *bind = new QQmlBinding(tmpValue, context, CTXT, COMP->name, instr.line, instr.column);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
@@ -919,6 +941,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 VME_EXCEPTION(tr("Unable to create attached object"), instr.line);
 
             objects.push(qmlObject);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(FetchAttached)
 
         QML_BEGIN_INSTR(FetchQList)
@@ -947,6 +970,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 VME_EXCEPTION(tr("Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.property).name())), instr.line);
 
             objects.push(obj);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(FetchObject)
 
         QML_BEGIN_INSTR(PopQList)
@@ -1003,6 +1027,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             Q_ASSERT(valueHandler);
             valueHandler->read(target, instr.property);
             objects.push(valueHandler);
+            qmlBindingWrappers[objects.count() - 1] = QV4::Primitive::undefinedValue();
         QML_END_INSTR(FetchValueType)
 
         QML_BEGIN_INSTR(PopValueType)

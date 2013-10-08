@@ -62,6 +62,7 @@
 #include "qqmlglobal_p.h"
 #include "qqmlbinding_p.h"
 #include "qqmlabstracturlinterceptor.h"
+#include "qqmlcodegenerator_p.h"
 
 #include <QDebug>
 #include <QPointF>
@@ -809,6 +810,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->unit = unit;
     this->unitRoot = root;
     this->output = out;
+    this->functionsToCompile.clear();
 
     // Compile types
     const QList<QQmlTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
@@ -914,6 +916,53 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
 
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())
         return;
+
+    const QQmlScript::Parser &parser = unit->parser();
+    QQmlJS::Engine *jsEngine = parser.jsEngine();
+    QQmlJS::MemoryPool *pool = jsEngine->pool();
+
+    foreach (JSBindingReference *root, allBindingReferenceRoots) {
+        for (JSBindingReference *b = root; b; b = b->nextReference) {
+            JSBindingReference &binding = *b;
+
+            QQmlJS::AST::Node *node = binding.expression.asAST();
+            // Always wrap this in an ExpressionStatement, to make sure that
+            // property var foo: function() { ... } results in a closure initialization.
+            if (!node->statementCast()) {
+                AST::ExpressionNode *expr = node->expressionCast();
+                node = new (pool) AST::ExpressionStatement(expr);
+            }
+
+            functionsToCompile.append(node);
+            binding.compiledIndex = functionsToCompile.count() - 1;
+        }
+    }
+
+    if (!functionsToCompile.isEmpty()) {
+        JSCodeGen jsCodeGen;
+
+        V4IR::Module jsModule;
+        const QString &sourceCode = jsEngine->code();
+        AST::UiProgram *qmlRoot = parser.qmlRoot();
+
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, &jsModule, jsEngine, qmlRoot, functionsToCompile);
+
+        foreach (JSBindingReference *root, allBindingReferenceRoots) {
+            for (JSBindingReference *b = root; b; b = b->nextReference) {
+                JSBindingReference &binding = *b;
+                functionsToCompile.append(binding.expression.asAST());
+                binding.compiledIndex = runtimeFunctionIndices[binding.compiledIndex];
+            }
+        }
+
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QV4::Compiler::JSUnitGenerator jsUnitGenerator(&jsModule);
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &jsModule, &jsUnitGenerator));
+        isel->setUseFastLookups(false);
+        QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/true);
+        output->compilationUnit = jsUnit;
+        output->compilationUnit->ref();
+    }
 
     Instruction::Init init;
     init.bindingsSize = compileState->totalBindingsCount;
@@ -3519,7 +3568,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
         Instruction::StoreBinding store;
-        store.value = output->indexForString(js.expression.asScript());
+        store.functionIndex = js.compiledIndex;
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
         store.line = binding->location.start.line;
@@ -3587,6 +3636,7 @@ bool QQmlCompiler::completeComponentBuild()
         if (componentStats)
             componentStats->componentStat.scriptBindings.append(b->value->location);
     }
+    allBindingReferenceRoots.append(compileState->bindings.first());
 
     // Check pop()'s matched push()'s
     Q_ASSERT(compileState->objectDepth.depth() == 0);

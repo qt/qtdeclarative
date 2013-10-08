@@ -316,7 +316,7 @@ void tst_qqmlinstruction::dump()
     {
         QQmlCompiledData::Instruction::StoreBinding i;
         i.property.coreIndex = 26;
-        i.value = 3;
+        i.functionIndex = 3;
         i.context = 2;
         i.owner = 0;
         data->addInstruction(i);

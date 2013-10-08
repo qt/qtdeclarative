@@ -2335,7 +2335,7 @@ void QQmlTypeData::compile()
         // Compile JS binding expressions and signal handlers
 
         JSCodeGen jsCodeGen;
-        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
@@ -2346,7 +2346,7 @@ void QQmlTypeData::compile()
         // Generate QML compiled type data structures
 
         QmlUnitGenerator qmlGenerator;
-        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data());
+        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data(), runtimeFunctionIndices);
 
         if (jsUnit) {
             Q_ASSERT(!jsUnit->data);

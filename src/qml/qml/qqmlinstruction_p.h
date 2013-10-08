@@ -237,7 +237,7 @@ union QQmlInstruction
     struct instr_assignBinding {
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
-        int value;
+        int functionIndex; // index in CompiledData::runtimeFunctions
         short context;
         short owner;
         bool isRoot:1;

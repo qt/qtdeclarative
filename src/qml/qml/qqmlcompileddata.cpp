@@ -243,6 +243,9 @@ void QQmlCompiledData::initialize(QQmlEngine *engine)
 {
     Q_ASSERT(!hasEngine());
     QQmlCleanup::addToEngine(engine);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+    if (compilationUnit && !compilationUnit->engine)
+        compilationUnit->linkToEngine(v4);
 }
 
 QT_END_NAMESPACE

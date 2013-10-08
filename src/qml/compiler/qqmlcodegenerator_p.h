@@ -127,12 +127,13 @@ struct QmlProperty : public QV4::CompiledData::Property
 
 struct Binding : public QV4::CompiledData::Binding
 {
+    // Binding's compiledScriptIndex is index in parsedQML::functions
     Binding *next;
 };
 
 struct Function
 {
-    int index;
+    int index; // index in parsedQML::functions
     Function *next;
 };
 
@@ -276,7 +277,7 @@ struct Q_QML_EXPORT QmlUnitGenerator
     {
     }
 
-    QV4::CompiledData::QmlUnit *generate(ParsedQML &output);
+    QV4::CompiledData::QmlUnit *generate(ParsedQML &output, const QVector<int> &runtimeFunctionIndices);
 
 private:
     int getStringId(const QString &str) const;
@@ -335,7 +336,10 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
         : QQmlJS::Codegen(/*strict mode*/false)
     {}
 
-    void generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
+    // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
+    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
+    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
+                                               QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, const QList<AST::Node*> &functions);
 
 private:
     struct QmlScanner : public ScanFunctions
@@ -350,8 +354,6 @@ private:
 
         JSCodeGen *codeGen;
     };
-
-    V4IR::Module jsModule;
 };
 
 } // namespace QtQml

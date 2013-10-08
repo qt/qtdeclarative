@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 class QByteArray;
 class QQmlPropertyCache;
-namespace QQmlJS { namespace AST { class Node; class StringLiteral; } }
+namespace QQmlJS { class Engine; namespace AST { class Node; class StringLiteral; class UiProgram; } }
 namespace QQmlCompilerTypes { struct BindingReference; struct ComponentCompileState; }
 
 namespace QQmlScript {
@@ -511,6 +511,9 @@ public:
     void setScriptFile(const QString &filename) {_scriptFile = filename; }
     QString scriptFile() const { return _scriptFile; }
 
+    QQmlJS::AST::UiProgram *qmlRoot() const { return _qmlRoot; }
+    QQmlJS::Engine *jsEngine() const;
+
 // ### private:
     QList<QQmlError> _errors;
 
@@ -520,6 +523,7 @@ public:
     QList<Pragma> _pragmas;
     QList<TypeReference*> _refTypes;
     QString _scriptFile;
+    QQmlJS::AST::UiProgram *_qmlRoot;
     ParserJsASTData *data;
 };
 
