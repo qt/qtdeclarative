@@ -2306,15 +2306,69 @@ bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
     Q_ASSERT(leftSource->type == V4IR::SInt32Type);
 
     switch (oper) {
-    case V4IR::OpBitAnd:
+    case V4IR::OpBitAnd: {
         Q_ASSERT(rightSource->type == V4IR::SInt32Type);
-        _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
-                  Assembler::ReturnValueRegister);
-        _as->move(_as->toInt32Register(rightSource, Assembler::ScratchRegister),
-                  Assembler::ScratchRegister);
-        _as->and32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
-        return true;
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
+                && target->kind == V4IR::Temp::PhysicalRegister
+                && target->index == rightSource->asTemp()->index) {
+            _as->and32(_as->toInt32Register(leftSource, Assembler::ScratchRegister),
+                       (Assembler::RegisterID) target->index);
+            return true;
+        }
+        Assembler::RegisterID targetReg;
+        if (target->kind == V4IR::Temp::PhysicalRegister)
+            targetReg = (Assembler::RegisterID) target->index;
+        else
+            targetReg = Assembler::ReturnValueRegister;
+
+        _as->move(_as->toInt32Register(leftSource, targetReg), targetReg);
+        Assembler::RegisterID rReg = _as->toInt32Register(rightSource, Assembler::ScratchRegister);
+        _as->and32(rReg, targetReg);
+        if (Assembler::ReturnValueRegister == targetReg)
+            _as->storeInt32(targetReg, target);
+    } return true;
+    case V4IR::OpBitOr: {
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
+                && target->kind == V4IR::Temp::PhysicalRegister
+                && target->index == rightSource->asTemp()->index) {
+            _as->or32(_as->toInt32Register(leftSource, Assembler::ScratchRegister),
+                       (Assembler::RegisterID) target->index);
+            return true;
+        }
+        Assembler::RegisterID targetReg;
+        if (target->kind == V4IR::Temp::PhysicalRegister)
+            targetReg = (Assembler::RegisterID) target->index;
+        else
+            targetReg = Assembler::ReturnValueRegister;
+
+        _as->move(_as->toInt32Register(leftSource, targetReg), targetReg);
+        Assembler::RegisterID rReg = _as->toInt32Register(rightSource, Assembler::ScratchRegister);
+        _as->or32(rReg, targetReg);
+        if (Assembler::ReturnValueRegister == targetReg)
+            _as->storeInt32(targetReg, target);
+    } return true;
+    case V4IR::OpBitXor: {
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+        if (rightSource->asTemp() && rightSource->asTemp()->kind == V4IR::Temp::PhysicalRegister
+                && target->kind == V4IR::Temp::PhysicalRegister
+                && target->index == rightSource->asTemp()->index) {
+            _as->xor32(_as->toInt32Register(leftSource, Assembler::ScratchRegister),
+                       (Assembler::RegisterID) target->index);
+            return true;
+        }
+        Assembler::RegisterID targetReg;
+        if (target->kind == V4IR::Temp::PhysicalRegister)
+            targetReg = (Assembler::RegisterID) target->index;
+        else
+            targetReg = Assembler::ReturnValueRegister;
+
+        _as->move(_as->toInt32Register(leftSource, targetReg), targetReg);
+        Assembler::RegisterID rReg = _as->toInt32Register(rightSource, Assembler::ScratchRegister);
+        _as->xor32(rReg, targetReg);
+        if (Assembler::ReturnValueRegister == targetReg)
+            _as->storeInt32(targetReg, target);
+    } return true;
     case V4IR::OpLShift:
         Q_ASSERT(rightSource->type == V4IR::UInt32Type);
         _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),

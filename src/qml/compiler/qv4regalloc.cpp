@@ -435,7 +435,7 @@ protected: // IRDecoder
                 needsCall = false;
             }
         } else if (leftSource->type == SInt32Type && rightSource->type == SInt32Type) {
-            if (oper == OpBitAnd) {
+            if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor) {
                 needsCall = false;
             }
         } else if (leftSource->type == SInt32Type && rightSource->type == UInt32Type) {
