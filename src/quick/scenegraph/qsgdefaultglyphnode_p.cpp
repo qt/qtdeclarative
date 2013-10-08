@@ -237,7 +237,7 @@ const char *QSG24BitTextMaskShader::fragmentShader() const {
         "uniform lowp sampler2D texture;                            \n"
         "uniform lowp float color; // just the alpha, really...     \n"
         "void main() {                                              \n"
-        "    vec4 glyph = texture2D(texture, sampleCoord);          \n"
+        "    lowp vec4 glyph = texture2D(texture, sampleCoord);     \n"
         "    gl_FragColor = vec4(glyph.rgb * color, glyph.a);       \n"
         "}";
 }
