@@ -114,6 +114,13 @@ struct RuntimeCounters::Data {
     typedef QVector<quint64> Counters;
     QHash<const char *, Counters> counters;
 
+    inline void count(const char *func) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[0] += 1;
+    }
+
     inline void count(const char *func, unsigned tag) {
         QVector<quint64> &cnt = counters[func];
         if (cnt.isEmpty())
@@ -178,6 +185,11 @@ RuntimeCounters::~RuntimeCounters()
 {
     d->dump();
     delete d;
+}
+
+void RuntimeCounters::count(const char *func)
+{
+    d->count(func);
 }
 
 void RuntimeCounters::count(const char *func, uint tag)
@@ -1077,31 +1089,37 @@ QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Valu
 
 ReturnedValue __qmljs_value_to_double(const ValueRef value)
 {
+    TRACE1(value);
     return Encode(value->toNumber());
 }
 
 int __qmljs_value_to_int32(const ValueRef value)
 {
+    TRACE1(value);
     return value->toInt32();
 }
 
 int __qmljs_double_to_int32(const double &d)
 {
+    TRACE0();
     return Primitive::toInt32(d);
 }
 
 unsigned __qmljs_value_to_uint32(const ValueRef value)
 {
+    TRACE1(value);
     return value->toUInt32();
 }
 
 unsigned __qmljs_double_to_uint32(const double &d)
 {
+    TRACE0();
     return Primitive::toUInt32(d);
 }
 
 ReturnedValue __qmljs_value_from_string(String *string)
 {
+    TRACE0();
     return string->asReturnedValue();
 }
 
