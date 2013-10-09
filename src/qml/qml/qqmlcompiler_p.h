@@ -470,6 +470,12 @@ private:
         int compiledFunctionIndex; // index in functionToCompile
     };
     QList<CompiledMetaMethod> compiledMetaMethods;
+    struct CompiledSignalHandlerExpression
+    {
+        QQmlScript::Value *signal;
+        int compiledHandlerIndex; // index in functionsToCompile
+    };
+    QList<CompiledSignalHandlerExpression> compiledSignalHandlers;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

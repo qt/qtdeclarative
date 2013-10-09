@@ -392,6 +392,7 @@ union QQmlInstruction
     };
     struct instr_storeSignal {
         QML_INSTR_HEADER
+        int runtimeFunctionIndex;
         int handlerName;
         int parameters;
         int signalIndex;

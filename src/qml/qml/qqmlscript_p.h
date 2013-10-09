@@ -227,9 +227,13 @@ public:
     LocationSpan location;
 
     // Used by compiler
+    struct SignalData {
+        int signalExpressionContextStack;
+        int functionIndex; // before gen() index in functionsToCompile, then index in runtime functions
+    };
     union {
         QQmlCompilerTypes::BindingReference *bindingReference;
-        int signalExpressionContextStack;
+        SignalData signalData;
     };
 
     // Used in Property::ValueList lists

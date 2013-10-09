@@ -812,6 +812,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->output = out;
     this->functionsToCompile.clear();
     this->compiledMetaMethods.clear();
+    this->compiledSignalHandlers.clear();
 
     // Compile types
     const QList<QQmlTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
@@ -961,6 +962,10 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
             VMD *vmd = (QQmlVMEMetaData *)cmm.obj->synthdata.data();
             VMD::MethodData &md = *(vmd->methodData() + cmm.methodIndex);
             md.runtimeFunctionIndex = runtimeFunctionIndices.at(cmm.compiledFunctionIndex);
+        }
+
+        foreach (const CompiledSignalHandlerExpression &expr, compiledSignalHandlers) {
+            expr.signal->signalData.functionIndex = runtimeFunctionIndices.at(expr.compiledHandlerIndex);
         }
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
@@ -1380,11 +1385,12 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         } else if (v->type == Value::SignalExpression) {
 
             Instruction::StoreSignal store;
+            store.runtimeFunctionIndex = v->signalData.functionIndex;
             store.handlerName = output->indexForString(prop->name().toString());
             store.parameters = output->indexForString(obj->metatype->signalParameterStringForJS(prop->index));
             store.signalIndex = prop->index;
             store.value = output->indexForString(v->value.asScript());
-            store.context = v->signalExpressionContextStack;
+            store.context = v->signalData.signalExpressionContextStack;
             store.line = v->location.start.line;
             store.column = v->location.start.column;
             output->addInstruction(store);
@@ -1678,6 +1684,42 @@ int QQmlCompiler::translationContextIndex()
     return cachedTranslationContextIndex;
 }
 
+static AST::FunctionDeclaration *convertSignalHandlerExpressionToFunctionDeclaration(QQmlJS::Engine *jsEngine,
+                                                                                     AST::Node *node,
+                                                                                     const QString &signalName,
+                                                                                     const QList<QByteArray> &parameters)
+{
+    QQmlJS::MemoryPool *pool = jsEngine->pool();
+
+    AST::FormalParameterList *paramList = 0;
+    foreach (const QByteArray &param, parameters) {
+        QStringRef paramNameRef = jsEngine->newStringRef(QString::fromUtf8(param));
+
+        if (paramList)
+            paramList = new (pool) AST::FormalParameterList(paramList, paramNameRef);
+        else
+            paramList = new (pool) AST::FormalParameterList(paramNameRef);
+    }
+
+    if (paramList)
+        paramList = paramList->finish();
+
+    AST::Statement *statement = node->statementCast();
+    if (!statement) {
+        AST::ExpressionNode *expr = node->expressionCast();
+        Q_ASSERT(expr);
+        statement = new (pool) AST::ExpressionStatement(expr);
+    }
+    AST::SourceElement *sourceElement = new (pool) AST::StatementSourceElement(statement);
+    AST::SourceElements *elements = new (pool) AST::SourceElements(sourceElement);
+    elements = elements->finish();
+
+    AST::FunctionBody *body = new (pool) AST::FunctionBody(elements);
+
+    AST::FunctionDeclaration *functionDeclaration = new (pool) AST::FunctionDeclaration(jsEngine->newStringRef(signalName), paramList, body);
+    return functionDeclaration;
+}
+
 bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *obj,
                                        const BindingContext &ctxt)
 {
@@ -1744,7 +1786,19 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
             //all handlers should be on the original, rather than cloned signals in order
             //to ensure all parameters are available (see qqmlboundsignal constructor for more details)
             prop->index = obj->metatype->originalClone(prop->index);
-            prop->values.first()->signalExpressionContextStack = ctxt.stack;
+            prop->values.first()->signalData.signalExpressionContextStack = ctxt.stack;
+
+            CompiledSignalHandlerExpression expr;
+            expr.signal = prop->values.first();
+
+            QList<QByteArray> parameters = obj->metatype->signalParameterNames(prop->index);
+
+            AST::FunctionDeclaration *funcDecl = convertSignalHandlerExpressionToFunctionDeclaration(unit->parser().jsEngine(), prop->values.first()->value.asAST(), propName.toString(), parameters);
+            functionsToCompile.append(funcDecl);
+
+            expr.compiledHandlerIndex = functionsToCompile.count() - 1;
+            compiledSignalHandlers.append(expr);
+            prop->values.first()->signalData.functionIndex = 0; // To be filled in before gen()
 
             QString errorString;
             obj->metatype->signalParameterStringForJS(prop->index, &errorString);

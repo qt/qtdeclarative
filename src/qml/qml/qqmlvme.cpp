@@ -777,13 +777,16 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *target = objects.top();
             QObject *context = objects.at(objects.count() - 1 - instr.context);
 
+            QV4::ExecutionContext *qmlContext = qmlBindingContext(engine, QV8Engine::getV4(engine), qmlBindingWrappers, CTXT, context, objects.count() - 1 - instr.context);
+
+            QV4::Function *runtimeFunction = COMP->compilationUnit->runtimeFunctions[instr.runtimeFunctionIndex];
+
+            tmpValue = QV4::FunctionObject::creatScriptFunction(qmlContext, runtimeFunction);
+
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(target, instr.signalIndex,
-                                              CTXT, context, PRIMITIVES.at(instr.value),
-                                              COMP->name, instr.line, instr.column,
-                                              PRIMITIVES.at(instr.handlerName),
-                                              PRIMITIVES.at(instr.parameters));
+                                              CTXT, context, tmpValue);
             bs->takeExpression(expr);
         QML_END_INSTR(StoreSignal)
 
