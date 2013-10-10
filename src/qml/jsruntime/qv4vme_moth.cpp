@@ -45,6 +45,7 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4lookup_p.h>
 #include <iostream>
 
 #include "qv4alloca_p.h"
@@ -263,6 +264,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_get_activation_property(context, runtimeStrings[instr.name]));
     MOTH_END_INSTR(LoadName)
 
+    MOTH_BEGIN_INSTR(GetGlobalLookup)
+        TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
+        QV4::Lookup *l = context->lookups + instr.index;
+        STOREVALUE(instr.result, l->globalGetter(l, context));
+    MOTH_END_INSTR(GetGlobalLookup)
+
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         __qmljs_set_activation_property(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
@@ -282,10 +289,21 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_get_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name]));
     MOTH_END_INSTR(LoadProperty)
 
+    MOTH_BEGIN_INSTR(GetLookup)
+        QV4::Lookup *l = context->lookups + instr.index;
+        STOREVALUE(instr.result, l->getter(l, VALUEPTR(instr.base)));
+    MOTH_END_INSTR(GetLookup)
+
     MOTH_BEGIN_INSTR(StoreProperty)
         __qmljs_set_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name], VALUEPTR(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
+
+    MOTH_BEGIN_INSTR(SetLookup)
+        QV4::Lookup *l = context->lookups + instr.index;
+        l->setter(l, VALUEPTR(instr.base), VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(SetLookup)
 
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
@@ -324,6 +342,16 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_call_property(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CallProperty)
 
+    MOTH_BEGIN_INSTR(CallPropertyLookup)
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = QV4::Value::Integer_Type;
+        callData->argc = instr.argc;
+        callData->thisObject = VALUE(instr.base);
+        STOREVALUE(instr.result, __qmljs_call_property_lookup(context, instr.lookupIndex, callData));
+    MOTH_END_INSTR(CallPropertyLookup)
+
     MOTH_BEGIN_INSTR(CallElement)
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
@@ -342,6 +370,16 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, __qmljs_call_activation_property(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CallActivationProperty)
+
+    MOTH_BEGIN_INSTR(CallGlobalLookup)
+        TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = QV4::Value::Integer_Type;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Primitive::undefinedValue();
+        STOREVALUE(instr.result, __qmljs_call_global_lookup(context, instr.index, callData));
+    MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
         exceptionHandler = instr.offset ? ((uchar *)&instr.offset) + instr.offset : 0;
@@ -458,6 +496,16 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, __qmljs_construct_activation_property(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CreateActivationProperty)
+
+    MOTH_BEGIN_INSTR(ConstructGlobalLookup)
+        TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = QV4::Value::Integer_Type;
+        callData->argc = instr.argc;
+        callData->thisObject = QV4::Primitive::undefinedValue();
+        STOREVALUE(instr.result, __qmljs_construct_global_lookup(context, instr.index, callData));
+    MOTH_END_INSTR(ConstructGlobalLookup)
 
     MOTH_BEGIN_INSTR(Jump)
         code = ((uchar *)&instr.offset) + instr.offset;

@@ -360,14 +360,24 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
                                         V4IR::Temp *result)
 {
-    // call the property on the loaded base
-    Instruction::CallProperty call;
-    call.base = getParam(base);
-    call.name = registerString(name);
-    prepareCallArgs(args, call.argc);
-    call.callData = callDataStart();
-    call.result = getResultParam(result);
-    addInstruction(call);
+    if (useFastLookups) {
+        Instruction::CallPropertyLookup call;
+        call.base = getParam(base);
+        call.lookupIndex = registerGetterLookup(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+    } else {
+        // call the property on the loaded base
+        Instruction::CallProperty call;
+        call.base = getParam(base);
+        call.name = registerString(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+    }
 }
 
 void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args,
@@ -399,6 +409,15 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
                                                        V4IR::ExprList *args,
                                                        V4IR::Temp *result)
 {
+    if (useFastLookups && func->global) {
+        Instruction::ConstructGlobalLookup call;
+        call.index = registerGlobalGetterLookup(*func->id);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CreateActivationProperty create;
     create.name = registerString(*func->id);
     prepareCallArgs(args, create.argc);
@@ -471,6 +490,13 @@ void InstructionSelection::loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *ta
 
 void InstructionSelection::getActivationProperty(const V4IR::Name *name, V4IR::Temp *temp)
 {
+    if (useFastLookups && name->global) {
+        Instruction::GetGlobalLookup load;
+        load.index = registerGlobalGetterLookup(*name->id);
+        load.result = getResultParam(temp);
+        addInstruction(load);
+        return;
+    }
     Instruction::LoadName load;
     load.name = registerString(*name->id);
     load.result = getResultParam(temp);
@@ -496,6 +522,14 @@ void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *targe
 
 void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target)
 {
+    if (useFastLookups) {
+        Instruction::GetLookup load;
+        load.base = getParam(base);
+        load.index = registerGetterLookup(name);
+        load.result = getResultParam(target);
+        addInstruction(load);
+        return;
+    }
     Instruction::LoadProperty load;
     load.base = getParam(base);
     load.name = registerString(name);
@@ -506,6 +540,14 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
 void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBase,
                                        const QString &targetName)
 {
+    if (useFastLookups) {
+        Instruction::SetLookup store;
+        store.base = getParam(targetBase);
+        store.index = registerSetterLookup(targetName);
+        store.source = getParam(source);
+        addInstruction(store);
+        return;
+    }
     Instruction::StoreProperty store;
     store.base = getParam(targetBase);
     store.name = registerString(targetName);
@@ -856,6 +898,15 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
+    if (useFastLookups && func->global) {
+        Instruction::CallGlobalLookup call;
+        call.index = registerGlobalGetterLookup(*func->id);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CallActivationProperty call;
     call.name = registerString(*func->id);
     prepareCallArgs(args, call.argc);

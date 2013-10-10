@@ -57,16 +57,21 @@ QT_BEGIN_NAMESPACE
     F(Move, move) \
     F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
+    F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
     F(StoreElement, storeElement) \
     F(LoadProperty, loadProperty) \
+    F(GetLookup, getLookup) \
     F(StoreProperty, storeProperty) \
+    F(SetLookup, setLookup) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
+    F(CallPropertyLookup, callPropertyLookup) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
+    F(CallGlobalLookup, callGlobalLookup) \
     F(SetExceptionHandler, setExceptionHandler) \
     F(CallBuiltinThrow, callBuiltinThrow) \
     F(CallBuiltinUnwindException, callBuiltinUnwindException) \
@@ -91,6 +96,7 @@ QT_BEGIN_NAMESPACE
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
+    F(ConstructGlobalLookup, constructGlobalLookup) \
     F(Jump, jump) \
     F(CJump, cjump) \
     F(UNot, unot) \
@@ -247,6 +253,11 @@ union Instr
         int name;
         Param result;
     };
+    struct instr_getGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        Param result;
+    };
     struct instr_storeName {
         MOTH_INSTR_HEADER
         int name;
@@ -258,9 +269,21 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_getLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        Param base;
+        Param result;
+    };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
         int name;
+        Param base;
+        Param source;
+    };
+    struct instr_setLookup {
+        MOTH_INSTR_HEADER
+        int index;
         Param base;
         Param source;
     };
@@ -295,6 +318,14 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_callPropertyLookup {
+        MOTH_INSTR_HEADER
+        int lookupIndex;
+        quint32 argc;
+        quint32 callData;
+        Param base;
+        Param result;
+    };
     struct instr_callElement {
         MOTH_INSTR_HEADER
         Param base;
@@ -306,6 +337,13 @@ union Instr
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         int name;
+        quint32 argc;
+        quint32 callData;
+        Param result;
+    };
+    struct instr_callGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
         quint32 argc;
         quint32 callData;
         Param result;
@@ -434,6 +472,13 @@ union Instr
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
+        quint32 argc;
+        quint32 callData;
+        Param result;
+    };
+    struct instr_constructGlobalLookup {
+        MOTH_INSTR_HEADER
+        int index;
         quint32 argc;
         quint32 callData;
         Param result;
@@ -592,16 +637,21 @@ union Instr
     instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
+    instr_getGlobalLookup getGlobalLookup;
     instr_storeName storeName;
     instr_loadElement loadElement;
     instr_storeElement storeElement;
     instr_loadProperty loadProperty;
+    instr_getLookup getLookup;
     instr_storeProperty storeProperty;
+    instr_setLookup setLookup;
     instr_push push;
     instr_callValue callValue;
     instr_callProperty callProperty;
+    instr_callPropertyLookup callPropertyLookup;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
+    instr_callGlobalLookup callGlobalLookup;
     instr_callBuiltinThrow callBuiltinThrow;
     instr_setExceptionHandler setExceptionHandler;
     instr_callBuiltinUnwindException callBuiltinUnwindException;
@@ -626,6 +676,7 @@ union Instr
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;
+    instr_constructGlobalLookup constructGlobalLookup;
     instr_jump jump;
     instr_cjump cjump;
     instr_unot unot;
