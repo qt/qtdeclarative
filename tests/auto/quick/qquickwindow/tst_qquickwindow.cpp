@@ -346,7 +346,11 @@ void tst_qquickwindow::constantUpdates()
     window.resize(250, 250);
     ConstantUpdateItem item(window.contentItem());
     window.show();
-    QTRY_VERIFY(item.iterations > 60);
+
+    QSignalSpy spy(&window, SIGNAL(beforeSynchronizing()));
+
+    QTRY_VERIFY(item.iterations > 10);
+    QTRY_VERIFY(spy.count() > 10);
 }
 
 void tst_qquickwindow::constantUpdatesOnWindow_data()
@@ -361,42 +365,56 @@ void tst_qquickwindow::constantUpdatesOnWindow_data()
     bool threaded = window.openglContext()->thread() != QGuiApplication::instance()->thread();
 
     if (threaded) {
-        QTest::newRow("blocked, beforeSync") << true << QByteArray(SIGNAL(beforeSynchronizing()));
         QTest::newRow("blocked, beforeRender") << true << QByteArray(SIGNAL(beforeRendering()));
         QTest::newRow("blocked, afterRender") << true << QByteArray(SIGNAL(afterRendering()));
         QTest::newRow("blocked, swapped") << true << QByteArray(SIGNAL(frameSwapped()));
     }
-    QTest::newRow("unblocked, beforeSync") << false << QByteArray(SIGNAL(beforeSynchronizing()));
     QTest::newRow("unblocked, beforeRender") << false << QByteArray(SIGNAL(beforeRendering()));
     QTest::newRow("unblocked, afterRender") << false << QByteArray(SIGNAL(afterRendering()));
     QTest::newRow("unblocked, swapped") << false << QByteArray(SIGNAL(frameSwapped()));
 }
 
+class FrameCounter : public QObject
+{
+    Q_OBJECT
+public slots:
+    void incr() { QMutexLocker locker(&m_mutex); ++m_counter; }
+public:
+    FrameCounter() : m_counter(0) {}
+    int count() { QMutexLocker locker(&m_mutex); int x = m_counter; return x; }
+private:
+    int m_counter;
+    QMutex m_mutex;
+};
+
 void tst_qquickwindow::constantUpdatesOnWindow()
 {
-    QSKIP("This test fails frequently on the present overworked CI mac machines");
     QFETCH(bool, blockedGui);
     QFETCH(QByteArray, signal);
 
     QQuickWindow window;
     window.setGeometry(100, 100, 300, 200);
 
-    connect(&window, signal.constData(), &window, SLOT(update()), Qt::DirectConnection);
+    bool ok = connect(&window, signal.constData(), &window, SLOT(update()), Qt::DirectConnection);
+    Q_ASSERT(ok);
     window.show();
-    QTRY_VERIFY(window.isExposed());
+    QTest::qWaitForWindowExposed(&window);
 
-    QSignalSpy catcher(&window, SIGNAL(frameSwapped()));
-    if (blockedGui)
-        QTest::qSleep(1000);
-    else {
+    FrameCounter counter;
+    connect(&window, SIGNAL(frameSwapped()), &counter, SLOT(incr()), Qt::DirectConnection);
+
+    int frameCount = 10;
+    QElapsedTimer timer;
+    timer.start();
+    if (blockedGui) {
+        while (counter.count() < frameCount)
+            QTest::qSleep(100);
+        QVERIFY(counter.count() >= frameCount);
+    } else {
         window.update();
-        QTest::qWait(1000);
+        QTRY_VERIFY(counter.count() > frameCount);
     }
     window.hide();
-
-    // We should expect 60, but under loaded conditions we could be skipping
-    // frames, so don't expect too much.
-    QVERIFY(catcher.size() > 10);
 }
 
 void tst_qquickwindow::touchEvent_basic()
