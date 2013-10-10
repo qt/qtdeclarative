@@ -171,6 +171,8 @@ void CompilationUnit::markObjects()
     for (int i = 0; i < runtimeFunctions.count(); ++i)
         if (runtimeFunctions[i])
             runtimeFunctions[i]->mark();
+    for (int i = 0; i < data->lookupTableSize; ++i)
+        runtimeLookups[i].name->mark();
 }
 
 QString Binding::valueAsString(const Unit *unit) const
