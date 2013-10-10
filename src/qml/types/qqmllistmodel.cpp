@@ -420,6 +420,8 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles
     QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
     QV4::Scoped<QV4::String> propertyName(scope);
     QV4::ScopedValue propertyValue(scope);
+    QV4::ScopedString s(scope);
+    QV4::ScopedArrayObject a(scope);
     while (1) {
         propertyName = it.nextPropertyNameAsString(propertyValue);
         if (!propertyName)
@@ -429,13 +431,13 @@ void ListModel::set(int elementIndex, QV4::ObjectRef object, QVector<int> *roles
         int roleIndex = -1;
 
         // Add the value now
-        if (QV4::String *s = propertyValue->asString()) {
+        if ((s = propertyValue)) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             roleIndex = e->setStringProperty(r, s->toQString());
         } else if (propertyValue->isNumber()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
             roleIndex = e->setDoubleProperty(r, propertyValue->asDouble());
-        } else if (QV4::ArrayObject *a = propertyValue->asArrayObject()) {
+        } else if ((a = propertyValue)) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
@@ -1174,7 +1176,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::ValueRef
     QV4::Scope scope(QV8Engine::getV4(eng));
 
     // Add the value now
-    if (d->asString()) {
+    if (d->isString()) {
         QString qstr = d->toQString();
         roleIndex = setStringProperty(role, qstr);
     } else if (d->isNumber()) {

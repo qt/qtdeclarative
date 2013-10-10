@@ -613,6 +613,7 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -620,7 +621,8 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
     QDate date = v8engine->toVariant(ctx->callData->args[0], -1).toDateTime().date();
     QString formattedDate;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedDate = date.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -634,7 +636,7 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
          formattedDate = date.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDate));
+    return ctx->engine->newString(formattedDate)->asReturnedValue();
 }
 
 /*!
@@ -656,6 +658,7 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -669,7 +672,8 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QString formattedTime;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedTime = time.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -683,7 +687,7 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
          formattedTime = time.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedTime));
+    return ctx->engine->newString(formattedTime)->asReturnedValue();
 }
 
 /*!
@@ -780,6 +784,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -787,7 +792,8 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
     QDateTime dt = v8engine->toVariant(ctx->callData->args[0], -1).toDateTime();
     QString formattedDt;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedDt = dt.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -801,7 +807,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
          formattedDt = dt.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDt));
+    return ctx->engine->newString(formattedDt)->asReturnedValue();
 }
 
 /*!

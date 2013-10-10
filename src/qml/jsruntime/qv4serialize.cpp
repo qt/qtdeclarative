@@ -281,7 +281,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
 
             QV4::ExecutionContext *ctx = v4->current;
             try {
-                str = s->asString();
+                str = s;
                 val = o->get(str);
             } catch (...) {
                 ctx->catchException();
