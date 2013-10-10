@@ -116,8 +116,10 @@ static Opcode32GroupInitializer opcode32BitGroupList[] = {
     OPCODE_GROUP_ENTRY(0x5, ARMv7DOpcodeDataProcessingShiftedReg),
     OPCODE_GROUP_ENTRY(0x6, ARMv7DOpcodeVMOVSinglePrecision),
     OPCODE_GROUP_ENTRY(0x6, ARMv7DOpcodeVMOVDoublePrecision),
+    OPCODE_GROUP_ENTRY(0x6, ARMv7DOpcodeVLDRVSTR),
     OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeFPTransfer),
     OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVMSR),
+    OPCODE_GROUP_ENTRY(0x7, ARMv7DOpcodeVADDVSUB),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeDataProcessingModifiedImmediate),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeConditionalBranchT3),
     OPCODE_GROUP_ENTRY(0x8, ARMv7DOpcodeBranchOrBranchLink),
@@ -1557,6 +1559,45 @@ const char* ARMv7DOpcodeVMSR::format()
         appendSeparator();
         appendRegisterName(rt());
     }
+
+    return m_formatBuffer;
+}
+
+const char* ARMv7DOpcodeVADDVSUB::format()
+{
+    char regPrefix = sz() ? 'd' : 's';
+    if (isSub())
+        appendInstructionName("vsub");
+    else
+        appendInstructionName("vadd");
+    appendFPRegisterName(regPrefix, vd());
+    appendSeparator();
+    appendFPRegisterName(regPrefix, vn());
+    appendSeparator();
+    appendFPRegisterName(regPrefix, vm());
+
+    return m_formatBuffer;
+}
+
+const char* ARMv7DOpcodeVLDRVSTR::format()
+{
+    appendInstructionName(opName());
+
+    char regPrefix = sz() ? 'd' : 's';
+    appendFPRegisterName(regPrefix, vd());
+
+    appendSeparator();
+    appendCharacter('[');
+    appendRegisterName(rn());
+
+    if (immediate8() || !uBit()) {
+        appendSeparator();
+        if (uBit())
+            appendUnsignedImmediate(immediate8() << 2);
+        else
+            appendSignedImmediate(0 - static_cast<int>(immediate8() << 2));
+    }
+    appendCharacter(']');
 
     return m_formatBuffer;
 }
