@@ -1486,7 +1486,11 @@ void CallArgument::initAsType(int callType)
 
 void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRef value)
 {
-    if (type != 0) { cleanup(); type = 0; }
+    if (type != 0) {
+        cleanup();
+        type = 0;
+    }
+
     QV4::Scope scope(QV8Engine::getV4(engine));
 
     if (callType == qMetaTypeId<QJSValue>()) {
@@ -1524,7 +1528,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
-        if (QV4::ArrayObject *array = value->asArrayObject()) {
+        QV4::ScopedArrayObject array(scope, value);
+        if (array) {
             Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
 
             uint32_t length = array->arrayLength();

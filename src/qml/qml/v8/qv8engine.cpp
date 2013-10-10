@@ -790,23 +790,30 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             return true;
         } break;
     }
-    case QMetaType::QStringList:
-        if (QV4::ArrayObject *a = value->asArrayObject()) {
+    case QMetaType::QStringList: {
+        QV4::ScopedArrayObject a(scope, value);
+        if (a) {
             *reinterpret_cast<QStringList *>(data) = a->toQStringList();
             return true;
-        } break;
-    case QMetaType::QVariantList:
-        if (value->asArrayObject()) {
-            QV4::ScopedArrayObject a(scope, value);
+        }
+        break;
+    }
+    case QMetaType::QVariantList: {
+        QV4::ScopedArrayObject a(scope, value);
+        if (a) {
             *reinterpret_cast<QVariantList *>(data) = variantListFromJS(a);
             return true;
-        } break;
-    case QMetaType::QVariantMap:
-        if (value->asObject()) {
-            QV4::ScopedObject o(scope, value);
+        }
+        break;
+    }
+    case QMetaType::QVariantMap: {
+        QV4::ScopedObject o(scope, value);
+        if (o) {
             *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(o);
             return true;
-        } break;
+        }
+        break;
+    }
     case QMetaType::QVariant:
         *reinterpret_cast<QVariant*>(data) = variantFromJS(value);
         return true;
@@ -820,8 +827,11 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
     }
     case QMetaType::QJsonArray: {
         QV4::ScopedArrayObject a(scope, value);
-        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(a);
-        return true;
+        if (a) {
+            *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(a);
+            return true;
+        }
+        break;
     }
     default:
     ;
@@ -927,8 +937,10 @@ QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
         return value->asDouble();
     if (value->isString())
         return value->stringValue()->toQString();
+
     Q_ASSERT(value->isObject());
     QV4::Scope scope(value->engine());
+
     if (value->asArrayObject()) {
         QV4::ScopedArrayObject a(scope, value);
         return variantListFromJS(a, visitedObjects);

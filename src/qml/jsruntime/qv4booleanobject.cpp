@@ -44,6 +44,7 @@
 using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(BooleanCtor);
+DEFINE_MANAGED_VTABLE(BooleanObject);
 
 BooleanCtor::BooleanCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Boolean"))
@@ -82,7 +83,8 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
     if (ctx->callData->thisObject.isBoolean()) {
         result = ctx->callData->thisObject.booleanValue();
     } else {
-        BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
+        Scope scope(ctx);
+        Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
         if (!thisObject)
             ctx->throwTypeError();
         result = thisObject->value.booleanValue();
@@ -93,7 +95,9 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 
 ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    BooleanObject *thisObject = ctx->callData->thisObject.asBooleanObject();
+    // ### Shouldn't this work for a boolean thisObject?
+    Scope scope(ctx);
+    Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
     if (!thisObject)
         ctx->throwTypeError();
 

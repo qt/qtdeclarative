@@ -312,7 +312,6 @@ struct Q_QML_EXPORT Value
     Managed *asManaged() const;
     Object *asObject() const;
     FunctionObject *asFunctionObject() const;
-    BooleanObject *asBooleanObject() const;
     NumberObject *asNumberObject() const;
     StringObject *asStringObject() const;
     DateObject *asDateObject() const;
@@ -444,6 +443,8 @@ struct Safe : public SafeValue
     const T *operator->() const { return static_cast<T *>(managed()); }
     T *getPointer() const { return static_cast<T *>(managed()); }
     Returned<T> *ret() const;
+
+    void mark() { if (managed()) managed()->mark(); }
 };
 typedef Safe<String> SafeString;
 typedef Safe<Object> SafeObject;

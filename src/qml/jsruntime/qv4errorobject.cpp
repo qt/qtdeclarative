@@ -169,7 +169,8 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
 
 ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
 {
-    ErrorObject *This = ctx->callData->thisObject.asErrorObject();
+    Scope scope(ctx);
+    Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
     if (!This)
         ctx->throwTypeError();
     if (!This->stack) {

@@ -247,11 +247,6 @@ inline FunctionObject *Value::asFunctionObject() const
     return isObject() ? managed()->asFunctionObject() : 0;
 }
 
-inline BooleanObject *Value::asBooleanObject() const
-{
-    return isObject() ? managed()->asBooleanObject() : 0;
-}
-
 inline NumberObject *Value::asNumberObject() const
 {
     return isObject() ? managed()->asNumberObject() : 0;

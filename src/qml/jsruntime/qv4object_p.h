@@ -329,9 +329,11 @@ private:
 };
 
 struct BooleanObject: Object {
+    Q_MANAGED
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
+        vtbl = &static_vtbl;
         type = Type_BooleanObject;
         value = val;
     }
@@ -344,9 +346,11 @@ protected:
 };
 
 struct NumberObject: Object {
+    Q_MANAGED
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
+        vtbl = &static_vtbl;
         type = Type_NumberObject;
         value = val;
     }

@@ -82,8 +82,7 @@ Function::~Function()
 
 void Function::mark()
 {
-    if (name.asManaged())
-        name.asManaged()->mark();
+    name.mark();
     for (int i = 0; i < formals.size(); ++i)
         formals.at(i)->mark();
     for (int i = 0; i < locals.size(); ++i)

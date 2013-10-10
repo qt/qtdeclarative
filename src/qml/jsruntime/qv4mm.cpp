@@ -332,8 +332,7 @@ void MemoryManager::mark()
             persistent = n;
             continue;
         }
-        if (Managed *m = persistent->value.asManaged())
-            m->mark();
+        persistent->value.mark();
         persistent = persistent->next;
     }
 
@@ -668,8 +667,8 @@ void MemoryManager::collectFromStack() const
 
 void MemoryManager::collectFromJSStack() const
 {
-    Value *v = engine()->jsStackBase;
-    Value *top = engine()->jsStackTop;
+    SafeValue *v = engine()->jsStackBase;
+    SafeValue *top = engine()->jsStackTop;
     while (v < top) {
         Managed *m = v->asManaged();
         if (m && m->inUse)

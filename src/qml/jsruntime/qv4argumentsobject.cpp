@@ -178,10 +178,8 @@ void ArgumentsObject::markObjects(Managed *that)
 {
     ArgumentsObject *o = static_cast<ArgumentsObject *>(that);
     o->context->mark();
-    for (int i = 0; i < o->mappedArguments.size(); ++i) {
-        Managed *m = o->mappedArguments.at(i).asManaged();
-        if (m)
-            m->mark();
-    }
+    for (int i = 0; i < o->mappedArguments.size(); ++i)
+        o->mappedArguments.at(i).mark();
+
     Object::markObjects(that);
 }

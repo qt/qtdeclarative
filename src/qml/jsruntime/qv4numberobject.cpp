@@ -49,6 +49,7 @@
 using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(NumberCtor);
+DEFINE_MANAGED_VTABLE(NumberObject);
 
 NumberCtor::NumberCtor(ExecutionContext *scope)
     : FunctionObject(scope, QStringLiteral("Number"))

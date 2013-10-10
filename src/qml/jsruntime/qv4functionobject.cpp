@@ -719,10 +719,8 @@ void BoundFunction::markObjects(Managed *that)
 {
     BoundFunction *o = static_cast<BoundFunction *>(that);
     o->target->mark();
-    if (Managed *m = o->boundThis.asManaged())
-        m->mark();
+    o->boundThis.mark();
     for (int i = 0; i < o->boundArgs.size(); ++i)
-        if (Managed *m = o->boundArgs.at(i).asManaged())
-            m->mark();
+        o->boundArgs.at(i).mark();
     FunctionObject::markObjects(that);
 }

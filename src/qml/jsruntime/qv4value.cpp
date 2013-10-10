@@ -402,10 +402,7 @@ void WeakValue::markOnce()
 {
     if (!d)
         return;
-    Managed *m = d->value.asManaged();
-    if (!m)
-        return;
-    m->mark();
+    d->value.mark();
 }
 
 PersistentValuePrivate::PersistentValuePrivate(ReturnedValue v, ExecutionEngine *e, bool weak)
