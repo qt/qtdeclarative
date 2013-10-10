@@ -93,6 +93,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     vtbl = &static_vtbl;
 
     Scope scope(v4);
+    ScopedObject protectThis(scope, this);
 
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
@@ -1313,6 +1314,9 @@ ReturnedValue QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 QV4::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
     : Object(v4)
 {
+    QV4::Scope scope(v4);
+    QV4::ScopedObject protectThis(scope, this);
+
     defineDefaultProperty(QStringLiteral("debug"), method_log);
     defineDefaultProperty(QStringLiteral("log"), method_log);
     defineDefaultProperty(QStringLiteral("info"), method_log);

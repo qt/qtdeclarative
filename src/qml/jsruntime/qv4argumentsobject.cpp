@@ -52,8 +52,9 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
     vtbl = &static_vtbl;
     type = Type_ArgumentsObject;
 
-    Scope scope(context);
     ExecutionEngine *v4 = context->engine;
+    Scope scope(v4);
+    ScopedObject protectThis(scope, this);
 
     if (context->strictMode) {
         internalClass = v4->strictArgumentsObjectClass;
