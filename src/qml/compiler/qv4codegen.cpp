@@ -804,14 +804,9 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     assert(expr.code);
     initializer = *expr;
 
-    if (! _env->parent || _function->insideWithOrCatch || _env->compilationMode == QmlBinding) {
-        // it's global code.
-        move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
-    } else {
-        const int index = _env->findMember(ast->name.toString());
-        assert(index != -1);
-        move(_block->LOCAL(index, 0), initializer);
-    }
+    int initialized = _block->newTemp();
+    move(_block->TEMP(initialized), initializer);
+    move(identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), _block->TEMP(initialized));
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
