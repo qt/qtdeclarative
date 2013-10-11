@@ -73,7 +73,9 @@ bool ArrayElementLessThan::operator()(const Property &p1, const Property &p2) co
 
         return result->toNumber() <= 0;
     }
-    return p1.value.toString(m_context)->toQString() < p2.value.toString(m_context)->toQString();
+    ScopedString p1s(scope, p1.value.toString(m_context));
+    ScopedString p2s(scope, p2.value.toString(m_context));
+    return p1s->toQString() < p2s->toQString();
 }
 
 

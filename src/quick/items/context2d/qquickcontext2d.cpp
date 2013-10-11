@@ -545,6 +545,9 @@ public:
     QQuickJSContext2DPrototype(QV4::ExecutionEngine *engine)
         : QV4::Object(engine)
     {
+        QV4::Scope scope(engine);
+        QV4::ScopedObject protectThis(scope, this);
+
         defineDefaultProperty(QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
         defineDefaultProperty(QStringLiteral("restore"), method_restore, 0);
         defineDefaultProperty(QStringLiteral("moveTo"), method_moveTo, 0);
@@ -890,6 +893,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
+
+        QV4::Scope scope(engine);
+        QV4::ScopedObject protectThis(scope, this);
 
         defineAccessorProperty(QStringLiteral("width"), method_get_width, 0);
         defineAccessorProperty(QStringLiteral("height"), method_get_height, 0);

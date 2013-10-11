@@ -673,12 +673,16 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     if (n <= argumentsAccessors.size())
         return;
 
+    Scope scope(this);
+    ScopedFunctionObject get(scope);
+    ScopedFunctionObject set(scope);
+
     uint oldSize = argumentsAccessors.size();
     argumentsAccessors.resize(n);
     for (int i = oldSize; i < n; ++i) {
-        FunctionObject *get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
-        FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
-        Property pd = Property::fromAccessor(get, set);
+        get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
+        set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
+        Property pd = Property::fromAccessor(get.getPointer(), set.getPointer());
         argumentsAccessors[i] = pd;
     }
 }

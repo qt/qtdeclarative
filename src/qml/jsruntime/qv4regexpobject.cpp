@@ -132,6 +132,9 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
         pattern = ecmaPattern;
     }
 
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
 
     init(engine);

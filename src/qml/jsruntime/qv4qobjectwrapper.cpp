@@ -243,6 +243,9 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 {
     vtbl = &static_vtbl;
 
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
 }
 

@@ -259,6 +259,10 @@ public:
         : Object(engine)
     {
         vtbl = &static_vtbl;
+
+        Scope scope(engine);
+        ScopedObject protectThis(scope, this);
+
         defineAccessorProperty(QStringLiteral("nodeName"), method_get_nodeName, 0);
         defineAccessorProperty(QStringLiteral("nodeValue"), method_get_nodeValue, 0);
         defineAccessorProperty(QStringLiteral("nodeType"), method_get_nodeType, 0);

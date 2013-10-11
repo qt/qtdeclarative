@@ -66,7 +66,7 @@ VariantObject::VariantObject(ExecutionEngine *engine, const QVariant &value)
 {
     vtbl = &static_vtbl;
     if (isScarce())
-        internalClass->engine->scarceResources.insert(this);
+        engine->scarceResources.insert(this);
 }
 
 QVariant VariantObject::toVariant(const QV4::ValueRef v)

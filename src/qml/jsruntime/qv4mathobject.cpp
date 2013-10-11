@@ -55,6 +55,9 @@ MathObject::MathObject(ExecutionEngine *engine)
 {
     type = Type_MathObject;
 
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(::exp(1.0)));
     defineReadonlyProperty(QStringLiteral("LN2"), Primitive::fromDouble(::log(2.0)));
     defineReadonlyProperty(QStringLiteral("LN10"), Primitive::fromDouble(::log(10.0)));
