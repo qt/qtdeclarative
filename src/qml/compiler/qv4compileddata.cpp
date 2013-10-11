@@ -98,6 +98,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     if (data->lookupTableSize) {
         runtimeLookups = new QV4::Lookup[data->lookupTableSize];
+        memset(runtimeLookups, 0, data->lookupTableSize * sizeof(QV4::Lookup));
         const CompiledData::Lookup *compiledLookups = data->lookupTable();
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup *l = runtimeLookups + i;
@@ -166,13 +167,17 @@ void CompilationUnit::markObjects()
 {
     for (int i = 0; i < data->stringTableSize; ++i)
         runtimeStrings[i].mark();
-    for (int i = 0; i < data->regexpTableSize; ++i)
-        runtimeRegularExpressions[i].mark();
+    if (runtimeRegularExpressions) {
+        for (int i = 0; i < data->regexpTableSize; ++i)
+            runtimeRegularExpressions[i].mark();
+    }
     for (int i = 0; i < runtimeFunctions.count(); ++i)
         if (runtimeFunctions[i])
             runtimeFunctions[i]->mark();
-    for (int i = 0; i < data->lookupTableSize; ++i)
-        runtimeLookups[i].name->mark();
+    if (runtimeLookups) {
+        for (int i = 0; i < data->lookupTableSize; ++i)
+            runtimeLookups[i].name->mark();
+    }
 }
 
 QString Binding::valueAsString(const Unit *unit) const
