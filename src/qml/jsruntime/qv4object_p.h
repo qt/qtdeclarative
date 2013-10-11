@@ -49,7 +49,6 @@
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4internalclass_p.h"
-#include "qv4objectiterator_p.h"
 #include "qv4sparsearray_p.h"
 
 #include <QtCore/QString>
@@ -314,7 +313,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const ValueRef v);
-    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
 
 private:
@@ -329,25 +328,12 @@ private:
     friend struct ObjectPrototype;
 };
 
-struct ForEachIteratorObject: Object {
-    Q_MANAGED
-    ObjectIterator it;
-    ForEachIteratorObject(ExecutionContext *ctx, Object *o)
-        : Object(ctx->engine), it(o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
-        vtbl = &static_vtbl;
-        type = Type_ForeachIteratorObject;
-    }
-
-    ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
-
-protected:
-    static void markObjects(Managed *that);
-};
-
 struct BooleanObject: Object {
+    Q_MANAGED
     SafeValue value;
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->booleanClass) {
+        vtbl = &static_vtbl;
         type = Type_BooleanObject;
         value = val;
     }
@@ -360,9 +346,11 @@ protected:
 };
 
 struct NumberObject: Object {
+    Q_MANAGED
     SafeValue value;
     NumberObject(ExecutionEngine *engine, const ValueRef val)
         : Object(engine->numberClass) {
+        vtbl = &static_vtbl;
         type = Type_NumberObject;
         value = val;
     }

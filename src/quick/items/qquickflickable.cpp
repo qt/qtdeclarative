@@ -211,7 +211,7 @@ public:
         axisData->transitionToSet = true;
 
         actions.clear();
-        actions << QQuickAction(fp->contentItem, propName, toPos);
+        actions << QQuickStateAction(fp->contentItem, propName, toPos);
         QQuickTransitionManager::transition(actions, fp->rebound, fp->contentItem);
         return true;
     }
@@ -581,14 +581,14 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onDragStarted()
+    \qmlsignal QtQuick::Flickable::onDragStarted()
 
     This handler is called when the view starts to be dragged due to user
     interaction.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onDragEnded()
+    \qmlsignal QtQuick::Flickable::onDragEnded()
 
     This handler is called when the user stops dragging the view.
 
@@ -648,14 +648,14 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onMovementStarted()
+    \qmlsignal QtQuick::Flickable::onMovementStarted()
 
     This handler is called when the view begins moving due to user
     interaction.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onMovementEnded()
+    \qmlsignal QtQuick::Flickable::onMovementEnded()
 
     This handler is called when the view stops moving due to user
     interaction.  If a flick was generated, this handler will
@@ -665,7 +665,7 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onFlickStarted()
+    \qmlsignal QtQuick::Flickable::onFlickStarted()
 
     This handler is called when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
@@ -673,16 +673,16 @@ is finished.
 */
 
 /*!
-    \qmlsignal QtQuick2::Flickable::onFlickEnded()
+    \qmlsignal QtQuick::Flickable::onFlickEnded()
 
     This handler is called when the view stops moving due to a flick.
 */
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::visibleArea.xPosition
-    \qmlproperty real QtQuick2::Flickable::visibleArea.widthRatio
-    \qmlproperty real QtQuick2::Flickable::visibleArea.yPosition
-    \qmlproperty real QtQuick2::Flickable::visibleArea.heightRatio
+    \qmlproperty real QtQuick::Flickable::visibleArea.xPosition
+    \qmlproperty real QtQuick::Flickable::visibleArea.widthRatio
+    \qmlproperty real QtQuick::Flickable::visibleArea.yPosition
+    \qmlproperty real QtQuick::Flickable::visibleArea.heightRatio
 
     These properties describe the position and size of the currently viewed area.
     The size is defined as the percentage of the full view currently visible,
@@ -718,8 +718,8 @@ QQuickFlickable::~QQuickFlickable()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::contentX
-    \qmlproperty real QtQuick2::Flickable::contentY
+    \qmlproperty real QtQuick::Flickable::contentX
+    \qmlproperty real QtQuick::Flickable::contentY
 
     These properties hold the surface coordinate currently at the top-left
     corner of the Flickable. For example, if you flick an image up 100 pixels,
@@ -760,7 +760,7 @@ void QQuickFlickable::setContentY(qreal pos)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::interactive
+    \qmlproperty bool QtQuick::Flickable::interactive
 
     This property describes whether the user can interact with the Flickable.
     A user cannot drag or flick a Flickable that is not interactive.
@@ -798,8 +798,8 @@ void QQuickFlickable::setInteractive(bool interactive)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::horizontalVelocity
-    \qmlproperty real QtQuick2::Flickable::verticalVelocity
+    \qmlproperty real QtQuick::Flickable::horizontalVelocity
+    \qmlproperty real QtQuick::Flickable::verticalVelocity
 
     The instantaneous velocity of movement along the x and y axes, in pixels/sec.
 
@@ -823,10 +823,10 @@ qreal QQuickFlickable::verticalVelocity() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::atXBeginning
-    \qmlproperty bool QtQuick2::Flickable::atXEnd
-    \qmlproperty bool QtQuick2::Flickable::atYBeginning
-    \qmlproperty bool QtQuick2::Flickable::atYEnd
+    \qmlproperty bool QtQuick::Flickable::atXBeginning
+    \qmlproperty bool QtQuick::Flickable::atXEnd
+    \qmlproperty bool QtQuick::Flickable::atYBeginning
+    \qmlproperty bool QtQuick::Flickable::atYEnd
 
     These properties are true if the flickable view is positioned at the beginning,
     or end respectively.
@@ -856,7 +856,7 @@ bool QQuickFlickable::isAtYBeginning() const
 }
 
 /*!
-    \qmlproperty Item QtQuick2::Flickable::contentItem
+    \qmlproperty Item QtQuick::Flickable::contentItem
 
     The internal item that contains the Items to be moved in the Flickable.
 
@@ -890,7 +890,7 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Flickable::flickableDirection
+    \qmlproperty enumeration QtQuick::Flickable::flickableDirection
 
     This property determines which directions the view can be flicked.
 
@@ -920,7 +920,7 @@ void QQuickFlickable::setFlickableDirection(FlickableDirection direction)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::pixelAligned
+    \qmlproperty bool QtQuick::Flickable::pixelAligned
 
     This property sets the alignment of \l contentX and \l contentY to
     pixels (\c true) or subpixels (\c false).
@@ -1246,15 +1246,6 @@ void QQuickFlickable::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
     if (d->interactive) {
-        if (d->delayedPressEvent) {
-            // A move beyond the threshold replays the press to give nested Flickables
-            // the opportunity to grab the gesture.
-            QPointF delta = event->localPos() - d->delayedPressEvent->localPos();
-            if (QQuickWindowPrivate::dragOverThreshold(qAbs(delta.x()), Qt::XAxis, event)
-                || QQuickWindowPrivate::dragOverThreshold(qAbs(delta.y()), Qt::YAxis, event)) {
-                d->replayDelayedPress();
-            }
-        }
         d->handleMouseMoveEvent(event);
         event->accept();
     } else {
@@ -1551,7 +1542,7 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
 }
 
 /*!
-    \qmlmethod QtQuick2::Flickable::flick(qreal xVelocity, qreal yVelocity)
+    \qmlmethod QtQuick::Flickable::flick(qreal xVelocity, qreal yVelocity)
 
     Flicks the content with \a xVelocity horizontally and \a yVelocity vertically in pixels/sec.
 */
@@ -1586,7 +1577,7 @@ void QQuickFlickablePrivate::flickingStarted(bool flickingH, bool flickingV)
 }
 
 /*!
-    \qmlmethod QtQuick2::Flickable::cancelFlick()
+    \qmlmethod QtQuick::Flickable::cancelFlick()
 
     Cancels the current flick animation.
 */
@@ -1641,7 +1632,7 @@ QQmlListProperty<QQuickItem> QQuickFlickable::flickableChildren()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Flickable::boundsBehavior
+    \qmlproperty enumeration QtQuick::Flickable::boundsBehavior
     This property holds whether the surface may be dragged
     beyond the Flickable's boundaries, or overshoot the
     Flickable's boundaries when flicked.
@@ -1677,7 +1668,7 @@ void QQuickFlickable::setBoundsBehavior(BoundsBehavior b)
 }
 
 /*!
-    \qmlproperty Transition QtQuick2::Flickable::rebound
+    \qmlproperty Transition QtQuick::Flickable::rebound
 
     This holds the transition to be applied to the content view when
     it snaps back to the bounds of the flickable. The transition is
@@ -1738,8 +1729,8 @@ void QQuickFlickable::setRebound(QQuickTransition *transition)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::contentWidth
-    \qmlproperty real QtQuick2::Flickable::contentHeight
+    \qmlproperty real QtQuick::Flickable::contentWidth
+    \qmlproperty real QtQuick::Flickable::contentHeight
 
     The dimensions of the content (the surface controlled by Flickable).
     This should typically be set to the combined size of the items placed in the
@@ -1820,10 +1811,10 @@ void QQuickFlickable::setContentHeight(qreal h)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::topMargin
-    \qmlproperty real QtQuick2::Flickable::leftMargin
-    \qmlproperty real QtQuick2::Flickable::bottomMargin
-    \qmlproperty real QtQuick2::Flickable::rightMargin
+    \qmlproperty real QtQuick::Flickable::topMargin
+    \qmlproperty real QtQuick::Flickable::leftMargin
+    \qmlproperty real QtQuick::Flickable::bottomMargin
+    \qmlproperty real QtQuick::Flickable::rightMargin
 
     These properties hold the margins around the content.  This space is reserved
     in addition to the contentWidth and contentHeight.
@@ -1915,8 +1906,8 @@ void QQuickFlickable::setRightMargin(qreal m)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::originX
-    \qmlproperty real QtQuick2::Flickable::originY
+    \qmlproperty real QtQuick::Flickable::originX
+    \qmlproperty real QtQuick::Flickable::originY
 
     These properties hold the origin of the content. This value always refers
     to the top-left position of the content regardless of layout direction.
@@ -1940,7 +1931,7 @@ qreal QQuickFlickable::originX() const
 
 
 /*!
-    \qmlmethod QtQuick2::Flickable::resizeContent(real width, real height, QPointF center)
+    \qmlmethod QtQuick::Flickable::resizeContent(real width, real height, QPointF center)
 
     Resizes the content to \a width x \a height about \a center.
 
@@ -1978,7 +1969,7 @@ void QQuickFlickable::resizeContent(qreal w, qreal h, QPointF center)
 }
 
 /*!
-    \qmlmethod QtQuick2::Flickable::returnToBounds()
+    \qmlmethod QtQuick::Flickable::returnToBounds()
 
     Ensures the content is within legal bounds.
 
@@ -2132,7 +2123,7 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::maximumFlickVelocity
+    \qmlproperty real QtQuick::Flickable::maximumFlickVelocity
     This property holds the maximum velocity that the user can flick the view in pixels/second.
 
     The default value is platform dependent.
@@ -2153,7 +2144,7 @@ void QQuickFlickable::setMaximumFlickVelocity(qreal v)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::flickDeceleration
+    \qmlproperty real QtQuick::Flickable::flickDeceleration
     This property holds the rate at which a flick will decelerate.
 
     The default value is platform dependent.
@@ -2180,9 +2171,9 @@ bool QQuickFlickable::isFlicking() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::flicking
-    \qmlproperty bool QtQuick2::Flickable::flickingHorizontally
-    \qmlproperty bool QtQuick2::Flickable::flickingVertically
+    \qmlproperty bool QtQuick::Flickable::flicking
+    \qmlproperty bool QtQuick::Flickable::flickingHorizontally
+    \qmlproperty bool QtQuick::Flickable::flickingVertically
 
     These properties describe whether the view is currently moving horizontally,
     vertically or in either direction, due to the user flicking the view.
@@ -2200,9 +2191,9 @@ bool QQuickFlickable::isFlickingVertically() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::dragging
-    \qmlproperty bool QtQuick2::Flickable::draggingHorizontally
-    \qmlproperty bool QtQuick2::Flickable::draggingVertically
+    \qmlproperty bool QtQuick::Flickable::dragging
+    \qmlproperty bool QtQuick::Flickable::draggingHorizontally
+    \qmlproperty bool QtQuick::Flickable::draggingVertically
 
     These properties describe whether the view is currently moving horizontally,
     vertically or in either direction, due to the user dragging the view.
@@ -2272,7 +2263,7 @@ bool QQuickFlickablePrivate::isViewMoving() const
 }
 
 /*!
-    \qmlproperty int QtQuick2::Flickable::pressDelay
+    \qmlproperty int QtQuick::Flickable::pressDelay
 
     This property holds the time to delay (ms) delivering a press to
     children of the Flickable.  This can be useful where reacting
@@ -2305,9 +2296,9 @@ void QQuickFlickable::setPressDelay(int delay)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Flickable::moving
-    \qmlproperty bool QtQuick2::Flickable::movingHorizontally
-    \qmlproperty bool QtQuick2::Flickable::movingVertically
+    \qmlproperty bool QtQuick::Flickable::moving
+    \qmlproperty bool QtQuick::Flickable::movingHorizontally
+    \qmlproperty bool QtQuick::Flickable::movingVertically
 
     These properties describe whether the view is currently moving horizontally,
     vertically or in either direction, due to the user either dragging or

@@ -46,6 +46,8 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 
+#include <private/qqmlprofilerservice_p.h>
+
 #include <algorithm>
 
 #ifndef GL_DOUBLE
@@ -69,6 +71,10 @@ const bool debug_noalpha    = qgetenv("QSG_RENDERER_DEBUG").contains("noalpha");
 const bool debug_noopaque   = qgetenv("QSG_RENDERER_DEBUG").contains("noopaque");
 const bool debug_noclip     = qgetenv("QSG_RENDERER_DEBUG").contains("noclip");
 
+#ifndef QSG_NO_RENDER_TIMING
+static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
+static QElapsedTimer qsg_renderer_timer;
+#endif
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
 #define SHADOWNODE_TRAVERSE(NODE) for (QList<Node *>::const_iterator child = NODE->children.constBegin(); child != NODE->children.constEnd(); ++child)
@@ -118,6 +124,11 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     if (shader)
         return shader;
 
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing  || QQmlProfilerService::enabled)
+        qsg_renderer_timer.start();
+#endif
+
     QSGMaterialShader *s = material->createShader();
 
     QOpenGLShaderProgram *p = s->program();
@@ -151,6 +162,17 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     Q_ASSERT(shader->pos_order >= 0);
     Q_ASSERT(shader->id_zRange >= 0);
 
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
+        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphContextFrame,
+                    qsg_renderer_timer.nsecsElapsed());
+    }
+#endif
+
     rewrittenShaders[type] = shader;
     return shader;
 }
@@ -161,6 +183,11 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     Shader *shader = stockShaders.value(type, 0);
     if (shader)
         return shader;
+
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing  || QQmlProfilerService::enabled)
+        qsg_renderer_timer.start();
+#endif
 
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
     s->compile();
@@ -173,6 +200,17 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     shader->lastOpacity = 0;
 
     stockShaders[type] = shader;
+
+#ifndef QSG_NO_RENDER_TIMING
+    if (qsg_render_timing)
+        printf("   - compiling material: %dms\n", (int) qsg_renderer_timer.elapsed());
+
+    if (QQmlProfilerService::enabled) {
+        QQmlProfilerService::sceneGraphFrame(
+                    QQmlProfilerService::SceneGraphContextFrame,
+                    qsg_renderer_timer.nsecsElapsed());
+    }
+#endif
 
     return shader;
 }
@@ -265,6 +303,8 @@ void Updater::updateStates(QSGNode *n)
             qDebug() << " - transforms have changed";
         if (sn->dirtyState & (QSGNode::DirtyOpacity << 16))
             qDebug() << " - opacity has changed";
+        if (sn->dirtyState & (QSGNode::DirtyForceUpdate << 16))
+            qDebug() << " - forceupdate";
     }
 
     visitNode(sn);
@@ -278,6 +318,10 @@ void Updater::visitNode(Node *n)
     int count = m_added;
     if (n->dirtyState & QSGNode::DirtyNodeAdded)
         ++m_added;
+
+    int force = m_force_update;
+    if (n->dirtyState & QSGNode::DirtyForceUpdate)
+        ++m_force_update;
 
     switch (n->type()) {
     case QSGNode::OpacityNodeType:
@@ -302,6 +346,7 @@ void Updater::visitNode(Node *n)
     }
 
     m_added = count;
+    m_force_update = force;
     n->dirtyState = 0;
 }
 
@@ -603,6 +648,21 @@ bool Batch::isTranslateOnlyToRoot() const {
     return only;
 }
 
+/*
+ * Iterates through all the nodes in the batch and returns true if the
+ * nodes are all "2D safe" meaning that they can be merged and that
+ * the value in the z coordinate is of no consequence.
+ */
+bool Batch::allMatricesAre2DSafe() const {
+    Element *e = first;
+    while (e) {
+        if (!QMatrix4x4_Accessor::is2DSafe(*e->node->matrix()))
+            return false;
+        e = e->nextInBatch;
+    }
+    return true;
+}
+
 static int qsg_countNodesInBatch(const Batch *batch)
 {
     int sum = 0;
@@ -810,8 +870,10 @@ void Renderer::nodeChangedBatchRoot(Node *node, Node *root)
     } else if (node->type() == QSGNode::GeometryNodeType) {
         // Only need to change the root as nodeChanged anyway flags a full update.
         Element *e = node->element();
-        if (e)
+        if (e) {
             e->root = root;
+            e->boundsComputed = false;
+        }
     }
 
     SHADOWNODE_TRAVERSE(node)
@@ -1063,7 +1125,8 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     QSGNode::DirtyState dirtyChain = state & (QSGNode::DirtyNodeAdded
                                               | QSGNode::DirtyOpacity
                                               | QSGNode::DirtyMatrix
-                                              | QSGNode::DirtySubtreeBlocked);
+                                              | QSGNode::DirtySubtreeBlocked
+                                              | QSGNode::DirtyForceUpdate);
     if (dirtyChain != 0) {
         dirtyChain = QSGNode::DirtyState(dirtyChain << 16);
         Node *sn = shadowNode->parent;
@@ -1549,11 +1612,11 @@ void Renderer::uploadBatch(Batch *b)
         bool canMerge = (g->drawingMode() == GL_TRIANGLES || g->drawingMode() == GL_TRIANGLE_STRIP)
                         && b->positionAttribute >= 0
                         && g->indexType() == GL_UNSIGNED_SHORT
-                        && QMatrix4x4_Accessor::is2DSafe(*gn->matrix())
                         && (gn->activeMaterial()->flags() & QSGMaterial::CustomCompileStep) == 0
                         && (((gn->activeMaterial()->flags() & QSGMaterial::RequiresDeterminant) == 0)
                             || (((gn->activeMaterial()->flags() & QSGMaterial_RequiresFullMatrixBit) == 0) && b->isTranslateOnlyToRoot())
-                            );
+                            )
+                        && b->allMatricesAre2DSafe();
 
         b->merged = canMerge;
 

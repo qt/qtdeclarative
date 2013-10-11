@@ -169,16 +169,12 @@ struct ScopedValue
         return *this;
     }
 
-    Value *operator->() {
+    SafeValue *operator->() {
         return ptr;
     }
 
-    const Value *operator->() const {
+    const SafeValue *operator->() const {
         return ptr;
-    }
-
-    operator const Value &() const {
-        return *ptr;
     }
 
     ReturnedValue asReturnedValue() const { return ptr->val; }
@@ -326,12 +322,6 @@ struct Scoped
         return static_cast<T *>(ptr->managed());
     }
 
-    Value asValue() const {
-        if (ptr->m)
-            return *ptr;
-        return QV4::Primitive::undefinedValue();
-    }
-
     ReturnedValue asReturnedValue() const {
 #if QT_POINTER_SIZE == 8
         return ptr->val ? ptr->val : Primitive::undefinedValue().asReturnedValue();
@@ -427,7 +417,7 @@ struct ValueRef {
     operator Value *() {
         return ptr;
     }
-    Value *operator->() {
+    SafeValue *operator->() {
         return ptr;
     }
 
@@ -463,21 +453,30 @@ struct Referenced {
     Referenced &operator=(const Referenced &o)
     { *ptr = *o.ptr; return *this; }
     Referenced &operator=(T *t)
-    { ptr->val = t->asReturnedValue(); return *this; }
-    Referenced &operator=(const Returned<T> *t) {
-        ptr->val = t->getPointer()->asReturnedValue();
+    {
+#if QT_POINTER_SIZE == 4
+        ptr->tag = Value::Managed_Type;
+#endif
+        ptr->m = t;
+        return *this;
+    }
+    Referenced &operator=(Returned<T> *t) {
+#if QT_POINTER_SIZE == 4
+        ptr->tag = Value::Managed_Type;
+#endif
+        ptr->m = t->getPointer();
         return *this;
     }
 
     operator const T *() const {
-        return static_cast<T*>(ptr->managed());
+        return ptr ? static_cast<T*>(ptr->managed()) : 0;
     }
     const T *operator->() const {
         return static_cast<T*>(ptr->managed());
     }
 
     operator T *() {
-        return static_cast<T*>(ptr->managed());
+        return ptr ? static_cast<T*>(ptr->managed()) : 0;
     }
     T *operator->() {
         return static_cast<T*>(ptr->managed());
@@ -487,6 +486,19 @@ struct Referenced {
         return static_cast<T *>(ptr->managed());
     }
     ReturnedValue asReturnedValue() const { return ptr ? ptr->val : Primitive::undefinedValue().asReturnedValue(); }
+    operator Returned<T> *() const { return ptr ? Returned<T>::create(getPointer()) : 0; }
+
+    bool operator==(const Referenced<T> &other) {
+        if (ptr == other.ptr)
+            return true;
+        return ptr && other.ptr && ptr->m == other.ptr->m;
+    }
+    bool operator!=(const Referenced<T> &other) {
+        if (ptr == other.ptr)
+            return false;
+        return !ptr || ptr->m != other.ptr->m;
+    }
+    bool operator!() const { return !ptr || !ptr->managed(); }
 
     static Referenced null() { return Referenced(Null); }
     bool isNull() const { return !ptr; }
@@ -633,6 +645,12 @@ inline Returned<T> *SafeValue::as()
     return Returned<T>::create(value_cast<T>(*this));
 }
 
+template<typename T> inline
+Referenced<T> SafeValue::asRef()
+{
+    return Referenced<T>(*this);
+}
+
 template<typename T>
 inline Safe<T> &Safe<T>::operator =(T *t)
 {
@@ -669,7 +687,7 @@ inline Safe<T> &Safe<T>::operator=(const Safe<T> &t)
 }
 
 template<typename T>
-inline Safe<T>::operator Returned<T> *()
+inline Returned<T> * Safe<T>::ret() const
 {
     return Returned<T>::create(static_cast<T *>(managed()));
 }

@@ -90,9 +90,6 @@ public:
 
     bool isReady() const;
 
-    virtual void precompileMaterials();
-    QSGMaterialShader *prepareMaterial(QSGMaterial *material);
-
     virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
 
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);

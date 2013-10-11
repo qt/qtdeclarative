@@ -38,25 +38,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "qv4engine_p.h"
 
-#include "qv4exception_p.h"
+#if defined(V4_CXX_ABI_EXCEPTION)
+
+// On arm we link libgcc statically and want to avoid exporting the _Unwind* symbols
+#if defined(Q_PROCESSOR_ARM)
+#define HIDE_EXPORTS
+#endif
 
 #include <unwind.h>
-#include <cxxabi.h>
-#include <bits/atomic_word.h>
-#include <typeinfo>
 #include <exception>
-
-/*
- * This is a little bit hacky as it relies on the fact that exceptions are
- * reference counted in libstdc++ and that affects the layout of the standardized
- * cxa_exception, making it bigger. LLVM's libcxxabi stores the reference count
- * differently, so this here is entirely GNU libstdc++ specific.
- *
- * Eliminating this dependency is doable but requires replacing the use of C++ exceptions
- * with foreign exceptions (a different exception class) and then using __cxa_get_globals
- * to get hold of the exception inside the catch (...). AFAICS that would be portable.
- */
 
 namespace {
 
@@ -81,63 +73,66 @@ struct cxa_exception {
     _Unwind_Exception unwindHeader;
 };
 
-// This is what libstdc++ actually allocates
-struct gcc_refcounted_compatible_exception {
-    _Atomic_word refCount;
-    cxa_exception x;
+struct cxa_eh_globals
+{
+    cxa_exception *caughtExceptions;
+    unsigned int uncaughtExceptions;
+#ifdef __ARM_EABI_UNWINDER__
+    cxa_exception* propagatingExceptions;
+#endif
 };
 
 }
 
+extern "C" cxa_eh_globals *__cxa_get_globals();
+
 static void exception_cleanup(_Unwind_Reason_Code, _Unwind_Exception *ex)
 {
-    gcc_refcounted_compatible_exception *exception = reinterpret_cast<gcc_refcounted_compatible_exception *>(ex + 1) - 1;
-    if (!--exception->refCount) {
-        if (exception->x.exceptionDestructor)
-            exception->x.exceptionDestructor(ex + 1);
-        abi::__cxa_free_exception(ex + 1);
-    }
-}
-
-static void exception_destructor(void *ex)
-{
-    reinterpret_cast<QV4::Exception *>(ex)->~Exception();
+    free(ex);
 }
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Exception::throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue)
+void ExecutionEngine::throwInternal()
 {
-    void *rawException = abi::__cxa_allocate_exception(sizeof(QV4::Exception));
-    gcc_refcounted_compatible_exception *refCountedException = reinterpret_cast<gcc_refcounted_compatible_exception *>(rawException) - 1;
-    cxa_exception *exception = &refCountedException->x;
+    _Unwind_Exception *exception = (_Unwind_Exception*)malloc(sizeof(_Unwind_Exception));
+    memset(exception, 0, sizeof(*exception));
+    exception->exception_cleanup = &exception_cleanup;
 
-    (void)new (rawException) Exception(throwingContext, exceptionValue);
-
-    refCountedException->refCount = 1;
-    exception->typeInfo = const_cast<std::type_info*>(&typeid(Exception));
-    exception->exceptionDestructor = &exception_destructor;
-    exception->unexpectedHandler = std::unexpected;
-    exception->terminateHandler = std::terminate;
-    exception->unwindHeader.exception_cleanup = &exception_cleanup;
 #ifdef __ARM_EABI_UNWINDER__
-    exception->unwindHeader.exception_class[0] = 'G';
-    exception->unwindHeader.exception_class[1] = 'N';
-    exception->unwindHeader.exception_class[2] = 'U';
-    exception->unwindHeader.exception_class[3] = 'C';
-    exception->unwindHeader.exception_class[4] = 'C';
-    exception->unwindHeader.exception_class[5] = '+';
-    exception->unwindHeader.exception_class[6] = '+';
-    exception->unwindHeader.exception_class[7] = 0;
+    exception->exception_class[0] = 'Q';
+    exception->exception_class[1] = 'M';
+    exception->exception_class[2] = 'L';
+    exception->exception_class[3] = 'J';
+    exception->exception_class[4] = 'S';
+    exception->exception_class[5] = 'V';
+    exception->exception_class[6] = '4';
+    exception->exception_class[7] = 0;
 #else
-    exception->unwindHeader.exception_class = 0x474e5543432b2b00; // GNUCC++0
+    exception->exception_class = 0x514d4c4a53563400; // QMLJSV40
 #endif
 
-    _Unwind_RaiseException(&exception->unwindHeader);
-    abi::__cxa_begin_catch(rawException);
+    _Unwind_RaiseException(exception);
     std::terminate();
 }
 
+void ExecutionEngine::rethrowInternal()
+{
+    cxa_eh_globals *globals = __cxa_get_globals();
+    cxa_exception *exception = globals->caughtExceptions;
+
+    // Make sure we only re-throw our foreign exceptions. For general re-throw
+    // we'd need different code.
+#ifndef __ARM_EABI_UNWINDER__
+    Q_ASSERT(exception->unwindHeader.exception_class == 0x514d4c4a53563400); // QMLJSV40
+#endif
+
+    globals->caughtExceptions = 0;
+    _Unwind_RaiseException(&exception->unwindHeader);
+}
+
 QT_END_NAMESPACE
+
+#endif

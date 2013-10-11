@@ -84,9 +84,9 @@ In addition, the \c QtQuick module provides the following basic types:
 \section1 Object Types
 
 All of the object types provided by \c QtQuick are based on the \l{Item} type,
-which itself derives from \l{QtQml2::QtObject}{QtObject}.  \l{qtqml-typereference-topic.html#object-types}
+which itself derives from \l{QtQml::QtObject}{QtObject}.  \l{qtqml-typereference-topic.html#object-types}
 {QML object types} provided by the Qt QML module
-(such as \l{QtQml2::QtObject}{QtObject} and \l{QtQml2::Component}{Component}) are also available when
+(such as \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also available when
 you import \c QtQuick.
 
 \section2 Visual Types
@@ -330,9 +330,9 @@ For more details about the module itself, see the \l{Qt Quick} module page.
     \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
         respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
         and a slightly transparent blue to a quad of \c "#800000FF".
-    \li Using the \l{QtQml2::Qt::rgba()}{Qt.rgba()}, \l{QtQml2::Qt::hsla()}{Qt.hsla()},
-        \l{QtQml2::Qt::darker()}{Qt.darker()}, \l{QtQml2::Qt::lighter()}{Qt.lighter()} or
-        \l{QtQml2::Qt::tint()}{Qt.tint()} functions.
+    \li Using the \l{QtQml::Qt::rgba()}{Qt.rgba()}, \l{QtQml::Qt::hsla()}{Qt.hsla()},
+        \l{QtQml::Qt::darker()}{Qt.darker()}, \l{QtQml::Qt::lighter()}{Qt.lighter()} or
+        \l{QtQml::Qt::tint()}{Qt.tint()} functions.
     \endlist
 
     Example:
@@ -354,7 +354,7 @@ For more details about the module itself, see the \l{Qt Quick} module page.
     }
     \endqml
 
-    To test color values for equality, use the \l{QtQml2::Qt::colorEqual()}{Qt.colorEqual()}
+    To test color values for equality, use the \l{QtQml::Qt::colorEqual()}{Qt.colorEqual()}
     function.  This allows colors to be accurately compared whether they are in property
     form or in any of the acceptable string specification forms.
 
@@ -595,7 +595,7 @@ console.log(c + " " + d); // false true
     Rotation { angle: 60; axis: "0,1,0" }
     \endqml
 
-    or with the \l{QtQml2::Qt::vector3d()}{Qt.vector3d()} function:
+    or with the \l{QtQml::Qt::vector3d()}{Qt.vector3d()} function:
 
     \qml
     Rotation { angle: 60; axis: Qt.vector3d(0, 1, 0) }

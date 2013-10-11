@@ -63,7 +63,7 @@ public:
 
         bool covers(int position) const { return start <= position && position <= end; }
     };
-    typedef QList<Range> Ranges;
+    typedef QVector<Range> Ranges;
 
 private:
     Temp _temp;
@@ -139,7 +139,9 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> loopStartEndBlocks() const { return startEndLoops; }
 
-    QList<LifeTimeInterval> lifeRanges() const;
+    QVector<LifeTimeInterval> lifeRanges() const;
+
+    QSet<V4IR::Jump *> calculateOptionalJumps();
 
     static void showMeTheCode(Function *function);
 
@@ -184,6 +186,11 @@ private:
 
 } // V4IR namespace
 } // QQmlJS namespace
+
+
+Q_DECLARE_TYPEINFO(QQmlJS::V4IR::LifeTimeInterval, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlJS::V4IR::LifeTimeInterval::Range, Q_PRIMITIVE_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QV4SSA_P_H

@@ -49,7 +49,6 @@
 #include "qv4argumentsobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
-#include "qv4exception_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 
@@ -115,6 +114,13 @@ struct RuntimeCounters::Data {
     typedef QVector<quint64> Counters;
     QHash<const char *, Counters> counters;
 
+    inline void count(const char *func) {
+        QVector<quint64> &cnt = counters[func];
+        if (cnt.isEmpty())
+            cnt.resize(64);
+        cnt[0] += 1;
+    }
+
     inline void count(const char *func, unsigned tag) {
         QVector<quint64> &cnt = counters[func];
         if (cnt.isEmpty())
@@ -140,6 +146,7 @@ struct RuntimeCounters::Data {
     };
 
     void dump() const {
+        QTextStream outs(stderr, QIODevice::WriteOnly);
         QList<Line> lines;
         foreach (const char *func, counters.keys()) {
             const Counters &fCount = counters[func];
@@ -155,9 +162,13 @@ struct RuntimeCounters::Data {
             }
         }
         qSort(lines.begin(), lines.end(), Line::less);
-        qDebug() << "Counters:";
+        outs << lines.size() << " counters:" << endl;
         foreach (const Line &line, lines)
-            qDebug("%10ld | %s | %s | %s", line.count, line.func, pretty(line.tag1), pretty(line.tag2));
+            outs << qSetFieldWidth(10) << line.count << qSetFieldWidth(0)
+                 << " | " << line.func
+                 << " | " << pretty(line.tag1)
+                 << " | " << pretty(line.tag2)
+                 << endl;
     }
 };
 
@@ -173,6 +184,12 @@ RuntimeCounters::RuntimeCounters()
 RuntimeCounters::~RuntimeCounters()
 {
     d->dump();
+    delete d;
+}
+
+void RuntimeCounters::count(const char *func)
+{
+    d->count(func);
 }
 
 void RuntimeCounters::count(const char *func, uint tag)
@@ -424,14 +441,14 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return ctx->engine->id_undefined;
+        return ctx->engine->id_undefined.ret();
     case Value::Null_Type:
-        return ctx->engine->id_null;
+        return ctx->engine->id_null.ret();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return ctx->engine->id_true;
+            return ctx->engine->id_true.ret();
         else
-            return ctx->engine->id_false;
+            return ctx->engine->id_false.ret();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->asReturned<String>();
@@ -544,7 +561,7 @@ ReturnedValue __qmljs_foreach_iterator_object(ExecutionContext *ctx, const Value
     Scoped<Object> o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
         o = in;
-    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o.getPointer()));
+    Scoped<Object> it(scope, ctx->engine->newForEachIteratorObject(ctx, o));
     return it.asReturnedValue();
 }
 
@@ -737,7 +754,7 @@ ReturnedValue __qmljs_call_global_lookup(ExecutionContext *context, uint index, 
     if (!o)
         context->throwTypeError();
 
-    if (o.getPointer() == context->engine->evalFunction && l->name->isEqualTo(context->engine->id_eval))
+    if (o.getPointer() == context->engine->evalFunction && l->name->equals(context->engine->id_eval))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
     return o->call(callData);
@@ -763,7 +780,7 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
         context->throwTypeError(msg);
     }
 
-    if (o == context->engine->evalFunction && name->isEqualTo(context->engine->id_eval)) {
+    if (o == context->engine->evalFunction && name->equals(context->engine->id_eval)) {
         return static_cast<EvalFunction *>(o)->evalCall(callData, true);
     }
 
@@ -782,7 +799,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
         }
 
         baseObject = __qmljs_convert_to_object(context, ValueRef(&callData->thisObject));
-        callData->thisObject = baseObject.asValue();
+        callData->thisObject = baseObject.asReturnedValue();
     }
 
     Scoped<FunctionObject> o(scope, baseObject->get(name));
@@ -878,7 +895,7 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueR
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 {
-    Exception::throwException(context, *value);
+    context->throwError(value);
 }
 
 ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value)
@@ -943,7 +960,7 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionCon
 
 ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
 {
-    return ctx->newCatchContext(exceptionVarName.getPointer(), *exceptionValue);
+    return ctx->newCatchContext(exceptionVarName, exceptionValue);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)
@@ -1072,31 +1089,37 @@ QV4::ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const QV4::Valu
 
 ReturnedValue __qmljs_value_to_double(const ValueRef value)
 {
+    TRACE1(value);
     return Encode(value->toNumber());
 }
 
 int __qmljs_value_to_int32(const ValueRef value)
 {
+    TRACE1(value);
     return value->toInt32();
 }
 
 int __qmljs_double_to_int32(const double &d)
 {
+    TRACE0();
     return Primitive::toInt32(d);
 }
 
 unsigned __qmljs_value_to_uint32(const ValueRef value)
 {
+    TRACE1(value);
     return value->toUInt32();
 }
 
 unsigned __qmljs_double_to_uint32(const double &d)
 {
+    TRACE0();
     return Primitive::toUInt32(d);
 }
 
 ReturnedValue __qmljs_value_from_string(String *string)
 {
+    TRACE0();
     return string->asReturnedValue();
 }
 

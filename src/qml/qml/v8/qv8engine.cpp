@@ -150,7 +150,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
         } else if (object->isListType())
-            return QV4::SequencePrototype::toVariant(object.getPointer());
+            return QV4::SequencePrototype::toVariant(object);
     }
 
     if (value->asArrayObject()) {
@@ -613,16 +613,15 @@ QVariantMap QV8Engine::variantMapFromJS(QV4::ObjectRef o,
 
     visitedObjects.insert(o);
 
-    QV4::ObjectIterator it(o, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedValue name(scope);
+    QV4::ScopedValue val(scope);
     while (1) {
-        QV4::Value v;
-        name = it.nextPropertyNameAsString(&v);
+        name = it.nextPropertyNameAsString(val);
         if (name->isNull())
             break;
 
         QString key = name->toQStringNoThrow();
-        QV4::ScopedValue val(scope, v);
         result.insert(key, variantFromJS(val, visitedObjects));
     }
 
@@ -791,23 +790,30 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             return true;
         } break;
     }
-    case QMetaType::QStringList:
-        if (QV4::ArrayObject *a = value->asArrayObject()) {
+    case QMetaType::QStringList: {
+        QV4::ScopedArrayObject a(scope, value);
+        if (a) {
             *reinterpret_cast<QStringList *>(data) = a->toQStringList();
             return true;
-        } break;
-    case QMetaType::QVariantList:
-        if (value->asArrayObject()) {
-            QV4::ScopedArrayObject a(scope, value);
+        }
+        break;
+    }
+    case QMetaType::QVariantList: {
+        QV4::ScopedArrayObject a(scope, value);
+        if (a) {
             *reinterpret_cast<QVariantList *>(data) = variantListFromJS(a);
             return true;
-        } break;
-    case QMetaType::QVariantMap:
-        if (value->asObject()) {
-            QV4::ScopedObject o(scope, value);
+        }
+        break;
+    }
+    case QMetaType::QVariantMap: {
+        QV4::ScopedObject o(scope, value);
+        if (o) {
             *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(o);
             return true;
-        } break;
+        }
+        break;
+    }
     case QMetaType::QVariant:
         *reinterpret_cast<QVariant*>(data) = variantFromJS(value);
         return true;
@@ -821,8 +827,11 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
     }
     case QMetaType::QJsonArray: {
         QV4::ScopedArrayObject a(scope, value);
-        *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(a);
-        return true;
+        if (a) {
+            *reinterpret_cast<QJsonArray *>(data) = QV4::JsonObject::toJsonArray(a);
+            return true;
+        }
+        break;
     }
     default:
     ;
@@ -859,9 +868,9 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
             return true;
-        } else if (QV4::Object *o = value->asObject()) {
+        } else if (value->isObject()) {
             // Look in the prototype chain.
-            QV4::Object *proto = o->prototype();
+            QV4::ScopedObject proto(scope, value->objectValue()->prototype());
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
@@ -928,8 +937,10 @@ QVariant QV8Engine::variantFromJS(const QV4::ValueRef value,
         return value->asDouble();
     if (value->isString())
         return value->stringValue()->toQString();
+
     Q_ASSERT(value->isObject());
     QV4::Scope scope(value->engine());
+
     if (value->asArrayObject()) {
         QV4::ScopedArrayObject a(scope, value);
         return variantListFromJS(a, visitedObjects);

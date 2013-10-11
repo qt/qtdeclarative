@@ -61,18 +61,6 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
-template <typename T>
-struct Returned : private T
-{
-    static Returned<T> *create(T *t) { return static_cast<Returned<T> *>(t); }
-    T *getPointer() { return this; }
-    template<typename X>
-    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
-    template<typename X>
-    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
-    using T::asReturnedValue;
-};
-
 #define Q_MANAGED \
     public: \
         Q_MANAGED_CHECK \
@@ -108,7 +96,7 @@ struct ManagedVTable
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     bool (*isEqualTo)(Managed *m, Managed *other);
-    Property *(*advanceIterator)(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
+    Property *(*advanceIterator)(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
     const char *className;
 };
 
@@ -278,8 +266,7 @@ public:
 
     bool isEqualTo(Managed *other)
     { return vtbl->isEqualTo(this, other); }
-    Property *advanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
-    { return vtbl->advanceIterator(this, it, name, index, attributes); }
+    Property *advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
     static void destroy(Managed *that) { that->_data = 0; }
     static bool hasInstance(Managed *that, const ValueRef value);

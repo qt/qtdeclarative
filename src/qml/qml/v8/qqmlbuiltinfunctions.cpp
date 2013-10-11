@@ -93,6 +93,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     vtbl = &static_vtbl;
 
     Scope scope(v4);
+    ScopedObject protectThis(scope, this);
 
     // Set all the enums from the "Qt" namespace
     const QMetaObject *qtMetaObject = StaticQtMetaObject::get();
@@ -602,7 +603,7 @@ to \c format.
 The \a date parameter may be a JavaScript \c Date object, a \l{date}{date}
 property, a QDate, or QDateTime value. The \a format parameter may be any of
 the possible format values as described for
-\l{QtQml2::Qt::formatDateTime()}{Qt.formatDateTime()}.
+\l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 If \a format is not specified, \a date is formatted using
 \l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
@@ -613,6 +614,7 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -620,7 +622,8 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
     QDate date = v8engine->toVariant(ctx->callData->args[0], -1).toDateTime().date();
     QString formattedDate;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedDate = date.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -634,7 +637,7 @@ ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
          formattedDate = date.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDate));
+    return ctx->engine->newString(formattedDate)->asReturnedValue();
 }
 
 /*!
@@ -645,7 +648,7 @@ Returns a string representation of \c time, optionally formatted according to
 
 The \a time parameter may be a JavaScript \c Date object, a QTime, or QDateTime
 value. The \a format parameter may be any of the possible format values as
-described for \l{QtQml2::Qt::formatDateTime()}{Qt.formatDateTime()}.
+described for \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 If \a format is not specified, \a time is formatted using
 \l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
@@ -656,6 +659,7 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -669,7 +673,8 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
     QString formattedTime;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedTime = time.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -683,7 +688,7 @@ ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
          formattedTime = time.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedTime));
+    return ctx->engine->newString(formattedTime)->asReturnedValue();
 }
 
 /*!
@@ -763,7 +768,7 @@ For example, if the following date/time value was specified:
     \endcode
 
 This \a dateTime value could be passed to \c Qt.formatDateTime(),
-\l {QtQml2::Qt::formatDate()}{Qt.formatDate()} or \l {QtQml2::Qt::formatTime()}{Qt.formatTime()}
+\l {QtQml::Qt::formatDate()}{Qt.formatDate()} or \l {QtQml::Qt::formatTime()}{Qt.formatTime()}
 with the \a format values below to produce the following results:
 
     \table
@@ -780,6 +785,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
+    QV4::Scope scope(ctx);
 
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -787,7 +793,8 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
     QDateTime dt = v8engine->toVariant(ctx->callData->args[0], -1).toDateTime();
     QString formattedDt;
     if (ctx->callData->argc == 2) {
-        if (String *s = ctx->callData->args[1].asString()) {
+        QV4::ScopedString s(scope, ctx->callData->args[1]);
+        if (s) {
             QString format = s->toQString();
             formattedDt = dt.toString(format);
         } else if (ctx->callData->args[1].isNumber()) {
@@ -801,7 +808,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
          formattedDt = dt.toString(enumFormat);
     }
 
-    return v8engine->fromVariant(QVariant::fromValue(formattedDt));
+    return ctx->engine->newString(formattedDt)->asReturnedValue();
 }
 
 /*!
@@ -932,7 +939,7 @@ For example, if the above snippet had misspelled color as 'colro' then the array
 
 Note that this function returns immediately, and therefore may not work if
 the \a qml string loads new components (that is, external QML files that have not yet been loaded).
-If this is the case, consider using \l{QtQml2::Qt::createComponent()}{Qt.createComponent()} instead.
+If this is the case, consider using \l{QtQml::Qt::createComponent()}{Qt.createComponent()} instead.
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
@@ -1068,7 +1075,7 @@ For example:
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 
 To create a QML object from an arbitrary string of QML (instead of a file),
-use \l{QtQml2::Qt::createQmlObject()}{Qt.createQmlObject()}.
+use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
 {
@@ -1152,7 +1159,7 @@ ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
     is not present, or is not a valid ISO 3166 code, the most
     appropriate country is chosen for the specified language.
 
-    \sa QtQuick2::Locale
+    \sa QtQuick::Locale
 */
 ReturnedValue QtObject::method_locale(SimpleCallContext *ctx)
 {
@@ -1307,6 +1314,9 @@ ReturnedValue QtObject::method_get_inputMethod(SimpleCallContext *ctx)
 QV4::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
     : Object(v4)
 {
+    QV4::Scope scope(v4);
+    QV4::ScopedObject protectThis(scope, this);
+
     defineDefaultProperty(QStringLiteral("debug"), method_log);
     defineDefaultProperty(QStringLiteral("log"), method_log);
     defineDefaultProperty(QStringLiteral("info"), method_log);
@@ -1333,10 +1343,10 @@ enum ConsoleLogTypes {
 static QString jsStack(QV4::ExecutionEngine *engine) {
     QString stack;
 
-    QVector<QV4::ExecutionEngine::StackFrame> stackTrace = engine->stackTrace(10);
+    QVector<QV4::StackFrame> stackTrace = engine->stackTrace(10);
 
     for (int i = 0; i < stackTrace.count(); i++) {
-        const QV4::ExecutionEngine::StackFrame &frame = stackTrace.at(i);
+        const QV4::StackFrame &frame = stackTrace.at(i);
 
         QString stackFrame;
         if (frame.column >= 0)
@@ -1377,8 +1387,10 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallCont
         result.append(jsStack(v4));
     }
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    QV4::StackFrame frame = v4->currentStackFrame();
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
     switch (logType) {
     case Log:
         logger.debug("%s", qPrintable(result));
@@ -1418,8 +1430,10 @@ QV4::ReturnedValue ConsoleObject::method_profile(SimpleCallContext *ctx)
     QString title;
     QV4::ExecutionEngine *v4 = ctx->engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    QV4::StackFrame frame = v4->currentStackFrame();
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
     if (QQmlProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
 
@@ -1440,8 +1454,10 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(SimpleCallContext *ctx)
 
     QV4::ExecutionEngine *v4 = ctx->engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    QV4::StackFrame frame = v4->currentStackFrame();
+    const QByteArray baSource = frame.source.toUtf8();
+    const QByteArray baFunction = frame.function.toUtf8();
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
 
     if (QQmlProfilerService::stopProfiling()) {
         QV8ProfilerService *profiler = QV8ProfilerService::instance();
@@ -1495,7 +1511,7 @@ QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
     QV4::ExecutionEngine *v4 = ctx->engine;
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
 
     QString scriptName = frame.source;
 
@@ -1503,7 +1519,8 @@ QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
     QString message = name + QLatin1String(": ") + QString::number(value);
 
     QMessageLogger(qPrintable(scriptName), frame.line,
-                   qPrintable(frame.function)).debug("%s", qPrintable(message));
+                   qPrintable(frame.function))
+        .debug("%s", qPrintable(message));
 
     return QV4::Encode::undefined();
 }
@@ -1517,10 +1534,11 @@ QV4::ReturnedValue ConsoleObject::method_trace(SimpleCallContext *ctx)
 
     QString stack = jsStack(v4);
 
-    QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
-    QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
+    QV4::StackFrame frame = v4->currentStackFrame();
+    QMessageLogger(frame.source.toUtf8().constData(), frame.line,
+                   frame.function.toUtf8().constData())
+        .debug("%s", qPrintable(stack));
 
-    logger.debug("%s", qPrintable(stack));
     return QV4::Encode::undefined();
 }
 
@@ -1547,9 +1565,10 @@ QV4::ReturnedValue ConsoleObject::method_assert(SimpleCallContext *ctx)
 
         QString stack = jsStack(v4);
 
-        QV4::ExecutionEngine::StackFrame frame = v4->currentStackFrame();
-        QMessageLogger logger(frame.source.toUtf8().constData(), frame.line, frame.function.toUtf8().constData());
-        logger.critical("%s\n%s", qPrintable(message), qPrintable(stack));
+        QV4::StackFrame frame = v4->currentStackFrame();
+        QMessageLogger(frame.source.toUtf8().constData(), frame.line,
+                       frame.function.toUtf8().constData())
+            .critical("%s\n%s",qPrintable(message), qPrintable(stack));
 
     }
     return QV4::Encode::undefined();

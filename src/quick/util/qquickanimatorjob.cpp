@@ -204,7 +204,8 @@ static void qquick_syncback_helper(QAbstractAnimationJob *job)
 {
     if (job->isRenderThreadJob()) {
         QQuickAnimatorJob *a = static_cast<QQuickAnimatorJob *>(job);
-        if (a->controller())
+        // Sync back only those jobs that actually have been running
+        if (a->controller() && a->hasBeenRunning())
             a->writeBack();
     } else if (job->isGroup()) {
         QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
@@ -227,6 +228,7 @@ QQuickAnimatorJob::QQuickAnimatorJob()
     , m_duration(0)
     , m_isTransform(false)
     , m_isUniform(false)
+    , m_hasBeenRunning(false)
 {
     m_isRenderThreadJob = true;
 }
@@ -265,6 +267,7 @@ void QQuickAnimatorJob::updateState(State newState, State oldState)
 
     if (newState == Running) {
         m_controller->activeLeafAnimations << this;
+        m_hasBeenRunning = true;
     } else if (oldState == Running) {
         m_controller->activeLeafAnimations.remove(this);
     }
@@ -297,6 +300,8 @@ void QQuickTransformAnimatorJob::initialize(QQuickAnimatorController *controller
             QObject::connect(m_target, SIGNAL(destroyed(QObject *)), m_controller, SLOT(itemDestroyed(QObject*)), Qt::DirectConnection);
         } else {
             ++m_helper->ref;
+            // Make sure leftovers from previous runs are being used...
+            m_helper->wasSynced = false;
         }
         m_helper->sync();
     }
@@ -314,6 +319,12 @@ void QQuickTransformAnimatorJob::Helper::sync()
             | QQuickItemPrivate::TransformOrigin;
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+    if (d->extra.isAllocated()
+            && d->extra->layer
+            && d->extra->layer->enabled()) {
+        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
+    }
+
     quint32 dirty = mask & d->dirtyAttributes;
 
     if (!wasSynced) {
@@ -404,6 +415,12 @@ void QQuickOpacityAnimatorJob::initialize(QQuickAnimatorController *controller)
 {
     QQuickAnimatorJob::initialize(controller);
     QQuickItemPrivate *d = QQuickItemPrivate::get(m_target);
+    if (d->extra.isAllocated()
+            && d->extra->layer
+            && d->extra->layer->enabled()) {
+        d = QQuickItemPrivate::get(d->extra->layer->m_effectSource);
+    }
+
     m_opacityNode = d->opacityNode();
     if (!m_opacityNode) {
         m_opacityNode = new QSGOpacityNode();
@@ -477,6 +494,11 @@ void QQuickRotationAnimatorJob::updateCurrentTime(int time)
     switch (m_direction) {
     case QQuickRotationAnimator::Clockwise:
         m_value = _q_interpolateClockwiseRotation(m_from, m_to, t).toFloat();
+        // The logic in _q_interpolateClockwise comes out a bit wrong
+        // for the case of X->0 where 0<X<360. It ends on 360 which it
+        // shouldn't.
+        if (t == 1)
+            m_value = m_to;
         break;
     case QQuickRotationAnimator::Counterclockwise:
         m_value = _q_interpolateCounterclockwiseRotation(m_from, m_to, t).toFloat();
@@ -551,6 +573,10 @@ void QQuickUniformAnimatorJob::updateCurrentTime(int time)
     QQuickShaderEffectMaterial *material =
             static_cast<QQuickShaderEffectMaterial *>(m_node->material());
     material->uniforms[m_uniformType][m_uniformIndex].value = m_value;
+    // As we're not touching the nodes, we need to explicitly mark it dirty.
+    // Otherwise, the renderer will abort repainting if this was the only
+    // change in the graph currently rendering.
+    m_node->markDirty(QSGNode::DirtyMaterial);
 }
 
 void QQuickUniformAnimatorJob::writeBack()

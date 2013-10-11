@@ -43,7 +43,6 @@
 #include "qv4instr_moth_p.h"
 #include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
-#include <private/qv4exception_p.h>
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <iostream>
@@ -135,7 +134,7 @@ static VMStats vmStats;
 #endif // WITH_STATS
 
 static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
-                                     QV4::Value* stack,
+                                     QV4::SafeValue* stack,
                                      const Param &param
 #if !defined(QT_NO_DEBUG)
                                      , unsigned stackSize
@@ -160,7 +159,7 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 
     if (param.isValue()) {
         VMSTATS(paramIsValue);
-        return const_cast<QV4::Value *>(&param.value);
+        return const_cast<QV4::Value *>(&static_cast<const QV4::Value &>(param.value));
     } else if (param.isArgument()) {
         VMSTATS(paramIsArg);
         QV4::ExecutionContext *c = context;
@@ -220,7 +219,7 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 #define STOREVALUE(param, value) VALUE(param) = QV4::Value::fromReturnedValue((value))
 
 QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
-                            QV4::Value *stack, unsigned stackSize
+                            QV4::SafeValue *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -311,7 +310,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = context->engine->stackPush(stackSize);
-        memset(stack, 0, stackSize * sizeof(QV4::Value));
+        memset(stack, 0, stackSize * sizeof(QV4::SafeValue));
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
@@ -368,14 +367,17 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(EnterTry)
         VALUE(instr.exceptionVar) = QV4::Primitive::undefinedValue();
+        bool caughtException = false;
         try {
             const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
             run(context, tryCode, stack, stackSize);
             code = tryCode;
             context->interpreterInstructionPointer = &code;
-        } catch (QV4::Exception &ex) {
-            ex.accept(context);
-            STOREVALUE(instr.exceptionVar, ex.value());
+        } catch (...) {
+            STOREVALUE(instr.exceptionVar, context->catchException());
+            caughtException = true;
+        }
+        if (caughtException) {
             try {
                 QV4::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(runtimeStrings[instr.exceptionVarName], VALUEPTR(instr.exceptionVar), context);
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
@@ -383,9 +385,8 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
                 code = catchCode;
                 context->interpreterInstructionPointer = &code;
                 context = __qmljs_builtin_pop_scope(catchContext);
-            } catch (QV4::Exception &ex) {
-                ex.accept(context);
-                STOREVALUE(instr.exceptionVar, ex.value());
+            } catch (...) {
+                STOREVALUE(instr.exceptionVar, context->catchException());
                 const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
                 run(context, catchCode, stack, stackSize);
                 code = catchCode;
@@ -456,12 +457,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
-        QV4::Value *args = stack + instr.args;
+        QV4::SafeValue *args = stack + instr.args;
         STOREVALUE(instr.result, __qmljs_builtin_define_array(context, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
-        QV4::Value *args = stack + instr.args;
+        QV4::SafeValue *args = stack + instr.args;
     STOREVALUE(instr.result, __qmljs_builtin_define_object_literal(context, args, instr.internalClassId));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
@@ -504,6 +505,8 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(CJump)
         uint cond = __qmljs_to_boolean(VALUEPTR(instr.condition));
         TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
+        if (instr.invert)
+            cond = !cond;
         if (cond)
             code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)

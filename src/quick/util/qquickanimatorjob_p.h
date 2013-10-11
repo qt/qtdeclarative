@@ -133,6 +133,8 @@ public:
     bool isTransform() const { return m_isTransform; }
     bool isUniform() const { return m_isUniform; }
 
+    bool hasBeenRunning() const { return m_hasBeenRunning; }
+
     qreal value() const;
 
     QQuickAnimatorController *controller() const { return m_controller; }
@@ -155,6 +157,7 @@ protected:
     uint m_feedback : 1;
     uint m_isTransform : 1;
     uint m_isUniform : 1;
+    uint m_hasBeenRunning : 1;
 };
 
 class QQuickTransformAnimatorJob : public QQuickAnimatorJob

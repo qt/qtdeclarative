@@ -90,7 +90,7 @@ public:
     static const double twoToThe32; // This is super useful for some double code.
 
     // Utilities used by the DFG JIT.
-#if ENABLE(DFG_JIT)
+#if ENABLE(DFG_JIT) || ENABLE(DFG_JIT_UTILITY_METHODS)
     using MacroAssemblerBase::invert;
     
     static DoubleCondition invert(DoubleCondition cond)

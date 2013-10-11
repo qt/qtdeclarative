@@ -100,7 +100,7 @@ QQuickTranslate::~QQuickTranslate()
 {
 }
 /*!
-    \qmlproperty real QtQuick2::Translate::x
+    \qmlproperty real QtQuick::Translate::x
 
     The translation along the X axis.
 
@@ -123,7 +123,7 @@ void QQuickTranslate::setX(qreal x)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Translate::y
+    \qmlproperty real QtQuick::Translate::y
 
     The translation along the Y axis.
 
@@ -198,8 +198,8 @@ QQuickScale::~QQuickScale()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Scale::origin.x
-    \qmlproperty real QtQuick2::Scale::origin.y
+    \qmlproperty real QtQuick::Scale::origin.x
+    \qmlproperty real QtQuick::Scale::origin.y
 
     This property holds the point that the item is scaled from (that is,
     the point that stays fixed relative to the parent as the rest of the
@@ -223,7 +223,7 @@ void QQuickScale::setOrigin(const QVector3D &point)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Scale::xScale
+    \qmlproperty real QtQuick::Scale::xScale
 
     The scaling factor for the X axis.
 
@@ -246,7 +246,7 @@ void QQuickScale::setXScale(qreal scale)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Scale::yScale
+    \qmlproperty real QtQuick::Scale::yScale
 
     The scaling factor for the Y axis.
 
@@ -347,8 +347,8 @@ QQuickRotation::~QQuickRotation()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Rotation::origin.x
-    \qmlproperty real QtQuick2::Rotation::origin.y
+    \qmlproperty real QtQuick::Rotation::origin.x
+    \qmlproperty real QtQuick::Rotation::origin.y
 
     The origin point of the rotation (i.e., the point that stays fixed
     relative to the parent as the rest of the item rotates). By default
@@ -371,7 +371,7 @@ void QQuickRotation::setOrigin(const QVector3D &point)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Rotation::angle
+    \qmlproperty real QtQuick::Rotation::angle
 
     The angle to rotate, in degrees clockwise.
 */
@@ -391,9 +391,9 @@ void QQuickRotation::setAngle(qreal angle)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Rotation::axis.x
-    \qmlproperty real QtQuick2::Rotation::axis.y
-    \qmlproperty real QtQuick2::Rotation::axis.z
+    \qmlproperty real QtQuick::Rotation::axis.x
+    \qmlproperty real QtQuick::Rotation::axis.y
+    \qmlproperty real QtQuick::Rotation::axis.z
 
     The axis to rotate around. For simple (2D) rotation around a point, you
     do not need to specify an axis, as the default axis is the z axis

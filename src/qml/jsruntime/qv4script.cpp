@@ -45,7 +45,6 @@
 #include "qv4function_p.h"
 #include "qv4context_p.h"
 #include "qv4debugging_p.h"
-#include "qv4exception_p.h"
 #include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -152,7 +151,7 @@ Script::Script(ExecutionEngine *v4, ObjectRef qml, CompiledData::CompilationUnit
         vmFunction = compilationUnit->linkToEngine(v4);
         Q_ASSERT(vmFunction);
         Scope valueScope(v4);
-        ScopedValue holder(valueScope, Value::fromObject(new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit)));
+        ScopedValue holder(valueScope, new (v4->memoryManager) CompilationUnitHolder(v4, compilationUnit));
         compilationUnitHolder = holder;
     } else
         vmFunction = 0;
@@ -252,11 +251,11 @@ ReturnedValue Script::run()
         QV4::ScopedValue result(valueScope);
         try {
             result = vmFunction->code(scope, vmFunction->codeData);
-        } catch (Exception &e) {
+        } catch (...) {
             scope->strictMode = strict;
             scope->lookups = oldLookups;
             scope->compilationUnit = oldCompilationUnit;
-            throw;
+            scope->rethrowException();
         }
 
         scope->lookups = oldLookups;
@@ -379,8 +378,8 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
     try {
         qmlScript.parse();
         return qmlScript.run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return Encode::undefined();
 }

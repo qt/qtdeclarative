@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickParentChangePrivate;
-class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickActionEvent
+class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentChange)
@@ -104,12 +104,12 @@ public:
     virtual ActionList actions();
 
     virtual void saveOriginals();
-    //virtual void copyOriginals(QQuickActionEvent*);
+    //virtual void copyOriginals(QQuickStateActionEvent*);
     virtual void execute(Reason reason = ActualChange);
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
     virtual EventType type() const;
-    virtual bool override(QQuickActionEvent*other);
+    virtual bool override(QQuickStateActionEvent*other);
     virtual void rewind();
     virtual void saveCurrentValues();
 };
@@ -169,7 +169,7 @@ private:
 };
 
 class QQuickAnchorChangesPrivate;
-class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickActionEvent
+class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorChanges)
@@ -192,16 +192,16 @@ public:
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
     virtual EventType type() const;
-    virtual bool override(QQuickActionEvent*other);
+    virtual bool override(QQuickStateActionEvent*other);
     virtual bool changesBindings();
     virtual void saveOriginals();
     virtual bool needsCopy() { return true; }
-    virtual void copyOriginals(QQuickActionEvent*);
+    virtual void copyOriginals(QQuickStateActionEvent*);
     virtual void clearBindings();
     virtual void rewind();
     virtual void saveCurrentValues();
 
-    QList<QQuickAction> additionalActions();
+    QList<QQuickStateAction> additionalActions();
     virtual void saveTargetValues();
 };
 

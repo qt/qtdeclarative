@@ -43,6 +43,8 @@
 
 #include "qv4global_p.h"
 #include "qv4property_p.h"
+#include "qv4scopedvalue_p.h"
+#include "qv4object_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -65,8 +67,8 @@ struct Q_QML_EXPORT ObjectIterator
         WithProtoChain = 0x2,
     };
 
-    Object *object;
-    Object *current;
+    ObjectRef object;
+    ObjectRef current;
     SparseArrayNode *arrayNode;
     uint arrayIndex;
     uint memberIndex;
@@ -74,11 +76,31 @@ struct Q_QML_EXPORT ObjectIterator
 
     Property tmpDynamicProperty;
 
-    ObjectIterator(Object *o, uint flags);
-    Property *next(String **name, uint *index, PropertyAttributes *attributes = 0);
-    ReturnedValue nextPropertyName(Value *value = 0);
-    ReturnedValue nextPropertyNameAsString(Value *value = 0);
+    ObjectIterator(SafeObject *scratch1, SafeObject *scratch2, const ObjectRef o, uint flags);
+    ObjectIterator(Scope &scope, const ObjectRef o, uint flags);
+    Property *next(StringRef name, uint *index, PropertyAttributes *attributes = 0);
+    ReturnedValue nextPropertyName(ValueRef value);
+    ReturnedValue nextPropertyNameAsString(ValueRef value);
+    ReturnedValue nextPropertyNameAsString();
 };
+
+struct ForEachIteratorObject: Object {
+    Q_MANAGED
+    ObjectIterator it;
+    ForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
+        : Object(ctx->engine), it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain) {
+        vtbl = &static_vtbl;
+        type = Type_ForeachIteratorObject;
+    }
+
+    ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
+
+protected:
+    static void markObjects(Managed *that);
+
+    SafeObject workArea[2];
+};
+
 
 }
 

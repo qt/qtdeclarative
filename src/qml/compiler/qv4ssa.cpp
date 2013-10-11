@@ -1049,130 +1049,152 @@ void cleanupPhis(DefUsesCalculator &defUses)
     }
 }
 
-class DeadCodeElimination: public ExprVisitor {
-    const bool variablesCanEscape;
+class EliminateDeadCode: public ExprVisitor {
     DefUsesCalculator &_defUses;
-    QVector<Temp> _worklist;
+    QVector<Stmt *> _worklist;
+    const bool _variablesCanEscape;
+    bool _sideEffect;
+    QVector<Temp *> _collectedTemps;
 
 public:
-    DeadCodeElimination(DefUsesCalculator &defUses, Function *function)
-        : variablesCanEscape(function->variablesCanEscape())
-        , _defUses(defUses)
+    EliminateDeadCode(DefUsesCalculator &defUses, QVector<Stmt *> worklist, bool variablesCanEscape)
+        : _defUses(defUses)
+        , _worklist(worklist)
+        , _variablesCanEscape(variablesCanEscape)
     {
-        _worklist = QVector<Temp>::fromList(_defUses.defs());
+        _collectedTemps.reserve(8);
     }
 
-    void run() {
-        while (!_worklist.isEmpty()) {
-            const Temp v = _worklist.first();
-            _worklist.removeFirst();
-
-            if (_defUses.useCount(v) == 0) {
-#if defined(SHOW_SSA)
-                qout<<"- ";v.dump(qout);qout<<" has no uses..."<<endl;
-#endif
-                Stmt *s = _defUses.defStmt(v);
-                if (!s) {
-                    _defUses.removeDef(v);
-                } else if (!hasSideEffect(s)) {
-#if defined(SHOW_SSA)
-                    qout<<"-- defining stmt for ";
-                    v.dump(qout);
-                    qout<<" has no side effect: ";
-                    s->dump(qout);
-                    qout<<endl;
-#endif
-                    QVector<Stmt *> &stmts = _defUses.defStmtBlock(v)->statements;
-                    int idx = stmts.indexOf(s);
-                    if (idx != -1)
-                        stmts.remove(idx);
-                    foreach (const Temp &usedVar, _defUses.usedVars(s)) {
-                        _defUses.removeUse(s, usedVar);
-                        _worklist.append(usedVar);
-                    }
-                    _defUses.removeDef(v);
-                }
+    void run(Expr *&expr, Stmt *stmt) {
+        if (!checkForSideEffects(expr)) {
+            expr = 0;
+            foreach (Temp *t, _collectedTemps) {
+                _defUses.removeUse(stmt, *t);
+                _worklist += _defUses.defStmt(*t);
             }
         }
     }
 
 private:
-    bool _sideEffect;
+    bool checkForSideEffects(Expr *expr)
+    {
+        bool sideEffect = false;
+        qSwap(_sideEffect, sideEffect);
+        expr->accept(this);
+        qSwap(_sideEffect, sideEffect);
+        return sideEffect;
+    }
 
-    bool hasSideEffect(Stmt *s) {
-        // TODO: check if this can be moved to IR building.
-        _sideEffect = false;
-        if (Move *move = s->asMove()) {
-            if (Temp *t = move->target->asTemp()) {
-                switch (t->kind) {
-                case Temp::Formal:
-                case Temp::ScopedFormal:
-                case Temp::ScopedLocal:
-                    return true;
-                case Temp::Local:
-                    if (variablesCanEscape)
-                        return true;
-                    else
-                        break;
-                case Temp::VirtualRegister:
-                    break;
-                default:
-                    Q_ASSERT(!"Invalid temp kind!");
-                    return true;
-                }
-                move->source->accept(this);
-            } else {
-                return true;
-            }
+    void markAsSideEffect()
+    {
+        _sideEffect = true;
+        _collectedTemps.clear();
+    }
+
+    bool isCollectable(Temp *t) const
+    {
+        switch (t->kind) {
+        case Temp::Formal:
+        case Temp::ScopedFormal:
+        case Temp::ScopedLocal:
+            return false;
+        case Temp::Local:
+            return !_variablesCanEscape;
+        default:
+            return true;
         }
-        return _sideEffect;
     }
 
 protected:
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
     virtual void visitRegExp(RegExp *) {}
-    virtual void visitName(Name *e) {
+
+    virtual void visitName(Name *e)
+    {
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
         // a side-effect.
         if (e->builtin == Name::builtin_invalid || (e->id && *e->id != QStringLiteral("this")))
-            _sideEffect = true;
+            markAsSideEffect();
     }
-    virtual void visitTemp(Temp *e) {
+
+    virtual void visitTemp(Temp *e)
+    {
+        if (isCollectable(e))
+            _collectedTemps.append(e);
     }
-    virtual void visitClosure(Closure *) {}
+
+    virtual void visitClosure(Closure *)
+    {
+        markAsSideEffect();
+    }
+
     virtual void visitConvert(Convert *e) {
-        // we do not have type information yet, so:
-        _sideEffect = true;
+        e->expr->accept(this);
+
+        switch (e->expr->type) {
+        case StringType:
+        case VarType:
+            markAsSideEffect();
+            break;
+        default:
+            break;
+        }
     }
 
     virtual void visitUnop(Unop *e) {
+        e->expr->accept(this);
+
         switch (e->op) {
+        case OpUPlus:
+        case OpUMinus:
+        case OpNot:
         case OpIncrement:
         case OpDecrement:
-            _sideEffect = true;
+            if (e->expr->type == VarType || e->expr->type == StringType)
+                markAsSideEffect();
             break;
 
         default:
             break;
         }
+    }
 
-        if (!_sideEffect) e->expr->accept(this);
+    virtual void visitBinop(Binop *e) {
+        // TODO: prune parts that don't have a side-effect. For example, in:
+        //   function f(x) { +x+1; return 0; }
+        // we can prune the binop and leave the unop/conversion.
+        _sideEffect = checkForSideEffects(e->left);
+        _sideEffect |= checkForSideEffects(e->right);
+
+        if (e->left->type == VarType || e->left->type == StringType
+                || e->right->type == VarType || e->right->type == StringType)
+            markAsSideEffect();
     }
-    virtual void visitBinop(Binop *e) { if (!_sideEffect) e->left->accept(this); if (!_sideEffect) e->right->accept(this); }
+
     virtual void visitSubscript(Subscript *e) {
-        // TODO: see if we can have subscript accesses without side effect
-        _sideEffect = true;
+        e->base->accept(this);
+        e->index->accept(this);
+        markAsSideEffect();
     }
+
     virtual void visitMember(Member *e) {
-        // TODO: see if we can have member accesses without side effect
-        _sideEffect = true;
+        e->base->accept(this);
+        markAsSideEffect();
     }
+
     virtual void visitCall(Call *e) {
-        _sideEffect = true; // TODO: there are built-in functions that have no side effect.
+        e->base->accept(this);
+        for (ExprList *args = e->args; args; args = args->next)
+            args->expr->accept(this);
+        markAsSideEffect(); // TODO: there are built-in functions that have no side effect.
     }
+
     virtual void visitNew(New *e) {
-        _sideEffect = true; // TODO: there are built-in types that have no side effect.
+        e->base->accept(this);
+        for (ExprList *args = e->args; args; args = args->next)
+            args->expr->accept(this);
+        markAsSideEffect(); // TODO: there are built-in types that have no side effect.
     }
 };
 
@@ -1503,11 +1525,19 @@ protected:
         _ty = run(s->d->incoming[0]);
         for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
             TypingResult ty = run(s->d->incoming[i]);
+            if (!ty.fullyTyped && _ty.fullyTyped) {
+                // When one of the temps not fully typed, we already know that we cannot completely type this node.
+                // So, pick the type we calculated upto this point, and wait until the unknown one will be typed.
+                // At that point, this statement will be re-scheduled, and then we can fully type this node.
+                _ty.fullyTyped = false;
+                break;
+            }
             _ty.type |= ty.type;
             _ty.fullyTyped &= ty.fullyTyped;
         }
 
         switch (_ty.type) {
+        case UnknownType:
         case UndefinedType:
         case NullType:
         case BoolType:
@@ -1693,12 +1723,12 @@ protected:
         case OpLShift:
         case OpRShift:
             run(e->left, SInt32Type);
-            run(e->right, UInt32Type);
+            run(e->right, SInt32Type);
             break;
 
         case OpURShift:
             run(e->left, UInt32Type);
-            run(e->right, UInt32Type);
+            run(e->right, SInt32Type);
             break;
 
         case OpGt:
@@ -2215,8 +2245,8 @@ bool tryOptimizingComparison(Expr *&expr)
     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
         return false;
 
-    QV4::Value l = convertToValue(leftConst);
-    QV4::Value r = convertToValue(rightConst);
+    QV4::Primitive l = convertToValue(leftConst);
+    QV4::Primitive r = convertToValue(rightConst);
 
     switch (b->op) {
     case OpGt:
@@ -2328,6 +2358,14 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
             }
 
             if (Temp *targetTemp = unescapableTemp(m->target, variablesCanEscape)) {
+                // dead code elimination:
+                if (defUses.useCount(*targetTemp) == 0) {
+                    EliminateDeadCode(defUses, W, variablesCanEscape).run(m->source, s);
+                    if (!m->source)
+                        *ref[s] = 0;
+                    continue;
+                }
+
                 // constant propagation:
                 if (Const *sourceConst = m->source->asConst()) {
                     if (sourceConst->type & NumberType || sourceConst->type == BoolType) {
@@ -2339,16 +2377,6 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     }
                     continue;
                 }
-
-#if defined(PROPAGATE_THIS)
-                if (Name *n = m->source->asName()) {
-                    qout<<"propagating constant from ";s->dump(qout);qout<<" info:"<<endl;
-                    W += replaceUses(t, n);
-                    defUses.removeDef(t->index);
-                    *ref[s] = 0;
-                    continue;
-                }
-#endif
 
                 // copy propagation:
                 if (Temp *sourceTemp = unescapableTemp(m->source, variablesCanEscape)) {
@@ -2431,8 +2459,8 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
                         continue;
 
-                    QV4::Value lc = convertToValue(leftConst);
-                    QV4::Value rc = convertToValue(rightConst);
+                    QV4::Primitive lc = convertToValue(leftConst);
+                    QV4::Primitive rc = convertToValue(rightConst);
                     double l = __qmljs_to_number(&lc);
                     double r = __qmljs_to_number(&rc);
 
@@ -2602,7 +2630,7 @@ class LifeRanges {
 
     QHash<BasicBlock *, LiveRegs> _liveIn;
     QHash<Temp, LifeTimeInterval> _intervals;
-    QList<LifeTimeInterval> _sortedRanges;
+    QVector<LifeTimeInterval> _sortedRanges;
 
 public:
     LifeRanges(Function *function, const QHash<BasicBlock *, BasicBlock *> &startEndLoops)
@@ -2631,7 +2659,7 @@ public:
         std::sort(_sortedRanges.begin(), _sortedRanges.end(), LifeTimeInterval::lessThan);
     }
 
-    QList<LifeTimeInterval> ranges() const { return _sortedRanges; }
+    QVector<LifeTimeInterval> ranges() const { return _sortedRanges; }
 
     void dump() const
     {
@@ -2854,10 +2882,6 @@ void Optimizer::run()
         cleanupPhis(defUses);
 //        showMeTheCode(function);
 
-//        qout << "Starting dead-code elimination..." << endl;
-        DeadCodeElimination(defUses, function).run();
-//        showMeTheCode(function);
-
 //        qout << "Running type inference..." << endl;
         TypeInference(defUses).run(function);
 //        showMeTheCode(function);
@@ -2942,7 +2966,7 @@ void Optimizer::convertOutOfSSA() {
     }
 }
 
-QList<LifeTimeInterval> Optimizer::lifeRanges() const
+QVector<LifeTimeInterval> Optimizer::lifeRanges() const
 {
     Q_ASSERT(isInSSA());
 
@@ -2950,6 +2974,45 @@ QList<LifeTimeInterval> Optimizer::lifeRanges() const
 //    lifeRanges.dump();
 //    showMeTheCode(function);
     return lifeRanges.ranges();
+}
+
+QSet<Jump *> Optimizer::calculateOptionalJumps()
+{
+    QSet<Jump *> optional;
+    QSet<BasicBlock *> reachableWithoutJump;
+
+    const int maxSize = function->basicBlocks.size();
+    optional.reserve(maxSize);
+    reachableWithoutJump.reserve(maxSize);
+
+    for (int i = function->basicBlocks.size() - 1; i >= 0; --i) {
+        BasicBlock *bb = function->basicBlocks[i];
+
+        if (Jump *jump = bb->statements.last()->asJump()) {
+            if (reachableWithoutJump.contains(jump->target)) {
+                if (bb->statements.size() > 1)
+                    reachableWithoutJump.clear();
+                optional.insert(jump);
+                reachableWithoutJump.insert(bb);
+                continue;
+            }
+        }
+
+        reachableWithoutJump.clear();
+        reachableWithoutJump.insert(bb);
+    }
+
+#if 0
+    QTextStream out(stdout, QIODevice::WriteOnly);
+    out << "Jumps to ignore:" << endl;
+    foreach (Jump *j, removed) {
+        out << "\t" << j->id << ": ";
+        j->dump(out, Stmt::MIR);
+        out << endl;
+    }
+#endif
+
+    return optional;
 }
 
 void Optimizer::showMeTheCode(Function *function)

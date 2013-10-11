@@ -98,16 +98,16 @@ MyDatePicker { minDate: "2000-01-01"; maxDate: "2020-12-31" }
 \endqml
 
 To read a date value returned from a C++ extension class, use
-\l{QtQml2::Qt::formatDate()}{Qt.formatDate()} and \l{QtQml2::Qt::formatDateTime()}{Qt.formatDateTime()}.
+\l{QtQml::Qt::formatDate()}{Qt.formatDate()} and \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 When integrating with C++, note that any QDate value
 \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
 converted into a \c date value, and vice-versa.
 
 This basic type is provided by the QML language. It can be implicitly converted
-to a \l{QtQml2::Date}{Date} object.
+to a \l{QtQml::Date}{Date} object.
 
-\sa {QtQml2::Date}{QML Date object}, {QML Basic Types}
+\sa {QtQml::Date}{QML Date object}, {QML Basic Types}
 */
 
 /*!
@@ -125,7 +125,7 @@ MyTimePicker { time: "14:22:15" }
 \endqml
 
 To read a time value returned from a C++ extension class, use
-\l{QtQml2::Qt::formatTime()}{Qt.formatTime()} and \l{QtQml2::Qt::formatDateTime()}{Qt.formatDateTime()}.
+\l{QtQml::Qt::formatTime()}{Qt.formatTime()} and \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 Note that when converting historical times to and from javascript that QDateTime and the JS Date object
 have different methods of calculating historical daylight savings time application. This can lead to variations of one hour
@@ -154,7 +154,7 @@ To create a \c point value, specify it as a "x,y" string:
 CustomObject { myPointProperty: "0,20" }
 \endqml
 
-Or use the \l{QtQml2::Qt::point()}{Qt.point()} function:
+Or use the \l{QtQml::Qt::point()}{Qt.point()} function:
 
 \qml
 CustomObject { myPointProperty: Qt.point(0, 20) }
@@ -192,7 +192,7 @@ To create a \c size value, specify it as a "width x height" string:
 Image { sourceSize: "150x50" }
 \endqml
 
-Or use the \l{QtQml2::Qt::size()}{Qt.size()} function:
+Or use the \l{QtQml::Qt::size()}{Qt.size()} function:
 
 \qml
 Image { sourceSize: Qt.size(150, 50) }
@@ -232,7 +232,7 @@ To create a \c rect value, specify it as a "x, y, width x height" string:
 CustomObject { myRectProperty: "50,50,100x100" }
 \endqml
 
-Or use the \l{QtQml2::Qt::rect()}{Qt.rect()} function:
+Or use the \l{QtQml::Qt::rect()}{Qt.rect()} function:
 
 \qml
 CustomObject { myRectProperty: Qt.rect(50, 50, 100, 100) }

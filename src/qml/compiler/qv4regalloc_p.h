@@ -64,7 +64,7 @@ class RegisterAllocator
 
     QVector<LifeTimeInterval> _fixedRegisterRanges, _fixedFPRegisterRanges;
 
-    QList<LifeTimeInterval> _unhandled, _active, _inactive, _handled;
+    QVector<LifeTimeInterval> _unhandled, _active, _inactive, _handled;
 
     QHash<V4IR::Temp, int> _lastAssignedRegister;
     QHash<V4IR::Temp, int> _assignedSpillSlots;

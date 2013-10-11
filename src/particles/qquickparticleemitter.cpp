@@ -66,20 +66,20 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::Emitter::system
+    \qmlproperty ParticleSystem QtQuick.Particles::Emitter::system
 
     This is the Particle system that the Emitter will emit into.
     This can be omitted if the Emitter is a direct child of the ParticleSystem
 */
 /*!
-    \qmlproperty string QtQuick.Particles2::Emitter::group
+    \qmlproperty string QtQuick.Particles::Emitter::group
 
     This is the logical particle group which it will emit into.
 
     Default value is "" (empty string).
 */
 /*!
-    \qmlproperty Shape QtQuick.Particles2::Emitter::shape
+    \qmlproperty Shape QtQuick.Particles::Emitter::shape
 
     This shape is applied with the size of the Emitter. Particles will be emitted
     randomly from any area covered by the shape.
@@ -88,21 +88,21 @@ QT_BEGIN_NAMESPACE
     box of the Emitter.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Emitter::enabled
+    \qmlproperty bool QtQuick.Particles::Emitter::enabled
 
     If set to false, the emitter will cease emissions until it is set to true.
 
     Default value is true.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Emitter::emitRate
+    \qmlproperty real QtQuick.Particles::Emitter::emitRate
 
     Number of particles emitted per second.
 
     Default value is 10 particles per second.
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpan
+    \qmlproperty int QtQuick.Particles::Emitter::lifeSpan
 
     The time in milliseconds each emitted particle should last for.
 
@@ -115,7 +115,7 @@ QT_BEGIN_NAMESPACE
     Default value is 1000 (one second).
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpanVariation
+    \qmlproperty int QtQuick.Particles::Emitter::lifeSpanVariation
 
     Particle lifespans will vary by up to this much in either direction.
 
@@ -123,7 +123,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty int QtQuick.Particles2::Emitter::maximumEmitted
+    \qmlproperty int QtQuick.Particles::Emitter::maximumEmitted
 
     The maximum number of particles at a time that this emitter will have alive.
 
@@ -136,21 +136,21 @@ QT_BEGIN_NAMESPACE
     The default value is -1.
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Emitter::startTime
+    \qmlproperty int QtQuick.Particles::Emitter::startTime
 
     If this value is set when the emitter is loaded, then it will emit particles from the
     past, up to startTime milliseconds ago. These will simulate as if they were emitted then,
     but will not have any affectors applied to them. Affectors will take effect from the present time.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Emitter::size
+    \qmlproperty real QtQuick.Particles::Emitter::size
 
     The size in pixels of the particles at the start of their life.
 
     Default value is 16.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Emitter::endSize
+    \qmlproperty real QtQuick.Particles::Emitter::endSize
 
     The size in pixels of the particles at the end of their life. Size will
     be linearly interpolated during the life of the particle from this value and
@@ -160,7 +160,7 @@ QT_BEGIN_NAMESPACE
     Default value is -1.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Emitter::sizeVariation
+    \qmlproperty real QtQuick.Particles::Emitter::sizeVariation
 
     The size of a particle can vary by this much up or down from size/endSize. The same
     random addition is made to both size and endSize for a single particle.
@@ -168,17 +168,17 @@ QT_BEGIN_NAMESPACE
     Default value is 0.
 */
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::velocity
+    \qmlproperty StochasticDirection QtQuick.Particles::Emitter::velocity
 
     The starting velocity of the particles emitted.
 */
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::acceleration
+    \qmlproperty StochasticDirection QtQuick.Particles::Emitter::acceleration
 
     The starting acceleraton of the particles emitted.
 */
 /*!
-    \qmlproperty qreal QtQuick.Particles2::Emitter::velocityFromMovement
+    \qmlproperty qreal QtQuick.Particles::Emitter::velocityFromMovement
 
     If this value is non-zero, then any movement of the emitter will provide additional
     starting velocity to the particles based on the movement. The additional vector will be the
@@ -189,7 +189,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuick.Particles2::Emitter::onEmitParticles(Array particles)
+    \qmlsignal QtQuick.Particles::Emitter::onEmitParticles(Array particles)
 
     This handler is called when particles are emitted. particles is a JavaScript
     array of Particle objects. You can modify particle attributes directly within the handler.
@@ -198,18 +198,18 @@ QT_BEGIN_NAMESPACE
     high-volume particle systems.
 */
 
-/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int count)
+/*! \qmlmethod QtQuick.Particles::Emitter::burst(int count)
 
     Emits count particles from this emitter immediately.
 */
 
-/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int count, int x, int y)
+/*! \qmlmethod QtQuick.Particles::Emitter::burst(int count, int x, int y)
 
     Emits count particles from this emitter immediately. The particles are emitted
     as if the Emitter was positioned at x,y but all other properties are the same.
 */
 
-/*! \qmlmethod QtQuick.Particles2::Emitter::pulse(int duration)
+/*! \qmlmethod QtQuick.Particles::Emitter::pulse(int duration)
 
     If the emitter is not enabled, enables it for duration milliseconds and then switches
     it back off.

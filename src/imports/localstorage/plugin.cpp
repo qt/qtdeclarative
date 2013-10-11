@@ -59,7 +59,6 @@
 #include <private/qv4object_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
-#include <private/qv4exception_p.h>
 #include <private/qv4scopedvalue_p.h>
 
 using namespace QV4;
@@ -276,14 +275,13 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
                     query.bindValue(ii, engine->toVariant((v = array->getIndexed(ii)), -1));
             } else if (values->asObject()) {
                 ScopedObject object(scope, values);
-                ObjectIterator it(object.getPointer(), ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
+                ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);
+                QV4::ScopedValue val(scope);
                 while (1) {
-                    Value value;
-                    key = it.nextPropertyName(&value);
+                    key = it.nextPropertyName(val);
                     if (key->isNull())
                         break;
-                    QV4::ScopedValue val(scope, value);
                     QVariant v = engine->toVariant(val, -1);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
@@ -305,7 +303,7 @@ static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
             rows->sqlQuery = query;
 
             Scoped<Object> resultObject(scope, ctx->engine->newObject());
-            result = resultObject.asValue();
+            result = resultObject.asReturnedValue();
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
@@ -363,9 +361,9 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
         callData->args[0] = w;
         try {
             callback->call(callData);
-        } catch (Exception &) {
+        } catch (...) {
             db.rollback();
-            throw;
+            ctx->rethrowException();
         }
         if (!db.commit()) {
             db.rollback();
@@ -419,10 +417,10 @@ static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, b
         callData->args[0] = w;
         try {
             callback->call(callData);
-        } catch (Exception &) {
+        } catch (...) {
             w->inTransaction = false;
             db.rollback();
-            throw;
+            ctx->rethrowException();
         }
 
         w->inTransaction = false;

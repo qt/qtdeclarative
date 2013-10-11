@@ -803,12 +803,6 @@ void QQmlEnginePrivate::init()
         QQmlProfilerService::initialize();
         QDebugMessageService::instance();
     }
-
-    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-    if (!dataLocation.isEmpty())
-        offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator())
-                           + QDir::separator() + QLatin1String("QML")
-                           + QDir::separator() + QLatin1String("OfflineStorage");
 }
 
 QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
@@ -1995,6 +1989,16 @@ void QQmlEngine::setOfflineStoragePath(const QString& dir)
 QString QQmlEngine::offlineStoragePath() const
 {
     Q_D(const QQmlEngine);
+
+    if (d->offlineStoragePath.isEmpty()) {
+        QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QQmlEnginePrivate *e = const_cast<QQmlEnginePrivate *>(d);
+        if (!dataLocation.isEmpty())
+            e->offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator())
+                                  + QDir::separator() + QLatin1String("QML")
+                                  + QDir::separator() + QLatin1String("OfflineStorage");
+    }
+
     return d->offlineStoragePath;
 }
 

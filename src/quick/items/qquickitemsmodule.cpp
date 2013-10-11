@@ -87,16 +87,44 @@
 
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
-    QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
-    if (!item)
-        return QQmlPrivate::IncompatibleObject;
-
+    // When setting a parent (especially during dynamic object creation) in QML,
+    // also try to set up the analogous item/window relationship.
     QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent);
-    if (!parentItem)
-        return QQmlPrivate::IncompatibleParent;
-
-    item->setParentItem(parentItem);
-    return QQmlPrivate::Parented;
+    if (parentItem) {
+        QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
+        if (item) {
+            // An Item has another Item
+            item->setParentItem(parentItem);
+            return QQmlPrivate::Parented;
+        } else if (parentItem->window()) {
+            QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
+            if (win) {
+                // A Window inside an Item should be transient for that item's window
+                win->setTransientParent(parentItem->window());
+                return QQmlPrivate::Parented;
+            }
+        }
+        return QQmlPrivate::IncompatibleObject;
+    } else {
+        QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent);
+        if (parentWindow) {
+            QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
+            if (win) {
+                // A Window inside a Window should be transient for it
+                win->setTransientParent(parentWindow);
+                return QQmlPrivate::Parented;
+            } else {
+                QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
+                if (item) {
+                    // The parent of an Item inside a Window is actually the implicit content Item
+                    item->setParentItem(parentWindow->contentItem());
+                    return QQmlPrivate::Parented;
+                }
+            }
+            return QQmlPrivate::IncompatibleObject;
+        }
+    }
+    return QQmlPrivate::IncompatibleParent;
 }
 
 static bool compareQQuickAnchorLines(const void *p1, const void *p2)

@@ -209,6 +209,9 @@ Q_SIGNALS:
     void sourceRectChanged(const QRectF &sourceRect);
 
 private:
+    friend class QQuickTransformAnimatorJob;
+    friend class QQuickOpacityAnimatorJob;
+
     void activate();
     void deactivate();
     void activateEffect();

@@ -1273,14 +1273,14 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 }
 
 /*!
-    \qmlattachedproperty bool QtQuick2::GridView::isCurrentItem
+    \qmlattachedproperty bool QtQuick::GridView::isCurrentItem
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
 */
 
 /*!
-    \qmlattachedproperty GridView QtQuick2::GridView::view
+    \qmlattachedproperty GridView QtQuick::GridView::view
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate.
@@ -1289,7 +1289,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlattachedproperty bool QtQuick2::GridView::delayRemove
+    \qmlattachedproperty bool QtQuick::GridView::delayRemove
     This attached property holds whether the delegate may be destroyed. It
     is attached to each instance of the delegate. The default value is false.
 
@@ -1304,12 +1304,12 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlattachedsignal QtQuick2::GridView::onAdd()
+    \qmlattachedsignal QtQuick::GridView::onAdd()
     This attached handler is called immediately after an item is added to the view.
 */
 
 /*!
-    \qmlattachedsignal QtQuick2::GridView::onRemove()
+    \qmlattachedsignal QtQuick::GridView::onRemove()
     This attached handler is called immediately before an item is removed from the view.
 
     If a \l remove transition has been specified, it is applied after
@@ -1318,7 +1318,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-  \qmlproperty model QtQuick2::GridView::model
+  \qmlproperty model QtQuick::GridView::model
   This property holds the model providing data for the grid.
 
     The model provides the set of data that is used to create the items
@@ -1330,7 +1330,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlproperty Component QtQuick2::GridView::delegate
+    \qmlproperty Component QtQuick::GridView::delegate
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -1349,8 +1349,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-  \qmlproperty int QtQuick2::GridView::currentIndex
-  \qmlproperty Item QtQuick2::GridView::currentItem
+  \qmlproperty int QtQuick::GridView::currentIndex
+  \qmlproperty Item QtQuick::GridView::currentItem
 
     The \c currentIndex property holds the index of the current item, and
     \c currentItem holds the current item.  Setting the currentIndex to -1
@@ -1366,7 +1366,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-  \qmlproperty Item QtQuick2::GridView::highlightItem
+  \qmlproperty Item QtQuick::GridView::highlightItem
 
   This holds the highlight item created from the \l highlight component.
 
@@ -1378,13 +1378,13 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-  \qmlproperty int QtQuick2::GridView::count
+  \qmlproperty int QtQuick::GridView::count
   This property holds the number of items in the view.
 */
 
 
 /*!
-  \qmlproperty Component QtQuick2::GridView::highlight
+  \qmlproperty Component QtQuick::GridView::highlight
   This property holds the component to use as the highlight.
 
   An instance of the highlight component is created for each view.
@@ -1395,7 +1395,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-  \qmlproperty bool QtQuick2::GridView::highlightFollowsCurrentItem
+  \qmlproperty bool QtQuick::GridView::highlightFollowsCurrentItem
   This property sets whether the highlight is managed by the view.
 
     If this property is true (the default value), the highlight is moved smoothly
@@ -1410,7 +1410,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-    \qmlproperty int QtQuick2::GridView::highlightMoveDuration
+    \qmlproperty int QtQuick::GridView::highlightMoveDuration
     This property holds the move animation duration of the highlight delegate.
 
     highlightFollowsCurrentItem must be true for this property
@@ -1422,9 +1422,9 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlproperty real QtQuick2::GridView::preferredHighlightBegin
-    \qmlproperty real QtQuick2::GridView::preferredHighlightEnd
-    \qmlproperty enumeration QtQuick2::GridView::highlightRangeMode
+    \qmlproperty real QtQuick::GridView::preferredHighlightBegin
+    \qmlproperty real QtQuick::GridView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick::GridView::highlightRangeMode
 
     These properties define the preferred range of the highlight (for the current item)
     within the view. The \c preferredHighlightBegin value must be less than the
@@ -1454,7 +1454,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-  \qmlproperty enumeration QtQuick2::GridView::layoutDirection
+  \qmlproperty enumeration QtQuick::GridView::layoutDirection
   This property holds the layout direction of the grid.
 
     Possible values:
@@ -1475,7 +1475,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 
 /*!
-    \qmlproperty enumeration QtQuick2::GridView::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick::GridView::effectiveLayoutDirection
     This property holds the effective layout direction of the grid.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -1486,7 +1486,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-  \qmlproperty enumeration QtQuick2::GridView::verticalLayoutDirection
+  \qmlproperty enumeration QtQuick::GridView::verticalLayoutDirection
   This property holds the vertical layout direction of the grid.
 
   Possible values:
@@ -1500,7 +1500,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-  \qmlproperty bool QtQuick2::GridView::keyNavigationWraps
+  \qmlproperty bool QtQuick::GridView::keyNavigationWraps
   This property holds whether the grid wraps key navigation
 
     If this is true, key navigation that would move the current item selection
@@ -1510,7 +1510,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     By default, key navigation is not wrapped.
 */
 /*!
-    \qmlproperty int QtQuick2::GridView::cacheBuffer
+    \qmlproperty int QtQuick::GridView::cacheBuffer
     This property determines whether delegates are retained outside the
     visible area of the view.
 
@@ -1548,7 +1548,7 @@ void QQuickGridView::setHighlightMoveDuration(int duration)
 }
 
 /*!
-  \qmlproperty enumeration QtQuick2::GridView::flow
+  \qmlproperty enumeration QtQuick::GridView::flow
   This property holds the flow of the grid.
 
     Possible values:
@@ -1585,8 +1585,8 @@ void QQuickGridView::setFlow(Flow flow)
 
 
 /*!
-  \qmlproperty real QtQuick2::GridView::cellWidth
-  \qmlproperty real QtQuick2::GridView::cellHeight
+  \qmlproperty real QtQuick::GridView::cellWidth
+  \qmlproperty real QtQuick::GridView::cellHeight
 
   These properties holds the width and height of each cell in the grid.
 
@@ -1626,7 +1626,7 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
     }
 }
 /*!
-    \qmlproperty enumeration QtQuick2::GridView::snapMode
+    \qmlproperty enumeration QtQuick::GridView::snapMode
 
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
@@ -1658,7 +1658,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 
 
 /*!
-    \qmlproperty Component QtQuick2::GridView::footer
+    \qmlproperty Component QtQuick::GridView::footer
     This property holds the component to use as the footer.
 
     An instance of the footer component is created for each view.  The
@@ -1667,7 +1667,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     \sa header, footerItem
 */
 /*!
-    \qmlproperty Component QtQuick2::GridView::header
+    \qmlproperty Component QtQuick::GridView::header
     This property holds the component to use as the header.
 
     An instance of the header component is created for each view.  The
@@ -1677,7 +1677,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Item QtQuick2::GridView::headerItem
+    \qmlproperty Item QtQuick::GridView::headerItem
     This holds the header item created from the \l header component.
 
     An instance of the header component is created for each view.  The
@@ -1687,7 +1687,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Item QtQuick2::GridView::footerItem
+    \qmlproperty Item QtQuick::GridView::footerItem
     This holds the footer item created from the \l footer component.
 
     An instance of the footer component is created for each view.  The
@@ -1697,7 +1697,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::populate
+    \qmlproperty Transition QtQuick::GridView::populate
 
     This property holds the transition to apply to the items that are initially created
     for a view.
@@ -1731,7 +1731,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::add
+    \qmlproperty Transition QtQuick::GridView::add
 
     This property holds the transition to apply to items that are added to the view.
 
@@ -1765,7 +1765,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::addDisplaced
+    \qmlproperty Transition QtQuick::GridView::addDisplaced
 
     This property holds the transition to apply to items within the view that are displaced by
     the addition of other items to the view.
@@ -1803,7 +1803,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     \sa displaced, add, populate, ViewTransition
 */
 /*!
-    \qmlproperty Transition QtQuick2::GridView::move
+    \qmlproperty Transition QtQuick::GridView::move
 
     This property holds the transition to apply to items in the view that are being moved due
     to a move operation in the view's \l model.
@@ -1832,7 +1832,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::moveDisplaced
+    \qmlproperty Transition QtQuick::GridView::moveDisplaced
 
     This property holds the transition to apply to items that are displaced by a move operation in
     the view's \l model.
@@ -1868,7 +1868,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::remove
+    \qmlproperty Transition QtQuick::GridView::remove
 
     This property holds the transition to apply to items that are removed from the view.
 
@@ -1905,7 +1905,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::removeDisplaced
+    \qmlproperty Transition QtQuick::GridView::removeDisplaced
 
     This property holds the transition to apply to items in the view that are displaced by the
     removal of other items in the view.
@@ -1940,7 +1940,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
 */
 
 /*!
-    \qmlproperty Transition QtQuick2::GridView::displaced
+    \qmlproperty Transition QtQuick::GridView::displaced
     This property holds the generic transition to apply to items that have been displaced by
     any model operation that affects the view.
 
@@ -2109,7 +2109,7 @@ void QQuickGridView::initItem(int index, QObject *obj)
 }
 
 /*!
-    \qmlmethod QtQuick2::GridView::moveCurrentIndexUp()
+    \qmlmethod QtQuick::GridView::moveCurrentIndexUp()
 
     Move the currentIndex up one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2153,7 +2153,7 @@ void QQuickGridView::moveCurrentIndexUp()
 }
 
 /*!
-    \qmlmethod QtQuick2::GridView::moveCurrentIndexDown()
+    \qmlmethod QtQuick::GridView::moveCurrentIndexDown()
 
     Move the currentIndex down one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2196,7 +2196,7 @@ void QQuickGridView::moveCurrentIndexDown()
 }
 
 /*!
-    \qmlmethod QtQuick2::GridView::moveCurrentIndexLeft()
+    \qmlmethod QtQuick::GridView::moveCurrentIndexLeft()
 
     Move the currentIndex left one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2239,7 +2239,7 @@ void QQuickGridView::moveCurrentIndexLeft()
 
 
 /*!
-    \qmlmethod QtQuick2::GridView::moveCurrentIndexRight()
+    \qmlmethod QtQuick::GridView::moveCurrentIndexRight()
 
     Move the currentIndex right one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2474,7 +2474,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 }
 
 /*!
-    \qmlmethod QtQuick2::GridView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod QtQuick::GridView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:
@@ -2510,8 +2510,8 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod QtQuick2::GridView::positionViewAtBeginning()
-    \qmlmethod QtQuick2::GridView::positionViewAtEnd()
+    \qmlmethod QtQuick::GridView::positionViewAtBeginning()
+    \qmlmethod QtQuick::GridView::positionViewAtEnd()
 
     Positions the view at the beginning or end, taking into account any header or footer.
 
@@ -2530,7 +2530,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod int QtQuick2::GridView::indexAt(int x, int y)
+    \qmlmethod int QtQuick::GridView::indexAt(int x, int y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -2543,7 +2543,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod Item QtQuick2::GridView::itemAt(int x, int y)
+    \qmlmethod Item QtQuick::GridView::itemAt(int x, int y)
 
     Returns the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is
@@ -2557,7 +2557,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 
 
 /*!
-    \qmlmethod QtQuick2::GridView::forceLayout()
+    \qmlmethod QtQuick::GridView::forceLayout()
 
     Responding to changes in the model is usually batched to happen only once
     per frame. This means that inside script blocks it is possible for the

@@ -270,7 +270,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     In some cases you may wish to use a Loader within a view delegate to improve delegate
     loading performance. This works well in most cases, but there is one important issue to
-    be aware of related to the \l{QtQuick2::Component#creation-context}{creation context} of a Component.
+    be aware of related to the \l{QtQuick::Component#creation-context}{creation context} of a Component.
 
     In the following example, the \c index context property inserted by the ListView into \c delegateComponent's
     context will be inaccessible to Text, as the Loader will use the creation context of \c myComponent as the parent
@@ -310,7 +310,7 @@ QQuickLoader::~QQuickLoader()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Loader::active
+    \qmlproperty bool QtQuick::Loader::active
     This property is \c true if the Loader is currently active.
     The default value for this property is \c true.
 
@@ -373,7 +373,7 @@ void QQuickLoader::setActive(bool newVal)
 
 
 /*!
-    \qmlproperty url QtQuick2::Loader::source
+    \qmlproperty url QtQuick::Loader::source
     This property holds the URL of the QML component to instantiate.
 
     Since \c {QtQuick 2.0}, Loader is able to load any type of object; it
@@ -433,7 +433,7 @@ void QQuickLoader::loadFromSource()
 }
 
 /*!
-    \qmlproperty Component QtQuick2::Loader::sourceComponent
+    \qmlproperty Component QtQuick::Loader::sourceComponent
     This property holds the \l{Component} to instantiate.
 
     \qml
@@ -501,7 +501,7 @@ void QQuickLoader::loadFromSourceComponent()
 }
 
 /*!
-    \qmlmethod object QtQuick2::Loader::setSource(url source, object properties)
+    \qmlmethod object QtQuick::Loader::setSource(url source, object properties)
 
     Creates an object instance of the given \a source component that will have
     the given \a properties. The \a properties argument is optional.  The instance
@@ -721,7 +721,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::Loader::status
+    \qmlproperty enumeration QtQuick::Loader::status
 
     This property holds the status of QML loading.  It can be one of:
     \list
@@ -811,7 +811,7 @@ void QQuickLoader::componentComplete()
 }
 
 /*!
-    \qmlsignal QtQuick2::Loader::onLoaded()
+    \qmlsignal QtQuick::Loader::onLoaded()
 
     This handler is called when the \l status becomes \c Loader.Ready, or on successful
     initial load.
@@ -819,7 +819,7 @@ void QQuickLoader::componentComplete()
 
 
 /*!
-\qmlproperty real QtQuick2::Loader::progress
+\qmlproperty real QtQuick::Loader::progress
 
 This property holds the progress of loading QML data from the network, from
 0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
@@ -841,7 +841,7 @@ qreal QQuickLoader::progress() const
 }
 
 /*!
-\qmlproperty bool QtQuick2::Loader::asynchronous
+\qmlproperty bool QtQuick::Loader::asynchronous
 
 This property holds whether the component will be instantiated asynchronously.
 
@@ -905,7 +905,7 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 }
 
 /*!
-    \qmlproperty object QtQuick2::Loader::item
+    \qmlproperty object QtQuick::Loader::item
     This property holds the top-level object that is currently loaded.
 
     Since \c {QtQuick 2.0}, Loader can load any object type.

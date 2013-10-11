@@ -42,7 +42,6 @@
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include "qv4mm_p.h"
-#include "qv4exception_p.h"
 
 #include <wtf/MathExtras.h>
 
@@ -124,19 +123,24 @@ QString Value::toQStringNoThrow() const
         {
             ExecutionContext *ctx = objectValue()->internalClass->engine->current;
             Scope scope(ctx);
+            ScopedValue ex(scope);
+            bool caughtException = false;
             try {
                 ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
                 if (prim->isPrimitive())
                     return prim->toQStringNoThrow();
-            } catch (Exception &e) {
-                e.accept(ctx);
+            } catch (...) {
+                ex = ctx->catchException();
+                caughtException = true;
+            }
+            // Can't nest try/catch due to CXX ABI limitations for foreign exception nesting.
+            if (caughtException) {
                 try {
-                    ScopedValue ex(scope, e.value());
                     ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
                     if (prim->isPrimitive())
                         return prim->toQStringNoThrow();
-                } catch(Exception &e) {
-                    e.accept(ctx);
+                } catch(...) {
+                    ctx->catchException();
                 }
             }
             return QString();
@@ -398,10 +402,7 @@ void WeakValue::markOnce()
 {
     if (!d)
         return;
-    Managed *m = d->value.asManaged();
-    if (!m)
-        return;
-    m->mark();
+    d->value.mark();
 }
 
 PersistentValuePrivate::PersistentValuePrivate(ReturnedValue v, ExecutionEngine *e, bool weak)

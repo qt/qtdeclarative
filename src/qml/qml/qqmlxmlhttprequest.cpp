@@ -925,7 +925,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
         v4->current->throwTypeError();
 
     name->makeIdentifier();
-    if (name->isEqualTo(v4->id_length))
+    if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->list.count()).asReturnedValue();
 
     QV8Engine *engine = v4->v8Engine;
@@ -981,7 +981,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
 
     name->makeIdentifier();
 
-    if (name->isEqualTo(v4->id_length))
+    if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }
@@ -1105,7 +1105,6 @@ private:
     PersistentValue m_me;
 
     void dispatchCallback(const ValueRef me);
-    void printError(const Exception &e);
 
     int m_status;
     QString m_statusText;
@@ -1560,7 +1559,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
             QV4::ScopedCallData callData(scope, 0);
-            callData->thisObject = activationObject.asValue();
+            callData->thisObject = activationObject.asReturnedValue();
             callback->call(callData);
         }
 
@@ -1568,18 +1567,10 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         // deleted explicitly (e.g., by a Loader deleting the itemContext when
         // the source is changed).  We do nothing in this case, as the evaluation
         // cannot succeed.
-    } catch(Exception &e) {
-        e.accept(ctx);
-        printError(e);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }
-}
-
-// Must have a handle scope
-void QQmlXMLHttpRequest::printError(const Exception &e)
-{
-    QQmlError error;
-    QQmlExpressionPrivate::exceptionToError(e, error);
-    QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
 }
 
 void QQmlXMLHttpRequest::destroyNetwork()

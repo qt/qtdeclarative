@@ -133,7 +133,7 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, ObjectRef o)
 
 ReturnedValue ArrayPrototype::method_isArray(SimpleCallContext *ctx)
 {
-    bool isArray = ctx->callData->argc ? ctx->callData->args[0].asArrayObject() : false;
+    bool isArray = ctx->callData->argc && ctx->callData->args[0].asArrayObject();
     return Encode(isArray);
 }
 
@@ -523,7 +523,7 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
                     --instance->arrayAttributes;
                     *instance->arrayAttributes = Attr_Data;
                 }
-                instance->arrayData->value = v;
+                instance->arrayData->value = v.asReturnedValue();
             } else {
                 uint idx = instance->allocArrayValue(v);
                 instance->sparseArray->push_front(idx);
@@ -643,7 +643,7 @@ ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
         ctx->throwTypeError();
 
     ScopedCallData callData(scope, 3);
-    callData->args[2] = instance.asValue();
+    callData->args[2] = instance;
     callData->thisObject = ctx->argument(1);
     ScopedValue r(scope);
     ScopedValue v(scope);

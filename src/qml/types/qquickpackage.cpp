@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty string QtQuick2::Package::name
+    \qmlattachedproperty string QtQuick::Package::name
     This attached property holds the name of an item within a Package.
 */
 

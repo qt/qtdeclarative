@@ -59,19 +59,19 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \qmlmethod QtQuick.Particles2::ItemParticle::freeze(Item item)
+    \qmlmethod QtQuick.Particles::ItemParticle::freeze(Item item)
 
     Suspends the flow of time for the logical particle which item represents, allowing you to control its movement.
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ItemParticle::unfreeze(Item item)
+    \qmlmethod QtQuick.Particles::ItemParticle::unfreeze(Item item)
 
     Restarts the flow of time for the logical particle which item represents, allowing it to be moved by the particle system again.
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ItemParticle::take(Item item, bool prioritize)
+    \qmlmethod QtQuick.Particles::ItemParticle::take(Item item, bool prioritize)
 
     Asks the ItemParticle to take over control of item. It will be emitted when there is a logical particle available.
 
@@ -79,13 +79,13 @@ QT_BEGIN_NAMESPACE
     head of the queue.
 */
 /*!
-    \qmlmethod QtQuick.Particles2::ItemParticle::give(Item item)
+    \qmlmethod QtQuick.Particles::ItemParticle::give(Item item)
 
     Orders the ItemParticle to give you control of the item. It will cease controlling it and the item will lose its association to the logical particle.
 */
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::ItemParticle::fade
+    \qmlproperty bool QtQuick.Particles::ItemParticle::fade
 
     If true, the item will automatically be faded in and out
     at the ends of its lifetime. If false, you will have to
@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
     Default is true.
 */
 /*!
-    \qmlproperty Component QtQuick.Particles2::ItemParticle::delegate
+    \qmlproperty Component QtQuick.Particles::ItemParticle::delegate
 
     An instance of the delegate will be created for every logical
     particle, and moved along with it.

@@ -43,7 +43,7 @@
 #define QV4GLOBAL_H
 
 #include <QtCore/qglobal.h>
-
+#include <QString>
 #include <qtqmlglobal.h>
 
 #if defined(Q_CC_MSVC)
@@ -231,6 +231,14 @@ struct PropertyAttributes
         return m_all != other.m_all;
     }
 };
+
+struct StackFrame {
+    QString source;
+    QString function;
+    int line;
+    int column;
+};
+typedef QVector<StackFrame> StackTrace;
 
 }
 

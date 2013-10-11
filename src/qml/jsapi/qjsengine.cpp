@@ -49,7 +49,6 @@
 #include "private/qv4mm_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
-#include "private/qv4exception_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -269,9 +268,8 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         script.inheritContext = true;
         script.parse();
         result = script.run();
-    } catch (QV4::Exception& ex) {
-        ex.accept(ctx);
-        result = ex.value();
+    } catch (...) {
+        result = ctx->catchException();
     }
     return new QJSValuePrivate(d->m_v4Engine, result);
 }

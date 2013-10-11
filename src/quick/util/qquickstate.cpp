@@ -53,13 +53,13 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(stateChangeDebug, STATECHANGE_DEBUG);
 
-QQuickAction::QQuickAction()
+QQuickStateAction::QQuickStateAction()
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false), fromBinding(0), event(0),
   specifiedObject(0)
 {
 }
 
-QQuickAction::QQuickAction(QObject *target, const QString &propertyName,
+QQuickStateAction::QQuickStateAction(QObject *target, const QString &propertyName,
                const QVariant &value)
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false),
   property(target, propertyName, qmlEngine(target)), toValue(value),
@@ -70,7 +70,7 @@ QQuickAction::QQuickAction(QObject *target, const QString &propertyName,
         fromValue = property.read();
 }
 
-QQuickAction::QQuickAction(QObject *target, const QString &propertyName,
+QQuickStateAction::QQuickStateAction(QObject *target, const QString &propertyName,
                QQmlContext *context, const QVariant &value)
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false),
   property(target, propertyName, context), toValue(value),
@@ -82,33 +82,33 @@ QQuickAction::QQuickAction(QObject *target, const QString &propertyName,
 }
 
 
-QQuickActionEvent::~QQuickActionEvent()
+QQuickStateActionEvent::~QQuickStateActionEvent()
 {
 }
 
-void QQuickActionEvent::execute(Reason)
+void QQuickStateActionEvent::execute(Reason)
 {
 }
 
-bool QQuickActionEvent::isReversable()
-{
-    return false;
-}
-
-void QQuickActionEvent::reverse(Reason)
-{
-}
-
-bool QQuickActionEvent::changesBindings()
+bool QQuickStateActionEvent::isReversable()
 {
     return false;
 }
 
-void QQuickActionEvent::clearBindings()
+void QQuickStateActionEvent::reverse(Reason)
 {
 }
 
-bool QQuickActionEvent::override(QQuickActionEvent *other)
+bool QQuickStateActionEvent::changesBindings()
+{
+    return false;
+}
+
+void QQuickStateActionEvent::clearBindings()
+{
+}
+
+bool QQuickStateActionEvent::override(QQuickStateActionEvent *other)
 {
     Q_UNUSED(other);
     return false;
@@ -168,7 +168,7 @@ QQuickState::~QQuickState()
 }
 
 /*!
-    \qmlproperty string QtQuick2::State::name
+    \qmlproperty string QtQuick::State::name
     This property holds the name of the state.
 
     Each state should have a unique name within its item.
@@ -199,7 +199,7 @@ bool QQuickState::isWhenKnown() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::State::when
+    \qmlproperty bool QtQuick::State::when
     This property holds when the state should be applied.
 
     This should be set to an expression that evaluates to \c true when you want the state to
@@ -237,7 +237,7 @@ void QQuickState::setWhen(QQmlBinding *when)
 }
 
 /*!
-    \qmlproperty string QtQuick2::State::extend
+    \qmlproperty string QtQuick::State::extend
     This property holds the state that this state extends.
 
     When a state extends another state, it inherits all the changes of that state.
@@ -258,7 +258,7 @@ void QQuickState::setExtends(const QString &extends)
 }
 
 /*!
-    \qmlproperty list<Change> QtQuick2::State::changes
+    \qmlproperty list<Change> QtQuick::State::changes
     This property holds the changes to apply for this state
     \default
 
@@ -361,7 +361,7 @@ void QQuickState::cancel()
     d->transitionManager.cancel();
 }
 
-void QQuickAction::deleteFromBinding()
+void QQuickStateAction::deleteFromBinding()
 {
     if (fromBinding) {
         QQmlPropertyPrivate::setBinding(property, 0);
@@ -457,7 +457,7 @@ bool QQuickState::removeEntryFromRevertList(QObject *target, const QString &name
     return false;
 }
 
-void QQuickState::addEntryToRevertList(const QQuickAction &action)
+void QQuickState::addEntryToRevertList(const QQuickStateAction &action)
 {
     Q_D(QQuickState);
 
@@ -492,15 +492,15 @@ void QQuickState::removeAllEntriesFromRevertList(QObject *target)
      }
 }
 
-void QQuickState::addEntriesToRevertList(const QList<QQuickAction> &actionList)
+void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionList)
 {
     Q_D(QQuickState);
     if (isStateActive()) {
         QList<QQuickSimpleAction> simpleActionList;
 
-        QListIterator<QQuickAction> actionListIterator(actionList);
+        QListIterator<QQuickStateAction> actionListIterator(actionList);
         while(actionListIterator.hasNext()) {
-            const QQuickAction &action = actionListIterator.next();
+            const QQuickStateAction &action = actionListIterator.next();
             QQuickSimpleAction simpleAction(action);
             action.property.write(action.toValue);
             if (!action.toBinding.isNull()) {
@@ -582,14 +582,14 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
     QQuickStatePrivate::SimpleActionList additionalReverts;
     // First add the reverse of all the applyList actions
     for (int ii = 0; ii < applyList.count(); ++ii) {
-        QQuickAction &action = applyList[ii];
+        QQuickStateAction &action = applyList[ii];
 
         if (action.event) {
             if (!action.event->isReversable())
                 continue;
             bool found = false;
             for (int jj = 0; jj < d->revertList.count(); ++jj) {
-                QQuickActionEvent *event = d->revertList.at(jj).event();
+                QQuickStateActionEvent *event = d->revertList.at(jj).event();
                 if (event && event->type() == action.event->type()) {
                     if (action.event->override(event)) {
                         found = true;
@@ -647,11 +647,11 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
     for (int ii = 0; ii < d->revertList.count(); ++ii) {
         bool found = false;
         if (d->revertList.at(ii).event()) {
-            QQuickActionEvent *event = d->revertList.at(ii).event();
+            QQuickStateActionEvent *event = d->revertList.at(ii).event();
             if (!event->isReversable())
                 continue;
             for (int jj = 0; !found && jj < applyList.count(); ++jj) {
-                const QQuickAction &action = applyList.at(jj);
+                const QQuickStateAction &action = applyList.at(jj);
                 if (action.event && action.event->type() == event->type()) {
                     if (action.event->override(event))
                         found = true;
@@ -659,7 +659,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             }
         } else {
             for (int jj = 0; !found && jj < applyList.count(); ++jj) {
-                const QQuickAction &action = applyList.at(jj);
+                const QQuickStateAction &action = applyList.at(jj);
                 if (action.property == d->revertList.at(ii).property())
                     found = true;
             }
@@ -671,7 +671,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             if (delBinding)
                 delBinding->destroy();
 
-            QQuickAction a;
+            QQuickStateAction a;
             a.property = d->revertList.at(ii).property();
             a.fromValue = cur;
             a.toValue = d->revertList.at(ii).value();
@@ -696,11 +696,11 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
 #ifndef QT_NO_DEBUG_STREAM
     // Output for debugging
     if (stateChangeDebug()) {
-        foreach(const QQuickAction &action, applyList) {
+        foreach(const QQuickStateAction &action, applyList) {
             if (action.event)
-                qWarning() << "    QQuickAction event:" << action.event->type();
+                qWarning() << "    QQuickStateAction event:" << action.event->type();
             else
-                qWarning() << "    QQuickAction:" << action.property.object()
+                qWarning() << "    QQuickStateAction:" << action.property.object()
                            << action.property.name() << "From:" << action.fromValue
                            << "To:" << action.toValue;
         }

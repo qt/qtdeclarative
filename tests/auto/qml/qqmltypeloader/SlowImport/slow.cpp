@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Canonical Limited and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,45 +38,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4EXCEPTION_GNU_P
-#define QV4EXCEPTION_GNU_P
 
-#include <qglobal.h>
-#include "qv4value_p.h"
-#include "qv4engine_p.h"
+#include "slow.h"
 
-QT_BEGIN_NAMESPACE
+#include <QThread>
 
-namespace QV4 {
+SlowStuff::SlowStuff()
+{
+    QThread::usleep(500000);
+}
 
-struct Q_QML_EXPORT Exception {
-    static void throwException(ExecutionContext *throwingContext, const Value &exceptionValue);
-
-    ~Exception();
-
-    void accept(ExecutionContext *catchingContext);
-
-    void partiallyUnwindContext(ExecutionContext *catchingContext);
-
-    ReturnedValue value() const { return e->exceptionValue.asReturnedValue(); }
-
-    ExecutionEngine::StackTrace stackTrace() const { return m_stackTrace; }
-    ExecutionEngine *engine() const { return e; }
-
-private:
-    void *operator new(size_t, void *p) { return p; }
-
-    explicit Exception(ExecutionContext *throwingContext, const Value &exceptionValue);
-
-    ExecutionEngine *e;
-    ExecutionContext *throwingContext;
-    bool accepted;
-    ExecutionEngine::StackTrace m_stackTrace;
-    static void throwInternal(ExecutionContext *throwingContext, const Value &exceptionValue);
-};
-
-} // namespace QV4
-
-QT_END_NAMESPACE
-
-#endif // QV4EXCEPTION_GNU_P

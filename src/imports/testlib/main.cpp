@@ -114,7 +114,7 @@ public Q_SLOTS:
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
         QV4::Scope scope(v4);
 
-        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+        QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
         if (stack.size() > frameIndex + 1) {
             QV4::ScopedValue s(scope, v4->newString(stack.at(frameIndex + 1).source));
             return QQmlV4Handle(s);
@@ -126,7 +126,7 @@ public Q_SLOTS:
         QQmlEngine *engine = qmlEngine(this);
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
 
-        QVector<QV4::ExecutionEngine::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+        QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
         if (stack.size() > frameIndex + 1)
             return stack.at(frameIndex + 1).line;
         return -1;

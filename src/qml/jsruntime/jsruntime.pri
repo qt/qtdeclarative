@@ -46,7 +46,6 @@ SOURCES += \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4qmlextensions.cpp \
     $$PWD/qv4stacktrace.cpp \
-    $$PWD/qv4exception.cpp \
     $$PWD/qv4vme_moth.cpp
 
 HEADERS += \
@@ -98,7 +97,6 @@ HEADERS += \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4qmlextensions_p.h \
     $$PWD/qv4stacktrace_p.h \
-    $$PWD/qv4exception_p.h \
     $$PWD/qv4vme_moth_p.h
 
 # Use SSE2 floating point math on 32 bit instead of the default
@@ -112,13 +110,12 @@ linux*|mac {
     LIBS += -ldl
 }
 
-# Only on Android/ARM at the moment, because only there we have issues
-# replacing __gnu_Unwind_Find_exidx with our own implementation,
-# and thus require static libgcc linkage.
-android:equals(QT_ARCH, "arm"):*g++* {
-    static_libgcc = $$system($$QMAKE_CXX -print-file-name=libgcc.a)
-    LIBS += $$static_libgcc
-    SOURCES += $$PWD/qv4exception_gcc.cpp
+!win32:!ios:!mac {
+    *g++*:equals(QT_ARCH, "arm") {
+        static_libgcc = $$system($$QMAKE_CXX -print-file-name=libgcc.a)
+        LIBS += $$static_libgcc
+    }
+    SOURCES += $$PWD/qv4engine_cxxabi.cpp
     DEFINES += V4_CXX_ABI_EXCEPTION
 }
 

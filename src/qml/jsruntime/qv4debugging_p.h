@@ -102,7 +102,7 @@ public: // compile-time interface
     void maybeBreakAtInstruction(const uchar *code, bool breakPointHit);
 
 public: // execution hooks
-    void aboutToThrow(const Value &value);
+    void aboutToThrow(const ValueRef value);
 
 private:
     // requires lock to be held

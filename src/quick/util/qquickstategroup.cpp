@@ -141,7 +141,7 @@ QList<QQuickState *> QQuickStateGroup::states() const
 }
 
 /*!
-  \qmlproperty list<State> QtQuick2::StateGroup::states
+  \qmlproperty list<State> QtQuick::StateGroup::states
   This property holds a list of states defined by the state group.
 
   \qml
@@ -202,7 +202,7 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
 }
 
 /*!
-  \qmlproperty list<Transition> QtQuick2::StateGroup::transitions
+  \qmlproperty list<Transition> QtQuick::StateGroup::transitions
   This property holds a list of transitions defined by the state group.
 
   \qml
@@ -256,7 +256,7 @@ void QQuickStateGroupPrivate::clear_transitions(QQmlListProperty<QQuickTransitio
 }
 
 /*!
-  \qmlproperty string QtQuick2::StateGroup::state
+  \qmlproperty string QtQuick::StateGroup::state
 
   This property holds the name of the current state of the state group.
 

@@ -50,6 +50,7 @@ PRIVATETESTS += \
     qqmllistcompositor \
     qqmllistmodel \
     qqmllistmodelworkerscript \
+    qqmltypeloader \
     qqmlparser \
     qquickworkerscript \
     qqmlbundle \

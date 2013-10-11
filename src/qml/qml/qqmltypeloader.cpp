@@ -619,12 +619,10 @@ void QQmlDataBlob::tryDone()
 
         // Locking is not required here, as anyone expecting callbacks must
         // already be protected against the blob being completed (as set above);
-        if (m_data.isAsync()) {
 #ifdef DATABLOB_DEBUG
-            qWarning("QQmlDataBlob: Dispatching completed");
+        qWarning("QQmlDataBlob: Dispatching completed");
 #endif
-            m_manager->m_thread->callCompleted(this);
-        }
+        m_manager->m_thread->callCompleted(this);
 
         release();
     }
@@ -2768,10 +2766,8 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     try {
         m_program->qml = qmlglobal;
         m_program->run();
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
-        QQmlError error;
-        QQmlExpressionPrivate::exceptionToError(e, error);
+    } catch (...) {
+        QQmlError error = QQmlError::catchJavaScriptException(ctx);
         if (error.isValid())
             ep->warning(error);
     }

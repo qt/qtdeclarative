@@ -667,7 +667,7 @@ QQuickShaderEffect::~QQuickShaderEffect()
 }
 
 /*!
-    \qmlproperty string QtQuick2::ShaderEffect::fragmentShader
+    \qmlproperty string QtQuick::ShaderEffect::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
     The default shader passes the texture coordinate along to the fragment
@@ -694,7 +694,7 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty string QtQuick2::ShaderEffect::vertexShader
+    \qmlproperty string QtQuick::ShaderEffect::vertexShader
 
     This property holds the vertex shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the
@@ -722,7 +722,7 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::ShaderEffect::blending
+    \qmlproperty bool QtQuick::ShaderEffect::blending
 
     If this property is true, the output from the \l fragmentShader is blended
     with the background using source-over blend mode. If false, the background
@@ -742,7 +742,7 @@ void QQuickShaderEffect::setBlending(bool enable)
 }
 
 /*!
-    \qmlproperty variant QtQuick2::ShaderEffect::mesh
+    \qmlproperty variant QtQuick::ShaderEffect::mesh
 
     This property defines the mesh used to draw the ShaderEffect. It can hold
     any \l GridMesh object.
@@ -797,7 +797,7 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::ShaderEffect::cullMode
+    \qmlproperty enumeration QtQuick::ShaderEffect::cullMode
 
     This property defines which sides of the item should be visible.
 
@@ -848,7 +848,7 @@ bool QQuickShaderEffect::event(QEvent *event)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::ShaderEffect::status
+    \qmlproperty enumeration QtQuick::ShaderEffect::status
 
     This property tells the current status of the OpenGL shader program.
 
@@ -866,7 +866,7 @@ bool QQuickShaderEffect::event(QEvent *event)
 */
 
 /*!
-    \qmlproperty string QtQuick2::ShaderEffect::log
+    \qmlproperty string QtQuick::ShaderEffect::log
 
     This property holds a log of warnings and errors from the latest attempt at compiling and
     linking the OpenGL shader program. It is updated at the same time \l status is set to Compiled

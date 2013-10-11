@@ -66,7 +66,7 @@ QQuickEllipseExtruder::QQuickEllipseExtruder(QObject *parent) :
 }
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::EllipseShape::fill
+    \qmlproperty bool QtQuick.Particles::EllipseShape::fill
     If fill is true the ellipse is filled; otherwise it is just a border.
 
     Default is true.

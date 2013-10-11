@@ -383,7 +383,7 @@ QQuickSpringAnimation::~QQuickSpringAnimation()
 }
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::velocity
+    \qmlproperty real QtQuick::SpringAnimation::velocity
 
     This property holds the maximum velocity allowed when tracking the source.
 
@@ -405,7 +405,7 @@ void QQuickSpringAnimation::setVelocity(qreal velocity)
 }
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::spring
+    \qmlproperty real QtQuick::SpringAnimation::spring
 
     This property describes how strongly the target is pulled towards the
     source. The default value is 0 (that is, the spring-like motion is disabled).
@@ -429,7 +429,7 @@ void QQuickSpringAnimation::setSpring(qreal spring)
 }
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::damping
+    \qmlproperty real QtQuick::SpringAnimation::damping
     This property holds the spring damping value.
 
     This value describes how quickly the spring-like motion comes to rest.
@@ -455,7 +455,7 @@ void QQuickSpringAnimation::setDamping(qreal damping)
 
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::epsilon
+    \qmlproperty real QtQuick::SpringAnimation::epsilon
     This property holds the spring epsilon.
 
     The epsilon is the rate and amount of change in the value which is close enough
@@ -477,7 +477,7 @@ void QQuickSpringAnimation::setEpsilon(qreal epsilon)
 }
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::modulus
+    \qmlproperty real QtQuick::SpringAnimation::modulus
     This property holds the modulus value. The default value is 0.
 
     Setting a \a modulus forces the target value to "wrap around" at the modulus.
@@ -501,7 +501,7 @@ void QQuickSpringAnimation::setModulus(qreal modulus)
 }
 
 /*!
-    \qmlproperty real QtQuick2::SpringAnimation::mass
+    \qmlproperty real QtQuick::SpringAnimation::mass
     This property holds the "mass" of the property being moved.
 
     The value is 1.0 by default.

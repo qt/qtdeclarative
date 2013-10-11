@@ -52,7 +52,7 @@ namespace QV4 {
 struct StringObject: Object {
     Q_MANAGED
 
-    Value value;
+    SafeValue value;
     mutable Property tmpProperty;
     StringObject(ExecutionEngine *engine, const ValueRef value);
 
@@ -62,7 +62,7 @@ struct StringObject: Object {
 
 protected:
     StringObject(InternalClass *ic);
-    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs);
     static void markObjects(Managed *that);
 };
 

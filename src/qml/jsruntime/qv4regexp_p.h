@@ -119,7 +119,7 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *, const StringRef);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static Property *advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes);
+    static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
 
 private:
     friend class RegExpCache;

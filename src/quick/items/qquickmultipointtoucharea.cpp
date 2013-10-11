@@ -65,7 +65,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 */
 
 /*!
-    \qmlproperty int QtQuick2::TouchPoint::pointId
+    \qmlproperty int QtQuick::TouchPoint::pointId
 
     This property holds the point id of the touch point.
 
@@ -80,8 +80,8 @@ void QQuickTouchPoint::setPointId(int id)
 }
 
 /*!
-    \qmlproperty real QtQuick2::TouchPoint::x
-    \qmlproperty real QtQuick2::TouchPoint::y
+    \qmlproperty real QtQuick::TouchPoint::x
+    \qmlproperty real QtQuick::TouchPoint::y
 
     These properties hold the current position of the touch point.
 */
@@ -103,9 +103,9 @@ void QQuickTouchPoint::setY(qreal y)
 }
 
 /*!
-    \qmlproperty real QtQuick2::TouchPoint::pressure
-    \qmlproperty vector2d QtQuick2::TouchPoint::velocity
-    \qmlproperty rectangle QtQuick2::TouchPoint::area
+    \qmlproperty real QtQuick::TouchPoint::pressure
+    \qmlproperty vector2d QtQuick::TouchPoint::velocity
+    \qmlproperty rectangle QtQuick::TouchPoint::area
 
     These properties hold additional information about the current state of the touch point.
 
@@ -143,7 +143,7 @@ void QQuickTouchPoint::setArea(const QRectF &area)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TouchPoint::pressed
+    \qmlproperty bool QtQuick::TouchPoint::pressed
 
     This property holds whether the touch point is currently pressed.
 */
@@ -156,8 +156,8 @@ void QQuickTouchPoint::setPressed(bool pressed)
 }
 
 /*!
-    \qmlproperty real QtQuick2::TouchPoint::startX
-    \qmlproperty real QtQuick2::TouchPoint::startY
+    \qmlproperty real QtQuick::TouchPoint::startX
+    \qmlproperty real QtQuick::TouchPoint::startY
 
     These properties hold the starting position of the touch point.
 */
@@ -179,8 +179,8 @@ void QQuickTouchPoint::setStartY(qreal startY)
 }
 
 /*!
-    \qmlproperty real QtQuick2::TouchPoint::previousX
-    \qmlproperty real QtQuick2::TouchPoint::previousY
+    \qmlproperty real QtQuick::TouchPoint::previousX
+    \qmlproperty real QtQuick::TouchPoint::previousY
 
     These properties hold the previous position of the touch point.
 */
@@ -201,8 +201,8 @@ void QQuickTouchPoint::setPreviousY(qreal previousY)
 }
 
 /*!
-    \qmlproperty real QtQuick2::TouchPoint::sceneX
-    \qmlproperty real QtQuick2::TouchPoint::sceneY
+    \qmlproperty real QtQuick::TouchPoint::sceneX
+    \qmlproperty real QtQuick::TouchPoint::sceneY
 
     These properties hold the current position of the touch point in scene coordinates.
 */
@@ -251,7 +251,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onPressed(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::onPressed(list<TouchPoint> touchPoints)
 
     This handler is called when new touch points are added. \a touchPoints is a list of these new points.
 
@@ -260,19 +260,19 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::onUpdated(list<TouchPoint> touchPoints)
 
     This handler is called when existing touch points are updated. \a touchPoints is a list of these updated points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onReleased(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::onReleased(list<TouchPoint> touchPoints)
 
     This handler is called when existing touch points are removed. \a touchPoints is a list of these removed points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onCanceled(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::onCanceled(list<TouchPoint> touchPoints)
 
     This handler is called when new touch events have been canceled because another item stole the touch event handling.
 
@@ -287,7 +287,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onGestureStarted(GestureEvent gesture)
+    \qmlsignal QtQuick::MultiPointTouchArea::onGestureStarted(GestureEvent gesture)
 
     This handler is called when the global drag threshold has been reached.
 
@@ -300,7 +300,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::onTouchUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick::MultiPointTouchArea::onTouchUpdated(list<TouchPoint> touchPoints)
 
     This handler is called when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
     removing or canceling previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
@@ -308,7 +308,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlproperty list<TouchPoint> QtQuick2::MultiPointTouchArea::touchPoints
+    \qmlproperty list<TouchPoint> QtQuick::MultiPointTouchArea::touchPoints
 
     This property holds a set of user-defined touch point objects that can be bound to.
 
@@ -349,8 +349,8 @@ QQuickMultiPointTouchArea::~QQuickMultiPointTouchArea()
 }
 
 /*!
-    \qmlproperty int QtQuick2::MultiPointTouchArea::minimumTouchPoints
-    \qmlproperty int QtQuick2::MultiPointTouchArea::maximumTouchPoints
+    \qmlproperty int QtQuick::MultiPointTouchArea::minimumTouchPoints
+    \qmlproperty int QtQuick::MultiPointTouchArea::maximumTouchPoints
 
     These properties hold the range of touch points to be handled by the touch area.
 

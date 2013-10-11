@@ -131,11 +131,11 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Object QtQuick2::PropertyChanges::target
+    \qmlproperty Object QtQuick::PropertyChanges::target
     This property holds the object which contains the properties to be changed.
 */
 
-class QQuickReplaceSignalHandler : public QQuickActionEvent
+class QQuickReplaceSignalHandler : public QQuickStateActionEvent
 {
 public:
     QQuickReplaceSignalHandler() {}
@@ -163,7 +163,7 @@ public:
     }
 
     virtual bool needsCopy() { return true; }
-    virtual void copyOriginals(QQuickActionEvent *other)
+    virtual void copyOriginals(QQuickStateActionEvent *other)
     {
         QQuickReplaceSignalHandler *rsh = static_cast<QQuickReplaceSignalHandler*>(other);
         saveCurrentValues();
@@ -179,7 +179,7 @@ public:
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
     }
 
-    virtual bool override(QQuickActionEvent*other) {
+    virtual bool override(QQuickStateActionEvent*other) {
         if (other == this)
             return true;
         if (other->type() != type())
@@ -400,7 +400,7 @@ void QQuickPropertyChanges::setObject(QObject *o)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PropertyChanges::restoreEntryValues
+    \qmlproperty bool QtQuick::PropertyChanges::restoreEntryValues
 
     This property holds whether the previous values should be restored when
     leaving the state.
@@ -445,7 +445,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
     for (int ii = 0; ii < d->properties.count(); ++ii) {
 
-        QQuickAction a(d->object, d->properties.at(ii).first,
+        QQuickStateAction a(d->object, d->properties.at(ii).first,
                  qmlContext(this), d->properties.at(ii).second);
 
         if (a.property.isValid()) {
@@ -459,7 +459,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
         QQuickReplaceSignalHandler *handler = d->signalReplacements.at(ii);
 
         if (handler->property.isValid()) {
-            QQuickAction a;
+            QQuickStateAction a;
             a.event = handler;
             list << a;
         }
@@ -472,7 +472,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
         QQmlProperty prop = d->property(property);
 
         if (prop.isValid()) {
-            QQuickAction a;
+            QQuickStateAction a;
             a.restore = restoreEntryValues();
             a.property = prop;
             a.fromValue = a.property.read();
@@ -504,7 +504,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::PropertyChanges::explicit
+    \qmlproperty bool QtQuick::PropertyChanges::explicit
 
     If explicit is set to true, any potential bindings will be interpreted as
     once-off assignments that occur when the state is entered.
@@ -607,7 +607,7 @@ void QQuickPropertyChanges::changeValue(const QString &name, const QVariant &val
         }
     }
 
-    QQuickAction action;
+    QQuickStateAction action;
     action.restore = restoreEntryValues();
     action.property = d->property(name);
     action.fromValue = action.property.read();
@@ -678,7 +678,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             newBinding->setTarget(d->property(name));
             QQmlPropertyPrivate::setBinding(d->property(name), newBinding, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
         } else {
-            QQuickAction action;
+            QQuickStateAction action;
             action.restore = restoreEntryValues();
             action.property = d->property(name);
             action.fromValue = action.property.read();

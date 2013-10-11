@@ -735,10 +735,10 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
     \inqmlmodule QtQml
     \brief Provides locale specific properties and formatted data
 
-    The Locale object may only be created via the \l{QtQml2::Qt::locale()}{Qt.locale()} function.
+    The Locale object may only be created via the \l{QtQml::Qt::locale()}{Qt.locale()} function.
     It cannot be created directly.
 
-    The \l{QtQml2::Qt::locale()}{Qt.locale()} function returns a JS Locale object representing the
+    The \l{QtQml::Qt::locale()}{Qt.locale()} function returns a JS Locale object representing the
     locale with the specified name, which has the format
     "language[_territory][.codeset][@modifier]" or "C".
 
@@ -864,7 +864,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 }
 
 /*!
-    \qmlproperty string QtQml2::Locale::name
+    \qmlproperty string QtQml::Locale::name
 
     Holds the language and country of this locale as a
     string of the form "language_country", where
@@ -873,50 +873,50 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::decimalPoint
+    \qmlproperty string QtQml::Locale::decimalPoint
 
     Holds the decimal point character of this locale.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::groupSeparator
+    \qmlproperty string QtQml::Locale::groupSeparator
 
     Holds the group separator character of this locale.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::percent
+    \qmlproperty string QtQml::Locale::percent
 
     Holds the percent character of this locale.
 */
 
 
 /*!
-    \qmlproperty string QtQml2::Locale::zeroDigit
+    \qmlproperty string QtQml::Locale::zeroDigit
 
     Holds Returns the zero digit character of this locale.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::negativeSign
+    \qmlproperty string QtQml::Locale::negativeSign
 
     Holds the negative sign character of this locale.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::positiveSign
+    \qmlproperty string QtQml::Locale::positiveSign
 
     Holds the positive sign character of this locale.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::exponential
+    \qmlproperty string QtQml::Locale::exponential
 
     Holds the exponential character of this locale.
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::dateTimeFormat(type)
+    \qmlmethod string QtQml::Locale::dateTimeFormat(type)
 
     Returns the date time format used for the current locale.
     \a type specifies the FormatType to return.
@@ -925,7 +925,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::dateFormat(type)
+    \qmlmethod string QtQml::Locale::dateFormat(type)
 
     Returns the date format used for the current locale.
     \a type specifies the FormatType to return.
@@ -934,7 +934,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::timeFormat(type)
+    \qmlmethod string QtQml::Locale::timeFormat(type)
 
     Returns the time format used for the current locale.
     \a type specifies the FormatType to return.
@@ -943,7 +943,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::monthName(month, type)
+    \qmlmethod string QtQml::Locale::monthName(month, type)
 
     Returns the localized name of \a month (0-11), in the optional
     \l FormatType specified by \a type.
@@ -955,7 +955,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::standaloneMonthName(month, type)
+    \qmlmethod string QtQml::Locale::standaloneMonthName(month, type)
 
     Returns the localized name of \a month (0-11) that is used as a
     standalone text, in the optional \l FormatType specified by \a type.
@@ -970,7 +970,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::dayName(day, type)
+    \qmlmethod string QtQml::Locale::dayName(day, type)
 
     Returns the localized name of the \a day (where 0 represents
     Sunday, 1 represents Monday and so on), in the optional
@@ -980,7 +980,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::standaloneDayName(day, type)
+    \qmlmethod string QtQml::Locale::standaloneDayName(day, type)
 
     Returns the localized name of the \a day (where 0 represents
     Sunday, 1 represents Monday and so on) that is used as a
@@ -993,7 +993,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty enumeration QtQml2::Locale::firstDayOfWeek
+    \qmlproperty enumeration QtQml::Locale::firstDayOfWeek
 
     Holds the first day of the week according to the current locale.
 
@@ -1012,7 +1012,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty Array<int> QtQml2::Locale::weekDays
+    \qmlproperty Array<int> QtQml::Locale::weekDays
 
     Holds an array of days that are considered week days according to the current locale,
     where Sunday is 0 and Saturday is 6.
@@ -1021,7 +1021,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty Array<string> QtQml2::Locale::uiLanguages
+    \qmlproperty Array<string> QtQml::Locale::uiLanguages
 
     Returns an ordered list of locale names for translation purposes in
     preference order.
@@ -1033,7 +1033,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty enumeration QtQml2::Locale::textDirection
+    \qmlproperty enumeration QtQml::Locale::textDirection
 
     Holds the text direction of the language:
     \list
@@ -1043,19 +1043,19 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::amText
+    \qmlproperty string QtQml::Locale::amText
 
     The localized name of the "AM" suffix for times specified using the conventions of the 12-hour clock.
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::pmText
+    \qmlproperty string QtQml::Locale::pmText
 
     The localized name of the "PM" suffix for times specified using the conventions of the 12-hour clock.
 */
 
 /*!
-    \qmlmethod string QtQml2::Locale::currencySymbol(format)
+    \qmlmethod string QtQml::Locale::currencySymbol(format)
 
     Returns the currency symbol for the specified \a format:
     \list
@@ -1067,7 +1067,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::nativeLanguageName
+    \qmlproperty string QtQml::Locale::nativeLanguageName
 
     Holds a native name of the language for the locale. For example
     "Schwiizertüütsch" for Swiss-German locale.
@@ -1076,7 +1076,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty string QtQml2::Locale::nativeCountryName
+    \qmlproperty string QtQml::Locale::nativeCountryName
 
     Holds a native name of the country for the locale. For example
     "España" for Spanish/Spain locale.
@@ -1085,7 +1085,7 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::SimpleCallContext *ctx)
 */
 
 /*!
-    \qmlproperty enumeration QtQml2::Locale::measurementSystem
+    \qmlproperty enumeration QtQml::Locale::measurementSystem
 
     This property defines which units are used for measurement.
 

@@ -544,10 +544,10 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         l->setter = Lookup::setterInsert2;
 }
 
-Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+Property *Object::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
-    *name = 0;
+    name = (String *)0;
     *index = UINT_MAX;
 
     if (!it->arrayIndex)
@@ -595,7 +595,7 @@ Property *Object::advanceIterator(Managed *m, ObjectIterator *it, String **name,
         PropertyAttributes a = o->internalClass->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            *name = n;
+            name = n;
             if (attrs)
                 *attrs = a;
             return p;
@@ -693,7 +693,7 @@ void Object::internalPut(const StringRef name, const ValueRef value)
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->isEqualTo(engine()->id_length)) {
+        else if (isArrayObject() && name->equals(engine()->id_length)) {
             bool ok;
             uint l = value->asArrayLength(&ok);
             if (!ok)
@@ -885,7 +885,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
     Property *current;
     PropertyAttributes *cattrs;
 
-    if (isArrayObject() && name->isEqualTo(ctx->engine->id_length)) {
+    if (isArrayObject() && name->equals(ctx->engine->id_length)) {
         assert(ArrayObject::LengthPropertyIndex == internalClass->find(ctx->engine->id_length));
         Property *lp = memberData + ArrayObject::LengthPropertyIndex;
         cattrs = internalClass->propertyData.data() + ArrayObject::LengthPropertyIndex;
@@ -1283,7 +1283,7 @@ void Object::arrayReserve(uint n)
         arrayData = newArrayData;
         if (sparseArray) {
             for (uint i = arrayFreeList; i < arrayAlloc; ++i) {
-                arrayData[i].value = Value::emptyValue();
+                arrayData[i].value = Primitive::emptyValue();
                 arrayData[i].value = Primitive::fromInt32(i + 1);
             }
         } else {
@@ -1363,7 +1363,7 @@ bool Object::setArrayLength(uint newLen) {
                     } else {
                         arrayAttributes[it - arrayData].clear();
                     }
-                    it->value = Value::emptyValue();
+                    it->value = Primitive::emptyValue();
                 }
             }
             arrayDataLen = newLen;
@@ -1434,15 +1434,4 @@ QStringList ArrayObject::toQStringList() const
         result.append(v->toString(engine->current)->toQString());
     }
     return result;
-}
-
-
-DEFINE_MANAGED_VTABLE(ForEachIteratorObject);
-
-void ForEachIteratorObject::markObjects(Managed *that)
-{
-    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
-    Object::markObjects(that);
-    if (o->it.object)
-        o->it.object->mark();
 }

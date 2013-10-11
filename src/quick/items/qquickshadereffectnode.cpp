@@ -187,6 +187,9 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());
                     }
                     break;
+                case QMetaType::QVector2D:
+                    program()->setUniformValue(loc, qvariant_cast<QVector2D>(d.value));
+                    break;
                 case QMetaType::QVector3D:
                     program()->setUniformValue(loc, qvariant_cast<QVector3D>(d.value));
                     break;

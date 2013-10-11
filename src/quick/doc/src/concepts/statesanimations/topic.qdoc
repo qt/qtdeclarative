@@ -115,6 +115,25 @@ result in undefined behavior occurring.  Please see the documentation about
 \l{qtquick-statesanimations-behaviors.html}
 {using Qt Quick Behaviors with States} for more information about this topic.
 
+\section1 Animators
+
+The \l Animator types are a special type of animation which bypass
+the QML objects and operate directly on the primitives in the
+\l {Qt Quick Scene Graph}{scene graph}. This has the benefit that
+the Animator based animations can be run on the scene graph's rendering thread
+(when applicable) and can continue to animate even when UI is otherwise
+blocked.
+
+Qt Quick provides the following Animator types:
+\list
+\li \l {XAnimator} - Animates the horizontal position of an \l {Item}.
+\li \l {YAnimator} - Animates the vertical position of an \l {Item}.
+\li \l {ScaleAnimator} - Animates the scale factor of an \l {Item}.
+\li \l {RotationAnimator} - Animates the rotation of an \l {Item}.
+\li \l {OpacityAnimator} - Animates the opacity of an \l {Item}.
+\li \l {UniformAnimator} - Animates a uniform in a \l {ShaderEffect}.
+\endlist
+
 \section1 Animated Sprites
 
 The concept of animated sprites is separate to the concept of animations as

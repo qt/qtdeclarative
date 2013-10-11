@@ -50,6 +50,7 @@ Item {
         Component.onCompleted: {
             addExample("ColorAnimation", "Interpolates between colors",  Qt.resolvedUrl("basics/color-animation.qml"));
             addExample("PropertyAnimation", "Interpolates between numbers", Qt.resolvedUrl("basics/property-animation.qml"));
+            addExample("Animators", "Using Animators",  Qt.resolvedUrl("basics/animators.qml"));
             addExample("Behaviors", "Animates procedural movement", Qt.resolvedUrl("behaviors/behavior-example.qml"));
             addExample("Wiggly Text", "Text that wiggles as you drag it", Qt.resolvedUrl("behaviors/wigglytext.qml"));
             addExample("Tv Tennis", "Paddles that follow a ball", Qt.resolvedUrl("behaviors/tvtennis.qml"));

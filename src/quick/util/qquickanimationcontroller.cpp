@@ -117,7 +117,7 @@ QQuickAnimationController::~QQuickAnimationController()
 }
 
 /*!
-    \qmlproperty real QtQuick2::AnimationController::progress
+    \qmlproperty real QtQuick::AnimationController::progress
     This property holds the animation progress value.
 
     The valid \c progress value is 0.0 to 1.0, setting values less than 0 will be converted to 0,
@@ -142,7 +142,7 @@ void QQuickAnimationController::setProgress(qreal progress)
 }
 
 /*!
-    \qmlproperty real QtQuick2::AnimationController::animation
+    \qmlproperty real QtQuick::AnimationController::animation
     \default
 
     This property holds the animation to be controlled by the AnimationController.
@@ -187,7 +187,7 @@ void QQuickAnimationController::setAnimation(QQuickAbstractAnimation *animation)
 }
 
 /*!
-    \qmlmethod QtQuick2::AnimationController::reload()
+    \qmlmethod QtQuick::AnimationController::reload()
     \brief Reloads the animation properties
 
     If the animation properties changed, calling this method to reload the animation definations.
@@ -237,7 +237,7 @@ void QQuickAnimationController::componentFinalized()
 }
 
 /*!
-    \qmlmethod QtQuick2::AnimationController::completeToBeginning()
+    \qmlmethod QtQuick::AnimationController::completeToBeginning()
     \brief Finishes running the controlled animation in a backwards direction.
 
     After calling this method, the animation runs normally from the current progress point
@@ -266,7 +266,7 @@ void QQuickAnimationController::completeToBeginning()
 }
 
 /*!
-    \qmlmethod QtQuick2::AnimationController::completeToEnd()
+    \qmlmethod QtQuick::AnimationController::completeToEnd()
     \brief Finishes running the controlled animation in a forwards direction.
 
     After calling this method, the animation runs normally from the current progress point

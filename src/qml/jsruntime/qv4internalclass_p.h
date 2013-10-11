@@ -137,9 +137,11 @@ struct InternalClass {
     uint size;
 
     InternalClass *changePrototype(Object *proto);
+    InternalClass *addMember(StringRef string, PropertyAttributes data, uint *index = 0);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
     void removeMember(Object *object, Identifier *id);
+    uint find(const StringRef string);
     uint find(const String *s);
 
     InternalClass *sealed();

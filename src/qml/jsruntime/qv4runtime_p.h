@@ -72,6 +72,7 @@ public:
 
     static RuntimeCounters *instance;
 
+    void count(const char *func);
     void count(const char *func, uint tag);
     void count(const char *func, uint tag1, uint tag2);
 
@@ -80,9 +81,11 @@ private:
     Data *d;
 };
 
+#  define TRACE0() RuntimeCounters::instance->count(Q_FUNC_INFO);
 #  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type());
 #  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type(), y->type());
 #else
+#  define TRACE0()
 #  define TRACE1(x)
 #  define TRACE2(x, y)
 #endif // QV4_COUNT_RUNTIME_FUNCTIONS

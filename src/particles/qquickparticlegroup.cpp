@@ -59,13 +59,13 @@
     none of the transition properties were set.
 */
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::ParticleGroup::system
+    \qmlproperty ParticleSystem QtQuick.Particles::ParticleGroup::system
     This is the system which will contain the group.
 
     If the ParticleGroup is a direct child of a ParticleSystem, it will automatically be associated with it.
 */
 /*!
-    \qmlproperty string QtQuick.Particles2::ParticleGroup::name
+    \qmlproperty string QtQuick.Particles::ParticleGroup::name
     This is the name of the particle group, and how it is generally referred to by other elements.
 
     If elements refer to a name which does not have an explicit ParticleGroup created, it will
@@ -73,18 +73,18 @@
     duration based transitions to a group, you do not need to create a ParticleGroup with that name (although you may).
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::ParticleGroup::duration
+    \qmlproperty int QtQuick.Particles::ParticleGroup::duration
     The time in milliseconds before the group will attempt to transition.
 
 */
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::ParticleGroup::durationVariation
+    \qmlproperty ParticleSystem QtQuick.Particles::ParticleGroup::durationVariation
     The maximum number of milliseconds that the duration of the transition cycle varies per particle in the group.
 
     Default value is zero.
 */
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::ParticleGroup::to
+    \qmlproperty ParticleSystem QtQuick.Particles::ParticleGroup::to
     The weighted list of transitions valid for this group.
 
     If the chosen transition stays in this group, another duration (+/- up to durationVariation)

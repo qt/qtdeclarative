@@ -174,7 +174,7 @@ bool RegExp::deleteIndexedProperty(Managed *m, uint index)
     return false;
 }
 
-Property *RegExp::advanceIterator(Managed *m, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attributes)
+Property *RegExp::advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
 {
     return 0;
 }

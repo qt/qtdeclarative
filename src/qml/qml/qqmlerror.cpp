@@ -46,6 +46,8 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
 
+#include <private/qv4errorobject_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -134,6 +136,28 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
 QQmlError::~QQmlError()
 {
     delete d; d = 0;
+}
+
+QQmlError QQmlError::catchJavaScriptException(QV4::ExecutionContext *context)
+{
+    QV4::StackTrace trace;
+    QV4::Scope scope(context);
+    QV4::ScopedValue exception(scope, context->catchException(&trace));
+    QQmlError error;
+    if (!trace.isEmpty()) {
+        QV4::StackFrame frame = trace.first();
+        error.setUrl(QUrl(frame.source));
+        error.setLine(frame.line);
+        error.setColumn(frame.column);
+    }
+    QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
+    if (!!errorObj && errorObj->asSyntaxError()) {
+        QV4::ScopedString m(scope, errorObj->engine()->newString("message"));
+        QV4::ScopedValue v(scope, errorObj->get(m));
+        error.setDescription(v->toQStringNoThrow());
+    } else
+        error.setDescription(exception->toQStringNoThrow());
+    return error;
 }
 
 /*!

@@ -132,7 +132,7 @@
     hour, if DST is currently in effect, while it was not for the time specified, or
     vice versa.
 
-    \sa {QtQml2::Locale}{Locale}
+    \sa {QtQml::Locale}{Locale}
 */
 
 /*!
@@ -142,7 +142,7 @@
     suitable for the specified \a locale
     in the specified \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.
@@ -164,7 +164,7 @@
     Converts the Date to a string containing the date suitable for the specified \a locale
     in the specified \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.
@@ -186,7 +186,7 @@
     Converts the Date to a string containing the time suitable for the specified \a locale
     in the specified \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.
@@ -205,10 +205,10 @@
 /*!
     \qmlmethod string Date::fromLocaleString(locale, dateTimeString, format)
 
-    Converts the datetime string \a dateTimeString to a \l {QtQml2::Date}{Date}
+    Converts the datetime string \a dateTimeString to a \l {QtQml::Date}{Date}
     object using \a locale and \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.
@@ -232,10 +232,10 @@
 /*!
     \qmlmethod string Date::fromLocaleDateString(locale, dateString, format)
 
-    Converts the date string \a dateString to a \l {QtQml2::Date}{Date} object
+    Converts the date string \a dateString to a \l {QtQml::Date}{Date} object
     using \a locale and \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.
@@ -262,10 +262,10 @@
 /*!
     \qmlmethod string Date::fromLocaleTimeString(locale, timeString, format)
 
-    Converts the time string \a timeString to a \l {QtQml2::Date}{Date} object
+    Converts the time string \a timeString to a \l {QtQml::Date}{Date} object
     using \a locale and \a format.
 
-    If \a format is not specified, \l {QtQml2::Locale}{Locale.LongFormat} will
+    If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
     be used.
 
     If \a locale is not specified, the default locale will be used.

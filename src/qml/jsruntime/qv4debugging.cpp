@@ -172,7 +172,7 @@ void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
         applyPendingBreakPoints();
 }
 
-void Debugger::aboutToThrow(const QV4::Value &value)
+void Debugger::aboutToThrow(const QV4::ValueRef value)
 {
     qDebug() << "*** We are about to throw...";
 }
@@ -205,47 +205,47 @@ void Debugger::applyPendingBreakPoints()
     m_havePendingBreakPoints = false;
 }
 
-static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string prefix)
+static void realDumpValue(const QV4::ValueRef v, QV4::ExecutionContext *ctx, std::string prefix)
 {
     using namespace QV4;
     using namespace std;
 
     Scope scope(ctx);
 
-    cout << prefix << "tag: " << hex << v.tag << dec << endl << prefix << "\t-> ";
-    switch (v.type()) {
+    cout << prefix << "tag: " << hex << v->tag << dec << endl << prefix << "\t-> ";
+    switch (v->type()) {
     case Value::Undefined_Type: cout << "Undefined"; return;
     case Value::Null_Type: cout << "Null"; return;
     case Value::Boolean_Type: cout << "Boolean"; break;
     case Value::Integer_Type: cout << "Integer"; break;
-    case Value::Managed_Type: cout << v.managed()->className().toUtf8().data(); break;
+    case Value::Managed_Type: cout << v->managed()->className().toUtf8().data(); break;
     default: cout << "UNKNOWN" << endl; return;
     }
     cout << endl;
 
-    if (v.isBoolean()) {
-        cout << prefix << "\t-> " << (v.booleanValue() ? "TRUE" : "FALSE") << endl;
+    if (v->isBoolean()) {
+        cout << prefix << "\t-> " << (v->booleanValue() ? "TRUE" : "FALSE") << endl;
         return;
     }
 
-    if (v.isInteger()) {
-        cout << prefix << "\t-> " << v.integerValue() << endl;
+    if (v->isInteger()) {
+        cout << prefix << "\t-> " << v->integerValue() << endl;
         return;
     }
 
-    if (v.isDouble()) {
-        cout << prefix << "\t-> " << v.doubleValue() << endl;
+    if (v->isDouble()) {
+        cout << prefix << "\t-> " << v->doubleValue() << endl;
         return;
     }
 
-    if (v.isString()) {
+    if (v->isString()) {
         // maybe check something on the Managed object?
-        cout << prefix << "\t-> @" << hex << v.stringValue() << endl;
-        cout << prefix << "\t-> \"" << qPrintable(v.stringValue()->toQString()) << "\"" << endl;
+        cout << prefix << "\t-> @" << hex << v->stringValue() << endl;
+        cout << prefix << "\t-> \"" << qPrintable(v->stringValue()->toQString()) << "\"" << endl;
         return;
     }
 
-    Object *o = v.objectValue();
+    ScopedObject o(scope, v);
     if (!o)
         return;
 
@@ -274,17 +274,18 @@ static void realDumpValue(QV4::Value v, QV4::ExecutionContext *ctx, std::string 
     cout << prefix << "properties:" << endl;
     ForEachIteratorObject it(ctx, o);
     ScopedValue name(scope);
+    ScopedValue pval(scope);
     for (name = it.nextPropertyName(); !name->isNull(); name = it.nextPropertyName()) {
         cout << prefix << "\t\"" << qPrintable(name->stringValue()->toQString()) << "\"" << endl;
         PropertyAttributes attrs;
         Property *d = o->__getOwnProperty__(ScopedString(scope, name), &attrs);
-        Value pval = Value::fromReturnedValue(o->getValue(d, attrs));
+        pval = o->getValue(d, attrs);
         cout << prefix << "\tvalue:" << endl;
         realDumpValue(pval, ctx, prefix + "\t");
     }
 }
 
-void dumpValue(QV4::Value v, QV4::ExecutionContext *ctx)
+void dumpValue(const QV4::ValueRef v, QV4::ExecutionContext *ctx)
 {
     realDumpValue(v, ctx, std::string(""));
 }

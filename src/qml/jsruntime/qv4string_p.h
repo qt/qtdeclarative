@@ -65,6 +65,7 @@ struct Q_QML_EXPORT String : public Managed {
     String(ExecutionEngine *engine, const QString &text);
     ~String() { _data = 0; }
 
+    bool equals(const StringRef other) const;
     inline bool isEqualTo(const String *other) const {
         if (this == other)
             return true;

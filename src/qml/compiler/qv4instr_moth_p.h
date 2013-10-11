@@ -130,7 +130,7 @@ struct Param {
         TempType     = 3,
         ScopedLocalType  = 4
     };
-    QV4::Value value;
+    QV4::Primitive value;
     unsigned type  : 3;
     unsigned scope : 29;
     unsigned index;
@@ -141,7 +141,7 @@ struct Param {
     bool isTemp() const { return type == TempType; }
     bool isScopedLocal() const { return type == ScopedLocalType; }
 
-    static Param createValue(const QV4::Value &v)
+    static Param createValue(const QV4::Primitive &v)
     {
         Param p;
         p.type = ValueType;
@@ -438,6 +438,7 @@ union Instr
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
         Param condition;
+        bool invert;
     };
     struct instr_unop {
         MOTH_INSTR_HEADER

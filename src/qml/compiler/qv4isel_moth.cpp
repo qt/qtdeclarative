@@ -149,7 +149,7 @@ class QQmlJS::Moth::StackSlotAllocator
     QHash<V4IR::Temp, V4IR::LifeTimeInterval> _intervals;
 
 public:
-    StackSlotAllocator(const QList<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
+    StackSlotAllocator(const QVector<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
         : _activeSlots(maxTempCount)
     {
         _intervals.reserve(ranges.size());
@@ -252,7 +252,11 @@ void InstructionSelection::run(int functionIndex)
         stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
         opt.convertOutOfSSA();
     }
+
     qSwap(_stackSlotAllocator, stackSlotAllocator);
+    QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
+    qSwap(_removableJumps, removableJumps);
+
     V4IR::Stmt *cs = 0;
     qSwap(_currentStatement, cs);
 
@@ -289,6 +293,7 @@ void InstructionSelection::run(int functionIndex)
     codeRefs.insert(_function, squeezeCode());
 
     qSwap(_currentStatement, cs);
+    qSwap(_removableJumps, removableJumps);
     qSwap(_stackSlotAllocator, stackSlotAllocator);
     delete stackSlotAllocator;
     qSwap(_function, function);
@@ -629,6 +634,8 @@ void InstructionSelection::visitJump(V4IR::Jump *s)
 {
     if (s->target == _nextBlock)
         return;
+    if (_removableJumps.contains(s))
+        return;
 
     Instruction::Jump jump;
     jump.offset = 0;
@@ -651,14 +658,22 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
     Instruction::CJump jump;
     jump.offset = 0;
     jump.condition = condition;
-    ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
-    _patches[s->iftrue].append(trueLoc);
 
-    if (s->iffalse != _nextBlock) {
-        Instruction::Jump jump;
-        jump.offset = 0;
+    if (s->iftrue == _nextBlock) {
+        jump.invert = true;
         ptrdiff_t falseLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
         _patches[s->iffalse].append(falseLoc);
+    } else {
+        jump.invert = false;
+        ptrdiff_t trueLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+        _patches[s->iftrue].append(trueLoc);
+
+        if (s->iffalse != _nextBlock) {
+            Instruction::Jump jump;
+            jump.offset = 0;
+            ptrdiff_t falseLoc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+            _patches[s->iffalse].append(falseLoc);
+        }
     }
 }
 

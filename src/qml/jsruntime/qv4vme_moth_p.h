@@ -61,7 +61,7 @@ public:
 
 private:
     QV4::ReturnedValue run(QV4::ExecutionContext *, const uchar *&code,
-            QV4::Value *stack = 0, unsigned stackSize = 0
+            QV4::SafeValue *stack = 0, unsigned stackSize = 0
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif

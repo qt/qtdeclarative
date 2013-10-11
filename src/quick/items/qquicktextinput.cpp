@@ -114,7 +114,7 @@ void QQuickTextInput::componentComplete()
 }
 
 /*!
-    \qmlproperty string QtQuick2::TextInput::text
+    \qmlproperty string QtQuick::TextInput::text
 
     The text in the TextInput.
 */
@@ -141,7 +141,7 @@ void QQuickTextInput::setText(const QString &s)
 
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::renderType
+    \qmlproperty enumeration QtQuick::TextInput::renderType
 
     Override the default rendering type for this component.
 
@@ -179,7 +179,7 @@ void QQuickTextInput::setRenderType(QQuickTextInput::RenderType renderType)
 }
 
 /*!
-    \qmlproperty int QtQuick2::TextInput::length
+    \qmlproperty int QtQuick::TextInput::length
 
     Returns the total number of characters in the TextInput item.
 
@@ -197,7 +197,7 @@ int QQuickTextInput::length() const
 }
 
 /*!
-    \qmlmethod string QtQuick2::TextInput::getText(int start, int end)
+    \qmlmethod string QtQuick::TextInput::getText(int start, int end)
 
     Returns the section of text that is between the \a start and \a end positions.
 
@@ -221,7 +221,7 @@ QString QQuickTextInputPrivate::realText() const
 }
 
 /*!
-    \qmlproperty string QtQuick2::TextInput::font.family
+    \qmlproperty string QtQuick::TextInput::font.family
 
     Sets the family name of the font.
 
@@ -231,13 +231,13 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::font.bold
+    \qmlproperty bool QtQuick::TextInput::font.bold
 
     Sets whether the font weight is bold.
 */
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::font.weight
+    \qmlproperty enumeration QtQuick::TextInput::font.weight
 
     Sets the font's weight.
 
@@ -256,31 +256,31 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::font.italic
+    \qmlproperty bool QtQuick::TextInput::font.italic
 
     Sets whether the font has an italic style.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::font.underline
+    \qmlproperty bool QtQuick::TextInput::font.underline
 
     Sets whether the text is underlined.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::font.strikeout
+    \qmlproperty bool QtQuick::TextInput::font.strikeout
 
     Sets whether the font has a strikeout style.
 */
 
 /*!
-    \qmlproperty real QtQuick2::TextInput::font.pointSize
+    \qmlproperty real QtQuick::TextInput::font.pointSize
 
     Sets the font size in points. The point size must be greater than zero.
 */
 
 /*!
-    \qmlproperty int QtQuick2::TextInput::font.pixelSize
+    \qmlproperty int QtQuick::TextInput::font.pixelSize
 
     Sets the font size in pixels.
 
@@ -289,7 +289,7 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty real QtQuick2::TextInput::font.letterSpacing
+    \qmlproperty real QtQuick::TextInput::font.letterSpacing
 
     Sets the letter spacing for the font.
 
@@ -298,7 +298,7 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty real QtQuick2::TextInput::font.wordSpacing
+    \qmlproperty real QtQuick::TextInput::font.wordSpacing
 
     Sets the word spacing for the font.
 
@@ -308,7 +308,7 @@ QString QQuickTextInputPrivate::realText() const
 */
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::font.capitalization
+    \qmlproperty enumeration QtQuick::TextInput::font.capitalization
 
     Sets the capitalization for the text.
 
@@ -356,7 +356,7 @@ void QQuickTextInput::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty color QtQuick2::TextInput::color
+    \qmlproperty color QtQuick::TextInput::color
 
     The text color.
 */
@@ -380,7 +380,7 @@ void QQuickTextInput::setColor(const QColor &c)
 
 
 /*!
-    \qmlproperty color QtQuick2::TextInput::selectionColor
+    \qmlproperty color QtQuick::TextInput::selectionColor
 
     The text highlight color, used behind selections.
 */
@@ -405,7 +405,7 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
     emit selectionColorChanged();
 }
 /*!
-    \qmlproperty color QtQuick2::TextInput::selectedTextColor
+    \qmlproperty color QtQuick::TextInput::selectedTextColor
 
     The highlighted text color, used in selections.
 */
@@ -431,9 +431,9 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::horizontalAlignment
-    \qmlproperty enumeration QtQuick2::TextInput::effectiveHorizontalAlignment
-    \qmlproperty enumeration QtQuick2::TextInput::verticalAlignment
+    \qmlproperty enumeration QtQuick::TextInput::horizontalAlignment
+    \qmlproperty enumeration QtQuick::TextInput::effectiveHorizontalAlignment
+    \qmlproperty enumeration QtQuick::TextInput::verticalAlignment
 
     Sets the horizontal alignment of the text within the TextInput item's
     width and height. By default, the text alignment follows the natural alignment
@@ -588,7 +588,7 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::wrapMode
+    \qmlproperty enumeration QtQuick::TextInput::wrapMode
 
     Set this property to wrap the text to the TextInput item's width.
     The text will only wrap if an explicit width has been set.
@@ -631,7 +631,7 @@ void QQuickTextInputPrivate::mirrorChange()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::readOnly
+    \qmlproperty bool QtQuick::TextInput::readOnly
 
     Sets whether user input can modify the contents of the TextInput.
 
@@ -666,7 +666,7 @@ void QQuickTextInput::setReadOnly(bool ro)
 }
 
 /*!
-    \qmlproperty int QtQuick2::TextInput::maximumLength
+    \qmlproperty int QtQuick::TextInput::maximumLength
     The maximum permitted length of the text in the TextInput.
 
     If the text is too long, it is truncated at the limit.
@@ -692,7 +692,7 @@ void QQuickTextInput::setMaxLength(int ml)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::cursorVisible
+    \qmlproperty bool QtQuick::TextInput::cursorVisible
     Set to true when the TextInput shows a cursor.
 
     This property is set and unset when the TextInput gets active focus, so that other
@@ -740,7 +740,7 @@ void QQuickTextInput::setCursorVisible(bool on)
 }
 
 /*!
-    \qmlproperty int QtQuick2::TextInput::cursorPosition
+    \qmlproperty int QtQuick::TextInput::cursorPosition
     The position of the cursor in the TextInput.
 */
 int QQuickTextInput::cursorPosition() const
@@ -758,7 +758,7 @@ void QQuickTextInput::setCursorPosition(int cp)
 }
 
 /*!
-    \qmlproperty rectangle QtQuick2::TextInput::cursorRectangle
+    \qmlproperty rectangle QtQuick::TextInput::cursorRectangle
 
     The rectangle where the standard text cursor is rendered within the text input.  Read only.
 
@@ -787,7 +787,7 @@ QRectF QQuickTextInput::cursorRectangle() const
 }
 
 /*!
-    \qmlproperty int QtQuick2::TextInput::selectionStart
+    \qmlproperty int QtQuick::TextInput::selectionStart
 
     The cursor position before the first character in the current selection.
 
@@ -802,7 +802,7 @@ int QQuickTextInput::selectionStart() const
     return d->lastSelectionStart;
 }
 /*!
-    \qmlproperty int QtQuick2::TextInput::selectionEnd
+    \qmlproperty int QtQuick::TextInput::selectionEnd
 
     The cursor position after the last character in the current selection.
 
@@ -817,7 +817,7 @@ int QQuickTextInput::selectionEnd() const
     return d->lastSelectionEnd;
 }
 /*!
-    \qmlmethod QtQuick2::TextInput::select(int start, int end)
+    \qmlmethod QtQuick::TextInput::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -838,7 +838,7 @@ void QQuickTextInput::select(int start, int end)
 }
 
 /*!
-    \qmlproperty string QtQuick2::TextInput::selectedText
+    \qmlproperty string QtQuick::TextInput::selectedText
 
     This read-only property provides the text currently selected in the
     text input.
@@ -858,7 +858,7 @@ QString QQuickTextInput::selectedText() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::activeFocusOnPress
+    \qmlproperty bool QtQuick::TextInput::activeFocusOnPress
 
     Whether the TextInput should gain active focus on a mouse press. By default this is
     set to true.
@@ -880,7 +880,7 @@ void QQuickTextInput::setFocusOnPress(bool b)
     emit activeFocusOnPressChanged(d->focusOnPress);
 }
 /*!
-    \qmlproperty bool QtQuick2::TextInput::autoScroll
+    \qmlproperty bool QtQuick::TextInput::autoScroll
 
     Whether the TextInput should scroll when the text is longer than the width. By default this is
     set to true.
@@ -927,11 +927,11 @@ QQuickIntValidator::QQuickIntValidator(QObject *parent)
 }
 
 /*!
-    \qmlproperty string QtQuick2::IntValidator::locale
+    \qmlproperty string QtQuick::IntValidator::locale
 
     This property holds the name of the locale used to interpret the number.
 
-    \sa {QtQml2::Qt::locale()}{Qt.locale()}
+    \sa {QtQml::Qt::locale()}{Qt.locale()}
 */
 
 QString QQuickIntValidator::localeName() const
@@ -957,13 +957,13 @@ void QQuickIntValidator::resetLocaleName()
 }
 
 /*!
-    \qmlproperty int QtQuick2::IntValidator::top
+    \qmlproperty int QtQuick::IntValidator::top
 
     This property holds the validator's highest acceptable value.
     By default, this property's value is derived from the highest signed integer available (typically 2147483647).
 */
 /*!
-    \qmlproperty int QtQuick2::IntValidator::bottom
+    \qmlproperty int QtQuick::IntValidator::bottom
 
     This property holds the validator's lowest acceptable value.
     By default, this property's value is derived from the lowest signed integer available (typically -2147483647).
@@ -1002,11 +1002,11 @@ QQuickDoubleValidator::QQuickDoubleValidator(QObject *parent)
 }
 
 /*!
-    \qmlproperty string QtQuick2::DoubleValidator::locale
+    \qmlproperty string QtQuick::DoubleValidator::locale
 
     This property holds the name of the locale used to interpret the number.
 
-    \sa {QtQml2::Qt::locale()}{Qt.locale()}
+    \sa {QtQml::Qt::locale()}{Qt.locale()}
 */
 
 QString QQuickDoubleValidator::localeName() const
@@ -1032,25 +1032,25 @@ void QQuickDoubleValidator::resetLocaleName()
 }
 
 /*!
-    \qmlproperty real QtQuick2::DoubleValidator::top
+    \qmlproperty real QtQuick::DoubleValidator::top
 
     This property holds the validator's maximum acceptable value.
     By default, this property contains a value of infinity.
 */
 /*!
-    \qmlproperty real QtQuick2::DoubleValidator::bottom
+    \qmlproperty real QtQuick::DoubleValidator::bottom
 
     This property holds the validator's minimum acceptable value.
     By default, this property contains a value of -infinity.
 */
 /*!
-    \qmlproperty int QtQuick2::DoubleValidator::decimals
+    \qmlproperty int QtQuick::DoubleValidator::decimals
 
     This property holds the validator's maximum number of digits after the decimal point.
     By default, this property contains a value of 1000.
 */
 /*!
-    \qmlproperty enumeration QtQuick2::DoubleValidator::notation
+    \qmlproperty enumeration QtQuick::DoubleValidator::notation
     This property holds the notation of how a string can describe a number.
 
     The possible values for this property are:
@@ -1074,7 +1074,7 @@ void QQuickDoubleValidator::resetLocaleName()
     matches a specified regular expression.
 */
 /*!
-   \qmlproperty regExp QtQuick2::RegExpValidator::regExp
+   \qmlproperty regExp QtQuick::RegExpValidator::regExp
 
    This property holds the regular expression used for validation.
 
@@ -1085,7 +1085,7 @@ void QQuickDoubleValidator::resetLocaleName()
 */
 
 /*!
-    \qmlproperty Validator QtQuick2::TextInput::validator
+    \qmlproperty Validator QtQuick::TextInput::validator
 
     Allows you to set a validator on the TextInput. When a validator is set
     the TextInput will only accept input which leaves the text property in
@@ -1165,7 +1165,7 @@ void QQuickTextInputPrivate::checkIsValid()
 }
 
 /*!
-    \qmlproperty string QtQuick2::TextInput::inputMask
+    \qmlproperty string QtQuick::TextInput::inputMask
 
     Allows you to set an input mask on the TextInput, restricting the allowable
     text inputs. See QLineEdit::inputMask for further details, as the exact
@@ -1190,7 +1190,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::acceptableInput
+    \qmlproperty bool QtQuick::TextInput::acceptableInput
 
     This property is always true unless a validator or input mask has been set.
     If a validator or input mask has been set, this property will only be true
@@ -1204,7 +1204,7 @@ bool QQuickTextInput::hasAcceptableInput() const
 }
 
 /*!
-    \qmlsignal QtQuick2::TextInput::onAccepted()
+    \qmlsignal QtQuick::TextInput::onAccepted()
 
     This handler is called when the Return or Enter key is pressed.
     Note that if there is a \l validator or \l inputMask set on the text
@@ -1227,7 +1227,7 @@ Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 #endif
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::echoMode
+    \qmlproperty enumeration QtQuick::TextInput::echoMode
 
     Specifies how the text should be displayed in the TextInput.
     \list
@@ -1264,7 +1264,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
 #ifndef QT_NO_IM
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::inputMethodHints
+    \qmlproperty enumeration QtQuick::TextInput::inputMethodHints
 
     Provides hints to the input method about the expected content of the text input and how it
     should operate.
@@ -1328,7 +1328,7 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
 #endif // QT_NO_IM
 
 /*!
-    \qmlproperty Component QtQuick2::TextInput::cursorDelegate
+    \qmlproperty Component QtQuick::TextInput::cursorDelegate
     The delegate for the cursor in the TextInput.
 
     If you set a cursorDelegate for a TextInput, this delegate will be used for
@@ -1360,7 +1360,7 @@ void QQuickTextInput::createCursor()
 }
 
 /*!
-    \qmlmethod rect QtQuick2::TextInput::positionToRectangle(int pos)
+    \qmlmethod rect QtQuick::TextInput::positionToRectangle(int pos)
 
     This function takes a character position and returns the rectangle that the
     cursor would occupy, if it was placed at that character position.
@@ -1387,7 +1387,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
 }
 
 /*!
-    \qmlmethod int QtQuick2::TextInput::positionAt(real x, real y, CursorPosition position = CursorBetweenCharacters)
+    \qmlmethod int QtQuick::TextInput::positionAt(real x, real y, CursorPosition position = CursorBetweenCharacters)
 
     This function returns the character position at
     x and y pixels from the top left  of the textInput. Position 0 is before the
@@ -1929,7 +1929,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 #endif // QT_NO_IM
 
 /*!
-    \qmlmethod QtQuick2::TextInput::deselect()
+    \qmlmethod QtQuick::TextInput::deselect()
 
     Removes active text selection.
 */
@@ -1940,7 +1940,7 @@ void QQuickTextInput::deselect()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::selectAll()
+    \qmlmethod QtQuick::TextInput::selectAll()
 
     Causes all text to be selected.
 */
@@ -1951,7 +1951,7 @@ void QQuickTextInput::selectAll()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::isRightToLeft(int start, int end)
+    \qmlmethod QtQuick::TextInput::isRightToLeft(int start, int end)
 
     Returns true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
@@ -1968,7 +1968,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
 
 #ifndef QT_NO_CLIPBOARD
 /*!
-    \qmlmethod QtQuick2::TextInput::cut()
+    \qmlmethod QtQuick::TextInput::cut()
 
     Moves the currently selected text to the system clipboard.
 */
@@ -1982,7 +1982,7 @@ void QQuickTextInput::cut()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::copy()
+    \qmlmethod QtQuick::TextInput::copy()
 
     Copies the currently selected text to the system clipboard.
 */
@@ -1993,7 +1993,7 @@ void QQuickTextInput::copy()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::paste()
+    \qmlmethod QtQuick::TextInput::paste()
 
     Replaces the currently selected text by the contents of the system clipboard.
 */
@@ -2006,7 +2006,7 @@ void QQuickTextInput::paste()
 #endif // QT_NO_CLIPBOARD
 
 /*!
-    \qmlmethod QtQuick2::TextInput::undo()
+    \qmlmethod QtQuick::TextInput::undo()
 
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
@@ -2023,7 +2023,7 @@ void QQuickTextInput::undo()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::redo()
+    \qmlmethod QtQuick::TextInput::redo()
 
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
@@ -2038,7 +2038,7 @@ void QQuickTextInput::redo()
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::insert(int position, string text)
+    \qmlmethod QtQuick::TextInput::insert(int position, string text)
 
     Inserts \a text into the TextInput at position.
 */
@@ -2112,7 +2112,7 @@ void QQuickTextInput::insert(int position, const QString &text)
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::remove(int start, int end)
+    \qmlmethod QtQuick::TextInput::remove(int start, int end)
 
     Removes the section of text that is between the \a start and \a end positions from the TextInput.
 */
@@ -2190,7 +2190,7 @@ void QQuickTextInput::remove(int start, int end)
 
 
 /*!
-    \qmlmethod QtQuick2::TextInput::selectWord()
+    \qmlmethod QtQuick::TextInput::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -2201,7 +2201,7 @@ void QQuickTextInput::selectWord()
 }
 
 /*!
-   \qmlproperty string QtQuick2::TextInput::passwordCharacter
+   \qmlproperty string QtQuick::TextInput::passwordCharacter
 
    This is the character displayed when echoMode is set to Password or
    PasswordEchoOnEdit. By default it is the password character used by
@@ -2229,7 +2229,7 @@ void QQuickTextInput::setPasswordCharacter(const QString &str)
 }
 
 /*!
-   \qmlproperty string QtQuick2::TextInput::displayText
+   \qmlproperty string QtQuick::TextInput::displayText
 
    This is the text displayed in the TextInput.
 
@@ -2247,7 +2247,7 @@ QString QQuickTextInput::displayText() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::selectByMouse
+    \qmlproperty bool QtQuick::TextInput::selectByMouse
 
     Defaults to false.
 
@@ -2272,7 +2272,7 @@ void QQuickTextInput::setSelectByMouse(bool on)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::TextInput::mouseSelectionMode
+    \qmlproperty enumeration QtQuick::TextInput::mouseSelectionMode
 
     Specifies how text should be selected using a mouse.
 
@@ -2300,7 +2300,7 @@ void QQuickTextInput::setMouseSelectionMode(SelectionMode mode)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::persistentSelection
+    \qmlproperty bool QtQuick::TextInput::persistentSelection
 
     Whether the TextInput should keep its selection when it loses active focus to another
     item in the scene. By default this is set to false;
@@ -2323,7 +2323,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
 
 #ifndef QT_NO_CLIPBOARD
 /*!
-    \qmlproperty bool QtQuick2::TextInput::canPaste
+    \qmlproperty bool QtQuick::TextInput::canPaste
 
     Returns true if the TextInput is writable and the content of the clipboard is
     suitable for pasting into the TextInput.
@@ -2341,7 +2341,7 @@ bool QQuickTextInput::canPaste() const
 #endif
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::canUndo
+    \qmlproperty bool QtQuick::TextInput::canUndo
 
     Returns true if the TextInput is writable and there are previous operations
     that can be undone.
@@ -2354,7 +2354,7 @@ bool QQuickTextInput::canUndo() const
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TextInput::canRedo
+    \qmlproperty bool QtQuick::TextInput::canRedo
 
     Returns true if the TextInput is writable and there are \l {undo}{undone}
     operations that can be redone.
@@ -2367,7 +2367,7 @@ bool QQuickTextInput::canRedo() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::TextInput::contentWidth
+    \qmlproperty real QtQuick::TextInput::contentWidth
 
     Returns the width of the text, including the width past the width
     which is covered due to insufficient wrapping if \l wrapMode is set.
@@ -2380,7 +2380,7 @@ qreal QQuickTextInput::contentWidth() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::TextInput::contentHeight
+    \qmlproperty real QtQuick::TextInput::contentHeight
 
     Returns the height of the text, including the height past the height
     that is covered if the text does not fit within the set height.
@@ -2399,7 +2399,7 @@ void QQuickTextInput::moveCursorSelection(int position)
 }
 
 /*!
-    \qmlmethod QtQuick2::TextInput::moveCursorSelection(int position, SelectionMode mode = TextInput.SelectCharacters)
+    \qmlmethod QtQuick::TextInput::moveCursorSelection(int position, SelectionMode mode = TextInput.SelectCharacters)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter.  (To only move the cursor, set the \l cursorPosition property.)
@@ -2538,7 +2538,7 @@ void QQuickTextInput::focusOutEvent(QFocusEvent *event)
 
 #ifndef QT_NO_IM
 /*!
-    \qmlproperty bool QtQuick2::TextInput::inputMethodComposing
+    \qmlproperty bool QtQuick::TextInput::inputMethodComposing
 
 
     This property holds whether the TextInput has partial text input from an

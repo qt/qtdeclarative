@@ -139,8 +139,8 @@ QQuickFlipable::~QQuickFlipable()
 }
 
 /*!
-  \qmlproperty Item QtQuick2::Flipable::front
-  \qmlproperty Item QtQuick2::Flipable::back
+  \qmlproperty Item QtQuick::Flipable::front
+  \qmlproperty Item QtQuick::Flipable::back
 
   The front and back sides of the flipable.
 */
@@ -203,7 +203,7 @@ void QQuickFlipable::retransformBack()
 }
 
 /*!
-  \qmlproperty enumeration QtQuick2::Flipable::side
+  \qmlproperty enumeration QtQuick::Flipable::side
 
   The side of the Flipable currently visible. Possible values are \c
   Flipable.Front and \c Flipable.Back.

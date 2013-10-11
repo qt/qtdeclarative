@@ -124,6 +124,7 @@ private slots:
     void visualDataModel();
     void undefinedPath();
     void mouseDrag();
+    void nestedMouseAreaDrag();
     void treeModel();
     void changePreferredHighlight();
     void missingPercent();
@@ -1505,6 +1506,29 @@ void tst_QQuickPathView::mouseDrag()
     QTRY_COMPARE(moveEndedSpy.count(), 1);
     QCOMPARE(moveStartedSpy.count(), 1);
 
+}
+
+void tst_QQuickPathView::nestedMouseAreaDrag()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setSource(testFileUrl("nestedmousearea.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    // Dragging the child mouse area should move it and not animate the PathView
+    flick(window.data(), QPoint(200,200), QPoint(300,200), 200);
+    QVERIFY(!pathview->isMoving());
+
+    // Dragging outside the mouse are should animate the PathView.
+    flick(window.data(), QPoint(75,75), QPoint(175,75), 200);
+    QVERIFY(pathview->isMoving());
 }
 
 void tst_QQuickPathView::treeModel()

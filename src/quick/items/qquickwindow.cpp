@@ -2110,7 +2110,7 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Window2::Window::data
+    \qmlproperty list<Object> QtQuick.Window::Window::data
     \default
 
     The data property allows you to freely mix visual children, resources
@@ -2659,7 +2659,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 */
 
 /*!
-    \qmlproperty bool QtQuick.Window2::CloseEvent::accepted
+    \qmlproperty bool QtQuick.Window::CloseEvent::accepted
 
     This property indicates whether the application will allow the user to
     close the window.  It is true by default.
@@ -2674,7 +2674,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 */
 
 /*!
-    \qmlsignal QtQuick.Window2::closing(CloseEvent close)
+    \qmlsignal QtQuick.Window::closing(CloseEvent close)
     \since 5.1
 
     This signal is emitted when the user tries to close the window.
@@ -3034,7 +3034,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
 }
 
 /*!
-    \qmlproperty color QtQuick.Window2::Window::color
+    \qmlproperty color QtQuick.Window::Window::color
 
     The background color for the window.
 
@@ -3163,7 +3163,7 @@ void QQuickWindow::resetOpenGLState()
 }
 
 /*!
-    \qmlproperty string QtQuick.Window2::Window::title
+    \qmlproperty string QtQuick.Window::Window::title
 
     The window's title in the windowing system.
 
@@ -3174,7 +3174,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty Qt::WindowModality QtQuick.Window2::Window::modality
+    \qmlproperty Qt::WindowModality QtQuick.Window::Window::modality
 
     The modality of the window.
 
@@ -3184,7 +3184,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty Qt::WindowFlags QtQuick.Window2::Window::flags
+    \qmlproperty Qt::WindowFlags QtQuick.Window::Window::flags
 
     The window flags of the window.
 
@@ -3197,10 +3197,10 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty int QtQuick.Window2::Window::x
-    \qmlproperty int QtQuick.Window2::Window::y
-    \qmlproperty int QtQuick.Window2::Window::width
-    \qmlproperty int QtQuick.Window2::Window::height
+    \qmlproperty int QtQuick.Window::Window::x
+    \qmlproperty int QtQuick.Window::Window::y
+    \qmlproperty int QtQuick.Window::Window::width
+    \qmlproperty int QtQuick.Window::Window::height
 
     Defines the window's position and size.
 
@@ -3215,8 +3215,8 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty int QtQuick.Window2::Window::minimumWidth
-    \qmlproperty int QtQuick.Window2::Window::minimumHeight
+    \qmlproperty int QtQuick.Window::Window::minimumWidth
+    \qmlproperty int QtQuick.Window::Window::minimumHeight
     \since 5.1
 
     Defines the window's minimum size.
@@ -3226,8 +3226,8 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty int QtQuick.Window2::Window::maximumWidth
-    \qmlproperty int QtQuick.Window2::Window::maximumHeight
+    \qmlproperty int QtQuick.Window::Window::maximumWidth
+    \qmlproperty int QtQuick.Window::Window::maximumHeight
     \since 5.1
 
     Defines the window's maximum size.
@@ -3237,7 +3237,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty bool QtQuick.Window2::Window::visible
+    \qmlproperty bool QtQuick.Window::Window::visible
 
     Whether the window is visible on the screen.
 
@@ -3247,7 +3247,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty QWindow::Visibility QtQuick.Window2::Window::visibility
+    \qmlproperty QWindow::Visibility QtQuick.Window::Window::visibility
 
     The screen-occupation state of the window.
 
@@ -3267,7 +3267,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty Qt::ScreenOrientation QtQuick.Window2::Window::contentOrientation
+    \qmlproperty Qt::ScreenOrientation QtQuick.Window::Window::contentOrientation
 
     This is a hint to the window manager in case it needs to display
     additional content like popups, dialogs, status bars, or similar
@@ -3288,7 +3288,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty real QtQuick.Window2::Window::opacity
+    \qmlproperty real QtQuick.Window::Window::opacity
 
     The opacity of the window.
 
@@ -3305,7 +3305,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty Item QtQuick.Window2::Window::activeFocusItem
+    \qmlproperty Item QtQuick.Window::Window::activeFocusItem
     \since 5.1
 
     The item which currently has active focus or \c null if there is
@@ -3313,7 +3313,7 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlproperty QtQuick.Window2::Window::active
+    \qmlproperty QtQuick.Window::Window::active
     \since 5.1
 
     The active status of the window.
@@ -3322,14 +3322,14 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
-    \qmlmethod QtQuick2::Window::requestActivate()
+    \qmlmethod QtQuick::Window::requestActivate()
     \since 5.1
 
     Requests the window to be activated, i.e. receive keyboard focus.
  */
 
 /*!
-    \qmlmethod QtQuick2::Window::alert(int msec)
+    \qmlmethod QtQuick::Window::alert(int msec)
     \since 5.1
 
     Causes an alert to be shown for \a msec miliseconds. If \a msec is \c 0 (the

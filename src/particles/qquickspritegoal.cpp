@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 */
 /*!
-    \qmlproperty string QtQuick.Particles2::SpriteGoal::goalState
+    \qmlproperty string QtQuick.Particles::SpriteGoal::goalState
 
     The name of the Sprite which the affected particles should move to.
 
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     on that path.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::SpriteGoal::jump
+    \qmlproperty bool QtQuick.Particles::SpriteGoal::jump
 
     If true, affected sprites will jump directly to the goal state instead of taking the
     the shortest valid path to get there. They will also not finish their current state,
@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     Default is false.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::SpriteGoal::systemStates
+    \qmlproperty bool QtQuick.Particles::SpriteGoal::systemStates
 
     deprecated, use GroupGoal instead
 */

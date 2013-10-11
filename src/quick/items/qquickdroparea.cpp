@@ -125,7 +125,7 @@ QQuickDropArea::~QQuickDropArea()
 }
 
 /*!
-    \qmlproperty bool QtQuick2::DropArea::containsDrag
+    \qmlproperty bool QtQuick::DropArea::containsDrag
 
     This property identifies whether the DropArea currently contains any
     dragged items.
@@ -138,14 +138,14 @@ bool QQuickDropArea::containsDrag() const
 }
 
 /*!
-    \qmlproperty stringlist QtQuick2::DropArea::keys
+    \qmlproperty stringlist QtQuick::DropArea::keys
 
     This property holds a list of drag keys a DropArea will accept.
 
     If no keys are listed the DropArea will accept events from any drag source,
     otherwise the drag source must have at least one compatible key.
 
-    \sa QtQuick2::Drag::keys
+    \sa QtQuick::Drag::keys
 */
 
 QStringList QQuickDropArea::keys() const
@@ -182,7 +182,7 @@ QQuickDropAreaDrag *QQuickDropArea::drag()
 }
 
 /*!
-    \qmlproperty Object QtQuick2::DropArea::drag.source
+    \qmlproperty Object QtQuick::DropArea::drag.source
 
     This property holds the source of a drag.
 */
@@ -193,8 +193,8 @@ QObject *QQuickDropAreaDrag::source() const
 }
 
 /*!
-    \qmlproperty qreal QtQuick2::DropArea::drag.x
-    \qmlproperty qreal QtQuick2::DropArea::drag.y
+    \qmlproperty qreal QtQuick::DropArea::drag.x
+    \qmlproperty qreal QtQuick::DropArea::drag.y
 
     These properties hold the coordinates of the last drag event.
 */
@@ -210,7 +210,7 @@ qreal QQuickDropAreaDrag::y() const
 }
 
 /*!
-    \qmlsignal QtQuick2::DropArea::onPositionChanged(DragEvent drag)
+    \qmlsignal QtQuick::DropArea::onPositionChanged(DragEvent drag)
 
     This handler is called when the position of a drag has changed.
 */
@@ -251,7 +251,7 @@ QStringList QQuickDropAreaPrivate::getKeys(const QMimeData *mimeData) const
 }
 
 /*!
-    \qmlsignal QtQuick2::DropArea::onEntered(DragEvent drag)
+    \qmlsignal QtQuick::DropArea::onEntered(DragEvent drag)
 
     This handler is called when a \a drag enters the bounds of a DropArea.
 */
@@ -284,7 +284,7 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
 }
 
 /*!
-    \qmlsignal QtQuick2::DropArea::onExited()
+    \qmlsignal QtQuick::DropArea::onExited()
 
     This handler is called when a drag exits the bounds of a DropArea.
 */
@@ -305,7 +305,7 @@ void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
 }
 
 /*!
-    \qmlsignal QtQuick2::DropArea::onDropped(DragEvent drop)
+    \qmlsignal QtQuick::DropArea::onDropped(DragEvent drop)
 
     This handler is called when a drop event occurs within the bounds of a
     a DropArea.
@@ -350,32 +350,32 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlproperty real QtQuick2::DragEvent::x
+    \qmlproperty real QtQuick::DragEvent::x
 
     This property holds the x coordinate of a drag event.
 */
 
 /*!
-    \qmlproperty real QtQuick2::DragEvent::y
+    \qmlproperty real QtQuick::DragEvent::y
 
     This property holds the y coordinate of a drag event.
 */
 
 /*!
-    \qmlproperty Object QtQuick2::DragEvent::drag.source
+    \qmlproperty Object QtQuick::DragEvent::drag.source
 
     This property holds the source of a drag event.
 */
 
 /*!
-    \qmlproperty stringlist QtQuick2::DragEvent::keys
+    \qmlproperty stringlist QtQuick::DragEvent::keys
 
     This property holds a list of keys identifying the data type or source of a
     drag event.
 */
 
 /*!
-    \qmlproperty enumeration QtQuick2::DragEvent::action
+    \qmlproperty enumeration QtQuick::DragEvent::action
 
     This property holds the action that the \l source is to perform on an accepted drop.
 
@@ -390,14 +390,14 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlproperty flags QtQuick2::DragEvent::supportedActions
+    \qmlproperty flags QtQuick::DragEvent::supportedActions
 
     This property holds the set of \l {action}{actions} supported by the
     drag source.
 */
 
 /*!
-    \qmlproperty flags QtQuick2::DragEvent::proposedAction
+    \qmlproperty flags QtQuick::DragEvent::proposedAction
     \since 5.2
 
     This property holds the set of \l {action}{actions} proposed by the
@@ -405,7 +405,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlproperty bool QtQuick2::DragEvent::accepted
+    \qmlproperty bool QtQuick::DragEvent::accepted
 
     This property holds whether the drag event was accepted by a handler.
 
@@ -413,8 +413,8 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlmethod QtQuick2::DragEvent::accept()
-    \qmlmethod QtQuick2::DragEvent::accept(enumeration action)
+    \qmlmethod QtQuick::DragEvent::accept()
+    \qmlmethod QtQuick::DragEvent::accept(enumeration action)
 
     Accepts the drag event.
 
@@ -422,77 +422,77 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlmethod QtQuick2::DragEvent::acceptProposedAction()
+    \qmlmethod QtQuick::DragEvent::acceptProposedAction()
     \since 5.2
 
     Accepts the drag event with the \l proposedAction.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::DragEvent::hasColor
+    \qmlproperty bool QtQuick::DragEvent::hasColor
     \since 5.2
 
     This property holds whether the drag event contains a color item.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::DragEvent::hasHtml
+    \qmlproperty bool QtQuick::DragEvent::hasHtml
     \since 5.2
 
     This property holds whether the drag event contains a html item.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::DragEvent::hasText
+    \qmlproperty bool QtQuick::DragEvent::hasText
     \since 5.2
 
     This property holds whether the drag event contains a text item.
 */
 
 /*!
-    \qmlproperty bool QtQuick2::DragEvent::hasUrls
+    \qmlproperty bool QtQuick::DragEvent::hasUrls
     \since 5.2
 
     This property holds whether the drag event contains one or more url items.
 */
 
 /*!
-    \qmlproperty color QtQuick2::DragEvent::colorData
+    \qmlproperty color QtQuick::DragEvent::colorData
     \since 5.2
 
     This property holds color data, if any.
 */
 
 /*!
-    \qmlproperty string QtQuick2::DragEvent::html
+    \qmlproperty string QtQuick::DragEvent::html
     \since 5.2
 
     This property holds html data, if any.
 */
 
 /*!
-    \qmlproperty string QtQuick2::DragEvent::text
+    \qmlproperty string QtQuick::DragEvent::text
     \since 5.2
 
     This property holds text data, if any.
 */
 
 /*!
-    \qmlproperty urllist QtQuick2::DragEvent::urls
+    \qmlproperty urllist QtQuick::DragEvent::urls
     \since 5.2
 
     This property holds a list of urls, if any.
 */
 
 /*!
-    \qmlproperty stringlist QtQuick2::DragEvent::formats
+    \qmlproperty stringlist QtQuick::DragEvent::formats
     \since 5.2
 
     This property holds a list of mime type formats contained in the drag data.
 */
 
 /*!
-    \qmlmethod string QtQuick2::DragEvent::getDataAsString(string format)
+    \qmlmethod string QtQuick::DragEvent::getDataAsString(string format)
     \since 5.2
 
     Returns the data for the given \a format converted to a string. \a format should be one contained in the \l formats property.

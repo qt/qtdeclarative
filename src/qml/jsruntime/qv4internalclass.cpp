@@ -197,6 +197,11 @@ InternalClass *InternalClass::changePrototype(Object *proto)
     return newClass;
 }
 
+InternalClass *InternalClass::addMember(StringRef string, PropertyAttributes data, uint *index)
+{
+    return addMember(string.getPointer(), data, index);
+}
+
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
 //    qDebug() << "InternalClass::addMember()" << string->toQString() << size << hex << (uint)data.m_all << data.type();
@@ -253,6 +258,11 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     }
 
     transitions.insert(t, object->internalClass);
+}
+
+uint InternalClass::find(const StringRef string)
+{
+    return find(string.getPointer());
 }
 
 uint InternalClass::find(const String *string)

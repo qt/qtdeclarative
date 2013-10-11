@@ -56,12 +56,12 @@ QT_BEGIN_NAMESPACE
 
 */
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::ParticlePainter::system
+    \qmlproperty ParticleSystem QtQuick.Particles::ParticlePainter::system
     This is the system whose particles can be painted by the element.
     If the ParticlePainter is a direct child of a ParticleSystem, it will automatically be associated with it.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::ParticlePainter::groups
+    \qmlproperty list<string> QtQuick.Particles::ParticlePainter::groups
     Which logical particle groups will be painted.
 
     If empty, it will paint the default particle group ("").

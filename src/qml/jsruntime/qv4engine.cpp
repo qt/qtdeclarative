@@ -42,6 +42,7 @@
 #include <qv4value_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
+#include <qv4objectiterator_p.h>
 #include <qv4arrayobject_p.h>
 #include <qv4booleanobject_p.h>
 #include <qv4globalobject_p.h>
@@ -102,6 +103,7 @@ ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
     exceptionValue = Encode::undefined();
+    hasException = false;
 
     if (!factory) {
 
@@ -366,9 +368,9 @@ Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *
     return f->asReturned<FunctionObject>();
 }
 
-Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs)
+Returned<BoundFunction> *ExecutionEngine::newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
 {
-    assert(target);
+    Q_ASSERT(target);
 
     BoundFunction *f = new (memoryManager) BoundFunction(scope, target, boundThis, boundArgs);
     return f->asReturned<BoundFunction>();
@@ -440,7 +442,7 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
 }
 
 
-Returned<DateObject> *ExecutionEngine::newDateObject(const Value &value)
+Returned<DateObject> *ExecutionEngine::newDateObject(const ValueRef value)
 {
     DateObject *object = new (memoryManager) DateObject(this, value);
     return object->asReturned<DateObject>();
@@ -535,7 +537,7 @@ Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
     return o->asReturned<Object>();
 }
 
-Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, Object *o)
+Returned<Object> *ExecutionEngine::newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o)
 {
     Object *obj = new (memoryManager) ForEachIteratorObject(ctx, o);
     return obj->asReturned<Object>();
@@ -571,7 +573,7 @@ namespace {
         {
         }
 
-        void resolve(ExecutionEngine::StackFrame *frame, ExecutionContext *context, Function *function)
+        void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
         {
             if (context->interpreterInstructionPointer) {
                 qptrdiff offset = *context->interpreterInstructionPointer - 1 - function->codeData;
@@ -588,7 +590,7 @@ namespace {
     };
 }
 
-QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
+QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
     LineNumberResolver lineNumbers(this);
 
@@ -627,7 +629,7 @@ QVector<ExecutionEngine::StackFrame> ExecutionEngine::stackTrace(int frameLimit)
     return stack;
 }
 
-ExecutionEngine::StackFrame ExecutionEngine::currentStackFrame() const
+StackFrame ExecutionEngine::currentStackFrame() const
 {
     StackFrame frame;
     frame.line = -1;
@@ -805,5 +807,63 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
         m_qmlExtensions = new QmlExtensions;
     return m_qmlExtensions;
 }
+
+void ExecutionEngine::throwException(const ValueRef value)
+{
+    Q_ASSERT(!hasException);
+    hasException = true;
+    exceptionValue = value;
+    QV4::Scope scope(this);
+    QV4::Scoped<ErrorObject> error(scope, value);
+    if (!!error)
+        exceptionStackTrace = error->stackTrace;
+    else
+        exceptionStackTrace = stackTrace();
+
+    if (debugger)
+        debugger->aboutToThrow(value);
+
+    UnwindHelper::prepareForUnwind(current);
+    throwInternal();
+}
+
+void ExecutionEngine::rethrowException(ExecutionContext *intermediateCatchingContext)
+{
+    if (hasException) {
+        while (current != intermediateCatchingContext)
+            popContext();
+    }
+    rethrowInternal();
+}
+
+ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
+{
+    if (!hasException)
+        rethrowInternal();
+    while (current != catchingContext)
+        popContext();
+    if (trace)
+        *trace = exceptionStackTrace;
+    exceptionStackTrace.clear();
+    hasException = false;
+    ReturnedValue res = exceptionValue.asReturnedValue();
+    exceptionValue = Encode::undefined();
+    return res;
+}
+
+#if !defined(V4_CXX_ABI_EXCEPTION)
+struct DummyException
+{};
+
+void ExecutionEngine::throwInternal()
+{
+    throw DummyException();
+}
+
+void ExecutionEngine::rethrowInternal()
+{
+    throw;
+}
+#endif
 
 QT_END_NAMESPACE

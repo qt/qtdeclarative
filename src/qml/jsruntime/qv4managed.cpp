@@ -241,3 +241,8 @@ bool Managed::deleteProperty(const StringRef name)
 {
     return vtbl->deleteProperty(this, name);
 }
+
+Property *Managed::advanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes)
+{
+    return vtbl->advanceIterator(this, it, name, index, attributes);
+}

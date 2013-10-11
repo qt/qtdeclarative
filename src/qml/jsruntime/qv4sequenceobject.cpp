@@ -63,7 +63,7 @@ static void generateWarning(QV4::ExecutionContext *ctx, const QString& descripti
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::ExecutionEngine::StackFrame frame = ctx->engine->currentStackFrame();
+    QV4::StackFrame frame = ctx->engine->currentStackFrame();
 
     retn.setLine(frame.line);
     retn.setUrl(QUrl(frame.source));
@@ -277,9 +277,9 @@ public:
         return (signedIdx < m_container.count()) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
-    Property *containerAdvanceIterator(ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    Property *containerAdvanceIterator(ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
     {
-        *name = 0;
+        name = (String *)0;
         *index = UINT_MAX;
 
         if (m_isReference) {
@@ -455,7 +455,7 @@ public:
     QVariant toVariant() const
     { return QVariant::fromValue<Container>(m_container); }
 
-    static QVariant toVariant(QV4::ArrayObject *array)
+    static QVariant toVariant(QV4::ArrayObjectRef array)
     {
         QV4::Scope scope(array->engine());
         Container result;
@@ -500,7 +500,7 @@ private:
     { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index); }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static Property *advanceIterator(Managed *that, ObjectIterator *it, String **name, uint *index, PropertyAttributes *attrs)
+    static Property *advanceIterator(Managed *that, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attrs)
     { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, attrs); }
 
     static void destroy(Managed *that)
@@ -544,12 +544,13 @@ void SequencePrototype::init()
 
 QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
 {
-    QV4::Object *o = ctx->callData->thisObject.asObject();
+    QV4::Scope scope(ctx);
+    QV4::ScopedObject o(scope, ctx->callData->thisObject);
     if (!o || !o->isListType())
         ctx->throwTypeError();
 
     if (ctx->callData->argc >= 2)
-        return ctx->callData->thisObject.asReturnedValue();
+        return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -559,7 +560,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
-    return ctx->callData->thisObject.asReturnedValue();
+    return o.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
@@ -575,7 +576,7 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex))); \
+        QV4::Scoped<QV4::Object> obj(scope, new (engine->memoryManager) QQml##ElementTypeName##List(engine, object, propertyIndex)); \
         return obj.asReturnedValue(); \
     } else
 
@@ -593,7 +594,7 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::Scoped<QV4::Object> obj(scope, QV4::Value::fromObject(new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >()))); \
+        QV4::Scoped<QV4::Object> obj(scope, new (engine->memoryManager) QQml##ElementTypeName##List(engine, v.value<SequenceType >())); \
         return obj.asReturnedValue(); \
     } else
 
@@ -615,12 +616,13 @@ ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const
         return list->toVariant(); \
     else
 
-QVariant SequencePrototype::toVariant(QV4::Object *object)
+QVariant SequencePrototype::toVariant(ObjectRef object)
 {
     Q_ASSERT(object->isListType());
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
 }
 
+#undef SEQUENCE_TO_VARIANT
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
     if (typeHint == qMetaTypeId<SequenceType>()) { \
         return QQml##ElementTypeName##List::toVariant(a); \
@@ -635,8 +637,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         return QVariant();
     }
     QV4::Scope scope(array->engine());
-    // ### GC
-    QV4::ArrayObject *a = array->asArrayObject();
+    QV4::ScopedArrayObject a(scope, array);
 
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }

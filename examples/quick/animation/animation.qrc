@@ -18,5 +18,6 @@
         <file>states/qt-logo.png</file>
         <file>states/states.qml</file>
         <file>states/transitions.qml</file>
+        <file>basics/animators.qml</file>
     </qresource>
 </RCC>

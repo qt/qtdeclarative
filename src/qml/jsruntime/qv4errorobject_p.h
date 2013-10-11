@@ -70,7 +70,7 @@ struct ErrorObject: Object {
 
     SyntaxErrorObject *asSyntaxError();
 
-    ExecutionEngine::StackTrace stackTrace;
+    StackTrace stackTrace;
     String *stack;
 
     static ReturnedValue method_get_stack(SimpleCallContext *ctx);

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     For full details, see the \l{Sprite Animation} overview.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::duration
+    \qmlproperty int QtQuick::Sprite::duration
 
     Duration of the animation. Values below 0 are invalid.
 
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::durationVariation
+    \qmlproperty int QtQuick::Sprite::durationVariation
 
     The duration of the animation can vary by up to this amount. Variation will never decrease the
     length of the animation to less than 0.
@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty qreal QtQuick2::Sprite::frameRate
+    \qmlproperty qreal QtQuick::Sprite::frameRate
 
     Frames per second to show in the animation. Values below 0 are invalid.
 
@@ -87,7 +87,7 @@ QT_BEGIN_NAMESPACE
     If not, and frameDuration is valid , then frameDuration will be used. Otherwise duration is used.
 */
 /*!
-    \qmlproperty qreal QtQuick2::Sprite::frameRateVariation
+    \qmlproperty qreal QtQuick::Sprite::frameRateVariation
 
     The frame rate between animations can vary by up to this amount. Variation will never decrease the
     length of the animation to less than 0.
@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameDuration
+    \qmlproperty int QtQuick::Sprite::frameDuration
 
     Duration of each frame of the animation. Values below 0 are invalid.
 
@@ -107,7 +107,7 @@ QT_BEGIN_NAMESPACE
     If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameDurationVariation
+    \qmlproperty int QtQuick::Sprite::frameDurationVariation
 
     The duration of a frame in the animation can vary by up to this amount. Variation will never decrease the
     length of the animation to less than 0.
@@ -119,12 +119,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick2::Sprite::name
+    \qmlproperty string QtQuick::Sprite::name
 
     The name of this sprite, for use in the to property of other sprites.
 */
 /*!
-    \qmlproperty QVariantMap QtQuick2::Sprite::to
+    \qmlproperty QVariantMap QtQuick::Sprite::to
 
     A list of other sprites and weighted transitions to them,
     for example {"a":1, "b":2, "c":0} would specify that one-third should
@@ -138,32 +138,32 @@ QT_BEGIN_NAMESPACE
     will repeat itself after completing.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameCount
+    \qmlproperty int QtQuick::Sprite::frameCount
 
     Number of frames in this sprite.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameHeight
+    \qmlproperty int QtQuick::Sprite::frameHeight
 
     Height of a single frame in this sprite.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameWidth
+    \qmlproperty int QtQuick::Sprite::frameWidth
 
     Width of a single frame in this sprite.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameX
+    \qmlproperty int QtQuick::Sprite::frameX
 
     The X coordinate in the image file of the first frame of the sprite.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frameY
+    \qmlproperty int QtQuick::Sprite::frameY
 
     The Y coordinate in the image file of the first frame of the sprite.
 */
 /*!
-    \qmlproperty url QtQuick2::Sprite::source
+    \qmlproperty url QtQuick::Sprite::source
 
     The image source for the animation.
 
@@ -174,7 +174,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Sprite::reverse
+    \qmlproperty bool QtQuick::Sprite::reverse
 
     If true, then the animation will be played in reverse.
 
@@ -182,7 +182,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Sprite::randomStart
+    \qmlproperty bool QtQuick::Sprite::randomStart
 
     If true, then the animation will start its first animation with a random amount of its duration skipped.
     This allows them to not look like they all just started when the animation begins.
@@ -194,7 +194,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool QtQuick2::Sprite::frameSync
+    \qmlproperty bool QtQuick::Sprite::frameSync
 
     If true, then the animation will have no duration. Instead, the animation will advance
     one frame each time a frame is rendered to the screen. This synchronizes it with the painting

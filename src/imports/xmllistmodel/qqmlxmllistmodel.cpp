@@ -99,7 +99,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty string QtQuick.XmlListModel2::XmlRole::name
+    \qmlproperty string QtQuick.XmlListModel::XmlRole::name
 
     The name for the role. This name is used to access the model data for this role.
 
@@ -126,7 +126,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty string QtQuick.XmlListModel2::XmlRole::query
+    \qmlproperty string QtQuick.XmlListModel::XmlRole::query
     The relative XPath expression query for this role. The query must be relative; it cannot start
     with a '/'.
 
@@ -143,7 +143,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty bool QtQuick.XmlListModel2::XmlRole::isKey
+    \qmlproperty bool QtQuick.XmlListModel::XmlRole::isKey
     Defines whether this is a key role.
     Key roles are used to determine whether a set of values should
     be updated or added to the XML list model when XmlListModel::reload()
@@ -728,7 +728,7 @@ QQuickXmlListModel::~QQuickXmlListModel()
 }
 
 /*!
-    \qmlproperty list<XmlRole> QtQuick.XmlListModel2::XmlListModel::roles
+    \qmlproperty list<XmlRole> QtQuick.XmlListModel::XmlListModel::roles
 
     The roles to make available for this model.
 */
@@ -774,7 +774,7 @@ QHash<int, QByteArray> QQuickXmlListModel::roleNames() const
 }
 
 /*!
-    \qmlproperty int QtQuick.XmlListModel2::XmlListModel::count
+    \qmlproperty int QtQuick.XmlListModel::XmlListModel::count
     The number of data entries in the model.
 */
 int QQuickXmlListModel::count() const
@@ -784,7 +784,7 @@ int QQuickXmlListModel::count() const
 }
 
 /*!
-    \qmlproperty url QtQuick.XmlListModel2::XmlListModel::source
+    \qmlproperty url QtQuick.XmlListModel::XmlListModel::source
     The location of the XML data source.
 
     If both \c source and \l xml are set, \l xml is used.
@@ -807,7 +807,7 @@ void QQuickXmlListModel::setSource(const QUrl &src)
 }
 
 /*!
-    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::xml
+    \qmlproperty string QtQuick.XmlListModel::XmlListModel::xml
     This property holds the XML data for this model, if set.
 
     The text is assumed to be UTF-8 encoded.
@@ -831,7 +831,7 @@ void QQuickXmlListModel::setXml(const QString &xml)
 }
 
 /*!
-    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::query
+    \qmlproperty string QtQuick.XmlListModel::XmlListModel::query
     An absolute XPath query representing the base query for creating model items
     from this model's XmlRole objects. The query should start with '/' or '//'.
 */
@@ -857,7 +857,7 @@ void QQuickXmlListModel::setQuery(const QString &query)
 }
 
 /*!
-    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::namespaceDeclarations
+    \qmlproperty string QtQuick.XmlListModel::XmlListModel::namespaceDeclarations
     The namespace declarations to be used in the XPath queries.
 
     The namespaces should be declared as in XQuery. For example, if a requested document
@@ -891,7 +891,7 @@ void QQuickXmlListModel::setNamespaceDeclarations(const QString &declarations)
 }
 
 /*!
-    \qmlmethod object QtQuick.XmlListModel2::XmlListModel::get(int index)
+    \qmlmethod object QtQuick.XmlListModel::XmlListModel::get(int index)
 
     Returns the item at \a index in the model.
 
@@ -935,7 +935,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.XmlListModel2::XmlListModel::status
+    \qmlproperty enumeration QtQuick.XmlListModel::XmlListModel::status
     Specifies the model loading status, which can be one of the following:
 
     \list
@@ -956,7 +956,7 @@ QQuickXmlListModel::Status QQuickXmlListModel::status() const
 }
 
 /*!
-    \qmlproperty real QtQuick.XmlListModel2::XmlListModel::progress
+    \qmlproperty real QtQuick.XmlListModel::XmlListModel::progress
 
     This indicates the current progress of the downloading of the XML data
     source. This value ranges from 0.0 (no data downloaded) to
@@ -977,7 +977,7 @@ qreal QQuickXmlListModel::progress() const
 }
 
 /*!
-    \qmlmethod QtQuick.XmlListModel2::XmlListModel::errorString()
+    \qmlmethod QtQuick.XmlListModel::XmlListModel::errorString()
 
     Returns a string description of the last error that occurred
     if \l status is XmlListModel::Error.
@@ -1008,7 +1008,7 @@ void QQuickXmlListModel::componentComplete()
 }
 
 /*!
-    \qmlmethod QtQuick.XmlListModel2::XmlListModel::reload()
+    \qmlmethod QtQuick.XmlListModel::XmlListModel::reload()
 
     Reloads the model.
 

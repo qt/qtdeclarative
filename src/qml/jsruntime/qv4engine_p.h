@@ -111,6 +111,7 @@ class MultiplyWrappedQObjectMap;
 class RegExp;
 class RegExpCache;
 struct QmlExtensions;
+struct Exception;
 
 struct Q_QML_EXPORT ExecutionEngine
 {
@@ -236,8 +237,6 @@ struct Q_QML_EXPORT ExecutionEngine
 
     RegExpCache *regExpCache;
 
-    SafeValue exceptionValue;
-
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
     // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
     // out-of-resource situations.  When such a resource is passed into JavaScript we
@@ -267,7 +266,7 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *popContext();
 
     Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *));
-    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObject *target, Value boundThis, const QVector<Value> &boundArgs);
+    Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs);
 
     Returned<Object> *newObject();
     Returned<Object> *newObject(InternalClass *internalClass);
@@ -283,7 +282,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<ArrayObject> *newArrayObject(const QStringList &list);
     Returned<ArrayObject> *newArrayObject(InternalClass *ic);
 
-    Returned<DateObject> *newDateObject(const Value &value);
+    Returned<DateObject> *newDateObject(const ValueRef value);
     Returned<DateObject> *newDateObject(const QDateTime &dt);
 
     Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
@@ -301,17 +300,10 @@ struct Q_QML_EXPORT ExecutionEngine
 
     Returned<Object> *newVariantObject(const QVariant &v);
 
-    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, Object *o);
+    Returned<Object> *newForEachIteratorObject(ExecutionContext *ctx, const ObjectRef o);
 
     Returned<Object> *qmlContextObject() const;
 
-    struct StackFrame {
-        QString source;
-        QString function;
-        int line;
-        int column;
-    };
-    typedef QVector<StackFrame> StackTrace;
     StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;
     QUrl resolvedUrl(const QString &file);
@@ -327,6 +319,20 @@ struct Q_QML_EXPORT ExecutionEngine
     Function *functionForProgramCounter(quintptr pc) const;
 
     QmlExtensions *qmlExtensions();
+
+    // Exception handling
+    SafeValue exceptionValue;
+    bool hasException;
+    StackTrace exceptionStackTrace;
+
+    void Q_NORETURN throwException(const ValueRef value);
+    void Q_NORETURN rethrowException(ExecutionContext *intermediateCatchingContext);
+    ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
+
+    void Q_NORETURN throwInternal();
+    void Q_NORETURN rethrowInternal();
+    // ----
+
 
 private:
     QmlExtensions *m_qmlExtensions;

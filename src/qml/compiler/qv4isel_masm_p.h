@@ -72,7 +72,7 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     // Coderef + execution engine
 
     QVector<JSC::MacroAssemblerCodeRef> codeRefs;
-    QList<QVector<QV4::Value> > constantValues;
+    QList<QVector<QV4::Primitive> > constantValues;
     QVector<int> codeSizes; // corresponding to the endOfCode labels. MacroAssemblerCodeRef's size may
                             // be larger, as for example on ARM we append the exception handling table.
 };
@@ -323,8 +323,8 @@ public:
 
         int calculateJSStackFrameSize() const
         {
-            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::Value) - 1 + maxOutgoingArgumentCount) + 1;
-            int frameSize = locals * sizeof(QV4::Value);
+            const int locals = (localCount + sizeof(QV4::CallData)/sizeof(QV4::SafeValue) - 1 + maxOutgoingArgumentCount) + 1;
+            int frameSize = locals * sizeof(QV4::SafeValue);
             return frameSize;
         }
 
@@ -334,7 +334,7 @@ public:
             Q_ASSERT(idx < localCount);
 
             Pointer addr = callDataAddress(0);
-            addr.offset -= sizeof(QV4::Value) * (idx + 1);
+            addr.offset -= sizeof(QV4::SafeValue) * (idx + 1);
             return addr;
         }
 
@@ -346,11 +346,11 @@ public:
             Q_ASSERT(argument < maxOutgoingArgumentCount);
 
             const int index = maxOutgoingArgumentCount - argument;
-            return Pointer(Assembler::LocalsRegister, sizeof(QV4::Value) * (-index));
+            return Pointer(Assembler::LocalsRegister, sizeof(QV4::SafeValue) * (-index));
         }
 
         Pointer callDataAddress(int offset = 0) const {
-            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::Value) * (maxOutgoingArgumentCount - 1)) + offset);
+            return Pointer(Assembler::LocalsRegister, -(sizeof(QV4::CallData) + sizeof(QV4::SafeValue) * (maxOutgoingArgumentCount - 1)) + offset);
         }
 
         Address savedRegPointer(int offset) const
@@ -358,7 +358,7 @@ public:
             Q_ASSERT(offset >= 0);
             Q_ASSERT(offset < savedRegCount);
 
-            const int off = offset * sizeof(QV4::Value);
+            const int off = offset * sizeof(QV4::SafeValue);
             return Address(Assembler::StackFrameRegister, - calleeSavedRegisterSpace() - off);
         }
 
@@ -387,14 +387,14 @@ public:
     public:
         ConstantTable(Assembler *as): _as(as) {}
 
-        int add(const QV4::Value &v);
+        int add(const QV4::Primitive &v);
         ImplicitAddress loadValueAddress(V4IR::Const *c, RegisterID baseReg);
-        ImplicitAddress loadValueAddress(const QV4::Value &v, RegisterID baseReg);
+        ImplicitAddress loadValueAddress(const QV4::Primitive &v, RegisterID baseReg);
         void finalize(JSC::LinkBuffer &linkBuffer, InstructionSelection *isel);
 
     private:
         Assembler *_as;
-        QVector<QV4::Value> _values;
+        QVector<QV4::Primitive> _values;
         QVector<DataLabelPtr> _toPatch;
     };
 
@@ -446,12 +446,21 @@ public:
     }
 
     void registerBlock(V4IR::BasicBlock*, V4IR::BasicBlock *nextBlock);
+    V4IR::BasicBlock *nextBlock() const { return _nextBlock; }
     void jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target);
     void addPatch(V4IR::BasicBlock* targetBlock, Jump targetJump);
     void addPatch(DataLabelPtr patch, Label target);
     void addPatch(DataLabelPtr patch, V4IR::BasicBlock *target);
+    void generateCJumpOnNonZero(RegisterID reg, V4IR::BasicBlock *currentBlock,
+                             V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, TrustedImm32 right,
+                                V4IR::BasicBlock *currentBlock, V4IR::BasicBlock *trueBlock,
+                                V4IR::BasicBlock *falseBlock);
+    void generateCJumpOnCompare(RelationalCondition cond, RegisterID left, RegisterID right,
+                                V4IR::BasicBlock *currentBlock, V4IR::BasicBlock *trueBlock,
+                                V4IR::BasicBlock *falseBlock);
 
-    Pointer loadTempAddress(RegisterID reg, V4IR::Temp *t);
+    Pointer loadTempAddress(RegisterID baseReg, V4IR::Temp *t);
     Pointer loadStringAddress(RegisterID reg, const QString &string);
     void loadStringRef(RegisterID reg, const QString &string);
     Pointer stackSlotPointer(V4IR::Temp *t) const
@@ -610,7 +619,7 @@ public:
 
     void storeUInt32ReturnValue(RegisterID dest)
     {
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::SafeValue)));
         storeReturnValue(tmp);
         toUInt32Register(tmp, dest);
     }
@@ -622,7 +631,7 @@ public:
         xor64(ScratchRegister, ReturnValueRegister);
         move64ToDouble(ReturnValueRegister, dest);
 #else
-        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::Value)));
+        Pointer tmp(StackPointerRegister, -int(sizeof(QV4::SafeValue)));
         storeReturnValue(tmp);
         loadDouble(tmp, dest);
 #endif
@@ -817,14 +826,14 @@ public:
         JSC::MacroAssembler::storeDouble(FPGpr0, target);
     }
 
-    void storeValue(QV4::Value value, RegisterID destination)
+    void storeValue(QV4::Primitive value, RegisterID destination)
     {
         Q_UNUSED(value);
         Q_UNUSED(destination);
         Q_UNREACHABLE();
     }
 
-    void storeValue(QV4::Value value, Address destination)
+    void storeValue(QV4::Primitive value, Address destination)
     {
 #ifdef VALUE_FITS_IN_REGISTER
         store64(TrustedImm64(value.val), destination);
@@ -835,7 +844,7 @@ public:
 #endif
     }
 
-    void storeValue(QV4::Value value, V4IR::Temp* temp);
+    void storeValue(QV4::Primitive value, V4IR::Temp* temp);
 
     void enterStandardStackFrame();
     void leaveStandardStackFrame();
@@ -1120,7 +1129,7 @@ public:
             Address tagAddr = addr;
             tagAddr.offset += 4;
 
-            QV4::Value v = convertToValue(c);
+            QV4::Primitive v = convertToValue(c);
             store32(TrustedImm32(v.int_32), addr);
             store32(TrustedImm32(v.tag), tagAddr);
             return Pointer(addr);
@@ -1197,7 +1206,6 @@ public:
     void storeUInt32(RegisterID reg, Pointer addr)
     {
         // The UInt32 representation in QV4::Value is really convoluted. See also toUInt32Register.
-#if CPU(X86_64) | CPU(X86)
         Jump intRange = branch32(GreaterThanOrEqual, reg, TrustedImm32(0));
         convertUInt32ToDouble(reg, FPGpr0, ReturnValueRegister);
         storeDouble(FPGpr0, addr);
@@ -1205,9 +1213,6 @@ public:
         intRange.link(this);
         storeInt32(reg, addr);
         done.link(this);
-#else
-        Q_ASSERT(!"Not tested on this platform!");
-#endif
     }
 
     void storeUInt32(RegisterID reg, V4IR::Temp *target)
@@ -1244,6 +1249,11 @@ public:
 
         loadDouble(t, target);
         return target;
+    }
+
+    RegisterID toBoolRegister(V4IR::Expr *e, RegisterID scratchReg)
+    {
+        return toInt32Register(e, scratchReg);
     }
 
     RegisterID toInt32Register(V4IR::Expr *e, RegisterID scratchReg)
@@ -1359,7 +1369,7 @@ public:
 
     virtual void run(int functionIndex);
 
-    void *addConstantTable(QVector<QV4::Value> *values);
+    void *addConstantTable(QVector<QV4::Primitive> *values);
 protected:
     virtual QV4::CompiledData::CompilationUnit *backendCompileStep();
 
@@ -1439,9 +1449,13 @@ protected:
                                    V4IR::Expr *rightSource, V4IR::Temp *target);
     void doubleBinop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
                      V4IR::Temp *target);
-    Assembler::Jump branchDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
+    Assembler::Jump branchDouble(bool invertCondition, V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right);
     bool visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right,
                           V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
+    void visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
+                                       V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    bool visitCJumpStrictBool(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
     bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
                     V4IR::Temp *target);
 
@@ -1467,21 +1481,13 @@ private:
     void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-#if CPU(X86_64) || CPU(X86)
             _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
                                        (Assembler::FPRegisterID) target->index,
                                        Assembler::ScratchRegister);
-#else
-        Q_ASSERT(!"Not supported on this platform!");
-#endif
         } else if (target->kind == V4IR::Temp::StackSlot) {
-#if CPU(X86_64) || CPU(X86)
             _as->convertUInt32ToDouble(_as->toUInt32Register(source, Assembler::ScratchRegister),
                                       Assembler::FPGpr0, Assembler::ScratchRegister);
             _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
-#else
-        Q_ASSERT(!"Not supported on this platform!");
-#endif
         } else {
             Q_UNIMPLEMENTED();
         }
@@ -1514,7 +1520,13 @@ private:
     template <typename Retval, typename Arg1, typename Arg2>
     void generateLookupCall(Retval retval, uint index, uint getterSetterOffset, Arg1 arg1, Arg2 arg2)
     {
-        Assembler::Pointer lookupAddr(Assembler::ReturnValueRegister, index * sizeof(QV4::Lookup));
+        Assembler::RegisterID lookupRegister;
+#if CPU(ARM)
+        lookupRegister = JSC::ARMRegisters::r8;
+#else
+        lookupRegister = Assembler::ReturnValueRegister;
+#endif
+        Assembler::Pointer lookupAddr(lookupRegister, index * sizeof(QV4::Lookup));
 
         Assembler::Address getterSetter = lookupAddr;
         getterSetter.offset += getterSetterOffset;
@@ -1553,6 +1565,7 @@ private:
 
     V4IR::BasicBlock *_block;
     V4IR::Function* _function;
+    QSet<V4IR::Jump *> _removableJumps;
     Assembler* _as;
     QSet<V4IR::BasicBlock*> _reentryBlocks;
 

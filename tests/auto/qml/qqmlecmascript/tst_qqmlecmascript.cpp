@@ -54,7 +54,6 @@
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
-#include <private/qv4exception_p.h>
 #include <private/qv4scopedvalue_p.h>
 
 #ifdef Q_CC_MSVC
@@ -2280,8 +2279,8 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
         d->args[0] = o;
         d->thisObject = engine->global();
         function->call(d);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
         return true;
     }
     return false;
@@ -2310,8 +2309,8 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
         d->thisObject = engine->global();
         value = function->call(d);
         return __qmljs_strict_equal(value, result);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return false;
 }
@@ -2335,8 +2334,8 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
         d->args[0] = o;
         d->thisObject = engine->global();
         return function->call(d);
-    } catch (QV4::Exception &e) {
-        e.accept(ctx);
+    } catch (...) {
+        ctx->catchException();
     }
     return QV4::Encode::undefined();
 }
@@ -2357,8 +2356,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QV8Engine *engine = ep->v8engine();
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::ScopedValue qobjectwrapper(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
-    QV4::ScopedValue object(scope, qobjectwrapper);
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
 
     // Non-existent methods
     o->reset();

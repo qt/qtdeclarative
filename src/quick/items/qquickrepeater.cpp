@@ -131,7 +131,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
  */
 
 /*!
-    \qmlsignal QtQuick2::Repeater::onItemAdded(int index, Item item)
+    \qmlsignal QtQuick::Repeater::onItemAdded(int index, Item item)
 
     This handler is called when an item is added to the repeater. The \a index
     parameter holds the index at which the item has been inserted within the
@@ -139,7 +139,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick2::Repeater::onItemRemoved(int index, Item item)
+    \qmlsignal QtQuick::Repeater::onItemRemoved(int index, Item item)
 
     This handler is called when an item is removed from the repeater. The \a index
     parameter holds the index at which the item was removed from the repeater,
@@ -158,7 +158,7 @@ QQuickRepeater::~QQuickRepeater()
 }
 
 /*!
-    \qmlproperty any QtQuick2::Repeater::model
+    \qmlproperty any QtQuick::Repeater::model
 
     The model providing data for the repeater.
 
@@ -235,7 +235,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component QtQuick2::Repeater::delegate
+    \qmlproperty Component QtQuick::Repeater::delegate
     \default
 
     The delegate provides a template defining each item instantiated by the repeater.
@@ -299,7 +299,7 @@ void QQuickRepeater::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty int QtQuick2::Repeater::count
+    \qmlproperty int QtQuick::Repeater::count
 
     This property holds the number of items in the repeater.
 */
@@ -312,7 +312,7 @@ int QQuickRepeater::count() const
 }
 
 /*!
-    \qmlmethod Item QtQuick2::Repeater::itemAt(index)
+    \qmlmethod Item QtQuick::Repeater::itemAt(index)
 
     Returns the \l Item that has been created at the given \a index, or \c null
     if no item exists at \a index.

@@ -285,7 +285,7 @@ bool JsonParser::parseMember(ObjectRef o)
 
     ScopedString s(scope, context->engine->newIdentifier(key));
     Property *p = o->insertMember(s, Attr_Data);
-    p->value = val;
+    p->value = val.asReturnedValue();
 
     END;
     return true;
@@ -791,16 +791,14 @@ QString Stringify::JO(ObjectRef o)
 
     QStringList partial;
     if (propertyList.isEmpty()) {
-        ObjectIterator it(o.getPointer(), ObjectIterator::EnumerableOnly);
+        ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
         ScopedValue name(scope);
 
         ScopedValue val(scope);
         while (1) {
-            Value v;
-            name = it.nextPropertyNameAsString(&v);
+            name = it.nextPropertyNameAsString(val);
             if (name->isNull())
                 break;
-            val = v;
             QString key = name->toQStringNoThrow();
             QString member = makeMember(key, val);
             if (!member.isEmpty())
@@ -1024,15 +1022,13 @@ QJsonObject JsonObject::toJsonObject(ObjectRef o, V4ObjectSet &visitedObjects)
 
     visitedObjects.insert(o);
 
-    ObjectIterator it(o, ObjectIterator::EnumerableOnly);
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
+    QV4::ScopedValue val(scope);
     while (1) {
-        Value v;
-        name = it.nextPropertyNameAsString(&v);
+        name = it.nextPropertyNameAsString(val);
         if (name->isNull())
             break;
-
-        QV4::ScopedValue val(scope, v);
 
         QString key = name->toQStringNoThrow();
         if (!val->asFunctionObject())

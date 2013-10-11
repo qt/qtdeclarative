@@ -46,7 +46,6 @@
 #include "qv4function_p.h"
 #include "qv4debugging_p.h"
 #include "qv4script_p.h"
-#include "qv4exception_p.h"
 #include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -412,13 +411,11 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ScopedValue result(scope);
     try {
         result = function->code(ctx, function->codeData);
-    } catch (Exception &ex) {
+    } catch (...) {
         ctx->strictMode = cstrict;
         ctx->currentEvalCode = evalCode.next;
         ctx->compilationUnit = oldCompilationUnit;
-        if (strictMode)
-            ex.partiallyUnwindContext(parentContext);
-        throw;
+        ctx->rethrowException();
     }
 
     ctx->strictMode = cstrict;

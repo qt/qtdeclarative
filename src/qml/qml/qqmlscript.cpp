@@ -635,13 +635,11 @@ void ProcessAST::extractVersion(QStringRef string, int *maj, int *min)
         int dot = string.indexOf(QLatin1Char('.'));
 
         if (dot < 0) {
-            *maj = string.toString().toInt();
+            *maj = string.toInt();
             *min = 0;
         } else {
-            const QString *s = string.string();
-            int p = string.position();
-            *maj = QStringRef(s, p, dot).toString().toInt();
-            *min = QStringRef(s, p + dot + 1, string.size() - dot - 1).toString().toInt();
+            *maj = string.left(dot).toInt();
+            *min = string.mid(dot + 1).toInt();
         }
     }
 }

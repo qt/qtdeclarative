@@ -66,8 +66,9 @@ public:
     virtual QSGMaterialShader *createShader() const;
     virtual int compare(const QSGMaterial *other) const;
 
-    void setColor(const QColor &color) { m_color = color; }
-    const QColor &color() const { return m_color; }
+    void setColor(const QColor &c) { m_color = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void setColor(const QVector4D &color) { m_color = color; }
+    const QVector4D &color() const { return m_color; }
 
     QSGTexture *texture() const { return m_texture; }
 
@@ -88,7 +89,7 @@ private:
     QSGPlainTexture *m_texture;
     QExplicitlySharedDataPointer<QFontEngineGlyphCache> m_glyphCache;
     QRawFont m_font;
-    QColor m_color;
+    QVector4D m_color;
     QSize m_size;
 };
 
@@ -98,11 +99,12 @@ public:
     QSGStyledTextMaterial(const QRawFont &font);
     virtual ~QSGStyledTextMaterial() { }
 
-    void setStyleShift(const QPointF &shift) { m_styleShift = shift; }
-    const QPointF &styleShift() const { return m_styleShift; }
+    void setStyleShift(const QVector2D &shift) { m_styleShift = shift; }
+    const QVector2D &styleShift() const { return m_styleShift; }
 
-    void setStyleColor(const QColor &color) { m_styleColor = color; }
-    const QColor &styleColor() const { return m_styleColor; }
+    void setStyleColor(const QColor &c) { m_styleColor = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void setStyleColor(const QVector4D &color) { m_styleColor = color; }
+    const QVector4D &styleColor() const { return m_styleColor; }
 
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
@@ -110,8 +112,8 @@ public:
     int compare(const QSGMaterial *other) const;
 
 private:
-    QPointF m_styleShift;
-    QColor m_styleColor;
+    QVector2D m_styleShift;
+    QVector4D m_styleColor;
 };
 
 class QSGOutlinedTextMaterial : public QSGStyledTextMaterial

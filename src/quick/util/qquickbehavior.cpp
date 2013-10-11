@@ -115,7 +115,7 @@ QQuickBehavior::~QQuickBehavior()
 }
 
 /*!
-    \qmlproperty Animation QtQuick2::Behavior::animation
+    \qmlproperty Animation QtQuick::Behavior::animation
     \default
 
     This property holds the animation to run when the behavior is triggered.
@@ -150,7 +150,7 @@ void QQuickBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbst
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Behavior::enabled
+    \qmlproperty bool QtQuick::Behavior::enabled
 
     This property holds whether the behavior will be triggered when the tracked
     property changes value.
@@ -202,7 +202,7 @@ void QQuickBehavior::write(const QVariant &value)
     const QVariant &currentValue = d->property.read();
 
     QQuickStateOperation::ActionList actions;
-    QQuickAction action;
+    QQuickStateAction action;
     action.property = d->property;
     action.fromValue = currentValue;
     action.toValue = value;

@@ -152,7 +152,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineDefaultProperty(QStringLiteral("name"), (s = ic->engine->newString(className())));
 
     stackTrace = ic->engine->stackTrace();
-    ExecutionEngine::StackFrame frame;
+    StackFrame frame;
     frame.source = fileName;
     frame.line = line;
     frame.column = column;
@@ -169,7 +169,8 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
 
 ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
 {
-    ErrorObject *This = ctx->callData->thisObject.asErrorObject();
+    Scope scope(ctx);
+    Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
     if (!This)
         ctx->throwTypeError();
     if (!This->stack) {
@@ -177,7 +178,7 @@ ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
         for (int i = 0; i < This->stackTrace.count(); ++i) {
             if (i > 0)
                 trace += QLatin1Char('\n');
-            const ExecutionEngine::StackFrame &frame = This->stackTrace[i];
+            const StackFrame &frame = This->stackTrace[i];
             trace += frame.function;
             trace += QLatin1Char('@');
             trace += frame.source;

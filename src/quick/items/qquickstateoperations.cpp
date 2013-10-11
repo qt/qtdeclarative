@@ -187,12 +187,12 @@ QQuickParentChange::~QQuickParentChange()
 }
 
 /*!
-    \qmlproperty real QtQuick2::ParentChange::x
-    \qmlproperty real QtQuick2::ParentChange::y
-    \qmlproperty real QtQuick2::ParentChange::width
-    \qmlproperty real QtQuick2::ParentChange::height
-    \qmlproperty real QtQuick2::ParentChange::scale
-    \qmlproperty real QtQuick2::ParentChange::rotation
+    \qmlproperty real QtQuick::ParentChange::x
+    \qmlproperty real QtQuick::ParentChange::y
+    \qmlproperty real QtQuick::ParentChange::width
+    \qmlproperty real QtQuick::ParentChange::height
+    \qmlproperty real QtQuick::ParentChange::scale
+    \qmlproperty real QtQuick::ParentChange::rotation
     These properties hold the new position, size, scale, and rotation
     for the item in this state.
 */
@@ -311,7 +311,7 @@ QQuickItem *QQuickParentChange::originalParent() const
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentChange::target
+    \qmlproperty Item QtQuick::ParentChange::target
     This property holds the item to be reparented
 */
 QQuickItem *QQuickParentChange::object() const
@@ -327,7 +327,7 @@ void QQuickParentChange::setObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty Item QtQuick2::ParentChange::parent
+    \qmlproperty Item QtQuick::ParentChange::parent
     This property holds the new parent for the item in this state.
 */
 QQuickItem *QQuickParentChange::parent() const
@@ -350,7 +350,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     ActionList actions;
 
-    QQuickAction a;
+    QQuickStateAction a;
     a.event = this;
     actions << a;
 
@@ -358,13 +358,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal x = d->xString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction xa(d->target, QLatin1String("x"), x);
+            QQuickStateAction xa(d->target, QLatin1String("x"), x);
             actions << xa;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->xString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("x"));
             newBinding->setTarget(property);
-            QQuickAction xa;
+            QQuickStateAction xa;
             xa.property = property;
             xa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             xa.fromValue = xa.property.read();
@@ -377,13 +377,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal y = d->yString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction ya(d->target, QLatin1String("y"), y);
+            QQuickStateAction ya(d->target, QLatin1String("y"), y);
             actions << ya;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->yString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("y"));
             newBinding->setTarget(property);
-            QQuickAction ya;
+            QQuickStateAction ya;
             ya.property = property;
             ya.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ya.fromValue = ya.property.read();
@@ -396,13 +396,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal scale = d->scaleString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction sa(d->target, QLatin1String("scale"), scale);
+            QQuickStateAction sa(d->target, QLatin1String("scale"), scale);
             actions << sa;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->scaleString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("scale"));
             newBinding->setTarget(property);
-            QQuickAction sa;
+            QQuickStateAction sa;
             sa.property = property;
             sa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             sa.fromValue = sa.property.read();
@@ -415,13 +415,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal rotation = d->rotationString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction ra(d->target, QLatin1String("rotation"), rotation);
+            QQuickStateAction ra(d->target, QLatin1String("rotation"), rotation);
             actions << ra;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->rotationString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("rotation"));
             newBinding->setTarget(property);
-            QQuickAction ra;
+            QQuickStateAction ra;
             ra.property = property;
             ra.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ra.fromValue = ra.property.read();
@@ -434,13 +434,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal width = d->widthString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction wa(d->target, QLatin1String("width"), width);
+            QQuickStateAction wa(d->target, QLatin1String("width"), width);
             actions << wa;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->widthString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("width"));
             newBinding->setTarget(property);
-            QQuickAction wa;
+            QQuickStateAction wa;
             wa.property = property;
             wa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             wa.fromValue = wa.property.read();
@@ -453,13 +453,13 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
         bool ok = false;
         qreal height = d->heightString.value.numberLiteral(&ok);
         if (ok) {
-            QQuickAction ha(d->target, QLatin1String("height"), height);
+            QQuickStateAction ha(d->target, QLatin1String("height"), height);
             actions << ha;
         } else {
             QQmlBinding *newBinding = new QQmlBinding(d->heightString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("height"));
             newBinding->setTarget(property);
-            QQuickAction ha;
+            QQuickStateAction ha;
             ha.property = property;
             ha.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ha.fromValue = ha.property.read();
@@ -479,7 +479,7 @@ void QQuickParentChange::saveOriginals()
     d->origStackBefore = d->rewindStackBefore;
 }
 
-/*void QQuickParentChange::copyOriginals(QQuickActionEvent *other)
+/*void QQuickParentChange::copyOriginals(QQuickStateActionEvent *other)
 {
     Q_D(QQuickParentChange);
     QQuickParentChange *pc = static_cast<QQuickParentChange*>(other);
@@ -507,12 +507,12 @@ void QQuickParentChange::reverse(Reason)
     d->doChange(d->origParent, d->origStackBefore);
 }
 
-QQuickActionEvent::EventType QQuickParentChange::type() const
+QQuickStateActionEvent::EventType QQuickParentChange::type() const
 {
     return ParentChange;
 }
 
-bool QQuickParentChange::override(QQuickActionEvent*other)
+bool QQuickParentChange::override(QQuickStateActionEvent*other)
 {
     Q_D(QQuickParentChange);
     if (other->type() != ParentChange)
@@ -926,7 +926,7 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
         d->baselineBinding->setTarget(d->baselineProp);
     }
 
-    QQuickAction a;
+    QQuickStateAction a;
     a.event = this;
     return ActionList() << a;
 }
@@ -938,7 +938,7 @@ QQuickAnchorSet *QQuickAnchorChanges::anchors()
 }
 
 /*!
-    \qmlproperty Item QtQuick2::AnchorChanges::target
+    \qmlproperty Item QtQuick::AnchorChanges::target
     This property holds the \l Item for which the anchor changes will be applied.
 */
 QQuickItem *QQuickAnchorChanges::object() const
@@ -954,13 +954,13 @@ void QQuickAnchorChanges::setObject(QQuickItem *target)
 }
 
 /*!
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.left
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.right
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.horizontalCenter
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.top
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.bottom
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.verticalCenter
-    \qmlproperty AnchorLine QtQuick2::AnchorChanges::anchors.baseline
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.left
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.right
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.horizontalCenter
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.top
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.bottom
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.verticalCenter
+    \qmlproperty AnchorLine QtQuick::AnchorChanges::anchors.baseline
 
     These properties change the respective anchors of the item.
 
@@ -1191,22 +1191,22 @@ void QQuickAnchorChanges::reverse(Reason reason)
         d->target->setY(d->origY);
 }
 
-QQuickActionEvent::EventType QQuickAnchorChanges::type() const
+QQuickStateActionEvent::EventType QQuickAnchorChanges::type() const
 {
     return AnchorChanges;
 }
 
-QList<QQuickAction> QQuickAnchorChanges::additionalActions()
+QList<QQuickStateAction> QQuickAnchorChanges::additionalActions()
 {
     Q_D(QQuickAnchorChanges);
-    QList<QQuickAction> extra;
+    QList<QQuickStateAction> extra;
 
     QQuickAnchors::Anchors combined = d->anchorSet->d_func()->usedAnchors | d->anchorSet->d_func()->resetAnchors;
     bool hChange = combined & QQuickAnchors::Horizontal_Mask;
     bool vChange = combined & QQuickAnchors::Vertical_Mask;
 
     if (d->target) {
-        QQuickAction a;
+        QQuickStateAction a;
         if (hChange && d->fromX != d->toX) {
             a.property = QQmlProperty(d->target, QLatin1String("x"));
             a.toValue = d->toX;
@@ -1265,7 +1265,7 @@ void QQuickAnchorChanges::saveOriginals()
     saveCurrentValues();
 }
 
-void QQuickAnchorChanges::copyOriginals(QQuickActionEvent *other)
+void QQuickAnchorChanges::copyOriginals(QQuickStateActionEvent *other)
 {
     Q_D(QQuickAnchorChanges);
     QQuickAnchorChanges *ac = static_cast<QQuickAnchorChanges*>(other);
@@ -1301,7 +1301,7 @@ void QQuickAnchorChanges::copyOriginals(QQuickActionEvent *other)
                 << acp->topBinding << acp->bottomBinding << acp->vCenterBinding << acp->baselineBinding;
 
     //clear old values from other
-    //### could this be generalized for all QQuickActionEvents, and called after copyOriginals?
+    //### could this be generalized for all QQuickStateActionEvents, and called after copyOriginals?
     acp->leftBinding = 0;
     acp->rightBinding = 0;
     acp->hCenterBinding = 0;
@@ -1368,11 +1368,11 @@ void QQuickAnchorChanges::clearBindings()
     }
 }
 
-bool QQuickAnchorChanges::override(QQuickActionEvent*other)
+bool QQuickAnchorChanges::override(QQuickStateActionEvent*other)
 {
     if (other->type() != AnchorChanges)
         return false;
-    if (static_cast<QQuickActionEvent*>(this) == other)
+    if (static_cast<QQuickStateActionEvent*>(this) == other)
         return true;
     if (static_cast<QQuickAnchorChanges*>(other)->object() == object())
         return true;

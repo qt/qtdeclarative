@@ -281,10 +281,10 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
 
             QV4::ExecutionContext *ctx = v4->current;
             try {
-                str = s->asString();
+                str = s;
                 val = o->get(str);
-            } catch (QV4::Exception &e) {
-                e.accept(ctx);
+            } catch (...) {
+                ctx->catchException();
             }
 
             serialize(data, val, engine);
@@ -392,7 +392,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
-            array->arrayData[ii].value = value;
+            array->arrayData[ii].value = value.asReturnedValue();
             array->arrayDataLen = ii + 1;
         }
         array->setArrayLengthUnchecked(seqLength);

@@ -122,7 +122,7 @@ QQmlTimer::QQmlTimer(QObject *parent)
 }
 
 /*!
-    \qmlproperty int QtQml2::Timer::interval
+    \qmlproperty int QtQml::Timer::interval
 
     Sets the \a interval between triggers, in milliseconds.
 
@@ -145,7 +145,7 @@ int QQmlTimer::interval() const
 }
 
 /*!
-    \qmlproperty bool QtQml2::Timer::running
+    \qmlproperty bool QtQml::Timer::running
 
     If set to true, starts the timer; otherwise stops the timer.
     For a non-repeating timer, \a running is set to false after the
@@ -173,7 +173,7 @@ void QQmlTimer::setRunning(bool running)
 }
 
 /*!
-    \qmlproperty bool QtQml2::Timer::repeat
+    \qmlproperty bool QtQml::Timer::repeat
 
     If \a repeat is true the timer is triggered repeatedly at the
     specified interval; otherwise, the timer will trigger once at the
@@ -200,7 +200,7 @@ void QQmlTimer::setRepeating(bool repeating)
 }
 
 /*!
-    \qmlproperty bool QtQml2::Timer::triggeredOnStart
+    \qmlproperty bool QtQml::Timer::triggeredOnStart
 
     When a timer is started, the first trigger is usually after the specified
     interval has elapsed.  It is sometimes desirable to trigger immediately
@@ -233,7 +233,7 @@ void QQmlTimer::setTriggeredOnStart(bool triggeredOnStart)
 }
 
 /*!
-    \qmlmethod QtQml2::Timer::start()
+    \qmlmethod QtQml::Timer::start()
     \brief Starts the timer
 
     If the timer is already running, calling this method has no effect.  The
@@ -245,7 +245,7 @@ void QQmlTimer::start()
 }
 
 /*!
-    \qmlmethod QtQml2::Timer::stop()
+    \qmlmethod QtQml::Timer::stop()
     \brief Stops the timer
 
     If the timer is not running, calling this method has no effect.  The
@@ -257,7 +257,7 @@ void QQmlTimer::stop()
 }
 
 /*!
-    \qmlmethod QtQml2::Timer::restart()
+    \qmlmethod QtQml::Timer::restart()
     \brief Restarts the timer
 
     If the Timer is not running it will be started, otherwise it will be
@@ -302,7 +302,7 @@ void QQmlTimer::componentComplete()
 }
 
 /*!
-    \qmlsignal QtQml2::Timer::onTriggered()
+    \qmlsignal QtQml::Timer::onTriggered()
 
     This handler is called when the Timer is triggered.
 */

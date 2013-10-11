@@ -63,14 +63,14 @@ QT_BEGIN_NAMESPACE
     The source should be relatively smooth black and white noise, such as perlin noise.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Turbulence::strength
+    \qmlproperty real QtQuick.Particles::Turbulence::strength
 
     The magnitude of the velocity vector at any point varies between zero and
     the square root of two. It will then be multiplied by strength to get the
     velocity per second for the particles affected by the turbulence.
 */
 /*!
-    \qmlproperty url QtQuick.Particles2::Turbulence::noiseSource
+    \qmlproperty url QtQuick.Particles::Turbulence::noiseSource
 
     The source image to generate the turbulence from. It will be scaled to the size of the element,
     so equal or larger sizes will give better results. Tweaking this image is the only way to tweak

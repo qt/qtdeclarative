@@ -68,18 +68,18 @@ QT_BEGIN_NAMESPACE
     but on less capable hardware you should expect small irregularties in the simulation as simulates with worse granularity.
 */
 /*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::Affector::system
+    \qmlproperty ParticleSystem QtQuick.Particles::Affector::system
     This is the system which will be affected by the element.
     If the Affector is a direct child of a ParticleSystem, it will automatically be associated with it.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::Affector::groups
+    \qmlproperty list<string> QtQuick.Particles::Affector::groups
     Which logical particle groups will be affected.
 
     If empty, it will affect all particles.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::Affector::whenCollidingWith
+    \qmlproperty list<string> QtQuick.Particles::Affector::whenCollidingWith
     If any logical particle groups are specified here, then the affector
     will only be triggered if the particle being examined intersects with
     a particle of one of these groups.
@@ -93,7 +93,7 @@ QT_BEGIN_NAMESPACE
     By default, no groups are specified.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::enabled
+    \qmlproperty bool QtQuick.Particles::Affector::enabled
     If enabled is set to false, this affector will not affect any particles.
 
     Usually this is used to conditionally turn an affector on or off.
@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
     Default value is true.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::once
+    \qmlproperty bool QtQuick.Particles::Affector::once
     If once is set to true, this affector will only affect each particle
     once in their lifetimes. If the affector normally simulates a continuous
     effect over time, then it will simulate the effect of one second of time
@@ -110,12 +110,12 @@ QT_BEGIN_NAMESPACE
     Default value is false.
 */
 /*!
-    \qmlproperty Shape QtQuick.Particles2::Affector::shape
+    \qmlproperty Shape QtQuick.Particles::Affector::shape
     If a size has been defined, the shape property can be used to affect a
     non-rectangular area.
 */
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::onAffected(real x, real y)
+    \qmlsignal QtQuick.Particles::Affector::onAffected(real x, real y)
 
     This handler is called when a particle is selected to be affected. It will not be called
     if a particle is considered by the Affector but not actually altered in any way.

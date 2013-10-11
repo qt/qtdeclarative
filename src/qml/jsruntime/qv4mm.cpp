@@ -169,9 +169,9 @@ struct MemoryManager::Data
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
-        scribble = !qgetenv("MM_SCRIBBLE").isEmpty();
-        aggressiveGC = !qgetenv("MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = !qgetenv("MM_EXACT_GC").isEmpty();
+        scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
+        aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
+        exactGC = !qgetenv("QV4_MM_EXACT_GC").isEmpty();
         if (aggressiveGC)
             qDebug() << "Using aggressive garbage collection";
         if (exactGC)
@@ -332,8 +332,7 @@ void MemoryManager::mark()
             persistent = n;
             continue;
         }
-        if (Managed *m = persistent->value.asManaged())
-            m->mark();
+        persistent->value.mark();
         persistent = persistent->next;
     }
 
@@ -579,12 +578,6 @@ void MemoryManager::unprotect(Managed *m)
         m_d->protectedObject.remove(m);
 }
 
-static inline void add(QVector<Managed *> &values, const Value &v)
-{
-    if (Object *o = v.asObject())
-        values.append(o);
-}
-
 void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 {
     m_d->engine = engine;
@@ -674,8 +667,8 @@ void MemoryManager::collectFromStack() const
 
 void MemoryManager::collectFromJSStack() const
 {
-    Value *v = engine()->jsStackBase;
-    Value *top = engine()->jsStackTop;
+    SafeValue *v = engine()->jsStackBase;
+    SafeValue *top = engine()->jsStackTop;
     while (v < top) {
         Managed *m = v->asManaged();
         if (m && m->inUse)

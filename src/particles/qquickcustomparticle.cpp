@@ -160,7 +160,7 @@ void QQuickCustomParticle::componentComplete()
 
 //Trying to keep the shader conventions the same as in qsgshadereffectitem
 /*!
-    \qmlproperty string QtQuick.Particles2::CustomParticle::fragmentShader
+    \qmlproperty string QtQuick.Particles::CustomParticle::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the
@@ -182,7 +182,7 @@ void QQuickCustomParticle::setFragmentShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty string QtQuick.Particles2::CustomParticle::vertexShader
+    \qmlproperty string QtQuick.Particles::CustomParticle::vertexShader
 
     This property holds the vertex shader's GLSL source code.
 

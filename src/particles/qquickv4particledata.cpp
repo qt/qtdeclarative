@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialX
+    \qmlproperty real QtQuick.Particles::Particle::initialX
     The x coordinate of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialVX
+    \qmlproperty real QtQuick.Particles::Particle::initialVX
     The x velocity of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialAX
+    \qmlproperty real QtQuick.Particles::Particle::initialAX
     The x acceleration of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialY
+    \qmlproperty real QtQuick.Particles::Particle::initialY
     The y coordinate of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialVY
+    \qmlproperty real QtQuick.Particles::Particle::initialVY
     The y velocity of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -104,7 +104,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::initialAY
+    \qmlproperty real QtQuick.Particles::Particle::initialAY
     The y acceleration of the particle at the beginning of its lifetime.
 
     The method of simulation prefers to have the initial values changed, rather
@@ -113,50 +113,50 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::x
+    \qmlproperty real QtQuick.Particles::Particle::x
     The current x coordinate of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::vx
+    \qmlproperty real QtQuick.Particles::Particle::vx
     The current x velocity of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::ax
+    \qmlproperty real QtQuick.Particles::Particle::ax
     The current x acceleration of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::y
+    \qmlproperty real QtQuick.Particles::Particle::y
     The current y coordinate of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::vy
+    \qmlproperty real QtQuick.Particles::Particle::vy
     The current y velocity of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::ay
+    \qmlproperty real QtQuick.Particles::Particle::ay
     The current y acceleration of the particle.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::t
+    \qmlproperty real QtQuick.Particles::Particle::t
     The time, in seconds since the beginning of the simulation, that the particle was born.
 */
 
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::startSize
+    \qmlproperty real QtQuick.Particles::Particle::startSize
     The size in pixels that the particle image is at the start
     of its life.
 */
 
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::endSize
+    \qmlproperty real QtQuick.Particles::Particle::endSize
     The size in pixels that the particle image is at the end
     of its life. If this value is less than 0, then it is
     disregarded and the particle will have its startSize for the
@@ -164,35 +164,35 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::lifeSpan
+    \qmlproperty real QtQuick.Particles::Particle::lifeSpan
     The time in seconds that the particle will live for.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::rotation
+    \qmlproperty real QtQuick.Particles::Particle::rotation
     Degrees clockwise that the particle image is rotated at
     the beginning of its life.
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::rotationVelocity
+    \qmlproperty real QtQuick.Particles::Particle::rotationVelocity
     Degrees clockwise per second that the particle image is rotated at while alive.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Particle::autoRotate
+    \qmlproperty bool QtQuick.Particles::Particle::autoRotate
     If autoRotate is true, then the particle's rotation will be
     set so that it faces the direction of travel, plus any
     rotation from the rotation or rotationVelocity properties.
 */
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::Particle::update
+    \qmlproperty bool QtQuick.Particles::Particle::update
 
     Inside an Affector, the changes made to the particle will only be
     applied if update is set to true.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::xDeformationVectorX
+    \qmlproperty real QtQuick.Particles::Particle::xDeformationVectorX
 
     The x component of the deformation vector along the X axis. ImageParticle
     can draw particles across non-square shapes. It will draw the texture rectangle
@@ -200,7 +200,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::yDeformationVectorX
+    \qmlproperty real QtQuick.Particles::Particle::yDeformationVectorX
 
     The y component of the deformation vector along the X axis. ImageParticle
     can draw particles across non-square shapes. It will draw the texture rectangle
@@ -208,7 +208,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::xDeformationVectorY
+    \qmlproperty real QtQuick.Particles::Particle::xDeformationVectorY
 
     The x component of the deformation vector along the X axis. ImageParticle
     can draw particles across non-square shapes. It will draw the texture rectangle
@@ -216,7 +216,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::yDeformationVectorY
+    \qmlproperty real QtQuick.Particles::Particle::yDeformationVectorY
 
     The y component of the deformation vector along the Y axis. ImageParticle
     can draw particles across non-square shapes. It will draw the texture rectangle
@@ -224,7 +224,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::red
+    \qmlproperty real QtQuick.Particles::Particle::red
 
     ImageParticle can draw colorized particles. When it does so, red is used
     as the red channel of the color applied to the source image.
@@ -233,7 +233,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::green
+    \qmlproperty real QtQuick.Particles::Particle::green
 
     ImageParticle can draw colorized particles. When it does so, green is used
     as the green channel of the color applied to the source image.
@@ -242,7 +242,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::blue
+    \qmlproperty real QtQuick.Particles::Particle::blue
 
     ImageParticle can draw colorized particles. When it does so, blue is used
     as the blue channel of the color applied to the source image.
@@ -251,7 +251,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::alpha
+    \qmlproperty real QtQuick.Particles::Particle::alpha
 
     ImageParticle can draw colorized particles. When it does so, alpha is used
     as the alpha channel of the color applied to the source image.
@@ -259,12 +259,12 @@ QT_BEGIN_NAMESPACE
     Values are from 0.0 to 1.0.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::lifeLeft
+    \qmlproperty real QtQuick.Particles::Particle::lifeLeft
     The time in seconds that the particle has left to live at
     the current point in time.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::currentSize
+    \qmlproperty real QtQuick.Particles::Particle::currentSize
     The currentSize of the particle, interpolating between startSize and endSize based on the currentTime.
 */
 

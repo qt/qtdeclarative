@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick2::Accessible::name
+    \qmlproperty string QtQuick::Accessible::name
 
     This property sets an accessible name.
     For a button for example, this should have a binding to its text.
@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick2::Accessible::description
+    \qmlproperty string QtQuick::Accessible::description
 
     This property sets an accessible description.
     Similar to the name it describes the item. The description
@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty enumeration QtQuick2::Accessible::role
+    \qmlproperty enumeration QtQuick::Accessible::role
 
     This flags sets the semantic type of the widget.
     A button for example would have "Button" as type.

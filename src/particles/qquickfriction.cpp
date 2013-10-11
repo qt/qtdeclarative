@@ -54,12 +54,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Friction::factor
+    \qmlproperty real QtQuick.Particles::Friction::factor
 
     A drag will be applied to moving objects which is this factor of their current velocity.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::Friction::threshold
+    \qmlproperty real QtQuick.Particles::Friction::threshold
 
     The drag will only be applied to objects with a velocity above the threshold velocity. The
     drag applied will bring objects down to the threshold velocity, but no further.
