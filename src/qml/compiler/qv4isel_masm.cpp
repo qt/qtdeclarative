@@ -1491,6 +1491,9 @@ void InstructionSelection::convertTypeToDouble(V4IR::Temp *source, V4IR::Temp *t
         convertUIntToDouble(source, target);
         break;
     case V4IR::UndefinedType:
+        _as->loadDouble(_as->loadTempAddress(Assembler::ScratchRegister, source), Assembler::FPGpr0);
+        _as->storeDouble(Assembler::FPGpr0, target);
+        break;
     case V4IR::StringType:
     case V4IR::VarType: {
         // load the tag:
@@ -1666,46 +1669,86 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
 
     } break;
     case V4IR::DoubleType: {
-        Assembler::FPRegisterID reg = _as->toDoubleRegister(source);
         Assembler::Jump success =
-                _as->branchTruncateDoubleToInt32(reg, Assembler::ReturnValueRegister,
+                _as->branchTruncateDoubleToInt32(_as->toDoubleRegister(source),
+                                                 Assembler::ReturnValueRegister,
                                                  Assembler::BranchIfTruncateSuccessful);
         generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_double_to_int32,
                              Assembler::PointerToValue(source));
         success.link(_as);
         _as->storeInt32(Assembler::ReturnValueRegister, target);
     } break;
-    case V4IR::UInt32Type: {
-        Assembler::RegisterID reg = _as->toUInt32Register(source, Assembler::ReturnValueRegister);
-        Assembler::Jump easy = _as->branch32(Assembler::GreaterThanOrEqual, reg, Assembler::TrustedImm32(0));
-        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_int32,
-                             Assembler::PointerToValue(source));
-        easy.link(_as);
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
-    } break;
+    case V4IR::UInt32Type:
+        _as->storeInt32(_as->toUInt32Register(source, Assembler::ReturnValueRegister), target);
+        break;
     case V4IR::NullType:
     case V4IR::UndefinedType:
         _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
         _as->storeInt32(Assembler::ReturnValueRegister, target);
         break;
-    case V4IR::StringType:
-        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_int32,
-                             _as->loadTempAddress(Assembler::ScratchRegister, source));
-        _as->storeInt32(Assembler::ReturnValueRegister, target);
-        break;
     case V4IR::BoolType:
         _as->storeInt32(_as->toInt32Register(source, Assembler::ReturnValueRegister), target);
         break;
+    case V4IR::StringType:
     default:
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_int32,
+                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+        _as->storeInt32(Assembler::ReturnValueRegister, target);
         break;
     } // switch (source->type)
 }
 
 void InstructionSelection::convertTypeToUInt32(V4IR::Temp *source, V4IR::Temp *target)
 {
-    generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_uint32,
-                         Assembler::PointerToValue(source));
-    _as->storeUInt32(Assembler::ReturnValueRegister, target);
+    switch (source->type) {
+    case V4IR::VarType: {
+        // load the tag:
+        Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        tagAddr.offset += 4;
+        _as->load32(tagAddr, Assembler::ScratchRegister);
+
+        // check if it's an int32:
+        Assembler::Jump isNoInt = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
+                                                Assembler::TrustedImm32(Value::_Integer_Type));
+        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ScratchRegister, source);
+        _as->storeUInt32(_as->toInt32Register(addr, Assembler::ScratchRegister), target);
+        Assembler::Jump intDone = _as->jump();
+
+        // not an int:
+        isNoInt.link(_as);
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_uint32,
+                             _as->loadTempAddress(Assembler::ScratchRegister, source));
+        _as->storeInt32(Assembler::ReturnValueRegister, target);
+
+        intDone.link(_as);
+    } break;
+    case V4IR::DoubleType: {
+        Assembler::FPRegisterID reg = _as->toDoubleRegister(source);
+        Assembler::Jump success =
+                _as->branchTruncateDoubleToUint32(reg, Assembler::ReturnValueRegister,
+                                                  Assembler::BranchIfTruncateSuccessful);
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_double_to_uint32,
+                             Assembler::PointerToValue(source));
+        success.link(_as);
+        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+    } break;
+    case V4IR::NullType:
+    case V4IR::UndefinedType:
+        _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
+        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+        break;
+    case V4IR::StringType:
+        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_value_to_uint32,
+                             Assembler::PointerToValue(source));
+        _as->storeUInt32(Assembler::ReturnValueRegister, target);
+        break;
+    case V4IR::SInt32Type:
+    case V4IR::BoolType:
+        _as->storeUInt32(_as->toInt32Register(source, Assembler::ReturnValueRegister), target);
+        break;
+    default:
+        break;
+    } // switch (source->type)
 }
 
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)

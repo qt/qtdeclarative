@@ -1294,6 +1294,8 @@ public:
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
     {
+        Q_ASSERT(addr.base != scratchReg);
+
         // The UInt32 representation in QV4::Value is really convoluted. See also storeUInt32.
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
@@ -1480,30 +1482,25 @@ private:
 
     void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
+        Assembler::RegisterID tmpReg = Assembler::ScratchRegister;
+        Assembler::RegisterID reg = _as->toInt32Register(source, tmpReg);
+
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-            _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                       (Assembler::FPRegisterID) target->index,
-                                       Assembler::ScratchRegister);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            _as->convertUInt32ToDouble(_as->toUInt32Register(source, Assembler::ScratchRegister),
-                                      Assembler::FPGpr0, Assembler::ScratchRegister);
-            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+            _as->convertUInt32ToDouble(reg, (Assembler::FPRegisterID) target->index, tmpReg);
         } else {
-            Q_UNIMPLEMENTED();
+            _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
+                                      Assembler::FPGpr0, tmpReg);
+            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
         }
     }
 
     void convertIntToBool(V4IR::Temp *source, V4IR::Temp *target)
     {
-        Assembler::RegisterID reg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister) {
-            reg = _as->toInt32Register(source, reg);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            _as->move(_as->toInt32Register(source, reg), reg);
-        } else {
-            Q_UNIMPLEMENTED();
-        }
+        Assembler::RegisterID reg = target->kind == V4IR::Temp::PhysicalRegister
+                ? (Assembler::RegisterID) target->index
+                : Assembler::ScratchRegister;
 
+        _as->move(_as->toInt32Register(source, reg), reg);
         _as->compare32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0), reg);
         _as->storeBool(reg, target);
     }
