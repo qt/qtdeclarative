@@ -456,14 +456,8 @@ protected: // IRDecoder
                     || (oper >= OpGt && oper <= OpStrictNotEqual)) {
                 needsCall = false;
             }
-        } else if (leftSource->type == SInt32Type && rightSource->type == SInt32Type) {
-            if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor) {
-                needsCall = false;
-            }
-        } else if (leftSource->type == SInt32Type && rightSource->type == UInt32Type) {
-            if (oper == OpLShift || oper == OpRShift) {
-                needsCall = false;
-            }
+        } if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift) {
+            needsCall = false;
         }
 
         addDef(target);
