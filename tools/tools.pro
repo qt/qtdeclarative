@@ -1,12 +1,13 @@
 TEMPLATE = subdirs
-qtHaveModule(quick): SUBDIRS += qmlscene qmlplugindump
-qtHaveModule(qmltest): SUBDIRS += qmltestrunner
+qtHaveModule(quick): !android|android_app: SUBDIRS += qmlscene qmlplugindump
+qtHaveModule(qmltest): !android|android_app: SUBDIRS += qmltestrunner
 SUBDIRS += \
-    qml \
     qmlmin \
-    qmlprofiler \
-    qmlbundle \
-    v4
+    qmlprofiler
+!android|android_app: SUBDIRS += \
+                          qml \
+                          qmlbundle \
+                          v4
 qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += qmleasing
 qtHaveModule(quick): SUBDIRS += qmlimportscanner
 
