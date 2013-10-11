@@ -456,7 +456,7 @@ protected: // IRDecoder
                     || (oper >= OpGt && oper <= OpStrictNotEqual)) {
                 needsCall = false;
             }
-        } if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift) {
+        } if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift || oper == OpURShift) {
             needsCall = false;
         }
 

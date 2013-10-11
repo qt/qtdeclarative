@@ -1387,8 +1387,7 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         doubleBinop(oper, leftSource, rightSource, target);
         return;
     }
-    if (leftSource->type == V4IR::SInt32Type &&
-            (rightSource->type == V4IR::SInt32Type || rightSource->type == V4IR::UInt32Type)) {
+    if (leftSource->type == V4IR::SInt32Type && rightSource->type == V4IR::SInt32Type) {
         if (int32Binop(oper, leftSource, rightSource, target))
             return;
     }
@@ -2478,6 +2477,16 @@ bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
         _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
         _as->rshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
         _as->storeInt32(Assembler::ReturnValueRegister, target);
+        return true;
+    case V4IR::OpURShift:
+        Q_ASSERT(rightSource->type == V4IR::SInt32Type);
+        _as->move(_as->toInt32Register(leftSource, Assembler::ReturnValueRegister),
+                  Assembler::ReturnValueRegister);
+        _as->move(_as->toInt32Register(rightSource, Assembler::ScratchRegister),
+                  Assembler::ScratchRegister);
+        _as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister); // TODO: for constants, do this in the IR
+        _as->urshift32(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->storeUInt32(Assembler::ReturnValueRegister, target);
         return true;
     default:
         return false;

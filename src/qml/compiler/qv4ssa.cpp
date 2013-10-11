@@ -1722,12 +1722,8 @@ protected:
 
         case OpLShift:
         case OpRShift:
-            run(e->left, SInt32Type);
-            run(e->right, SInt32Type);
-            break;
-
         case OpURShift:
-            run(e->left, UInt32Type);
+            run(e->left, SInt32Type);
             run(e->right, SInt32Type);
             break;
 
