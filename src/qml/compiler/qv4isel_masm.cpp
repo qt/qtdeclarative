@@ -2239,8 +2239,8 @@ bool InstructionSelection::visitCJumpStrictNullUndefined(V4IR::Type nullOrUndef,
 
     Assembler::RelationalCondition cond = binop->op == V4IR::OpStrictEqual ? Assembler::Equal
                                                                            : Assembler::NotEqual;
-    const Assembler::TrustedImm32 tag(nullOrUndef == V4IR::NullType ? QV4::Value::_Null_Type
-                                                                    : QV4::Value::Undefined_Type);
+    const Assembler::TrustedImm32 tag(nullOrUndef == V4IR::NullType ? int(QV4::Value::_Null_Type)
+                                                                    : int(QV4::Value::Undefined_Type));
     _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
 }

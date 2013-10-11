@@ -242,7 +242,7 @@ struct Q_QML_EXPORT Value
     void setDouble(double d) { dbl = d; }
     bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
-    inline bool isString() const;
+    bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
         if (tag == _Integer_Type)

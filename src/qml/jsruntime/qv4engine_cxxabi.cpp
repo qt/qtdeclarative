@@ -131,6 +131,7 @@ void ExecutionEngine::rethrowInternal()
 
     globals->caughtExceptions = 0;
     _Unwind_RaiseException(&exception->unwindHeader);
+    std::terminate();
 }
 
 QT_END_NAMESPACE
