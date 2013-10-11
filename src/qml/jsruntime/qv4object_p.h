@@ -340,6 +340,7 @@ struct BooleanObject: Object {
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
+        vtbl = &static_vtbl;
         type = Type_BooleanObject;
         value = Encode(false);
     }
@@ -357,6 +358,7 @@ struct NumberObject: Object {
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
+        vtbl = &static_vtbl;
         type = Type_NumberObject;
         value = Encode((int)0);
     }

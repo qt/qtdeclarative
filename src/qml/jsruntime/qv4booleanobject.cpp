@@ -95,7 +95,9 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
 
 ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
 {
-    // ### Shouldn't this work for a boolean thisObject?
+    if (ctx->callData->thisObject.isBoolean())
+        return ctx->callData->thisObject.asReturnedValue();
+
     Scope scope(ctx);
     Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
     if (!thisObject)
