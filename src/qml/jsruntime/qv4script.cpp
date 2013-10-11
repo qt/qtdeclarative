@@ -66,7 +66,6 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, Function *f, Objec
     vtbl = &static_vtbl;
     function = f;
     function->compilationUnit->ref();
-    usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 
@@ -80,7 +79,6 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 {
     vtbl = &static_vtbl;
     function = 0;
-    usesArgumentsObject = false;
     needsActivation = false;
     defineReadonlyProperty(scope->engine->id_length, Primitive::fromInt32(1));
 

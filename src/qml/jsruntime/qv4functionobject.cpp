@@ -115,7 +115,6 @@ FunctionObject::FunctionObject(InternalClass *ic)
 
     type = Type_FunctionObject;
     needsActivation = false;
-    usesArgumentsObject = false;
     strictMode = false;
 }
 
@@ -135,7 +134,6 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     type = Type_FunctionObject;
     needsActivation = true;
-    usesArgumentsObject = false;
     strictMode = false;
 #ifndef QT_NO_DEBUG
      assert(scope->next != (ExecutionContext *)0x1);
@@ -414,7 +412,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject();
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
@@ -511,7 +508,6 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject();
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
@@ -596,7 +592,6 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
     , code(code)
 {
     vtbl = &static_vtbl;
-    isBuiltinFunction = true;
 }
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)

@@ -289,15 +289,13 @@ public:
             uint inUse   :  1;
             uint extensible : 1; // used by Object
             uint isNonStrictArgumentsObject : 1;
-            uint isBuiltinFunction : 1; // used by FunctionObject
             uint needsActivation : 1; // used by FunctionObject
-            uint usesArgumentsObject : 1; // used by FunctionObject
             uint strictMode : 1; // used by FunctionObject
-            uint type : 8;
-            mutable uint subtype : 3;
             uint bindingKeyFlag : 1;
             uint hasAccessorProperty : 1;
-            uint unused : 11;
+            uint type : 8;
+            mutable uint subtype : 8;
+            uint unused : 8;
         };
     };
 

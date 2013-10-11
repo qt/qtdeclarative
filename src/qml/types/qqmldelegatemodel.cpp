@@ -72,7 +72,6 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         , flag(flag)
     {
         vtbl = &static_vtbl;
-        isBuiltinFunction = true;
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)

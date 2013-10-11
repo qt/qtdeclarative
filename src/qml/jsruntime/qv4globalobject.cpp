@@ -386,7 +386,6 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 
     strictMode = function->isStrict() || (ctx->strictMode);
 
-    usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
 
     if (strictMode) {
