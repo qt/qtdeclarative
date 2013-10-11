@@ -1161,20 +1161,20 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
     _module->setFileName(fileName);
 
     QmlScanner scan(this, output->code);
-    scan.begin(output->program);
+    scan.begin(output->program, QmlBinding);
     foreach (AST::Node *node, output->functions) {
         if (node == output->program)
             continue;
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
-        scan.enterEnvironment(node);
+        scan.enterEnvironment(node, function ? FunctionCode : QmlBinding);
         scan(function ? function->body : node);
         scan.leaveEnvironment();
     }
     scan.end();
 
     _env = 0;
-    _function = defineFunction(QString("context scope"), output->program, 0, 0, QmlBinding);
+    _function = defineFunction(QString("context scope"), output->program, 0, 0);
 
     foreach (AST::Node *node, output->functions) {
         if (node == output->program)
@@ -1201,7 +1201,7 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
 
         defineFunction(name, node,
                        function ? function->formals : 0,
-                       body, function ? FunctionCode : QmlBinding);
+                       body);
 
     }
 
@@ -1210,9 +1210,9 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
 }
 
 
-void JSCodeGen::QmlScanner::begin(AST::Node *rootNode)
+void JSCodeGen::QmlScanner::begin(AST::Node *rootNode, CompilationMode compilationMode)
 {
-    enterEnvironment(0);
+    enterEnvironment(0, compilationMode);
     enterFunction(rootNode, "context scope", 0, 0, 0, /*isExpression*/false);
 }
 

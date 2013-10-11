@@ -341,11 +341,11 @@ private:
     struct QmlScanner : public ScanFunctions
     {
         QmlScanner(JSCodeGen *cg, const QString &sourceCode)
-            : ScanFunctions(cg, sourceCode)
+            : ScanFunctions(cg, sourceCode, /*default program mode*/GlobalCode)
             , codeGen(cg)
         {}
 
-        void begin(AST::Node *rootNode);
+        void begin(AST::Node *rootNode, CompilationMode compilationMode);
         void end();
 
         JSCodeGen *codeGen;
