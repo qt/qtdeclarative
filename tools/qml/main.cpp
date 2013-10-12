@@ -42,13 +42,17 @@
 #include "conf.h"
 
 #include <QCoreApplication>
+
+#ifdef QT_GUI_LIB
 #include <QGuiApplication>
+#include <QWindow>
+#include <QFileOpenEvent>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
-#endif
-#include <QWindow>
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+
 #include <QQmlApplicationEngine>
-#include <QFileOpenEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -128,6 +132,8 @@ void contain(QObject *o, const QUrl &containPath)
         o->setParent(o2); //Set QObject parent, and assume container will react as needed
 }
 
+#ifdef QT_GUI_LIB
+
 // Loads qml after receiving a QFileOpenEvent
 class LoaderApplication : public QGuiApplication
 {
@@ -143,6 +149,8 @@ public:
         return true;
     }
 };
+
+#endif // QT_GUI_LIB
 
 // Listens to the appEngine signals to determine if all files failed to load
 class LoadWatcher : public QObject
@@ -200,8 +208,22 @@ void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const Q
 
 
 // ### Should command line arguments have translations? Qt creator doesn't, so maybe it's not worth it.
-bool useCoreApp = false;
-bool useWidgetApp = false;
+enum QmlApplicationType {
+    QmlApplicationTypeUnknown
+    , QmlApplicationTypeCore
+#ifdef QT_GUI_LIB
+    , QmlApplicationTypeGui
+#ifdef QT_WIDGETS_LIB
+    , QmlApplicationTypeWidget
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+};
+
+#ifndef QT_GUI_LIB
+QmlApplicationType applicationType = QmlApplicationTypeCore;
+#else
+QmlApplicationType applicationType = QmlApplicationTypeGui;
+#endif // QT_GUI_LIB
 bool quietMode = false;
 void printVersion()
 {
@@ -220,12 +242,19 @@ void printUsage()
     printf("Any argument ending in .qml will be treated as a QML file to be loaded.\n");
     printf("Any number of QML files can be loaded. They will share the same engine.\n");
     printf("Any argument which is not a recognized option and which does not end in .qml will be ignored.\n");
+    printf("'gui' application type is only available if the QtGui module is avaialble.\n");
     printf("'widget' application type is only available if the QtWidgets module is avaialble.\n");
     printf("\n");
     printf("General Options:\n");
     printf("\t-h, -help..................... Print this usage information and exit.\n");
     printf("\t-v, -version.................. Print the version information and exit.\n");
+#ifdef QT_GUI_LIB
+#ifndef QT_WIDGETS_LIB
+    printf("\t-apptype [core|gui] .......... Select which application class to use. Default is gui.\n");
+#else
     printf("\t-apptype [core|gui|widget] ... Select which application class to use. Default is gui.\n");
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
     printf("\t-quiet ....................... Suppress all output.\n");
     printf("\t-I [path] .................... Prepend the given path to the import paths.\n");
     printf("\t-f [file] .................... Load the given file as a QML file.\n");
@@ -244,44 +273,39 @@ void printUsage()
 void getAppFlags(int &argc, char **argv)
 {
     for (int i=0; i<argc; i++) {
-        if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
-            int type = 0;
-            if (i+1 < argc) {
-                if (!strcmp(argv[i+1], "core"))
-                    type = 1;
-                else if (!strcmp(argv[i+1], "gui"))
-                    type = 2;
-#ifdef QT_WIDGETS_LIB
-                else if (!strcmp(argv[i+1], "widget"))
-                    type = 3;
-#endif
-            }
-
-            if (!type) {
-#ifdef QT_WIDGETS_LIB
-                printf("-apptype must be followed by one of the following: core gui widget\n");
-#else
-                printf("-apptype must be followed by one of the following: core gui\n");
-#endif
-                printUsage();
-            }
-
-            switch (type) {
-            case 1: useCoreApp = true; break;
-            case 2: useCoreApp = false; break;
-#ifdef QT_WIDGETS_LIB
-            case 3: useWidgetApp = true; break;
-#endif
-            }
-            for (int j=i; j<argc-2; j++)
-                argv[j] = argv[j+2];
-            argc -= 2;
-        } else if (!strcmp(argv[i], "-enable-debugger")) { // Normally done via a define in the include, so expects to be before application (and must be before engine)
+        if (!strcmp(argv[i], "-enable-debugger")) { // Normally done via a define in the include, so expects to be before application (and must be before engine)
             static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
             for (int j=i; j<argc-1; j++)
                 argv[j] = argv[j+1];
             argc --;
         }
+#ifdef QT_GUI_LIB
+        else if (!strcmp(argv[i], "-apptype")) { // Must be done before application, as it selects application
+            applicationType = QmlApplicationTypeUnknown;
+            if (i+1 < argc) {
+                if (!strcmp(argv[i+1], "core"))
+                    applicationType = QmlApplicationTypeCore;
+                else if (!strcmp(argv[i+1], "gui"))
+                    applicationType = QmlApplicationTypeGui;
+#ifdef QT_WIDGETS_LIB
+                else if (!strcmp(argv[i+1], "widget"))
+                    applicationType = QmlApplicationTypeWidget;
+#endif // QT_WIDGETS_LIB
+            }
+
+            if (applicationType == QmlApplicationTypeUnknown) {
+#ifndef QT_WIDGETS_LIB
+                printf("-apptype must be followed by one of the following: core gui\n");
+#else
+                printf("-apptype must be followed by one of the following: core gui widget\n");
+#endif // QT_WIDGETS_LIB
+                printUsage();
+            }
+            for (int j=i; j<argc-2; j++)
+                argv[j] = argv[j+2];
+            argc -= 2;
+        }
+#endif // QT_GUI_LIB
     }
 }
 
@@ -327,14 +351,24 @@ int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
     QCoreApplication *app;
-    if (useCoreApp)
+    switch (applicationType) {
+    case QmlApplicationTypeCore:
         app = new QCoreApplication(argc, argv);
-#ifdef QT_WIDGETS_LIB
-    else if (useWidgetApp)
-        app = new QApplication(argc, argv);
-#endif
-    else
+        break;
+#ifdef QT_GUI_LIB
+    case QmlApplicationTypeGui:
         app = new LoaderApplication(argc, argv);
+        break;
+#ifdef QT_WIDGETS_LIB
+    case QmlApplicationTypeWidget:
+        app = new QApplication(argc, argv);
+        break;
+#endif // QT_WIDGETS_LIB
+#endif // QT_GUI_LIB
+    default:
+        Q_ASSERT_X(false, Q_FUNC_INFO, "impossible case");
+        break;
+    }
 
     app->setApplicationName("Qml Runtime");
     app->setOrganizationName("Qt Project");
