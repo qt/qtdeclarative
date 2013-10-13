@@ -350,7 +350,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
 
     Property *front = 0;
     uint pidx = instance->propertyIndexFromArrayIndex(0);
-    if (pidx < UINT_MAX && (!instance->arrayAttributes || !instance->arrayAttributes[0].isGeneric()))
+    if (pidx < UINT_MAX && !instance->arrayData[pidx].value.isEmpty())
             front = instance->arrayData + pidx;
 
     ScopedValue result(scope, front ? instance->getValue(front, instance->arrayAttributes ? instance->arrayAttributes[pidx] : Attr_Data) : Encode::undefined());

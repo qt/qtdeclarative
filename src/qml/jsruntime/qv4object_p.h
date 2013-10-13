@@ -422,9 +422,12 @@ inline Property *Object::arrayInsert(uint index, PropertyAttributes attributes) 
         if (index >= arrayAlloc)
             arrayReserve(index + 1);
         if (index >= arrayDataLen) {
-            ensureArrayAttributes();
-            for (uint i = arrayDataLen; i < index; ++i)
-                arrayAttributes[i].clear();
+            // mark possible hole in the array
+            for (uint i = arrayDataLen; i < index; ++i) {
+                arrayData[i].value = Primitive::emptyValue();
+                if (arrayAttributes)
+                    arrayAttributes[i].clear();
+            }
             arrayDataLen = index + 1;
         }
         pd = arrayData + index;
