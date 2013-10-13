@@ -136,6 +136,7 @@ public:
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
     static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1 = JSC::X86Registers::xmm1;
 
     static const int RegisterSize = 8;
 

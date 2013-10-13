@@ -3187,6 +3187,7 @@ public:
         : Object(engine)
     {
         vtbl = &static_vtbl;
+        flags &= ~SimpleArray;
     }
     virtual ~QQmlDelegateModelGroupChangeArray() {}
 

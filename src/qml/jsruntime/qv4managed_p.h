@@ -159,7 +159,7 @@ private:
 protected:
     Managed(InternalClass *internal)
         : _data(0), vtbl(&static_vtbl), internalClass(internal)
-    { inUse = 1; extensible = 1; hasAccessorProperty = 0; }
+    { inUse = 1; extensible = 1; }
 
 public:
     void *operator new(size_t size, MemoryManager *mm);
@@ -282,20 +282,24 @@ public:
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
+    enum {
+        SimpleArray = 1
+    };
+
     union {
         uint _data;
         struct {
-            uint markBit :  1;
-            uint inUse   :  1;
-            uint extensible : 1; // used by Object
-            uint isNonStrictArgumentsObject : 1;
-            uint needsActivation : 1; // used by FunctionObject
-            uint strictMode : 1; // used by FunctionObject
-            uint bindingKeyFlag : 1;
-            uint hasAccessorProperty : 1;
-            uint type : 8;
-            mutable uint subtype : 8;
-            uint unused : 8;
+            uchar markBit :  1;
+            uchar inUse   :  1;
+            uchar extensible : 1; // used by Object
+            uchar isNonStrictArgumentsObject : 1;
+            uchar needsActivation : 1; // used by FunctionObject
+            uchar strictMode : 1; // used by FunctionObject
+            uchar bindingKeyFlag : 1;
+            uchar hasAccessorProperty : 1;
+            uchar type;
+            mutable uchar subtype;
+            uchar flags;
         };
     };
 

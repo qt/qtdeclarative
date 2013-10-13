@@ -76,6 +76,7 @@ Object::Object(ExecutionEngine *engine)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
+    flags = SimpleArray;
     memset(memberData, 0, sizeof(Property)*memberDataAlloc);
 }
 
@@ -86,6 +87,7 @@ Object::Object(InternalClass *internalClass)
 {
     vtbl = &static_vtbl;
     type = Type_Object;
+    flags = SimpleArray;
 
     if (internalClass->size >= memberDataAlloc) {
         memberDataAlloc = internalClass->size;
@@ -1078,6 +1080,7 @@ void Object::copyArrayData(Object *other)
     arrayOffset = 0;
 
     if (other->sparseArray) {
+        flags &= ~SimpleArray;
         sparseArray = new SparseArray(*other->sparseArray);
         arrayFreeList = other->arrayFreeList;
     }
@@ -1226,6 +1229,7 @@ void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const Va
 void Object::initSparse()
 {
     if (!sparseArray) {
+        flags &= ~SimpleArray;
         sparseArray = new SparseArray;
         for (int i = 0; i < arrayDataLen; ++i) {
             if (!((arrayAttributes && arrayAttributes[i].isGeneric()) || arrayData[i].value.isEmpty())) {
@@ -1302,6 +1306,7 @@ void Object::ensureArrayAttributes()
     if (arrayAttributes)
         return;
 
+    flags &= ~SimpleArray;
     arrayAttributes = new PropertyAttributes[arrayAlloc];
     for (uint i = 0; i < arrayDataLen; ++i)
         arrayAttributes[i] = Attr_Data;

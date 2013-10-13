@@ -671,7 +671,6 @@ void InstructionSelection::run(int functionIndex)
                 << JSC::X86Registers::r15;
 #endif
         static const QVector<int> fpRegisters = QVector<int>()
-                << JSC::X86Registers::xmm1
                 << JSC::X86Registers::xmm2
                 << JSC::X86Registers::xmm3
                 << JSC::X86Registers::xmm4
@@ -1102,6 +1101,89 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
 {
+#if QT_POINTER_SIZE == 8
+    V4IR::Temp *tbase = base->asTemp();
+    V4IR::Temp *tindex = index->asTemp();
+    if (tbase && tindex &&
+        tbase->kind != V4IR::Temp::PhysicalRegister) {
+        Assembler::Pointer addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
+        _as->load64(addr, Assembler::ScratchRegister);
+        _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+        _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsManaged_Shift), Assembler::ReturnValueRegister);
+        Assembler::Jump notManaged = _as->branch64(Assembler::NotEqual, Assembler::ReturnValueRegister, Assembler::TrustedImm64(0));
+        // check whether we have an object with a simple array
+        Assembler::Address managedType(Assembler::ScratchRegister, qOffsetOf(QV4::Managed, flags));
+        _as->load8(managedType, Assembler::ReturnValueRegister);
+        _as->and32(Assembler::TrustedImm32(QV4::Managed::SimpleArray), Assembler::ReturnValueRegister);
+        Assembler::Jump notSimple = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
+
+        Assembler::Jump fallback;
+        if (tindex->kind == V4IR::Temp::PhysicalRegister) {
+            if (tindex->type == V4IR::SInt32Type) {
+                _as->move((Assembler::RegisterID) tindex->index, Assembler::ScratchRegister);
+            } else {
+                // double, convert and check if it's a int
+                _as->truncateDoubleToUint32((Assembler::FPRegisterID) tindex->index, Assembler::ScratchRegister);
+                _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr0);
+                fallback = _as->branchDouble(Assembler::DoubleNotEqual, Assembler::FPGpr0, (Assembler::FPRegisterID) tindex->index);
+            }
+        } else {
+            Assembler::Pointer indexAddr = _as->loadTempAddress(Assembler::ReturnValueRegister, tindex);
+            _as->load64(indexAddr, Assembler::ScratchRegister);
+            _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+            _as->urshift64(Assembler::TrustedImm32(QV4::Value::IsNumber_Shift), Assembler::ReturnValueRegister);
+            Assembler::Jump isInteger = _as->branch64(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm64(1));
+
+            // other type, convert to double and check if it's a int
+            // this check is ok to do even if the type is something else than a double, as
+            // that would result in a NaN
+            _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ReturnValueRegister);
+            _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
+            _as->move64ToDouble(Assembler::ReturnValueRegister, Assembler::FPGpr0);
+            _as->truncateDoubleToUint32(Assembler::FPGpr0, Assembler::ScratchRegister);
+            _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr1);
+            fallback = _as->branchDouble(Assembler::DoubleNotEqualOrUnordered, Assembler::FPGpr0, Assembler::FPGpr1);
+
+            isInteger.link(_as);
+            _as->or32(Assembler::TrustedImm32(0), Assembler::ScratchRegister);
+        }
+
+        // get data, ScratchRegister holds index
+        addr = _as->loadTempAddress(Assembler::ReturnValueRegister, tbase);
+        _as->load64(addr, Assembler::ReturnValueRegister);
+        Address arrayDataLen(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayDataLen));
+        Assembler::Jump outOfRange = _as->branch32(Assembler::GreaterThanOrEqual, Assembler::ScratchRegister, arrayDataLen);
+        Address arrayData(Assembler::ReturnValueRegister, qOffsetOf(Object, arrayData));
+        _as->load64(arrayData, Assembler::ReturnValueRegister);
+        Q_ASSERT(sizeof(Property) == (1<<4));
+        _as->lshift64(Assembler::TrustedImm32(4), Assembler::ScratchRegister);
+        _as->add64(Assembler::ReturnValueRegister, Assembler::ScratchRegister);
+        Address value(Assembler::ScratchRegister, qOffsetOf(Property, value));
+        _as->load64(value, Assembler::ReturnValueRegister);
+
+        // check that the value is not empty
+        _as->move(Assembler::ReturnValueRegister, Assembler::ScratchRegister);
+        _as->urshift64(Assembler::TrustedImm32(32), Assembler::ScratchRegister);
+        Assembler::Jump emptyValue = _as->branch32(Assembler::Equal, Assembler::TrustedImm32(QV4::Value::Empty_Type), Assembler::ScratchRegister);
+        _as->storeReturnValue(target);
+
+        Assembler::Jump done = _as->jump();
+
+        emptyValue.link(_as);
+        outOfRange.link(_as);
+        if (fallback.isSet())
+            fallback.link(_as);
+        notSimple.link(_as);
+        notManaged.link(_as);
+
+        generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister,
+                             Assembler::PointerToValue(base), Assembler::PointerToValue(index));
+
+        done.link(_as);
+        return;
+    }
+#endif
+
     generateFunctionCall(target, __qmljs_get_element, Assembler::ContextRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
@@ -1313,8 +1395,8 @@ Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Exp
     //       register.
     switch (oper) {
     case V4IR::OpAdd: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
         Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
 
@@ -1328,8 +1410,8 @@ Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Exp
             rightIsNoDbl.link(_as);
     } break;
     case V4IR::OpMul: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
         Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
 
@@ -1343,8 +1425,8 @@ Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Exp
             rightIsNoDbl.link(_as);
     } break;
     case V4IR::OpSub: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
         Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
 
@@ -1358,8 +1440,8 @@ Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Exp
             rightIsNoDbl.link(_as);
     } break;
     case V4IR::OpDiv: {
-        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 1);
-        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 3);
+        Assembler::FPRegisterID lReg = getFreeFPReg(rightSource, 2);
+        Assembler::FPRegisterID rReg = getFreeFPReg(leftSource, 4);
         Assembler::Jump leftIsNoDbl = genTryDoubleConversion(leftSource, lReg);
         Assembler::Jump rightIsNoDbl = genTryDoubleConversion(rightSource, rReg);
 
