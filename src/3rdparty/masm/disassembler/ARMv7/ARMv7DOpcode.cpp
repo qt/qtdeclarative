@@ -577,7 +577,7 @@ const char* ARMv7DOpcodeMiscAddSubSP::format()
     appendSeparator();
     appendRegisterName(RegSP);
     appendSeparator();
-    appendUnsignedImmediate(immediate7());
+    appendUnsignedImmediate(immediate7() << 2);
 
     return m_formatBuffer;
 }
