@@ -1612,9 +1612,6 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
         Assembler::Jump success =
                 _as->branchTruncateDoubleToInt32(Assembler::FPGpr0, Assembler::ReturnValueRegister,
                                                  Assembler::BranchIfTruncateSuccessful);
-        generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_double_to_int32,
-                             Assembler::PointerToValue(source));
-        Assembler::Jump converted = _as->jump();
 
         // not an int:
         fallback.link(_as);
@@ -1623,12 +1620,7 @@ void InstructionSelection::convertTypeToSInt32(V4IR::Temp *source, V4IR::Temp *t
 
         isInt.link(_as);
         success.link(_as);
-        converted.link(_as);
         if (target->kind == V4IR::Temp::StackSlot) {
-//            _as->move(Assembler::TrustedImm32(QV4::Value::_Integer_Type), Assembler::ScratchRegister);
-//            _as->lshift64(Assembler::TrustedImm32(32), Assembler::ScratchRegister);
-//            _as->or64(Assembler::ScratchRegister, Assembler::ReturnValueRegister, Assembler::ScratchRegister);
-//            _as->store64(Assembler::ScratchRegister, target);
             Assembler::Pointer targetAddr = _as->stackSlotPointer(target);
             _as->store32(Assembler::ReturnValueRegister, targetAddr);
             targetAddr.offset += 4;
