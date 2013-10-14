@@ -1374,7 +1374,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         f = f->outer;
     }
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) && e->compilationMode != EvalCode && e->compilationMode != QmlBinding)
+    if (!e->parent && (!f || !f->insideWithOrCatch) && _env->compilationMode != EvalCode && e->compilationMode != QmlBinding)
         return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
