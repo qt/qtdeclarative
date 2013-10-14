@@ -289,7 +289,7 @@ public:
             qDebug("calleeSavedRegCount.....: %d",calleeSavedRegCount);
             qDebug("maxOutgoingArgumentCount: %d",maxOutgoingArgumentCount);
             qDebug("localCount..............: %d",localCount);
-            qDebug("savedConstCount.........: %d",savedConstCount);
+            qDebug("savedConstCount.........: %d",savedRegCount);
             for (int i = 0; i < maxOutgoingArgumentCount; ++i)
                 qDebug("argumentAddressForCall(%d) = 0x%x / -0x%x", i,
                        argumentAddressForCall(i).offset, -argumentAddressForCall(i).offset);
@@ -313,7 +313,8 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedRegCount);
+            int frameSize = RegisterSize * calleeSavedRegisterCount;
+            frameSize += savedRegCount * sizeof(QV4::SafeValue); // these get written out as Values, not as native registers
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
