@@ -241,19 +241,19 @@ void QJSEngine::collectGarbage()
     QJSValue::isError()).
 
     \a lineNumber is used to specify a starting line number for \a
-    program; line number information reported by the engine that pertain
+    program; line number information reported by the engine that pertains
     to this evaluation will be based on this argument. For example, if
     \a program consists of two lines of code, and the statement on the
     second line causes a script exception, the exception line number
     would be \a lineNumber plus one. When no starting line number is
     specified, line numbers will be 1-based.
 
-    \a fileName is used for error reporting. For example in error objects
-    the file name is accessible through the "fileName" property if it's
+    \a fileName is used for error reporting. For example, in error objects
+    the file name is accessible through the "fileName" property if it is
     provided with this function.
 
     \note If an exception was thrown and the exception value is not an
-    Error instance (i.e., QJSValue::isError() returns false), the
+    Error instance (i.e., QJSValue::isError() returns \c false), the
     exception value will still be returned, but there is currently no
     API for detecting that an exception did occur in this case.
 */
