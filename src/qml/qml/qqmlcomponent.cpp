@@ -1094,7 +1094,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     }
 
     incubator.clear();
-    QQmlIncubatorPrivate *p = incubator.d;
+    QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(incubator.d);
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 

@@ -196,9 +196,9 @@ public:
         return uniqueId++;
     }
 
-    // Unfortunate workaround to avoid a circular dependency between 
+    // Unfortunate workaround to avoid a circular dependency between
     // qqmlengine_p.h and qqmlincubator_p.h
-    struct Incubator {
+    struct Incubator : public QSharedData {
         QIntrusiveListNode next;
         // Unfortunate workaround for MSVC
         QIntrusiveListNode nextWaitingFor;
