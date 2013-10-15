@@ -286,7 +286,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<DateObject> *newDateObject(const QDateTime &dt);
 
     Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
-    Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
+    Returned<RegExpObject> *newRegExpObject(Referenced<RegExp> re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
     Returned<Object> *newErrorObject(const ValueRef value);

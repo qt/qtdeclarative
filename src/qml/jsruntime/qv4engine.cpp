@@ -464,10 +464,12 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
     if (flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
         multiline = true;
 
-    return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
+    Scope scope(this);
+    Scoped<RegExp> re(scope, RegExp::create(this, pattern, ignoreCase, multiline));
+    return newRegExpObject(re, global);
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(Referenced<RegExp> re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     return object->asReturned<RegExpObject>();

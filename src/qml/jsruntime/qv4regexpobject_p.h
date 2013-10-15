@@ -83,7 +83,7 @@ struct RegExpObject: Object {
     Property *lastIndexProperty(ExecutionContext *ctx);
     bool global;
 
-    RegExpObject(ExecutionEngine *engine, RegExp* value, bool global);
+    RegExpObject(ExecutionEngine *engine, Referenced<RegExp> value, bool global);
     RegExpObject(ExecutionEngine *engine, const QRegExp &re);
     ~RegExpObject() {}
 
