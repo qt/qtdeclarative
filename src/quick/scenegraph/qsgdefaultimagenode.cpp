@@ -298,15 +298,13 @@ void QSGDefaultImageNode::setHorizontalWrapMode(QSGTexture::WrapMode wrapMode)
 
 void QSGDefaultImageNode::setTexture(QSGTexture *texture)
 {
-    if (texture == m_material.texture())
-        return;
+    Q_ASSERT(texture);
 
     m_material.setTexture(texture);
     m_materialO.setTexture(texture);
     m_smoothMaterial.setTexture(texture);
-    // Texture cleanup
-    if (texture)
-        m_material.setFlag(QSGMaterial::Blending, texture->hasAlphaChannel());
+    m_material.setFlag(QSGMaterial::Blending, texture->hasAlphaChannel());
+
     markDirty(DirtyMaterial);
 
     // Because the texture can be a different part of the atlas, we need to update it...

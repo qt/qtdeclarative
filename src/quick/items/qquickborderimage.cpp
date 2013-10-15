@@ -560,10 +560,14 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
 
-    if (!node)
+    bool updatePixmap = d->pixmapChanged;
+    if (!node) {
         node = d->sceneGraphContext()->createImageNode();
+        updatePixmap = true;
+    }
 
-    node->setTexture(texture);
+    if (updatePixmap)
+        node->setTexture(texture);
 
     // Don't implicitly create the scalegrid in the rendering thread...
     QRectF innerSourceRect(0, 0, 1, 1);
