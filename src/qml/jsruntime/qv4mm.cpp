@@ -286,7 +286,9 @@ Managed *MemoryManager::alloc(std::size_t size)
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
+#ifndef QT_NO_DEBUG
         memset(chunk, 0, allocation.memory.size());
+#endif
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
@@ -396,7 +398,7 @@ void MemoryManager::mark()
     }
 }
 
-std::size_t MemoryManager::sweep(bool lastSweep)
+void MemoryManager::sweep(bool lastSweep)
 {
     PersistentValuePrivate *weak = m_weakValues;
     while (weak) {
@@ -428,12 +430,11 @@ std::size_t MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    std::size_t freedCount = 0;
     GCDeletable *deletable = 0;
     GCDeletable **firstDeletable = &deletable;
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
+        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
 
     ExecutionContext *ctx = m_contextList;
     ExecutionContext **n = &m_contextList;
@@ -456,15 +457,11 @@ std::size_t MemoryManager::sweep(bool lastSweep)
         delete deletable;
         deletable = next;
     }
-
-    return freedCount;
 }
 
-std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
+void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
-    std::size_t freedCount = 0;
-
     Managed **f = &m_d->smallItems[size >> 4];
 
 #ifdef V4_USE_VALGRIND
@@ -496,15 +493,12 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 #endif
                 *f = m;
                 SCRIBBLE(m, 0x99, size);
-                ++freedCount;
             }
         }
     }
 #ifdef V4_USE_VALGRIND
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-
-    return freedCount;
 }
 
 bool MemoryManager::isGCBlocked() const

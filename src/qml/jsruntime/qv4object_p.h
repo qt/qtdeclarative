@@ -255,8 +255,6 @@ public:
         return arrayData + index;
     }
 
-    void markArrayObjects() const;
-
     void push_back(const ValueRef v);
 
     SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }

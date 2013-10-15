@@ -241,19 +241,39 @@ void Object::markObjects(Managed *that)
 {
     Object *o = static_cast<Object *>(that);
 
-    for (int i = 0; i < o->internalClass->size; ++i) {
-        const Property &pd = o->memberData[i];
-        if (o->internalClass->propertyData[i].isData()) {
-            if (Managed *m = pd.value.asManaged())
-                m->mark();
-         } else {
-            if (pd.getter())
-                pd.getter()->mark();
-            if (pd.setter())
-                pd.setter()->mark();
+    if (!o->hasAccessorProperty) {
+        for (int i = 0; i < o->internalClass->size; ++i)
+            o->memberData[i].value.mark();
+    } else {
+        for (int i = 0; i < o->internalClass->size; ++i) {
+            const Property &pd = o->memberData[i];
+            if (o->internalClass->propertyData[i].isAccessor()) {
+                if (pd.getter())
+                    pd.getter()->mark();
+                if (pd.setter())
+                    pd.setter()->mark();
+            } else {
+                pd.value.mark();
+            }
         }
     }
-    o->markArrayObjects();
+    if (o->flags & SimpleArray) {
+        for (uint i = 0; i < o->arrayDataLen; ++i)
+            o->arrayData[i].value.mark();
+        return;
+    } else {
+        for (uint i = 0; i < o->arrayDataLen; ++i) {
+            const Property &pd = o->arrayData[i];
+            if (o->arrayAttributes && o->arrayAttributes[i].isAccessor()) {
+                if (pd.getter())
+                    pd.getter()->mark();
+                if (pd.setter())
+                    pd.setter()->mark();
+            } else {
+                pd.value.mark();
+            }
+        }
+    }
 }
 
 void Object::ensureMemberIndex(uint idx)
@@ -1372,22 +1392,6 @@ bool Object::setArrayLength(uint newLen) {
     }
     setArrayLengthUnchecked(newLen);
     return ok;
-}
-
-void Object::markArrayObjects() const
-{
-    for (uint i = 0; i < arrayDataLen; ++i) {
-        const Property &pd = arrayData[i];
-        if (!arrayAttributes || arrayAttributes[i].isData()) {
-            if (Managed *m = pd.value.asManaged())
-                m->mark();
-         } else if (arrayAttributes[i].isAccessor()) {
-            if (pd.getter())
-                pd.getter()->mark();
-            if (pd.setter())
-                pd.setter()->mark();
-        }
-    }
 }
 
 DEFINE_MANAGED_VTABLE(ArrayObject);
