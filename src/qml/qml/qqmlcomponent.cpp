@@ -1105,7 +1105,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
     enginePriv->incubate(incubator, forContextData);
 }
 
-class WrapperIncubator;
+class QQmlComponentIncubator;
 
 class QmlIncubatorObject : public QV4::Object
 {
@@ -1122,7 +1122,7 @@ public:
     static void destroy(Managed *that);
     static void markObjects(Managed *that);
 
-    QScopedPointer<WrapperIncubator> incubator;
+    QScopedPointer<QQmlComponentIncubator> incubator;
     QV8Engine *v8;
     QPointer<QObject> parent;
     QV4::SafeValue valuemap;
@@ -1135,13 +1135,14 @@ public:
 
 DEFINE_MANAGED_VTABLE(QmlIncubatorObject);
 
-class WrapperIncubator : public QQmlIncubator
+class QQmlComponentIncubator : public QQmlIncubator
 {
 public:
-    WrapperIncubator(QmlIncubatorObject *inc, IncubationMode mode)
+    QQmlComponentIncubator(QmlIncubatorObject *inc, IncubationMode mode)
         : QQmlIncubator(mode)
         , incubatorObject(inc)
     {}
+
     virtual void statusChanged(Status s) {
         incubatorObject->statusChanged(s);
     }
@@ -1506,7 +1507,7 @@ QQmlComponentExtension::~QQmlComponentExtension()
 QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode m)
     : Object(QV8Engine::getV4(engine))
 {
-    incubator.reset(new WrapperIncubator(this, m));
+    incubator.reset(new QQmlComponentIncubator(this, m));
     v8 = engine;
     vtbl = &static_vtbl;
 
@@ -1553,13 +1554,16 @@ void QmlIncubatorObject::markObjects(QV4::Managed *that)
 
 void QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 {
+    QV4::Scope scope(QV8Engine::getV4(v8));
+    // hold the incubated object in a scoped value to prevent it's destruction before this method returns
+    QV4::ScopedObject incubatedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, incubator->object()));
+
     if (s == QQmlIncubator::Ready) {
         Q_ASSERT(QQmlData::get(incubator->object()));
         QQmlData::get(incubator->object())->explicitIndestructibleSet = false;
         QQmlData::get(incubator->object())->indestructible = false;
     }
 
-    QV4::Scope scope(QV8Engine::getV4(v8));
     QV4::ScopedFunctionObject f(scope, m_statusChanged);
     if (f) {
         QV4::ExecutionContext *ctx = scope.engine->current;
