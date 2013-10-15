@@ -171,7 +171,7 @@ struct MemoryManager::Data
         memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = !qgetenv("QV4_MM_EXACT_GC").isEmpty();
+        exactGC = qgetenv("QV4_MM_CONSERVATIVE_GC").isEmpty();
     }
 
     ~Data()
@@ -332,37 +332,38 @@ void MemoryManager::mark()
         persistent = persistent->next;
     }
 
-    // push all caller saved registers to the stack, so we can find the objects living in these registers
+    collectFromJSStack();
+
+    if (!m_d->exactGC) {
+        // push all caller saved registers to the stack, so we can find the objects living in these registers
 #if COMPILER(MSVC)
 #  if CPU(X86_64)
-    HANDLE thread = GetCurrentThread();
-    WOW64_CONTEXT ctxt;
-    /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
+        HANDLE thread = GetCurrentThread();
+        WOW64_CONTEXT ctxt;
+        /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
 #  elif CPU(X86)
-    HANDLE thread = GetCurrentThread();
-    CONTEXT ctxt;
-    /*bool success =*/ GetThreadContext(thread, &ctxt);
+        HANDLE thread = GetCurrentThread();
+        CONTEXT ctxt;
+        /*bool success =*/ GetThreadContext(thread, &ctxt);
 #  endif // CPU
 #elif COMPILER(CLANG) || COMPILER(GCC)
 #  if CPU(X86_64)
-    quintptr regs[5];
-    asm(
-        "mov %%rbp, %0\n"
-        "mov %%r12, %1\n"
-        "mov %%r13, %2\n"
-        "mov %%r14, %3\n"
-        "mov %%r15, %4\n"
-        : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
-        :
-        :
-    );
+        quintptr regs[5];
+        asm(
+            "mov %%rbp, %0\n"
+            "mov %%r12, %1\n"
+            "mov %%r13, %2\n"
+            "mov %%r14, %3\n"
+            "mov %%r15, %4\n"
+            : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
+            :
+            :
+        );
 #  endif // CPU
 #endif // COMPILER
 
-    collectFromJSStack();
-
-    if (!m_d->exactGC)
         collectFromStack();
+    }
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
