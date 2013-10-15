@@ -75,7 +75,6 @@ class QObject;
 class QJSValue;
 class QQmlScriptData;
 class QQmlCompiledData;
-class QQmlCompiledData;
 class QQmlContextData;
 
 namespace QQmlVMETypes {
