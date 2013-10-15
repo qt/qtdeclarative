@@ -1025,14 +1025,11 @@ static QQuickGuiProvider *getGuiProvider()
     return &guiProvider;
 }
 
-static bool initializeProviders()
+void QQuick_initializeProviders()
 {
     QQml_addValueTypeProvider(getValueTypeProvider());
     QQml_setColorProvider(getColorProvider());
     QQml_setGuiProvider(getGuiProvider());
-    return true;
 }
-
-Q_CONSTRUCTOR_FUNCTION(initializeProviders)
 
 QT_END_NAMESPACE
