@@ -894,6 +894,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
         : QV4::Object(engine)
     {
         vtbl = &static_vtbl;
+        pixelData = QV4::Primitive::undefinedValue();
 
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
