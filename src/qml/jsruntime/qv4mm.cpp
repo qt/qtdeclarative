@@ -172,10 +172,6 @@ struct MemoryManager::Data
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
         exactGC = !qgetenv("QV4_MM_EXACT_GC").isEmpty();
-        if (aggressiveGC)
-            qDebug() << "Using aggressive garbage collection";
-        if (exactGC)
-            qDebug() << "Using exact garbage collection";
     }
 
     ~Data()
