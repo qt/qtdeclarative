@@ -1545,6 +1545,9 @@ protected:
     bool visitCJumpStrictNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
                                        V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
     bool visitCJumpStrictBool(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    bool visitCJumpNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
+                                 V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
+    void visitCJumpEqual(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock, V4IR::BasicBlock *falseBlock);
     bool int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource,
                     V4IR::Temp *target);
 

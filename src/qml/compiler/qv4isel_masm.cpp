@@ -1910,6 +1910,10 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
             visitCJumpStrict(b, s->iftrue, s->iffalse);
             return;
         }
+        if (b->op == V4IR::OpEqual || b->op == V4IR::OpNotEqual) {
+            visitCJumpEqual(b, s->iftrue, s->iffalse);
+            return;
+        }
 
         CmpOp op = 0;
         CmpOpContext opContext = 0;
@@ -2339,6 +2343,8 @@ bool InstructionSelection::visitCJumpDouble(V4IR::AluOp op, V4IR::Expr *left, V4
 void InstructionSelection::visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock,
                                             V4IR::BasicBlock *falseBlock)
 {
+    Q_ASSERT(binop->op == V4IR::OpStrictEqual || binop->op == V4IR::OpStrictNotEqual);
+
     if (visitCJumpStrictNullUndefined(V4IR::NullType, binop, trueBlock, falseBlock))
         return;
     if (visitCJumpStrictNullUndefined(V4IR::UndefinedType, binop, trueBlock, falseBlock))
@@ -2346,22 +2352,14 @@ void InstructionSelection::visitCJumpStrict(V4IR::Binop *binop, V4IR::BasicBlock
     if (visitCJumpStrictBool(binop, trueBlock, falseBlock))
         return;
 
-    QV4::BinOp op;
-    const char *opName;
-    if (binop->op == V4IR::OpStrictEqual) {
-        op = __qmljs_se;
-        opName = "__qmljs_se";
-    } else {
-        op = __qmljs_sne;
-        opName = "__qmljs_sne";
-    }
-
     V4IR::Expr *left = binop->left;
     V4IR::Expr *right = binop->right;
 
-    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, op,
+    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, "__qmljs_cmp_se", __qmljs_cmp_se,
                                  Assembler::PointerToValue(left), Assembler::PointerToValue(right));
-    _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, trueBlock, falseBlock);
+    _as->generateCJumpOnCompare(binop->op == V4IR::OpStrictEqual ? Assembler::NotEqual : Assembler::Equal,
+                                Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),
+                                _block, trueBlock, falseBlock);
 }
 
 // Only load the non-null temp.
@@ -2462,6 +2460,72 @@ bool InstructionSelection::visitCJumpStrictBool(V4IR::Binop *binop, V4IR::BasicB
                                 falseBlock);
     return true;
 }
+
+bool InstructionSelection::visitCJumpNullUndefined(V4IR::Type nullOrUndef, V4IR::Binop *binop,
+                                                         V4IR::BasicBlock *trueBlock,
+                                                         V4IR::BasicBlock *falseBlock)
+{
+    Q_ASSERT(nullOrUndef == V4IR::NullType || nullOrUndef == V4IR::UndefinedType);
+
+    V4IR::Expr *varSrc = 0;
+    if (binop->left->type == V4IR::VarType && binop->right->type == nullOrUndef)
+        varSrc = binop->left;
+    else if (binop->left->type == nullOrUndef && binop->right->type == V4IR::VarType)
+        varSrc = binop->right;
+    if (!varSrc)
+        return false;
+
+    if (varSrc->asTemp() && varSrc->asTemp()->kind == V4IR::Temp::PhysicalRegister) {
+        _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    if (V4IR::Const *c = varSrc->asConst()) {
+        if (c->type == nullOrUndef)
+            _as->jumpToBlock(_block, trueBlock);
+        else
+            _as->jumpToBlock(_block, falseBlock);
+        return true;
+    }
+
+    V4IR::Temp *t = varSrc->asTemp();
+    Q_ASSERT(t);
+
+    Assembler::Pointer tagAddr = _as->loadTempAddress(Assembler::ScratchRegister, t);
+    tagAddr.offset += 4;
+    const Assembler::RegisterID tagReg = Assembler::ScratchRegister;
+    _as->load32(tagAddr, tagReg);
+
+    if (binop->op == V4IR::OpNotEqual)
+        qSwap(trueBlock, falseBlock);
+    Assembler::Jump isNull = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::_Null_Type)));
+    Assembler::Jump isUndefined = _as->branch32(Assembler::Equal, tagReg, Assembler::TrustedImm32(int(QV4::Value::Undefined_Type)));
+    _as->addPatch(trueBlock, isNull);
+    _as->addPatch(trueBlock, isUndefined);
+    _as->jumpToBlock(_block, falseBlock);
+
+    return true;
+}
+
+
+void InstructionSelection::visitCJumpEqual(V4IR::Binop *binop, V4IR::BasicBlock *trueBlock,
+                                            V4IR::BasicBlock *falseBlock)
+{
+    Q_ASSERT(binop->op == V4IR::OpEqual || binop->op == V4IR::OpNotEqual);
+
+    if (visitCJumpNullUndefined(V4IR::NullType, binop, trueBlock, falseBlock))
+        return;
+
+    V4IR::Expr *left = binop->left;
+    V4IR::Expr *right = binop->right;
+
+    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, "__qmljs_cmp_eq", __qmljs_cmp_eq,
+                                 Assembler::PointerToValue(left), Assembler::PointerToValue(right));
+    _as->generateCJumpOnCompare(binop->op == V4IR::OpEqual ? Assembler::NotEqual : Assembler::Equal,
+                                Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),
+                                _block, trueBlock, falseBlock);
+}
+
 
 bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
                                       V4IR::Expr *rightSource, V4IR::Temp *target)
