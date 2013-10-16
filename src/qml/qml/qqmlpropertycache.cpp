@@ -1419,8 +1419,7 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
 
     if (cache) {
         rv = cache->property(name, obj, context);
-    }
-    if (!rv) {
+    } else {
         local = qQmlPropertyCacheCreate(obj->metaObject(), qQmlPropertyCacheToString(name));
         if (local.isValid())
             rv = &local;

@@ -263,7 +263,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, m_object, qmlContext);
-    if (!result)
+    else
         result = QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, name, qmlContext, *local);
     return result;
 }
