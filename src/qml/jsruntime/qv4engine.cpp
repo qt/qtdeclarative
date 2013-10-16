@@ -826,7 +826,7 @@ ReturnedValue ExecutionEngine::throwException(const ValueRef value)
         exceptionStackTrace = stackTrace();
 
     if (debugger)
-        debugger->aboutToThrow(value);
+        debugger->aboutToThrow();
 
     return Encode::undefined();
 }

@@ -52,15 +52,81 @@
 using namespace QV4;
 using namespace QV4::Debugging;
 
+namespace {
+class EvalJob: public Debugger::Job
+{
+    QV4::ExecutionEngine *engine;
+    const QString &script;
+
+public:
+    EvalJob(QV4::ExecutionEngine *engine, const QString &script)
+        : engine(engine)
+        , script(script)
+    {}
+
+    ~EvalJob() {}
+
+    void run()
+    {
+        // TODO
+        qDebug() << "Evaluating script:" << script;
+        Q_UNUSED(engine);
+    }
+
+    bool resultAsBoolean() const
+    {
+        return true;
+    }
+};
+
+class GatherSourcesJob: public Debugger::Job
+{
+    QV4::ExecutionEngine *engine;
+    const int seq;
+
+public:
+    GatherSourcesJob(QV4::ExecutionEngine *engine, int seq)
+        : engine(engine)
+        , seq(seq)
+    {}
+
+    ~GatherSourcesJob() {}
+
+    void run()
+    {
+        QStringList sources;
+
+        foreach (QV4::CompiledData::CompilationUnit *unit, engine->compilationUnits) {
+            QString fileName = unit->fileName();
+            if (!fileName.isEmpty())
+                sources.append(fileName);
+        }
+
+        Debugger *debugger = engine->debugger;
+        QMetaObject::invokeMethod(debugger->agent(), "sourcesCollected", Qt::QueuedConnection,
+                                  Q_ARG(QV4::Debugging::Debugger*, debugger),
+                                  Q_ARG(QStringList, sources),
+                                  Q_ARG(int, seq));
+    }
+};
+}
+
 Debugger::Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
     , m_agent(0)
     , m_state(Running)
     , m_pauseRequested(false)
+    , m_gatherSources(0)
     , m_havePendingBreakPoints(false)
     , m_currentInstructionPointer(0)
+    , m_stepping(NotStepping)
+    , m_stopForStepping(false)
+    , m_returnedValue(Primitive::undefinedValue())
+    , m_breakOnThrow(false)
+    , m_runningJob(0)
 {
     qMetaTypeId<Debugger*>();
+    qMetaTypeId<PauseReason>();
 }
 
 Debugger::~Debugger()
@@ -86,6 +152,18 @@ void Debugger::detachFromAgent()
         agent->removeDebugger(this);
 }
 
+void Debugger::gatherSources(int requestSequenceNr)
+{
+    QMutexLocker locker(&m_lock);
+
+    m_gatherSources = new GatherSourcesJob(m_engine, requestSequenceNr);
+    if (m_state == Paused) {
+        runInEngine_havingLock(m_gatherSources);
+        delete m_gatherSources;
+        m_gatherSources = 0;
+    }
+}
+
 void Debugger::pause()
 {
     QMutexLocker locker(&m_lock);
@@ -94,19 +172,33 @@ void Debugger::pause()
     m_pauseRequested = true;
 }
 
-void Debugger::resume()
+void Debugger::resume(Speed speed)
 {
     QMutexLocker locker(&m_lock);
-    Q_ASSERT(m_state == Paused);
+    if (m_state != Paused)
+        return;
+
+    if (!m_returnedValue.isUndefined())
+        m_returnedValue = Primitive::undefinedValue();
+
+    clearTemporaryBreakPoint();
+    if (speed == StepOver)
+        setTemporaryBreakPointOnNextLine();
+    if (speed == StepOut)
+        m_temporaryBreakPoint.function = getFunction();
+
+    m_stepping = speed;
     m_runningCondition.wakeAll();
 }
 
-void Debugger::addBreakPoint(const QString &fileName, int lineNumber)
+void Debugger::addBreakPoint(const QString &fileName, int lineNumber, const QString &condition)
 {
     QMutexLocker locker(&m_lock);
     if (!m_pendingBreakPointsToRemove.remove(fileName, lineNumber))
         m_pendingBreakPointsToAdd.add(fileName, lineNumber);
     m_havePendingBreakPoints = !m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty();
+    if (!condition.isEmpty())
+        m_breakPointConditions.add(fileName, lineNumber, condition);
 }
 
 void Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
@@ -115,6 +207,14 @@ void Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
     if (!m_pendingBreakPointsToAdd.remove(fileName, lineNumber))
         m_pendingBreakPointsToRemove.add(fileName, lineNumber);
     m_havePendingBreakPoints = !m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty();
+    m_breakPointConditions.remove(fileName, lineNumber);
+}
+
+void Debugger::setBreakOnThrow(bool onoff)
+{
+    QMutexLocker locker(&m_lock);
+
+    m_breakOnThrow = onoff;
 }
 
 Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) const
@@ -124,21 +224,11 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
     // ### Locking
     ExecutionState state;
 
-    QV4::ExecutionContext *context = m_engine->current;
-    QV4::Function *function = 0;
-    CallContext *callCtx = context->asCallContext();
-    if (callCtx && callCtx->function)
-        function = callCtx->function->function;
-    else {
-        Q_ASSERT(context->type == QV4::ExecutionContext::Type_GlobalContext);
-        function = context->engine->globalCode;
-    }
+    state.function = getFunction();
+    state.fileName = state.function->sourceFile();
 
-    state.function = function;
-    state.fileName = function->sourceFile();
-
-    qptrdiff relativeProgramCounter = code - function->codeData;
-    state.lineNumber = function->lineNumberForProgramCounter(relativeProgramCounter);
+    qptrdiff relativeProgramCounter = code - state.function->codeData;
+    state.lineNumber = state.function->lineNumberForProgramCounter(relativeProgramCounter);
 
     return state;
 }
@@ -153,83 +243,7 @@ QVector<StackFrame> Debugger::stackTrace(int frameLimit) const
     return m_engine->stackTrace(frameLimit);
 }
 
-QList<Debugger::VarInfo> Debugger::retrieveFromValue(const ObjectRef o, const QStringList &path) const
-{
-    QList<Debugger::VarInfo> props;
-    if (!o)
-        return props;
-
-    Scope scope(m_engine);
-    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
-    ScopedValue name(scope);
-    ScopedValue val(scope);
-    while (true) {
-        Value v;
-        name = it.nextPropertyNameAsString(&v);
-        if (name->isNull())
-            break;
-        QString key = name->toQStringNoThrow();
-        if (path.isEmpty()) {
-            val = v;
-            QVariant varValue;
-            VarInfo::Type type;
-            convert(val, &varValue, &type);
-            props.append(VarInfo(key, varValue, type));
-        } else if (path.first() == key) {
-            QStringList pathTail = path;
-            pathTail.pop_front();
-            return retrieveFromValue(ScopedObject(scope, v), pathTail);
-        }
-    }
-
-    return props;
-}
-
-void Debugger::convert(ValueRef v, QVariant *varValue, VarInfo::Type *type) const
-{
-    Q_ASSERT(varValue);
-    Q_ASSERT(type);
-
-    switch (v->type()) {
-    case Value::Empty_Type:
-        Q_ASSERT(!"empty Value encountered");
-        break;
-    case Value::Undefined_Type:
-        *type = VarInfo::Undefined;
-        varValue->setValue<int>(0);
-        break;
-    case Value::Null_Type:
-        *type = VarInfo::Null;
-        varValue->setValue<int>(0);
-        break;
-    case Value::Boolean_Type:
-        *type = VarInfo::Bool;
-        varValue->setValue<bool>(v->booleanValue());
-        break;
-    case Value::Managed_Type:
-        if (v->isString()) {
-            *type = VarInfo::String;
-            varValue->setValue<QString>(v->stringValue()->toQString());
-        } else {
-            *type = VarInfo::Object;
-            ExecutionContext *ctx = v->objectValue()->internalClass->engine->current;
-            Scope scope(ctx);
-            ScopedValue prim(scope, __qmljs_to_primitive(v, STRING_HINT));
-            varValue->setValue<QString>(prim->toQString());
-        }
-        break;
-    case Value::Integer_Type:
-        *type = VarInfo::Number;
-        varValue->setValue<double>((double)v->int_32);
-        break;
-    default: // double
-        *type = VarInfo::Number;
-        varValue->setValue<double>(v->doubleValue());
-        break;
-    }
-}
-
-static CallContext *findContext(ExecutionContext *ctxt, int frame)
+static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
 {
     while (ctxt) {
         CallContext *cCtxt = ctxt->asCallContext();
@@ -244,133 +258,359 @@ static CallContext *findContext(ExecutionContext *ctxt, int frame)
     return 0;
 }
 
-/// Retrieves all arguments from a context, or all properties in an object passed in an argument.
-///
-/// \arg frame specifies the frame number: 0 is top of stack, 1 is the parent of the current frame, etc.
-/// \arg path when empty, retrieve all arguments in the specified frame. When not empty, find the
-///      argument with the same name as the first element in the path (in the specified frame, of
-///      course), and then use the rest of the path to walk nested objects. When the path is empty,
-///      retrieve all properties in that object. If an intermediate non-object is specified by the
-///      path, or non of the property names match, an empty list is returned.
-QList<Debugger::VarInfo> Debugger::retrieveArgumentsFromContext(const QStringList &path, int frame)
+static inline CallContext *findScope(ExecutionContext *ctxt, int scope)
 {
-    QList<VarInfo> args;
+    for (; scope > 0 && ctxt; --scope)
+        ctxt = ctxt->outer;
 
+    return ctxt ? ctxt->asCallContext() : 0;
+}
+
+void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int scopeNr)
+{
     if (state() != Paused)
-        return args;
+        return;
 
-    if (frame < 0)
-        return args;
+    class ArgumentCollectJob: public Job
+    {
+        QV4::ExecutionEngine *engine;
+        Collector *collector;
+        int frameNr;
+        int scopeNr;
 
-    CallContext *ctxt = findContext(m_engine->current, frame);
-    if (!ctxt)
-        return args;
+    public:
+        ArgumentCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, int scopeNr)
+            : engine(engine)
+            , collector(collector)
+            , frameNr(frameNr)
+            , scopeNr(scopeNr)
+        {}
 
-    Scope scope(m_engine);
-    ScopedValue v(scope);
-    for (unsigned i = 0, ei = ctxt->formalCount(); i != ei; ++i) {
-        // value = ctxt->argument(i);
-        String *name = ctxt->formals()[i];
-        QString qName;
-        if (name)
-            qName = name->toQString();
-        if (path.isEmpty()) {
-            v = ctxt->argument(i);
-            QVariant value;
-            VarInfo::Type type;
-            convert(v, &value, &type);
-            args.append(VarInfo(qName, value, type));
-        } else if (path.first() == qName) {
-            ScopedObject o(scope, ctxt->argument(i));
-            QStringList pathTail = path;
-            pathTail.pop_front();
-            return retrieveFromValue(o, pathTail);
+        ~ArgumentCollectJob() {}
+
+        void run()
+        {
+            if (frameNr < 0)
+                return;
+
+            CallContext *ctxt = findScope(findContext(engine->current, frameNr), scopeNr);
+            if (!ctxt)
+                return;
+
+            Scope scope(engine);
+            ScopedValue v(scope);
+            for (unsigned i = 0, ei = ctxt->formalCount(); i != ei; ++i) {
+                QString qName;
+                if (String *name = ctxt->formals()[i])
+                    qName = name->toQString();
+                v = ctxt->argument(i);
+                collector->collect(qName, v);
+            }
         }
-    }
+    };
 
-    return args;
+    ArgumentCollectJob job(m_engine, collector, frameNr, scopeNr);
+    runInEngine(&job);
 }
 
 /// Same as \c retrieveArgumentsFromContext, but now for locals.
-QList<Debugger::VarInfo> Debugger::retrieveLocalsFromContext(const QStringList &path, int frame)
+void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int scopeNr)
 {
-    QList<VarInfo> args;
+    if (state() != Paused)
+        return;
+
+    class LocalCollectJob: public Job
+    {
+        QV4::ExecutionEngine *engine;
+        Collector *collector;
+        int frameNr;
+        int scopeNr;
+
+    public:
+        LocalCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, int scopeNr)
+            : engine(engine)
+            , collector(collector)
+            , frameNr(frameNr)
+            , scopeNr(scopeNr)
+        {}
+
+        void run()
+        {
+            if (frameNr < 0)
+                return;
+
+            CallContext *ctxt = findScope(findContext(engine->current, frameNr), scopeNr);
+            if (!ctxt)
+                return;
+
+            Scope scope(engine);
+            ScopedValue v(scope);
+            for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
+                QString qName;
+                if (String *name = ctxt->variables()[i])
+                    qName = name->toQString();
+                v = ctxt->locals[i];
+                collector->collect(qName, v);
+            }
+        }
+    };
+
+    LocalCollectJob job(m_engine, collector, frameNr, scopeNr);
+    runInEngine(&job);
+}
+
+bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
+{
+    if (state() != Paused)
+        return false;
+
+    class ThisCollectJob: public Job
+    {
+        QV4::ExecutionEngine *engine;
+        Collector *collector;
+        int frameNr;
+        bool *foundThis;
+
+    public:
+        ThisCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, bool *foundThis)
+            : engine(engine)
+            , collector(collector)
+            , frameNr(frameNr)
+            , foundThis(foundThis)
+        {}
+
+        void run()
+        {
+            *foundThis = myRun();
+        }
+
+        bool myRun()
+        {
+            ExecutionContext *ctxt = findContext(engine->current, frameNr);
+            while (ctxt) {
+                if (CallContext *cCtxt = ctxt->asCallContext())
+                    if (cCtxt->activation)
+                        break;
+                ctxt = ctxt->outer;
+            }
+
+            if (!ctxt)
+                return false;
+
+            Scope scope(engine);
+            ScopedObject o(scope, ctxt->asCallContext()->activation);
+            collector->collect(o);
+            return true;
+        }
+    };
+
+    bool foundThis = false;
+    ThisCollectJob job(m_engine, collector, frame, &foundThis);
+    runInEngine(&job);
+    return foundThis;
+}
+
+void Debugger::collectThrownValue(Collector *collector)
+{
+    if (state() != Paused || !m_engine->hasException)
+        return;
+
+    class ThisCollectJob: public Job
+    {
+        QV4::ExecutionEngine *engine;
+        Collector *collector;
+
+    public:
+        ThisCollectJob(QV4::ExecutionEngine *engine, Collector *collector)
+            : engine(engine)
+            , collector(collector)
+        {}
+
+        void run()
+        {
+            Scope scope(engine);
+            ScopedValue v(scope, engine->exceptionValue);
+            collector->collect(QStringLiteral("exception"), v);
+        }
+    };
+
+    ThisCollectJob job(m_engine, collector);
+    runInEngine(&job);
+}
+
+void Debugger::collectReturnedValue(Collector *collector) const
+{
+    if (state() != Paused)
+        return;
+
+    Scope scope(m_engine);
+    ScopedObject o(scope, m_returnedValue);
+    collector->collect(o);
+}
+
+QVector<ExecutionContext::Type> Debugger::getScopeTypes(int frame) const
+{
+    QVector<ExecutionContext::Type> types;
 
     if (state() != Paused)
-        return args;
-
-    if (frame < 0)
-        return args;
+        return types;
 
     CallContext *sctxt = findContext(m_engine->current, frame);
     if (!sctxt || sctxt->type < ExecutionContext::Type_SimpleCallContext)
-        return args;
+        return types;
     CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
-    Scope scope(m_engine);
-    ScopedValue v(scope);
-    for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
-        String *name = ctxt->variables()[i];
-        QString qName;
-        if (name)
-            qName = name->toQString();
-        if (path.isEmpty()) {
-            v = ctxt->locals[i];
-            QVariant value;
-            VarInfo::Type type;
-            convert(v, &value, &type);
-            args.append(VarInfo(qName, value, type));
-        } else if (path.first() == qName) {
-            ScopedObject o(scope, ctxt->locals[i]);
-            QStringList pathTail = path;
-            pathTail.pop_front();
-            return retrieveFromValue(o, pathTail);
-        }
-    }
+    for (ExecutionContext *it = ctxt; it; it = it->outer)
+        types.append(it->type);
 
-    return args;
+    return types;
 }
 
 void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
 {
+    if (m_runningJob) // do not re-enter when we're doing a job for the debugger.
+        return;
+
     QMutexLocker locker(&m_lock);
     m_currentInstructionPointer = code;
 
+    ExecutionState state = currentExecutionState();
+
     // Do debugger internal work
     if (m_havePendingBreakPoints) {
-
-        if (breakPointHit) {
-            ExecutionState state = currentExecutionState();
+        if (breakPointHit)
             breakPointHit = !m_pendingBreakPointsToRemove.contains(state.fileName, state.lineNumber);
-        }
 
         applyPendingBreakPoints();
     }
 
-    // Serve debugging requests from the agent
-    if (m_pauseRequested) {
+    if (m_gatherSources) {
+        m_gatherSources->run();
+        delete m_gatherSources;
+        m_gatherSources = 0;
+    }
+
+    if (m_stopForStepping) {
+        clearTemporaryBreakPoint();
+        m_stopForStepping = false;
         m_pauseRequested = false;
-        pauseAndWait();
-    } else if (breakPointHit)
-        pauseAndWait();
+        pauseAndWait(Step);
+    } else if (m_pauseRequested) { // Serve debugging requests from the agent
+        m_pauseRequested = false;
+        pauseAndWait(PauseRequest);
+    } else if (breakPointHit) {
+        if (m_stepping == StepOver)
+            pauseAndWait(Step);
+        else if (reallyHitTheBreakPoint(state.fileName, state.lineNumber))
+            pauseAndWait(BreakPoint);
+    }
 
     if (!m_pendingBreakPointsToAdd.isEmpty() || !m_pendingBreakPointsToRemove.isEmpty())
         applyPendingBreakPoints();
 }
 
-void Debugger::aboutToThrow(const QV4::ValueRef value)
+void Debugger::enteringFunction()
 {
-    Q_UNUSED(value);
+    QMutexLocker locker(&m_lock);
 
-    qDebug() << "*** We are about to throw...";
+    if (m_stepping == StepIn) {
+        m_stepping = NotStepping;
+        m_stopForStepping = true;
+        m_pauseRequested = true;
+    }
 }
 
-void Debugger::pauseAndWait()
+void Debugger::leavingFunction(const ReturnedValue &retVal)
 {
+    Q_UNUSED(retVal); // TODO
+
+    QMutexLocker locker(&m_lock);
+
+    if (m_stepping == StepOut && temporaryBreakPointInFunction()) {
+        clearTemporaryBreakPoint();
+        m_stepping = NotStepping;
+        m_stopForStepping = true;
+        m_pauseRequested = true;
+        m_returnedValue = retVal;
+    }
+}
+
+void Debugger::aboutToThrow()
+{
+    if (!m_breakOnThrow)
+        return;
+
+    if (m_runningJob) // do not re-enter when we're doing a job for the debugger.
+        return;
+
+    QMutexLocker locker(&m_lock);
+    clearTemporaryBreakPoint();
+    pauseAndWait(Throwing);
+}
+
+Function *Debugger::getFunction() const
+{
+    ExecutionContext *context = m_engine->current;
+    if (CallContext *callCtx = context->asCallContext())
+        return callCtx->function->function;
+    else {
+        Q_ASSERT(context->type == QV4::ExecutionContext::Type_GlobalContext);
+        return context->engine->globalCode;
+    }
+}
+
+void Debugger::pauseAndWait(PauseReason reason)
+{
+    if (m_runningJob)
+        return;
+
     m_state = Paused;
-    QMetaObject::invokeMethod(m_agent, "debuggerPaused", Qt::QueuedConnection, Q_ARG(QV4::Debugging::Debugger*, this));
-    m_runningCondition.wait(&m_lock);
+    QMetaObject::invokeMethod(m_agent, "debuggerPaused", Qt::QueuedConnection,
+                              Q_ARG(QV4::Debugging::Debugger*, this),
+                              Q_ARG(QV4::Debugging::PauseReason, reason));
+
+    while (true) {
+        m_runningCondition.wait(&m_lock);
+        if (m_runningJob) {
+            m_runningJob->run();
+            m_jobIsRunning.wakeAll();
+        } else {
+            break;
+        }
+    }
+
     m_state = Running;
+}
+
+void Debugger::setTemporaryBreakPointOnNextLine()
+{
+    ExecutionState state = currentExecutionState();
+    Function *function = state.function;
+    if (!function)
+        return;
+
+    qptrdiff offset = function->programCounterForLine(state.lineNumber + 1);
+    if (offset < 0)
+        return;
+
+    if (hasBreakOnInstruction(function, offset))
+        return;
+
+    setBreakOnInstruction(function, offset, true);
+    m_temporaryBreakPoint = TemporaryBreakPoint(function, offset);
+}
+
+void Debugger::clearTemporaryBreakPoint()
+{
+    if (m_temporaryBreakPoint.function && m_temporaryBreakPoint.codeOffset) {
+        setBreakOnInstruction(m_temporaryBreakPoint.function, m_temporaryBreakPoint.codeOffset, false);
+        m_temporaryBreakPoint = TemporaryBreakPoint();
+    }
+}
+
+bool Debugger::temporaryBreakPointInFunction() const
+{
+    return m_temporaryBreakPoint.function == getFunction();
 }
 
 void Debugger::applyPendingBreakPoints()
@@ -393,11 +633,62 @@ void Debugger::applyPendingBreakPoints()
     m_havePendingBreakPoints = false;
 }
 
+void Debugger::setBreakOnInstruction(Function *function, qptrdiff codeOffset, bool onoff)
+{
+    uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
+    QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
+    instruction->common.breakPoint = onoff;
+}
+
+bool Debugger::hasBreakOnInstruction(Function *function, qptrdiff codeOffset)
+{
+    uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
+    QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
+    return instruction->common.breakPoint;
+}
+
+bool Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
+{
+    QString condition = m_breakPointConditions.condition(filename, linenr);
+    if (condition.isEmpty())
+        return true;
+
+    Q_ASSERT(m_runningJob == 0);
+    EvalJob evilJob(m_engine, condition);
+    m_runningJob = &evilJob;
+    m_runningJob->run();
+
+    return evilJob.resultAsBoolean();
+}
+
+void Debugger::runInEngine(Debugger::Job *job)
+{
+    QMutexLocker locker(&m_lock);
+    runInEngine_havingLock(job);
+}
+
+void Debugger::runInEngine_havingLock(Debugger::Job *job)
+{
+    Q_ASSERT(job);
+    Q_ASSERT(m_runningJob == 0);
+
+    m_runningJob = job;
+    m_runningCondition.wakeAll();
+    m_jobIsRunning.wait(&m_lock);
+    m_runningJob = 0;
+}
+
 void DebuggerAgent::addDebugger(Debugger *debugger)
 {
     Q_ASSERT(!m_debuggers.contains(debugger));
     m_debuggers << debugger;
     debugger->attachToAgent(this);
+
+    debugger->setBreakOnThrow(m_breakOnThrow);
+
+    foreach (const BreakPoint &breakPoint, m_breakPoints.values())
+        if (breakPoint.enabled)
+            debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
 }
 
 void DebuggerAgent::removeDebugger(Debugger *debugger)
@@ -421,19 +712,73 @@ void DebuggerAgent::resumeAll() const
 {
     foreach (Debugger *debugger, m_debuggers)
         if (debugger->state() == Debugger::Paused)
-            debugger->resume();
+            debugger->resume(Debugger::FullThrottle);
 }
 
-void DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber) const
+int DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, bool enabled, const QString &condition)
 {
-    foreach (Debugger *debugger, m_debuggers)
-        debugger->addBreakPoint(fileName, lineNumber);
+    if (enabled)
+        foreach (Debugger *debugger, m_debuggers)
+            debugger->addBreakPoint(fileName, lineNumber, condition);
+
+    int id = m_breakPoints.size();
+    m_breakPoints.insert(id, BreakPoint(fileName, lineNumber, enabled, condition));
+    return id;
 }
 
-void DebuggerAgent::removeBreakPoint(const QString &fileName, int lineNumber) const
+void DebuggerAgent::removeBreakPoint(int id)
 {
-    foreach (Debugger *debugger, m_debuggers)
-        debugger->removeBreakPoint(fileName, lineNumber);
+    BreakPoint breakPoint = m_breakPoints.value(id);
+    if (!breakPoint.isValid())
+        return;
+
+    m_breakPoints.remove(id);
+
+    if (breakPoint.enabled)
+        foreach (Debugger *debugger, m_debuggers)
+            debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
+}
+
+void DebuggerAgent::removeAllBreakPoints()
+{
+    QList<int> ids = m_breakPoints.keys();
+    foreach (int id, ids)
+        removeBreakPoint(id);
+}
+
+void DebuggerAgent::enableBreakPoint(int id, bool onoff)
+{
+    BreakPoint &breakPoint = m_breakPoints[id];
+    if (!breakPoint.isValid() || breakPoint.enabled == onoff)
+        return;
+    breakPoint.enabled = onoff;
+
+    foreach (Debugger *debugger, m_debuggers) {
+        if (onoff)
+            debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
+        else
+            debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
+    }
+}
+
+QList<int> DebuggerAgent::breakPointIds(const QString &fileName, int lineNumber) const
+{
+    QList<int> ids;
+
+    for (QHash<int, BreakPoint>::const_iterator i = m_breakPoints.begin(), ei = m_breakPoints.end(); i != ei; ++i)
+        if (i->lineNr == lineNumber && fileName.endsWith(i->fileName))
+            ids.push_back(i.key());
+
+    return ids;
+}
+
+void DebuggerAgent::setBreakOnThrow(bool onoff)
+{
+    if (onoff != m_breakOnThrow) {
+        m_breakOnThrow = onoff;
+        foreach (Debugger *debugger, m_debuggers)
+            debugger->setBreakOnThrow(onoff);
+    }
 }
 
 DebuggerAgent::~DebuggerAgent()
@@ -468,32 +813,99 @@ bool Debugger::BreakPoints::contains(const QString &fileName, int lineNumber) co
 
 void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreakPoints)
 {
-    Iterator breakPointsForFile = find(function->sourceFile());
-    if (breakPointsForFile == end())
-        return;
+    Iterator breakPointsForFile = begin();
 
-    QList<int>::Iterator breakPoint = breakPointsForFile->begin();
-    while (breakPoint != breakPointsForFile->end()) {
-        bool breakPointFound = false;
-        const quint32 *lineNumberMappings = function->compiledFunction->lineNumberMapping();
-        for (quint32 i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
-            const int codeOffset = lineNumberMappings[i * 2];
-            const int lineNumber = lineNumberMappings[i * 2 + 1];
-            if (lineNumber == *breakPoint) {
-                uchar *codePtr = const_cast<uchar *>(function->codeData) + codeOffset;
-                QQmlJS::Moth::Instr *instruction = reinterpret_cast<QQmlJS::Moth::Instr*>(codePtr);
-                instruction->common.breakPoint = !removeBreakPoints;
-                // Continue setting the next break point.
-                breakPointFound = true;
-                break;
-            }
+    while (breakPointsForFile != end()) {
+        if (!function->sourceFile().endsWith(breakPointsForFile.key())) {
+            ++breakPointsForFile;
+            continue;
         }
-        if (breakPointFound)
-            breakPoint = breakPointsForFile->erase(breakPoint);
+
+        QList<int>::Iterator breakPoint = breakPointsForFile->begin();
+        while (breakPoint != breakPointsForFile->end()) {
+            bool breakPointFound = false;
+            const quint32 *lineNumberMappings = function->compiledFunction->lineNumberMapping();
+            for (quint32 i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
+                const int codeOffset = lineNumberMappings[i * 2];
+                const int lineNumber = lineNumberMappings[i * 2 + 1];
+                if (lineNumber == *breakPoint) {
+                    setBreakOnInstruction(function, codeOffset, !removeBreakPoints);
+                    // Continue setting the next break point.
+                    breakPointFound = true;
+                    break;
+                }
+            }
+            if (breakPointFound)
+                breakPoint = breakPointsForFile->erase(breakPoint);
+            else
+                ++breakPoint;
+        }
+
+        if (breakPointsForFile->isEmpty())
+            breakPointsForFile = erase(breakPointsForFile);
         else
-            ++breakPoint;
+            ++breakPointsForFile;
+    }
+}
+
+
+Debugger::Collector::~Collector()
+{
+}
+
+void Debugger::Collector::collect(const QString &name, const ScopedValue &value)
+{
+    switch (value->type()) {
+    case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+        break;
+    case Value::Undefined_Type:
+        addUndefined(name);
+        break;
+    case Value::Null_Type:
+        addNull(name);
+        break;
+    case Value::Boolean_Type:
+        addBoolean(name, value->booleanValue());
+        break;
+    case Value::Managed_Type:
+        if (String *s = value->asString())
+            addString(name, s->toQString());
+        else
+            addObject(name, value);
+        break;
+    case Value::Integer_Type:
+        addInteger(name, value->int_32);
+        break;
+    default: // double
+        addDouble(name, value->doubleValue());
+        break;
+    }
+}
+
+void Debugger::Collector::collect(const ObjectRef object)
+{
+    bool property = true;
+    qSwap(property, m_isProperty);
+
+    Scope scope(m_engine);
+    ObjectIterator it(scope, object, ObjectIterator::EnumerableOnly);
+    ScopedValue name(scope);
+    ScopedValue value(scope);
+    while (true) {
+        Value v;
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
+            break;
+        QString key = name->toQStringNoThrow();
+        value = v;
+        collect(key, value);
     }
 
-    if (breakPointsForFile->isEmpty())
-        erase(breakPointsForFile);
+    qSwap(property, m_isProperty);
+}
+
+
+Debugger::Job::~Job()
+{
 }

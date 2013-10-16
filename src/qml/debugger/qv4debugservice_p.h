@@ -77,11 +77,10 @@ public:
 protected:
     void stateChanged(State newState);
     void messageReceived(const QByteArray &);
+    void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
-private slots:
-    void pause(int debuggerId, int querySequence);
-    void addBreakpoint(const QByteArray &data, int querySequence);
-    void removeBreakpoint(const QByteArray &data, int querySequence);
+private:
+    void handleV8Request(const QByteArray &payload);
 
 private:
     Q_DISABLE_COPY(QV4DebugService)

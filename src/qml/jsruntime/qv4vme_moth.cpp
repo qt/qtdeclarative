@@ -64,8 +64,8 @@ using namespace QQmlJS::Moth;
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
     code += InstrMeta<(int)Instr::I>::Size; \
-    if (context->engine->debugger && (instr.breakPoint || context->engine->debugger->pauseAtNextOpportunity())) \
-        context->engine->debugger->maybeBreakAtInstruction(code, instr.breakPoint); \
+    if (debugger && (instr.breakPoint || debugger->pauseAtNextOpportunity())) \
+        debugger->maybeBreakAtInstruction(code, instr.breakPoint); \
     Q_UNUSED(instr); \
     TRACE_INSTR(I)
 
@@ -176,8 +176,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 #endif
         )
 {
-    const uchar *exceptionHandler = 0;
-
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
 #endif // DO_TRACE_INSTR
@@ -193,6 +191,14 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         return QV4::Primitive::undefinedValue().asReturnedValue();
     }
 #endif
+
+    const uchar *exceptionHandler = 0;
+
+    QV4::Debugging::Debugger *debugger = context->engine->debugger;
+
+#ifdef DO_TRACE_INSTR
+    qDebug("Starting VME with context=%p and code=%p", context, code);
+#endif // DO_TRACE_INSTR
 
     QV4::SafeString * const runtimeStrings = context->compilationUnit->runtimeStrings;
     context->interpreterInstructionPointer = &code;
@@ -695,5 +701,11 @@ void **VME::instructionJumpTable()
 QV4::ReturnedValue VME::exec(QV4::ExecutionContext *ctxt, const uchar *code)
 {
     VME vme;
-    return vme.run(ctxt, code);
+    QV4::Debugging::Debugger *debugger = ctxt->engine->debugger;
+    if (debugger)
+        debugger->enteringFunction();
+    QV4::ReturnedValue retVal = vme.run(ctxt, code);
+    if (debugger)
+        debugger->leavingFunction(retVal);
+    return retVal;
 }

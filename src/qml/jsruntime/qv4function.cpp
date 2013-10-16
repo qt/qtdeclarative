@@ -91,10 +91,11 @@ void Function::mark(ExecutionEngine *e)
 }
 
 namespace QV4 {
+template <int field, typename SearchType>
 struct LineNumberMappingHelper
 {
     const quint32 *table;
-    int lowerBound(int begin, int end, quint32 offset) {
+    int lowerBound(int begin, int end, SearchType value) {
         int middle;
         int n = int(end - begin);
         int half;
@@ -102,7 +103,7 @@ struct LineNumberMappingHelper
         while (n > 0) {
             half = n >> 1;
             middle = begin + half;
-            if (table[middle * 2] < offset) {
+            if (table[middle * 2 + field] < value) {
                 begin = middle + 1;
                 n -= half + 1;
             } else {
@@ -111,13 +112,30 @@ struct LineNumberMappingHelper
         }
         return begin;
     }
-};
+    int upperBound(int begin, int end, SearchType value) {
+        int middle;
+        int n = int(end - begin);
+        int half;
 
+        while (n > 0) {
+            half = n >> 1;
+            middle = begin + half;
+            if (value < table[middle * 2 + field]) {
+                n = half;
+            } else {
+                begin = middle + 1;
+                n -= half + 1;
+            }
+        }
+        return begin;
+    }
+};
 }
 
 int Function::lineNumberForProgramCounter(qptrdiff offset) const
 {
-    LineNumberMappingHelper helper;
+    // Access the first field, the program counter
+    LineNumberMappingHelper<0, qptrdiff> helper;
     helper.table = compiledFunction->lineNumberMapping();
     const uint count = compiledFunction->nLineNumberMappingEntries;
 
@@ -127,6 +145,21 @@ int Function::lineNumberForProgramCounter(qptrdiff offset) const
     if (static_cast<uint>(pos) == count)
         return -1;
     return helper.table[pos * 2 + 1];
+}
+
+qptrdiff Function::programCounterForLine(quint32 line) const
+{
+    // Access the second field, the line number
+    LineNumberMappingHelper<1, quint32> helper;
+    helper.table = compiledFunction->lineNumberMapping();
+    const int count = static_cast<int>(compiledFunction->nLineNumberMappingEntries);
+
+    int pos = helper.upperBound(0, count, line);
+    if (pos != 0 && count > 0)
+        --pos;
+    if (pos == count)
+        return -1;
+    return helper.table[pos * 2];
 }
 
 QT_END_NAMESPACE

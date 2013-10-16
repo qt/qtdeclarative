@@ -112,6 +112,7 @@ struct Function {
     void mark(ExecutionEngine *e);
 
     int lineNumberForProgramCounter(qptrdiff offset) const;
+    qptrdiff programCounterForLine(quint32 line) const;
 };
 
 }
