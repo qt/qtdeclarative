@@ -1524,8 +1524,7 @@ void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelInd
 
 void QQmlDelegateModel::_q_layoutChanged()
 {
-    Q_D(QQmlDelegateModel);
-    _q_itemsChanged(0, d->m_count, QVector<int>());
+    _q_modelReset();
 }
 
 QQmlDelegateModelAttached *QQmlDelegateModel::qmlAttachedProperties(QObject *obj)

@@ -54,6 +54,7 @@
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
 #include "incrementalmodel.h"
+#include "proxytestinnermodel.h"
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -210,6 +211,7 @@ private slots:
     void accessEmptyCurrentItem_QTBUG_30227();
     void delayedChanges_QTBUG_30555();
     void outsideViewportChangeNotAffectingView();
+    void testProxyModelChangedAfterMove();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -319,6 +321,9 @@ void tst_QQuickListView::init()
         m_view = 0;
     }
 #endif
+    qmlRegisterType<QAbstractItemModel>();
+    qmlRegisterType<ProxyTestInnerModel>("Proxy", 1, 0, "ProxyTestInnerModel");
+    qmlRegisterType<QSortFilterProxyModel>("Proxy", 1, 0, "QSortFilterProxyModel");
 }
 
 void tst_QQuickListView::cleanupTestCase()
@@ -6934,6 +6939,23 @@ void tst_QQuickListView::outsideViewportChangeNotAffectingView()
     QMetaObject::invokeMethod(window->rootObject(), "resizeThirdItem", Q_ARG(QVariant, 400));
     QTRY_COMPARE(listview->indexAt(0, listview->contentY()), 4);
     QTRY_COMPARE(listview->itemAt(0, listview->contentY())->y(), 1200.);
+
+    delete window;
+}
+
+void tst_QQuickListView::testProxyModelChangedAfterMove()
+{
+    QQuickView *window = createView();
+    QQuickViewTestUtil::moveMouseAway(window);
+    window->setSource(testFileUrl("proxytest.qml"));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
+    QTRY_VERIFY(listview != 0);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QTRY_COMPARE(listview->count(), 3);
 
     delete window;
 }
