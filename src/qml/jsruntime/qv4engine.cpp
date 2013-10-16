@@ -826,19 +826,9 @@ void ExecutionEngine::throwException(const ValueRef value)
     throwInternal();
 }
 
-void ExecutionEngine::rethrowException(ExecutionContext *intermediateCatchingContext)
-{
-    if (hasException) {
-        while (current != intermediateCatchingContext)
-            popContext();
-    }
-    rethrowInternal();
-}
-
 ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
 {
-    if (!hasException)
-        rethrowInternal();
+    Q_ASSERT(hasException);
     while (current != catchingContext)
         popContext();
     if (trace)
@@ -857,11 +847,6 @@ struct DummyException
 void ExecutionEngine::throwInternal()
 {
     throw DummyException();
-}
-
-void ExecutionEngine::rethrowInternal()
-{
-    throw;
 }
 #endif
 

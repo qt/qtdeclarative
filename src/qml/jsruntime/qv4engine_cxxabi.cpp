@@ -118,22 +118,6 @@ void ExecutionEngine::throwInternal()
     std::terminate();
 }
 
-void ExecutionEngine::rethrowInternal()
-{
-    cxa_eh_globals *globals = __cxa_get_globals();
-    cxa_exception *exception = globals->caughtExceptions;
-
-    // Make sure we only re-throw our foreign exceptions. For general re-throw
-    // we'd need different code.
-#ifndef __ARM_EABI_UNWINDER__
-    Q_ASSERT(exception->unwindHeader.exception_class == 0x514d4c4a53563400); // QMLJSV40
-#endif
-
-    globals->caughtExceptions = 0;
-    _Unwind_RaiseException(&exception->unwindHeader);
-    std::terminate();
-}
-
 QT_END_NAMESPACE
 
 /*

@@ -86,13 +86,24 @@ struct Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
     inline ReturnedValue code(ExecutionContext *ctx, const uchar *data) {
-        SafeValue *stack = ctx->engine->jsStackTop;
-        try {
-            return codePtr(ctx, data);
-        } catch (...) {
-            ctx->engine->jsStackTop = stack;
-            ctx->rethrowException();
-        }
+
+        struct StackSaver {
+            ExecutionEngine *engine;
+            SafeValue *stack;
+
+            StackSaver(ExecutionEngine *engine)
+                : engine(engine)
+                , stack(engine->jsStackTop)
+            {}
+
+            ~StackSaver()
+            {
+                engine->jsStackTop = stack;
+            }
+        };
+
+        StackSaver(ctx->engine);
+        return codePtr(ctx, data);
     }
 
     ReturnedValue (*codePtr)(ExecutionContext *, const uchar *);

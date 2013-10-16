@@ -147,7 +147,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     // Can only be called from within catch(...), rethrows if no JS exception.
     ReturnedValue catchException(StackTrace *trace = 0);
-    void Q_NORETURN rethrowException();
 
     void mark();
 

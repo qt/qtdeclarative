@@ -649,11 +649,6 @@ ReturnedValue ExecutionContext::catchException(StackTrace *trace)
     return engine->catchException(this, trace);
 }
 
-void ExecutionContext::rethrowException()
-{
-    engine->rethrowException(this);
-}
-
 void ExecutionContext::throwReferenceError(const ValueRef value)
 {
     Scope scope(this);

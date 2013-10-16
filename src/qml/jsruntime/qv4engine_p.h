@@ -326,11 +326,9 @@ struct Q_QML_EXPORT ExecutionEngine
     StackTrace exceptionStackTrace;
 
     void Q_NORETURN throwException(const ValueRef value);
-    void Q_NORETURN rethrowException(ExecutionContext *intermediateCatchingContext);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
     void Q_NORETURN throwInternal();
-    void Q_NORETURN rethrowInternal();
     // ----
 
 
@@ -350,6 +348,23 @@ inline ExecutionContext *ExecutionEngine::popContext()
     current = current->parent;
     return current;
 }
+
+struct ExecutionContextSaver
+{
+    ExecutionEngine *engine;
+    ExecutionContext *savedContext;
+
+    ExecutionContextSaver(ExecutionContext *context)
+        : engine(context->engine)
+        , savedContext(context)
+    {
+    }
+    ~ExecutionContextSaver()
+    {
+        while (engine->current != savedContext)
+            engine->popContext();
+    }
+};
 
 } // namespace QV4
 

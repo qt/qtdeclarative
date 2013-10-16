@@ -227,6 +227,27 @@ void Script::parse()
 
 ReturnedValue Script::run()
 {
+    struct ContextStateSaver {
+        ExecutionContext *savedContext;
+        bool strictMode;
+        Lookup *lookups;
+        CompiledData::CompilationUnit *compilationUnit;
+
+        ContextStateSaver(ExecutionContext *context)
+            : savedContext(context)
+            , strictMode(context->strictMode)
+            , lookups(context->lookups)
+            , compilationUnit(context->compilationUnit)
+        {}
+
+        ~ContextStateSaver()
+        {
+            savedContext->strictMode = strictMode;
+            savedContext->lookups = lookups;
+            savedContext->compilationUnit = compilationUnit;
+        }
+    };
+
     if (!parsed)
         parse();
     if (!vmFunction)
@@ -238,29 +259,13 @@ ReturnedValue Script::run()
     if (qml.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        bool strict = scope->strictMode;
-        Lookup *oldLookups = scope->lookups;
-        CompiledData::CompilationUnit * const oldCompilationUnit = scope->compilationUnit;
-
+        ExecutionContextSaver ctxSaver(scope);
+        ContextStateSaver stateSaver(scope);
         scope->strictMode = vmFunction->isStrict();
         scope->lookups = vmFunction->compilationUnit->runtimeLookups;
         scope->compilationUnit = vmFunction->compilationUnit;
 
-        QV4::ScopedValue result(valueScope);
-        try {
-            result = vmFunction->code(scope, vmFunction->codeData);
-        } catch (...) {
-            scope->strictMode = strict;
-            scope->lookups = oldLookups;
-            scope->compilationUnit = oldCompilationUnit;
-            scope->rethrowException();
-        }
-
-        scope->lookups = oldLookups;
-        scope->compilationUnit = oldCompilationUnit;
-
-        return result.asReturnedValue();
-
+        return vmFunction->code(scope, vmFunction->codeData);
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
         FunctionObject *f = new (engine->memoryManager) QmlBindingWrapper(scope, vmFunction, qmlObj);
