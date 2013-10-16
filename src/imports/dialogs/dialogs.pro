@@ -37,7 +37,7 @@ HEADERS += \
     qquickfontdialog_p.h \
     qquickabstractdialog_p.h
 
-QML_FILES += \
+DIALOGS_QML_FILES += \
     DefaultMessageDialog.qml \
     WidgetMessageDialog.qml \
     DefaultFileDialog.qml \
@@ -76,7 +76,7 @@ RESOURCE_CONTENT = \
     "<RCC>" \
     "<qresource prefix=\"/QtQuick/Dialogs\">"
 
-for(resourcefile, QML_FILES) {
+for(resourcefile, DIALOGS_QML_FILES) {
     resourcefileabsolutepath = $$absolute_path($$resourcefile)
     relativepath_in = $$relative_path($$resourcefileabsolutepath, $$_PRO_FILE_PWD_)
     relativepath_out = $$relative_path($$resourcefileabsolutepath, $$OUT_PWD)
@@ -90,5 +90,8 @@ RESOURCE_CONTENT += \
 write_file($$GENERATED_RESOURCE_FILE, RESOURCE_CONTENT)|error("Aborting.")
 
 RESOURCES += $$GENERATED_RESOURCE_FILE
+
+# In case of a debug build, deploy the QML files too
+CONFIG(debug, debug|release): QML_FILES += $$DIALOGS_QML_FILES
 
 load(qml_plugin)
