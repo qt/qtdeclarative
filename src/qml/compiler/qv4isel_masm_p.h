@@ -430,7 +430,25 @@ public:
         V4IR::BasicBlock *block;
     };
 
+    void saveInstructionPointer(RegisterID freeScratchRegister) {
+        Address ipAddr(ContextRegister, qOffsetOf(QV4::ExecutionContext, jitInstructionPointer));
+        RegisterID sourceRegister = freeScratchRegister;
+
+#if CPU(X86_64) || CPU(X86)
+        callToRetrieveIP();
+        peek(sourceRegister);
+        pop();
+#elif CPU(ARM)
+        move(JSC::ARMRegisters::pc, sourceRegister);
+#else
+#error "Port me!"
+#endif
+
+        storePtr(sourceRegister, ipAddr);
+    }
+
     void callAbsolute(const char* functionName, FunctionPtr function) {
+        saveInstructionPointer(ScratchRegister);
         CallToLink ctl;
         ctl.call = call();
         ctl.externalFunction = function;
@@ -439,11 +457,13 @@ public:
     }
 
     void callAbsolute(const char* /*functionName*/, Address addr) {
+        saveInstructionPointer(ScratchRegister);
         call(addr);
     }
 
     void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
     {
+        saveInstructionPointer(ScratchRegister);
         call(relativeCall.addr);
     }
 

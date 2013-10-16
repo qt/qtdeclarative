@@ -66,7 +66,6 @@
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
-#include "qv4stacktrace_p.h"
 
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
@@ -568,7 +567,6 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 namespace {
     struct LineNumberResolver {
         const ExecutionEngine* engine;
-        QScopedPointer<QV4::NativeStackTrace> nativeTrace;
 
         LineNumberResolver(const ExecutionEngine *engine)
             : engine(engine)
@@ -577,17 +575,12 @@ namespace {
 
         void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
         {
-            if (context->interpreterInstructionPointer) {
-                qptrdiff offset = *context->interpreterInstructionPointer - 1 - function->codeData;
-                frame->line = function->lineNumberForProgramCounter(offset);
-            } else {
-                if (!nativeTrace)
-                    nativeTrace.reset(new QV4::NativeStackTrace(engine->current));
-
-                NativeFrame nativeFrame = nativeTrace->nextFrame();
-                if (nativeFrame.function == function)
-                    frame->line = nativeFrame.line;
-            }
+            qptrdiff offset;
+            if (context->interpreterInstructionPointer)
+                offset = *context->interpreterInstructionPointer - 1 - function->codeData;
+            else
+                offset = context->jitInstructionPointer - (char*)function->codePtr;
+            frame->line = function->lineNumberForProgramCounter(offset);
         }
     };
 }

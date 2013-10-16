@@ -45,7 +45,6 @@ SOURCES += \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4qmlextensions.cpp \
-    $$PWD/qv4stacktrace.cpp \
     $$PWD/qv4vme_moth.cpp
 
 HEADERS += \
@@ -96,7 +95,6 @@ HEADERS += \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4qmlextensions_p.h \
-    $$PWD/qv4stacktrace_p.h \
     $$PWD/qv4vme_moth_p.h
 
 # Use SSE2 floating point math on 32 bit instead of the default

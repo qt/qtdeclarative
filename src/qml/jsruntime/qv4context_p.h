@@ -97,6 +97,7 @@ struct Q_QML_EXPORT ExecutionContext
     EvalCode *currentEvalCode;
 
     const uchar **interpreterInstructionPointer;
+    char *jitInstructionPointer;
 
     void initBaseContext(Type type, ExecutionEngine *engine, ExecutionContext *parentContext)
     {
@@ -110,6 +111,7 @@ struct Q_QML_EXPORT ExecutionContext
         compilationUnit = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
+        jitInstructionPointer = 0;
     }
 
     CallContext *newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *f, CallData *callData);
