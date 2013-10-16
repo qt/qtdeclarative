@@ -56,6 +56,8 @@
 #include <iostream>
 #include <cassert>
 
+#if ENABLE(ASSEMBLER)
+
 #if USE(UDIS86)
 #  include <udis86.h>
 #endif
@@ -2566,3 +2568,5 @@ bool InstructionSelection::int32Binop(V4IR::AluOp oper, V4IR::Expr *leftSource,
         return false;
     }
 }
+
+#endif // ENABLE(ASSEMBLER)

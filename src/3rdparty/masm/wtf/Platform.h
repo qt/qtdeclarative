@@ -28,6 +28,10 @@
 #ifndef WTF_Platform_h
 #define WTF_Platform_h
 
+#if defined(__cplusplus)
+#include <private/qv4global_p.h>
+#endif
+
 /* Include compiler specific macros */
 #include <wtf/Compiler.h>
 
@@ -767,7 +771,8 @@
 #endif
 
 /* If the jit is not available, enable the LLInt C Loop: */
-#if !ENABLE(JIT)
+/* Not for Qml. We have our own interpreter. */
+#if 0 /* !ENABLE(JIT) */
 #undef ENABLE_LLINT        /* Undef so that we can redefine it. */
 #undef ENABLE_LLINT_C_LOOP /* Undef so that we can redefine it. */
 #undef ENABLE_DFG_JIT      /* Undef so that we can redefine it. */
@@ -778,7 +783,7 @@
 
 /* Do a sanity check to make sure that we at least have one execution engine in
    use: */
-#if !(ENABLE(JIT) || ENABLE(LLINT))
+#if 0 /* !(ENABLE(JIT) || ENABLE(LLINT)) */
 #error You have to have at least one execution model enabled to build JSC
 #endif
 

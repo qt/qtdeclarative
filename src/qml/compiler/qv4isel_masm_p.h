@@ -51,6 +51,9 @@
 #include <QtCore/QHash>
 #include <config.h>
 #include <wtf/Vector.h>
+
+#if ENABLE(ASSEMBLER)
+
 #include <assembler/MacroAssembler.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 
@@ -1605,5 +1608,7 @@ public:
 } // end of namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#endif // ENABLE(ASSEMBLER)
 
 #endif // QV4ISEL_MASM_P_H

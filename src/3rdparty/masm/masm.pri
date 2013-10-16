@@ -1,11 +1,6 @@
-contains(DEFINES, V4_ENABLE_JIT) {
-    HEADERS += $$PWD/assembler/*.h
-    SOURCES += $$PWD/assembler/ARMAssembler.cpp
-    SOURCES += $$PWD/assembler/ARMv7Assembler.cpp
-    SOURCES += $$PWD/assembler/MacroAssemblerARM.cpp
-    SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
-    SOURCES += $$PWD/assembler/LinkBuffer.cpp
-}
+HEADERS += $$PWD/assembler/*.h
+SOURCES += $$PWD/assembler/ARMv7Assembler.cpp
+SOURCES += $$PWD/assembler/LinkBuffer.cpp
 
 HEADERS += $$PWD/wtf/*.h
 SOURCES += $$PWD/wtf/PrintStream.cpp
