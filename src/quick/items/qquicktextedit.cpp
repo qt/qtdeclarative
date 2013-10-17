@@ -2370,7 +2370,7 @@ void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QSGTransformNode *root, QQu
 QQuickTextNode *QQuickTextEditPrivate::createTextNode()
 {
     Q_Q(QQuickTextEdit);
-    QQuickTextNode* node = new QQuickTextNode(QQuickItemPrivate::get(q)->sceneGraphContext(), q);
+    QQuickTextNode* node = new QQuickTextNode(q);
     node->setUseNativeRenderer(renderType == QQuickTextEdit::NativeRendering && window->devicePixelRatio() <= 1);
     node->initEngine(color, selectedTextColor, selectionColor);
     return node;

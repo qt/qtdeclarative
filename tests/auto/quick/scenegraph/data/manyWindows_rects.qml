@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,69 +39,32 @@
 **
 ****************************************************************************/
 
-#ifndef DESIGNERWINDOWMANAGER_P_H
-#define DESIGNERWINDOWMANAGER_P_H
+import QtQuick 2.2
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Rectangle {
+    width: 100
+    height: 100
 
-#include <QtCore/QScopedPointer>
+    gradient: Gradient {
+        GradientStop { position: 0; color: "black" }
+        GradientStop { position: 1; color: "red" }
+    }
 
-#include <private/qsgrenderloop_p.h>
-#include <private/qtquickglobal_p.h>
-#include <QtQuick/private/qsgcontext_p.h>
-
-
-QT_BEGIN_NAMESPACE
-
-class QQuickWindow;
-class QSGContext;
-class QSGRenderContext;
-class QAnimationDriver;
-class QOpenGLContext;
-
-class DesignerWindowManager : public QSGRenderLoop
-{
-    Q_OBJECT
-public:
-    DesignerWindowManager();
-
-    void show(QQuickWindow *window);
-    void hide(QQuickWindow *window);
-
-    void windowDestroyed(QQuickWindow *window);
-
-    void makeOpenGLContext(QQuickWindow *window);
-    void exposureChanged(QQuickWindow *window);
-    QImage grab(QQuickWindow *window);
-    void resize(QQuickWindow *window, const QSize &size);
-
-    void maybeUpdate(QQuickWindow *window);
-    void update(QQuickWindow *window); // identical for this implementation.
-
-    void releaseResources(QQuickWindow *) { }
-
-    QAnimationDriver *animationDriver() const { return 0; }
-
-    QSGContext *sceneGraphContext() const;
-    QSGRenderContext *createRenderContext(QSGContext *) const { return m_renderContext.data(); }
-
-    static void createOpenGLContext(QQuickWindow *window);
-
-private:
-    QScopedPointer<QOpenGLContext> m_openGlContext;
-    QScopedPointer<QSGContext> m_sgContext;
-    QScopedPointer<QSGRenderContext> m_renderContext;
-};
-
-QT_END_NAMESPACE
-
-#endif // DESIGNERWINDOWMANAGER_P_H
+    Rectangle {
+        width: 40
+        height: 40
+        rotation: 30
+        color: "#00ff00";
+        antialiasing: true
+        x: parent.width / 3 - width / 2
+        y: parent.height / 3 - height/ 2
+    }
+    Rectangle {
+        width: 40
+        height: 40
+        rotation: 30
+        color: "blue"
+        x: parent.width * 2 / 3 - width / 2
+        y: parent.height * 2 / 3 - height/ 2
+    }
+}

@@ -4112,7 +4112,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_texture->moveToThread(renderThread);
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
-         QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->glContext();
+         QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->openglContext();
          m_surface = window;
          m_glContext = new QOpenGLContext;
          m_glContext->setFormat(cc->format());

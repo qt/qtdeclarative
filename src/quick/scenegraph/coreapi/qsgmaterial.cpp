@@ -478,7 +478,7 @@ QRect QSGMaterialShader::RenderState::deviceRect() const
 
 QOpenGLContext *QSGMaterialShader::RenderState::context() const
 {
-    return static_cast<const QSGRenderer *>(m_data)->glContext();
+    return static_cast<const QSGRenderer *>(m_data)->context()->openglContext();
 }
 
 

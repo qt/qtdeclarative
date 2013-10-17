@@ -85,6 +85,8 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
     qsg_debug_timer.start();
 #endif
 
+    m_rc = new QSGRenderContext(m_sg);
+
     m_animationDriver = m_sg->createAnimationDriver(m_sg);
     m_animationDriver->install();
 
@@ -100,6 +102,12 @@ QSGWindowsRenderLoop::QSGWindowsRenderLoop()
 #ifndef QSG_NO_RENDER_TIMIMG
     qsg_render_timer.start();
 #endif
+}
+
+QSGWindowsRenderLoop::~QSGWindowsRenderLoop()
+{
+    delete m_rc;
+    delete m_sg;
 }
 
 bool QSGWindowsRenderLoop::interleaveIncubation() const
@@ -176,7 +184,7 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         m_gl->makeCurrent(window);
         RLDEBUG(" - initializing SG");
         QSG_RENDER_TIMING_SAMPLE(time_current);
-        m_sg->initialize(m_gl);
+        QQuickWindowPrivate::get(window)->context->initialize(m_gl);
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
@@ -230,7 +238,7 @@ void QSGWindowsRenderLoop::hide(QQuickWindow *window)
     // potentially clean up.
     if (m_windows.size() == 0) {
         if (!cd->persistentSceneGraph) {
-            m_sg->invalidate();
+            QQuickWindowPrivate::get(window)->context->invalidate();
             if (!cd->persistentGLContext) {
                 delete m_gl;
                 m_gl = 0;
@@ -246,7 +254,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
 
     // If this is the last tracked window, clean up SG and GL.
     if (m_windows.size() == 0) {
-        m_sg->invalidate();
+        QQuickWindowPrivate::get(window)->context->invalidate();
         delete m_gl;
         m_gl = 0;
     }

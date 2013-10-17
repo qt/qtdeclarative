@@ -54,7 +54,7 @@ class QOpenGLSharedResourceGuard;
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
+    QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font);
     virtual ~QSGDefaultDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs);

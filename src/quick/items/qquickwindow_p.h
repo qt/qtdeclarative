@@ -194,7 +194,7 @@ public:
 
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
 
-    QSGContext *context;
+    QSGRenderContext *context;
     QSGRenderer *renderer;
 
     QSGRenderLoop *windowManager;

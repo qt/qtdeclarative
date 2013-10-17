@@ -45,6 +45,7 @@
 #include "qquickwindow_p.h"
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
+#include <qsgsimplerectnode.h>
 
 #include "qopenglframebufferobject.h"
 #include "qmath.h"
@@ -143,7 +144,7 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
-    , m_context(QQuickItemPrivate::get(shaderSource)->sceneGraphContext())
+    , m_context(QQuickItemPrivate::get(shaderSource)->sceneGraphRenderContext())
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -326,7 +327,7 @@ void QQuickShaderEffectTexture::grab()
         || (!m_fbo->format().mipmap() && m_mipmap))
     {
         if (!m_multisamplingChecked) {
-            if (m_context->glContext()->format().samples() <= 1) {
+            if (m_context->openglContext()->format().samples() <= 1) {
                 m_multisampling = false;
             } else {
                 QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
@@ -342,7 +343,7 @@ void QQuickShaderEffectTexture::grab()
             QOpenGLFramebufferObjectFormat format;
 
             format.setInternalTextureFormat(m_format);
-            format.setSamples(m_context->glContext()->format().samples());
+            format.setSamples(m_context->openglContext()->format().samples());
             m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
             m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
         } else {
@@ -385,20 +386,16 @@ void QQuickShaderEffectTexture::grab()
 #ifdef QSG_DEBUG_FBO_OVERLAY
     if (qmlFboOverlay()) {
         if (!m_debugOverlay)
-            m_debugOverlay = m_context->createRectangleNode();
+            m_debugOverlay = new QSGSimpleRectNode();
         m_debugOverlay->setRect(QRectF(0, 0, m_size.width(), m_size.height()));
         m_debugOverlay->setColor(QColor(0xff, 0x00, 0x80, 0x40));
-        m_debugOverlay->setPenColor(QColor());
-        m_debugOverlay->setPenWidth(0);
-        m_debugOverlay->setRadius(0);
-        m_debugOverlay->update();
         root->appendChildNode(m_debugOverlay);
     }
 #endif
 
     m_dirtyTexture = false;
 
-    QOpenGLContext *ctx = m_context->glContext();
+    QOpenGLContext *ctx = m_context->openglContext();
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
@@ -591,8 +588,8 @@ void QQuickShaderEffectSource::ensureTexture()
         return;
 
     Q_ASSERT_X(QQuickItemPrivate::get(this)->window
-               && QQuickItemPrivate::get(this)->sceneGraphContext()
-               && QThread::currentThread() == QQuickItemPrivate::get(this)->sceneGraphContext()->thread(),
+               && QQuickItemPrivate::get(this)->sceneGraphRenderContext()
+               && QThread::currentThread() == QQuickItemPrivate::get(this)->sceneGraphRenderContext()->thread(),
                "QQuickShaderEffectSource::ensureTexture",
                "Cannot be used outside the rendering thread");
 
@@ -603,13 +600,13 @@ void QQuickShaderEffectSource::ensureTexture()
 
 QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
 {
+    const QQuickItemPrivate *d = QQuickItemPrivate::get(this);
+    if (!d->window || !d->sceneGraphRenderContext() || QThread::currentThread() != d->sceneGraphRenderContext()->thread()) {
+        qWarning("QQuickShaderEffectSource::textureProvider: can only be queried on the rendering thread of an exposed window");
+        return 0;
+    }
+
     if (!m_provider) {
-        // Make sure it gets thread affinity on the rendering thread so deletion works properly..
-        Q_ASSERT_X(QQuickItemPrivate::get(this)->window
-                   && QQuickItemPrivate::get(this)->sceneGraphContext()
-                   && QThread::currentThread() == QQuickItemPrivate::get(this)->sceneGraphContext()->thread(),
-                   "QQuickShaderEffectSource::textureProvider",
-                   "Cannot be used outside the rendering thread");
         const_cast<QQuickShaderEffectSource *>(this)->m_provider = new QQuickShaderEffectSourceTextureProvider();
         const_cast<QQuickShaderEffectSource *>(this)->ensureTexture();
         connect(m_texture, SIGNAL(updateRequested()), m_provider, SIGNAL(textureChanged()));

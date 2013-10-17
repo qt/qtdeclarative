@@ -283,7 +283,6 @@ Updater::Updater(Renderer *r)
 
 void Updater::updateStates(QSGNode *n)
 {
-    m_toplevel_alpha = 1;
     m_current_clip = 0;
 
     m_added = 0;
@@ -683,7 +682,7 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGContext *ctx)
+Renderer::Renderer(QSGRenderContext *ctx)
     : QSGRenderer(ctx)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)

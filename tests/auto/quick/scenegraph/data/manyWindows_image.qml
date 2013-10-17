@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,24 +39,14 @@
 **
 ****************************************************************************/
 
-#include "qsgflashnode_p.h"
+import QtQuick 2.2
 
-QT_BEGIN_NAMESPACE
-
-QSGFlashNode::QSGFlashNode()
-    : m_counter(1)
-{
-    setFlag(UsePreprocess);
-    setColor(QColor(rand()%56 + 200, rand()%56 + 200, rand()%156 + 100)); // A random, mostly yellow, color
-}
-
-void QSGFlashNode::preprocess()
-{
-    if (m_counter) {
-        --m_counter;
-    } else {
-        delete this;
+Image {
+    width: 100
+    height: 100
+    source: "logo-big.jpg"
+    Image {
+        anchors.centerIn: parent
+        source: "logo-small.jpg"
     }
 }
-
-QT_END_NAMESPACE

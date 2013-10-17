@@ -149,7 +149,7 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -245,8 +245,6 @@ protected:
     GLuint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
-
-    QOpenGLContext *ctx;
 
 private:
     QSGDistanceFieldGlyphCacheManager *m_manager;

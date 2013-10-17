@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,25 +39,12 @@
 **
 ****************************************************************************/
 
-#ifndef QSGFLASHNODE_H
-#define QSGFLASHNODE_H
+import QtQuick 2.2
 
-#include <QtQuick/QSGSimpleRectNode>
-
-QT_BEGIN_NAMESPACE
-
-class QSGFlashNode : public QSGSimpleRectNode
+Text
 {
-public:
-    QSGFlashNode();
-
-    void preprocess();
-
-private:
-    int m_counter;
-};
-
-QT_END_NAMESPACE
-
-#endif // QSGFLASHNODE_H
-
+    width: 100
+    height: 100
+    text: "abcdefghijklmnopqrstuwABCDEFGHIJKLMNOPPQRSTUWXYZ1234567890!@#$%^&*()_"
+    wrapMode: Text.WrapAnywhere
+}

@@ -84,7 +84,7 @@ public:
     };
     Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
 
-    QSGRenderer(QSGContext *context);
+    QSGRenderer(QSGRenderContext *context);
     virtual ~QSGRenderer();
 
     void setRootNode(QSGRootNode *node);
@@ -117,9 +117,7 @@ public:
     void setClearColor(const QColor &color);
     QColor clearColor() const { return m_clear_color; }
 
-    QOpenGLContext *glContext() const { Q_ASSERT(m_context); return m_context->glContext(); }
-
-    QSGContext *context();
+    QSGRenderContext *context() const { return m_context; }
 
     void renderScene();
     void renderScene(const QSGBindable &bindable);
@@ -161,7 +159,7 @@ protected:
     QRect m_current_scissor_rect;
     int m_current_stencil_value;
 
-    QSGContext *m_context;
+    QSGRenderContext *m_context;
 
 private:
     QSGRootNode *m_root_node;

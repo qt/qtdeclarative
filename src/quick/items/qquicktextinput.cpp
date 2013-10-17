@@ -1834,7 +1834,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
     if (node == 0)
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
+        node = new QQuickTextNode(this);
     d->textNode = node;
 
     if (!d->textLayoutDirty && oldNode != 0) {

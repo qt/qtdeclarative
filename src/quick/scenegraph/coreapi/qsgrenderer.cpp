@@ -133,7 +133,7 @@ void QSGBindableFboId::bind() const
  */
 
 
-QSGRenderer::QSGRenderer(QSGContext *context)
+QSGRenderer::QSGRenderer(QSGRenderContext *context)
     : QObject()
     , m_clear_color(Qt::transparent)
     , m_clear_mode(ClearColorBuffer | ClearDepthBuffer)
@@ -160,20 +160,6 @@ QSGRenderer::~QSGRenderer()
     setRootNode(0);
     delete m_node_updater;
 }
-
-/*!
-    Returns the scene graph context for this renderer.
-
-    \internal
- */
-
-QSGContext *QSGRenderer::context()
-{
-    return m_context;
-}
-
-
-
 
 /*!
     Returns the node updater that this renderer uses to update states in the
@@ -398,7 +384,6 @@ void QSGRenderer::preprocess()
         preprocessTime = frameTimer.nsecsElapsed();
 #endif
 
-    nodeUpdater()->setToplevelOpacity(context()->renderAlpha());
     nodeUpdater()->updateStates(m_root_node);
 
 #ifndef QSG_NO_RENDER_TIMING

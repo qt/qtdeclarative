@@ -2241,11 +2241,10 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height(), height(), d->vAlign);
 
     QQuickTextNode *node = 0;
-    if (!oldNode) {
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
-    } else {
+    if (!oldNode)
+        node = new QQuickTextNode(this);
+    else
         node = static_cast<QQuickTextNode *>(oldNode);
-    }
 
     node->setUseNativeRenderer(d->renderType == NativeRendering && d->window->devicePixelRatio() <= 1);
     node->deleteContent();

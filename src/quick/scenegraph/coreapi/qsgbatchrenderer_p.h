@@ -389,7 +389,7 @@ public:
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
 {
 public:
-    Renderer(QSGContext *);
+    Renderer(QSGRenderContext *);
     ~Renderer();
 
 protected:

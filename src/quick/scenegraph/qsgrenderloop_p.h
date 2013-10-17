@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
 class QSGContext;
+class QSGRenderContext;
 class QAnimationDriver;
 
 class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
@@ -72,6 +73,7 @@ public:
     virtual QAnimationDriver *animationDriver() const = 0;
 
     virtual QSGContext *sceneGraphContext() const = 0;
+    virtual QSGRenderContext *createRenderContext(QSGContext *) const = 0;
 
     virtual void releaseResources(QQuickWindow *window) = 0;
 

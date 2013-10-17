@@ -46,7 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGContext *context)
+QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     : m_glyphNodeType(RootGlyphNode)
     , m_context(context)
     , m_material(0)

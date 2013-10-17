@@ -52,8 +52,8 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
 
-QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(man, c, font)
+QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font)
+    : QSGDistanceFieldGlyphCache(man, font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
     , m_blitProgram(0)
@@ -239,6 +239,9 @@ static void freeFramebufferFunc(QOpenGLFunctions *funcs, GLuint id)
 
 void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int width, int height)
 {
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    Q_ASSERT(ctx);
+
     int oldWidth = texInfo->size.width();
     int oldHeight = texInfo->size.height();
     if (width == oldWidth && height == oldHeight)
@@ -361,7 +364,7 @@ bool QSGDefaultDistanceFieldGlyphCache::useWorkaround() const
     static bool set = false;
     static bool useWorkaround = false;
     if (!set) {
-        QOpenGLContextPrivate *ctx_p = static_cast<QOpenGLContextPrivate *>(QOpenGLContextPrivate::get(ctx));
+        QOpenGLContextPrivate *ctx_p = static_cast<QOpenGLContextPrivate *>(QOpenGLContextPrivate::get(QOpenGLContext::currentContext()));
         useWorkaround = ctx_p->workaround_brokenFBOReadBack
                 || qmlUseGlyphCacheWorkaround(); // on some hardware the workaround is faster (see QTBUG-29264)
         set = true;
