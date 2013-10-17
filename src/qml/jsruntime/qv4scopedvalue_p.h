@@ -95,9 +95,11 @@ struct Scope {
 #ifndef QT_NO_DEBUG
     mutable int size;
 #endif
+
+private:
+    Q_DISABLE_COPY(Scope)
 };
 
-struct ScopedValue;
 struct ValueRef;
 
 struct ScopedValue
