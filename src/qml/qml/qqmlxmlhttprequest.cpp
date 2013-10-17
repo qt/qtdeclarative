@@ -1572,7 +1572,7 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
         // the source is changed).  We do nothing in this case, as the evaluation
         // cannot succeed.
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }
 }

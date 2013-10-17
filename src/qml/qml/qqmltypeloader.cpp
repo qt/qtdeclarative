@@ -2767,7 +2767,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         m_program->qml = qmlglobal;
         m_program->run();
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         if (error.isValid())
             ep->warning(error);
     }

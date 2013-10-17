@@ -86,7 +86,7 @@ void QQmlDelayedError::setErrorObject(QObject *object)
 
 void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionContext *context)
 {
-    m_error = QQmlError::catchJavaScriptException(context);
+    m_error = QV4::ExecutionEngine::convertJavaScriptException(context);
 }
 
 
@@ -306,7 +306,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
         script.parse();
         result = script.run();
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)
@@ -340,7 +340,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
         script.parse();
         result = script.qmlBinding();
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)

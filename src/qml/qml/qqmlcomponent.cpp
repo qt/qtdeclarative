@@ -1573,7 +1573,7 @@ void QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
             callData->args[0] = QV4::Primitive::fromUInt32(s);
             f->call(callData);
         } catch (...) {
-            QQmlError error = QQmlError::catchJavaScriptException(ctx);
+            QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v8->engine()), error);
         }
     }

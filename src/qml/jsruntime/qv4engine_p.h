@@ -56,6 +56,7 @@ class PageAllocation;
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
+class QQmlError;
 
 namespace QV4 {
 namespace Debugging {
@@ -327,6 +328,9 @@ struct Q_QML_EXPORT ExecutionEngine
 
     void Q_NORETURN throwException(const ValueRef value);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
+
+    // Use only inside catch(...) -- will re-throw if no JS exception
+    static QQmlError convertJavaScriptException(QV4::ExecutionContext *context);
 
     void Q_NORETURN throwInternal();
     // ----

@@ -727,7 +727,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             try {
                 f->call(callData);
             } catch (...) {
-                QQmlError error = QQmlError::catchJavaScriptException(ctx);
+                QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
