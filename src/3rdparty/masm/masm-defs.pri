@@ -30,3 +30,5 @@ INCLUDEPATH += $$PWD/disassembler/udis86
 INCLUDEPATH += $$_OUT_PWD
 
 win32-msvc2008|wince*: INCLUDEPATH += $$PWD/stubs/compat
+
+CONFIG(release, debug|release): DEFINES += NDEBUG
