@@ -459,22 +459,21 @@ void tst_QQmlProfilerService::scenegraphData()
 
     // check that at least one frame was rendered
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
+    // (though we can't be sure to get the SGRenderLoopFrame in the threaded renderer)
+    //
     // since the rendering happens in a different thread, there could be other unrelated events interleaved
     int loopcheck = 0;
     foreach (const QQmlProfilerData &msg, m_client->traceMessages) {
         if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
             if (loopcheck == 0 && msg.detailType == QQmlProfilerClient::SceneGraphContextFrame)
                 loopcheck = 1;
-            else
-            if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
+            else if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
                 loopcheck = 2;
-            else
-            if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
+            else if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
                loopcheck = 3;
         }
     }
-
-    QCOMPARE(loopcheck, 3);
+    QVERIFY(loopcheck >= 2);
 }
 
 void tst_QQmlProfilerService::profileOnExit()
