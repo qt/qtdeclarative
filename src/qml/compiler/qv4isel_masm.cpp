@@ -1071,7 +1071,7 @@ void InstructionSelection::setActivationProperty(V4IR::Expr *source, const QStri
 
 void InstructionSelection::initClosure(V4IR::Closure *closure, V4IR::Temp *target)
 {
-    int id = irModule->functions.indexOf(closure->value);
+    int id = closure->value;
     generateFunctionCall(target, __qmljs_init_closure, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 

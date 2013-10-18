@@ -75,13 +75,13 @@ public:
         QmlBinding
     };
 
-    V4IR::Function *generateFromProgram(const QString &fileName,
+    void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
                              V4IR::Module *module,
                              CompilationMode mode = GlobalCode,
                              const QStringList &inheritedLocals = QStringList());
-    V4IR::Function *generateFromFunctionExpression(const QString &fileName,
+    void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
                              V4IR::Module *module);
@@ -283,10 +283,11 @@ protected:
     void move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op = V4IR::OpInvalid);
     void cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
 
-    V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
-                                 AST::FormalParameterList *formals,
-                                 AST::SourceElements *body,
-                                 const QStringList &inheritedLocals = QStringList());
+    // Returns index in _module->functions
+    int defineFunction(const QString &name, AST::Node *ast,
+                       AST::FormalParameterList *formals,
+                       AST::SourceElements *body,
+                       const QStringList &inheritedLocals = QStringList());
 
     void unwindException(ScopeAndFinally *outest);
 

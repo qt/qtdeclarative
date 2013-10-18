@@ -464,7 +464,7 @@ bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW
 
 void Closure::dump(QTextStream &out) const
 {
-    QString name = value->name ? *value->name : QString();
+    QString name = functionName ? *functionName : QString();
     if (name.isEmpty())
         name.sprintf("%p", value);
     out << "closure(" << name << ')';
@@ -763,10 +763,10 @@ Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
     return e;
 }
 
-Closure *BasicBlock::CLOSURE(Function *function)
+Closure *BasicBlock::CLOSURE(int functionInModule)
 {
     Closure *clos = function->New<Closure>();
-    clos->init(function);
+    clos->init(functionInModule, function->module->functions.at(functionInModule)->name);
     return clos;
 }
 

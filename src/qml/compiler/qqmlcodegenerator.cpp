@@ -1180,7 +1180,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fil
     scan.end();
 
     _env = 0;
-    _function = defineFunction(QString("context scope"), qmlRoot, 0, 0);
+    _function = _module->functions.at(defineFunction(QString("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {
         AST::Node *node = functions.at(i);
@@ -1212,10 +1212,10 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fil
             body = body->finish();
         }
 
-        V4IR::Function *irFunc = defineFunction(name, node,
-                                                function ? function->formals : 0,
-                                                body);
-        runtimeFunctionIndices[i] = _module->functions.indexOf(irFunc); // ###
+        int idx = defineFunction(name, node,
+                                 function ? function->formals : 0,
+                                 body);
+        runtimeFunctionIndices[i] = idx;
     }
 
     qDeleteAll(_envMap);
