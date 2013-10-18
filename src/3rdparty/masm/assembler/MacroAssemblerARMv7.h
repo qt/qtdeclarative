@@ -177,6 +177,11 @@ public:
         }
     }
 
+    void add32(RegisterID op1, RegisterID op2, RegisterID dest)
+    {
+        m_assembler.add(dest, op1, op2);
+    }
+
     void add32(TrustedImm32 imm, Address address)
     {
         load32(address, dataTempRegister);
@@ -308,6 +313,11 @@ public:
     {
         move(imm, dataTempRegister);
         m_assembler.smull(dest, dataTempRegister, src, dataTempRegister);
+    }
+
+    void mul32(RegisterID op1, RegisterID op2, RegisterID dest)
+    {
+        m_assembler.smull(dest, dataTempRegister, op1, op2);
     }
 
     void neg32(RegisterID srcDest)

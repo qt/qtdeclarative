@@ -518,8 +518,15 @@ protected: // IRDecoder
                     || (oper >= OpGt && oper <= OpStrictNotEqual)) {
                 needsCall = false;
             }
-        } if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift || oper == OpURShift) {
+        } else if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift || oper == OpURShift) {
             needsCall = false;
+        } else if (oper == OpAdd
+                   || oper == OpMul
+                   ||
+                   oper == OpSub
+                   ) {
+            if (leftSource->type == SInt32Type && rightSource->type == SInt32Type)
+                needsCall = false;
         }
 
         addDef(target);
