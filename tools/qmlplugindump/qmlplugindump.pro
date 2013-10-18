@@ -1,6 +1,6 @@
 QT += qml qml-private quick-private core-private
 
-CONFIG += qpa_minimal_plugin
+CONFIG += no_import_scan qpa_minimal_plugin
 
 SOURCES += \
     main.cpp \
