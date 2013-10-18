@@ -610,8 +610,10 @@ Function *Module::newFunction(const QString &name, Function *outer)
     Function *f = new Function(this, outer, name);
     functions.append(f);
     if (!outer) {
-        assert(!rootFunction);
-        rootFunction = f;
+        if (!isQmlModule) {
+            assert(!rootFunction);
+            rootFunction = f;
+        }
     } else {
         outer->nestedFunctions.append(f);
     }

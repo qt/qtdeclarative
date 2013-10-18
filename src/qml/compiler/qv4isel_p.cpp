@@ -80,9 +80,6 @@ EvalISelFactory::~EvalISelFactory()
 
 QV4::CompiledData::CompilationUnit *EvalInstructionSelection::compile(bool generateUnitData)
 {
-    Function *rootFunction = irModule->rootFunction;
-    if (!rootFunction)
-        return 0;
     for (int i = 0; i < irModule->functions.size(); ++i)
         run(i);
 

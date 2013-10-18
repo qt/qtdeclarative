@@ -161,7 +161,7 @@ struct Unit
     uint offsetToRegexpTable;
     uint jsClassTableSize;
     uint offsetToJSClassTable;
-    uint indexOfRootFunction;
+    qint32 indexOfRootFunction;
     quint32 sourceFileIndex;
 
     QString stringAt(int idx) const {

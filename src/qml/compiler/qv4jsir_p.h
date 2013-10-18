@@ -682,10 +682,14 @@ struct Q_QML_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
+    bool isQmlModule; // implies rootFunction is always 0
 
     Function *newFunction(const QString &name, Function *outer);
 
-    Module() : rootFunction(0) {}
+    Module()
+        : rootFunction(0)
+        , isQmlModule(false)
+    {}
     ~Module();
 
     void setFileName(const QString &name);

@@ -140,7 +140,10 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     std::sort(runtimeFunctionsSortedByAddress.begin(), runtimeFunctionsSortedByAddress.end(), functionSortHelper);
 #endif
 
-    return runtimeFunctions[data->indexOfRootFunction];
+    if (data->indexOfRootFunction != -1)
+        return runtimeFunctions[data->indexOfRootFunction];
+    else
+        return 0;
 }
 
 void CompilationUnit::unlink()

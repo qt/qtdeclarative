@@ -810,9 +810,8 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
     this->unit = unit;
     this->unitRoot = root;
     this->output = out;
-    this->functionsToCompile.clear();
-    this->compiledMetaMethods.clear();
-    this->compiledSignalHandlers.clear();
+    this->jsModule.reset(new QQmlJS::V4IR::Module);
+    this->jsModule->isQmlModule = true;
 
     // Compile types
     const QList<QQmlTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
@@ -919,58 +918,10 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())
         return;
 
-    const QQmlScript::Parser &parser = unit->parser();
-    QQmlJS::Engine *jsEngine = parser.jsEngine();
-    QQmlJS::MemoryPool *pool = jsEngine->pool();
-
-    foreach (JSBindingReference *root, allBindingReferenceRoots) {
-        for (JSBindingReference *b = root; b; b = b->nextReference) {
-            JSBindingReference &binding = *b;
-
-            QQmlJS::AST::Node *node = binding.expression.asAST();
-            // Always wrap this in an ExpressionStatement, to make sure that
-            // property var foo: function() { ... } results in a closure initialization.
-            if (!node->statementCast()) {
-                AST::ExpressionNode *expr = node->expressionCast();
-                node = new (pool) AST::ExpressionStatement(expr);
-            }
-
-            functionsToCompile.append(node);
-            binding.compiledIndex = functionsToCompile.count() - 1;
-        }
-    }
-
-    if (!functionsToCompile.isEmpty()) {
-        JSCodeGen jsCodeGen;
-
-        V4IR::Module jsModule;
-        const QString &sourceCode = jsEngine->code();
-        AST::UiProgram *qmlRoot = parser.qmlRoot();
-
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, &jsModule, jsEngine, qmlRoot, functionsToCompile);
-
-        foreach (JSBindingReference *root, allBindingReferenceRoots) {
-            for (JSBindingReference *b = root; b; b = b->nextReference) {
-                JSBindingReference &binding = *b;
-                functionsToCompile.append(binding.expression.asAST());
-                binding.compiledIndex = runtimeFunctionIndices[binding.compiledIndex];
-            }
-        }
-
-        foreach (const CompiledMetaMethod &cmm, compiledMetaMethods) {
-            typedef QQmlVMEMetaData VMD;
-            VMD *vmd = (QQmlVMEMetaData *)cmm.obj->synthdata.data();
-            VMD::MethodData &md = *(vmd->methodData() + cmm.methodIndex);
-            md.runtimeFunctionIndex = runtimeFunctionIndices.at(cmm.compiledFunctionIndex);
-        }
-
-        foreach (const CompiledSignalHandlerExpression &expr, compiledSignalHandlers) {
-            expr.signal->signalData.functionIndex = runtimeFunctionIndices.at(expr.compiledHandlerIndex);
-        }
-
+    if (!jsModule->functions.isEmpty()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-        QV4::Compiler::JSUnitGenerator jsUnitGenerator(&jsModule);
-        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &jsModule, &jsUnitGenerator));
+        QV4::Compiler::JSUnitGenerator jsUnitGenerator(jsModule.data());
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, jsModule.data(), &jsUnitGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/true);
         output->compilationUnit = jsUnit;
@@ -1385,7 +1336,7 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         } else if (v->type == Value::SignalExpression) {
 
             Instruction::StoreSignal store;
-            store.runtimeFunctionIndex = v->signalData.functionIndex;
+            store.runtimeFunctionIndex = compileState->runtimeFunctionIndices.at(v->signalData.functionIndex);
             store.handlerName = output->indexForString(prop->name().toString());
             store.parameters = output->indexForString(obj->metatype->signalParameterStringForJS(prop->index));
             store.signalIndex = prop->index;
@@ -1788,17 +1739,11 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
             prop->index = obj->metatype->originalClone(prop->index);
             prop->values.first()->signalData.signalExpressionContextStack = ctxt.stack;
 
-            CompiledSignalHandlerExpression expr;
-            expr.signal = prop->values.first();
-
             QList<QByteArray> parameters = obj->metatype->signalParameterNames(prop->index);
 
             AST::FunctionDeclaration *funcDecl = convertSignalHandlerExpressionToFunctionDeclaration(unit->parser().jsEngine(), prop->values.first()->value.asAST(), propName.toString(), parameters);
-            functionsToCompile.append(funcDecl);
-
-            expr.compiledHandlerIndex = functionsToCompile.count() - 1;
-            compiledSignalHandlers.append(expr);
-            prop->values.first()->signalData.functionIndex = 0; // To be filled in before gen()
+            compileState->functionsToCompile.append(funcDecl);
+            prop->values.first()->signalData.functionIndex = compileState->functionsToCompile.count() - 1;
 
             QString errorString;
             obj->metatype->signalParameterStringForJS(prop->index, &errorString);
@@ -3305,12 +3250,12 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         vmd->methodCount++;
         md = methodData;
 
-        CompiledMetaMethod cmm;
+        QQmlCompilerTypes::ComponentCompileState::CompiledMetaMethod cmm;
         cmm.obj = obj;
         cmm.methodIndex = vmd->methodCount - 1;
-        functionsToCompile.append(s->funcDecl);
-        cmm.compiledFunctionIndex = functionsToCompile.count() - 1;
-        compiledMetaMethods.append(cmm);
+        compileState->functionsToCompile.append(s->funcDecl);
+        cmm.compiledFunctionIndex = compileState->functionsToCompile.count() - 1;
+        compileState->compiledMetaMethods.append(cmm);
     }
 
     if (aliasCount)
@@ -3679,15 +3624,51 @@ bool QQmlCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMetaAliases(aliasObject));
 
+    const QQmlScript::Parser &parser = unit->parser();
+    QQmlJS::Engine *jsEngine = parser.jsEngine();
+    QQmlJS::MemoryPool *pool = jsEngine->pool();
+
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
         JSBindingReference &binding = *b;
         binding.dataType = BindingReference::QtScript;
 
+        QQmlJS::AST::Node *node = binding.expression.asAST();
+        // Always wrap this in an ExpressionStatement, to make sure that
+        // property var foo: function() { ... } results in a closure initialization.
+        if (!node->statementCast()) {
+            AST::ExpressionNode *expr = node->expressionCast();
+            node = new (pool) AST::ExpressionStatement(expr);
+        }
+
+        compileState->functionsToCompile.append(node);
+        binding.compiledIndex = compileState->functionsToCompile.count() - 1;
+
         if (componentStats)
             componentStats->componentStat.scriptBindings.append(b->value->location);
     }
-    allBindingReferenceRoots.append(compileState->bindings.first());
+
+    if (!compileState->functionsToCompile.isEmpty()) {
+        JSCodeGen jsCodeGen;
+
+        const QString &sourceCode = jsEngine->code();
+        AST::UiProgram *qmlRoot = parser.qmlRoot();
+
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, compileState->functionsToCompile);
+        compileState->runtimeFunctionIndices = runtimeFunctionIndices;
+
+        for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
+            JSBindingReference &binding = *b;
+            binding.compiledIndex = runtimeFunctionIndices[binding.compiledIndex];
+        }
+
+        foreach (const QQmlCompilerTypes::ComponentCompileState::CompiledMetaMethod &cmm, compileState->compiledMetaMethods) {
+            typedef QQmlVMEMetaData VMD;
+            VMD *vmd = (QQmlVMEMetaData *)cmm.obj->synthdata.data();
+            VMD::MethodData &md = *(vmd->methodData() + cmm.methodIndex);
+            md.runtimeFunctionIndex = runtimeFunctionIndices.at(cmm.compiledFunctionIndex);
+        }
+    }
 
     // Check pop()'s matched push()'s
     Q_ASSERT(compileState->objectDepth.depth() == 0);

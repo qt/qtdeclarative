@@ -302,6 +302,16 @@ namespace QQmlCompilerTypes {
         typedef QFieldList<O, &O::nextAliasingObject> AliasingObjectsList;
         AliasingObjectsList aliasingObjects;
         QQmlScript::Object *root;
+        QList<QQmlJS::AST::Node*> functionsToCompile;
+        QVector<int> runtimeFunctionIndices;
+
+        struct CompiledMetaMethod
+        {
+            QQmlScript::Object *obj;
+            int methodIndex;
+            int compiledFunctionIndex; // index in functionToCompile
+        };
+        QList<CompiledMetaMethod> compiledMetaMethods;
     };
 };
 
@@ -461,21 +471,7 @@ private:
     int cachedComponentTypeRef;
     int cachedTranslationContextIndex;
 
-    QList<QQmlJS::AST::Node*> functionsToCompile;
-    QList<QQmlCompilerTypes::JSBindingReference*> allBindingReferenceRoots;
-    struct CompiledMetaMethod
-    {
-        QQmlScript::Object *obj;
-        int methodIndex;
-        int compiledFunctionIndex; // index in functionToCompile
-    };
-    QList<CompiledMetaMethod> compiledMetaMethods;
-    struct CompiledSignalHandlerExpression
-    {
-        QQmlScript::Value *signal;
-        int compiledHandlerIndex; // index in functionsToCompile
-    };
-    QList<CompiledSignalHandlerExpression> compiledSignalHandlers;
+    QScopedPointer<QQmlJS::V4IR::Module> jsModule;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat
