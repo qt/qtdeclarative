@@ -6,6 +6,8 @@ SUBDIRS=\
     cmake \
     installed_cmake
 
+qmldevtools.CONFIG = host_build
+
 !mac {
 SUBDIRS += \
     quick \

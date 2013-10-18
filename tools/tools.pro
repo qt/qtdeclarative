@@ -2,6 +2,10 @@ TEMPLATE = subdirs
 SUBDIRS += \
     qmlmin \
     qmlimportscanner
+
+qmlmin.CONFIG = host_build
+qmlimportscanner.CONFIG = host_build
+
 !android|android_app {
     SUBDIRS += \
         qml \
