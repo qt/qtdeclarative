@@ -1,12 +1,6 @@
 option(host_build)
 TARGET     = QtQmlDevTools
-
-force_bootstrap {
-    QT = bootstrap-private
-} else {
-    QT = core
-}
-
+QT         = core
 CONFIG += static no_module_headers internal_module
 
 MODULE_INCLUDES = \
