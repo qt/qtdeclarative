@@ -118,6 +118,11 @@ void showMeTheCode(Function *function)
                 str.append('L');
                 str.append(QByteArray::number(bb->index));
                 str.append(':');
+                if (bb->catchBlock) {
+                    str.append(" (exception handler L");
+                    str.append(QByteArray::number(bb->catchBlock->index));
+                    str.append(')');
+                }
                 for (int i = 66 - str.length(); i; --i)
                     str.append(' ');
                 qout << str;
@@ -481,8 +486,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) { // ### TODO
-    }
 
     virtual void visitCall(Call *e) {
         e->base->accept(this);
@@ -725,7 +728,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *s) { /* this should never happen */ }
 
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -959,7 +961,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) {}
 
     virtual void visitPhi(Phi *s) {
         addDef(s->targetTemp);
@@ -1310,7 +1311,6 @@ private:
         virtual void visitJump(Jump *) {}
         virtual void visitCJump(CJump *s) { s->cond->accept(this); }
         virtual void visitRet(Ret *s) { s->expr->accept(this); }
-        virtual void visitTry(Try *s) { s->exceptionVar->accept(this); }
         virtual void visitPhi(Phi *s) {
             s->targetTemp->accept(this);
             foreach (Expr *e, s->d->incoming)
@@ -1520,7 +1520,6 @@ protected:
     virtual void visitJump(Jump *) { _ty = TypingResult(MissingType); }
     virtual void visitCJump(CJump *s) { _ty = run(s->cond); }
     virtual void visitRet(Ret *s) { _ty = run(s->expr); }
-    virtual void visitTry(Try *s) { setType(s->exceptionVar, VarType); _ty = TypingResult(MissingType); }
     virtual void visitPhi(Phi *s) {
         _ty = run(s->d->incoming[0]);
         for (int i = 1, ei = s->d->incoming.size(); i != ei; ++i) {
@@ -1796,7 +1795,6 @@ protected:
         run(s->cond, BoolType);
     }
     virtual void visitRet(Ret *s) { run(s->expr); }
-    virtual void visitTry(Try *) {}
     virtual void visitPhi(Phi *s) {
         Type ty = s->targetTemp->type;
         for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
@@ -1818,7 +1816,7 @@ void splitCriticalEdges(Function *f)
 #endif
 
                     // create the basic block:
-                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup());
+                    BasicBlock *newBB = new BasicBlock(f, bb->containingGroup(), bb->catchBlock);
                     newBB->index = f->basicBlocks.last()->index + 1;
                     f->basicBlocks.append(newBB);
                     Jump *s = f->New<Jump>();
@@ -1962,7 +1960,7 @@ void cleanupBasicBlocks(Function *function)
         W.removeFirst();
         if (toRemove.contains(bb))
             continue;
-        if (bb->in.isEmpty()) {
+        if (bb->in.isEmpty() && !bb->isExceptionHandler) {
             foreach (BasicBlock *outBB, bb->out) {
                 int idx = outBB->in.indexOf(bb);
                 if (idx != -1) {
@@ -2103,7 +2101,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { check(s->cond); }
     virtual void visitRet(Ret *s) { check(s->expr); }
-    virtual void visitTry(Try *) { Q_UNREACHABLE(); }
     virtual void visitPhi(Phi *s) {
         for (int i = 0, ei = s->d->incoming.size(); i != ei; ++i)
             check(s->d->incoming[i]);
@@ -2166,6 +2163,11 @@ namespace {
 /// Important: this assumes that there are no critical edges in the control-flow graph!
 void purgeBB(BasicBlock *bb, Function *func, DefUsesCalculator &defUses, QVector<Stmt *> &W)
 {
+    // don't purge blocks that are entry points for catch statements. They might not be directly
+    // connected, but are required anyway
+    if (bb->isExceptionHandler)
+        return;
+
     QVector<BasicBlock *> toPurge;
     toPurge.append(bb);
 
@@ -2603,7 +2605,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) {}
     virtual void visitPhi(Phi *s) {
         // Handled separately
     }

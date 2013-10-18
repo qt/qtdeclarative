@@ -809,7 +809,7 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
 
 void ExecutionEngine::throwException(const ValueRef value)
 {
-    Q_ASSERT(!hasException);
+//    Q_ASSERT(!hasException);
     hasException = true;
     exceptionValue = value;
     QV4::Scope scope(this);
@@ -822,8 +822,6 @@ void ExecutionEngine::throwException(const ValueRef value)
     if (debugger)
         debugger->aboutToThrow(value);
 
-    UnwindHelper::prepareForUnwind(current);
-    throwInternal();
 }
 
 ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)

@@ -127,9 +127,9 @@ QV4::ReturnedValue __qmljs_builtin_typeof_name(QV4::ExecutionContext *context, c
 QV4::ReturnedValue __qmljs_builtin_typeof_member(QV4::ExecutionContext* context, const QV4::ValueRef base, const QV4::StringRef name);
 QV4::ReturnedValue __qmljs_builtin_typeof_element(QV4::ExecutionContext* context, const QV4::ValueRef base, const QV4::ValueRef index);
 
-void Q_NORETURN __qmljs_builtin_rethrow(QV4::ExecutionContext *context);
+void __qmljs_builtin_rethrow(QV4::ExecutionContext *context);
 QV4::ExecutionContext *__qmljs_builtin_push_with_scope(const QV4::ValueRef o, QV4::ExecutionContext *ctx);
-QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(const QV4::StringRef exceptionVarName, const QV4::ValueRef exceptionValue, QV4::ExecutionContext *ctx);
+QV4::ExecutionContext *__qmljs_builtin_push_catch_scope(const QV4::StringRef exceptionVarName, QV4::ExecutionContext *ctx);
 QV4::ExecutionContext *__qmljs_builtin_pop_scope(QV4::ExecutionContext *ctx);
 void __qmljs_builtin_declare_var(QV4::ExecutionContext *ctx, bool deletable, const QV4::StringRef name);
 void __qmljs_builtin_define_property(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, QV4::ValueRef val);
@@ -199,7 +199,7 @@ QV4::ReturnedValue __qmljs_delete_subscript(QV4::ExecutionContext *ctx, const QV
 ReturnedValue __qmljs_delete_member(QV4::ExecutionContext *ctx, const QV4::ValueRef base, const QV4::StringRef name);
 ReturnedValue __qmljs_delete_name(QV4::ExecutionContext *ctx, const QV4::StringRef name);
 
-void Q_NORETURN __qmljs_throw(QV4::ExecutionContext*, const QV4::ValueRef value);
+void __qmljs_throw(QV4::ExecutionContext*, const QV4::ValueRef value);
 
 // binary operators
 typedef QV4::ReturnedValue (*BinOp)(const QV4::ValueRef left, const QV4::ValueRef right);

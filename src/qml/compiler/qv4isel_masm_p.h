@@ -49,6 +49,7 @@
 #include "private/qv4lookup_p.h"
 
 #include <QtCore/QHash>
+#include <QtCore/QStack>
 #include <config.h>
 #include <wtf/Vector.h>
 
@@ -61,6 +62,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace MASM {
+
 
 class InstructionSelection;
 
@@ -87,6 +89,13 @@ struct RelativeCall {
         : addr(addr)
     {}
 };
+
+
+template <typename T>
+struct ExceptionCheck {
+    enum { NeedsCheck = 1 };
+};
+
 
 class Assembler : public JSC::MacroAssembler
 {
@@ -874,6 +883,23 @@ public:
     void enterStandardStackFrame();
     void leaveStandardStackFrame();
 
+    void checkException() {
+        loadPtr(Address(ContextRegister, qOffsetOf(QV4::ExecutionContext, engine)), ScratchRegister);
+        load32(Address(ScratchRegister, qOffsetOf(QV4::ExecutionEngine, hasException)), ScratchRegister);
+        Jump exceptionThrown = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
+        if (catchBlock)
+            addPatch(catchBlock, exceptionThrown);
+        else
+            exceptionPropagationJumps.append(exceptionThrown);
+    }
+    void jumpToExceptionHandler() {
+        Jump exceptionThrown = jump();
+        if (catchBlock)
+            addPatch(catchBlock, exceptionThrown);
+        else
+            exceptionPropagationJumps.append(exceptionThrown);
+    }
+
     template <int argumentNumber, typename T>
     void loadArgumentOnStackOrRegister(const T &value)
     {
@@ -917,7 +943,6 @@ public:
         enum { Size = 0 };
     };
 
-
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
@@ -954,10 +979,15 @@ public:
 
         callAbsolute(functionName, function);
 
-        storeReturnValue(r);
-
         if (stackSpaceNeeded)
             add32(TrustedImm32(stackSpaceNeeded), StackPointerRegister);
+
+        if (ExceptionCheck<Callable>::NeedsCheck) {
+            checkException();
+        }
+
+        storeReturnValue(r);
+
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
@@ -1351,6 +1381,9 @@ public:
     const StackLayout stackLayout() const { return _stackLayout; }
     ConstantTable &constantTable() { return _constTable; }
 
+    Label exceptionReturnLabel;
+    V4IR::BasicBlock * catchBlock;
+    QVector<Jump> exceptionPropagationJumps;
 private:
     const StackLayout _stackLayout;
     ConstantTable _constTable;
@@ -1410,7 +1443,8 @@ protected:
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
-    virtual void callBuiltinFinishTry();
+    virtual void callBuiltinReThrow();
+    virtual void callBuiltinPushCatchScope(const QString &exceptionName);
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinPushWithScope(V4IR::Temp *arg);
@@ -1469,7 +1503,6 @@ protected:
     virtual void visitJump(V4IR::Jump *);
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
-    virtual void visitTry(V4IR::Try *);
 
     Assembler::Jump genTryDoubleConversion(V4IR::Expr *src, Assembler::FPRegisterID dest);
     Assembler::Jump genInlineBinop(V4IR::AluOp oper, V4IR::Expr *leftSource,
@@ -1589,7 +1622,6 @@ private:
     V4IR::Function* _function;
     QSet<V4IR::Jump *> _removableJumps;
     Assembler* _as;
-    QSet<V4IR::BasicBlock*> _reentryBlocks;
 
     CompilationUnit *compilationUnit;
 };

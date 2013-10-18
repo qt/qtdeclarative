@@ -119,7 +119,8 @@ public: // to implement by subclasses:
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result) = 0;
     virtual void callBuiltinDeleteValue(V4IR::Temp *result) = 0;
     virtual void callBuiltinThrow(V4IR::Expr *arg) = 0;
-    virtual void callBuiltinFinishTry() = 0;
+    virtual void callBuiltinReThrow() = 0;
+    virtual void callBuiltinPushCatchScope(const QString &exceptionName) = 0;
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result) = 0;
     virtual void callBuiltinPushWithScope(V4IR::Temp *arg) = 0;

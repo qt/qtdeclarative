@@ -461,69 +461,6 @@ ReturnedValue ExecutionContext::getProperty(const StringRef name)
     return 0;
 }
 
-ReturnedValue ExecutionContext::getPropertyNoThrow(const StringRef name)
-{
-    Scope scope(this);
-    ScopedValue v(scope);
-    name->makeIdentifier();
-
-    if (name->equals(engine->id_this))
-        return callData->thisObject.asReturnedValue();
-
-    bool hasWith = false;
-    bool hasCatchScope = false;
-    for (ExecutionContext *ctx = this; ctx; ctx = ctx->outer) {
-        if (ctx->type == Type_WithContext) {
-            ScopedObject w(scope, static_cast<WithContext *>(ctx)->withObject);
-            hasWith = true;
-            bool hasProperty = false;
-            v = w->get(name, &hasProperty);
-            if (hasProperty) {
-                return v.asReturnedValue();
-            }
-            continue;
-        }
-
-        else if (ctx->type == Type_CatchContext) {
-            hasCatchScope = true;
-            CatchContext *c = static_cast<CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name))
-                return c->exceptionValue.asReturnedValue();
-        }
-
-        else if (ctx->type >= Type_CallContext) {
-            QV4::CallContext *c = static_cast<CallContext *>(ctx);
-            ScopedFunctionObject f(scope, c->function);
-            if (f->needsActivation || hasWith || hasCatchScope) {
-                for (unsigned int i = 0; i < f->varCount; ++i)
-                    if (f->varList[i]->isEqualTo(name))
-                        return c->locals[i].asReturnedValue();
-                for (int i = (int)f->formalParameterCount - 1; i >= 0; --i)
-                    if (f->formalParameterList[i]->isEqualTo(name))
-                        return c->callData->args[i].asReturnedValue();
-            }
-            if (c->activation) {
-                bool hasProperty = false;
-                v = c->activation->get(name, &hasProperty);
-                if (hasProperty)
-                    return v.asReturnedValue();
-            }
-            if (f->function && f->function->isNamedExpression()
-                && name->equals(f->function->name))
-                return f.asReturnedValue();
-        }
-
-        else if (ctx->type == Type_GlobalContext) {
-            GlobalContext *g = static_cast<GlobalContext *>(ctx);
-            bool hasProperty = false;
-            v = g->global->get(name, &hasProperty);
-            if (hasProperty)
-                return v.asReturnedValue();
-        }
-    }
-    return Encode::undefined();
-}
-
 ReturnedValue ExecutionContext::getPropertyAndBase(const StringRef name, ObjectRef base)
 {
     Scope scope(this);

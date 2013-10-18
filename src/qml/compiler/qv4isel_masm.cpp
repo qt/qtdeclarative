@@ -166,7 +166,6 @@ protected:
     virtual void visitJump(V4IR::Jump *) {}
     virtual void visitCJump(V4IR::CJump *s) { s->cond->accept(this); }
     virtual void visitRet(V4IR::Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(V4IR::Try *s) { s->exceptionVar->accept(this); }
     virtual void visitPhi(V4IR::Phi *) { Q_UNREACHABLE(); }
 };
 
@@ -236,6 +235,7 @@ Assembler::Assembler(InstructionSelection *isel, V4IR::Function* function, QV4::
 void Assembler::registerBlock(V4IR::BasicBlock* block, V4IR::BasicBlock *nextBlock)
 {
     _addrs[block] = label();
+    catchBlock = block->catchBlock;
     _nextBlock = nextBlock;
 }
 
@@ -557,6 +557,10 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     foreach (const DataLabelPatch &p, _dataLabelPatches)
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
 
+    // link exception handlers
+    foreach(Jump jump, exceptionPropagationJumps)
+        linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
+
     {
         QHashIterator<V4IR::BasicBlock *, QVector<DataLabelPtr> > it(_labelPatches);
         while (it.hasNext()) {
@@ -648,9 +652,7 @@ void InstructionSelection::run(int functionIndex)
 {
     V4IR::Function *function = irModule->functions[functionIndex];
     QVector<Lookup> lookups;
-    QSet<V4IR::BasicBlock*> reentryBlocks;
     qSwap(_function, function);
-    qSwap(_reentryBlocks, reentryBlocks);
 
     V4IR::Optimizer opt(_function);
     opt.run();
@@ -714,17 +716,6 @@ void InstructionSelection::run(int functionIndex)
         _block = _function->basicBlocks[i];
         _as->registerBlock(_block, nextBlock);
 
-        if (_reentryBlocks.contains(_block)) {
-            _as->enterStandardStackFrame();
-#ifdef ARGUMENTS_IN_REGISTERS
-            _as->move(Assembler::registerForArgument(0), Assembler::ContextRegister);
-            _as->move(Assembler::registerForArgument(1), Assembler::LocalsRegister);
-#else
-            _as->loadPtr(addressForArgument(0), Assembler::ContextRegister);
-            _as->loadPtr(addressForArgument(1), Assembler::LocalsRegister);
-#endif
-        }
-
         foreach (V4IR::Stmt *s, _block->statements) {
             if (s->location.isValid())
                 _as->recordLineNumber(s->location.startLine);
@@ -736,7 +727,6 @@ void InstructionSelection::run(int functionIndex)
     compilationUnit->codeRefs[functionIndex] = codeRef;
 
     qSwap(_function, function);
-    qSwap(_reentryBlocks, reentryBlocks);
     delete _as;
     _as = oldAssembler;
     qSwap(_removableJumps, removableJumps);
@@ -830,62 +820,18 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 {
     generateFunctionCall(Assembler::Void, __qmljs_throw, Assembler::ContextRegister,
                          Assembler::PointerToValue(arg));
+    _as->jumpToExceptionHandler();
 }
 
-typedef void *(*MiddleOfFunctionEntryPoint(ExecutionContext *, void *localsPtr));
-static void *tryWrapper(ExecutionContext *context, void *localsPtr, MiddleOfFunctionEntryPoint tryBody, MiddleOfFunctionEntryPoint catchBody,
-                        QV4::StringRef exceptionVarName, ValueRef exceptionVar)
+void InstructionSelection::callBuiltinReThrow()
 {
-    exceptionVar = Primitive::undefinedValue();
-    void *addressToContinueAt = 0;
-    SafeValue *jsStackTop = context->engine->jsStackTop;
-    bool caughtException = false;
-    try {
-        addressToContinueAt = tryBody(context, localsPtr);
-    } catch (...) {
-        context->engine->jsStackTop = jsStackTop;
-        exceptionVar = context->catchException();
-        caughtException = true;
-    }
-    // Can't nest try { ... } catch (...) {} due to inability of nesting foreign exceptions
-    // with common CXX ABI.
-    if (caughtException) {
-        try {
-            ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(exceptionVarName, exceptionVar, context);
-            addressToContinueAt = catchBody(catchContext, localsPtr);
-            context = __qmljs_builtin_pop_scope(catchContext);
-        } catch (...) {
-            context->engine->jsStackTop = jsStackTop;
-            exceptionVar = context->catchException();
-            addressToContinueAt = catchBody(context, localsPtr);
-        }
-    }
-    return addressToContinueAt;
+    _as->jumpToExceptionHandler();
 }
 
-void InstructionSelection::visitTry(V4IR::Try *t)
+void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    // Call tryWrapper, which is going to re-enter the same function at the address of the try block. At then end
-    // of the try function the JIT code will return with the address of the sub-sequent instruction, which tryWrapper
-    // returns and to which we jump to.
-
-    _reentryBlocks.insert(t->tryBlock);
-    _reentryBlocks.insert(t->catchBlock);
-
-    generateFunctionCall(Assembler::ReturnValueRegister, tryWrapper, Assembler::ContextRegister, Assembler::LocalsRegister,
-                         Assembler::ReentryBlock(t->tryBlock), Assembler::ReentryBlock(t->catchBlock),
-                         Assembler::PointerToString(*t->exceptionVarName), Assembler::PointerToValue(t->exceptionVar));
-    _as->jump(Assembler::ReturnValueRegister);
-}
-
-void InstructionSelection::callBuiltinFinishTry()
-{
-    // This assumes that we're in code that was called by tryWrapper, so we return to try wrapper
-    // with the address that we'd like to continue at, which is right after the ret below.
-    Assembler::DataLabelPtr continuation = _as->moveWithPatch(Assembler::TrustedImmPtr(0), Assembler::ReturnValueRegister);
-    _as->leaveStandardStackFrame();
-    _as->ret();
-    _as->addPatch(continuation, _as->label());
+    Assembler::Pointer s = _as->loadStringAddress(Assembler::ScratchRegister, exceptionName);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_catch_scope, s, Assembler::ContextRegister);
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)
@@ -2051,6 +1997,8 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
         Q_UNREACHABLE();
         Q_UNUSED(s);
     }
+
+    _as->exceptionReturnLabel = _as->label();
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);

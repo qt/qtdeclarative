@@ -193,7 +193,8 @@ protected: // IRDecoder
     virtual void callBuiltinDeleteName(const QString &, V4IR::Temp *) {}
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
     virtual void callBuiltinThrow(V4IR::Expr *) {}
-    virtual void callBuiltinFinishTry() {}
+    virtual void callBuiltinReThrow() {}
+    virtual void callBuiltinPushCatchScope(const QString &) {};
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *, V4IR::Temp *) {}
@@ -505,9 +506,6 @@ protected: // IRDecoder
 
     virtual void visitRet(V4IR::Ret *s)
     { addUses(s->expr->asTemp(), Use::CouldHaveRegister); }
-
-    virtual void visitTry(V4IR::Try *)
-    { Q_UNREACHABLE(); } // this should never happen, we do not optimize when there is a try in the function
 
     virtual void visitPhi(V4IR::Phi *s)
     {
@@ -954,7 +952,6 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitTry(Try *) { Q_UNREACHABLE(); }
     virtual void visitPhi(Phi *) {}
 };
 } // anonymous namespace

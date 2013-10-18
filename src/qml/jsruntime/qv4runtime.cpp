@@ -769,6 +769,9 @@ ReturnedValue __qmljs_call_activation_property(ExecutionContext *context, const 
 
     ScopedObject base(scope);
     ScopedValue func(scope, context->getPropertyAndBase(name, base));
+    if (context->engine->hasException)
+        return Encode::undefined();
+
     if (base)
         callData->thisObject = base;
 
@@ -866,6 +869,9 @@ ReturnedValue __qmljs_construct_activation_property(ExecutionContext *context, c
 {
     Scope scope(context);
     ScopedValue func(scope, context->getProperty(name));
+    if (context->engine->hasException)
+        return Encode::undefined();
+
     Object *f = func->asObject();
     if (!f)
         context->throwTypeError();
@@ -931,7 +937,9 @@ ReturnedValue __qmljs_builtin_typeof(ExecutionContext *ctx, const ValueRef value
 QV4::ReturnedValue __qmljs_builtin_typeof_name(ExecutionContext *context, const StringRef name)
 {
     Scope scope(context);
-    ScopedValue prop(scope, context->getPropertyNoThrow(name));
+    ScopedValue prop(scope, context->getProperty(name));
+    // typeof doesn't throw. clear any possible exception
+    context->engine->hasException = false;
     return __qmljs_builtin_typeof(context, prop);
 }
 
@@ -959,9 +967,11 @@ ExecutionContext *__qmljs_builtin_push_with_scope(const ValueRef o, ExecutionCon
     return ctx->newWithContext(obj);
 }
 
-ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, const ValueRef exceptionValue, ExecutionContext *ctx)
+ExecutionContext *__qmljs_builtin_push_catch_scope(const StringRef exceptionVarName, ExecutionContext *ctx)
 {
-    return ctx->newCatchContext(exceptionVarName, exceptionValue);
+    Scope scope(ctx);
+    ScopedValue v(scope, ctx->engine->catchException(ctx, 0));
+    return ctx->newCatchContext(exceptionVarName, v);
 }
 
 ExecutionContext *__qmljs_builtin_pop_scope(ExecutionContext *ctx)

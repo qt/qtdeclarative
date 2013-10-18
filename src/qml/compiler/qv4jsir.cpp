@@ -217,11 +217,6 @@ struct RemoveSharedExpressions: V4IR::StmtVisitor, V4IR::ExprVisitor
         s->expr = cleanup(s->expr);
     }
 
-    virtual void visitTry(Try *)
-    {
-        // nothing to do for Try statements
-    }
-
     virtual void visitPhi(V4IR::Phi *) { Q_UNIMPLEMENTED(); }
 
     // expressions
@@ -400,8 +395,10 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_delete";
     case Name::builtin_throw:
         return "builtin_throw";
-    case Name::builtin_finish_try:
-        return "builtin_finish_try";
+    case Name::builtin_rethrow:
+        return "builtin_rethrow";
+    case Name::builtin_push_catch_scope:
+        return "builtin_push_catch_scope";
     case V4IR::Name::builtin_foreach_iterator_object:
         return "builtin_foreach_iterator_object";
     case V4IR::Name::builtin_foreach_next_property_name:
@@ -585,13 +582,6 @@ void Ret::dump(QTextStream &out, Mode)
     out << ';';
 }
 
-void Try::dump(QTextStream &out, Stmt::Mode mode)
-{
-    out << "try L" << tryBlock->index << "; catch exception in ";
-    exceptionVar->dump(out);
-    out << " with the name " << exceptionVarName << " and go to L" << catchBlock->index << ';';
-}
-
 void Phi::dump(QTextStream &out, Stmt::Mode mode)
 {
     targetTemp->dump(out);
@@ -653,9 +643,9 @@ const QString *Function::newString(const QString &text)
     return &*strings.insert(text);
 }
 
-BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlockInsertMode mode)
+BasicBlock *Function::newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode)
 {
-    BasicBlock *block = new BasicBlock(this, containingLoop);
+    BasicBlock *block = new BasicBlock(this, containingLoop, catchBlock);
     return mode == InsertBlock ? insertBasicBlock(block) : block;
 }
 
@@ -905,33 +895,12 @@ Stmt *BasicBlock::RET(Temp *expr)
     return s;
 }
 
-Stmt *BasicBlock::TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
-{
-    if (isTerminated())
-        return 0;
-
-    Try *t = function->New<Try>();
-    t->init(tryBlock, catchBlock, exceptionVarName, exceptionVar);
-    appendStatement(t);
-
-    assert(! out.contains(tryBlock));
-    out.append(tryBlock);
-
-    assert(! out.contains(catchBlock));
-    out.append(catchBlock);
-
-    assert(! tryBlock->in.contains(this));
-    tryBlock->in.append(this);
-
-    assert(! catchBlock->in.contains(this));
-    catchBlock->in.append(this);
-
-    return t;
-}
-
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 {
-    out << 'L' << index << ':' << endl;
+    out << 'L' << index << ':';
+    if (catchBlock)
+        out << " (catchBlock L" << catchBlock->index << ")";
+    out << endl;
     foreach (Stmt *s, statements) {
         out << '\t';
         s->dump(out, mode);

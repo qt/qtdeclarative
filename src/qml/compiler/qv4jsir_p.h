@@ -119,7 +119,6 @@ struct Move;
 struct Jump;
 struct CJump;
 struct Ret;
-struct Try;
 struct Phi;
 
 enum AluOp {
@@ -215,7 +214,6 @@ struct StmtVisitor {
     virtual void visitJump(Jump *) = 0;
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
-    virtual void visitTry(Try *) = 0;
     virtual void visitPhi(Phi *) = 0;
 };
 
@@ -312,7 +310,8 @@ struct Name: Expr {
         builtin_typeof,
         builtin_delete,
         builtin_throw,
-        builtin_finish_try,
+        builtin_rethrow,
+        builtin_push_catch_scope,
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,
         builtin_push_with_scope,
@@ -552,7 +551,6 @@ struct Stmt {
     virtual Jump *asJump() { return 0; }
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
-    virtual Try *asTry() { return 0; }
     virtual Phi *asPhi() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
 
@@ -646,28 +644,6 @@ struct Ret: Stmt {
     virtual void dump(QTextStream &out, Mode);
 };
 
-struct Try: Stmt {
-    BasicBlock *tryBlock;
-    BasicBlock *catchBlock;
-    const QString *exceptionVarName;
-    Temp *exceptionVar; // place to store the caught exception, for use when re-throwing
-
-    void init(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar)
-    {
-        this->tryBlock = tryBlock;
-        this->catchBlock = catchBlock;
-        this->exceptionVarName = exceptionVarName;
-        this->exceptionVar = exceptionVar;
-    }
-
-    virtual Stmt *asTerminator() { return this; }
-
-    virtual void accept(StmtVisitor *v) { v->visitTry(this); }
-    virtual Try *asTry() { return this; }
-
-    virtual void dump(QTextStream &out, Mode mode);
-};
-
 struct Phi: Stmt {
     Temp *targetTemp;
 
@@ -751,7 +727,7 @@ struct Function {
         DontInsertBlock
     };
 
-    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlockInsertMode mode = InsertBlock);
+    BasicBlock *newBasicBlock(BasicBlock *containingLoop, BasicBlock *catchBlock, BasicBlockInsertMode mode = InsertBlock);
     const QString *newString(const QString &text);
 
     void RECEIVE(const QString &name) { formals.append(newString(name)); }
@@ -771,17 +747,21 @@ struct Function {
 
 struct BasicBlock {
     Function *function;
+    BasicBlock *catchBlock;
     QVector<Stmt *> statements;
     QVector<BasicBlock *> in;
     QVector<BasicBlock *> out;
     QBitArray liveIn;
     QBitArray liveOut;
     int index;
+    bool isExceptionHandler;
     AST::SourceLocation nextLocation;
 
-    BasicBlock(Function *function, BasicBlock *containingLoop)
+    BasicBlock(Function *function, BasicBlock *containingLoop, BasicBlock *catcher)
         : function(function)
+        , catchBlock(catcher)
         , index(-1)
+        , isExceptionHandler(false)
         , _containingGroup(containingLoop)
         , _groupStart(false)
     {}
@@ -837,7 +817,6 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Temp *expr);
-    Stmt *TRY(BasicBlock *tryBlock, BasicBlock *catchBlock, const QString *exceptionVarName, Temp *exceptionVar);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 

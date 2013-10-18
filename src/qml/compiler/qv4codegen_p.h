@@ -272,6 +272,22 @@ protected:
                 return it->groupStartBlock;
         return 0;
     }
+    V4IR::BasicBlock *exceptionHandler() const
+    {
+        if (_exceptionHandlers.isEmpty())
+            return 0;
+        return _exceptionHandlers.top();
+    }
+    void pushExceptionHandler(V4IR::BasicBlock *handler)
+    {
+        handler->isExceptionHandler = true;
+        _exceptionHandlers.push(handler);
+    }
+    void popExceptionHandler()
+    {
+        Q_ASSERT(!_exceptionHandlers.isEmpty());
+        _exceptionHandlers.pop();
+    }
 
     V4IR::Expr *member(V4IR::Expr *base, const QString *name);
     V4IR::Expr *subscript(V4IR::Expr *base, V4IR::Expr *index);
@@ -428,7 +444,6 @@ protected:
     V4IR::Function *_function;
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_exitBlock;
-    V4IR::BasicBlock *_throwBlock;
     unsigned _returnAddress;
     Environment *_env;
     Loop *_loop;
@@ -436,6 +451,7 @@ protected:
     ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
+    QStack<V4IR::BasicBlock *> _exceptionHandlers;
     bool _strictMode;
 
     QList<QQmlError> _errors;

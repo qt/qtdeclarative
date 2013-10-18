@@ -684,22 +684,6 @@ void InstructionSelection::visitRet(V4IR::Ret *s)
     addInstruction(ret);
 }
 
-void InstructionSelection::visitTry(V4IR::Try *t)
-{
-    Instruction::EnterTry enterTry;
-    enterTry.tryOffset = 0;
-    enterTry.catchOffset = 0;
-    enterTry.exceptionVarName = registerString(*t->exceptionVarName);
-    enterTry.exceptionVar = getParam(t->exceptionVar);
-    ptrdiff_t enterTryLoc = addInstruction(enterTry);
-
-    ptrdiff_t tryLoc = enterTryLoc + (((const char *)&enterTry.tryOffset) - ((const char *)&enterTry));
-    _patches[t->tryBlock].append(tryLoc);
-
-    ptrdiff_t catchLoc = enterTryLoc + (((const char *)&enterTry.catchOffset) - ((const char *)&enterTry));
-    _patches[t->catchBlock].append(catchLoc);
-}
-
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Instruction::CallActivationProperty call;
@@ -788,10 +772,15 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
     addInstruction(call);
 }
 
-void InstructionSelection::callBuiltinFinishTry()
+void InstructionSelection::callBuiltinReThrow()
 {
-    Instruction::CallBuiltinFinishTry call;
-    addInstruction(call);
+    // ###
+}
+
+
+void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
+{
+    // ####
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)

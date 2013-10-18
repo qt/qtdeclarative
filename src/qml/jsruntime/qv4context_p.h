@@ -127,21 +127,20 @@ struct Q_QML_EXPORT ExecutionContext
 
     void createMutableBinding(const StringRef name, bool deletable);
 
-    void Q_NORETURN throwError(const QV4::ValueRef value);
-    void Q_NORETURN throwError(const QString &message);
-    void Q_NORETURN throwSyntaxError(const QString &message);
-    void Q_NORETURN throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
-    void Q_NORETURN throwTypeError();
-    void Q_NORETURN throwTypeError(const QString &message);
-    void Q_NORETURN throwReferenceError(const ValueRef value);
-    void Q_NORETURN throwReferenceError(const QString &value, const QString &fileName, int line, int column);
-    void Q_NORETURN throwRangeError(const ValueRef value);
-    void Q_NORETURN throwURIError(const ValueRef msg);
-    void Q_NORETURN throwUnimplemented(const QString &message);
+    void throwError(const QV4::ValueRef value);
+    void throwError(const QString &message);
+    void throwSyntaxError(const QString &message);
+    void throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
+    void throwTypeError();
+    void throwTypeError(const QString &message);
+    void throwReferenceError(const ValueRef value);
+    void throwReferenceError(const QString &value, const QString &fileName, int line, int column);
+    void throwRangeError(const ValueRef value);
+    void throwURIError(const ValueRef msg);
+    void throwUnimplemented(const QString &message);
 
     void setProperty(const StringRef name, const ValueRef value);
     ReturnedValue getProperty(const StringRef name);
-    ReturnedValue getPropertyNoThrow(const StringRef name);
     ReturnedValue getPropertyAndBase(const StringRef name, ObjectRef base);
     bool deleteProperty(const StringRef name);
 

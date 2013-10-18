@@ -365,40 +365,6 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         __qmljs_throw(context, VALUEPTR(instr.arg));
     MOTH_END_INSTR(CallBuiltinThrow)
 
-    MOTH_BEGIN_INSTR(EnterTry)
-        VALUE(instr.exceptionVar) = QV4::Primitive::undefinedValue();
-        bool caughtException = false;
-        try {
-            const uchar *tryCode = ((uchar *)&instr.tryOffset) + instr.tryOffset;
-            run(context, tryCode, stack, stackSize);
-            code = tryCode;
-            context->interpreterInstructionPointer = &code;
-        } catch (...) {
-            STOREVALUE(instr.exceptionVar, context->catchException());
-            caughtException = true;
-        }
-        if (caughtException) {
-            try {
-                QV4::ExecutionContext *catchContext = __qmljs_builtin_push_catch_scope(runtimeStrings[instr.exceptionVarName], VALUEPTR(instr.exceptionVar), context);
-                const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
-                run(catchContext, catchCode, stack, stackSize);
-                code = catchCode;
-                context->interpreterInstructionPointer = &code;
-                context = __qmljs_builtin_pop_scope(catchContext);
-            } catch (...) {
-                STOREVALUE(instr.exceptionVar, context->catchException());
-                const uchar *catchCode = ((uchar *)&instr.catchOffset) + instr.catchOffset;
-                run(context, catchCode, stack, stackSize);
-                code = catchCode;
-                context->interpreterInstructionPointer = &code;
-            }
-        }
-    MOTH_END_INSTR(EnterTry)
-
-    MOTH_BEGIN_INSTR(CallBuiltinFinishTry)
-         return QV4::ReturnedValue(0);
-    MOTH_END_INSTR(CallBuiltinFinishTry)
-
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         context = __qmljs_builtin_push_with_scope(VALUEPTR(instr.arg), context);
     MOTH_END_INSTR(CallBuiltinPushScope)

@@ -266,9 +266,15 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         callBuiltinThrow(arg);
     } return;
 
-    case V4IR::Name::builtin_finish_try:
-        callBuiltinFinishTry();
-        return;
+    case V4IR::Name::builtin_rethrow: {
+        callBuiltinReThrow();
+    } return;
+
+    case V4IR::Name::builtin_push_catch_scope: {
+        V4IR::String *s = call->args->expr->asString();
+        Q_ASSERT(s);
+        callBuiltinPushCatchScope(*s->value);
+    } return;
 
     case V4IR::Name::builtin_foreach_iterator_object: {
         V4IR::Temp *arg = call->args->expr->asTemp();

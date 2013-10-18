@@ -82,7 +82,6 @@ protected:
     virtual void visitJump(V4IR::Jump *);
     virtual void visitCJump(V4IR::CJump *);
     virtual void visitRet(V4IR::Ret *);
-    virtual void visitTry(V4IR::Try *);
 
     virtual void callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callBuiltinTypeofMember(V4IR::Expr *base, const QString &name, V4IR::Temp *result);
@@ -94,7 +93,8 @@ protected:
     virtual void callBuiltinDeleteName(const QString &name, V4IR::Temp *result);
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
-    virtual void callBuiltinFinishTry();
+    virtual void callBuiltinReThrow();
+    virtual void callBuiltinPushCatchScope(const QString &exceptionName);
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinPushWithScope(V4IR::Temp *arg);

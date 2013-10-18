@@ -323,10 +323,10 @@ struct Q_QML_EXPORT ExecutionEngine
 
     // Exception handling
     SafeValue exceptionValue;
-    bool hasException;
+    quint32 hasException;
     StackTrace exceptionStackTrace;
 
-    void Q_NORETURN throwException(const ValueRef value);
+    void throwException(const ValueRef value);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
     // Use only inside catch(...) -- will re-throw if no JS exception

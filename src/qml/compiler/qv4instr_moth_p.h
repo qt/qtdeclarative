@@ -64,13 +64,11 @@ QT_BEGIN_NAMESPACE
     F(LoadProperty, loadProperty) \
     F(StoreProperty, storeProperty) \
     F(Push, push) \
-    F(EnterTry, enterTry) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
     F(CallBuiltinThrow, callBuiltinThrow) \
-    F(CallBuiltinFinishTry, callBuiltinFinishTry) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
     F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
@@ -274,13 +272,6 @@ union Instr
         MOTH_INSTR_HEADER
         quint32 value;
     };
-    struct instr_enterTry {
-        MOTH_INSTR_HEADER
-        ptrdiff_t tryOffset;
-        ptrdiff_t catchOffset;
-        int exceptionVarName;
-        Param exceptionVar;
-    };
     struct instr_callValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -314,9 +305,6 @@ union Instr
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
         Param arg;
-    };
-    struct instr_callBuiltinFinishTry {
-        MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
@@ -498,13 +486,11 @@ union Instr
     instr_loadProperty loadProperty;
     instr_storeProperty storeProperty;
     instr_push push;
-    instr_enterTry enterTry;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
     instr_callBuiltinThrow callBuiltinThrow;
-    instr_callBuiltinFinishTry callBuiltinFinishTry;
     instr_callBuiltinPushScope callBuiltinPushScope;
     instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
