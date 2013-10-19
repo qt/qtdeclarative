@@ -101,10 +101,10 @@ const char *QSGTextMaskShader::vertexShader() const {
 const char *QSGTextMaskShader::fragmentShader() const {
     return
         "varying highp vec2 sampleCoord;                \n"
-        "uniform sampler2D texture;                     \n"
+        "uniform sampler2D _qt_texture;                 \n"
         "uniform lowp vec4 color;                       \n"
         "void main() {                                  \n"
-        "    lowp vec4 glyph = texture2D(texture, sampleCoord); \n"
+        "    lowp vec4 glyph = texture2D(_qt_texture, sampleCoord); \n"
         "    gl_FragColor = vec4(glyph.rgb * color.a, glyph.a); \n"
         "}";
 }
@@ -389,14 +389,14 @@ const char *QSGStyledTextShader::fragmentShader() const
     return
         "varying highp vec2 sampleCoord;                \n"
         "varying highp vec2 shiftedSampleCoord;         \n"
-        "uniform sampler2D texture;                     \n"
+        "uniform sampler2D _qt_texture;                 \n"
         "uniform lowp vec4 color;                       \n"
         "uniform lowp vec4 styleColor;                  \n"
-        "void main() {                                                                  \n"
-        "    lowp float glyph = texture2D(texture, sampleCoord).a;                      \n"
-        "    lowp float style = clamp(texture2D(texture, shiftedSampleCoord).a - glyph, \n"
-        "                             0.0, 1.0);                                        \n"
-        "    gl_FragColor = style * styleColor + glyph * color;                         \n"
+        "void main() {                                                                      \n"
+        "    lowp float glyph = texture2D(_qt_texture, sampleCoord).a;                      \n"
+        "    lowp float style = clamp(texture2D(_qt_texture, shiftedSampleCoord).a - glyph, \n"
+        "                             0.0, 1.0);                                            \n"
+        "    gl_FragColor = style * styleColor + glyph * color;                             \n"
         "}";
 }
 
@@ -444,18 +444,18 @@ const char *QSGOutlinedTextShader::fragmentShader() const
         "varying highp vec2 sCoordDown;                 \n"
         "varying highp vec2 sCoordLeft;                 \n"
         "varying highp vec2 sCoordRight;                \n"
-        "uniform sampler2D texture;                     \n"
+        "uniform sampler2D _qt_texture;                 \n"
         "uniform lowp vec4 color;                       \n"
         "uniform lowp vec4 styleColor;                  \n"
-        "void main() {                                                            \n"
-            "lowp float glyph = texture2D(texture, sampleCoord).a;                \n"
-        "    lowp float outline = clamp(clamp(texture2D(texture, sCoordUp).a +    \n"
-        "                                     texture2D(texture, sCoordDown).a +  \n"
-        "                                     texture2D(texture, sCoordLeft).a +  \n"
-        "                                     texture2D(texture, sCoordRight).a,  \n"
-        "                                     0.0, 1.0) - glyph,                  \n"
-        "                               0.0, 1.0);                                \n"
-        "    gl_FragColor = outline * styleColor + glyph * color;                 \n"
+        "void main() {                                                                \n"
+            "lowp float glyph = texture2D(_qt_texture, sampleCoord).a;                \n"
+        "    lowp float outline = clamp(clamp(texture2D(_qt_texture, sCoordUp).a +    \n"
+        "                                     texture2D(_qt_texture, sCoordDown).a +  \n"
+        "                                     texture2D(_qt_texture, sCoordLeft).a +  \n"
+        "                                     texture2D(_qt_texture, sCoordRight).a,  \n"
+        "                                     0.0, 1.0) - glyph,                      \n"
+        "                               0.0, 1.0);                                    \n"
+        "    gl_FragColor = outline * styleColor + glyph * color;                     \n"
         "}";
 }
 
