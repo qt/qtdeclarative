@@ -123,6 +123,7 @@ inline bool signbit(double x) { struct ieee_double *p = (struct ieee_double *)&x
 
 #if COMPILER(MSVC)
 
+#if _MSC_VER < 1800
 // We must not do 'num + 0.5' or 'num - 0.5' because they can cause precision loss.
 static double round(double num)
 {
@@ -138,6 +139,7 @@ static float roundf(float num)
         return integer - num > 0.5f ? integer - 1.0f : integer;
     return integer - num >= 0.5f ? integer - 1.0f : integer;
 }
+#endif
 inline long long llround(double num) { return static_cast<long long>(round(num)); }
 inline long long llroundf(float num) { return static_cast<long long>(roundf(num)); }
 inline long lround(double num) { return static_cast<long>(round(num)); }

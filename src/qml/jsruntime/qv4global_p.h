@@ -55,7 +55,9 @@ namespace std {
 inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
 inline bool isnan(double d) { return !!_isnan(d); }
 inline bool isfinite(double d) { return _finite(d); }
+#if _MSC_VER < 1800
 inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
+#endif
 
 } // namespace std
 
