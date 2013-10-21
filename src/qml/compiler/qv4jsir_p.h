@@ -311,6 +311,7 @@ struct Name: Expr {
         builtin_delete,
         builtin_throw,
         builtin_rethrow,
+        builtin_unwind_exception,
         builtin_push_catch_scope,
         builtin_foreach_iterator_object,
         builtin_foreach_next_property_name,

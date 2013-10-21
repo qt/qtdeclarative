@@ -238,12 +238,11 @@ protected:
 
         ScopeAndFinally *parent;
         AST::Finally *finally;
-        V4IR::ExprList *finishTryArgs;
         ScopeType type;
 
-        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), finishTryArgs(0), type(t) {}
-        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally, V4IR::ExprList *finishTryArgs)
-        : parent(parent), finally(finally), finishTryArgs(finishTryArgs), type(TryScope)
+        ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), type(t) {}
+        ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally)
+        : parent(parent), finally(finally), type(TryScope)
         {}
     };
 

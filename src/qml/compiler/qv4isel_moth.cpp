@@ -777,6 +777,11 @@ void InstructionSelection::callBuiltinReThrow()
     // ###
 }
 
+void InstructionSelection::callBuiltinUnwindException(V4IR::Temp *)
+{
+    // ###
+}
+
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {

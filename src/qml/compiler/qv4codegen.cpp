@@ -2328,57 +2328,47 @@ bool Codegen::visit(TryStatement *ast)
             (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
         throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
 
+    V4IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
+
     // We always need a finally body to clean up the exception handler
     // exceptions thrown in finally get catched by the surrounding catch block
-    V4IR::BasicBlock *finallyBody = _function->newBasicBlock(groupStartBlock(), exceptionHandler(), V4IR::Function::DontInsertBlock);
+    V4IR::BasicBlock *finallyBody = 0;
+    V4IR::BasicBlock *catchBody = 0;
+    V4IR::BasicBlock *catchExceptionHandler = 0;
+    V4IR::BasicBlock *end = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, V4IR::Function::DontInsertBlock);
 
-    // the Catch block for catch is the block itself. We protect against recursion by checking the
-    // hasException boolean
-    // all basic blocks within try and catch get catched by catchBody
-    V4IR::BasicBlock *catchBody =  _function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
-    catchBody->catchBlock = catchBody;
-    pushExceptionHandler(catchBody);
+    if (ast->finallyExpression)
+        finallyBody = _function->newBasicBlock(groupStartBlock(), surroundingExceptionHandler, V4IR::Function::DontInsertBlock);
 
-    int hasException = _block->newTemp();
-    move(_block->TEMP(hasException), _block->CONST(V4IR::BoolType, false));
+    if (ast->catchExpression) {
+        // exception handler for the catch body
+        catchExceptionHandler = _function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
+        pushExceptionHandler(catchExceptionHandler);
+        catchBody =  _function->newBasicBlock(groupStartBlock(), catchExceptionHandler, V4IR::Function::DontInsertBlock);
+        popExceptionHandler();
+        pushExceptionHandler(catchBody);
+    } else {
+        Q_ASSERT(finallyBody);
+        pushExceptionHandler(finallyBody);
+    }
 
     V4IR::BasicBlock *tryBody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     _block->JUMP(tryBody);
 
-    // ### Remove
-    // Pass the hidden "needRethrow" TEMP to the
-    // builtin_delete_exception_handler, in order to have those TEMPs alive for
-    // the duration of the exception handling block.
-    V4IR::ExprList *finishTryArgs = _function->New<V4IR::ExprList>();
-    finishTryArgs->init(_block->TEMP(hasException));
-
-    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression, finishTryArgs);
+    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression);
     _scopeAndFinally = &tcf;
 
     _block = tryBody;
     statement(ast->statement);
-    _block->JUMP(finallyBody);
+    _block->JUMP(finallyBody ? finallyBody : end);
 
-    _function->insertBasicBlock(catchBody);
-    _block = catchBody;
-
-    if (ast->catchExpression) {
-        // check if an exception got thrown within catch. Go to finally
-        // and then rethrow
-        V4IR::BasicBlock *cleanupCatchScope = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-        V4IR::BasicBlock *b = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-        _block->CJUMP(_block->TEMP(hasException), cleanupCatchScope, b);
-
-        _block = cleanupCatchScope;
-        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
-        _block->JUMP(finallyBody);
-
-        _block = b;
-    }
-
-    move(_block->TEMP(hasException), _block->CONST(V4IR::BoolType, true));
+    popExceptionHandler();
 
     if (ast->catchExpression) {
+        pushExceptionHandler(catchExceptionHandler);
+        _function->insertBasicBlock(catchBody);
+        _block = catchBody;
+
         ++_function->insideWithOrCatch;
         V4IR::ExprList *catchArgs = _function->New<V4IR::ExprList>();
         catchArgs->init(_block->STRING(_function->newString(ast->catchExpression->name.toString())));
@@ -2391,28 +2381,37 @@ bool Codegen::visit(TryStatement *ast)
         }
         _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
         --_function->insideWithOrCatch;
-        move(_block->TEMP(hasException), _block->CONST(V4IR::BoolType, false));
+        _block->JUMP(finallyBody ? finallyBody : end);
+        popExceptionHandler();
+
+        _function->insertBasicBlock(catchExceptionHandler);
+        catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(V4IR::Name::builtin_pop_scope, 0, 0), 0));
+        if (finallyBody || surroundingExceptionHandler)
+            catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
+        else
+            catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(V4IR::Name::builtin_rethrow, 0, 0), 0));
     }
-    _block->JUMP(finallyBody);
 
     _scopeAndFinally = tcf.parent;
 
-    // exceptions thrown in finally get catched by the surrounding catch statement
-    popExceptionHandler();
+    if (finallyBody) {
+        _function->insertBasicBlock(finallyBody);
+        _block = finallyBody;
 
-    _function->insertBasicBlock(finallyBody);
+        int hasException = _block->newTemp();
+        move(_block->TEMP(hasException), _block->CALL(_block->NAME(V4IR::Name::builtin_unwind_exception, /*line*/0, /*column*/0), 0));
 
-    _block = finallyBody;
-    if (ast->finallyExpression && ast->finallyExpression->statement)
-        statement(ast->finallyExpression->statement);
+        if (ast->finallyExpression && ast->finallyExpression->statement)
+            statement(ast->finallyExpression->statement);
 
-    V4IR::BasicBlock *rethrowBlock = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    V4IR::BasicBlock *after = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
-    _block->CJUMP(_block->TEMP(hasException), rethrowBlock, after);
-    _block = rethrowBlock;
-    _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_rethrow, /*line*/0, /*column*/0), 0));
+        V4IR::ExprList *arg = _function->New<V4IR::ExprList>();
+        arg->expr = _block->TEMP(hasException);
+        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_throw, /*line*/0, /*column*/0), arg));
+        _block->JUMP(end);
+    }
 
-    _block = after;
+    _function->insertBasicBlock(end);
+    _block = end;
 
     return false;
 }

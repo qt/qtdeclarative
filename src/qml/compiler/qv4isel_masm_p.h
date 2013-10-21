@@ -95,7 +95,15 @@ template <typename T>
 struct ExceptionCheck {
     enum { NeedsCheck = 1 };
 };
-
+// push_catch and pop context methods shouldn't check for exceptions
+template <>
+struct ExceptionCheck<QV4::ExecutionContext *(*)(QV4::ExecutionContext *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<QV4::ExecutionContext *(*)(QV4::ExecutionContext *, A)> {
+    enum { NeedsCheck = 0 };
+};
 
 class Assembler : public JSC::MacroAssembler
 {
@@ -1444,6 +1452,7 @@ protected:
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
     virtual void callBuiltinReThrow();
+    virtual void callBuiltinUnwindException(V4IR::Temp *);
     virtual void callBuiltinPushCatchScope(const QString &exceptionName);
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);

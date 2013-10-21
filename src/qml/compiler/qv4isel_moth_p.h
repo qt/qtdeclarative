@@ -94,6 +94,7 @@ protected:
     virtual void callBuiltinDeleteValue(V4IR::Temp *result);
     virtual void callBuiltinThrow(V4IR::Expr *arg);
     virtual void callBuiltinReThrow();
+    virtual void callBuiltinUnwindException(V4IR::Temp *);
     virtual void callBuiltinPushCatchScope(const QString &exceptionName);
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result);
     virtual void callBuiltinForeachNextPropertyname(V4IR::Temp *arg, V4IR::Temp *result);

@@ -818,9 +818,8 @@ void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 {
-    generateFunctionCall(Assembler::Void, __qmljs_throw, Assembler::ContextRegister,
+    generateFunctionCall(Assembler::ReturnValueRegister, __qmljs_throw, Assembler::ContextRegister,
                          Assembler::PointerToValue(arg));
-    _as->jumpToExceptionHandler();
 }
 
 void InstructionSelection::callBuiltinReThrow()
@@ -828,10 +827,16 @@ void InstructionSelection::callBuiltinReThrow()
     _as->jumpToExceptionHandler();
 }
 
+void InstructionSelection::callBuiltinUnwindException(V4IR::Temp *result)
+{
+    generateFunctionCall(result, __qmljs_builtin_unwind_exception, Assembler::ContextRegister);
+
+}
+
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
     Assembler::Pointer s = _as->loadStringAddress(Assembler::ScratchRegister, exceptionName);
-    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_catch_scope, s, Assembler::ContextRegister);
+    generateFunctionCall(Assembler::ContextRegister, __qmljs_builtin_push_catch_scope, Assembler::ContextRegister, s);
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)

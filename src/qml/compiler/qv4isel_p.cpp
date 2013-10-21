@@ -270,6 +270,10 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         callBuiltinReThrow();
     } return;
 
+    case V4IR::Name::builtin_unwind_exception: {
+        callBuiltinUnwindException(result);
+    } return;
+
     case V4IR::Name::builtin_push_catch_scope: {
         V4IR::String *s = call->args->expr->asString();
         Q_ASSERT(s);

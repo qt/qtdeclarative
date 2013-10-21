@@ -194,6 +194,7 @@ protected: // IRDecoder
     virtual void callBuiltinDeleteValue(V4IR::Temp *) {}
     virtual void callBuiltinThrow(V4IR::Expr *) {}
     virtual void callBuiltinReThrow() {}
+    virtual void callBuiltinUnwindException(V4IR::Temp *) {}
     virtual void callBuiltinPushCatchScope(const QString &) {};
     virtual void callBuiltinForeachIteratorObject(V4IR::Temp *, V4IR::Temp *) {}
     virtual void callBuiltinForeachNextProperty(V4IR::Temp *, V4IR::Temp *) {}

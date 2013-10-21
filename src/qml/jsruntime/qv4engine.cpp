@@ -834,7 +834,7 @@ ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext,
     exceptionStackTrace.clear();
     hasException = false;
     ReturnedValue res = exceptionValue.asReturnedValue();
-    exceptionValue = Encode::undefined();
+    exceptionValue = Primitive::emptyValue();
     return res;
 }
 

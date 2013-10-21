@@ -397,6 +397,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_throw";
     case Name::builtin_rethrow:
         return "builtin_rethrow";
+    case Name::builtin_unwind_exception:
+        return "builtin_unwind_exception";
     case Name::builtin_push_catch_scope:
         return "builtin_push_catch_scope";
     case V4IR::Name::builtin_foreach_iterator_object:
