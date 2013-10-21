@@ -428,7 +428,7 @@ protected:
     virtual bool visit(AST::UiScriptBinding *ast);
     virtual bool visit(AST::UiSourceElement *ast);
 
-    void throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
+    bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr* expr, const AST::SourceLocation &loc);
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 
@@ -453,6 +453,7 @@ protected:
     QStack<V4IR::BasicBlock *> _exceptionHandlers;
     bool _strictMode;
 
+    bool hasError;
     QList<QQmlError> _errors;
 
     class ScanFunctions: protected Visitor

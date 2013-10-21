@@ -55,7 +55,6 @@
 #include <qv4context_p.h>
 #include <cmath>
 #include <iostream>
-#include <cassert>
 
 #ifdef CONST
 #undef CONST
@@ -388,10 +387,14 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
         QStringList args;
         for (FormalParameterList *it = formals; it; it = it->next) {
             QString arg = it->name.toString();
-            if (args.contains(arg))
+            if (args.contains(arg)) {
                 _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
-            if (arg == QLatin1String("eval") || arg == QLatin1String("arguments"))
+                return;
+            }
+            if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
                 _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
+                return;
+            }
             args += arg;
         }
     }
@@ -409,6 +412,7 @@ Codegen::Codegen(bool strict)
     , _labelledStatement(0)
     , _scopeAndFinally(0)
     , _strictMode(strict)
+    , hasError(false)
 {
 }
 
@@ -419,7 +423,7 @@ void Codegen::generateFromProgram(const QString &fileName,
                                   CompilationMode mode,
                                   const QStringList &inheritedLocals)
 {
-    assert(node);
+    Q_ASSERT(node);
 
     _module = module;
     _env = 0;
@@ -459,12 +463,12 @@ void Codegen::generateFromFunctionExpression(const QString &fileName,
 void Codegen::enterEnvironment(Node *node)
 {
     _env = _envMap.value(node);
-    assert(_env);
+    Q_ASSERT(_env);
 }
 
 void Codegen::leaveEnvironment()
 {
-    assert(_env);
+    Q_ASSERT(_env);
     _env = _env->parent;
 }
 
@@ -487,6 +491,9 @@ void Codegen::leaveLoop()
 
 V4IR::Expr *Codegen::member(V4IR::Expr *base, const QString *name)
 {
+    if (hasError)
+        return 0;
+
     if (base->asTemp() /*|| base->asName()*/)
         return _block->MEMBER(base->asTemp(), name);
     else {
@@ -498,6 +505,9 @@ V4IR::Expr *Codegen::member(V4IR::Expr *base, const QString *name)
 
 V4IR::Expr *Codegen::subscript(V4IR::Expr *base, V4IR::Expr *index)
 {
+    if (hasError)
+        return 0;
+
     if (! base->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), base);
@@ -510,7 +520,7 @@ V4IR::Expr *Codegen::subscript(V4IR::Expr *base, V4IR::Expr *index)
         index = _block->TEMP(t);
     }
 
-    assert(base->asTemp() && index->asTemp());
+    Q_ASSERT(base->asTemp() && index->asTemp());
     return _block->SUBSCRIPT(base->asTemp(), index->asTemp());
 }
 
@@ -527,6 +537,9 @@ V4IR::Expr *Codegen::argument(V4IR::Expr *expr)
 // keeps references alive, converts other expressions to temps
 V4IR::Expr *Codegen::reference(V4IR::Expr *expr)
 {
+    if (hasError)
+        return 0;
+
     if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
@@ -537,6 +550,9 @@ V4IR::Expr *Codegen::reference(V4IR::Expr *expr)
 
 V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
 {
+    if (hasError)
+        return 0;
+
     Q_ASSERT(op != V4IR::OpIncrement);
     Q_ASSERT(op != V4IR::OpDecrement);
 
@@ -565,12 +581,15 @@ V4IR::Expr *Codegen::unop(V4IR::AluOp op, V4IR::Expr *expr)
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
     }
-    assert(expr->asTemp());
+    Q_ASSERT(expr->asTemp());
     return _block->UNOP(op, expr->asTemp());
 }
 
 V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
 {
+    if (hasError)
+        return 0;
+
     if (V4IR::Const *c1 = left->asConst()) {
         if (V4IR::Const *c2 = right->asConst()) {
             if (c1->type == V4IR::NumberType && c2->type == V4IR::NumberType) {
@@ -633,21 +652,26 @@ V4IR::Expr *Codegen::binop(V4IR::AluOp op, V4IR::Expr *left, V4IR::Expr *right)
         right = _block->TEMP(t);
     }
 
-    assert(left->asTemp());
-    assert(right->asTemp());
+    Q_ASSERT(left->asTemp());
+    Q_ASSERT(right->asTemp());
 
     return _block->BINOP(op, left, right);
 }
 
 V4IR::Expr *Codegen::call(V4IR::Expr *base, V4IR::ExprList *args)
 {
+    if (hasError)
+        return 0;
     base = reference(base);
     return _block->CALL(base, args);
 }
 
 void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
 {
-    assert(target->isLValue());
+    if (hasError)
+        return;
+
+    Q_ASSERT(target->isLValue());
 
     if (op != V4IR::OpInvalid) {
         move(target, binop(op, target, source));
@@ -670,6 +694,9 @@ void Codegen::move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op)
 
 void Codegen::cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse)
 {
+    if (hasError)
+        return;
+
     if (! (cond->asTemp() || cond->asBinop())) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), cond);
@@ -680,6 +707,9 @@ void Codegen::cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock
 
 void Codegen::accept(Node *node)
 {
+    if (hasError)
+        return;
+
     if (node)
         node->accept(this);
 }
@@ -698,6 +728,8 @@ void Codegen::statement(ExpressionNode *ast)
         Result r(nx);
         qSwap(_expr, r);
         accept(ast);
+        if (hasError)
+            return;
         qSwap(_expr, r);
         if (r.format == ex) {
             if (r->asCall()) {
@@ -786,6 +818,8 @@ void Codegen::sourceElements(SourceElements *ast)
 {
     for (SourceElements *it = ast; it; it = it->next) {
         sourceElement(it->element);
+        if (hasError)
+            return;
     }
 }
 
@@ -795,7 +829,10 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     if (!ast->expression)
         return;
     Result expr = expression(ast->expression);
-    assert(expr.code);
+    if (hasError)
+        return;
+
+    Q_ASSERT(expr.code);
     initializer = *expr;
 
     int initialized = _block->newTemp();
@@ -813,180 +850,183 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 
 bool Codegen::visit(ArgumentList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(CaseBlock *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(CaseClause *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(CaseClauses *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(Catch *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(DefaultClause *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(ElementList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(Elision *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(Finally *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(FormalParameterList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(FunctionBody *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(Program *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(PropertyAssignmentList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(PropertyNameAndValue *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(PropertyGetterSetter *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(SourceElements *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(StatementList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiArrayMemberList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiImport *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiHeaderItemList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiPragma *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiObjectInitializer *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiObjectMemberList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiParameterList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiProgram *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiQualifiedId *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(UiQualifiedPragmaId *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(VariableDeclaration *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(VariableDeclarationList *)
 {
-    assert(!"unreachable");
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool Codegen::visit(Expression *ast)
 {
+    if (hasError)
+        return false;
+
     statement(ast->left);
     accept(ast->right);
     return false;
@@ -994,6 +1034,9 @@ bool Codegen::visit(Expression *ast)
 
 bool Codegen::visit(ArrayLiteral *ast)
 {
+    if (hasError)
+        return false;
+
     V4IR::ExprList *args = 0;
     V4IR::ExprList *current = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
@@ -1045,6 +1088,9 @@ bool Codegen::visit(ArrayLiteral *ast)
 
 bool Codegen::visit(ArrayMemberExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result base = expression(ast->base);
     Result index = expression(ast->expression);
     _expr.code = subscript(*base, *index);
@@ -1071,6 +1117,9 @@ static V4IR::AluOp baseOp(int op)
 
 bool Codegen::visit(BinaryExpression *ast)
 {
+    if (hasError)
+        return false;
+
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
             V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -1124,10 +1173,13 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign: {
-        throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
+        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
+            return false;
         V4IR::Expr* right = *expression(ast->right);
-        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember()))
+        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
             throwReferenceError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
+            return false;
+        }
 
         if (_expr.accept(nx)) {
             move(left, right);
@@ -1151,10 +1203,13 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
-        throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation());
+        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
+            return false;
         V4IR::Expr* right = *expression(ast->right);
-        if (!left->isLValue())
+        if (!left->isLValue()) {
             throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
+            return false;
+        }
 
         if (_expr.accept(nx)) {
             move(left, right, baseOp(ast->op));
@@ -1237,6 +1292,9 @@ bool Codegen::visit(BinaryExpression *ast)
 
 bool Codegen::visit(CallExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result base = expression(ast->base);
     V4IR::ExprList *args = 0, **args_it = &args;
     for (ArgumentList *it = ast->arguments; it; it = it->next) {
@@ -1252,6 +1310,9 @@ bool Codegen::visit(CallExpression *ast)
 
 bool Codegen::visit(ConditionalExpression *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *iffalse = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -1277,18 +1338,25 @@ bool Codegen::visit(ConditionalExpression *ast)
 
 bool Codegen::visit(DeleteExpression *ast)
 {
+    if (hasError)
+        return false;
+
     V4IR::Expr* expr = *expression(ast->expression);
     // Temporaries cannot be deleted
     V4IR::Temp *t = expr->asTemp();
     if (t && t->index < _env->members.size()) {
         // Trying to delete a function argument might throw.
-        if (_function->isStrict)
+        if (_function->isStrict) {
             throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+            return false;
+        }
         _expr.code = _block->CONST(V4IR::BoolType, 0);
         return false;
     }
-    if (_function->isStrict && expr->asName())
+    if (_function->isStrict && expr->asName()) {
         throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+        return false;
+    }
 
     // [[11.4.1]] Return true if it's not a reference
     if (expr->asConst() || expr->asString()) {
@@ -1316,6 +1384,9 @@ bool Codegen::visit(DeleteExpression *ast)
 
 bool Codegen::visit(FalseLiteral *)
 {
+    if (hasError)
+        return false;
+
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iffalse);
     } else {
@@ -1326,6 +1397,9 @@ bool Codegen::visit(FalseLiteral *)
 
 bool Codegen::visit(FieldMemberExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result base = expression(ast->base);
     _expr.code = member(*base, _function->newString(ast->name.toString()));
     return false;
@@ -1333,6 +1407,9 @@ bool Codegen::visit(FieldMemberExpression *ast)
 
 bool Codegen::visit(FunctionExpression *ast)
 {
+    if (hasError)
+        return false;
+
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     _expr.code = _block->CLOSURE(function);
     return false;
@@ -1340,6 +1417,9 @@ bool Codegen::visit(FunctionExpression *ast)
 
 V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
+    if (hasError)
+        return false;
+
     uint scope = 0;
     Environment *e = _env;
     V4IR::Function *f = _function;
@@ -1349,7 +1429,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
             return _block->NAME(name, line, col);
 
         int index = e->findMember(name);
-        assert (index < e->members.size());
+        Q_ASSERT (index < e->members.size());
         if (index != -1) {
             V4IR::Temp *t = _block->LOCAL(index, scope);
             if (name == "arguments" || name == "eval")
@@ -1378,18 +1458,27 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
+    if (hasError)
+        return false;
+
     _expr.code = identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn);
     return false;
 }
 
 bool Codegen::visit(NestedExpression *ast)
 {
+    if (hasError)
+        return false;
+
     accept(ast->expression);
     return false;
 }
 
 bool Codegen::visit(NewExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result base = expression(ast->expression);
     V4IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
@@ -1403,6 +1492,9 @@ bool Codegen::visit(NewExpression *ast)
 
 bool Codegen::visit(NewMemberExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result base = expression(ast->base);
     V4IR::Expr *expr = *base;
     if (expr && !expr->asTemp() && !expr->asName() && !expr->asMember()) {
@@ -1427,6 +1519,9 @@ bool Codegen::visit(NewMemberExpression *ast)
 
 bool Codegen::visit(NotExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
     const unsigned r = _block->newTemp();
     move(_block->TEMP(r), unop(V4IR::OpNot, *expr));
@@ -1436,6 +1531,9 @@ bool Codegen::visit(NotExpression *ast)
 
 bool Codegen::visit(NullExpression *)
 {
+    if (hasError)
+        return false;
+
     if (_expr.accept(cx)) _block->JUMP(_expr.iffalse);
     else _expr.code = _block->CONST(V4IR::NullType, 0);
 
@@ -1444,6 +1542,9 @@ bool Codegen::visit(NullExpression *)
 
 bool Codegen::visit(NumericLiteral *ast)
 {
+    if (hasError)
+        return false;
+
     if (_expr.accept(cx)) {
         if (ast->value) _block->JUMP(_expr.iftrue);
         else _block->JUMP(_expr.iffalse);
@@ -1470,6 +1571,9 @@ struct ObjectPropertyValue {
 
 bool Codegen::visit(ObjectLiteral *ast)
 {
+    if (hasError)
+        return false;
+
     QMap<QString, ObjectPropertyValue> valueMap;
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
@@ -1477,9 +1581,11 @@ bool Codegen::visit(ObjectLiteral *ast)
             QString name = propertyName(nv->name);
             Result value = expression(nv->value);
             ObjectPropertyValue &v = valueMap[name];
-            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value))
+            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
                 throwSyntaxError(nv->lastSourceLocation(),
                                  QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
+                return false;
+            }
 
             valueMap[name].value = *value;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
@@ -1488,9 +1594,11 @@ bool Codegen::visit(ObjectLiteral *ast)
             ObjectPropertyValue &v = valueMap[name];
             if (v.value ||
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
-                (gs->type == PropertyGetterSetter::Setter && v.hasSetter()))
+                (gs->type == PropertyGetterSetter::Setter && v.hasSetter())) {
                 throwSyntaxError(gs->lastSourceLocation(),
                                  QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
+                return false;
+            }
             if (gs->type == PropertyGetterSetter::Getter)
                 v.getter = function;
             else
@@ -1604,10 +1712,16 @@ bool Codegen::visit(ObjectLiteral *ast)
 
 bool Codegen::visit(PostDecrementExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->base);
-    if (!expr->isLValue())
+    if (!expr->isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
-    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
+        return false;
+    }
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
+        return false;
 
     const unsigned oldValue = _block->newTemp();
     move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
@@ -1624,10 +1738,16 @@ bool Codegen::visit(PostDecrementExpression *ast)
 
 bool Codegen::visit(PostIncrementExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->base);
-    if (!expr->isLValue())
+    if (!expr->isLValue()) {
         throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
-    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
+        return false;
+    }
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
+        return false;
 
     const unsigned oldValue = _block->newTemp();
     move(_block->TEMP(oldValue), unop(V4IR::OpUPlus, *expr));
@@ -1644,8 +1764,12 @@ bool Codegen::visit(PostIncrementExpression *ast)
 
 bool Codegen::visit(PreDecrementExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
-    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken);
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
+        return false;
     V4IR::Expr *op = binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1));
     if (_expr.accept(nx)) {
         move(*expr, op);
@@ -1660,8 +1784,12 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
 bool Codegen::visit(PreIncrementExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
-    throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken);
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
+        return false;
     V4IR::Expr *op = binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1));
     if (_expr.accept(nx)) {
         move(*expr, op);
@@ -1676,24 +1804,36 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
 bool Codegen::visit(RegExpLiteral *ast)
 {
+    if (hasError)
+        return false;
+
     _expr.code = _block->REGEXP(_function->newString(ast->pattern.toString()), ast->flags);
     return false;
 }
 
 bool Codegen::visit(StringLiteral *ast)
 {
+    if (hasError)
+        return false;
+
     _expr.code = _block->STRING(_function->newString(ast->value.toString()));
     return false;
 }
 
 bool Codegen::visit(ThisExpression *ast)
 {
+    if (hasError)
+        return false;
+
     _expr.code = _block->NAME(QStringLiteral("this"), ast->thisToken.startLine, ast->thisToken.startColumn);
     return false;
 }
 
 bool Codegen::visit(TildeExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), unop(V4IR::OpCompl, *expr));
@@ -1703,6 +1843,9 @@ bool Codegen::visit(TildeExpression *ast)
 
 bool Codegen::visit(TrueLiteral *)
 {
+    if (hasError)
+        return false;
+
     if (_expr.accept(cx)) {
         _block->JUMP(_expr.iftrue);
     } else {
@@ -1713,6 +1856,9 @@ bool Codegen::visit(TrueLiteral *)
 
 bool Codegen::visit(TypeOfExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
     V4IR::ExprList *args = _function->New<V4IR::ExprList>();
     args->init(reference(*expr));
@@ -1722,6 +1868,9 @@ bool Codegen::visit(TypeOfExpression *ast)
 
 bool Codegen::visit(UnaryMinusExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), unop(V4IR::OpUMinus, *expr));
@@ -1731,6 +1880,9 @@ bool Codegen::visit(UnaryMinusExpression *ast)
 
 bool Codegen::visit(UnaryPlusExpression *ast)
 {
+    if (hasError)
+        return false;
+
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
     move(_block->TEMP(t), unop(V4IR::OpUPlus, *expr));
@@ -1740,6 +1892,9 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 
 bool Codegen::visit(VoidExpression *ast)
 {
+    if (hasError)
+        return false;
+
     statement(ast->expression);
     _expr.code = _block->CONST(V4IR::UndefinedType, 0);
     return false;
@@ -1747,6 +1902,9 @@ bool Codegen::visit(VoidExpression *ast)
 
 bool Codegen::visit(FunctionDeclaration * ast)
 {
+    if (hasError)
+        return false;
+
     if (_env->compilationMode == QmlBinding)
         move(_block->TEMP(_returnAddress), _block->NAME(ast->name.toString(), 0, 0));
     _expr.accept(nx);
@@ -1846,7 +2004,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
                      _block->CLOSURE(function));
             } else {
-                assert(member.index >= 0);
+                Q_ASSERT(member.index >= 0);
                 move(_block->LOCAL(member.index, 0), _block->CLOSURE(function));
             }
         }
@@ -1878,36 +2036,54 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
 bool Codegen::visit(IdentifierPropertyName *ast)
 {
+    if (hasError)
+        return false;
+
     _property = ast->id.toString();
     return false;
 }
 
 bool Codegen::visit(NumericLiteralPropertyName *ast)
 {
+    if (hasError)
+        return false;
+
     _property = QString::number(ast->id, 'g', 16);
     return false;
 }
 
 bool Codegen::visit(StringLiteralPropertyName *ast)
 {
+    if (hasError)
+        return false;
+
     _property = ast->id.toString();
     return false;
 }
 
 bool Codegen::visit(FunctionSourceElement *ast)
 {
+    if (hasError)
+        return false;
+
     statement(ast->declaration);
     return false;
 }
 
 bool Codegen::visit(StatementSourceElement *ast)
 {
+    if (hasError)
+        return false;
+
     statement(ast->statement);
     return false;
 }
 
 bool Codegen::visit(Block *ast)
 {
+    if (hasError)
+        return false;
+
     for (StatementList *it = ast->statements; it; it = it->next) {
         statement(it->statement);
     }
@@ -1916,8 +2092,13 @@ bool Codegen::visit(Block *ast)
 
 bool Codegen::visit(BreakStatement *ast)
 {
-    if (!_loop)
+    if (hasError)
+        return false;
+
+    if (!_loop) {
         throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Break outside of loop"));
+        return false;
+    }
     Loop *loop = 0;
     if (ast->label.isEmpty())
         loop = _loop;
@@ -1926,8 +2107,10 @@ bool Codegen::visit(BreakStatement *ast)
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label)
                 break;
         }
-        if (!loop)
+        if (!loop) {
             throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+            return false;
+        }
     }
     unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->breakBlock);
@@ -1936,6 +2119,9 @@ bool Codegen::visit(BreakStatement *ast)
 
 bool Codegen::visit(ContinueStatement *ast)
 {
+    if (hasError)
+        return false;
+
     Loop *loop = 0;
     if (ast->label.isEmpty()) {
         for (loop = _loop; loop; loop = loop->parent) {
@@ -1950,11 +2136,15 @@ bool Codegen::visit(ContinueStatement *ast)
                 break;
             }
         }
-        if (!loop)
+        if (!loop) {
             throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+            return false;
+        }
     }
-    if (!loop)
+    if (!loop) {
         throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "continue outside of loop"));
+        return false;
+    }
     unwindException(loop->scopeAndFinally);
     _block->JUMP(loop->continueBlock);
     return false;
@@ -1968,6 +2158,9 @@ bool Codegen::visit(DebuggerStatement *)
 
 bool Codegen::visit(DoWhileStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *loopbody = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *loopcond = _function->newBasicBlock(loopbody, exceptionHandler());
     V4IR::BasicBlock *loopend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -1992,11 +2185,17 @@ bool Codegen::visit(DoWhileStatement *ast)
 
 bool Codegen::visit(EmptyStatement *)
 {
+    if (hasError)
+        return true;
+
     return false;
 }
 
 bool Codegen::visit(ExpressionStatement *ast)
 {
+    if (hasError)
+        return true;
+
     if (_env->compilationMode == EvalCode || _env->compilationMode == QmlBinding) {
         Result e = expression(ast->expression);
         if (*e)
@@ -2009,6 +2208,9 @@ bool Codegen::visit(ExpressionStatement *ast)
 
 bool Codegen::visit(ForEachStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -2047,6 +2249,9 @@ bool Codegen::visit(ForEachStatement *ast)
 
 bool Codegen::visit(ForStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
@@ -2080,6 +2285,9 @@ bool Codegen::visit(ForStatement *ast)
 
 bool Codegen::visit(IfStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *iftrue = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(groupStartBlock(), exceptionHandler()) : 0;
     V4IR::BasicBlock *endif = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -2103,12 +2311,16 @@ bool Codegen::visit(IfStatement *ast)
 
 bool Codegen::visit(LabelledStatement *ast)
 {
+    if (hasError)
+        return true;
+
     // check that no outer loop contains the label
     Loop *l = _loop;
     while (l) {
         if (l->labelledStatement && l->labelledStatement->label == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
             throwSyntaxError(ast->firstSourceLocation(), error);
+            return false;
         }
         l = l->parent;
     }
@@ -2136,6 +2348,9 @@ bool Codegen::visit(LabelledStatement *ast)
 
 bool Codegen::visit(LocalForEachStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *foreachin = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *foreachbody = _function->newBasicBlock(foreachin, exceptionHandler());
     V4IR::BasicBlock *foreachend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -2174,6 +2389,9 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
 bool Codegen::visit(LocalForStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *forcond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *forbody = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
@@ -2207,8 +2425,13 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
-    if (_env->compilationMode != FunctionCode && _env->compilationMode != QmlBinding)
+    if (hasError)
+        return true;
+
+    if (_env->compilationMode != FunctionCode && _env->compilationMode != QmlBinding) {
         throwSyntaxError(ast->returnToken, QCoreApplication::translate("qv4codegen", "Return statement outside of function"));
+        return false;
+    }
     if (ast->expression) {
         Result expr = expression(ast->expression);
         move(_block->TEMP(_returnAddress), *expr);
@@ -2221,6 +2444,9 @@ bool Codegen::visit(ReturnStatement *ast)
 
 bool Codegen::visit(SwitchStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *switchend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
     if (ast->block) {
@@ -2312,6 +2538,9 @@ bool Codegen::visit(SwitchStatement *ast)
 
 bool Codegen::visit(ThrowStatement *ast)
 {
+    if (hasError)
+        return true;
+
     Result expr = expression(ast->expression);
     move(_block->TEMP(_returnAddress), *expr);
     V4IR::ExprList *throwArgs = _function->New<V4IR::ExprList>();
@@ -2322,11 +2551,16 @@ bool Codegen::visit(ThrowStatement *ast)
 
 bool Codegen::visit(TryStatement *ast)
 {
+    if (hasError)
+        return true;
+
     _function->hasTry = true;
 
     if (_function->isStrict && ast->catchExpression &&
-            (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments")))
+            (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
         throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
+        return false;
+    }
 
     V4IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
 
@@ -2445,12 +2679,18 @@ void Codegen::unwindException(Codegen::ScopeAndFinally *outest)
 
 bool Codegen::visit(VariableStatement *ast)
 {
+    if (hasError)
+        return true;
+
     variableDeclarationList(ast->declarations);
     return false;
 }
 
 bool Codegen::visit(WhileStatement *ast)
 {
+    if (hasError)
+        return true;
+
     V4IR::BasicBlock *whilecond = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
     V4IR::BasicBlock *whilebody = _function->newBasicBlock(whilecond, exceptionHandler());
     V4IR::BasicBlock *whileend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
@@ -2473,6 +2713,9 @@ bool Codegen::visit(WhileStatement *ast)
 
 bool Codegen::visit(WithStatement *ast)
 {
+    if (hasError)
+        return true;
+
     _function->hasWith = true;
 
     // need an exception handler for with to cleanup the with scope
@@ -2515,58 +2758,63 @@ bool Codegen::visit(WithStatement *ast)
 
 bool Codegen::visit(UiArrayBinding *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
 bool Codegen::visit(UiObjectBinding *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
 bool Codegen::visit(UiObjectDefinition *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
 bool Codegen::visit(UiPublicMember *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
 bool Codegen::visit(UiScriptBinding *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
 bool Codegen::visit(UiSourceElement *)
 {
-    assert(!"not implemented");
+    Q_ASSERT(!"not implemented");
     return false;
 }
 
-void Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, const SourceLocation& loc)
+bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, const SourceLocation& loc)
 {
     if (!_env->isStrict)
-        return;
+        return false;
     if (V4IR::Name *n = expr->asName()) {
         if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
-            return;
+            return false;
     } else if (V4IR::Temp *t = expr->asTemp()) {
         if (!t->isArgumentsOrEval)
-            return;
+            return false;
     } else {
-        return;
+        return false;
     }
     throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+    return true;
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
+    if (hasError)
+        return;
+
+    hasError = true;
     QQmlError error;
     error.setUrl(QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
@@ -2577,6 +2825,10 @@ void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 
 void Codegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
+    if (hasError)
+        return;
+
+    hasError = true;
     QQmlError error;
     error.setUrl(QUrl::fromLocalFile(_module->fileName));
     error.setDescription(detail);
@@ -2592,10 +2844,16 @@ QList<QQmlError> Codegen::errors() const
 
 void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
 {
+    if (hasError)
+        return;
+    hasError = true;
     context->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
 void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
 {
+    if (hasError)
+        return;
+    hasError = true;
     context->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
