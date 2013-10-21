@@ -262,15 +262,15 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::Scope scope(d->m_v4Engine);
     QV4::ExecutionContext *ctx = d->m_v4Engine->current;
     QV4::ScopedValue result(scope);
-    try {
-        QV4::Script script(ctx, program, fileName, lineNumber);
-        script.strictMode = ctx->strictMode;
-        script.inheritContext = true;
-        script.parse();
+
+    QV4::Script script(ctx, program, fileName, lineNumber);
+    script.strictMode = ctx->strictMode;
+    script.inheritContext = true;
+    script.parse();
+    if (!scope.engine->hasException)
         result = script.run();
-    } catch (...) {
+    if (scope.engine->hasException)
         result = ctx->catchException();
-    }
     return new QJSValuePrivate(d->m_v4Engine, result);
 }
 

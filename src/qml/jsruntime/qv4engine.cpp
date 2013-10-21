@@ -838,7 +838,7 @@ ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext,
     return res;
 }
 
-QQmlError ExecutionEngine::convertJavaScriptException(ExecutionContext *context)
+QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
 {
     QV4::StackTrace trace;
     QV4::Scope scope(context);

@@ -2786,11 +2786,10 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
     QV4::ExecutionContext *ctx = QV8Engine::getV4(v8engine)->current;
-    try {
-        m_program->qml = qmlglobal;
-        m_program->run();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    m_program->qml = qmlglobal;
+    m_program->run();
+    if (scope.engine->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.isValid())
             ep->warning(error);
     }

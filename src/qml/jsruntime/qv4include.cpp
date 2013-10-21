@@ -157,14 +157,15 @@ void QV4Include::finished()
 
         QV4::ExecutionContext *ctx = v4->current;
         QV4::ScopedString status(scope, v4->newString("status"));
-        try {
-            script.parse();
+        script.parse();
+        if (!scope.engine->hasException)
             script.run();
-            resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Ok)));
-        } catch (...) {
+        if (scope.engine->hasException) {
             QV4::ScopedValue ex(scope, ctx->catchException());
             resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Exception)));
             resultObj->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
+        } else {
+            resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Ok)));
         }
     } else {
         resultObj->put(QV4::ScopedString(scope, v4->newString("status")), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
@@ -222,14 +223,15 @@ QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
             QV4::Script script(v4, qmlcontextobject, code, url.toString());
 
             QV4::ExecutionContext *ctx = v4->current;
-            try {
-                script.parse();
+            script.parse();
+            if (!v4->hasException)
                 script.run();
-                result = resultValue(v4, Ok);
-            } catch (...) {
+            if (v4->hasException) {
                 QV4::ScopedValue ex(scope, ctx->catchException());
                 result = resultValue(v4, Exception);
                 result->asObject()->put(QV4::ScopedString(scope, v4->newString("exception")), ex);
+            } else {
+                result = resultValue(v4, Ok);
             }
         } else {
             result = resultValue(v4, NetworkError);

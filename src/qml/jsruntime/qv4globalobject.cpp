@@ -400,6 +400,8 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     script.strictMode = (directCall && parentContext->strictMode);
     script.inheritContext = inheritContext;
     script.parse();
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Function *function = script.function();
     if (!function)

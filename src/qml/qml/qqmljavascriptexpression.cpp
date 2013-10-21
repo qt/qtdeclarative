@@ -86,7 +86,7 @@ void QQmlDelayedError::setErrorObject(QObject *object)
 
 void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionContext *context)
 {
-    m_error = QV4::ExecutionEngine::convertJavaScriptException(context);
+    m_error = QV4::ExecutionEngine::catchExceptionAsQmlError(context);
 }
 
 
@@ -302,11 +302,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
-    try {
-        script.parse();
+    script.parse();
+    if (!v4->hasException)
         result = script.run();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    if (v4->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)
@@ -336,11 +336,11 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
     QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
-    try {
-        script.parse();
+    script.parse();
+    if (!v4->hasException)
         result = script.qmlBinding();
-    } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+    if (v4->hasException) {
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         if (error.description().isEmpty())
             error.setDescription(QLatin1String("Exception occurred during function evaluation"));
         if (error.line() == -1)

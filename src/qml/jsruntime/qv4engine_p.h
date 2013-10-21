@@ -330,7 +330,7 @@ struct Q_QML_EXPORT ExecutionEngine
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
     // Use only inside catch(...) -- will re-throw if no JS exception
-    static QQmlError convertJavaScriptException(QV4::ExecutionContext *context);
+    static QQmlError catchExceptionAsQmlError(QV4::ExecutionContext *context);
 
     void Q_NORETURN throwInternal();
     // ----

@@ -2257,15 +2257,16 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
     QV4::Scope scope(ctx);
 
-    try {
-        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
-        if (!function)
-            return false;
-        QV4::ScopedCallData d(scope, 1);
-        d->args[0] = o;
-        d->thisObject = engine->global();
-        function->call(d);
-    } catch (...) {
+    QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
+    if (scope.engine->hasException) {
+        ctx->catchException();
+        return true;
+    }
+    QV4::ScopedCallData d(scope, 1);
+    d->args[0] = o;
+    d->thisObject = engine->global();
+    function->call(d);
+    if (scope.engine->hasException) {
         ctx->catchException();
         return true;
     }
@@ -2284,21 +2285,24 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
     QV4::ExecutionContext *ctx = QV8Engine::getV4(engine)->current;
     QV4::Scope scope(ctx);
 
-    try {
-        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
-        if (!function)
-            return false;
-
-        QV4::ScopedValue value(scope);
-        QV4::ScopedCallData d(scope, 1);
-        d->args[0] = o;
-        d->thisObject = engine->global();
-        value = function->call(d);
-        return __qmljs_strict_equal(value, result);
-    } catch (...) {
+    QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
+    if (scope.engine->hasException) {
         ctx->catchException();
+        return false;
     }
-    return false;
+    if (!function)
+        return false;
+
+    QV4::ScopedValue value(scope);
+    QV4::ScopedCallData d(scope, 1);
+    d->args[0] = o;
+    d->thisObject = engine->global();
+    value = function->call(d);
+    if (scope.engine->hasException) {
+        ctx->catchException();
+        return false;
+    }
+    return __qmljs_strict_equal(value, result);
 }
 
 static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,
@@ -2312,18 +2316,23 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
 
     QV4::Script program(QV8Engine::getV4(engine)->rootContext, functionSource);
     program.inheritContext = true;
-    try {
-        QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
-        if (!function)
-            return QV4::Encode::undefined();
-        QV4::ScopedCallData d(scope, 1);
-        d->args[0] = o;
-        d->thisObject = engine->global();
-        return function->call(d);
-    } catch (...) {
+
+    QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
+    if (scope.engine->hasException) {
         ctx->catchException();
+        return QV4::Encode::undefined();
     }
-    return QV4::Encode::undefined();
+    if (!function)
+        return QV4::Encode::undefined();
+    QV4::ScopedCallData d(scope, 1);
+    d->args[0] = o;
+    d->thisObject = engine->global();
+    QV4::ScopedValue result(scope, function->call(d));
+    if (scope.engine->hasException) {
+        ctx->catchException();
+        return QV4::Encode::undefined();
+    }
+    return result.asReturnedValue();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)

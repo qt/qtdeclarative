@@ -185,6 +185,7 @@ void Script::parse()
     foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages()) {
         if (m.isError()) {
             scope->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
+            return;
         } else {
             qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
                       << ": warning: " << m.message;
@@ -208,6 +209,9 @@ void Script::parse()
         RuntimeCodegen cg(scope, strictMode);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module,
                                parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
+        if (v4->hasException)
+            return;
+
         QV4::Compiler::JSUnitGenerator jsGenerator(&module);
         QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
@@ -378,11 +382,13 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
     QV4::Script qmlScript(engine, scopeObject, script, QString());
 
     QV4::ExecutionContext *ctx = engine->current;
-    try {
-        qmlScript.parse();
-        return qmlScript.run();
-    } catch (...) {
+    qmlScript.parse();
+    QV4::ScopedValue result(scope);
+    if (!scope.engine->hasException)
+        result = qmlScript.run();
+    if (scope.engine->hasException) {
         ctx->catchException();
+        return Encode::undefined();
     }
-    return Encode::undefined();
+    return result.asReturnedValue();
 }

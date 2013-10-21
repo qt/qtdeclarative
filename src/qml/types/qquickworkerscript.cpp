@@ -230,8 +230,10 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 
     QV4::Scope scope(m_v4Engine);
     onmessage = QV4::Script(m_v4Engine->rootContext, CALL_ONMESSAGE_SCRIPT).run();
+    Q_ASSERT(!scope.engine->hasException);
     QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
     QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
+    Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
     QV4::ScopedValue function(scope, m_v4Engine->newBuiltinFunction(m_v4Engine->rootContext, name,
                                                                     QQuickWorkerScriptEnginePrivate::method_sendMessage));
@@ -367,7 +369,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
         callData->args[1] = value;
         f->call(callData);
     } catch (...) {
-        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         reportScriptException(script, error);
     }
 }
@@ -400,11 +402,11 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         QV4::Script program(v4, activation, sourceCode, url.toString());
 
         QV4::ExecutionContext *ctx = v4->current;
-        try {
-            program.parse();
+        program.parse();
+        if (!v4->hasException)
             program.run();
-        } catch (...) {
-            QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
+        if (v4->hasException) {
+            QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
             reportScriptException(script, error);
         }
     } else {
