@@ -306,6 +306,7 @@ private slots:
     void jsOwnedObjectsDeletedOnEngineDestroy();
     void numberParsing();
     void stringParsing();
+    void qtbug_32801();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7286,6 +7287,18 @@ void tst_qqmlecmascript::stringParsing()
         QObject *object = component.create();
         QVERIFY(object == 0);
     }
+}
+
+void tst_qqmlecmascript::qtbug_32801()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_32801.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+
+    // do not crash when a QML signal is connected to a non-void slot
+    connect(obj.data(), SIGNAL(testSignal(QString)), obj.data(), SLOT(slotWithReturnValue(QString)));
+    QVERIFY(QMetaObject::invokeMethod(obj.data(), "emitTestSignal"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

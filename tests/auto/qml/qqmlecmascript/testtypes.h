@@ -268,6 +268,7 @@ public slots:
     void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
     void v8function(QQmlV4Function*);
     void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
+    QString slotWithReturnValue(const QString &arg) { return arg; }
 
 private:
     friend class tst_qqmlecmascript;

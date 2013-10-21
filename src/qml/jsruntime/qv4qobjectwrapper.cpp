@@ -1436,14 +1436,15 @@ void *CallArgument::dataPtr()
 {
     if (type == -1)
         return qvariantPtr->data();
-    else
+    else if (type != 0)
         return (void *)&allocData;
+    return 0;
 }
 
 void CallArgument::initAsType(int callType)
 {
     if (type != 0) { cleanup(); type = 0; }
-    if (callType == QMetaType::UnknownType) return;
+    if (callType == QMetaType::UnknownType || callType == QMetaType::Void) return;
 
     if (callType == qMetaTypeId<QJSValue>()) {
         qjsValuePtr = new (&allocData) QJSValue();
@@ -1478,9 +1479,6 @@ void CallArgument::initAsType(int callType)
     } else if (callType == QMetaType::QJsonValue) {
         type = callType;
         jsonValuePtr = new (&allocData) QJsonValue();
-    } else if (callType == QMetaType::Void) {
-        type = -1;
-        qvariantPtr = new (&allocData) QVariant();
     } else {
         type = -1;
         qvariantPtr = new (&allocData) QVariant(callType, (void *)0);
