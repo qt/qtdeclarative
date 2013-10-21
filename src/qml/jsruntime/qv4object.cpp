@@ -168,7 +168,6 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
   reject:
     if (engine()->current->strictMode)
         engine()->current->throwTypeError();
-
 }
 
 void Object::defineDefaultProperty(const StringRef name, ValueRef value)
@@ -715,8 +714,10 @@ void Object::internalPut(const StringRef name, const ValueRef value)
         else if (isArrayObject() && name->equals(engine()->id_length)) {
             bool ok;
             uint l = value->asArrayLength(&ok);
-            if (!ok)
+            if (!ok) {
                 engine()->current->throwRangeError(value);
+                return;
+            }
             ok = setArrayLength(l);
             if (!ok)
                 goto reject;
@@ -914,6 +915,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, const StringRef name, 
             if (!ok) {
                 ScopedValue v(scope, p.value);
                 ctx->throwRangeError(v);
+                return false;
             }
             succeeded = setArrayLength(l);
         }
@@ -1230,8 +1232,10 @@ void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const Va
         }
     }
 
-    if (!(comparefn->isUndefined() || comparefn->asObject()))
+    if (!(comparefn->isUndefined() || comparefn->asObject())) {
         context->throwTypeError();
+        return;
+    }
 
     ArrayElementLessThan lessThan(context, thisObject, comparefn);
 

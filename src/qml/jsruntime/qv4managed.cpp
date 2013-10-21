@@ -174,23 +174,22 @@ QString Managed::className() const
 
 bool Managed::hasInstance(Managed *m, const ValueRef)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::construct(Managed *m, CallData *)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::call(Managed *m, CallData *)
 {
-    m->engine()->current->throwTypeError();
+    return m->engine()->current->throwTypeError();
 }
 
 ReturnedValue Managed::getLookup(Managed *m, Lookup *)
 {
-    m->engine()->current->throwTypeError();
-    return 0;
+    return m->engine()->current->throwTypeError();
 }
 
 void Managed::setLookup(Managed *m, Lookup *, const ValueRef)

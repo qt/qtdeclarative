@@ -436,7 +436,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     if (!result->isWritable() && !result->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
                         name->toQString() + QLatin1Char('\"');
-        ctx->throwTypeError(error);
+        return ctx->throwTypeError(error);
     }
 
     QQmlBinding *newBinding = 0;
@@ -451,6 +451,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
                 else
                     error += QLatin1String(QMetaType::typeName(result->propType));
                 ctx->throwError(error);
+                return false;
             }
         } else {
             // binding assignment.
@@ -504,6 +505,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
         else
             error += QLatin1String(QMetaType::typeName(result->propType));
         ctx->throwError(error);
+        return false;
     } else if (value->asFunctionObject()) {
         // this is handled by the binding creation above
     } else if (result->propType == QMetaType::Int && value->isNumber()) {
@@ -542,6 +544,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
                             QLatin1String(" to ") +
                             QLatin1String(targetTypeName);
             ctx->throwError(error);
+            return false;
         }
     }
 
@@ -1281,7 +1284,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
         QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
-        QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->current->throwError(error);
     }
 
     if (data.hasArguments()) {
@@ -1295,12 +1298,12 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
             QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
-            QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         if (args[0] > callArgs->argc) {
             QString error = QLatin1String("Insufficient arguments");
-            QV8Engine::getV4(engine)->current->throwError(error);
+            return QV8Engine::getV4(engine)->current->throwError(error);
         }
 
         return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
@@ -1399,7 +1402,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
-        QV8Engine::getV4(engine)->current->throwError(error);
+        return QV8Engine::getV4(engine)->current->throwError(error);
     }
 }
 
@@ -1697,7 +1700,7 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
     if (!m_object)
         return Encode::undefined();
     if (QQmlData::keepAliveDuringGarbageCollection(m_object))
-        ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+        return ctx->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
     if (argc > 0)

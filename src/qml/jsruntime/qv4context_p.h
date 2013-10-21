@@ -127,17 +127,17 @@ struct Q_QML_EXPORT ExecutionContext
 
     void createMutableBinding(const StringRef name, bool deletable);
 
-    void throwError(const QV4::ValueRef value);
-    void throwError(const QString &message);
-    void throwSyntaxError(const QString &message);
-    void throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
-    void throwTypeError();
-    void throwTypeError(const QString &message);
-    void throwReferenceError(const ValueRef value);
-    void throwReferenceError(const QString &value, const QString &fileName, int line, int column);
-    void throwRangeError(const ValueRef value);
-    void throwURIError(const ValueRef msg);
-    void throwUnimplemented(const QString &message);
+    ReturnedValue throwError(const QV4::ValueRef value);
+    ReturnedValue throwError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message);
+    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
+    ReturnedValue throwTypeError();
+    ReturnedValue throwTypeError(const QString &message);
+    ReturnedValue throwReferenceError(const ValueRef value);
+    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int line, int column);
+    ReturnedValue throwRangeError(const ValueRef value);
+    ReturnedValue throwURIError(const ValueRef msg);
+    ReturnedValue throwUnimplemented(const QString &message);
 
     void setProperty(const StringRef name, const ValueRef value);
     ReturnedValue getProperty(const StringRef name);

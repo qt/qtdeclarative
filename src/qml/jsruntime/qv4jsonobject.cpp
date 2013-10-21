@@ -779,8 +779,10 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
 
 QString Stringify::JO(ObjectRef o)
 {
-    if (stack.contains(o.getPointer()))
+    if (stack.contains(o.getPointer())) {
         ctx->throwTypeError();
+        return QString();
+    }
 
     Scope scope(ctx);
 
@@ -834,8 +836,10 @@ QString Stringify::JO(ObjectRef o)
 
 QString Stringify::JA(ArrayObjectRef a)
 {
-    if (stack.contains(a.getPointer()))
+    if (stack.contains(a.getPointer())) {
         ctx->throwTypeError();
+        return QString();
+    }
 
     Scope scope(a->engine());
 
@@ -901,7 +905,7 @@ ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
     ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        ctx->throwSyntaxError("JSON.parse: Parse error");
+        return ctx->throwSyntaxError("JSON.parse: Parse error");
     }
 
     return result.asReturnedValue();

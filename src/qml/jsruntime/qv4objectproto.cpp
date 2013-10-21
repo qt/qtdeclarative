@@ -143,7 +143,7 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<Object> p(scope, o->prototype());
     return !!p ? p->asReturnedValue() : Encode::null();
@@ -154,7 +154,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
     if (!O)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue v(scope, ctx->argument(1));
     Scoped<String> name(scope, v->toString(ctx));
@@ -168,7 +168,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *con
     Scope scope(context);
     ScopedObject O(scope, context->argument(0));
     if (!O)
-        context->throwTypeError();
+        return context->throwTypeError();
 
     ScopedArrayObject array(scope, getOwnPropertyNames(context->engine, context->callData->args[0]));
     return array.asReturnedValue();
@@ -179,7 +179,7 @@ ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
     Scope scope(ctx);
     ScopedValue O(scope, ctx->argument(0));
     if (!O->isObject() && !O->isNull())
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<Object> newObject(scope, ctx->engine->newObject());
     newObject->setPrototype(O->asObject());
@@ -197,17 +197,21 @@ ReturnedValue ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
     if (!O)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<String> name(scope, ctx->argument(1), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     ScopedValue attributes(scope, ctx->argument(2));
     Property pd;
     PropertyAttributes attrs;
     toPropertyDescriptor(ctx, attributes, &pd, &attrs);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     if (!O->__defineOwnProperty__(ctx, name, pd, attrs))
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return O.asReturnedValue();
 }
@@ -217,9 +221,11 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
     if (!O)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<Object> o(scope, ctx->argument(1), Scoped<Object>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
     ScopedValue val(scope);
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
@@ -234,13 +240,15 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
         PropertyAttributes nattrs;
         val = o->getValue(pd, attrs);
         toPropertyDescriptor(ctx, val, &n, &nattrs);
+        if (scope.engine->hasException)
+            return Encode::undefined();
         bool ok;
         if (name)
             ok = O->__defineOwnProperty__(ctx, name, n, nattrs);
         else
             ok = O->__defineOwnProperty__(ctx, index, n, nattrs);
         if (!ok)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
     }
 
     return O.asReturnedValue();
@@ -251,7 +259,7 @@ ReturnedValue ObjectPrototype::method_seal(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     o->extensible = false;
 
@@ -271,7 +279,7 @@ ReturnedValue ObjectPrototype::method_freeze(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     o->extensible = false;
 
@@ -292,7 +300,7 @@ ReturnedValue ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     o->extensible = false;
     return o.asReturnedValue();
@@ -303,7 +311,7 @@ ReturnedValue ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (o->extensible)
         return Encode(false);
@@ -331,7 +339,7 @@ ReturnedValue ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (o->extensible)
         return Encode(false);
@@ -359,7 +367,7 @@ ReturnedValue ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return Encode((bool)o->extensible);
 }
@@ -369,7 +377,7 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<ArrayObject> a(scope, ctx->engine->newArrayObject());
 
@@ -403,9 +411,11 @@ ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject.toObject(ctx));
+    if (!o)
+        return Encode::undefined();
     Scoped<FunctionObject> f(scope, o->get(ctx->engine->id_toString));
     if (!f)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     ScopedCallData callData(scope, 0);
     callData->thisObject = o;
     return f->call(callData);
@@ -415,6 +425,8 @@ ReturnedValue ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->callData->thisObject.toObject(ctx));
+    if (ctx->engine->hasException)
+        return Encode::undefined();
     return v.asReturnedValue();
 }
 
@@ -422,7 +434,11 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<String> P(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
     Scoped<Object> O(scope, ctx->callData->thisObject, Scoped<Object>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
     bool r = O->__getOwnProperty__(P) != 0;
     if (!r)
         r = !O->query(P).isEmpty();
@@ -437,6 +453,8 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
         return Encode(false);
 
     Scoped<Object> O(scope, ctx->callData->thisObject, Scoped<Object>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
     Scoped<Object> proto(scope, V->prototype());
     while (proto) {
         if (O.getPointer() == proto.getPointer())
@@ -450,8 +468,12 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ct
 {
     Scope scope(ctx);
     Scoped<String> p(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<Object> o(scope, ctx->callData->thisObject, Scoped<Object>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
     PropertyAttributes attrs;
     o->__getOwnProperty__(p, &attrs);
     return Encode(attrs.isEnumerable());
@@ -460,14 +482,16 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ct
 ReturnedValue ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 2)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scope scope(ctx);
     Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<FunctionObject> f(scope, ctx->argument(1));
     if (!f)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<Object> o(scope, ctx->callData->thisObject);
     if (!o) {
@@ -484,14 +508,16 @@ ReturnedValue ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
 ReturnedValue ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
 {
     if (ctx->callData->argc < 2)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scope scope(ctx);
     Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     Scoped<FunctionObject> f(scope, ctx->argument(1));
     if (!f)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     Scoped<Object> o(scope, ctx->callData->thisObject);
     if (!o) {
@@ -510,7 +536,7 @@ ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject.asObject());
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return o->prototype()->asReturnedValue();
 }
@@ -520,7 +546,7 @@ ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->callData->thisObject);
     if (!o || !ctx->callData->argc)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (ctx->callData->args[0].isNull()) {
         o->setPrototype(0);
@@ -537,7 +563,7 @@ ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
         }
     }
     if (!ok)
-        ctx->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
+        return ctx->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
     return Encode::undefined();
 }
 
@@ -545,8 +571,10 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
 {
     Scope scope(ctx);
     ScopedObject o(scope, v);
-    if (!o)
+    if (!o) {
         ctx->throwTypeError();
+        return;
+    }
 
     attrs->clear();
     desc->setGetter(0);
@@ -568,6 +596,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
             desc->setGetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
+            return;
         }
         attrs->setType(PropertyAttributes::Accessor);
     }
@@ -581,21 +610,26 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
             desc->setSetter((FunctionObject *)0x1);
         } else {
             ctx->throwTypeError();
+            return;
         }
         attrs->setType(PropertyAttributes::Accessor);
     }
 
     if (o->__hasProperty__(ctx->engine->id_writable)) {
-        if (attrs->isAccessor())
+        if (attrs->isAccessor()) {
             ctx->throwTypeError();
+            return;
+        }
         attrs->setWritable((tmp = o->get(ctx->engine->id_writable))->toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Primitive::undefinedValue();
     }
 
     if (o->__hasProperty__(ctx->engine->id_value)) {
-        if (attrs->isAccessor())
+        if (attrs->isAccessor()) {
             ctx->throwTypeError();
+            return;
+        }
         desc->value = o->get(ctx->engine->id_value);
         attrs->setType(PropertyAttributes::Data);
     }

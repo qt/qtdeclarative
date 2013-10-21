@@ -1318,7 +1318,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalCompositeOperation(QV4::S
     CHECK_CONTEXT_SETTER(r)
 
     if (!ctx->callData->argc)
-            ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QString mode = ctx->callData->args[0].toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
@@ -1882,7 +1882,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineJoin(QV4::SimpleCallContext
     CHECK_CONTEXT_SETTER(r)
 
     if (!ctx->callData->argc)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QString lineJoin = ctx->callData->args[0].toQString();
     Qt::PenJoinStyle join;
@@ -2667,6 +2667,8 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_font(QV4::SimpleCallContext *ct
     CHECK_CONTEXT_SETTER(r)
 
     QV4::Scoped<QV4::String> s(scope, ctx->argument(0), QV4::Scoped<QV4::String>::Convert);
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
     QFont font = qt_font_from_string(s->toQString(), r->context->state.font);
     if (font != r->context->state.font) {
         r->context->state.font = font;
@@ -2717,6 +2719,8 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(QV4::SimpleCallContex
     CHECK_CONTEXT_SETTER(r)
 
     QV4::Scoped<QV4::String> s(scope, ctx->argument(0), QV4::Scoped<QV4::String>::Convert);
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
     QString textAlign = s->toQString();
 
     QQuickContext2D::TextAlignType ta;
@@ -2782,6 +2786,8 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(QV4::SimpleCallCon
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
     QV4::Scoped<QV4::String> s(scope, ctx->argument(0), QV4::Scoped<QV4::String>::Convert);
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
     QString textBaseline = s->toQString();
 
     QQuickContext2D::TextBaseLineType tb;
@@ -3088,7 +3094,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_width(QV4::SimpleCallC
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->callData->thisObject);
     if (!imageData)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
@@ -3104,7 +3110,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_height(QV4::SimpleCall
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->callData->thisObject);
     if (!imageData)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->pixelData.as<QQuickJSContext2DPixelData>());
     if (!r)
         return QV4::Encode(0);
@@ -3120,7 +3126,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_data(QV4::SimpleCallCo
     QV4::Scope scope(ctx);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, ctx->callData->thisObject);
     if (!imageData)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     return imageData->pixelData.asReturnedValue();
 }
 
@@ -3158,7 +3164,7 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint 
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!m)
-        m->engine()->current->throwTypeError();
+        return m->engine()->current->throwTypeError();
 
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
         if (hasProperty)
@@ -3189,8 +3195,10 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
-    if (!r)
-        m->engine()->current->throwTypeError();
+    if (!r) {
+        v4->current->throwTypeError();
+        return;
+    }
 
     const int v = value->toInt32();
     if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v >= 0 && v <= 255) {

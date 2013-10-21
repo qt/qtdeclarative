@@ -139,7 +139,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     }
 
     if (ctx->strictMode && !result)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     return result;
 }
 
@@ -152,7 +152,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     Q_ASSERT(g->index < o->context->callData->argc);
     return o->context->argument(g->index);
@@ -167,7 +167,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     Q_ASSERT(s->index < o->context->callData->argc);
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();

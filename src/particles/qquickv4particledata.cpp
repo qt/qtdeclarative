@@ -304,7 +304,7 @@ static QV4::ReturnedValue particleData_discard(QV4::SimpleCallContext *ctx)
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
 
     if (!r || !r->datum)
-        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
+        return ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     r->datum->lifeSpan = 0; //Don't kill(), because it could still be in the middle of being created
     return QV4::Encode::undefined();
@@ -316,7 +316,7 @@ static QV4::ReturnedValue particleData_lifeLeft(QV4::SimpleCallContext *ctx)
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
 
     if (!r || !r->datum)
-        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
+        return ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     return QV4::Encode(r->datum->lifeLeft());
 }
@@ -327,7 +327,7 @@ static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
 
     if (!r || !r->datum)
-        ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
+        return ctx->throwError(QStringLiteral("Not a valid ParticleData object"));
 
     return QV4::Encode(r->datum->curSize());
 }

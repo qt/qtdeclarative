@@ -121,7 +121,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
     Scoped<QmlTypeWrapper> w(scope,  m->as<QmlTypeWrapper>());
     if (!w)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
 
     if (hasProperty)
@@ -229,8 +229,10 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
-    if (!w)
+    if (!w) {
         v4->current->throwTypeError();
+        return;
+    }
 
     QV4::Scope scope(v4);
     QV8Engine *v8engine = v4->v8Engine;
@@ -255,6 +257,7 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
                 v4->current->throwError(error);
+                return;
             } else {
                 apiprivate->put(name, value);
             }

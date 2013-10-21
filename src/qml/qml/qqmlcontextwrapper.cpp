@@ -135,7 +135,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
     QV4::Scope scope(v4);
     QmlContextWrapper *resource = m->as<QmlContextWrapper>();
     if (!resource)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
@@ -282,8 +282,10 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
     ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
-    if (!wrapper)
+    if (!wrapper) {
         v4->current->throwTypeError();
+        return;
+    }
 
     if (wrapper->isNullWrapper) {
         if (wrapper && wrapper->readOnly) {
@@ -291,6 +293,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
                             QLatin1Char('"');
             Scoped<String> e(scope, v4->current->engine->newString(error));
             v4->current->throwError(e);
+            return;
         }
 
         Object::put(m, name, value);
@@ -341,6 +344,7 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
         QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                         QLatin1Char('"');
         v4->current->throwError(error);
+        return;
     }
 
     Object::put(m, name, value);

@@ -166,8 +166,10 @@ bool FunctionObject::hasInstance(Managed *that, const ValueRef value)
         return false;
 
     Scoped<Object> o(scope, f->get(scope.engine->id_prototype));
-    if (!o)
+    if (!o) {
         scope.engine->current->throwTypeError();
+        return false;
+    }
 
     while (v) {
         v = v->prototype();
@@ -259,13 +261,13 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        f->engine()->current->throwSyntaxError(0);
+        return f->engine()->current->throwSyntaxError(0);
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
     ExecutionEngine *v4 = f->engine();
     if (!fe)
-        v4->current->throwSyntaxError(0);
+        return v4->current->throwSyntaxError(0);
 
     QQmlJS::V4IR::Module module(v4->debugger != 0);
 
@@ -312,7 +314,7 @@ ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
 {
     FunctionObject *fun = ctx->callData->thisObject.asFunctionObject();
     if (!fun)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return ctx->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
@@ -322,7 +324,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     Scope scope(ctx);
     FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(1));
 
@@ -331,10 +333,8 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     quint32 len;
     if (!arr) {
         len = 0;
-        if (!arg->isNullOrUndefined()) {
-            ctx->throwTypeError();
-            return Encode::undefined();
-        }
+        if (!arg->isNullOrUndefined())
+            return ctx->throwTypeError();
     } else {
         len = ArrayPrototype::getLength(ctx, arr);
     }
@@ -364,7 +364,7 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
 
     FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedCallData callData(scope, ctx->callData->argc ? ctx->callData->argc - 1 : 0);
     if (ctx->callData->argc) {
@@ -380,7 +380,7 @@ ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<FunctionObject> target(scope, ctx->callData->thisObject);
     if (!target)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     QVector<SafeValue> boundArgs;
@@ -568,8 +568,7 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
-    f->engine()->current->throwTypeError();
-    return Encode::undefined();
+    return f->engine()->current->throwTypeError();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)

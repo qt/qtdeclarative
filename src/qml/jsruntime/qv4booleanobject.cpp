@@ -86,7 +86,7 @@ ReturnedValue BooleanPrototype::method_toString(SimpleCallContext *ctx)
         Scope scope(ctx);
         Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
         if (!thisObject)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
         result = thisObject->value.booleanValue();
     }
 
@@ -101,7 +101,7 @@ ReturnedValue BooleanPrototype::method_valueOf(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<BooleanObject> thisObject(scope, ctx->callData->thisObject);
     if (!thisObject)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return thisObject->value.asReturnedValue();
 }

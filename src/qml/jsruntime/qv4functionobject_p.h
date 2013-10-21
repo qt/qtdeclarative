@@ -197,8 +197,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
     static ReturnedValue construct(Managed *m, CallData *)
     {
-        m->engine()->current->throwTypeError();
-        return Encode::undefined();
+        return m->engine()->current->throwTypeError();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);

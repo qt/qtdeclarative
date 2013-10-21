@@ -326,7 +326,7 @@ struct Q_QML_EXPORT ExecutionEngine
     quint32 hasException;
     StackTrace exceptionStackTrace;
 
-    void throwException(const ValueRef value);
+    ReturnedValue throwException(const ValueRef value);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
     // Use only inside catch(...) -- will re-throw if no JS exception

@@ -81,8 +81,7 @@ static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
 static ReturnedValue throwTypeError(SimpleCallContext *ctx)
 {
-    ctx->throwTypeError();
-    return Encode::undefined();
+    return ctx->throwTypeError();
 }
 
 ExecutionEngine::ExecutionEngine(QQmlJS::EvalISelFactory *factory)
@@ -807,7 +806,7 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
     return m_qmlExtensions;
 }
 
-void ExecutionEngine::throwException(const ValueRef value)
+ReturnedValue ExecutionEngine::throwException(const ValueRef value)
 {
 //    Q_ASSERT(!hasException);
     hasException = true;
@@ -822,6 +821,7 @@ void ExecutionEngine::throwException(const ValueRef value)
     if (debugger)
         debugger->aboutToThrow(value);
 
+    return Encode::undefined();
 }
 
 ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)

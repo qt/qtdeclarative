@@ -124,8 +124,10 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
     Scoped<StringObject> o(scope, m->asStringObject());
-    if (!o)
+    if (!o) {
         v4->current->throwTypeError();
+        return false;
+    }
 
     if (index < o->value.stringValue()->toQString().length()) {
         if (v4->current->strictMode)
@@ -237,8 +239,10 @@ static QString getThisString(ExecutionContext *ctx)
         return t->stringValue()->toQString();
     if (StringObject *thisString = t->asStringObject())
         return thisString->value.stringValue()->toQString();
-    if (t->isUndefined() || t->isNull())
+    if (t->isUndefined() || t->isNull()) {
         ctx->throwTypeError();
+        return QString();
+    }
     return t->toQString();
 }
 
@@ -249,13 +253,15 @@ ReturnedValue StringPrototype::method_toString(SimpleCallContext *context)
 
     StringObject *o = context->callData->thisObject.asStringObject();
     if (!o)
-        context->throwTypeError();
+        return context->throwTypeError();
     return o->value.asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
 {
     const QString str = getThisString(context);
+    if (context->engine->hasException)
+        return Encode::undefined();
 
     int pos = 0;
     if (context->callData->argc > 0)
@@ -271,6 +277,8 @@ ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_charCodeAt(SimpleCallContext *context)
 {
     const QString str = getThisString(context);
+    if (context->engine->hasException)
+        return Encode::undefined();
 
     int pos = 0;
     if (context->callData->argc > 0)
@@ -288,6 +296,8 @@ ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
     Scope scope(context);
 
     QString value = getThisString(context);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     ScopedValue v(scope);
     for (int i = 0; i < context->callData->argc; ++i) {
@@ -302,6 +312,8 @@ ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_indexOf(SimpleCallContext *context)
 {
     QString value = getThisString(context);
+    if (context->engine->hasException)
+        return Encode::undefined();
 
     QString searchString;
     if (context->callData->argc)
@@ -323,6 +335,8 @@ ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
     Scope scope(context);
 
     const QString value = getThisString(context);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     QString searchString;
     if (context->callData->argc)
@@ -348,6 +362,9 @@ ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
 {
     Scope scope(context);
     const QString value = getThisString(context);
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
     ScopedValue v(scope, context->callData->argument(0));
     const QString that = v->toQString();
     return Encode(QString::localeAwareCompare(value, that));
@@ -356,7 +373,7 @@ ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
 {
     if (context->callData->thisObject.isUndefined() || context->callData->thisObject.isNull())
-        context->throwTypeError();
+        return context->throwTypeError();
 
     Scope scope(context);
     ScopedString s(scope, context->callData->thisObject.toString(context));
@@ -371,7 +388,7 @@ ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
 
     if (!rx)
         // ### CHECK
-        context->throwTypeError();
+        return context->throwTypeError();
 
     bool global = rx->global;
 
@@ -580,6 +597,8 @@ ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     QString string = getThisString(ctx);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     ScopedValue regExpValue(scope, ctx->argument(0));
     Scoped<RegExpObject> regExp(scope, regExpValue->as<RegExpObject>());
@@ -600,6 +619,9 @@ ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
 ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
 {
     const QString text = getThisString(ctx);
+    if (ctx->engine->hasException)
+        return Encode::undefined();
+
     const double length = text.length();
 
     double start = ctx->callData->argc ? ctx->callData->args[0].toInteger() : 0;
@@ -627,6 +649,8 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     QString text = getThisString(ctx);
+    if (scope.engine->hasException)
+        return Encode::undefined();
 
     ScopedValue separatorValue(scope, ctx->argument(0));
     ScopedValue limitValue(scope, ctx->argument(1));
@@ -705,6 +729,8 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
 ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
 {
     const QString value = getThisString(context);
+    if (context->engine->hasException)
+        return Encode::undefined();
 
     double start = 0;
     if (context->callData->argc > 0)
@@ -728,6 +754,8 @@ ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
 {
     QString value = getThisString(context);
+    if (context->engine->hasException)
+        return Encode::undefined();
     int length = value.length();
 
     double start = 0;
@@ -767,6 +795,8 @@ ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
+    if (ctx->engine->hasException)
+        return Encode::undefined();
     return ctx->engine->newString(value.toLower())->asReturnedValue();
 }
 
@@ -778,6 +808,8 @@ ReturnedValue StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
 ReturnedValue StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
 {
     QString value = getThisString(ctx);
+    if (ctx->engine->hasException)
+        return Encode::undefined();
     return ctx->engine->newString(value.toUpper())->asReturnedValue();
 }
 
@@ -800,6 +832,8 @@ ReturnedValue StringPrototype::method_fromCharCode(SimpleCallContext *context)
 ReturnedValue StringPrototype::method_trim(SimpleCallContext *ctx)
 {
     QString s = getThisString(ctx);
+    if (ctx->engine->hasException)
+        return Encode::undefined();
 
     const QChar *chars = s.constData();
     int start, end;

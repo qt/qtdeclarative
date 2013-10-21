@@ -76,8 +76,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
     {
-        m->engine()->current->throwTypeError();
-        return QV4::Primitive::undefinedValue().asReturnedValue();
+        return m->engine()->current->throwTypeError();
     }
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
@@ -87,7 +86,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
         QV4::Scoped<DelegateModelGroupFunction> f(scope, that, QV4::Scoped<DelegateModelGroupFunction>::Cast);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
         if (!o)
-            v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return v4->current->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
         QV4::ScopedValue v(scope, callData->argument(0));
         return f->code(o->item, f->flag, v);
@@ -1711,7 +1710,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
     if (!o->item->metaType->model)
         return QV4::Encode::undefined();
 
@@ -1723,7 +1722,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
     QStringList groups;
     for (int i = 1; i < o->item->metaType->groupCount; ++i) {
@@ -1739,9 +1738,9 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
-        ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return ctx->throwTypeError(QStringLiteral("Not a valid VisualData object"));
     if (!ctx->callData->argc)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (!o->item->metaType->model)
         return QV4::Encode::undefined();
@@ -3153,21 +3152,21 @@ struct QQmlDelegateModelGroupChange : QV4::Object
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
         return QV4::Encode(that->change.index);
     }
     static QV4::ReturnedValue method_get_count(QV4::SimpleCallContext *ctx) {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
         return QV4::Encode(that->change.count);
     }
     static QV4::ReturnedValue method_get_moveId(QV4::SimpleCallContext *ctx) {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
         if (that->change.moveId < 0)
             return QV4::Encode::undefined();
         return QV4::Encode(that->change.moveId);
@@ -3199,7 +3198,7 @@ public:
         QV4::Scope scope(v4);
         QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, m->as<QQmlDelegateModelGroupChangeArray>());
         if (!array)
-            v4->current->throwTypeError();
+            return v4->current->throwTypeError();
 
         if (index >= array->count()) {
             if (hasProperty)
@@ -3223,7 +3222,7 @@ public:
     {
         QQmlDelegateModelGroupChangeArray *array = m->as<QQmlDelegateModelGroupChangeArray>();
         if (!array)
-            m->engine()->current->throwTypeError();
+            return m->engine()->current->throwTypeError();
 
         if (name->equals(m->engine()->id_length)) {
             if (hasProperty)

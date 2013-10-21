@@ -249,7 +249,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     Scoped<RegExpObject> re(scope, r);
     if (re) {
         if (!f->isUndefined())
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         Scoped<RegExp> newRe(scope, re->value);
         return Encode(ctx->engine->newRegExpObject(newRe, re->global));
@@ -273,14 +273,14 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
             } else if (str.at(i) == QChar('m') && !multiLine) {
                 multiLine = true;
             } else {
-                ctx->throwSyntaxError(0);
+                return ctx->throwSyntaxError(0);
             }
         }
     }
 
     Scoped<RegExp> regexp(scope, RegExp::create(ctx->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
-        ctx->throwSyntaxError(0);
+        return ctx->throwSyntaxError(0);
 
     return Encode(ctx->engine->newRegExpObject(regexp, global));
 }
@@ -314,7 +314,7 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
     arg = __qmljs_to_string(arg, ctx);
@@ -366,7 +366,7 @@ ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return ctx->engine->newString(r->toString())->asReturnedValue();
 }
@@ -376,7 +376,7 @@ ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedCallData callData(scope, ctx->callData->argc);
     memcpy(callData->args, ctx->callData->args, ctx->callData->argc*sizeof(SafeValue));

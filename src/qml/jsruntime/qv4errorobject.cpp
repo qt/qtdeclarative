@@ -172,7 +172,7 @@ ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
     if (!This)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
     if (!This->stack) {
         QString trace;
         for (int i = 0; i < This->stackTrace.count(); ++i) {
@@ -389,7 +389,7 @@ ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
 
     Object *o = ctx->callData->thisObject.asObject();
     if (!o)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     ScopedValue name(scope, o->get(ctx->engine->id_name));
     QString qname;

@@ -422,7 +422,7 @@ ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QString name;
     switch (r->d->type) {
@@ -447,7 +447,7 @@ ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (r->d->type == NodeImpl::Document ||
         r->d->type == NodeImpl::DocumentFragment ||
@@ -466,7 +466,7 @@ ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     return Encode(r->d->type);
 }
@@ -476,7 +476,7 @@ ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -491,7 +491,7 @@ ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -503,7 +503,7 @@ ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -518,7 +518,7 @@ ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -533,7 +533,7 @@ ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -557,7 +557,7 @@ ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -581,7 +581,7 @@ ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
     if (!r)
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
@@ -907,7 +907,7 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -926,7 +926,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, const StringRef name, bool *hasPrope
     NamedNodeMap *r = m->as<NamedNodeMap>();
     QV4::ExecutionEngine *v4 = m->engine();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     name->makeIdentifier();
     if (name->equals(v4->id_length))
@@ -962,7 +962,7 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     QV8Engine *engine = v4->v8Engine;
 
@@ -981,7 +981,7 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = m->as<NodeList>();
     if (!r)
-        v4->current->throwTypeError();
+        return v4->current->throwTypeError();
 
     name->makeIdentifier();
 
@@ -1540,13 +1540,17 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
     QV4::Scope scope(v4);
     try {
         Scoped<Object> o(scope, me);
-        if (!o)
+        if (!o) {
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+            return;
+        }
 
         ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
         Scoped<Object> thisObj(scope, o->get(s));
-        if (!thisObj)
+        if (!thisObj) {
             ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+            return;
+        }
 
         s = v4->newString(QStringLiteral("onreadystatechange"));
         Scoped<FunctionObject> callback(scope, thisObj->get(s));
@@ -1557,8 +1561,10 @@ void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
 
         s = v4->newString(QStringLiteral("ActivationObject"));
         Scoped<Object> activationObject(scope, o->get(s));
-        if (!activationObject)
+        if (!activationObject) {
             v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
+            return;
+        }
 
         QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
         if (callingContext) {
@@ -1645,7 +1651,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Scope scope(that->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
-            that->engine()->current->throwTypeError();
+            return that->engine()->current->throwTypeError();
 
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());

@@ -400,7 +400,7 @@ public:
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         if (This->m_isReference) {
             if (!This->m_object)
@@ -415,7 +415,7 @@ public:
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
-            ctx->throwTypeError();
+            return ctx->throwTypeError();
 
         quint32 newLength = ctx->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
@@ -553,7 +553,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
     QV4::Scope scope(ctx);
     QV4::ScopedObject o(scope, ctx->callData->thisObject);
     if (!o || !o->isListType())
-        ctx->throwTypeError();
+        return ctx->throwTypeError();
 
     if (ctx->callData->argc >= 2)
         return o.asReturnedValue();
