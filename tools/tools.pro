@@ -6,8 +6,7 @@ SUBDIRS += \
     qmlprofiler
 !android|android_app: SUBDIRS += \
                           qml \
-                          qmlbundle \
-                          v4
+                          qmlbundle
 qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += qmleasing
 
 # qmlmin & qmlbundle are build tools.
@@ -20,6 +19,8 @@ qtNomakeTools( \
     qmlplugindump \
     qmleasing \
 )
+
+contains(QT_CONFIG, private_tests): SUBDIRS += qmljs
 
 qtHaveModule(quick) {
     for(subdir, SUBDIRS): $${subdir}.depends += qmlimportscanner
