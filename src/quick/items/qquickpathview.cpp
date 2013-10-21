@@ -1568,11 +1568,9 @@ qreal QQuickPathViewPrivate::calcVelocity() const
 
 qint64 QQuickPathViewPrivate::computeCurrentTime(QInputEvent *event)
 {
-    if (0 != event->timestamp() && QQuickItemPrivate::consistentTime == -1) {
+    if (0 != event->timestamp())
         return event->timestamp();
-    }
-
-    return QQuickItemPrivate::elapsed(timer);
+    return timer.elapsed();
 }
 
 void QQuickPathView::mousePressEvent(QMouseEvent *event)
@@ -1613,7 +1611,7 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
     else
         stealMouse = false;
 
-    QQuickItemPrivate::start(timer);
+    timer.start();
     lastPosTime = computeCurrentTime(event);
     tl.clear();
 }
