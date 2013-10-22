@@ -6,17 +6,13 @@ PUBLICTESTS += \
     qpacketprotocol \
 #    qv8profilerservice \
 #    qdebugmessageservice \
-    qqmlenginedebuginspectorintegrationtest
+    qqmlenginedebuginspectorintegrationtest \
+    qqmlinspector \
+    qqmlprofilerservice
 
 PRIVATETESTS += \
     qqmldebugclient \
     qqmldebugservice
-
-!mac {
-PUBLICTESTS += \
-    qqmlinspector \
-    qqmlprofilerservice
-}
 
 SUBDIRS += $$PUBLICTESTS
 
