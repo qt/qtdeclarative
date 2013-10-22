@@ -250,6 +250,8 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
         }
         body = callData->args[callData->argc - 1].toString(ctx)->toQString();
     }
+    if (ctx->engine->hasException)
+        return Encode::undefined();
 
     QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
 
@@ -431,6 +433,9 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
     ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return Encode::undefined();
+
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
@@ -456,6 +461,9 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     void *stackSpace;
     ExecutionContext *context = f->engine()->current;
     Scope scope(context);
+    if (scope.hasException())
+        return Encode::undefined();
+
     CallContext *ctx = context->newCallContext(f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
@@ -511,6 +519,9 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
     ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return Encode::undefined();
+
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
@@ -536,6 +547,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
     ExecutionEngine *v4 = that->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return Encode::undefined();
+
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
@@ -576,6 +590,9 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
     ExecutionEngine *v4 = f->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return Encode::undefined();
+
     ExecutionContext *context = v4->current;
 
     SimpleCallContext ctx;
@@ -594,6 +611,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionEngine *v4 = f->engine();
     ExecutionContext *context = v4->current;
     Scope scope(v4);
+    if (scope.hasException())
+        return Encode::undefined();
 
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);
@@ -643,6 +662,8 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Scope scope(f->scope->engine);
+    if (scope.hasException())
+        return Encode::undefined();
 
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     callData->thisObject = f->boundThis;
@@ -655,6 +676,9 @@ ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
 {
     BoundFunction *f = static_cast<BoundFunction *>(that);
     Scope scope(f->scope->engine);
+    if (scope.hasException())
+        return Encode::undefined();
+
     ScopedCallData callData(scope, f->boundArgs.size() + dd->argc);
     memcpy(callData->args, f->boundArgs.constData(), f->boundArgs.size()*sizeof(SafeValue));
     memcpy(callData->args + f->boundArgs.size(), dd->args, dd->argc*sizeof(SafeValue));

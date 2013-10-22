@@ -231,6 +231,9 @@ public:
 
     void containerPutIndexed(uint index, const QV4::ValueRef value)
     {
+        if (internalClass->engine->hasException)
+            return;
+
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
             generateWarning(engine()->current, QLatin1String("Index out of range during indexed set"));

@@ -597,15 +597,16 @@ ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     QString string = getThisString(ctx);
+    ScopedValue regExpValue(scope, ctx->argument(0));
     if (scope.engine->hasException)
         return Encode::undefined();
-
-    ScopedValue regExpValue(scope, ctx->argument(0));
     Scoped<RegExpObject> regExp(scope, regExpValue->as<RegExpObject>());
     if (!regExp) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regExpValue;
         regExpValue = ctx->engine->regExpCtor.asFunctionObject()->construct(callData);
+        if (scope.engine->hasException)
+            return Encode::undefined();
         regExp = regExpValue->as<RegExpObject>();
         Q_ASSERT(regExp);
     }

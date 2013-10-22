@@ -3194,6 +3194,9 @@ void QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
 {
     QV4::ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
+    if (scope.hasException())
+        return;
+
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, m->as<QQuickJSContext2DPixelData>());
     if (!r) {
         v4->current->throwTypeError();

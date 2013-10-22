@@ -178,6 +178,8 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
 void String::put(Managed *m, const StringRef name, const ValueRef value)
 {
     Scope scope(m->engine());
+    if (scope.hasException())
+        return;
     ScopedString that(scope, static_cast<String *>(m));
     Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->put(name, value);
@@ -186,6 +188,9 @@ void String::put(Managed *m, const StringRef name, const ValueRef value)
 void String::putIndexed(Managed *m, uint index, const ValueRef value)
 {
     Scope scope(m->engine());
+    if (scope.hasException())
+        return;
+
     ScopedString that(scope, static_cast<String *>(m));
     Scoped<Object> o(scope, that->engine()->newStringObject(that));
     o->putIndexed(index, value);

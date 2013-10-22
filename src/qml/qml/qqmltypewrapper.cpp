@@ -229,6 +229,8 @@ void QmlTypeWrapper::put(Managed *m, const StringRef name, const ValueRef value)
 {
     QmlTypeWrapper *w = m->as<QmlTypeWrapper>();
     QV4::ExecutionEngine *v4 = m->engine();
+    if (v4->hasException)
+        return;
     if (!w) {
         v4->current->throwTypeError();
         return;

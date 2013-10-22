@@ -334,6 +334,9 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
+    if (scope.hasException())
+        return;
+
     Scoped<QmlValueTypeWrapper> r(scope, m->as<QmlValueTypeWrapper>());
     if (!r) {
         v4->current->throwTypeError();

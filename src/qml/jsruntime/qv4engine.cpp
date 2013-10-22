@@ -808,7 +808,13 @@ QmlExtensions *ExecutionEngine::qmlExtensions()
 
 ReturnedValue ExecutionEngine::throwException(const ValueRef value)
 {
-//    Q_ASSERT(!hasException);
+    // we can get in here with an exception already set, as the runtime
+    // doesn't check after every operation that can throw.
+    // in this case preserve the first exception to give correct error
+    // information
+    if (hasException)
+        return Encode::undefined();
+
     hasException = true;
     exceptionValue = value;
     QV4::Scope scope(this);

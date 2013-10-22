@@ -258,6 +258,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     QString pattern;
     if (!r->isUndefined())
         pattern = r->toString(ctx)->toQString();
+    if (scope.hasException())
+        return Encode::undefined();
 
     bool global = false;
     bool ignoreCase = false;
@@ -265,6 +267,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     if (!f->isUndefined()) {
         f = __qmljs_to_string(f, ctx);
         QString str = f->stringValue()->toQString();
+        if (scope.hasException())
+            return Encode::undefined();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QChar('g') && !global) {
                 global = true;

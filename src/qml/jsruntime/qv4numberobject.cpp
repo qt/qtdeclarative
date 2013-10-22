@@ -177,10 +177,9 @@ ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, thisNumberValue(ctx));
+    ScopedString str(scope, v->toString(ctx));
     if (ctx->engine->hasException)
         return Encode::undefined();
-
-    ScopedString str(scope, v->toString(ctx));
     return str.asReturnedValue();
 }
 

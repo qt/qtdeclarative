@@ -147,6 +147,9 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
 
 void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef value)
 {
+    if (internalClass->engine->hasException)
+        return;
+
     if (attrs.isAccessor()) {
         if (pd->set) {
             Scope scope(pd->set->engine());
@@ -689,6 +692,9 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 // Section 8.12.5
 void Object::internalPut(const StringRef name, const ValueRef value)
 {
+    if (internalClass->engine->hasException)
+        return;
+
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
@@ -773,6 +779,9 @@ void Object::internalPut(const StringRef name, const ValueRef value)
 
 void Object::internalPutIndexed(uint index, const ValueRef value)
 {
+    if (internalClass->engine->hasException)
+        return;
+
     Property *pd = 0;
     PropertyAttributes attrs;
 
@@ -842,6 +851,9 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
 // Section 8.12.7
 bool Object::internalDeleteProperty(const StringRef name)
 {
+    if (internalClass->engine->hasException)
+        return false;
+
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
         return deleteIndexedProperty(idx);
@@ -865,6 +877,9 @@ bool Object::internalDeleteProperty(const StringRef name)
 
 bool Object::internalDeleteIndexedProperty(uint index)
 {
+    if (internalClass->engine->hasException)
+        return false;
+
     uint pidx = propertyIndexFromArrayIndex(index);
     if (pidx == UINT_MAX)
         return true;
@@ -1121,12 +1136,16 @@ ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endInd
         for (uint i = fromIndex; i < endIndex; ++i) {
             bool exists;
             value = o->getIndexed(i, &exists);
+            if (scope.hasException())
+                return Encode::undefined();
             if (exists && __qmljs_strict_equal(value, v))
                 return Encode(i);
         }
     } else if (sparseArray) {
         for (SparseArrayNode *n = sparseArray->lowerBound(fromIndex); n != sparseArray->end() && n->key() < endIndex; n = n->nextNode()) {
             value = o->getValue(arrayData + n->value, arrayAttributes ? arrayAttributes[n->value] : Attr_Data);
+            if (scope.hasException())
+                return Encode::undefined();
             if (__qmljs_strict_equal(value, v))
                 return Encode(n->key());
         }
@@ -1139,6 +1158,8 @@ ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endInd
         while (pd < end) {
             if (!pd->value.isEmpty()) {
                 value = o->getValue(pd, arrayAttributes ? arrayAttributes[pd - arrayData] : Attr_Data);
+                if (scope.hasException())
+                    return Encode::undefined();
                 if (__qmljs_strict_equal(value, v))
                     return Encode((uint)(pd - arrayData));
             }
@@ -1437,7 +1458,7 @@ QStringList ArrayObject::toQStringList() const
     uint32_t length = arrayLength();
     for (uint32_t i = 0; i < length; ++i) {
         v = const_cast<ArrayObject *>(this)->getIndexed(i);
-        result.append(v->toString(engine->current)->toQString());
+        result.append(v->toQStringNoThrow());
     }
     return result;
 }

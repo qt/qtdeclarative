@@ -213,6 +213,8 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
                 R += r4;
 
             e = a->getIndexed(i);
+            if (scope.hasException())
+                return Encode::undefined();
             if (!e->isNullOrUndefined())
                 R += e->toString(ctx)->toQString();
         }
@@ -231,6 +233,8 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
 
             name = Primitive::fromDouble(k).toString(ctx);
             r12 = self->get(name);
+            if (scope.hasException())
+                return Encode::undefined();
 
             if (!r12->isNullOrUndefined())
                 R += r12->toString(ctx)->toQString();
@@ -255,8 +259,12 @@ ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
     }
 
     ScopedValue result(scope, instance->getIndexed(len - 1));
+    if (scope.hasException())
+        return Encode::undefined();
 
     instance->deleteIndexedProperty(len - 1);
+    if (scope.hasException())
+        return Encode::undefined();
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
@@ -334,10 +342,14 @@ ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
         bool loExists, hiExists;
         lval = instance->getIndexed(lo, &loExists);
         hval = instance->getIndexed(hi, &hiExists);
+        if (scope.hasException())
+            return Encode::undefined();
         if (hiExists)
             instance->putIndexed(lo, hval);
         else
             instance->deleteIndexedProperty(lo);
+        if (scope.hasException())
+            return Encode::undefined();
         if (loExists)
             instance->putIndexed(hi, lval);
         else
@@ -387,12 +399,16 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
         for (uint k = 1; k < len; ++k) {
             bool exists;
             v = instance->getIndexed(k, &exists);
+            if (scope.hasException())
+                return Encode::undefined();
             if (exists)
                 instance->putIndexed(k - 1, v);
             else
                 instance->deleteIndexedProperty(k - 1);
         }
         instance->deleteIndexedProperty(len - 1);
+        if (scope.hasException())
+            return Encode::undefined();
     }
 
     if (instance->isArrayObject())
@@ -435,9 +451,10 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
     for (uint i = start; i < end; ++i) {
         bool exists;
         v = o->getIndexed(i, &exists);
-        if (exists) {
+        if (scope.hasException())
+            return Encode::undefined();
+        if (exists)
             result->arraySet(n, v);
-        }
         ++n;
     }
     return result.asReturnedValue();
@@ -479,6 +496,8 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     newArray->arrayReserve(deleteCount);
     for (uint i = 0; i < deleteCount; ++i) {
         newArray->arrayData[i].value = instance->getIndexed(start + i);
+        if (scope.hasException())
+            return Encode::undefined();
         newArray->arrayDataLen = i + 1;
     }
     newArray->setArrayLengthUnchecked(deleteCount);
@@ -490,28 +509,42 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
         for (uint k = start; k < len - deleteCount; ++k) {
             bool exists;
             v = instance->getIndexed(k + deleteCount, &exists);
+            if (scope.hasException())
+                return Encode::undefined();
             if (exists)
                 instance->putIndexed(k + itemCount, v);
             else
                 instance->deleteIndexedProperty(k + itemCount);
+            if (scope.hasException())
+                return Encode::undefined();
         }
-        for (uint k = len; k > len - deleteCount + itemCount; --k)
+        for (uint k = len; k > len - deleteCount + itemCount; --k) {
             instance->deleteIndexedProperty(k - 1);
+            if (scope.hasException())
+                return Encode::undefined();
+        }
     } else if (itemCount > deleteCount) {
         uint k = len - deleteCount;
         while (k > start) {
             bool exists;
             v = instance->getIndexed(k + deleteCount - 1, &exists);
+            if (scope.hasException())
+                return Encode::undefined();
             if (exists)
                 instance->putIndexed(k + itemCount - 1, v);
             else
                 instance->deleteIndexedProperty(k + itemCount - 1);
+            if (scope.hasException())
+                return Encode::undefined();
             --k;
         }
     }
 
-    for (uint i = 0; i < itemCount; ++i)
+    for (uint i = 0; i < itemCount; ++i) {
         instance->putIndexed(start + i, ctx->callData->args[i + 2]);
+        if (scope.hasException())
+            return Encode::undefined();
+    }
 
     ctx->strictMode = true;
     instance->put(ctx->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
@@ -582,16 +615,13 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     if (!len)
         return Encode(-1);
 
-    ScopedValue searchValue(scope);
+    ScopedValue searchValue(scope, ctx->callData->argument(0));
     uint fromIndex = 0;
-
-    if (ctx->callData->argc >= 1)
-        searchValue = ctx->callData->args[0];
-    else
-        searchValue = Primitive::undefinedValue();
 
     if (ctx->callData->argc >= 2) {
         double f = ctx->callData->args[1].toInteger();
+        if (scope.hasException())
+            return Encode::undefined();
         if (f >= len)
             return Encode(-1);
         if (f < 0)
@@ -634,6 +664,8 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
 
     if (ctx->callData->argc >= 2) {
         double f = ctx->callData->args[1].toInteger();
+        if (scope.hasException())
+            return Encode::undefined();
         if (f > 0)
             f = qMin(f, (double)(len - 1));
         else if (f < 0) {
@@ -649,6 +681,8 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
         --k;
         bool exists;
         v = instance->getIndexed(k, &exists);
+        if (scope.hasException())
+            return Encode::undefined();
         if (exists && __qmljs_strict_equal(v, searchValue))
             return Encode(k);
     }

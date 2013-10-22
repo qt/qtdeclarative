@@ -627,7 +627,7 @@ void QObjectWrapper::put(Managed *m, const StringRef name, const ValueRef value)
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = m->engine();
 
-    if (QQmlData::wasDeleted(that->m_object))
+    if (v4->hasException || QQmlData::wasDeleted(that->m_object))
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);

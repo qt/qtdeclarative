@@ -158,6 +158,8 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext
 
     ScopedValue v(scope, ctx->argument(1));
     Scoped<String> name(scope, v->toString(ctx));
+    if (scope.hasException())
+        return Encode::undefined();
     PropertyAttributes attrs;
     Property *desc = O->__getOwnProperty__(name, &attrs);
     return fromPropertyDescriptor(ctx, desc, attrs);

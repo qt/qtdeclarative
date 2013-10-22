@@ -281,6 +281,8 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 {
     ExecutionEngine *v4 = m->engine();
     QV4::Scope scope(v4);
+    if (scope.hasException())
+        return;
     QV4::Scoped<QmlContextWrapper> wrapper(scope, m->as<QmlContextWrapper>());
     if (!wrapper) {
         v4->current->throwTypeError();

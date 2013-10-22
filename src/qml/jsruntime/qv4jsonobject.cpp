@@ -801,7 +801,7 @@ QString Stringify::JO(ObjectRef o)
             name = it.nextPropertyNameAsString(val);
             if (name->isNull())
                 break;
-            QString key = name->toQStringNoThrow();
+            QString key = name->toQString();
             QString member = makeMember(key, val);
             if (!member.isEmpty())
                 partial += member;
@@ -951,7 +951,7 @@ ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
 
     ScopedValue arg0(scope, ctx->argument(0));
     QString result = stringify.Str(QString(), arg0);
-    if (result.isEmpty())
+    if (result.isEmpty() || scope.engine->hasException)
         return Encode::undefined();
     return ctx->engine->newString(result)->asReturnedValue();
 }

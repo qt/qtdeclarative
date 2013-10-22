@@ -469,6 +469,10 @@ ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
     // [15.1.2.2] step by step:
     String *inputString = string->toString(ctx); // 1
     QString trimmed = inputString->toQString().trimmed(); // 2
+
+    if (ctx->engine->hasException)
+        return Encode::undefined();
+
     const QChar *pos = trimmed.constData();
     const QChar *end = pos + trimmed.length();
 

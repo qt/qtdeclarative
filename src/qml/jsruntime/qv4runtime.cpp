@@ -478,8 +478,6 @@ void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, const St
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
-    if (scope.engine->hasException)
-        return;
     o->put(name, value);
 }
 
@@ -571,8 +569,6 @@ void __qmljs_set_element(ExecutionContext *ctx, const ValueRef object, const Val
     }
 
     ScopedString name(scope, index->toString(ctx));
-    if (scope.hasException())
-        return;
     o->put(name, value);
 }
 
