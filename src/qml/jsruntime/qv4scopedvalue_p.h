@@ -86,6 +86,10 @@ struct Scope {
         return ptr;
     }
 
+    bool hasException() const {
+        return engine->hasException;
+    }
+
     ExecutionEngine *engine;
     SafeValue *mark;
 #ifndef QT_NO_DEBUG

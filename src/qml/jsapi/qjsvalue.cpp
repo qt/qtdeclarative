@@ -377,12 +377,12 @@ QString QJSValue::toString() const
 double QJSValue::toNumber() const
 {
     QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
-    try {
-        return d->value.toNumber();
-    } catch (...) {
+    double dbl = d->value.toNumber();
+    if (ctx && ctx->engine->hasException) {
         ctx->catchException();
         return 0;
     }
+    return dbl;
 }
 
 /*!
@@ -400,12 +400,12 @@ double QJSValue::toNumber() const
 bool QJSValue::toBool() const
 {
     QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
-    try {
-        return d->value.toBoolean();
-    } catch (...) {
+    bool b = d->value.toBoolean();
+    if (ctx && ctx->engine->hasException) {
         ctx->catchException();
         return false;
     }
+    return b;
 }
 
 /*!
@@ -423,12 +423,12 @@ bool QJSValue::toBool() const
 qint32 QJSValue::toInt() const
 {
     QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
-    try {
-        return d->value.toInt32();
-    } catch (...) {
+    qint32 i = d->value.toInt32();
+    if (ctx && ctx->engine->hasException) {
         ctx->catchException();
         return 0;
     }
+    return i;
 }
 
 /*!
@@ -446,12 +446,12 @@ qint32 QJSValue::toInt() const
 quint32 QJSValue::toUInt() const
 {
     QV4::ExecutionContext *ctx = d->engine ? d->engine->current : 0;
-    try {
-        return d->value.toUInt32();
-    } catch (...) {
+    quint32 u = d->value.toUInt32();
+    if (ctx && ctx->engine->hasException) {
         ctx->catchException();
         return 0;
     }
+    return u;
 }
 
 /*!
@@ -518,11 +518,9 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
     ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
-    try {
-        result = f->call(callData);
-    } catch (...) {
+    result = f->call(callData);
+    if (scope.hasException())
         result = ctx->catchException();
-    }
 
     return new QJSValuePrivate(engine, result);
 }
@@ -574,11 +572,9 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
 
     ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
-    try {
-        result = f->call(callData);
-    } catch (...) {
+    result = f->call(callData);
+    if (scope.hasException())
         result = ctx->catchException();
-    }
 
     return new QJSValuePrivate(engine, result);
 }
@@ -622,11 +618,9 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
 
     ScopedValue result(scope);
     QV4::ExecutionContext *ctx = engine->current;
-    try {
-        result = f->construct(callData);
-    } catch (...) {
+    result = f->construct(callData);
+    if (scope.hasException())
         result = ctx->catchException();
-    }
 
     return new QJSValuePrivate(engine, result);
 }
@@ -813,11 +807,10 @@ QJSValue QJSValue::property(const QString& name) const
     s->makeIdentifier();
     QV4::ExecutionContext *ctx = engine->current;
     QV4::ScopedValue result(scope);
-    try {
-        result = o->get(s);
-    } catch (...) {
+    result = o->get(s);
+    if (scope.hasException())
         result = ctx->catchException();
-    }
+
     return new QJSValuePrivate(engine, result);
 }
 
@@ -846,11 +839,9 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 
     QV4::ExecutionContext *ctx = engine->current;
     QV4::ScopedValue result(scope);
-    try {
-        result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
-    } catch (...) {
+    result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex);
+    if (scope.hasException())
         result = ctx->catchException();
-    }
     return new QJSValuePrivate(engine, result);
 }
 
@@ -890,12 +881,10 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
 
     QV4::ExecutionContext *ctx = engine->current;
     s->makeIdentifier();
-    try {
-        QV4::ScopedValue v(scope, value.d->getValue(engine));
-        o->put(s, v);
-    } catch (...) {
+    QV4::ScopedValue v(scope, value.d->getValue(engine));
+    o->put(s, v);
+    if (scope.hasException())
         ctx->catchException();
-    }
 }
 
 /*!
@@ -923,14 +912,12 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 
     QV4::ExecutionContext *ctx = engine->current;
     QV4::ScopedValue v(scope, value.d->getValue(engine));
-    try {
-        if (arrayIndex != UINT_MAX)
-            o->putIndexed(arrayIndex, v);
-        else
-            o->put(engine->id_uintMax, v);
-    } catch (...) {
+    if (arrayIndex != UINT_MAX)
+        o->putIndexed(arrayIndex, v);
+    else
+        o->put(engine->id_uintMax, v);
+    if (scope.hasException())
         ctx->catchException();
-    }
 }
 
 /*!
@@ -956,13 +943,17 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 bool QJSValue::deleteProperty(const QString &name)
 {
     ExecutionEngine *engine = d->engine;
+    ExecutionContext *ctx = engine->current;
     Scope scope(engine);
     ScopedObject o(scope, d->value.asObject());
     if (!o)
         return false;
 
     ScopedString s(scope, engine->newString(name));
-    return o->deleteProperty(s);
+    bool b = o->deleteProperty(s);
+    if (scope.hasException())
+        ctx->catchException();
+    return b;
 }
 
 /*!
