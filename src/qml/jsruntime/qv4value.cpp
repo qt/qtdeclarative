@@ -125,22 +125,20 @@ QString Value::toQStringNoThrow() const
             Scope scope(ctx);
             ScopedValue ex(scope);
             bool caughtException = false;
-            try {
-                ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
-                if (prim->isPrimitive())
-                    return prim->toQStringNoThrow();
-            } catch (...) {
+            ScopedValue prim(scope, __qmljs_to_primitive(ValueRef::fromRawValue(this), STRING_HINT));
+            if (scope.hasException()) {
                 ex = ctx->catchException();
                 caughtException = true;
+            } else if (prim->isPrimitive()) {
+                    return prim->toQStringNoThrow();
             }
             // Can't nest try/catch due to CXX ABI limitations for foreign exception nesting.
             if (caughtException) {
-                try {
-                    ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
-                    if (prim->isPrimitive())
-                        return prim->toQStringNoThrow();
-                } catch(...) {
-                    ctx->catchException();
+                ScopedValue prim(scope, __qmljs_to_primitive(ex, STRING_HINT));
+                if (scope.hasException()) {
+                    ex = ctx->catchException();
+                } else if (prim->isPrimitive()) {
+                    return prim->toQStringNoThrow();
                 }
             }
             return QString();

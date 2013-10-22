@@ -109,14 +109,12 @@ void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef stat
         return;
 
     QV4::ExecutionContext *ctx = v4->current;
-    try {
-        QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = v4->globalObject->asReturnedValue();
-        callData->args[0] = status;
-        f->call(callData);
-    } catch (...) {
+    QV4::ScopedCallData callData(scope, 1);
+    callData->thisObject = v4->globalObject->asReturnedValue();
+    callData->args[0] = status;
+    f->call(callData);
+    if (scope.hasException())
         ctx->catchException();
-    }
 }
 
 QV4::ReturnedValue QV4Include::result()

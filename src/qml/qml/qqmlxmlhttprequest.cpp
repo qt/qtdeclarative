@@ -1108,6 +1108,7 @@ private:
     void setMe(const ValueRef me);
     PersistentValue m_me;
 
+    void dispatchCallbackImpl(const ValueRef me);
     void dispatchCallback(const ValueRef me);
 
     int m_status;
@@ -1534,50 +1535,56 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
+void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 {
     ExecutionContext *ctx = v4->current;
     QV4::Scope scope(v4);
-    try {
-        Scoped<Object> o(scope, me);
-        if (!o) {
-            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
-            return;
-        }
+    Scoped<Object> o(scope, me);
+    if (!o) {
+        ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        return;
+    }
 
-        ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
-        Scoped<Object> thisObj(scope, o->get(s));
-        if (!thisObj) {
-            ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
-            return;
-        }
+    ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
+    Scoped<Object> thisObj(scope, o->get(s));
+    if (!thisObj) {
+        ctx->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        return;
+    }
 
-        s = v4->newString(QStringLiteral("onreadystatechange"));
-        Scoped<FunctionObject> callback(scope, thisObj->get(s));
-        if (!callback) {
-            // not an error, but no onreadystatechange function to call.
-            return;
-        }
+    s = v4->newString(QStringLiteral("onreadystatechange"));
+    Scoped<FunctionObject> callback(scope, thisObj->get(s));
+    if (!callback) {
+        // not an error, but no onreadystatechange function to call.
+        return;
+    }
 
-        s = v4->newString(QStringLiteral("ActivationObject"));
-        Scoped<Object> activationObject(scope, o->get(s));
-        if (!activationObject) {
-            v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
-            return;
-        }
+    s = v4->newString(QStringLiteral("ActivationObject"));
+    Scoped<Object> activationObject(scope, o->get(s));
+    if (!activationObject) {
+        v4->current->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
+        return;
+    }
 
-        QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
-        if (callingContext) {
-            QV4::ScopedCallData callData(scope, 0);
-            callData->thisObject = activationObject.asReturnedValue();
-            callback->call(callData);
-        }
+    QQmlContextData *callingContext = QmlContextWrapper::getContext(activationObject);
+    if (callingContext) {
+        QV4::ScopedCallData callData(scope, 0);
+        callData->thisObject = activationObject.asReturnedValue();
+        callback->call(callData);
+    }
 
-        // if the callingContext object is no longer valid, then it has been
-        // deleted explicitly (e.g., by a Loader deleting the itemContext when
-        // the source is changed).  We do nothing in this case, as the evaluation
-        // cannot succeed.
-    } catch (...) {
+    // if the callingContext object is no longer valid, then it has been
+    // deleted explicitly (e.g., by a Loader deleting the itemContext when
+    // the source is changed).  We do nothing in this case, as the evaluation
+    // cannot succeed.
+
+}
+
+void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
+{
+    ExecutionContext *ctx = v4->current;
+    dispatchCallbackImpl(me);
+    if (v4->hasException) {
         QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
         QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }

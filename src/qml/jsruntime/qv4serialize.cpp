@@ -280,12 +280,10 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             serialize(data, s, engine);
 
             QV4::ExecutionContext *ctx = v4->current;
-            try {
-                str = s;
-                val = o->get(str);
-            } catch (...) {
+            str = s;
+            val = o->get(str);
+            if (scope.hasException())
                 ctx->catchException();
-            }
 
             serialize(data, val, engine);
         }

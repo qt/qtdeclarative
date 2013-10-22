@@ -956,14 +956,14 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 QV4::ScopedValue result(scope);
                 QV4::ExecutionContext *ctx = function->engine()->current;
-                try {
-                    result = function->call(callData);
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
-                } catch (...) {
+                result = function->call(callData);
+                if (scope.hasException()) {
                     QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
+                } else {
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

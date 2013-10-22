@@ -727,9 +727,8 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 }
             }
 
-            try {
-                f->call(callData);
-            } catch (...) {
+            f->call(callData);
+            if (scope.hasException()) {
                 QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
