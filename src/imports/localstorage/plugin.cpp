@@ -186,7 +186,9 @@ static QString qmlsqldatabase_databasesPath(QV8Engine *engine)
 
 static void qmlsqldatabase_initDatabasesPath(QV8Engine *engine)
 {
-    QDir().mkpath(qmlsqldatabase_databasesPath(engine));
+    QString databasesPath = qmlsqldatabase_databasesPath(engine);
+    if (!QDir().mkpath(databasesPath))
+        qWarning() << "LocalStorage: can't create path - " << databasesPath;
 }
 
 static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Engine *engine)
