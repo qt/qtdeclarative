@@ -42,6 +42,7 @@
 /*!
     \qmltype SignalSpy
     \instantiates SignalSpy
+    \inqmlmodule QtTest
     \brief Enables introspection of signal emission
     \ingroup qtquick-utility
     \since 4.8
