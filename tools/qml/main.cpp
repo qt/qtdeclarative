@@ -309,14 +309,17 @@ void getAppFlags(int &argc, char **argv)
     }
 }
 
-void getFileSansBangLine(const QString &path, QByteArray &output)
+bool getFileSansBangLine(const QString &path, QByteArray &output)
 {
     QFile f(path);
     if (!f.open(QFile::ReadOnly | QFile::Text))
-        return;
+        return false;
     output = f.readAll();
-    if (output.startsWith("#!"))//Remove first line in this case (except \n, to avoid disturbing line count)
+    if (output.startsWith("#!")) {//Remove first line in this case (except \n, to avoid disturbing line count)
         output.remove(0, output.indexOf('\n'));
+        return true;
+    }
+    return false;
 }
 
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
@@ -479,12 +482,10 @@ int main(int argc, char *argv[])
             if (!quietMode) {
                 qDebug() << QObject::tr("qml: loading ") << path;
                 QByteArray strippedFile;
-                getFileSansBangLine(path, strippedFile);
-                if (strippedFile.isEmpty())
-                    // If there's an error opening the file, this will give us the right error message
+                if (getFileSansBangLine(path, strippedFile))
+                    e.loadData(strippedFile, e.baseUrl().resolved(QUrl::fromLocalFile(path))); //QQmlComponent won't resolve it for us, it doesn't know it's a valid file if we loadData
+                else //Errors or no bang line
                     e.load(path);
-                else
-                    e.loadData(strippedFile, QUrl::fromLocalFile(path));
             } else {
                 e.load(path);
             }
