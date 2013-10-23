@@ -36,6 +36,7 @@ interfaces and applications with QML.  This page lists every QML type provided
 by this module, organized according to category and purpose.
 
 
+\target importing-qtquick
 \section1 Importing Qt Quick
 
 The types provided by the \l {Qt Quick} module are only available in a QML document
@@ -71,7 +72,7 @@ information about the concepts which are central to \c QtQuick.
     \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used
     to arrange items in the user interface
     \endlist
-
+\target basic-types
 \section1 Basic Types
 
 There are a number of basic types that are
@@ -80,7 +81,7 @@ There are a number of basic types that are
 
 In addition, the \c QtQuick module provides the following basic types:
 \annotatedlist qtquickbasictypes
-
+\target object-types
 \section1 Object Types
 
 All of the object types provided by \c QtQuick are based on the \l{Item} type,
@@ -88,7 +89,7 @@ which itself derives from \l{QtQml::QtObject}{QtObject}.  \l{qtqml-typereference
 {QML object types} provided by the Qt QML module
 (such as \l{QtQml::QtObject}{QtObject} and \l{QtQml::Component}{Component}) are also available when
 you import \c QtQuick.
-
+\target visual-types
 \section2 Visual Types
 
 \list
@@ -129,7 +130,7 @@ Visual Item Transformations
 \li \l {Translate} - Assigns item translation behaviors
 \endlist
 
-
+\target user-input
 \section2 User Input
 
 \list
@@ -163,7 +164,7 @@ User Input Events
 \li \l {KeyEvent} - Provides information about a key press event
 \li \l {DragEvent} -Provides information about a drag event
 \endlist
-
+\target positioning
 \section2 Positioning
 
 \list
@@ -174,7 +175,7 @@ User Input Events
 \li \l {Flow} - Positions its children with wrapping support
 \li \l {LayoutMirroring} - Attached property used to mirror layout behavior
 \endlist
-
+\target states-transitions-and-animations
 \section2 States, Transitions and Animations
 
 States
@@ -231,7 +232,7 @@ Animation paths
 \li \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
 \li \l {PathPercent} - Modifies the item distribution along a \l {Path}
 \endlist
-
+\target model-view-types-and-data-storage-and-access
 \section2 Model/View Types And Data Storage And Access
 
 QML Lists and Models
@@ -268,9 +269,10 @@ Views
 
 Data Storage
 \list
-\li \l {QtQuick.LocalStorage 2} - Singleton type providing simplified SQL access
+\li \l {Qt Quick Local Storage QML Types}{QtQuick.LocalStorage 2} - Singleton
+type providing simplified SQL access
 \endlist
-
+\target graphical-effects
 \section2 Graphical Effects
 
 \list
@@ -278,9 +280,10 @@ Data Storage
 \li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
 \li \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
 \li \l {GridMesh} - Generates a grid mesh of vertices for use by ShaderEffect
-\li The \l{QtQuick.Particles 2} module provides a set of Particle System types for Qt Quick 2
+\li The \l{Qt Quick Particles QML Types}{QtQuick.Particles 2} module provides a
+set of Particle System types for Qt Quick 2
 \endlist
-
+\target convenience-types
 \section2 Convenience Types
 
 \list
@@ -289,7 +292,7 @@ Data Storage
 \li \l {Timer} - Provides timed triggers
 \li \l {WorkerScript} - Enables the use of threads in a Qt Quick application
 \endlist
-
+\target canvas-similar-to-html5-canvas
 \section2 Canvas (similar to HTML5 canvas)
 
 \list
