@@ -1769,6 +1769,9 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     d->updateType = QQuickTextEditPrivate::UpdateNone;
 
+    if (!oldNode) // If we had any text node references, they were deleted along with the root node
+        d->textNodeMap.clear();
+
     RootNode *rootNode = static_cast<RootNode *>(oldNode);
     TextNodeIterator nodeIterator = d->textNodeMap.begin();
     while (nodeIterator != d->textNodeMap.end() && !(*nodeIterator)->dirty())
