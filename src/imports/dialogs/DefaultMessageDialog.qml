@@ -57,19 +57,28 @@ AbstractMessageDialog {
             mainText.implicitWidth, buttons.implicitWidth) + outerSpacing * 2);
         onImplicitWidthChanged: if (implicitWidth > root.width) root.width = implicitWidth
         color: palette.window
-        focus: true
-        Keys.onEscapePressed: root.reject()
-        Keys.onEnterPressed: root.accept()
-        Keys.onReturnPressed: root.accept()
-        Keys.onPressed: if (event.modifiers === Qt.ControlModifier)
-            switch (event.key) {
-            case Qt.Key_A:
-                detailedText.selectAll();
-                break;
-            case Qt.Key_C:
-                detailedText.copy();
-                break;
+        focus: root.visible
+        Keys.onPressed: {
+            event.accepted = true
+            if (event.modifiers === Qt.ControlModifier)
+                switch (event.key) {
+                case Qt.Key_A:
+                    detailedText.selectAll()
+                    break
+                case Qt.Key_C:
+                    detailedText.copy()
+                    break
+            } else switch (event.key) {
+                case Qt.Key_Escape:
+                case Qt.Key_Back:
+                    reject()
+                    break
+                case Qt.Key_Enter:
+                case Qt.Key_Return:
+                    accept()
+                    break
             }
+        }
 
         Column {
             id: contentColumn

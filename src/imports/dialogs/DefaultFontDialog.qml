@@ -55,6 +55,7 @@ AbstractFontDialog {
         implicitWidth: settings.implicitWidth + changeableWidth + outerSpacing * 2
         implicitHeight: writingSystemLabel.implicitHeight + changeableHeight + buttonRow.height + outerSpacing * 2
         color: palette.window
+        focus: root.visible
         property real spacing: 8
         property real outerSpacing: 12
         property real listMargins: 4
@@ -69,6 +70,7 @@ AbstractFontDialog {
         property real changeableWidth: 160
         property real changeableHeight: 120
 
+
         onFontChanged: externalFont = font
 
         onExternalFontChanged: {
@@ -77,6 +79,25 @@ AbstractFontDialog {
                 wsListView.reset()
                 fontListView.reset()
                 weightListView.reset()
+            }
+        }
+
+        Keys.onPressed: {
+            event.accepted = true
+            switch (event.key) {
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+                root.font = content.font
+                root.accept()
+                break
+            case Qt.Key_Escape:
+            case Qt.Key_Back:
+                reject()
+                break
+            default:
+                // do nothing
+                event.accepted = false
+                break
             }
         }
 

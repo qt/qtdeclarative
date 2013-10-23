@@ -65,10 +65,39 @@ AbstractColorDialog {
         implicitHeight: Math.min(maxSize, Screen.pixelDensity * (usePaletteMap ? 100 : 50))
         implicitWidth: usePaletteMap ? implicitHeight - bottomMinHeight : implicitHeight * 1.5
         color: palette.window
+        focus: root.visible
         property real bottomMinHeight: sliders.height + buttonRow.height + outerSpacing * 3
         property real spacing: 8
         property real outerSpacing: 12
         property bool usePaletteMap: true
+
+        Keys.onPressed: {
+            event.accepted = true
+            switch (event.key) {
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+                accept()
+                break
+            case Qt.Key_Escape:
+            case Qt.Key_Back:
+                reject()
+                break
+            case Qt.Key_C:
+                if (event.modifiers & Qt.ControlModifier)
+                    colorField.copyAll()
+                break
+            case Qt.Key_V:
+                if (event.modifiers & Qt.ControlModifier) {
+                    colorField.paste()
+                    root.currentColor = colorField.text
+                }
+                break
+            default:
+                // do nothing
+                event.accepted = false
+                break
+            }
+        }
 
         // set the preferred width based on height, to avoid "letterboxing" the paletteMap
         onHeightChanged: implicitHeight = Math.max((usePaletteMap ? 480 : bottomMinHeight), height)

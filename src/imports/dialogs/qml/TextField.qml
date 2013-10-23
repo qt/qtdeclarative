@@ -47,12 +47,19 @@ Item {
     property alias text: textInput.text
     signal accepted
     signal downPressed
+    signal backPressed
+    signal escapePressed
     implicitWidth: textInput.implicitWidth + rect.radius * 2
     implicitHeight: textInput.implicitHeight
 
     function copyAll() {
         textInput.selectAll()
         textInput.copy()
+    }
+
+    function paste() {
+        textInput.selectAll()
+        textInput.paste()
     }
 
     SystemPalette { id: palette }
@@ -76,5 +83,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         onAccepted: root.accepted()
         Keys.onDownPressed: root.downPressed()
+        Keys.onBackPressed: root.backPressed()
+        Keys.onEscapePressed: root.escapePressed()
     }
 }

@@ -103,7 +103,7 @@ AbstractFileDialog {
         clearSelection()
         if (selectFolder && selectedIndices.length == 0)
             addSelection(folder)
-        else {
+        else if (selectedIndices.length > 0) {
             selectedIndices.map(function(idx) {
                 if (view.model.isFolder(idx)) {
                     if (selectFolder)
@@ -113,17 +113,20 @@ AbstractFileDialog {
                         addSelection(view.model.get(idx, "fileURL"))
                 }
             })
+        } else {
+            addSelection(pathToUrl(currentPathField.text))
         }
         accept()
     }
 
     Rectangle {
+        id: content
         property int maxSize: Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
         // TODO: QTBUG-29817 geometry from AbstractFileDialog
-        id: window
         implicitWidth: Math.min(maxSize, Screen.pixelDensity * 100)
         implicitHeight: Math.min(maxSize, Screen.pixelDensity * 80)
         color: palette.window
+        focus: root.visible && !currentPathField.visible
 
         SystemPalette { id: palette }
 
@@ -138,7 +141,7 @@ AbstractFileDialog {
                         root.acceptSelection()
                     }
                 }
-                width: window.width
+                width: content.width
                 height: nameText.implicitHeight * 1.5
                 color: "transparent"
                 Rectangle {
@@ -204,6 +207,47 @@ AbstractFileDialog {
             }
         }
 
+        Keys.onPressed: {
+            event.accepted = true
+            switch (event.key) {
+            case Qt.Key_Up:
+                root.up(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
+                break
+            case Qt.Key_Down:
+                root.down(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
+                break
+            case Qt.Key_Left:
+                root.dirUp()
+                break
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+            case Qt.Key_Right:
+                if (view.currentItem)
+                    view.currentItem.launch()
+                else
+                    root.acceptSelection()
+                break
+            case Qt.Key_Back:
+            case Qt.Key_Escape:
+                reject()
+                break
+            case Qt.Key_C:
+                if (event.modifiers & Qt.ControlModifier)
+                    currentPathField.copyAll()
+                break
+            case Qt.Key_V:
+                if (event.modifiers & Qt.ControlModifier) {
+                    currentPathField.visible = true
+                    currentPathField.paste()
+                }
+                break
+            default:
+                // do nothing
+                event.accepted = false
+                break
+            }
+        }
+
         ListView {
             id: view
             anchors.top: titleBar.bottom
@@ -224,33 +268,6 @@ AbstractFileDialog {
             }
             highlightMoveDuration: 0
             highlightMoveVelocity: -1
-            focus: !currentPathField.visible
-            Keys.onPressed: {
-                event.accepted = true
-                switch (event.key) {
-                case Qt.Key_Up:
-                    root.up(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
-                    break
-                case Qt.Key_Down:
-                    root.down(event.modifiers & Qt.ShiftModifier && root.selectMultiple)
-                    break
-                case Qt.Key_Left:
-                    root.dirUp()
-                    break
-                case Qt.Key_Return:
-                case Qt.Key_Select:
-                case Qt.Key_Right:
-                    if (view.currentItem)
-                        view.currentItem.launch()
-                    else
-                        root.acceptSelection()
-                    break
-                default:
-                    // do nothing
-                    event.accepted = false
-                    break
-                }
-            }
         }
 
         MouseArea {
@@ -318,6 +335,8 @@ AbstractFileDialog {
                         view.model.folder = root.pathFolder(text)
                 }
                 onDownPressed: currentPathField.visible = false
+                onBackPressed: reject()
+                onEscapePressed: reject()
             }
         }
         Rectangle {
