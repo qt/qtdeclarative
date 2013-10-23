@@ -235,9 +235,6 @@ void QQmlDebugProcess::processAppOutput()
                 m_eventLoop.quit();
                 continue;
             }
-        } else if (line.startsWith("qml:")) {
-            // ### Can't enable quiet mode because that also suppresses application output
-            continue; //We don't use these, but they aren't output from the app either
         } else {
             // set to true if there is output not coming from the debugger
             outputFromAppItself = true;

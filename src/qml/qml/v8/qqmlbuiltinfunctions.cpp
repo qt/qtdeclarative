@@ -72,6 +72,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1385,19 +1386,24 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
         result.append(jsStack(v4));
     }
 
+    static QLoggingCategory loggingCategory("qml");
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
-    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData(), loggingCategory.categoryName());
+
     switch (logType) {
     case Log:
-        logger.debug("%s", qPrintable(result));
+        if (loggingCategory.isDebugEnabled())
+            logger.debug("%s", result.toUtf8().constData());
         break;
     case Warn:
-        logger.warning("%s", qPrintable(result));
+        if (loggingCategory.isWarningEnabled())
+            logger.warning("%s", result.toUtf8().constData());
         break;
     case Error:
-        logger.critical("%s", qPrintable(result));
+        if (loggingCategory.isCriticalEnabled())
+            logger.critical("%s", result.toUtf8().constData());
         break;
     default:
         break;

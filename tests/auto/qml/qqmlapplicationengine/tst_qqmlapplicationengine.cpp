@@ -117,7 +117,7 @@ void tst_qqmlapplicationengine::application()
     QCOMPARE(testProcess->exitCode(), 0);
     QByteArray test_stdout = testProcess->readAllStandardOutput();
     QByteArray test_stderr = testProcess->readAllStandardError();
-    QByteArray test_stderr_target("Start: testData\nEnd\n");
+    QByteArray test_stderr_target("qml: Start: testData\nqml: End\n");
 #ifdef Q_OS_WIN
     test_stderr_target.replace('\n', QByteArray("\r\n"));
 #endif
