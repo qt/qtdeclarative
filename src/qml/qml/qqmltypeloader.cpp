@@ -1341,7 +1341,7 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
     Q_ASSERT(errors);
 
     if (pragma.type == QQmlScript::Pragma::Singleton) {
-        QUrl myUrl = url();
+        QUrl myUrl = finalUrl();
 
         QQmlType *ret = QQmlMetaType::qmlType(myUrl, true);
         if (!ret) {
@@ -1369,7 +1369,7 @@ bool QQmlTypeLoader::Blob::addPragma(const QQmlScript::Pragma &pragma, QList<QQm
     } else {
         QQmlError error;
         error.setDescription(QLatin1String("Invalid pragma"));
-        error.setUrl(url());
+        error.setUrl(finalUrl());
         error.setLine(pragma.location.start.line);
         error.setColumn(pragma.location.start.column);
         errors->prepend(error);
@@ -2086,7 +2086,7 @@ void QQmlTypeData::done()
     // If the type is CompositeSingleton but there was no pragma Singleton in the
     // QML file, lets report an error.
     QQmlType *type = QQmlMetaType::qmlType(url(), true);
-    if (type && type->isCompositeSingleton() && !m_isSingleton) {
+    if (!isError() && type && type->isCompositeSingleton() && !m_isSingleton) {
         QString typeName = type->qmlTypeName();
 
         QQmlError error;

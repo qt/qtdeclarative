@@ -49,6 +49,8 @@
 #include <QtCore/qdir.h>
 #include <QSignalSpy>
 #include <QFont>
+#include <QQmlFileSelector>
+#include <QFileSelector>
 
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -209,6 +211,7 @@ private slots:
     void compositeSingletonQmlDirError();
     void compositeSingletonRemote();
     void compositeSingletonJavaScriptPragma();
+    void compositeSingletonSelectors();
 
 private:
     QQmlEngine engine;
@@ -3499,6 +3502,23 @@ void tst_qqmllanguage::compositeSingletonJavaScriptPragma()
     // the engine has not been destroyed, we just retrieve the old instance and
     // the value is still 99.
     verifyCompositeSingletonPropertyValues(o, "value1", 99, "value2", 333);
+}
+
+// Reads values from a Singleton accessed through selectors.
+void tst_qqmllanguage::compositeSingletonSelectors()
+{
+    QFileSelector selector;
+    selector.setExtraSelectors(QStringList() << "basicSelector");
+    QQmlFileSelector qmlSelector;
+    qmlSelector.setSelector(&selector);
+    QQmlEngine e2;
+    e2.setUrlInterceptor(&qmlSelector);
+    QQmlComponent component(&e2, testFile("singletonTest1.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 625, "value2", 455);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
