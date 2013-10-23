@@ -322,7 +322,8 @@ struct Name: Expr {
         builtin_define_array,
         builtin_define_getter_setter,
         builtin_define_object_literal,
-        builtin_setup_argument_object
+        builtin_setup_argument_object,
+        builtin_qml_id_scope
     };
 
     const QString *id;
@@ -512,13 +513,31 @@ struct Subscript: Expr {
 };
 
 struct Member: Expr {
+    enum MemberType {
+        MemberByName,
+        // QML extensions
+        MemberByObjectId // lookup in context's id values
+    };
+
+    MemberType type;
     Expr *base;
     const QString *name;
+    int objectId;
 
     void init(Expr *base, const QString *name)
     {
+        this->type = MemberByName;
         this->base = base;
         this->name = name;
+        this->objectId = -1;
+    }
+
+    void initQmlIdObject(Expr *base, const QString *name, int objectId)
+    {
+        this->type = MemberByObjectId;
+        this->base = base;
+        this->name = name;
+        this->objectId = objectId;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -695,7 +714,8 @@ struct Function {
     uint isNamedExpression : 1;
     uint hasTry: 1;
     uint hasWith: 1;
-    uint unused : 26;
+    uint hasQmlDependencies : 1;
+    uint unused : 25;
 
     // Location of declaration in source code (-1 if not specified)
     int line;
@@ -716,6 +736,7 @@ struct Function {
         , isNamedExpression(false)
         , hasTry(false)
         , hasWith(false)
+        , hasQmlDependencies(false)
         , unused(0)
         , line(-1)
         , column(-1)
@@ -810,6 +831,7 @@ struct BasicBlock {
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
     Expr *MEMBER(Expr *base, const QString *name);
+    Expr *QML_CONTEXT_ID_MEMBER(const QString &id, int idIndex, quint32 line, quint32 column);
 
     Stmt *EXP(Expr *expr);
 
@@ -907,6 +929,69 @@ protected:
 private:
     V4IR::BasicBlock *block;
     V4IR::Expr *cloned;
+};
+
+struct QmlDependenciesCollector : public V4IR::StmtVisitor, V4IR::ExprVisitor
+{
+    QSet<int> run(Function *function)
+    {
+        QSet<int> dependencies;
+        qSwap(_usedIdObjects, dependencies);
+        for (int i = 0; i < function->basicBlocks.count(); ++i) {
+            BasicBlock *bb = function->basicBlocks.at(i);
+            for (int j = 0; j < bb->statements.count(); ++j) {
+                Stmt *s = bb->statements.at(j);
+                s->accept(this);
+            }
+        }
+        qSwap(_usedIdObjects, dependencies);
+        return dependencies;
+    }
+
+protected:
+    QSet<int> _usedIdObjects;
+
+    virtual void visitConst(Const *) {}
+    virtual void visitString(String *) {}
+    virtual void visitRegExp(RegExp *) {}
+    virtual void visitName(Name *) {}
+    virtual void visitTemp(Temp *) {}
+    virtual void visitClosure(Closure *) {}
+    virtual void visitConvert(Convert *e) { e->expr->accept(this); }
+    virtual void visitUnop(Unop *e) { e->expr->accept(this); }
+    virtual void visitBinop(Binop *e) { e->left->accept(this); e->right->accept(this); }
+
+    virtual void visitCall(Call *e) {
+        e->base->accept(this);
+        for (ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitNew(New *e) {
+        e->base->accept(this);
+        for (ExprList *it = e->args; it; it = it->next)
+            it->expr->accept(this);
+    }
+    virtual void visitSubscript(Subscript *e) {
+        e->base->accept(this);
+        e->index->accept(this);
+    }
+
+    virtual void visitMember(Member *e) {
+        e->base->accept(this);
+        if (e->type == Member::MemberByObjectId)
+            _usedIdObjects.insert(e->objectId);
+    }
+
+    virtual void visitExp(Exp *s) {s->expr->accept(this);}
+    virtual void visitMove(Move *s) {
+        s->source->accept(this);
+        s->target->accept(this);
+    }
+
+    virtual void visitJump(Jump *) {}
+    virtual void visitCJump(CJump *s) { s->cond->accept(this); }
+    virtual void visitRet(Ret *s) { s->expr->accept(this); }
+    virtual void visitPhi(Phi *s);
 };
 
 } // end of namespace IR

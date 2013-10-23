@@ -51,6 +51,8 @@
 #include "qv4function_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
+#include <private/qqmlcontextwrapper_p.h>
+#include "qv4qobjectwrapper_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
@@ -1173,6 +1175,12 @@ ReturnedValue __qmljs_value_from_string(String *string)
 ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
 {
     return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
+}
+
+ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id)
+{
+    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    return QObjectWrapper::wrap(ctx->engine, context->idValues[id].data());
 }
 
 } // namespace QV4

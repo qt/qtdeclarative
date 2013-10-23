@@ -334,6 +334,12 @@ protected: // IRDecoder
         addDef(temp);
     }
 
+    virtual void loadIdObject(int id, V4IR::Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
     {
         addDef(targetTemp);

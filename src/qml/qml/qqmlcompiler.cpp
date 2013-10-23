@@ -3654,7 +3654,21 @@ bool QQmlCompiler::completeComponentBuild()
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
 
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, compileState->functionsToCompile);
+        JSCodeGen::ObjectIdMapping idMapping;
+        if (compileState->ids.count() > 0) {
+            idMapping.reserve(compileState->ids.count());
+            for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) {
+                JSCodeGen::IdMapping m;
+                m.name = o->id;
+                m.idIndex = o->idIndex;
+                idMapping << m;
+            }
+        }
+
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine,
+                                                                                                    qmlRoot, compileState->root->astNode,
+                                                                                                    compileState->functionsToCompile,
+                                                                                                    idMapping);
         compileState->runtimeFunctionIndices = runtimeFunctionIndices;
 
         for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {

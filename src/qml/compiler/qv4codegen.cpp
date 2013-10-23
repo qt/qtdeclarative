@@ -1448,12 +1448,24 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         f = f->outer;
     }
 
+    // This hook allows implementing QML lookup semantics
+    if (V4IR::Expr *fallback = fallbackNameLookup(name, line, col))
+        return fallback;
+
     if (!e->parent && (!f || !f->insideWithOrCatch) && _env->compilationMode != EvalCode && e->compilationMode != QmlBinding)
         return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
     return _block->NAME(name, line, col);
 
+}
+
+V4IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col) const
+{
+    Q_UNUSED(name)
+    Q_UNUSED(line)
+    Q_UNUSED(col)
+    return 0;
 }
 
 bool Codegen::visit(IdentifierExpression *ast)

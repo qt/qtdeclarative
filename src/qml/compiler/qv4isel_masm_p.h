@@ -1469,6 +1469,7 @@ protected:
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void loadThisObject(V4IR::Temp *temp);
+    virtual void loadIdObject(int id, V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);

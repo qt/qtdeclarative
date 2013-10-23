@@ -948,6 +948,11 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 #endif
 }
 
+void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_id_object, Assembler::ContextRegister, Assembler::TrustedImm32(id));
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     if (targetTemp->kind == V4IR::Temp::PhysicalRegister) {

@@ -54,6 +54,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
@@ -448,6 +449,9 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj.asReturnedValue();
     ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
+    if (f->function->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
+
     ExecutionContextSaver ctxSaver(context);
     ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
     if (result->isObject())
@@ -473,6 +477,9 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
             ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
+
+    if (f->function->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
     return f->function->code(ctx, f->function->codeData);
@@ -535,6 +542,9 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj;
     ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
+    if (f->function->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
+
     ExecutionContextSaver ctxSaver(context);
     Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
 
@@ -563,6 +573,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
             ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
     }
+
+    if (f->function->compiledFunction->hasQmlDependencies())
+        QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
     return f->function->code(ctx, f->function->codeData);

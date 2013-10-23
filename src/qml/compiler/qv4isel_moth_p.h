@@ -114,6 +114,7 @@ protected:
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void loadThisObject(V4IR::Temp *temp);
+    virtual void loadIdObject(int id, V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);

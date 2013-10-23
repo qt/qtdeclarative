@@ -164,6 +164,8 @@ QV4::ReturnedValue __qmljs_construct_global_lookup(QV4::ExecutionContext *contex
 QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index);
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
+QV4::ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id);
+
 // For each
 QV4::ReturnedValue __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, const QV4::ValueRef in);
 QV4::ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_iterator);

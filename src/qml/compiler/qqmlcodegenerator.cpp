@@ -1201,18 +1201,23 @@ int QmlUnitGenerator::getStringId(const QString &str) const
 QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output)
 {
     return generateJSCodeForFunctionsAndBindings(fileName, output->code, &output->jsModule, &output->jsParserEngine,
-                                                 output->program, output->functions);
+                                                 output->program, /* ### */output->program, output->functions);
 }
 
 QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-                                                      QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, const QList<AST::Node*> &functions)
+                                                              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, AST::Node *contextRoot,
+                                                              const QList<AST::Node*> &functions,
+                                                              const ObjectIdMapping &objectIds)
 {
+    this->idObjects = objectIds;
+
     QVector<int> runtimeFunctionIndices(functions.size());
     _module = jsModule;
     _module->setFileName(fileName);
 
-    QmlScanner scan(this, sourceCode);
-    scan.begin(qmlRoot, QmlBinding);
+    ScanFunctions scan(this, sourceCode, GlobalCode);
+    scan.enterEnvironment(0, QmlBinding);
+    scan.enterQmlScope(qmlRoot, "context scope");
     foreach (AST::Node *node, functions) {
         Q_ASSERT(node != qmlRoot);
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
@@ -1221,7 +1226,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fil
         scan(function ? function->body : node);
         scan.leaveEnvironment();
     }
-    scan.end();
+    scan.leaveEnvironment();
+    scan.leaveEnvironment();
 
     _env = 0;
     _function = _module->functions.at(defineFunction(QString("context scope"), qmlRoot, 0, 0));
@@ -1267,16 +1273,25 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fil
     return runtimeFunctionIndices;
 }
 
-
-void JSCodeGen::QmlScanner::begin(AST::Node *rootNode, CompilationMode compilationMode)
+V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col) const
 {
-    enterEnvironment(0, compilationMode);
-    enterFunction(rootNode, "context scope", 0, 0, 0, /*isExpression*/false);
-}
+    V4IR::Expr *result = 0;
+    // Implement QML lookup semantics in the current file context.
 
-void JSCodeGen::QmlScanner::end()
-{
-    leaveEnvironment();
+    // Look for IDs first.
+    foreach (const IdMapping &mapping, idObjects)
+        if (name == mapping.name) {
+            result = _block->QML_CONTEXT_ID_MEMBER(mapping.name, mapping.idIndex, line, col);
+            break;
+        }
+
+    if (result) {
+        _function->hasQmlDependencies = true;
+        return result;
+    }
+
+    // fall back to name lookup at run-time.
+    return 0;
 }
 
 SignalHandlerConverter::SignalHandlerConverter(QQmlEnginePrivate *enginePrivate, ParsedQML *parsedQML,

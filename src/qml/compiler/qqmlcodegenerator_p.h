@@ -349,24 +349,24 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
         : QQmlJS::Codegen(/*strict mode*/false)
     {}
 
+    struct IdMapping
+    {
+        QString name;
+        int idIndex;
+    };
+    typedef QVector<IdMapping> ObjectIdMapping;
+
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
     QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
     QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-                                               QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, const QList<AST::Node*> &functions);
+                                                       QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, AST::Node *contextRoot, const QList<AST::Node*> &functions,
+                                                       const ObjectIdMapping &objectIds = ObjectIdMapping());
+
+protected:
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col) const;
 
 private:
-    struct QmlScanner : public ScanFunctions
-    {
-        QmlScanner(JSCodeGen *cg, const QString &sourceCode)
-            : ScanFunctions(cg, sourceCode, /*default program mode*/GlobalCode)
-            , codeGen(cg)
-        {}
-
-        void begin(AST::Node *rootNode, CompilationMode compilationMode);
-        void end();
-
-        JSCodeGen *codeGen;
-    };
+    ObjectIdMapping idObjects;
 };
 
 } // namespace QtQml

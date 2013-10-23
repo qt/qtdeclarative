@@ -532,6 +532,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         VALUE(instr.result) = context->callData->thisObject;
     MOTH_END_INSTR(LoadThis)
 
+    MOTH_BEGIN_INSTR(LoadIdObject)
+        VALUE(instr.result) = __qmljs_get_id_object(context, instr.id);
+    MOTH_END_INSTR(LoadIdObject)
+
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do
 #else

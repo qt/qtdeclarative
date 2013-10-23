@@ -421,6 +421,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_define_object_literal";
     case V4IR::Name::builtin_setup_argument_object:
         return "builtin_setup_argument_object";
+    case V4IR::Name::builtin_qml_id_scope:
+        return "builtin_qml_id_scope";
     }
     return "builtin_(###FIXME)";
 };
@@ -817,6 +819,14 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
     return e;
 }
 
+Expr *BasicBlock::QML_CONTEXT_ID_MEMBER(const QString &id, int objectId, quint32 line, quint32 column)
+{
+    Member*e = function->New<Member>();
+    Name *base = NAME(Name::builtin_qml_id_scope, line, column);
+    e->initQmlIdObject(base, function->newString(id), objectId);
+    return e;
+}
+
 Stmt *BasicBlock::EXP(Expr *expr)
 { 
     if (isTerminated())
@@ -1003,7 +1013,18 @@ void CloneExpr::visitSubscript(Subscript *e)
 
 void CloneExpr::visitMember(Member *e)
 {
-    cloned = block->MEMBER(clone(e->base), e->name);
+    Member *m = static_cast<Member*>(block->MEMBER(clone(e->base), e->name));
+    if (e->type == Member::MemberByObjectId) {
+        m->type = e->type;
+        m->objectId = e->objectId;
+    }
+    cloned = m;
+}
+
+void QmlDependenciesCollector::visitPhi(Phi *s) {
+    s->targetTemp->accept(this);
+    foreach (Expr *e, s->d->incoming)
+        e->accept(this);
 }
 
 } // end of namespace IR

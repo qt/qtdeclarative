@@ -47,9 +47,10 @@
 
 #include <private/qv4engine_p.h>
 #include <private/qv4value_p.h>
-#include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
+#include <private/qv4function_p.h>
+#include <private/qv4compileddata_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
 
@@ -355,6 +356,29 @@ void QmlContextWrapper::put(Managed *m, const StringRef name, const ValueRef val
 void QmlContextWrapper::destroy(Managed *that)
 {
     static_cast<QmlContextWrapper *>(that)->~QmlContextWrapper();
+}
+
+void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const CompiledData::Function *compiledFunction)
+{
+    // Let the caller check and avoid the function call :)
+    Q_ASSERT(compiledFunction->hasQmlDependencies());
+
+    QQmlEnginePrivate *ep = engine->v8Engine->engine() ? QQmlEnginePrivate::get(engine->v8Engine->engine()) : 0;
+    if (!ep)
+        return;
+    QQmlEnginePrivate::PropertyCapture *capture = ep->propertyCapture;
+    if (!capture)
+        return;
+
+    QV4::Scope scope(engine);
+    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    QQmlContextData *qmlContext = contextWrapper->getContext();
+
+    const quint32 *dependency = compiledFunction->qmlIdObjectDependencyTable();
+    const int dependencyCount = compiledFunction->nDependingIdObjects;
+    for (int i = 0; i < dependencyCount; ++i, ++dependency)
+        capture->captureProperty(&qmlContext->idValues[*dependency].bindings);
+
 }
 
 QT_END_NAMESPACE

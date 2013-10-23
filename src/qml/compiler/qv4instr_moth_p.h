@@ -104,7 +104,8 @@ QT_BEGIN_NAMESPACE
     F(AddNumberParams, addNumberParams) \
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
-    F(LoadThis, loadThis)
+    F(LoadThis, loadThis) \
+    F(LoadIdObject, loadIdObject)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -502,6 +503,11 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_loadIdObject {
+        MOTH_INSTR_HEADER
+        Param result;
+        int id;
+    };
 
     instr_common common;
     instr_ret ret;
@@ -559,6 +565,7 @@ union Instr
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
+    instr_loadIdObject loadIdObject;
 
     static int size(Type type);
 };

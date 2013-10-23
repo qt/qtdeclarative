@@ -232,6 +232,12 @@ struct Function
     quint32 nInnerFunctions;
     quint32 innerFunctionsOffset;
     Location location;
+
+    // Qml Extensions Begin
+    quint32 nDependingIdObjects;
+    quint32 dependingIdObjectsOffset;
+    // Qml Extensions End
+
 //    quint32 formalsIndex[nFormals]
 //    quint32 localsIndex[nLocals]
 //    quint32 offsetForInnerFunctions[nInnerFunctions]
@@ -240,9 +246,12 @@ struct Function
     const quint32 *formalsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
     const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
+    const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings) * sizeof(quint32) + 7) & ~0x7;
+    inline bool hasQmlDependencies() const { return nDependingIdObjects; }
+
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies) * sizeof(quint32) + 7) & ~0x7;
     }
 };
 

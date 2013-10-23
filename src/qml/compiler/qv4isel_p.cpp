@@ -135,7 +135,10 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 return;
             }
         } else if (V4IR::Member *m = s->source->asMember()) {
-            if (m->base->asTemp() || m->base->asConst()) {
+            if (m->type == V4IR::Member::MemberByObjectId) {
+                loadIdObject(m->objectId, t);
+                return;
+            } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);
                 return;
             }

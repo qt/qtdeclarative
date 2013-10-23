@@ -323,6 +323,8 @@ protected:
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
+    // Hook provided to implement QML lookup semantics
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col) const;
 
     // nodes
     virtual bool visit(AST::ArgumentList *ast);
@@ -465,6 +467,9 @@ protected:
 
         void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
         void leaveEnvironment();
+
+        void enterQmlScope(AST::Node *ast, const QString &name)
+        { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0, /*isExpression*/false); }
 
     protected:
         using Visitor::visit;

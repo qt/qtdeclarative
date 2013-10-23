@@ -419,6 +419,14 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
     addInstruction(load);
 }
 
+void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
+{
+    Instruction::LoadIdObject load;
+    load.result = getResultParam(temp);
+    load.id = id;
+    addInstruction(load);
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     assert(sourceConst);
