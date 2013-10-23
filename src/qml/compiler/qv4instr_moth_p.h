@@ -68,7 +68,10 @@ QT_BEGIN_NAMESPACE
     F(CallProperty, callProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
+    F(SetExceptionHandler, setExceptionHandler) \
     F(CallBuiltinThrow, callBuiltinThrow) \
+    F(CallBuiltinUnwindException, callBuiltinUnwindException) \
+    F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
     F(CallBuiltinPopScope, callBuiltinPopScope) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
@@ -302,9 +305,21 @@ union Instr
         quint32 callData;
         Param result;
     };
+    struct instr_setExceptionHandler {
+        MOTH_INSTR_HEADER
+        qptrdiff offset;
+    };
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
         Param arg;
+    };
+    struct instr_callBuiltinUnwindException {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_callBuiltinPushCatchScope {
+        MOTH_INSTR_HEADER
+        int name;
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
@@ -491,6 +506,9 @@ union Instr
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
     instr_callBuiltinThrow callBuiltinThrow;
+    instr_setExceptionHandler setExceptionHandler;
+    instr_callBuiltinUnwindException callBuiltinUnwindException;
+    instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;
     instr_callBuiltinPushScope callBuiltinPushScope;
     instr_callBuiltinPopScope callBuiltinPopScope;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;

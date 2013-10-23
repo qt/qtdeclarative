@@ -216,15 +216,25 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
 # define VALUE(param) (*getValueRef(context, stack, param, stackSize))
 # define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
 #endif
-#define STOREVALUE(param, value) VALUE(param) = QV4::Value::fromReturnedValue((value))
+#define STOREVALUE(param, value) { \
+    QV4::ReturnedValue tmp = (value); \
+    if (context->engine->hasException) \
+        goto catchException; \
+    VALUE(param) = tmp; \
+    }
+#define CHECK_EXCEPTION \
+    if (context->engine->hasException) \
+        goto catchException
 
-QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
+QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
                             QV4::SafeValue *stack, unsigned stackSize
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
         )
 {
+    const uchar *exceptionHandler = 0;
+
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
 #endif // DO_TRACE_INSTR
@@ -244,12 +254,12 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     QV4::SafeString * const runtimeStrings = context->compilationUnit->runtimeStrings;
     context->interpreterInstructionPointer = &code;
 
-#ifdef MOTH_THREADED_INTERPRETER
-    const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
-    goto *genericInstr->common.code;
-#else
+
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
+#ifdef MOTH_THREADED_INTERPRETER
+        goto *genericInstr->common.code;
+#else
         switch (genericInstr->common.instructionType) {
 #endif
 
@@ -288,6 +298,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
     MOTH_BEGIN_INSTR(StoreName)
         TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         __qmljs_set_activation_property(context, runtimeStrings[instr.name], VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreName)
 
     MOTH_BEGIN_INSTR(LoadElement)
@@ -296,6 +307,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(StoreElement)
         __qmljs_set_element(context, VALUEPTR(instr.base), VALUEPTR(instr.index), VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
@@ -304,6 +316,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
 
     MOTH_BEGIN_INSTR(StoreProperty)
         __qmljs_set_property(context, VALUEPTR(instr.base), runtimeStrings[instr.name], VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(Push)
@@ -361,9 +374,22 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
         STOREVALUE(instr.result, __qmljs_call_activation_property(context, runtimeStrings[instr.name], callData));
     MOTH_END_INSTR(CallActivationProperty)
 
+    MOTH_BEGIN_INSTR(SetExceptionHandler)
+        exceptionHandler = instr.offset ? ((uchar *)&instr.offset) + instr.offset : 0;
+    MOTH_END_INSTR(SetExceptionHandler)
+
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
         __qmljs_throw(context, VALUEPTR(instr.arg));
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinThrow)
+
+    MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
+        STOREVALUE(instr.result, __qmljs_builtin_unwind_exception(context));
+    MOTH_END_INSTR(CallBuiltinUnwindException)
+
+    MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
+        context = __qmljs_builtin_push_catch_scope(context, runtimeStrings[instr.name]);
+    MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         context = __qmljs_builtin_push_with_scope(VALUEPTR(instr.arg), context);
@@ -524,8 +550,18 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *&code,
             qFatal("QQmlJS::Moth::VME: Internal error - unknown instruction %d", genericInstr->common.instructionType);
             break;
         }
-    }
 #endif
+
+        Q_ASSERT(false);
+    catchException:
+        Q_ASSERT(context->engine->hasException);
+        if (!exceptionHandler) {
+            context->engine->stackPop(stackSize);
+            return QV4::Encode::undefined();
+        }
+        code = exceptionHandler;
+    }
+
 
 }
 

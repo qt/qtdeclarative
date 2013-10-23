@@ -263,6 +263,8 @@ void InstructionSelection::run(int functionIndex)
     int locals = frameSize();
     assert(locals >= 0);
 
+    V4IR::BasicBlock *exceptionHandler = 0;
+
     Instruction::Push push;
     push.value = quint32(locals);
     addInstruction(push);
@@ -274,6 +276,18 @@ void InstructionSelection::run(int functionIndex)
         _block = _function->basicBlocks[i];
         _nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _addrs.insert(_block, _codeNext - _codeStart);
+
+        if (_block->catchBlock != exceptionHandler) {
+            Instruction::SetExceptionHandler set;
+            set.offset = 0;
+            if (_block->catchBlock) {
+                ptrdiff_t loc = addInstruction(set) + (((const char *)&set.offset) - ((const char *)&set));
+                _patches[_block->catchBlock].append(loc);
+            } else {
+                addInstruction(set);
+            }
+            exceptionHandler = _block->catchBlock;
+        }
 
         foreach (V4IR::Stmt *s, _block->statements) {
             _currentStatement = s;
@@ -774,18 +788,33 @@ void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
 
 void InstructionSelection::callBuiltinReThrow()
 {
-    // ###
+    if (_block->catchBlock) {
+        // jump to exception handler
+        Instruction::Jump jump;
+        jump.offset = 0;
+        ptrdiff_t loc = addInstruction(jump) + (((const char *)&jump.offset) - ((const char *)&jump));
+
+        _patches[_block->catchBlock].append(loc);
+    } else {
+        Instruction::Ret ret;
+        ret.result = Param::createValue(QV4::Primitive::undefinedValue());
+        addInstruction(ret);
+    }
 }
 
-void InstructionSelection::callBuiltinUnwindException(V4IR::Temp *)
+void InstructionSelection::callBuiltinUnwindException(V4IR::Temp *result)
 {
-    // ###
+    Instruction::CallBuiltinUnwindException call;
+    call.result = getResultParam(result);
+    addInstruction(call);
 }
 
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    // ####
+    Instruction::CallBuiltinPushCatchScope call;
+    call.name = registerString(exceptionName);
+    addInstruction(call);
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(V4IR::Temp *arg, V4IR::Temp *result)

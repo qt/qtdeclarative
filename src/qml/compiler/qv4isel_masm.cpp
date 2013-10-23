@@ -723,6 +723,9 @@ void InstructionSelection::run(int functionIndex)
         }
     }
 
+    if (!_as->exceptionReturnLabel.isSet())
+        visitRet(0);
+
     JSC::MacroAssemblerCodeRef codeRef =_as->link(&compilationUnit->codeSizes[functionIndex]);
     compilationUnit->codeRefs[functionIndex] = codeRef;
 
@@ -1909,7 +1912,10 @@ void InstructionSelection::visitCJump(V4IR::CJump *s)
 
 void InstructionSelection::visitRet(V4IR::Ret *s)
 {
-    if (V4IR::Temp *t = s->expr->asTemp()) {
+    if (!s) {
+        // this only happens if the method doesn't have a return statement and can
+        // only exit through an exception
+    } else if (V4IR::Temp *t = s->expr->asTemp()) {
 #if CPU(X86) || CPU(ARM)
 
 #  if CPU(X86)
