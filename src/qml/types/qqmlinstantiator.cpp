@@ -115,7 +115,7 @@ void QQmlInstantiatorPrivate::_q_createdItem(int idx, QObject* item)
     if (objects.contains(item)) //Case when it was created synchronously in regenerate
         return;
     item->setParent(q);
-    objects << item;
+    objects.insert(idx, item);
     if (objects.count() == 1)
         q->objectChanged();
     q->objectAdded(idx, item);
