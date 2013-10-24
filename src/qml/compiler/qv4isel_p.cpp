@@ -46,6 +46,7 @@
 #include "qv4isel_util_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4function_p.h"
+#include <private/qqmlpropertycache_p.h>
 
 #include <QString>
 
@@ -100,8 +101,12 @@ void IRDecoder::visitMove(V4IR::Move *s)
         }
     } else if (V4IR::Temp *t = s->target->asTemp()) {
         if (V4IR::Name *n = s->source->asName()) {
-            if (*n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
+            if (n->id && *n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
                 loadThisObject(t);
+            else if (n->builtin == V4IR::Name::builtin_qml_context_object)
+                loadQmlContextObject(t);
+            else if (n->builtin == V4IR::Name::builtin_qml_scope_object)
+                loadQmlScopeObject(t);
             else
                 getActivationProperty(n, t);
             return;
@@ -137,6 +142,9 @@ void IRDecoder::visitMove(V4IR::Move *s)
         } else if (V4IR::Member *m = s->source->asMember()) {
             if (m->type == V4IR::Member::MemberByObjectId) {
                 loadIdObject(m->objectId, t);
+                return;
+            } else if (m->type == V4IR::Member::MemberOfQObject) {
+                getQObjectProperty(m->base, m->property->coreIndex, t);
                 return;
             } else if (m->base->asTemp() || m->base->asConst()) {
                 getProperty(m->base, *m->name, t);

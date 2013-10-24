@@ -1424,7 +1424,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     Environment *e = _env;
     V4IR::Function *f = _function;
 
-    while (f && e->parent && e->compilationMode != QmlBinding) {
+    while (f && e->parent) {
         if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
             return _block->NAME(name, line, col);
 
@@ -1460,7 +1460,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 
 }
 
-V4IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col) const
+V4IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
 {
     Q_UNUSED(name)
     Q_UNUSED(line)
@@ -1955,7 +1955,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _env->enter("arguments", Environment::VariableDeclaration);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
-    if (_env->compilationMode == FunctionCode) {
+    if (_env->compilationMode == FunctionCode || _env->compilationMode == QmlBinding) {
         unsigned t = 0;
         for (Environment::MemberMap::iterator it = _env->members.begin(); it != _env->members.end(); ++it) {
             const QString &local = it.key();
@@ -2012,7 +2012,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
-            if (! _env->parent || _env->compilationMode == QmlBinding) {
+            if (! _env->parent) {
                 move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
                      _block->CLOSURE(function));
             } else {

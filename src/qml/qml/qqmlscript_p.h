@@ -229,6 +229,7 @@ public:
     // Used by compiler
     struct SignalData {
         int signalExpressionContextStack;
+        Object *signalScopeObject;
         int functionIndex; // before gen() index in functionsToCompile, then index in runtime functions
     };
     union {

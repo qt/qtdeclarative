@@ -1304,6 +1304,7 @@ void tst_qqmlecmascript::scope()
         QVERIFY(object != 0);
 
         QCOMPARE(object->property("test1").toBool(), true);
+        QEXPECT_FAIL("", "Properties resolvable at compile time come before the global object, which is not 100% compatible with older QML versions", Continue);
         QCOMPARE(object->property("test2").toBool(), true);
         QCOMPARE(object->property("test3").toBool(), true);
 

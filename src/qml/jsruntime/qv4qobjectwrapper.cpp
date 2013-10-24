@@ -329,16 +329,23 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     if (hasProperty)
         *hasProperty = true;
 
-    if (result->isFunction() && !result->isVarProperty()) {
-        if (result->isVMEFunction()) {
+    return getProperty(ctx, result);
+}
+
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyData *property)
+{
+    QV4::Scope scope(ctx);
+
+    if (property->isFunction() && !property->isVarProperty()) {
+        if (property->isVMEFunction()) {
             QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
             Q_ASSERT(vmemo);
-            return vmemo->vmeMethod(result->coreIndex);
-        } else if (result->isV4Function()) {
+            return vmemo->vmeMethod(property->coreIndex);
+        } else if (property->isV4Function()) {
             QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->engine->qmlContextObject());
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex, qmlcontextobject);
-        } else if (result->isSignalHandler()) {
-            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, result->coreIndex));
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, property->coreIndex, qmlcontextobject);
+        } else if (property->isSignalHandler()) {
+            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, new (ctx->engine->memoryManager) QV4::QmlSignalHandler(ctx->engine, m_object, property->coreIndex));
 
             QV4::ScopedString connect(scope, ctx->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->engine->newIdentifier(QStringLiteral("disconnect")));
@@ -347,44 +354,45 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
 
             return handler.asReturnedValue();
         } else {
-            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, result->coreIndex);
+            return QV4::QObjectMethod::create(ctx->engine->rootContext, m_object, property->coreIndex);
         }
     }
 
     QQmlEnginePrivate *ep = ctx->engine->v8Engine->engine() ? QQmlEnginePrivate::get(ctx->engine->v8Engine->engine()) : 0;
 
-    if (result->hasAccessors()) {
+    if (property->hasAccessors()) {
         QQmlNotifier *n = 0;
         QQmlNotifier **nptr = 0;
 
-        if (ep && ep->propertyCapture && result->accessors->notifier)
+        if (ep && ep->propertyCapture && property->accessors->notifier)
             nptr = &n;
 
-        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *result, nptr));
+        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->engine->v8Engine, m_object, *property, nptr));
 
-        if (result->accessors->notifier) {
+        if (property->accessors->notifier) {
             if (n)
                 ep->captureProperty(n);
         } else {
-            ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+            ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
         }
 
         return rv.asReturnedValue();
     }
 
-    if (ep && !result->isConstant())
-        ep->captureProperty(m_object, result->coreIndex, result->notifyIndex);
+    if (ep && !property->isConstant())
+        ep->captureProperty(m_object, property->coreIndex, property->notifyIndex);
 
-    if (result->isVarProperty()) {
+    if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_object);
         Q_ASSERT(vmemo);
-        return vmemo->vmeProperty(result->coreIndex);
-    } else if (result->isDirect())  {
-        return LoadProperty<ReadAccessor::Direct>(ctx->engine->v8Engine, m_object, *result, 0);
+        return vmemo->vmeProperty(property->coreIndex);
+    } else if (property->isDirect())  {
+        return LoadProperty<ReadAccessor::Direct>(ctx->engine->v8Engine, m_object, *property, 0);
     } else {
-        return LoadProperty<ReadAccessor::Indirect>(ctx->engine->v8Engine, m_object, *result, 0);
+        return LoadProperty<ReadAccessor::Indirect>(ctx->engine->v8Engine, m_object, *property, 0);
     }
 }
+
 
 ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
 {
@@ -601,6 +609,21 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
 
         return alternateWrapper.asReturnedValue();
     }
+}
+
+ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyIndex)
+{
+    if (QQmlData::wasDeleted(m_object))
+        return QV4::Encode::null();
+    QQmlData *ddata = QQmlData::get(m_object, /*create*/false);
+    if (!ddata)
+        return QV4::Encode::undefined();
+
+    QQmlPropertyCache *cache = ddata->propertyCache;
+    Q_ASSERT(cache);
+    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
+    return getProperty(ctx, property);
 }
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)

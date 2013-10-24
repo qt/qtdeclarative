@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlTypeNameCache;
+
 namespace QtQml {
 
 using namespace QQmlJS;
@@ -346,7 +348,7 @@ private:
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
     JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot);
+              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports);
 
     struct IdMapping
     {
@@ -355,18 +357,24 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     };
     typedef QVector<IdMapping> ObjectIdMapping;
 
+    void beginContextScope(const ObjectIdMapping &objectIds, QQmlPropertyCache *contextObject);
+    void beginObjectScope(QQmlPropertyCache *scopeObject);
+
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
-    QVector<int> generateJSCodeForFunctionsAndBindings(AST::Node *contextRoot, const QList<AST::Node*> &functions, const ObjectIdMapping &objectIds = ObjectIdMapping());
+    QVector<int> generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions);
 
 protected:
-    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col) const;
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool
     AST::UiProgram *qmlRoot;
+    QQmlTypeNameCache *imports;
 
-    ObjectIdMapping idObjects;
+    ObjectIdMapping _idObjects;
+    QQmlPropertyCache *_contextObject;
+    QQmlPropertyCache *_scopeObject;
 };
 
 } // namespace QtQml

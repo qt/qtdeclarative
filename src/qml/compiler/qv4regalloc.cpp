@@ -340,6 +340,18 @@ protected: // IRDecoder
         addCall();
     }
 
+    virtual void loadQmlContextObject(Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlScopeObject(Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
     {
         addDef(targetTemp);
@@ -385,6 +397,13 @@ protected: // IRDecoder
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
+    virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, V4IR::Temp *target)
+    {
+        addDef(target);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 

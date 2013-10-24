@@ -2357,8 +2357,8 @@ void QQmlTypeData::compile()
 
         // Compile JS binding expressions and signal handlers
 
-        JSCodeGen jsCodeGen(finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program);
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(/*### context root*/0, parsedQML->functions);
+        JSCodeGen jsCodeGen(finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
@@ -2920,7 +2920,7 @@ void QQmlScriptBlob::done()
 
     QList<QQmlError> errors;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, /*parseAsBinding*/true, &errors);
+    m_scriptData->m_precompiledScript = QV4::Script::precompile(v4, m_scriptData->url, m_source, &errors);
     if (m_scriptData->m_precompiledScript)
         m_scriptData->m_precompiledScript->ref();
     m_source.clear();

@@ -1183,6 +1183,30 @@ ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id)
     return QObjectWrapper::wrap(ctx->engine, context->idValues[id].data());
 }
 
+ReturnedValue __qmljs_get_context_object(ExecutionContext *ctx)
+{
+    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    return QObjectWrapper::wrap(ctx->engine, context->contextObject);
+}
+
+ReturnedValue __qmljs_get_scope_object(ExecutionContext *ctx)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
+    return QObjectWrapper::wrap(ctx->engine, c->getScopeObject());
+}
+
+ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
+    if (!wrapper) {
+        ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
+        return Encode::undefined();
+    }
+    return wrapper->getProperty(ctx, propertyIndex);
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

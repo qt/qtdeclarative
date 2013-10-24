@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyData;
+
 namespace QV4 {
 
 namespace CompiledData {
@@ -92,7 +94,13 @@ struct Q_QML_EXPORT JSUnitGenerator {
     QList<QList<CompiledData::JSClassMember> > jsClasses;
     uint jsClassDataSize;
     uint headerSize;
-    QHash<QQmlJS::V4IR::Function *, QSet<int> > qmlIdObjectDependenciesPerFunction;
+
+    typedef QHash<QQmlJS::V4IR::Function *, QSet<int> > IdDependencyHash;
+    IdDependencyHash qmlIdObjectDependenciesPerFunction;
+
+    typedef QHash<QQmlJS::V4IR::Function *, QSet<QQmlPropertyData*> > PropertyDependencyHash;
+    PropertyDependencyHash qmlContextPropertyDependenciesPerFunction;
+    PropertyDependencyHash qmlScopePropertyDependenciesPerFunction;
 };
 
 }

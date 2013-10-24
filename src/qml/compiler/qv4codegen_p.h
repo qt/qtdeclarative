@@ -72,7 +72,10 @@ public:
         GlobalCode,
         EvalCode,
         FunctionCode,
-        QmlBinding
+        QmlBinding // This is almost the same as EvalCode, except:
+                   //  * function declarations are moved to the return address when encountered
+                   //  * return statements are allowed everywhere (like in FunctionCode)
+                   //  * variable declarations are treated as true locals (like in FunctionCode)
     };
 
     void generateFromProgram(const QString &fileName,
@@ -324,7 +327,7 @@ protected:
 
     V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
     // Hook provided to implement QML lookup semantics
-    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col) const;
+    virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
     // nodes
     virtual bool visit(AST::ArgumentList *ast);

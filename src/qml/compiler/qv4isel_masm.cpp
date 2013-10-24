@@ -953,6 +953,16 @@ void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
     generateFunctionCall(temp, __qmljs_get_id_object, Assembler::ContextRegister, Assembler::TrustedImm32(id));
 }
 
+void InstructionSelection::loadQmlContextObject(V4IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_context_object, Assembler::ContextRegister);
+}
+
+void InstructionSelection::loadQmlScopeObject(V4IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_scope_object, Assembler::ContextRegister);
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     if (targetTemp->kind == V4IR::Temp::PhysicalRegister) {
@@ -1029,6 +1039,11 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
         generateFunctionCall(target, __qmljs_get_property, Assembler::ContextRegister,
                              Assembler::PointerToValue(base), Assembler::PointerToString(name));
     }
+}
+
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target)
+{
+    generateFunctionCall(target, __qmljs_get_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex));
 }
 
 void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBase,

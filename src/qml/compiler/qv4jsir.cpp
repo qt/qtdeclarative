@@ -42,6 +42,7 @@
 #include "qv4jsir_p.h"
 #include <private/qqmljsast_p.h>
 
+#include <private/qqmlpropertycache_p.h>
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qset.h>
@@ -423,6 +424,10 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_setup_argument_object";
     case V4IR::Name::builtin_qml_id_scope:
         return "builtin_qml_id_scope";
+    case V4IR::Name::builtin_qml_scope_object:
+        return "builtin_qml_scope_object";
+    case V4IR::Name::builtin_qml_context_object:
+        return "builtin_qml_context_object";
     }
     return "builtin_(###FIXME)";
 };
@@ -532,6 +537,8 @@ void Member::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '.' << *name;
+    if (type == MemberOfQObject)
+        out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
 }
 
 void Exp::dump(QTextStream &out, Mode)
@@ -819,11 +826,18 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
     return e;
 }
 
-Expr *BasicBlock::QML_CONTEXT_ID_MEMBER(const QString &id, int objectId, quint32 line, quint32 column)
+Expr *BasicBlock::QML_CONTEXT_ID_MEMBER(Expr *base, const QString *id, int objectId)
 {
     Member*e = function->New<Member>();
-    Name *base = NAME(Name::builtin_qml_id_scope, line, column);
-    e->initQmlIdObject(base, function->newString(id), objectId);
+    Q_ASSERT(base->asName() && base->asName()->builtin == Name::builtin_qml_id_scope);
+    e->initQmlIdObject(base, id, objectId);
+    return e;
+}
+
+Expr *BasicBlock::QML_QOBJECT_PROPERTY(Expr *base, const QString *id, QQmlPropertyData *property)
+{
+    Member*e = function->New<Member>();
+    e->initMetaProperty(base, id, property);
     return e;
 }
 
@@ -1013,12 +1027,30 @@ void CloneExpr::visitSubscript(Subscript *e)
 
 void CloneExpr::visitMember(Member *e)
 {
-    Member *m = static_cast<Member*>(block->MEMBER(clone(e->base), e->name));
-    if (e->type == Member::MemberByObjectId) {
-        m->type = e->type;
-        m->objectId = e->objectId;
+    if (e->type == Member::MemberByName)
+        cloned = block->MEMBER(clone(e->base), e->name);
+    else if (e->type == Member::MemberByObjectId)
+        cloned = block->QML_CONTEXT_ID_MEMBER(clone(e->base), e->name, e->objectId);
+    else if (e->type == Member::MemberOfQObject)
+        cloned = block->QML_QOBJECT_PROPERTY(clone(e->base), e->name, e->property);
+    else
+        Q_ASSERT(!"Unimplemented!");
+}
+
+void QmlDependenciesCollector::visitMember(Member *e) {
+    e->base->accept(this);
+    if (e->type == Member::MemberByObjectId)
+        _usedIdObjects.insert(e->objectId);
+    else if (e->type == Member::MemberOfQObject
+             && !e->property->isFunction()) { // only non-functions have notifyIndex
+
+        if (Name *base = e->base->asName()) {
+            if (base->builtin == Name::builtin_qml_context_object)
+                _usedContextProperties.insert(e->property);
+            else if (base->builtin == Name::builtin_qml_scope_object)
+                _usedScopeProperties.insert(e->property);
+        }
     }
-    cloned = m;
 }
 
 void QmlDependenciesCollector::visitPhi(Phi *s) {

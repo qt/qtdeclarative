@@ -374,10 +374,27 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
     QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
     QQmlContextData *qmlContext = contextWrapper->getContext();
 
-    const quint32 *dependency = compiledFunction->qmlIdObjectDependencyTable();
-    const int dependencyCount = compiledFunction->nDependingIdObjects;
-    for (int i = 0; i < dependencyCount; ++i, ++dependency)
-        capture->captureProperty(&qmlContext->idValues[*dependency].bindings);
+    const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
+    const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
+    for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency)
+        capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
+
+    const quint32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
+    const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
+    for (int i = 0; i < contextPropertyDependencyCount; ++i) {
+        const int propertyIndex = *contextPropertyDependency++;
+        const int notifyIndex = *contextPropertyDependency++;
+        capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex);
+    }
+
+    QObject *scopeObject = contextWrapper->getScopeObject();
+    const quint32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
+    const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
+    for (int i = 0; i < scopePropertyDependencyCount; ++i) {
+        const int propertyIndex = *scopePropertyDependency++;
+        const int notifyIndex = *scopePropertyDependency++;
+        capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
+    }
 
 }
 

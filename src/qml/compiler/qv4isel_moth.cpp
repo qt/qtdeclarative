@@ -456,9 +456,23 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 
 void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
 {
-    Instruction::LoadIdObject load;
+    Instruction::LoadQmlIdObject load;
     load.result = getResultParam(temp);
     load.id = id;
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlContextObject(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlContextObject load;
+    load.result = getResultParam(temp);
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlScopeObject(V4IR::Temp *temp)
+{
+    Instruction::LoadQmlScopeObject load;
+    load.result = getResultParam(temp);
     addInstruction(load);
 }
 
@@ -553,6 +567,15 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
     store.name = registerString(targetName);
     store.source = getParam(source);
     addInstruction(store);
+}
+
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target)
+{
+    Instruction::LoadQObjectProperty load;
+    load.base = getParam(base);
+    load.propertyIndex = propertyIndex;
+    load.result = getResultParam(target);
+    addInstruction(load);
 }
 
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)

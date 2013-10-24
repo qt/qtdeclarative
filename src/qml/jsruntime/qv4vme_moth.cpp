@@ -305,6 +305,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
 
+    MOTH_BEGIN_INSTR(LoadQObjectProperty)
+        STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex));
+    MOTH_END_INSTR(LoadQObjectProperty)
+
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
@@ -628,9 +632,17 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         VALUE(instr.result) = context->callData->thisObject;
     MOTH_END_INSTR(LoadThis)
 
-    MOTH_BEGIN_INSTR(LoadIdObject)
+    MOTH_BEGIN_INSTR(LoadQmlIdObject)
         VALUE(instr.result) = __qmljs_get_id_object(context, instr.id);
-    MOTH_END_INSTR(LoadIdObject)
+    MOTH_END_INSTR(LoadQmlIdObject)
+
+    MOTH_BEGIN_INSTR(LoadQmlContextObject)
+        VALUE(instr.result) = __qmljs_get_context_object(context);
+    MOTH_END_INSTR(LoadContextObject)
+
+    MOTH_BEGIN_INSTR(LoadQmlScopeObject)
+        VALUE(instr.result) = __qmljs_get_scope_object(context);
+    MOTH_END_INSTR(LoadScopeObject)
 
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do

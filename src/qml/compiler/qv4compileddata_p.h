@@ -235,7 +235,11 @@ struct Function
 
     // Qml Extensions Begin
     quint32 nDependingIdObjects;
-    quint32 dependingIdObjectsOffset;
+    quint32 dependingIdObjectsOffset; // Array of resolved ID objects
+    quint32 nDependingContextProperties;
+    quint32 dependingContextPropertiesOffset; // Array of int pairs (property index and notify index)
+    quint32 nDependingScopeProperties;
+    quint32 dependingScopePropertiesOffset; // Array of int pairs (property index and notify index)
     // Qml Extensions End
 
 //    quint32 formalsIndex[nFormals]
@@ -247,11 +251,13 @@ struct Function
     const quint32 *localsTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + localsOffset); }
     const quint32 *lineNumberMapping() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + lineNumberMappingOffset); }
     const quint32 *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
+    const quint32 *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
+    const quint32 *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32 *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
 
-    inline bool hasQmlDependencies() const { return nDependingIdObjects; }
+    inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies) * sizeof(quint32) + 7) & ~0x7;
+    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int lineNumberMappings, int nIdObjectDependencies, int nPropertyDependencies) {
+        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + 2 * lineNumberMappings + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
     }
 };
 

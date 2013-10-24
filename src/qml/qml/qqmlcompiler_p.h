@@ -302,16 +302,21 @@ namespace QQmlCompilerTypes {
         typedef QFieldList<O, &O::nextAliasingObject> AliasingObjectsList;
         AliasingObjectsList aliasingObjects;
         QQmlScript::Object *root;
-        QList<QQmlJS::AST::Node*> functionsToCompile;
-        QVector<int> runtimeFunctionIndices;
 
         struct CompiledMetaMethod
         {
-            QQmlScript::Object *obj;
             int methodIndex;
             int compiledFunctionIndex; // index in functionToCompile
         };
+
         QList<CompiledMetaMethod> compiledMetaMethods;
+        struct PerObjectCompileData
+        {
+            QList<QQmlJS::AST::Node*> functionsToCompile;
+            QVector<int> runtimeFunctionIndices;
+            QVector<CompiledMetaMethod> compiledMetaMethods;
+        };
+        QHash<QQmlScript::Object *, PerObjectCompileData> jsCompileData;
     };
 };
 

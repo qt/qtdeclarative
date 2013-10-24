@@ -72,6 +72,7 @@ QT_BEGIN_NAMESPACE
 
 class QTextStream;
 class QQmlType;
+class QQmlPropertyData;
 
 namespace QV4 {
 struct ExecutionContext;
@@ -323,7 +324,9 @@ struct Name: Expr {
         builtin_define_getter_setter,
         builtin_define_object_literal,
         builtin_setup_argument_object,
-        builtin_qml_id_scope
+        builtin_qml_id_scope,
+        builtin_qml_context_object,
+        builtin_qml_scope_object
     };
 
     const QString *id;
@@ -516,13 +519,15 @@ struct Member: Expr {
     enum MemberType {
         MemberByName,
         // QML extensions
-        MemberByObjectId // lookup in context's id values
+        MemberByObjectId, // lookup in context's id values
+        MemberOfQObject
     };
 
     MemberType type;
     Expr *base;
     const QString *name;
     int objectId;
+    QQmlPropertyData *property;
 
     void init(Expr *base, const QString *name)
     {
@@ -530,6 +535,7 @@ struct Member: Expr {
         this->base = base;
         this->name = name;
         this->objectId = -1;
+        this->property = 0;
     }
 
     void initQmlIdObject(Expr *base, const QString *name, int objectId)
@@ -538,6 +544,15 @@ struct Member: Expr {
         this->base = base;
         this->name = name;
         this->objectId = objectId;
+        this->property = 0;
+    }
+
+    void initMetaProperty(Expr *base, const QString *name, QQmlPropertyData *property)
+    {
+        this->type = MemberOfQObject;
+        this->base = base;
+        this->name = name;
+        this->property = property;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -831,7 +846,8 @@ struct BasicBlock {
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
     Expr *MEMBER(Expr *base, const QString *name);
-    Expr *QML_CONTEXT_ID_MEMBER(const QString &id, int idIndex, quint32 line, quint32 column);
+    Expr *QML_CONTEXT_ID_MEMBER(Expr *base, const QString *id, int idIndex);
+    Expr *QML_QOBJECT_PROPERTY(Expr *base, const QString *id, QQmlPropertyData *property);
 
     Stmt *EXP(Expr *expr);
 
@@ -933,10 +949,14 @@ private:
 
 struct QmlDependenciesCollector : public V4IR::StmtVisitor, V4IR::ExprVisitor
 {
-    QSet<int> run(Function *function)
+    void run(Function *function, QSet<int> *idObjectDependencies, QSet<QQmlPropertyData*> *contextPropertyDependencies, QSet<QQmlPropertyData*> *scopePropertyDependencies)
     {
-        QSet<int> dependencies;
-        qSwap(_usedIdObjects, dependencies);
+        QSet<int> idProperties;
+        QSet<QQmlPropertyData*> contextProperties;
+        QSet<QQmlPropertyData*> scopeProperties;
+        qSwap(_usedIdObjects, idProperties);
+        qSwap(_usedContextProperties, contextProperties);
+        qSwap(_usedScopeProperties, scopeProperties);
         for (int i = 0; i < function->basicBlocks.count(); ++i) {
             BasicBlock *bb = function->basicBlocks.at(i);
             for (int j = 0; j < bb->statements.count(); ++j) {
@@ -944,12 +964,19 @@ struct QmlDependenciesCollector : public V4IR::StmtVisitor, V4IR::ExprVisitor
                 s->accept(this);
             }
         }
-        qSwap(_usedIdObjects, dependencies);
-        return dependencies;
+        qSwap(_usedScopeProperties, scopeProperties);
+        qSwap(_usedContextProperties, contextProperties);
+        qSwap(_usedIdObjects, idProperties);
+
+        *idObjectDependencies = idProperties;
+        *contextPropertyDependencies = contextProperties;
+        *scopePropertyDependencies = scopeProperties;
     }
 
 protected:
     QSet<int> _usedIdObjects;
+    QSet<QQmlPropertyData*> _usedContextProperties;
+    QSet<QQmlPropertyData*> _usedScopeProperties;
 
     virtual void visitConst(Const *) {}
     virtual void visitString(String *) {}
@@ -976,11 +1003,7 @@ protected:
         e->index->accept(this);
     }
 
-    virtual void visitMember(Member *e) {
-        e->base->accept(this);
-        if (e->type == Member::MemberByObjectId)
-            _usedIdObjects.insert(e->objectId);
-    }
+    virtual void visitMember(Member *e);
 
     virtual void visitExp(Exp *s) {s->expr->accept(this);}
     virtual void visitMove(Move *s) {

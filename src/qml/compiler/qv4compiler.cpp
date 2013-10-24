@@ -43,6 +43,7 @@
 #include <qv4compileddata_p.h>
 #include <qv4isel_p.h>
 #include <qv4engine_p.h>
+#include <private/qqmlpropertycache_p.h>
 
 QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::V4IR::Module *module, int headerSize)
     : irModule(module)
@@ -172,9 +173,19 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
 
         if (f->hasQmlDependencies) {
             QQmlJS::V4IR::QmlDependenciesCollector depCollector;
-            QSet<int> idObjectDeps = depCollector.run(f);
+
+            QSet<int> idObjectDeps;
+            QSet<QQmlPropertyData*> contextPropertyDeps;
+            QSet<QQmlPropertyData*> scopePropertyDeps;
+
+            depCollector.run(f, &idObjectDeps, &contextPropertyDeps, &scopePropertyDeps);
+
             if (!idObjectDeps.isEmpty())
                 qmlIdObjectDependenciesPerFunction.insert(f, idObjectDeps);
+            if (!contextPropertyDeps.isEmpty())
+                qmlContextPropertyDependenciesPerFunction.insert(f, contextPropertyDeps);
+            if (!scopePropertyDeps.isEmpty())
+                qmlScopePropertyDependenciesPerFunction.insert(f, scopePropertyDeps);
         }
 
     }
@@ -192,9 +203,24 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd())
             lineNumberMappingCount = lineNumberMapping->count() / 2;
 
-        const int qmlIdDepsCount = f->hasQmlDependencies ? qmlIdObjectDependenciesPerFunction.value(f).count() : 0;
+        int qmlIdDepsCount = 0;
+        int qmlPropertyDepsCount = 0;
 
-        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount, qmlIdDepsCount);
+        if (f->hasQmlDependencies) {
+            IdDependencyHash::ConstIterator idIt = qmlIdObjectDependenciesPerFunction.find(f);
+            if (idIt != qmlIdObjectDependenciesPerFunction.constEnd())
+                qmlIdDepsCount += idIt->count();
+
+            PropertyDependencyHash::ConstIterator it = qmlContextPropertyDependenciesPerFunction.find(f);
+            if (it != qmlContextPropertyDependenciesPerFunction.constEnd())
+                qmlPropertyDepsCount += it->count();
+
+            it = qmlScopePropertyDependenciesPerFunction.find(f);
+            if (it != qmlScopePropertyDependenciesPerFunction.constEnd())
+                qmlPropertyDepsCount += it->count();
+        }
+
+        functionDataSize += QV4::CompiledData::Function::calculateSize(f->formals.size(), f->locals.size(), f->nestedFunctions.size(), lineNumberMappingCount, qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
     const int totalSize = unitSize + functionDataSize + stringDataSize + jsClassDataSize;
@@ -292,7 +318,7 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
-    QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
+    quint32 currentOffset = sizeof(QV4::CompiledData::Function);
 
     function->index = index;
     function->nameIndex = getStringId(*irFunction->name);
@@ -306,25 +332,55 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
     if (irFunction->isNamedExpression)
         function->flags |= CompiledData::Function::IsNamedExpression;
     function->nFormals = irFunction->formals.size();
-    function->formalsOffset = sizeof(QV4::CompiledData::Function);
+    function->formalsOffset = currentOffset;
+    currentOffset += function->nFormals * sizeof(quint32);
+
     function->nLocals = irFunction->locals.size();
-    function->localsOffset = function->formalsOffset + function->nFormals * sizeof(quint32);
+    function->localsOffset = currentOffset;
+    currentOffset += function->nLocals * sizeof(quint32);
 
     function->nLineNumberMappingEntries = 0;
+    QHash<QQmlJS::V4IR::Function *, QVector<uint> >::ConstIterator lineNumberMapping = lineNumberMappingsPerFunction.find(irFunction);
     if (lineNumberMapping != lineNumberMappingsPerFunction.constEnd()) {
         function->nLineNumberMappingEntries = lineNumberMapping->count() / 2;
     }
-    function->lineNumberMappingOffset = function->localsOffset + function->nLocals * sizeof(quint32);
+    function->lineNumberMappingOffset = currentOffset;
+    currentOffset += function->nLineNumberMappingEntries * 2 * sizeof(quint32);
 
     function->nInnerFunctions = irFunction->nestedFunctions.size();
-    function->innerFunctionsOffset = function->lineNumberMappingOffset + function->nLineNumberMappingEntries * 2 * sizeof(quint32);
+    function->innerFunctionsOffset = currentOffset;
+    currentOffset += function->nInnerFunctions * sizeof(quint32);
 
     function->nDependingIdObjects = 0;
+    function->nDependingContextProperties = 0;
+    function->nDependingScopeProperties = 0;
+
     QSet<int> qmlIdObjectDeps;
+    QSet<QQmlPropertyData*> qmlContextPropertyDeps;
+    QSet<QQmlPropertyData*> qmlScopePropertyDeps;
+
     if (irFunction->hasQmlDependencies) {
         qmlIdObjectDeps = qmlIdObjectDependenciesPerFunction.value(irFunction);
-        function->nDependingIdObjects = qmlIdObjectDeps.count();
-        function->dependingIdObjectsOffset = function->innerFunctionsOffset + function->nInnerFunctions * sizeof(quint32);
+        qmlContextPropertyDeps = qmlContextPropertyDependenciesPerFunction.value(irFunction);
+        qmlScopePropertyDeps = qmlScopePropertyDependenciesPerFunction.value(irFunction);
+
+        if (!qmlIdObjectDeps.isEmpty()) {
+            function->nDependingIdObjects = qmlIdObjectDeps.count();
+            function->dependingIdObjectsOffset = currentOffset;
+            currentOffset += function->nDependingIdObjects * sizeof(quint32);
+        }
+
+        if (!qmlContextPropertyDeps.isEmpty()) {
+            function->nDependingContextProperties = qmlContextPropertyDeps.count();
+            function->dependingContextPropertiesOffset = currentOffset;
+            currentOffset += function->nDependingContextProperties * sizeof(quint32) * 2;
+        }
+
+        if (!qmlScopePropertyDeps.isEmpty()) {
+            function->nDependingScopeProperties = qmlScopePropertyDeps.count();
+            function->dependingScopePropertiesOffset = currentOffset;
+            currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
+        }
     }
 
     function->location.line = irFunction->line;
@@ -352,11 +408,24 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
         innerFunctions[i] = functionOffsets.value(irFunction->nestedFunctions.at(i));
 
     // write QML dependencies
-    quint32 *writtenIdDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
+    quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
     foreach (int id, qmlIdObjectDeps)
-        *writtenIdDeps++ = id;
+        *writtenDeps++ = id;
 
-    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions, function->nLineNumberMappingEntries, function->nDependingIdObjects);
+    writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
+    foreach (QQmlPropertyData *property, qmlContextPropertyDeps) {
+        *writtenDeps++ = property->coreIndex;
+        *writtenDeps++ = property->notifyIndex;
+    }
+
+    writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
+    foreach (QQmlPropertyData *property, qmlScopePropertyDeps) {
+        *writtenDeps++ = property->coreIndex;
+        *writtenDeps++ = property->notifyIndex;
+    }
+
+    return CompiledData::Function::calculateSize(function->nFormals, function->nLocals, function->nInnerFunctions, function->nLineNumberMappingEntries,
+                                                 function->nDependingIdObjects, function->nDependingContextProperties + function->nDependingScopeProperties);
 }
 
 

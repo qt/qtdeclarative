@@ -115,6 +115,8 @@ protected:
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void loadThisObject(V4IR::Temp *temp);
     virtual void loadIdObject(int id, V4IR::Temp *temp);
+    virtual void loadQmlContextObject(V4IR::Temp *temp);
+    virtual void loadQmlScopeObject(V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);
@@ -123,6 +125,7 @@ protected:
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
+    virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target);
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp);

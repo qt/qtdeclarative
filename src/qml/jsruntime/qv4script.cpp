@@ -207,8 +207,7 @@ void Script::parse()
                 inheritedLocals.append(*i ? (*i)->toQString() : QString());
 
         RuntimeCodegen cg(scope, strictMode);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module,
-                               parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::EvalCode, inheritedLocals);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
         if (v4->hasException)
             return;
 
@@ -286,7 +285,7 @@ Function *Script::function()
     return vmFunction;
 }
 
-CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, bool parseAsBinding, QList<QQmlError> *reportedErrors)
+CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
 {
     using namespace QQmlJS;
     using namespace QQmlJS::AST;
@@ -330,7 +329,7 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
     }
 
     QQmlJS::Codegen cg(/*strict mode*/false);
-    cg.generateFromProgram(url.toString(), source, program, &module, parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::GlobalCode);
+    cg.generateFromProgram(url.toString(), source, program, &module, QQmlJS::Codegen::EvalCode);
     errors = cg.errors();
     if (!errors.isEmpty()) {
         if (reportedErrors)

@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
     F(GetLookup, getLookup) \
     F(StoreProperty, storeProperty) \
     F(SetLookup, setLookup) \
+    F(LoadQObjectProperty, loadQObjectProperty) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
@@ -122,7 +123,9 @@ QT_BEGIN_NAMESPACE
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
     F(LoadThis, loadThis) \
-    F(LoadIdObject, loadIdObject)
+    F(LoadQmlIdObject, loadQmlIdObject) \
+    F(LoadQmlContextObject, loadQmlContextObject) \
+    F(LoadQmlScopeObject, loadQmlScopeObject)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -272,6 +275,12 @@ union Instr
     struct instr_getLookup {
         MOTH_INSTR_HEADER
         int index;
+        Param base;
+        Param result;
+    };
+    struct instr_loadQObjectProperty {
+        MOTH_INSTR_HEADER
+        int propertyIndex;
         Param base;
         Param result;
     };
@@ -623,10 +632,18 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_loadIdObject {
+    struct instr_loadQmlIdObject {
         MOTH_INSTR_HEADER
         Param result;
         int id;
+    };
+    struct instr_loadQmlContextObject {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
+    struct instr_loadQmlScopeObject {
+        MOTH_INSTR_HEADER
+        Param result;
     };
 
     instr_common common;
@@ -643,6 +660,7 @@ union Instr
     instr_storeElement storeElement;
     instr_loadProperty loadProperty;
     instr_getLookup getLookup;
+    instr_loadQObjectProperty loadQObjectProperty;
     instr_storeProperty storeProperty;
     instr_setLookup setLookup;
     instr_push push;
@@ -702,7 +720,9 @@ union Instr
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
-    instr_loadIdObject loadIdObject;
+    instr_loadQmlIdObject loadQmlIdObject;
+    instr_loadQmlContextObject loadQmlContextObject;
+    instr_loadQmlScopeObject loadQmlScopeObject;
 
     static int size(Type type);
 };
