@@ -866,14 +866,4 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
     return error;
 }
 
-#if !defined(V4_CXX_ABI_EXCEPTION)
-struct DummyException
-{};
-
-void ExecutionEngine::throwInternal()
-{
-    throw DummyException();
-}
-#endif
-
 QT_END_NAMESPACE

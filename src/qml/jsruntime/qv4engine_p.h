@@ -332,10 +332,6 @@ struct Q_QML_EXPORT ExecutionEngine
     // Use only inside catch(...) -- will re-throw if no JS exception
     static QQmlError catchExceptionAsQmlError(QV4::ExecutionContext *context);
 
-    void Q_NORETURN throwInternal();
-    // ----
-
-
 private:
     QmlExtensions *m_qmlExtensions;
 };
