@@ -73,6 +73,7 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool showDirs READ showDirs WRITE setShowDirs)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst)
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
+    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden)
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 //![class props]
@@ -131,6 +132,8 @@ public:
     void setShowDirsFirst(bool showDirsFirst);
     bool showDotAndDotDot() const;
     void setShowDotAndDotDot(bool on);
+    bool showHidden() const;
+    void setShowHidden(bool on);
     bool showOnlyReadable() const;
     void setShowOnlyReadable(bool on);
 //![prop funcs]

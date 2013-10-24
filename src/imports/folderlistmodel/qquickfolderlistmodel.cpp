@@ -56,7 +56,8 @@ public:
     QQuickFolderListModelPrivate(QQuickFolderListModel *q)
         : q_ptr(q),
           sortField(QQuickFolderListModel::Name), sortReversed(false), showFiles(true),
-          showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false)
+          showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false),
+          showHidden(false)
     {
         nameFilters << QLatin1String("*");
     }
@@ -76,6 +77,7 @@ public:
     bool showDirsFirst;
     bool showDotAndDotDot;
     bool showOnlyReadable;
+    bool showHidden;
 
     ~QQuickFolderListModelPrivate() {}
     void init();
@@ -271,9 +273,10 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     that are applied to names of files and directories, causing only those that
     match the filters to be exposed.
 
-    Directories can be included or excluded using the \l showDirs property, and
+    Directories can be included or excluded using the \l showDirs property,
     navigation directories can also be excluded by setting the \l showDotAndDotDot
-    property to false.
+    property to false, hidden files can be included or excluded using the
+    \l showHidden property.
 
     It is sometimes useful to limit the files and directories exposed to those
     that the user can access. The \l showOnlyReadable property can be set to
@@ -718,6 +721,30 @@ void  QQuickFolderListModel::setShowDotAndDotDot(bool on)
 
     if (on != d->showDotAndDotDot) {
         d->fileInfoThread.setShowDotAndDotDot(on);
+    }
+}
+
+
+/*!
+    \qmlproperty bool FolderListModel::showHidden
+
+    If true, hidden files and directories are included in the model; otherwise
+    they are excluded.
+
+    By default, this property is false.
+*/
+bool QQuickFolderListModel::showHidden() const
+{
+    Q_D(const QQuickFolderListModel);
+    return d->showHidden;
+}
+
+void QQuickFolderListModel::setShowHidden(bool on)
+{
+    Q_D(QQuickFolderListModel);
+
+    if (on != d->showHidden) {
+        d->fileInfoThread.setShowHidden(on);
     }
 }
 

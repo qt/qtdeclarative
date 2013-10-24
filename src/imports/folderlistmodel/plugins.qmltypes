@@ -33,6 +33,7 @@ Module {
         Property { name: "showDirs"; type: "bool" }
         Property { name: "showDirsFirst"; type: "bool" }
         Property { name: "showDotAndDotDot"; type: "bool" }
+        Property { name: "showHidden"; type: "bool" }
         Property { name: "showOnlyReadable"; type: "bool" }
         Property { name: "count"; type: "int"; isReadonly: true }
         Signal { name: "rowCountChanged" }
