@@ -48,14 +48,14 @@ AbstractMessageDialog {
 
     Rectangle {
         id: content
-        property real spacing: 8
+        property real spacing: 6
         property real outerSpacing: 12
-        property int maxSize: 0.9 * Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+        property real buttonsRowImplicitWidth: Screen.pixelDensity * 50
         implicitHeight: contentColumn.implicitHeight + outerSpacing * 2
         onImplicitHeightChanged: root.height = implicitHeight
-        implicitWidth: Math.min(maxSize, Math.max(
-            mainText.implicitWidth, buttons.implicitWidth) + outerSpacing * 2);
-        onImplicitWidthChanged: if (implicitWidth > root.width) root.width = implicitWidth
+        implicitWidth: Math.min(Screen.desktopAvailableWidth * 0.9, Math.max(
+            mainText.implicitWidth, buttonsRowImplicitWidth) + outerSpacing * 2);
+        onImplicitWidthChanged: root.width = implicitWidth
         color: palette.window
         focus: root.visible
         Keys.onPressed: {
@@ -127,11 +127,12 @@ AbstractMessageDialog {
             }
 
 
-            Row {
+            Flow {
                 id: buttons
                 spacing: content.spacing
                 layoutDirection: Qt.RightToLeft
-                width: parent.width
+                width: parent.width + content.outerSpacing
+                x: -content.outerSpacing
                 Button {
                     id: okButton
                     text: "OK"
@@ -246,6 +247,7 @@ AbstractMessageDialog {
                     onClicked: root.click(Message.Help)
                     visible: root.standardButtons & Message.Help
                 }
+                onVisibleChildrenChanged: calculateImplicitWidth()
             }
         }
 
@@ -316,4 +318,13 @@ AbstractMessageDialog {
             }
         ]
     }
+    function calculateImplicitWidth() {
+        if (buttons.visibleChildren.length < 2)
+            return;
+        var calcWidth = 0;
+        for (var i = 0; i < buttons.visibleChildren.length; ++i)
+            calcWidth += Math.max(100, buttons.visibleChildren[i].implicitWidth) + content.spacing
+        content.buttonsRowImplicitWidth = content.outerSpacing + calcWidth
+    }
+    Component.onCompleted: calculateImplicitWidth()
 }
