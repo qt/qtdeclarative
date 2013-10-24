@@ -3649,10 +3649,10 @@ bool QQmlCompiler::completeComponentBuild()
     }
 
     if (!compileState->functionsToCompile.isEmpty()) {
-        JSCodeGen jsCodeGen;
-
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
+
+        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot);
 
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {
@@ -3665,8 +3665,7 @@ bool QQmlCompiler::completeComponentBuild()
             }
         }
 
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine,
-                                                                                                    qmlRoot, compileState->root->astNode,
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(compileState->root->astNode,
                                                                                                     compileState->functionsToCompile,
                                                                                                     idMapping);
         compileState->runtimeFunctionIndices = runtimeFunctionIndices;

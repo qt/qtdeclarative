@@ -1198,22 +1198,23 @@ int QmlUnitGenerator::getStringId(const QString &str) const
     return jsUnitGenerator->getStringId(str);
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output)
+JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule, Engine *jsEngine, AST::UiProgram *qmlRoot)
+    : QQmlJS::Codegen(/*strict mode*/false)
+    , sourceCode(sourceCode)
+    , jsEngine(jsEngine)
+    , qmlRoot(qmlRoot)
 {
-    return generateJSCodeForFunctionsAndBindings(fileName, output->code, &output->jsModule, &output->jsParserEngine,
-                                                 output->program, /* ### */output->program, output->functions);
+    _module = jsModule;
+    _module->setFileName(fileName);
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-                                                              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, AST::Node *contextRoot,
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(AST::Node *contextRoot,
                                                               const QList<AST::Node*> &functions,
                                                               const ObjectIdMapping &objectIds)
 {
     this->idObjects = objectIds;
 
     QVector<int> runtimeFunctionIndices(functions.size());
-    _module = jsModule;
-    _module->setFileName(fileName);
 
     ScanFunctions scan(this, sourceCode, GlobalCode);
     scan.enterEnvironment(0, QmlBinding);

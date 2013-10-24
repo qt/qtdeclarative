@@ -345,9 +345,8 @@ private:
 
 struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
 {
-    JSCodeGen()
-        : QQmlJS::Codegen(/*strict mode*/false)
-    {}
+    JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
+              QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot);
 
     struct IdMapping
     {
@@ -357,15 +356,16 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     typedef QVector<IdMapping> ObjectIdMapping;
 
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
-    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output);
-    QVector<int> generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
-                                                       QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, AST::Node *contextRoot, const QList<AST::Node*> &functions,
-                                                       const ObjectIdMapping &objectIds = ObjectIdMapping());
+    QVector<int> generateJSCodeForFunctionsAndBindings(AST::Node *contextRoot, const QList<AST::Node*> &functions, const ObjectIdMapping &objectIds = ObjectIdMapping());
 
 protected:
     virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col) const;
 
 private:
+    QString sourceCode;
+    QQmlJS::Engine *jsEngine; // needed for memory pool
+    AST::UiProgram *qmlRoot;
+
     ObjectIdMapping idObjects;
 };
 

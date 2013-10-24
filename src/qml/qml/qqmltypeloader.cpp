@@ -2357,8 +2357,8 @@ void QQmlTypeData::compile()
 
         // Compile JS binding expressions and signal handlers
 
-        JSCodeGen jsCodeGen;
-        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
+        JSCodeGen jsCodeGen(finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program);
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(/*### context root*/0, parsedQML->functions);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
