@@ -40,8 +40,8 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-
-import "settings.js" as Settings
+// Needed for singletons QTBUG-34418
+import "."
 
 Emitter {
     property Item block: parent

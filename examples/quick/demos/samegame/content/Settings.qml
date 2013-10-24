@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Research In Motion
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -38,19 +38,23 @@
 **
 ****************************************************************************/
 
-.pragma library
+pragma Singleton
+import QtQml 2.0
 
-//This should be switched over once a proper QML settings API exists
+QtObject {
+    property int screenHeight: 480
+    property int screenWidth: 320
 
-var menuDelay = 500
+    property int menuDelay: 500
 
-var headerHeight = 20 // 70 on BB10
-var footerHeight = 44 // 100 on BB10
+    property int headerHeight: 20 // 70 on BB10
+    property int footerHeight: 44 // 100 on BB10
 
-var fontPixelSize = 14 // 55 on BB10
+    property int fontPixelSize: 14 // 55 on BB10
 
-var blockSize = 32 // 64 on BB10
+    property int blockSize: 32 // 64 on BB10
 
-var toolButtonHeight = 32 // 64 on BB10
+    property int toolButtonHeight: 32 // 64 on BB10
 
-var menuButtonSpacing = 0 // 15 on BB10
+    property int menuButtonSpacing: 0 // 15 on BB10
+}

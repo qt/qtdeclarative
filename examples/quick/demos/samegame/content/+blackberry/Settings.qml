@@ -38,19 +38,10 @@
 **
 ****************************************************************************/
 
-.pragma library
+pragma Singleton
+import QtQml 2.0
 
-//This should be switched over once a proper QML settings API exists
-
-var menuDelay = 500
-
-var headerHeight = 70
-var footerHeight = 100
-
-var fontPixelSize = 55
-
-var blockSize = 64
-
-var toolButtonHeight = 64
-
-var menuButtonSpacing = 15
+// Instantiating a BBSettings class that can be easily tweaked for future
+// BB devices (we may have more selectors added)
+BBSettings {
+}

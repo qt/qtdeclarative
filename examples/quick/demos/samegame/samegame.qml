@@ -41,12 +41,11 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 import "content/samegame.js" as Logic
-import "content/settings.js" as Settings
 import "content"
 
 Rectangle {
     id: root
-    width: 320; height: 480
+    width: Settings.screenWidth; height: Settings.screenHeight
     property int acc: 0
 
 
@@ -119,6 +118,8 @@ Rectangle {
         Column {
             y: 100 + 40
             spacing: Settings.menuButtonSpacing
+            width: parent.width
+            height: parent.height - (140 + Settings.footerHeight)
 
             Button {
                 width: root.width

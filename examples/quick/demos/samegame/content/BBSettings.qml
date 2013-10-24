@@ -1,6 +1,6 @@
-/***************************************************************************
+/****************************************************************************
 **
-** Copyright (C) 2012 Research In Motion
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -38,12 +38,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "."
+import QtQml 2.0
 
-Text {
-    font.pixelSize: Settings.fontPixelSize;
-    color: "white";
-    textFormat: Text.StyledText;
-    Behavior on opacity { NumberAnimation {} }
+QtObject {
+    // This height/width is here for desktop testing, otherwise
+    // we could just use Screen.width/Screen.height.
+    property int screenHeight: 1280
+    property int screenWidth: 768
+
+    property int menuDelay: 500
+
+    property int headerHeight: 70
+    property int footerHeight: 100
+
+    property int fontPixelSize: 55
+
+    property int blockSize: 64
+
+    property int toolButtonHeight: 64
+
+    property int menuButtonSpacing: 15
 }
