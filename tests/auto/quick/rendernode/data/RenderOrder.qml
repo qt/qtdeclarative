@@ -4,8 +4,8 @@ import Test 1.0
 Rectangle {
     id: root
 
-    width: 160
-    height: 240
+    width: 200
+    height: 200
     color: "black"
 
     Rectangle {

@@ -2031,14 +2031,13 @@ void Renderer::renderBatches()
                            << " -> Alpha: " << qsg_countNodesInBatches(m_alphaBatches) << " nodes in " << m_alphaBatches.size() << " batches...";
     }
 
-    QRect r = viewportRect();
-    glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
-
     for (QHash<QSGRenderNode *, RenderNodeElement *>::const_iterator it = m_renderNodeElements.constBegin();
          it != m_renderNodeElements.constEnd(); ++it) {
         prepareRenderNode(it.value());
     }
 
+    QRect r = viewportRect();
+    glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
     glClearColor(clearColor().redF(), clearColor().greenF(), clearColor().blueF(), clearColor().alphaF());
 #if defined(QT_OPENGL_ES)
     glClearDepthf(1);
