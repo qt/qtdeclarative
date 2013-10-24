@@ -301,7 +301,7 @@ void QQuickBorderImage::load()
             d->oldSourceSize = sourceSize();
             emit sourceSizeChanged();
         }
-        update();
+        pixmapChange();
         return;
     } else {
         if (d->url.path().endsWith(QLatin1String("sci"))) {
@@ -509,7 +509,7 @@ void QQuickBorderImage::requestFinished()
         emit sourceSizeChanged();
     }
 
-    update();
+    pixmapChange();
 }
 
 #define BORDERIMAGE_MAX_REDIRECT 16
@@ -561,6 +561,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
 
     bool updatePixmap = d->pixmapChanged;
+    d->pixmapChanged = false;
     if (!node) {
         node = d->sceneGraphContext()->createImageNode();
         updatePixmap = true;
@@ -634,10 +635,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 void QQuickBorderImage::pixmapChange()
 {
     Q_D(QQuickBorderImage);
-
     d->pixmapChanged = true;
-
-    // When the pixmap changes, such as being deleted, we need to update the textures
     update();
 }
 
