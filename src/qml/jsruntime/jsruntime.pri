@@ -37,7 +37,6 @@ SOURCES += \
     $$PWD/qv4string.cpp \
     $$PWD/qv4objectiterator.cpp \
     $$PWD/qv4regexp.cpp \
-    $$PWD/qv4unwindhelper.cpp \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
     $$PWD/qv4executableallocator.cpp \
@@ -83,9 +82,6 @@ HEADERS += \
     $$PWD/qv4property_p.h \
     $$PWD/qv4objectiterator_p.h \
     $$PWD/qv4regexp_p.h \
-    $$PWD/qv4unwindhelper_p.h \
-    $$PWD/qv4unwindhelper_dw2_p.h \
-    $$PWD/qv4unwindhelper_arm_p.h \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \

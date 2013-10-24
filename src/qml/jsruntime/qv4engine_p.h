@@ -85,7 +85,6 @@ struct ArgumentsObject;
 struct ExecutionContext;
 struct ExecutionEngine;
 class MemoryManager;
-class UnwindHelper;
 class ExecutableAllocator;
 
 struct ObjectPrototype;

@@ -46,7 +46,6 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
-#include <private/qv4unwindhelper_p.h>
 
 #include <algorithm>
 

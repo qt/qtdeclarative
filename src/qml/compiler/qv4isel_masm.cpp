@@ -44,7 +44,6 @@
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4regexpobject_p.h"
-#include "qv4unwindhelper_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "qv4ssa_p.h"
@@ -70,7 +69,6 @@ CompilationUnit::~CompilationUnit()
 {
     foreach (Function *f, runtimeFunctions)
         engine->allFunctions.remove(reinterpret_cast<quintptr>(f->codePtr));
-    UnwindHelper::deregisterFunctions(runtimeFunctions);
 }
 
 void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
@@ -85,8 +83,6 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
                                                            codeSizes[i]);
         runtimeFunctions[i] = runtimeFunction;
     }
-
-    UnwindHelper::registerFunctions(runtimeFunctions);
 
     foreach (Function *f, runtimeFunctions)
         engine->allFunctions.insert(reinterpret_cast<quintptr>(f->codePtr), f);
@@ -201,8 +197,6 @@ static const Assembler::RegisterID calleeSavedRegisters[] = {
 #if CPU(ARM)
 static const Assembler::RegisterID calleeSavedRegisters[] = {
     // ### FIXME: remove unused registers.
-    // Keep these in reverse order and make sure to also edit the unwind program in
-    // qv4unwindhelper_arm_p.h when changing this list.
     JSC::ARMRegisters::r12,
     JSC::ARMRegisters::r10,
     JSC::ARMRegisters::r9,
@@ -519,11 +513,6 @@ void Assembler::recordLineNumber(int lineNumber)
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
     Label endOfCode = label();
-#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
-    // Let the ARM exception table follow right after that
-    for (int i = 0, nops = UnwindHelper::unwindInfoSize() / 2; i < nops; ++i)
-        nop();
-#endif
 
     {
         QHashIterator<V4IR::BasicBlock *, QVector<Jump> > it(_patches);
@@ -575,9 +564,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     _constTable.finalize(linkBuffer, _isel);
 
     *codeSize = linkBuffer.offsetOf(endOfCode);
-#if defined(Q_PROCESSOR_ARM) && !defined(Q_OS_IOS)
-    UnwindHelper::writeARMUnwindInfo(linkBuffer.debugAddress(), *codeSize);
-#endif
 
     JSC::MacroAssemblerCodeRef codeRef;
 

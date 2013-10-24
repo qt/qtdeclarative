@@ -45,7 +45,6 @@
 #include "qv4value_p.h"
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
-#include "qv4unwindhelper_p.h"
 
 QT_BEGIN_NAMESPACE
 
