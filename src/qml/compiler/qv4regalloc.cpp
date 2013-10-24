@@ -242,30 +242,52 @@ protected: // IRDecoder
 
         switch (target->type) {
         case DoubleType:
-            if (source->type == UInt32Type) {
-                sourceReg = Use::MustHaveRegister;
+            switch (source->type) {
+            case UInt32Type:
+            case SInt32Type:
+            case NullType:
+            case UndefinedType:
+            case BoolType:
                 needsCall = false;
                 break;
-            }
-        case SInt32Type:
-            if (source->type == DoubleType || source->type == UInt32Type) {
-                // this might need a call
+            default:
                 break;
             }
-#if 0 // TODO: change masm to generate code
-        case UInt32Type:
-#endif
+            break;
         case BoolType:
             switch (source->type) {
             case UInt32Type:
-            case BoolType:
-            case DoubleType:
                 sourceReg = Use::MustHaveRegister;
                 needsCall = false;
                 break;
+            case DoubleType:
+            case UndefinedType:
+            case NullType:
             case SInt32Type:
                 needsCall = false;
                 break;
+            default:
+                break;
+            }
+            break;
+        case SInt32Type:
+            switch (source->type) {
+            case UInt32Type:
+            case NullType:
+            case UndefinedType:
+            case BoolType:
+                needsCall = false;
+            default:
+                break;
+            }
+            break;
+        case UInt32Type:
+            switch (source->type) {
+            case SInt32Type:
+            case NullType:
+            case UndefinedType:
+            case BoolType:
+                needsCall = false;
             default:
                 break;
             }
@@ -434,14 +456,8 @@ protected: // IRDecoder
                     || (oper >= OpGt && oper <= OpStrictNotEqual)) {
                 needsCall = false;
             }
-        } else if (leftSource->type == SInt32Type && rightSource->type == SInt32Type) {
-            if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor) {
-                needsCall = false;
-            }
-        } else if (leftSource->type == SInt32Type && rightSource->type == UInt32Type) {
-            if (oper == OpLShift || oper == OpRShift) {
-                needsCall = false;
-            }
+        } if (oper == OpBitAnd || oper == OpBitOr || oper == OpBitXor || oper == OpLShift || oper == OpRShift || oper == OpURShift) {
+            needsCall = false;
         }
 
         addDef(target);

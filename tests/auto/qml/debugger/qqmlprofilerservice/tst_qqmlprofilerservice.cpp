@@ -313,7 +313,7 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
     m_process->start(QStringList() << arguments);
     QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
 
-    QQmlDebugConnection *m_connection = new QQmlDebugConnection();
+    m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerClient(m_connection);
 
     const int port = m_process->debugPort();
@@ -323,17 +323,23 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 void tst_QQmlProfilerService::cleanup()
 {
     if (QTest::currentTestFailed()) {
-        qDebug() << "Process State:" << m_process->state();
-        qDebug() << "Application Output:" << m_process->output();
+        qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
+        qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
+        qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
+        qDebug() << "Client State:" << (m_client ? m_client->stateString() : QLatin1String("null"));
     }
     delete m_process;
-    delete m_connection;
+    m_process = 0;
     delete m_client;
+    m_client = 0;
+    delete m_connection;
+    m_connection = 0;
 }
 
 void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 {
     connect(true, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -353,6 +359,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
 {
     connect(true, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(false);
@@ -374,6 +381,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
 void tst_QQmlProfilerService::nonBlockingConnect()
 {
     connect(false, "test.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -392,6 +400,7 @@ void tst_QQmlProfilerService::nonBlockingConnect()
 void tst_QQmlProfilerService::pixmapCacheData()
 {
     connect(true, "pixmapCacheTest.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -437,6 +446,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
 void tst_QQmlProfilerService::scenegraphData()
 {
     connect(true, "scenegraphTest.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
@@ -449,27 +459,27 @@ void tst_QQmlProfilerService::scenegraphData()
 
     // check that at least one frame was rendered
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
+    // (though we can't be sure to get the SGRenderLoopFrame in the threaded renderer)
+    //
     // since the rendering happens in a different thread, there could be other unrelated events interleaved
     int loopcheck = 0;
     foreach (const QQmlProfilerData &msg, m_client->traceMessages) {
         if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
             if (loopcheck == 0 && msg.detailType == QQmlProfilerClient::SceneGraphContextFrame)
                 loopcheck = 1;
-            else
-            if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
+            else if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
                 loopcheck = 2;
-            else
-            if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
+            else if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
                loopcheck = 3;
         }
     }
-
-    QCOMPARE(loopcheck, 3);
+    QVERIFY(loopcheck >= 2);
 }
 
 void tst_QQmlProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);

@@ -92,7 +92,8 @@ void QQuickAbstractDialog::setVisible(bool v)
             if (!m_dialogWindow) {
                 m_contentItem = qobject_cast<QQuickItem *>(m_qmlImplementation);
                 if (m_contentItem) {
-                    m_dialogWindow = m_contentItem->window();
+                    if (m_hasNativeWindows)
+                        m_dialogWindow = m_contentItem->window();
                     // An Item-based dialog implementation doesn't come with a window, so
                     // we have to instantiate one iff the platform allows it.
                     if (!m_dialogWindow && m_hasNativeWindows) {
@@ -163,6 +164,8 @@ void QQuickAbstractDialog::decorationLoaded()
 {
     bool ok = false;
     QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
+    while (parentItem->parentItem() && !parentItem->parentItem()->inherits("QQuickRootItem"))
+        parentItem = parentItem->parentItem();
     if (m_decorationComponent->isError()) {
         qWarning() << m_decorationComponent->errors();
     } else {

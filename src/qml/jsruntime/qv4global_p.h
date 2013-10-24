@@ -55,7 +55,9 @@ namespace std {
 inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
 inline bool isnan(double d) { return !!_isnan(d); }
 inline bool isfinite(double d) { return _finite(d); }
+#if _MSC_VER < 1800
 inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
+#endif
 
 } // namespace std
 
@@ -63,6 +65,41 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
 #define qOffsetOf(s, m) ((size_t)((((char *)&(((s *)64)->m)) - 64)))
+
+// Decide whether to enable or disable the JIT
+
+// White list architectures
+
+#if defined(Q_PROCESSOR_X86)
+#define V4_ENABLE_JIT
+#elif defined(Q_PROCESSOR_X86_64)
+#define V4_ENABLE_JIT
+#elif defined(Q_PROCESSOR_ARM_32)
+
+#if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
+#define V4_ENABLE_JIT
+#endif
+
+#endif
+
+// Black list some platforms
+#if defined(V4_ENABLE_JIT)
+#if defined(Q_OS_WINCE) || defined(Q_OS_IOS) || defined(Q_OS_WIN64)
+    #undef V4_ENABLE_JIT
+#endif
+#endif
+
+// Do certain things depending on whether the JIT is enabled or disabled
+
+#ifdef V4_ENABLE_JIT
+#define ENABLE_YARR_JIT 1
+#define ENABLE_JIT 1
+#define ENABLE_ASSEMBLER 1
+#else
+#define ENABLE_YARR_JIT 0
+#define ENABLE_ASSEMBLER 0
+#define ENABLE_JIT 0
+#endif
 
 #if defined(Q_OS_QNX)
 #include <math.h>

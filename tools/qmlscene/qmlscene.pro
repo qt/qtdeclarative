@@ -1,5 +1,6 @@
 QT += qml quick core-private
 qtHaveModule(widgets): QT += widgets
+CONFIG += no_import_scan
 
 SOURCES += main.cpp
 

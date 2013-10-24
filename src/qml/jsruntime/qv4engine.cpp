@@ -66,7 +66,6 @@
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
 #include "qv4qmlextensions_p.h"
-#include "qv4stacktrace_p.h"
 
 #ifdef V4_ENABLE_JIT
 #include "qv4isel_masm_p.h"
@@ -464,10 +463,12 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
     if (flags & QQmlJS::V4IR::RegExp::RegExp_Multiline)
         multiline = true;
 
-    return newRegExpObject(RegExp::create(this, pattern, ignoreCase, multiline), global);
+    Scope scope(this);
+    Scoped<RegExp> re(scope, RegExp::create(this, pattern, ignoreCase, multiline));
+    return newRegExpObject(re, global);
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp* re, bool global)
+Returned<RegExpObject> *ExecutionEngine::newRegExpObject(Referenced<RegExp> re, bool global)
 {
     RegExpObject *object = new (memoryManager) RegExpObject(this, re, global);
     return object->asReturned<RegExpObject>();
@@ -566,7 +567,6 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 namespace {
     struct LineNumberResolver {
         const ExecutionEngine* engine;
-        QScopedPointer<QV4::NativeStackTrace> nativeTrace;
 
         LineNumberResolver(const ExecutionEngine *engine)
             : engine(engine)
@@ -575,17 +575,12 @@ namespace {
 
         void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
         {
-            if (context->interpreterInstructionPointer) {
-                qptrdiff offset = *context->interpreterInstructionPointer - 1 - function->codeData;
-                frame->line = function->lineNumberForProgramCounter(offset);
-            } else {
-                if (!nativeTrace)
-                    nativeTrace.reset(new QV4::NativeStackTrace(engine->current));
-
-                NativeFrame nativeFrame = nativeTrace->nextFrame();
-                if (nativeFrame.function == function)
-                    frame->line = nativeFrame.line;
-            }
+            qptrdiff offset;
+            if (context->interpreterInstructionPointer)
+                offset = *context->interpreterInstructionPointer - 1 - function->codeData;
+            else
+                offset = context->jitInstructionPointer - (char*)function->codePtr;
+            frame->line = function->lineNumberForProgramCounter(offset);
         }
     };
 }
@@ -673,12 +668,16 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     if (n <= argumentsAccessors.size())
         return;
 
+    Scope scope(this);
+    ScopedFunctionObject get(scope);
+    ScopedFunctionObject set(scope);
+
     uint oldSize = argumentsAccessors.size();
     argumentsAccessors.resize(n);
     for (int i = oldSize; i < n; ++i) {
-        FunctionObject *get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
-        FunctionObject *set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
-        Property pd = Property::fromAccessor(get, set);
+        get = new (memoryManager) ArgumentsGetterFunction(rootContext, i);
+        set = new (memoryManager) ArgumentsSetterFunction(rootContext, i);
+        Property pd = Property::fromAccessor(get.getPointer(), set.getPointer());
         argumentsAccessors[i] = pd;
     }
 }
@@ -827,19 +826,9 @@ void ExecutionEngine::throwException(const ValueRef value)
     throwInternal();
 }
 
-void ExecutionEngine::rethrowException(ExecutionContext *intermediateCatchingContext)
-{
-    if (hasException) {
-        while (current != intermediateCatchingContext)
-            popContext();
-    }
-    rethrowInternal();
-}
-
 ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
 {
-    if (!hasException)
-        rethrowInternal();
+    Q_ASSERT(hasException);
     while (current != catchingContext)
         popContext();
     if (trace)
@@ -851,6 +840,28 @@ ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext,
     return res;
 }
 
+QQmlError ExecutionEngine::convertJavaScriptException(ExecutionContext *context)
+{
+    QV4::StackTrace trace;
+    QV4::Scope scope(context);
+    QV4::ScopedValue exception(scope, context->catchException(&trace));
+    QQmlError error;
+    if (!trace.isEmpty()) {
+        QV4::StackFrame frame = trace.first();
+        error.setUrl(QUrl(frame.source));
+        error.setLine(frame.line);
+        error.setColumn(frame.column);
+    }
+    QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
+    if (!!errorObj && errorObj->asSyntaxError()) {
+        QV4::ScopedString m(scope, errorObj->engine()->newString("message"));
+        QV4::ScopedValue v(scope, errorObj->get(m));
+        error.setDescription(v->toQStringNoThrow());
+    } else
+        error.setDescription(exception->toQStringNoThrow());
+    return error;
+}
+
 #if !defined(V4_CXX_ABI_EXCEPTION)
 struct DummyException
 {};
@@ -858,11 +869,6 @@ struct DummyException
 void ExecutionEngine::throwInternal()
 {
     throw DummyException();
-}
-
-void ExecutionEngine::rethrowInternal()
-{
-    throw;
 }
 #endif
 

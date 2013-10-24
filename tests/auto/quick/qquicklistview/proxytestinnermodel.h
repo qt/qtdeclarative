@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Canonical Limited and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,38 +38,32 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4STACKTRACE_P_H
-#define QV4STACKTRACE_P_H
 
-#include <qglobal.h>
+#ifndef INNERMODEL_H
+#define INNERMODEL_H
 
-QT_BEGIN_NAMESPACE
+#include <QAbstractItemModel>
 
-namespace QV4 {
-
-struct Function;
-struct ExecutionEngine;
-struct ExecutionContext;
-
-struct NativeFrame {
-    Function *function;
-    int line;
-};
-
-struct NativeStackTrace
+class ProxyTestInnerModel : public QAbstractItemModel
 {
-    void *trace[100];
-    int nativeFrameCount;
-    int currentNativeFrame;
-    ExecutionEngine *engine;
+    Q_OBJECT
+public:
+    ProxyTestInnerModel();
+    virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    virtual QModelIndex parent(const QModelIndex & /*parent*/) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual int columnCount(const QModelIndex &parent) const;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
-    NativeStackTrace(ExecutionContext *context);
+    Q_INVOKABLE void doStuff();
 
-    NativeFrame nextFrame();
+private:
+    void append(const QString &s);
+    void setValue(int i, const QString &s);
+    void moveTwoToZero();
+
+private:
+    QList<QString> m_values;
 };
 
-} // namespace QV4
-
-QT_END_NAMESPACE
-
-#endif // QV4STACKTRACE_P_H
+#endif

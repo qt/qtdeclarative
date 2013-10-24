@@ -204,7 +204,7 @@ static const char vertexShaderCode[] =
     "}\n";
 
 static const char fragmentShaderCode[] =
-    "uniform sampler2D texture;\n"
+    "uniform sampler2D _qt_texture;\n"
     "uniform lowp float qt_Opacity;\n"
     "\n"
     "#if defined(SPRITE)\n"
@@ -224,21 +224,21 @@ static const char fragmentShaderCode[] =
     "\n"
     "void main() {\n"
     "#if defined(SPRITE)\n"
-    "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), tt.y)\n"
+    "    gl_FragColor = mix(texture2D(_qt_texture, fTexS.xy), texture2D(_qt_texture, fTexS.zw), tt.y)\n"
     "            * fColor\n"
     "            * texture2D(colortable, tt)\n"
     "            * qt_Opacity;\n"
     "#elif defined(TABLE)\n"
-    "    gl_FragColor = texture2D(texture, fTex)\n"
+    "    gl_FragColor = texture2D(_qt_texture, fTex)\n"
     "            * fColor\n"
     "            * texture2D(colortable, tt)\n"
     "            * qt_Opacity;\n"
     "#elif defined(DEFORM)\n"
-    "    gl_FragColor = (texture2D(texture, fTex)) * fColor * qt_Opacity;\n"
+    "    gl_FragColor = (texture2D(_qt_texture, fTex)) * fColor * qt_Opacity;\n"
     "#elif defined(COLOR)\n"
-    "    gl_FragColor = (texture2D(texture, gl_PointCoord)) * fColor * qt_Opacity;\n"
+    "    gl_FragColor = (texture2D(_qt_texture, gl_PointCoord)) * fColor * qt_Opacity;\n"
     "#else\n"
-    "    gl_FragColor = texture2D(texture, gl_PointCoord) * (fFade * qt_Opacity);\n"
+    "    gl_FragColor = texture2D(_qt_texture, gl_PointCoord) * (fFade * qt_Opacity);\n"
     "#endif\n"
     "}\n";
 
@@ -296,7 +296,7 @@ public:
     void initialize() {
         QSGSimpleMaterialShader<TabledMaterialData>::initialize();
         program()->bind();
-        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("_qt_texture", 0);
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
@@ -358,7 +358,7 @@ public:
     void initialize() {
         QSGSimpleMaterialShader<DeformableMaterialData>::initialize();
         program()->bind();
-        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("_qt_texture", 0);
         glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
@@ -409,7 +409,7 @@ public:
     void initialize() {
         QSGSimpleMaterialShader<SpriteMaterialData>::initialize();
         program()->bind();
-        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("_qt_texture", 0);
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
         //Don't actually expose the animSheetSize in the shader, it's currently only used for CPU calculations.
@@ -488,7 +488,7 @@ public:
     void initialize() {
         QSGSimpleMaterialShader<ColoredMaterialData>::initialize();
         program()->bind();
-        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("_qt_texture", 0);
         glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
@@ -552,7 +552,7 @@ public:
     void initialize() {
         QSGSimpleMaterialShader<SimpleMaterialData>::initialize();
         program()->bind();
-        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("_qt_texture", 0);
         glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");

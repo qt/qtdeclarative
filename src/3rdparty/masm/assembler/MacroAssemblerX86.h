@@ -197,6 +197,11 @@ public:
         return Call(m_assembler.call(), Call::Linkable);
     }
 
+    void callToRetrieveIP()
+    {
+        m_assembler.call();
+    }
+
     // Address is a memory location containing the address to jump to
     void jump(AbsoluteAddress address)
     {

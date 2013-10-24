@@ -42,6 +42,7 @@
 /*!
     \qmltype TestCase
     \instantiates TestCase
+    \inqmlmodule QtTest
     \brief Represents a unit test case
     \ingroup qtquick-utility
     \since 4.8

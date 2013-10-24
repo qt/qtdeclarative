@@ -31,7 +31,7 @@
 \brief The Qt QML module defines and implements the QML language
 
 The Qt QML module provides a framework for developing applications and libraries
-with the \l{QML Application Developer Resources}{QML language}. It defines and implements the
+with the \l{QML Applications}{QML language}. It defines and implements the
 language and engine infrastructure, and provides an API to enable application
 developers to extend the QML language with custom types and integrate QML code
 with JavaScript and C++. The Qt QML module provides both a \l{Qt QML QML Types}
@@ -43,7 +43,7 @@ model-view support, an animation framework, and much more for building user
 interfaces.
 
 For those new to QML and Qt Quick, please see
-\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+\l{QML Applications}
 for an introduction to writing QML applications.
 
 \section1 Getting Started
@@ -131,7 +131,7 @@ the QML code to interact with C++ code.
 Further information for writing QML applications:
 \list
 \li \l{The QML Reference}
-\li \l{QML Application Developer Resources}
+\li \l{QML Applications}
     - essential information for application development with QML and Qt Quick
 \li \l{Qt Quick} - a module which provides a set of QML types and C++ classes
     for building user interfaces and applications with QML

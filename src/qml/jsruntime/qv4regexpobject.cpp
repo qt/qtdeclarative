@@ -79,7 +79,7 @@ RegExpObject::RegExpObject(InternalClass *ic)
     init(ic->engine);
 }
 
-RegExpObject::RegExpObject(ExecutionEngine *engine, RegExp* value, bool global)
+RegExpObject::RegExpObject(ExecutionEngine *engine, Referenced<RegExp> value, bool global)
     : Object(engine->regExpClass)
     , value(value)
     , global(global)
@@ -131,6 +131,9 @@ RegExpObject::RegExpObject(ExecutionEngine *engine, const QRegExp &re)
         }
         pattern = ecmaPattern;
     }
+
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
 
     value = RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
 
@@ -248,7 +251,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         if (!f->isUndefined())
             ctx->throwTypeError();
 
-        return Encode(ctx->engine->newRegExpObject(re->value, re->global));
+        Scoped<RegExp> newRe(scope, re->value);
+        return Encode(ctx->engine->newRegExpObject(newRe, re->global));
     }
 
     QString pattern;
@@ -274,7 +278,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    RegExp *regexp = RegExp::create(ctx->engine, pattern, ignoreCase, multiLine);
+    Scoped<RegExp> regexp(scope, RegExp::create(ctx->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
         ctx->throwSyntaxError(0);
 

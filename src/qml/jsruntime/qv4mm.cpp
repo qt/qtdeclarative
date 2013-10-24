@@ -171,11 +171,7 @@ struct MemoryManager::Data
         memset(allocCount, 0, sizeof(allocCount));
         scribble = !qgetenv("QV4_MM_SCRIBBLE").isEmpty();
         aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
-        exactGC = !qgetenv("QV4_MM_EXACT_GC").isEmpty();
-        if (aggressiveGC)
-            qDebug() << "Using aggressive garbage collection";
-        if (exactGC)
-            qDebug() << "Using exact garbage collection";
+        exactGC = qgetenv("QV4_MM_CONSERVATIVE_GC").isEmpty();
     }
 
     ~Data()
@@ -290,7 +286,9 @@ Managed *MemoryManager::alloc(std::size_t size)
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
+#ifndef QT_NO_DEBUG
         memset(chunk, 0, allocation.memory.size());
+#endif
         Managed **last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Managed *o = reinterpret_cast<Managed *>(chunk);
@@ -336,37 +334,38 @@ void MemoryManager::mark()
         persistent = persistent->next;
     }
 
-    // push all caller saved registers to the stack, so we can find the objects living in these registers
+    collectFromJSStack();
+
+    if (!m_d->exactGC) {
+        // push all caller saved registers to the stack, so we can find the objects living in these registers
 #if COMPILER(MSVC)
 #  if CPU(X86_64)
-    HANDLE thread = GetCurrentThread();
-    WOW64_CONTEXT ctxt;
-    /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
+        HANDLE thread = GetCurrentThread();
+        WOW64_CONTEXT ctxt;
+        /*bool success =*/ Wow64GetThreadContext(thread, &ctxt);
 #  elif CPU(X86)
-    HANDLE thread = GetCurrentThread();
-    CONTEXT ctxt;
-    /*bool success =*/ GetThreadContext(thread, &ctxt);
+        HANDLE thread = GetCurrentThread();
+        CONTEXT ctxt;
+        /*bool success =*/ GetThreadContext(thread, &ctxt);
 #  endif // CPU
 #elif COMPILER(CLANG) || COMPILER(GCC)
 #  if CPU(X86_64)
-    quintptr regs[5];
-    asm(
-        "mov %%rbp, %0\n"
-        "mov %%r12, %1\n"
-        "mov %%r13, %2\n"
-        "mov %%r14, %3\n"
-        "mov %%r15, %4\n"
-        : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
-        :
-        :
-    );
+        quintptr regs[5];
+        asm(
+            "mov %%rbp, %0\n"
+            "mov %%r12, %1\n"
+            "mov %%r13, %2\n"
+            "mov %%r14, %3\n"
+            "mov %%r15, %4\n"
+            : "=m" (regs[0]), "=m" (regs[1]), "=m" (regs[2]), "=m" (regs[3]), "=m" (regs[4])
+            :
+            :
+        );
 #  endif // CPU
 #endif // COMPILER
 
-    collectFromJSStack();
-
-    if (!m_d->exactGC)
         collectFromStack();
+    }
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
@@ -399,7 +398,7 @@ void MemoryManager::mark()
     }
 }
 
-std::size_t MemoryManager::sweep(bool lastSweep)
+void MemoryManager::sweep(bool lastSweep)
 {
     PersistentValuePrivate *weak = m_weakValues;
     while (weak) {
@@ -431,12 +430,11 @@ std::size_t MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    std::size_t freedCount = 0;
     GCDeletable *deletable = 0;
     GCDeletable **firstDeletable = &deletable;
 
     for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        freedCount += sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
+        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize, &deletable);
 
     ExecutionContext *ctx = m_contextList;
     ExecutionContext **n = &m_contextList;
@@ -459,15 +457,11 @@ std::size_t MemoryManager::sweep(bool lastSweep)
         delete deletable;
         deletable = next;
     }
-
-    return freedCount;
 }
 
-std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
+void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
-    std::size_t freedCount = 0;
-
     Managed **f = &m_d->smallItems[size >> 4];
 
 #ifdef V4_USE_VALGRIND
@@ -499,15 +493,12 @@ std::size_t MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t
 #endif
                 *f = m;
                 SCRIBBLE(m, 0x99, size);
-                ++freedCount;
             }
         }
     }
 #ifdef V4_USE_VALGRIND
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-
-    return freedCount;
 }
 
 bool MemoryManager::isGCBlocked() const

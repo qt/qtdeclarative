@@ -36,7 +36,7 @@ interfaces and applications with QML.  This page lists every QML type provided
 by this module, organized according to category and purpose.
 
 
-\section1 Importing \c QtQuick
+\section1 Importing Qt Quick
 
 The types provided by the \l {Qt Quick} module are only available in a QML document
 if that document imports the \c QtQuick namespace.
@@ -1057,4 +1057,18 @@ console.log(c + " " + d); // false true
     This basic type is provided by the QtQuick import.
 
     \sa {QML Basic Types}
+*/
+
+/*!
+\qmlmodule QtTest 1.0
+\title Qt Quick Test
+\brief This module provides QML types to unit test your QML application
+
+You can import this module using the following statement:
+\code
+import QtTest 1.0
+\endcode
+
+For more information about how to use these types, see
+\l{Qt Quick Test Reference Documentation}.
 */

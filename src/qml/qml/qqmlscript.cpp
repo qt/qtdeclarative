@@ -202,7 +202,7 @@ QQmlScript::Object::DynamicSignal::DynamicSignal()
 }
 
 QQmlScript::Object::DynamicSlot::DynamicSlot()
-: nextSlot(0), nameIndex(-1)
+: funcDecl(0), nextSlot(0), nameIndex(-1)
 {
 }
 
@@ -895,7 +895,7 @@ bool ProcessAST::visit(AST::UiPragma *node)
     // For now the only valid pragma is Singleton, so lets validate the input
     if (!node->pragmaType->name.isNull())
     {
-        if (QLatin1String("Singleton") == node->pragmaType->name.toString())
+        if (QLatin1String("Singleton") == node->pragmaType->name)
         {
             pragma.type = QQmlScript::Pragma::Singleton;
         } else {
@@ -991,7 +991,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             for(int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
                 const TypeNameToType *t = propTypeNameToTypes + typeIndex;
                 if (t->nameLength == size_t(memberType.length()) &&
-                    QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                    QHashedString::compare(memberType.constData(), t->name, int(t->nameLength))) {
                     type = t;
                     break;
                 }
@@ -1033,7 +1033,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         Object::DynamicProperty::Type type;
 
         if ((unsigned)memberType.length() == strlen("alias") && 
-            QHashedString::compare(memberType.constData(), "alias", strlen("alias"))) {
+            QHashedString::compare(memberType.constData(), "alias", int(strlen("alias")))) {
             type = Object::DynamicProperty::Alias;
             typeFound = true;
         } 
@@ -1041,7 +1041,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         for(int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
             const TypeNameToType *t = propTypeNameToTypes + ii;
             if (t->nameLength == size_t(memberType.length()) &&
-                QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                QHashedString::compare(memberType.constData(), t->name, int(t->nameLength))) {
                 type = t->type;
                 typeFound = true;
             }
@@ -1053,7 +1053,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             if (typeModifier.isEmpty()) {
                 type = Object::DynamicProperty::Custom;
             } else if((unsigned)typeModifier.length() == strlen("list") && 
-                      QHashedString::compare(typeModifier.constData(), "list", strlen("list"))) {
+                      QHashedString::compare(typeModifier.constData(), "list", int(strlen("list")))) {
                 type = Object::DynamicProperty::CustomList;
             } else {
                 QQmlError error;
@@ -1284,9 +1284,8 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
         AST::SourceLocation loc = funDecl->rparenToken;
         loc.offset = loc.end();
         loc.startColumn += 1;
-        QString body = textAt(loc, funDecl->rbraceToken);
         slot->name = funDecl->name;
-        slot->body = body;
+        slot->funcDecl = funDecl;
         obj->dynamicSlots.append(slot);
 
     } else {
@@ -1303,7 +1302,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
 
 
 QQmlScript::Parser::Parser()
-: root(0), data(0)
+: root(0), _qmlRoot(0), data(0)
 {
 
 }
@@ -1379,6 +1378,8 @@ bool QQmlScript::Parser::parse(const QString &qmlcode, const QByteArray & /* pre
         for(int ii = 0; ii < _errors.count(); ++ii)
             _errors[ii].setUrl(url);
     }
+
+    _qmlRoot = parser.ast();
 
     return _errors.isEmpty();
 }
@@ -1759,6 +1760,7 @@ void QQmlScript::Parser::clear()
     }
 
     _pool.clear();
+    _qmlRoot = 0;
 }
 
 int QQmlScript::Parser::findOrCreateTypeId(const QString &name, Object *object)
@@ -1780,6 +1782,11 @@ void QQmlScript::Parser::setTree(QQmlScript::Object *tree)
     Q_ASSERT(! root);
 
     root = tree;
+}
+
+Engine *QQmlScript::Parser::jsEngine() const
+{
+    return data ? &data->engine : 0;
 }
 
 QT_END_NAMESPACE

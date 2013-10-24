@@ -47,7 +47,7 @@ create user interfaces. Please see \l{Qt Quick Controls}
 for more information.
 
 For those new to QML and Qt Quick, please see
-\l{QML Application Developer Resources}
+\l{QML Applications}
 for an introduction to writing QML applications.
 
 \section1 Important Concepts in Qt Quick
@@ -74,7 +74,7 @@ When using the \c QtQuick module, you will need to know how to write QML
 applications using the QML language. In particular, you should have a grasp
 of the \l{qtquick-quickstart-basics.html}{QML Basics} and
 \l{qtquick-quickstart-essentials.html}{QML Essentials} from the
-\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}.
+\l{QML Applications}.
 
 To find out more about using the QML language, see the \l{Qt QML} module documentation.
 
@@ -135,7 +135,7 @@ module
 
 Further information for writing QML applications:
 \list
-\li \l{QML Application Developer Resources}
+\li \l{QML Applications}
     - essential information for application development with QML and Qt Quick
 \li \l{Qt QML} - documentation for the
     Qt QML module, which provides the QML engine and language infrastructure

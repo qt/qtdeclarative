@@ -587,12 +587,6 @@ public:
 
     virtual void mirrorChange() {}
 
-    static qint64 consistentTime;
-    static void setConsistentTime(qint64 t);
-    static void start(QElapsedTimer &);
-    static qint64 elapsed(QElapsedTimer &);
-    static qint64 restart(QElapsedTimer &);
-
     void incrementCursorCount(int delta);
 };
 

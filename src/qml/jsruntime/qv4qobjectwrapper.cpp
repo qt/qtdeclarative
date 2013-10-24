@@ -243,6 +243,9 @@ QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 {
     vtbl = &static_vtbl;
 
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     m_destroy = engine->newIdentifier(QStringLiteral("destroy"));
 }
 
@@ -260,7 +263,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     QQmlPropertyData *result = 0;
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, m_object, qmlContext);
-    if (!result)
+    else
         result = QQmlPropertyCache::property(engine->v8Engine->engine(), m_object, name, qmlContext, *local);
     return result;
 }
@@ -724,7 +727,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             try {
                 f->call(callData);
             } catch (...) {
-                QQmlError error = QQmlError::catchJavaScriptException(ctx);
+                QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
                 if (error.description().isEmpty())
                     error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(f->name->toQString()));
                 QQmlEnginePrivate::get(v4->v8Engine->engine())->warning(error);
@@ -1433,14 +1436,15 @@ void *CallArgument::dataPtr()
 {
     if (type == -1)
         return qvariantPtr->data();
-    else
+    else if (type != 0)
         return (void *)&allocData;
+    return 0;
 }
 
 void CallArgument::initAsType(int callType)
 {
     if (type != 0) { cleanup(); type = 0; }
-    if (callType == QMetaType::UnknownType) return;
+    if (callType == QMetaType::UnknownType || callType == QMetaType::Void) return;
 
     if (callType == qMetaTypeId<QJSValue>()) {
         qjsValuePtr = new (&allocData) QJSValue();
@@ -1475,9 +1479,6 @@ void CallArgument::initAsType(int callType)
     } else if (callType == QMetaType::QJsonValue) {
         type = callType;
         jsonValuePtr = new (&allocData) QJsonValue();
-    } else if (callType == QMetaType::Void) {
-        type = -1;
-        qvariantPtr = new (&allocData) QVariant();
     } else {
         type = -1;
         qvariantPtr = new (&allocData) QVariant(callType, (void *)0);

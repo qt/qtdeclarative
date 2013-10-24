@@ -119,7 +119,7 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("font bad 2") << "<font size=\"1>text</font>" << "" << FormatList() << false;
     QTest::newRow("extra close") << "<b>text</b></b>" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
     QTest::newRow("extra space") << "<b >text</b>" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
-    QTest::newRow("entities") << "&lt;b&gt;this &amp; that&lt;/b&gt;" << "<b>this & that</b>" << FormatList() << false;
+    QTest::newRow("entities") << "&lt;b&gt;&quot;this&quot; &amp; that&lt;/b&gt;" << "<b>\"this\" & that</b>" << FormatList() << false;
     QTest::newRow("newline") << "text<br>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
     QTest::newRow("self-closing newline") << "text<br/>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
     QTest::newRow("paragraph") << "text<p>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;

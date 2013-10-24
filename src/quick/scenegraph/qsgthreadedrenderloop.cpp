@@ -406,22 +406,26 @@ bool QSGRenderThread::event(QEvent *e)
             pendingUpdate |= SyncRequest;
         return true;
 
-    case WM_TryRelease:
+    case WM_TryRelease: {
         RLDEBUG1("    Render: WM_TryRelease");
         mutex.lock();
+        WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
         if (m_windows.size() == 0) {
-            WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
             RLDEBUG1("    Render:  - setting exit flag and invalidating GL");
             invalidateOpenGL(wme->window, wme->inDestructor);
             shouldExit = !gl;
             if (sleeping)
                 stopEventProcessing = true;
+        } else if (wme->window == gl->surface()) {
+            RLDEBUG1("    Render:  - destroying the current window. Calling doneCurrent()...");
+            gl->doneCurrent();
         } else {
             RLDEBUG1("    Render:  - not releasing anything because we have active windows...");
         }
         waitCondition.wakeOne();
         mutex.unlock();
         return true;
+    }
 
     case WM_Grab: {
         RLDEBUG1("    Render: WM_Grab");

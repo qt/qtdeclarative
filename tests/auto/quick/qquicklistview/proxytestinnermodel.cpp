@@ -1,7 +1,6 @@
-
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Canonical Limited and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -40,86 +39,74 @@
 **
 ****************************************************************************/
 
-#ifndef DEBUGUTIL_H
-#define DEBUGUTIL_H
+#include "proxytestinnermodel.h"
 
-#include <QEventLoop>
-#include <QTimer>
-#include <QThread>
-#include <QTest>
-#include <QProcess>
-#include <QMutex>
-
-#include <QtQml/qqmlengine.h>
-
-#include "qqmldebugclient.h"
-
-class QQmlDebugTest
+ProxyTestInnerModel::ProxyTestInnerModel()
 {
-public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
-};
+    append("Adios");
+    append("Hola");
+    append("Halo");
+}
 
-class QQmlDebugTestClient : public QQmlDebugClient
+QModelIndex ProxyTestInnerModel::index(int row, int column, const QModelIndex &parent) const
 {
-    Q_OBJECT
-public:
-    QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c);
+    if (parent.isValid())
+        return QModelIndex();
 
-    QByteArray waitForResponse();
+    return createIndex(row, column);
+}
 
-signals:
-    void stateHasChanged();
-    void serverMessage(const QByteArray &);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &ba);
-
-private:
-    QByteArray lastMsg;
-};
-
-class QQmlDebugProcess : public QObject
+QModelIndex ProxyTestInnerModel::parent(const QModelIndex & /*parent*/) const
 {
-    Q_OBJECT
-public:
-    QQmlDebugProcess(const QString &executable, QObject *parent = 0);
-    ~QQmlDebugProcess();
+    return QModelIndex();
+}
 
-    QString state();
+int ProxyTestInnerModel::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+        return 0;
 
-    void setEnvironment(const QStringList &environment);
+    return m_values.count();
+}
 
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-    int debugPort() const;
+int ProxyTestInnerModel::columnCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+        return 0;
 
-    bool waitForFinished();
-    QProcess::ExitStatus exitStatus() const;
+    return 1;
+}
 
-    QString output() const;
-    void stop();
+QVariant ProxyTestInnerModel::data(const QModelIndex &index, int role) const
+{
+    if (role != Qt::DisplayRole)
+        return QVariant();
 
-signals:
-    void readyReadStandardOutput();
+    return m_values[index.row()];
+}
 
-private slots:
-    void timeout();
-    void processAppOutput();
-    void processError(QProcess::ProcessError error);
+void ProxyTestInnerModel::append(const QString &s)
+{
+    beginInsertRows(QModelIndex(), m_values.count(), m_values.count());
+    m_values << s;
+    endInsertRows();
+}
 
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-    QStringList m_environment;
-    int m_port;
-};
+void ProxyTestInnerModel::setValue(int i, const QString &s)
+{
+    m_values[i] = s;
+    Q_EMIT dataChanged(index(i, 0), index(i, 0));
+}
 
-#endif // DEBUGUTIL_H
+void ProxyTestInnerModel::moveTwoToZero()
+{
+    beginMoveRows(QModelIndex(), 2, 2, QModelIndex(), 0);
+    m_values.move(2, 0);
+    endMoveRows();
+}
+
+void ProxyTestInnerModel::doStuff()
+{
+    moveTwoToZero();
+    setValue(1, "Hilo");
+}

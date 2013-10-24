@@ -1288,7 +1288,7 @@ Qt::LayoutDirection QQuickGrid::effectiveLayoutDirection() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick::Grid::horizontalItmeAlignment
+    \qmlproperty enumeration QtQuick::Grid::horizontalItemAlignment
     \qmlproperty enumeration QtQuick::Grid::verticalItemAlignment
     \qmlproperty enumeration QtQuick::Grid::effectiveHorizontalItemAlignment
 

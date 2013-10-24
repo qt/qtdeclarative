@@ -355,6 +355,27 @@ EvalFunction::EvalFunction(ExecutionContext *scope)
 
 ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 {
+    struct ContextStateSaver {
+        ExecutionContext *savedContext;
+        bool strictMode;
+        ExecutionContext::EvalCode *evalCode;
+        CompiledData::CompilationUnit *compilationUnit;
+
+        ContextStateSaver(ExecutionContext *context)
+            : savedContext(context)
+            , strictMode(context->strictMode)
+            , evalCode(context->currentEvalCode)
+            , compilationUnit(context->compilationUnit)
+        {}
+
+        ~ContextStateSaver()
+        {
+            savedContext->strictMode = strictMode;
+            savedContext->currentEvalCode = evalCode;
+            savedContext->compilationUnit = compilationUnit;
+        }
+    };
+
     if (callData->argc < 1)
         return Encode::undefined();
 
@@ -386,15 +407,17 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 
     strictMode = function->isStrict() || (ctx->strictMode);
 
-    usesArgumentsObject = function->usesArgumentsObject();
     needsActivation = function->needsActivation();
 
     if (strictMode) {
-        FunctionObject *e = FunctionObject::creatScriptFunction(ctx, function);
+        ScopedFunctionObject e(scope, FunctionObject::creatScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->callData->thisObject;
         return e->call(callData);
     }
+
+    ExecutionContextSaver ctxSaver(parentContext);
+    ContextStateSaver stateSaver(ctx);
 
     ExecutionContext::EvalCode evalCode;
     evalCode.function = function;
@@ -402,30 +425,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ctx->currentEvalCode = &evalCode;
 
     // set the correct strict mode flag on the context
-    bool cstrict = ctx->strictMode;
     ctx->strictMode = strictMode;
-
-    CompiledData::CompilationUnit * const oldCompilationUnit = ctx->compilationUnit;
     ctx->compilationUnit = function->compilationUnit;
 
-    ScopedValue result(scope);
-    try {
-        result = function->code(ctx, function->codeData);
-    } catch (...) {
-        ctx->strictMode = cstrict;
-        ctx->currentEvalCode = evalCode.next;
-        ctx->compilationUnit = oldCompilationUnit;
-        ctx->rethrowException();
-    }
-
-    ctx->strictMode = cstrict;
-    ctx->currentEvalCode = evalCode.next;
-    ctx->compilationUnit = oldCompilationUnit;
-
-    while (engine->current != parentContext)
-        engine->popContext();
-
-    return result.asReturnedValue();
+    return function->code(ctx, function->codeData);
 }
 
 

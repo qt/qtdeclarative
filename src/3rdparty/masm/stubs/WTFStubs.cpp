@@ -109,8 +109,9 @@ void dataLogFString(const char* str)
 
 extern "C" {
 
-void WTFReportAssertionFailure(const char* /*file*/, int /*line*/, const char* /*function*/, const char* /*assertion*/)
+void WTFReportAssertionFailure(const char* file, int line, const char* function, const char*assertion)
 {
+    fprintf(stderr, "WTF failing assertion in %s, line %d, function %s: %s\n", file, line, function, assertion);
 }
 
 void WTFReportBacktrace()

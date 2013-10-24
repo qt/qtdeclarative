@@ -63,6 +63,7 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmltypeloader_p.h"
 #include "private/qv4identifier_p.h"
+#include <private/qqmljsastfwd_p.h>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -301,6 +302,16 @@ namespace QQmlCompilerTypes {
         typedef QFieldList<O, &O::nextAliasingObject> AliasingObjectsList;
         AliasingObjectsList aliasingObjects;
         QQmlScript::Object *root;
+        QList<QQmlJS::AST::Node*> functionsToCompile;
+        QVector<int> runtimeFunctionIndices;
+
+        struct CompiledMetaMethod
+        {
+            QQmlScript::Object *obj;
+            int methodIndex;
+            int compiledFunctionIndex; // index in functionToCompile
+        };
+        QList<CompiledMetaMethod> compiledMetaMethods;
     };
 };
 
@@ -459,6 +470,8 @@ private:
     QQmlTypeData *unit;
     int cachedComponentTypeRef;
     int cachedTranslationContextIndex;
+
+    QScopedPointer<QQmlJS::V4IR::Module> jsModule;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

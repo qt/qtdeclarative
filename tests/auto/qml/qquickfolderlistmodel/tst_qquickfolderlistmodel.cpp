@@ -81,6 +81,7 @@ private slots:
 #endif
     void showDotAndDotDot();
     void showDotAndDotDot_data();
+    void sortReversed();
 
 private:
     void checkNoErrors(const QQmlComponent& component);
@@ -115,7 +116,6 @@ void tst_qquickfolderlistmodel::basicProperties()
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
-
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml"); // from basic.qml
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(QDir::currentPath()));
 
@@ -126,7 +126,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     QSignalSpy folderChangedSpy(flm, SIGNAL(folderChanged()));
     flm->setProperty("folder", dataDirectoryUrl());
     QVERIFY(folderChangedSpy.wait());
-    QCOMPARE(flm->property("count").toInt(), 5);
+    QCOMPARE(flm->property("count").toInt(), 6);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
@@ -152,7 +152,7 @@ void tst_qquickfolderlistmodel::showFiles()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(), 5); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(), 6); // wait for refresh
     QCOMPARE(flm->property("showFiles").toBool(), true);
 
     flm->setProperty("showFiles", false);
@@ -200,7 +200,7 @@ void tst_qquickfolderlistmodel::refresh()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder", dataDirectoryUrl());
-    QTRY_COMPARE(flm->property("count").toInt(),5); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(),6); // wait for refresh
 
     int count = flm->rowCount();
 
@@ -304,7 +304,7 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
     flm->setProperty("rootFolder", rootFolder);
     flm->setProperty("showDotAndDotDot", showDotAndDotDot);
 
-    int count = 5;
+    int count = 6;
     if (showDot) count++;
     if (showDotDot) count++;
     QTRY_COMPARE(flm->property("count").toInt(), count); // wait for refresh
@@ -326,7 +326,19 @@ void tst_qquickfolderlistmodel::showDotAndDotDot_data()
     QTest::newRow("false") << dataDirectoryUrl() << QUrl() << false << false << false;
     QTest::newRow("true") << dataDirectoryUrl() << QUrl() << true << true << true;
     QTest::newRow("true but root") << dataDirectoryUrl() << dataDirectoryUrl() << true << true << false;
+}
 
+void tst_qquickfolderlistmodel::sortReversed()
+{
+    QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
+    checkNoErrors(component);
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+    flm->setProperty("folder", dataDirectoryUrl());
+
+    int count = 6;
+    QTRY_COMPARE(flm->property("count").toInt(), count); // wait for refresh
+    QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("sortReversed.qml"));
 }
 
 QTEST_MAIN(tst_qquickfolderlistmodel)

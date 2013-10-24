@@ -500,7 +500,8 @@ ReturnedValue __qmljs_get_element(ExecutionContext *ctx, const ValueRef object, 
         uint pidx = o->propertyIndexFromArrayIndex(idx);
         if (pidx < UINT_MAX) {
             if (!o->arrayAttributes || o->arrayAttributes[pidx].isData()) {
-                return o->arrayData[pidx].value.asReturnedValue();
+                if (!o->arrayData[pidx].value.isEmpty())
+                    return o->arrayData[pidx].value.asReturnedValue();
             }
         }
 
@@ -996,13 +997,7 @@ ReturnedValue __qmljs_builtin_define_array(ExecutionContext *ctx, Value *values,
         a->arrayDataLen = length;
         Property *pd = a->arrayData;
         for (uint i = 0; i < length; ++i) {
-            if (values[i].isEmpty()) {
-                a->ensureArrayAttributes();
-                pd->value = Primitive::undefinedValue();
-                a->arrayAttributes[i].clear();
-            } else {
-                pd->value = values[i];
-            }
+            pd->value = values[i];
             ++pd;
         }
         a->setArrayLengthUnchecked(length);

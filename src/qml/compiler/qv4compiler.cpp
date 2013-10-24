@@ -198,6 +198,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
     unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
     unit->jsClassTableSize = jsClasses.count();
     unit->offsetToJSClassTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
+    unit->indexOfRootFunction = -1;
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
     // write strings and string table

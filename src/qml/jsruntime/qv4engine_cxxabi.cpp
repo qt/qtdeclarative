@@ -118,21 +118,39 @@ void ExecutionEngine::throwInternal()
     std::terminate();
 }
 
-void ExecutionEngine::rethrowInternal()
-{
-    cxa_eh_globals *globals = __cxa_get_globals();
-    cxa_exception *exception = globals->caughtExceptions;
-
-    // Make sure we only re-throw our foreign exceptions. For general re-throw
-    // we'd need different code.
-#ifndef __ARM_EABI_UNWINDER__
-    Q_ASSERT(exception->unwindHeader.exception_class == 0x514d4c4a53563400); // QMLJSV40
-#endif
-
-    globals->caughtExceptions = 0;
-    _Unwind_RaiseException(&exception->unwindHeader);
-}
-
 QT_END_NAMESPACE
+
+/*
+ * We override these EABI defined symbols on Android, where we must statically link in the unwinder from libgcc.a
+ * and thus also ensure that compiler generated cleanup code / landing pads end up calling these stubs, that
+ * ultimately return control to our copy of the unwinder. The symbols are also exported from gnustl_shared, which
+ * comes later in the link line.
+ */
+#if defined(__ANDROID__) && defined(__ARM_EABI_UNWINDER__)
+#pragma GCC visibility push(default)
+#ifdef __thumb__
+asm ("  .pushsection .text.__cxa_end_cleanup\n"
+"       .global __cxa_end_cleanup\n"
+"       .type __cxa_end_cleanup, \"function\"\n"
+"       .thumb_func\n"
+"__cxa_end_cleanup:\n"
+"       push\t{r1, r2, r3, r4}\n"
+"       bl\t__gnu_end_cleanup\n"
+"       pop\t{r1, r2, r3, r4}\n"
+"       bl\t_Unwind_Resume @ Never returns\n"
+"       .popsection\n");
+#else
+asm ("  .pushsection .text.__cxa_end_cleanup\n"
+"       .global __cxa_end_cleanup\n"
+"       .type __cxa_end_cleanup, \"function\"\n"
+"__cxa_end_cleanup:\n"
+"       stmfd\tsp!, {r1, r2, r3, r4}\n"
+"       bl\t__gnu_end_cleanup\n"
+"       ldmfd\tsp!, {r1, r2, r3, r4}\n"
+"       bl\t_Unwind_Resume @ Never returns\n"
+"       .popsection\n");
+#endif
+#pragma GCC visibility pop
+#endif
 
 #endif

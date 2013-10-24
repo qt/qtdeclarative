@@ -1098,7 +1098,7 @@ protected:
 
     unsigned op() { return (m_opcode >> 20) & 0x1; }
     unsigned rt2() { return (m_opcode >> 16) & 0xf; }
-    unsigned rt() { return (m_opcode >> 16) & 0xf; }
+    unsigned rt() { return (m_opcode >> 12) & 0xf; }
     unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
 };
 
@@ -1132,6 +1132,42 @@ protected:
     unsigned rt() { return (m_opcode >> 12) & 0xf; }
 };
 
+class ARMv7DOpcodeVADDVSUB : public ARMv7D32BitOpcode {
+public:
+    static const uint32_t s_mask =    0xffb00e50;
+    static const uint32_t s_pattern = 0xee300a00;
+
+    DEFINE_STATIC_FORMAT32(ARMv7DOpcodeVADDVSUB, thisObj);
+
+protected:
+    const char* format();
+
+    unsigned sz() { return (m_opcode >> 8) & 0x1; }
+    unsigned isSub() { return (m_opcode >> 6) & 0x1; }
+    unsigned vm() { return (m_opcode & 0xf) | ((m_opcode >> 1) & 0x10); }
+    unsigned vn() { return ((m_opcode >> 16) & 0xf) | ((m_opcode >> 3) & 0x10); }
+    unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
+};
+
+class ARMv7DOpcodeVLDRVSTR : public ARMv7D32BitOpcode {
+public:
+    static const uint32_t s_mask =    0xff200a00;
+    static const uint32_t s_pattern = 0xed000a00;
+
+    DEFINE_STATIC_FORMAT32(ARMv7DOpcodeVLDRVSTR, thisObj);
+
+protected:
+    const char* format();
+
+    const char *opName() { return op() ? "vldr" : "vstr"; }
+
+    unsigned sz() { return (m_opcode >> 8) & 0x1; }
+    unsigned op() { return (m_opcode >> 20) & 0x1; }
+    unsigned uBit() { return (m_opcode >> 23) & 0x1; }
+    unsigned rn() { return (m_opcode >> 16) & 0xf; }
+    unsigned vd() { return ((m_opcode >> 12) & 0xf) | ((m_opcode >> 18) & 0x10); }
+    unsigned immediate8() { return m_opcode & 0xff; }
+};
 
 } } // namespace JSC::ARMv7Disassembler
 

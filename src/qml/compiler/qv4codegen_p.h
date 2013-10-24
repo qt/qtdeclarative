@@ -68,20 +68,20 @@ class Q_QML_EXPORT Codegen: protected AST::Visitor
 public:
     Codegen(bool strict);
 
-    enum Mode {
+    enum CompilationMode {
         GlobalCode,
         EvalCode,
         FunctionCode,
         QmlBinding
     };
 
-    V4IR::Function *generateFromProgram(const QString &fileName,
+    void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
                              V4IR::Module *module,
-                             Mode mode = GlobalCode,
+                             CompilationMode mode = GlobalCode,
                              const QStringList &inheritedLocals = QStringList());
-    V4IR::Function *generateFromFunctionExpression(const QString &fileName,
+    void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
                              V4IR::Module *module);
@@ -153,7 +153,9 @@ protected:
 
         UsesArgumentsObject usesArgumentsObject;
 
-        Environment(Environment *parent)
+        CompilationMode compilationMode;
+
+        Environment(Environment *parent, CompilationMode mode)
             : parent(parent)
             , formals(0)
             , maxNumberOfArguments(0)
@@ -162,6 +164,7 @@ protected:
             , isStrict(false)
             , isNamedFunctionExpression(false)
             , usesArgumentsObject(ArgumentsObjectUnknown)
+            , compilationMode(mode)
         {
             if (parent && parent->isStrict)
                 isStrict = true;
@@ -216,9 +219,9 @@ protected:
         }
     };
 
-    Environment *newEnvironment(AST::Node *node, Environment *parent)
+    Environment *newEnvironment(AST::Node *node, Environment *parent, CompilationMode compilationMode)
     {
-        Environment *env = new Environment(parent);
+        Environment *env = new Environment(parent, compilationMode);
         _envMap.insert(node, env);
         return env;
     }
@@ -280,11 +283,11 @@ protected:
     void move(V4IR::Expr *target, V4IR::Expr *source, V4IR::AluOp op = V4IR::OpInvalid);
     void cjump(V4IR::Expr *cond, V4IR::BasicBlock *iftrue, V4IR::BasicBlock *iffalse);
 
-    V4IR::Function *defineFunction(const QString &name, AST::Node *ast,
-                                 AST::FormalParameterList *formals,
-                                 AST::SourceElements *body,
-                                 Mode mode = FunctionCode,
-                                 const QStringList &inheritedLocals = QStringList());
+    // Returns index in _module->functions
+    int defineFunction(const QString &name, AST::Node *ast,
+                       AST::FormalParameterList *formals,
+                       AST::SourceElements *body,
+                       const QStringList &inheritedLocals = QStringList());
 
     void unwindException(ScopeAndFinally *outest);
 
@@ -427,7 +430,6 @@ protected:
     V4IR::BasicBlock *_exitBlock;
     V4IR::BasicBlock *_throwBlock;
     unsigned _returnAddress;
-    Mode _mode;
     Environment *_env;
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
@@ -442,10 +444,10 @@ protected:
     {
         typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
     public:
-        ScanFunctions(Codegen *cg, const QString &sourceCode);
+        ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode);
         void operator()(AST::Node *node);
 
-        void enterEnvironment(AST::Node *node);
+        void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
         void leaveEnvironment();
 
     protected:
@@ -500,6 +502,7 @@ protected:
         QStack<Environment *> _envStack;
 
         bool _allowFuncDecls;
+        CompilationMode defaultProgramMode;
     };
 
 };

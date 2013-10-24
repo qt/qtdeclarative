@@ -531,7 +531,7 @@ void QSGSharedDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        int textureUniformLocation = glGetUniformLocation(shaderProgram, "texture");
+        int textureUniformLocation = glGetUniformLocation(shaderProgram, "_qt_texture");
         glUniform1i(textureUniformLocation, 0);
     }
 

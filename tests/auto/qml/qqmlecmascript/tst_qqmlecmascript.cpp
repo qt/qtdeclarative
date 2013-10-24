@@ -306,6 +306,7 @@ private slots:
     void jsOwnedObjectsDeletedOnEngineDestroy();
     void numberParsing();
     void stringParsing();
+    void qtbug_32801();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -325,24 +326,9 @@ private:
     }
 };
 
-// The JavaScriptCore GC marks the C stack. To try to ensure that there is
-// no JSObject* left in stack memory by the compiler, we call this function
-// to zap some bytes of memory before calling collectGarbage().
-static void NO_INLINE zapSomeStack()
-{
-    char *buf = (char*)alloca(4096);
-    memset(buf, 0, 4096);
-}
-
-static void gcWithoutDeferredObjectDeletion(QQmlEngine &engine)
-{
-    zapSomeStack();
-    engine.collectGarbage();
-}
-
 static void gc(QQmlEngine &engine)
 {
-    gcWithoutDeferredObjectDeletion(engine);
+    engine.collectGarbage();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
@@ -4830,7 +4816,7 @@ void tst_qqmlecmascript::propertyVarOwnership()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "createComponent");
-    gcWithoutDeferredObjectDeletion(engine);
+    engine.collectGarbage();
     QMetaObject::invokeMethod(object, "runTest");
     QCOMPARE(object->property("test").toBool(), true);
     delete object;
@@ -4997,18 +4983,8 @@ void tst_qqmlecmascript::propertyVarCircular2()
     delete object;
 }
 
-#if defined(Q_CC_GNU)
-#if (__GNUC__ * 100 + __GNUC_MINOR__) >= 404
-#define pop_gcc_flags
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-#endif
-#endif
-
 void tst_qqmlecmascript::propertyVarInheritance()
 {
-    QSKIP("This test does not work reliably with our conservative GC.");
-
     // enforce behaviour regarding element inheritance - ensure handle disposal.
     // The particular component under test here has a chain of references.
     QQmlComponent component(&engine, testFileUrl("propertyVar.inherit.qml"));
@@ -5045,13 +5021,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
-#if defined(Q_CC_MSVC)
-    QSKIP("This test does not work reliably with MSVC.");
-#endif
-#if !defined(Q_CC_CLANG)
     QVERIFY(icoCanaryHandle.isUndefined());
     QVERIFY(ccoCanaryHandle.isUndefined());
-#endif
     delete object;
     // since there are no parent vmemo's to keep implicit references alive, and the only handles
     // to what remains are weak, all varProperties arrays must have been collected.
@@ -5059,8 +5030,6 @@ void tst_qqmlecmascript::propertyVarInheritance()
 
 void tst_qqmlecmascript::propertyVarInheritance2()
 {
-    QSKIP("This test does not work reliably with our conservative GC.");
-
     // The particular component under test here does NOT have a chain of references; the
     // only link between rootObject and childObject is that rootObject is the parent of childObject.
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.2.qml"));
@@ -5087,15 +5056,9 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QMetaObject::invokeMethod(object, "deassignCircular");
     gc(engine);
     // an equivalent for pragma GCC optimize is still work-in-progress for CLang, so this test will fail.
-#if !defined(Q_CC_CLANG)
     QVERIFY(childObjectVarArrayValueHandle.isUndefined()); // should have been collected now.
-#endif
     delete object;
 }
-
-#if defined(pop_gcc_flags)
-#pragma GCC pop_options
-#endif
 
 
 // Ensure that QObject type conversion works on binding assignment
@@ -7324,6 +7287,18 @@ void tst_qqmlecmascript::stringParsing()
         QObject *object = component.create();
         QVERIFY(object == 0);
     }
+}
+
+void tst_qqmlecmascript::qtbug_32801()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_32801.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+
+    // do not crash when a QML signal is connected to a non-void slot
+    connect(obj.data(), SIGNAL(testSignal(QString)), obj.data(), SLOT(slotWithReturnValue(QString)));
+    QVERIFY(QMetaObject::invokeMethod(obj.data(), "emitTestSignal"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

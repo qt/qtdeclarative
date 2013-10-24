@@ -173,8 +173,7 @@ QRectF QSGSimpleTextureNode::rect() const
  */
 void QSGSimpleTextureNode::setTexture(QSGTexture *texture)
 {
-    if (m_material.texture() == texture)
-        return;
+    Q_ASSERT(texture);
     m_material.setTexture(texture);
     m_opaque_material.setTexture(texture);
     Q_D(QSGSimpleTextureNode);

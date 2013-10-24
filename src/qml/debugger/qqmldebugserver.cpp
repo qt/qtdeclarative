@@ -141,6 +141,7 @@ private:
 
 QQmlDebugServerPrivate::QQmlDebugServerPrivate() :
     connection(0),
+    pluginsLock(QReadWriteLock::Recursive),
     gotHello(false),
     blockingMode(false),
     thread(0)

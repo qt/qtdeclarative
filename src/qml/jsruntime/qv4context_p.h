@@ -97,6 +97,7 @@ struct Q_QML_EXPORT ExecutionContext
     EvalCode *currentEvalCode;
 
     const uchar **interpreterInstructionPointer;
+    char *jitInstructionPointer;
 
     void initBaseContext(Type type, ExecutionEngine *engine, ExecutionContext *parentContext)
     {
@@ -110,6 +111,7 @@ struct Q_QML_EXPORT ExecutionContext
         compilationUnit = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
+        jitInstructionPointer = 0;
     }
 
     CallContext *newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *f, CallData *callData);
@@ -145,7 +147,6 @@ struct Q_QML_EXPORT ExecutionContext
 
     // Can only be called from within catch(...), rethrows if no JS exception.
     ReturnedValue catchException(StackTrace *trace = 0);
-    void Q_NORETURN rethrowException();
 
     void mark();
 

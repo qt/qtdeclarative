@@ -132,8 +132,8 @@ private:
     void collectFromStack() const;
     void collectFromJSStack() const;
     void mark();
-    std::size_t sweep(bool lastSweep = false);
-    std::size_t sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);
+    void sweep(bool lastSweep = false);
+    void sweep(char *chunkStart, std::size_t chunkSize, size_t size, GCDeletable **deletable);
 
 protected:
     QScopedPointer<Data> m_d;

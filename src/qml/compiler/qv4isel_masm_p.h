@@ -51,6 +51,9 @@
 #include <QtCore/QHash>
 #include <config.h>
 #include <wtf/Vector.h>
+
+#if ENABLE(ASSEMBLER)
+
 #include <assembler/MacroAssembler.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 
@@ -136,6 +139,7 @@ public:
     static const RegisterID ScratchRegister = JSC::X86Registers::r10;
     static const RegisterID IntegerOpRegister = JSC::X86Registers::eax;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+    static const FPRegisterID FPGpr1 = JSC::X86Registers::xmm1;
 
     static const int RegisterSize = 8;
 
@@ -289,7 +293,7 @@ public:
             qDebug("calleeSavedRegCount.....: %d",calleeSavedRegCount);
             qDebug("maxOutgoingArgumentCount: %d",maxOutgoingArgumentCount);
             qDebug("localCount..............: %d",localCount);
-            qDebug("savedConstCount.........: %d",savedConstCount);
+            qDebug("savedConstCount.........: %d",savedRegCount);
             for (int i = 0; i < maxOutgoingArgumentCount; ++i)
                 qDebug("argumentAddressForCall(%d) = 0x%x / -0x%x", i,
                        argumentAddressForCall(i).offset, -argumentAddressForCall(i).offset);
@@ -313,7 +317,8 @@ public:
                                                      + RegisterSize; // saved StackFrameRegister
 
             // space for the callee saved registers
-            int frameSize = RegisterSize * (calleeSavedRegisterCount + savedRegCount);
+            int frameSize = RegisterSize * calleeSavedRegisterCount;
+            frameSize += savedRegCount * sizeof(QV4::SafeValue); // these get written out as Values, not as native registers
 
             frameSize = WTF::roundUpToMultipleOf(StackAlignment, frameSize + stackSpaceAllocatedOtherwise);
             frameSize -= stackSpaceAllocatedOtherwise;
@@ -428,7 +433,25 @@ public:
         V4IR::BasicBlock *block;
     };
 
+    void saveInstructionPointer(RegisterID freeScratchRegister) {
+        Address ipAddr(ContextRegister, qOffsetOf(QV4::ExecutionContext, jitInstructionPointer));
+        RegisterID sourceRegister = freeScratchRegister;
+
+#if CPU(X86_64) || CPU(X86)
+        callToRetrieveIP();
+        peek(sourceRegister);
+        pop();
+#elif CPU(ARM)
+        move(JSC::ARMRegisters::pc, sourceRegister);
+#else
+#error "Port me!"
+#endif
+
+        storePtr(sourceRegister, ipAddr);
+    }
+
     void callAbsolute(const char* functionName, FunctionPtr function) {
+        saveInstructionPointer(ScratchRegister);
         CallToLink ctl;
         ctl.call = call();
         ctl.externalFunction = function;
@@ -437,11 +460,13 @@ public:
     }
 
     void callAbsolute(const char* /*functionName*/, Address addr) {
+        saveInstructionPointer(ScratchRegister);
         call(addr);
     }
 
     void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
     {
+        saveInstructionPointer(ScratchRegister);
         call(relativeCall.addr);
     }
 
@@ -1294,6 +1319,8 @@ public:
 
     RegisterID toUInt32Register(Pointer addr, RegisterID scratchReg)
     {
+        Q_ASSERT(addr.base != scratchReg);
+
         // The UInt32 representation in QV4::Value is really convoluted. See also storeUInt32.
         Pointer tagAddr = addr;
         tagAddr.offset += 4;
@@ -1480,30 +1507,25 @@ private:
 
     void convertUIntToDouble(V4IR::Temp *source, V4IR::Temp *target)
     {
+        Assembler::RegisterID tmpReg = Assembler::ScratchRegister;
+        Assembler::RegisterID reg = _as->toInt32Register(source, tmpReg);
+
         if (target->kind == V4IR::Temp::PhysicalRegister) {
-            _as->convertUInt32ToDouble(_as->toInt32Register(source, Assembler::ScratchRegister),
-                                       (Assembler::FPRegisterID) target->index,
-                                       Assembler::ScratchRegister);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            _as->convertUInt32ToDouble(_as->toUInt32Register(source, Assembler::ScratchRegister),
-                                      Assembler::FPGpr0, Assembler::ScratchRegister);
-            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
+            _as->convertUInt32ToDouble(reg, (Assembler::FPRegisterID) target->index, tmpReg);
         } else {
-            Q_UNIMPLEMENTED();
+            _as->convertUInt32ToDouble(_as->toUInt32Register(source, tmpReg),
+                                      Assembler::FPGpr0, tmpReg);
+            _as->storeDouble(Assembler::FPGpr0, _as->stackSlotPointer(target));
         }
     }
 
     void convertIntToBool(V4IR::Temp *source, V4IR::Temp *target)
     {
-        Assembler::RegisterID reg = Assembler::ScratchRegister;
-        if (target->kind == V4IR::Temp::PhysicalRegister) {
-            reg = _as->toInt32Register(source, reg);
-        } else if (target->kind == V4IR::Temp::StackSlot) {
-            _as->move(_as->toInt32Register(source, reg), reg);
-        } else {
-            Q_UNIMPLEMENTED();
-        }
+        Assembler::RegisterID reg = target->kind == V4IR::Temp::PhysicalRegister
+                ? (Assembler::RegisterID) target->index
+                : Assembler::ScratchRegister;
 
+        _as->move(_as->toInt32Register(source, reg), reg);
         _as->compare32(Assembler::NotEqual, reg, Assembler::TrustedImm32(0), reg);
         _as->storeBool(reg, target);
     }
@@ -1586,5 +1608,7 @@ public:
 } // end of namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#endif // ENABLE(ASSEMBLER)
 
 #endif // QV4ISEL_MASM_P_H

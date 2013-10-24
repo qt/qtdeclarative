@@ -172,6 +172,8 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
 
 void QQmlQtQuick2Module::defineModule()
 {
+    QQuick_initializeProviders();
+
     QQuickUtilModule::defineModule();
     QQmlEnginePrivate::defineQtQuick2Module();
     QQuickItemsModule::defineModule();

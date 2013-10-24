@@ -52,7 +52,7 @@
 //     async if nested cases
 void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
 {
-    QQmlIncubatorPrivate *p = i.d;
+    QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(i.d);
 
     QQmlIncubator::IncubationMode mode = i.incubationMode();
 
@@ -63,7 +63,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         mode = QQmlIncubator::Synchronous;
 
         // Need to find the first constructing context and see if it is asynchronous
-        QQmlIncubatorPrivate *parentIncubator = 0;
+        QExplicitlySharedDataPointer<QQmlIncubatorPrivate> parentIncubator;
         QQmlContextData *cctxt = forContext;
         while (cctxt) {
             if (cctxt->activeVMEData) {
@@ -76,7 +76,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         if (parentIncubator && parentIncubator->isAsynchronous) {
             mode = QQmlIncubator::Asynchronous;
             p->waitingOnMe = parentIncubator;
-            parentIncubator->waitingFor.insert(p);
+            parentIncubator->waitingFor.insert(p.data());
         }
     }
 
@@ -85,8 +85,7 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
     inProgressCreations++;
 
     if (mode == QQmlIncubator::Synchronous) {
-        typedef QQmlIncubatorPrivate IP;
-        QRecursionWatcher<IP, &IP::recursion> watcher(p);
+        QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(p.data());
 
         p->changeStatus(QQmlIncubator::Loading);
 
@@ -95,14 +94,14 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
             p->incubate(i);
         }
     } else {
-        incubatorList.insert(p);
+        incubatorList.insert(p.data());
         incubatorCount++;
 
         p->vmeGuard.guard(&p->vme);
         p->changeStatus(QQmlIncubator::Loading);
 
         if (incubationController)
-            incubationController->incubatingObjectCountChanged(incubatorCount);
+             incubationController->incubatingObjectCountChanged(incubatorCount);
     }
 }
 
@@ -132,15 +131,15 @@ QQmlIncubationController *QQmlEngine::incubationController() const
     return d->incubationController;
 }
 
-QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, 
-                                                           QQmlIncubator::IncubationMode m)
-: q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-  result(0), compiledData(0), vme(this), waitingOnMe(0)
+QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m)
+    : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
+      result(0), compiledData(0), vme(this), waitingOnMe(0)
 {
 }
 
 QQmlIncubatorPrivate::~QQmlIncubatorPrivate()
 {
+    clear();
 }
 
 void QQmlIncubatorPrivate::clear()
@@ -154,7 +153,7 @@ void QQmlIncubatorPrivate::clear()
         enginePriv->incubatorCount--;
         QQmlIncubationController *controller = enginePriv->incubationController;
         if (controller)
-            controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
+             controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
     } else if (compiledData) {
         compiledData->release();
         compiledData = 0;
@@ -240,10 +239,7 @@ Return the number of objects currently incubating.
 */
 int QQmlIncubationController::incubatingObjectCount() const
 {
-    if (d)
-        return d->incubatorCount;
-    else 
-        return 0;
+    return d ? d->incubatorCount : 0;
 }
 
 /*!
@@ -257,14 +253,26 @@ void QQmlIncubationController::incubatingObjectCountChanged(int incubatingObject
     Q_UNUSED(incubatingObjectCount);
 }
 
+void QQmlIncubatorPrivate::forceCompletion(QQmlVME::Interrupt &i)
+{
+    while (QQmlIncubator::Loading == status) {
+        while (QQmlIncubator::Loading == status && !waitingFor.isEmpty())
+            static_cast<QQmlIncubatorPrivate *>(waitingFor.first())->forceCompletion(i);
+        if (QQmlIncubator::Loading == status)
+            incubate(i);
+    }
+}
+
 void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 {
     if (!compiledData)
         return;
+
     QML_MEMORY_SCOPE_URL(compiledData->url);
 
-    typedef QQmlIncubatorPrivate IP;
-    QRecursionWatcher<IP, &IP::recursion> watcher(this);
+    QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
+
+    QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(this);
 
     QQmlEngine *engine = compiledData->engine;
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
@@ -301,7 +309,8 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
             ddata->indestructible = true;
             ddata->explicitIndestructibleSet = true;
             ddata->rootObjectInCreation = false;
-            q->setInitialState(result);
+            if (q)
+                q->setInitialState(result);
         }
 
         if (watcher.hasRecursed())
@@ -337,13 +346,11 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 
 finishIncubate:
     if (progress == QQmlIncubatorPrivate::Completed && waitingFor.isEmpty()) {
-        typedef QQmlIncubatorPrivate IP;
-
-        QQmlIncubatorPrivate *isWaiting = waitingOnMe;
+        QExplicitlySharedDataPointer<QQmlIncubatorPrivate> isWaiting = waitingOnMe;
         clear();
 
         if (isWaiting) {
-            QRecursionWatcher<IP, &IP::recursion> watcher(isWaiting);
+            QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(isWaiting.data());
             changeStatus(calculateStatus());
             if (!watcher.hasRecursed())
                 isWaiting->incubate(i);
@@ -369,14 +376,13 @@ Incubate objects for \a msecs, or until there are no more objects to incubate.
 */
 void QQmlIncubationController::incubateFor(int msecs)
 {
-    if (!d || d->incubatorCount == 0)
+    if (!d || !d->incubatorCount)
         return;
 
     QQmlVME::Interrupt i(msecs * 1000000);
     i.reset();
     do {
-        QQmlIncubatorPrivate *p = (QQmlIncubatorPrivate*)d->incubatorList.first();
-        p->incubate(i);
+        static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
@@ -389,14 +395,13 @@ the bool pointed to by \a flag to false when it wants incubation to be interrupt
 */
 void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
 {
-    if (!d || d->incubatorCount == 0)
+    if (!d || !d->incubatorCount)
         return;
 
     QQmlVME::Interrupt i(flag, msecs * 1000000);
     i.reset();
     do {
-        QQmlIncubatorPrivate *p = (QQmlIncubatorPrivate*)d->incubatorList.first();
-        p->incubate(i);
+        static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
@@ -487,16 +492,20 @@ or stutters into the application, should use the AsynchronousIfNested incubation
 Create a new incubator with the specified \a mode
 */
 QQmlIncubator::QQmlIncubator(IncubationMode mode)
-: d(new QQmlIncubatorPrivate(this, mode))
+    : d(new QQmlIncubatorPrivate(this, mode))
 {
+    d->ref.ref();
 }
 
 /*! \internal */
 QQmlIncubator::~QQmlIncubator()
 {
-    clear();
+    d->q = 0;
 
-    delete d; d = 0;
+    if (!d->ref.deref()) {
+        delete d;
+    }
+    d = 0;
 }
 
 /*!
@@ -531,8 +540,7 @@ Ready state, the created object is \b not deleted.
 */
 void QQmlIncubator::clear()
 {
-    typedef QQmlIncubatorPrivate IP;
-    QRecursionWatcher<IP, &IP::recursion> watcher(d);
+    QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(d);
 
     Status s = status();
 
@@ -550,16 +558,18 @@ void QQmlIncubator::clear()
     d->clear();
 
     // if we're waiting on any incubators then they should be cleared too.
-    while (d->waitingFor.first())
-        static_cast<QQmlIncubatorPrivate*>(d->waitingFor.first())->q->clear();
+    while (d->waitingFor.first()) {
+        QQmlIncubator * i = static_cast<QQmlIncubatorPrivate*>(d->waitingFor.first())->q;
+        if (i)
+            i->clear();
+    }
 
     d->vme.reset();
     d->vmeGuard.clear();
 
     Q_ASSERT(d->compiledData == 0);
-    Q_ASSERT(d->waitingOnMe == 0);
+    Q_ASSERT(d->waitingOnMe.data() == 0);
     Q_ASSERT(d->waitingFor.isEmpty());
-    Q_ASSERT(!d->nextWaitingFor.isInList());
 
     d->errors.clear();
     d->progress = QQmlIncubatorPrivate::Execute;
@@ -587,12 +597,7 @@ returns, the incubator will not be in the Loading state.
 void QQmlIncubator::forceCompletion()
 {
     QQmlVME::Interrupt i;
-    while (Loading == status()) {
-        while (Loading == status() && !d->waitingFor.isEmpty())
-            static_cast<QQmlIncubatorPrivate *>(d->waitingFor.first())->incubate(i);
-        if (Loading == status())
-            d->incubate(i);
-    }
+    d->forceCompletion(i);
 }
 
 /*!
@@ -656,8 +661,10 @@ Return the incubated object if the status is Ready, otherwise 0.
 */
 QObject *QQmlIncubator::object() const
 {
-    if (status() != Ready) return 0;
-    else return d->result;
+    if (status() != Ready)
+        return 0;
+    else
+        return d->result;
 }
 
 /*!
@@ -690,15 +697,15 @@ void QQmlIncubatorPrivate::changeStatus(QQmlIncubator::Status s)
         return;
 
     status = s;
-    q->statusChanged(status);
+    if (q)
+        q->statusChanged(status);
 }
 
 QQmlIncubator::Status QQmlIncubatorPrivate::calculateStatus() const
 {
     if (!errors.isEmpty()) 
         return QQmlIncubator::Error;
-    else if (result && progress == QQmlIncubatorPrivate::Completed && 
-             waitingFor.isEmpty()) 
+    else if (result && progress == QQmlIncubatorPrivate::Completed && waitingFor.isEmpty())
         return QQmlIncubator::Ready;
     else if (compiledData)
         return QQmlIncubator::Loading;

@@ -1,7 +1,6 @@
-
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Canonical Limited and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -40,86 +39,39 @@
 **
 ****************************************************************************/
 
-#ifndef DEBUGUTIL_H
-#define DEBUGUTIL_H
+import QtQuick 2.1
+import Proxy 1.0
 
-#include <QEventLoop>
-#include <QTimer>
-#include <QThread>
-#include <QTest>
-#include <QProcess>
-#include <QMutex>
+Item {
 
-#include <QtQml/qqmlengine.h>
+    ProxyTestInnerModel {
+        id: innerModel
+    }
 
-#include "qqmldebugclient.h"
+    QSortFilterProxyModel {
+        id: outerModel
+        sourceModel: innerModel
+        filterRegExp: RegExp("^H.*$")
+    }
 
-class QQmlDebugTest
-{
-public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
-};
+    width: 400
+    height: 400
+    ListView {
+        anchors.fill: parent
+        orientation: Qt.Vertical
+        model: outerModel
+        delegate: Rectangle {
+            width: 400
+            height: 50
+            color: index % 2 ? "red" : "yellow"
+        }
+    }
 
-class QQmlDebugTestClient : public QQmlDebugClient
-{
-    Q_OBJECT
-public:
-    QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c);
-
-    QByteArray waitForResponse();
-
-signals:
-    void stateHasChanged();
-    void serverMessage(const QByteArray &);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &ba);
-
-private:
-    QByteArray lastMsg;
-};
-
-class QQmlDebugProcess : public QObject
-{
-    Q_OBJECT
-public:
-    QQmlDebugProcess(const QString &executable, QObject *parent = 0);
-    ~QQmlDebugProcess();
-
-    QString state();
-
-    void setEnvironment(const QStringList &environment);
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-    int debugPort() const;
-
-    bool waitForFinished();
-    QProcess::ExitStatus exitStatus() const;
-
-    QString output() const;
-    void stop();
-
-signals:
-    void readyReadStandardOutput();
-
-private slots:
-    void timeout();
-    void processAppOutput();
-    void processError(QProcess::ProcessError error);
-
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-    QStringList m_environment;
-    int m_port;
-};
-
-#endif // DEBUGUTIL_H
+    Timer {
+        running: true
+        interval: 500
+        onTriggered: {
+            innerModel.doStuff();
+        }
+    }
+}

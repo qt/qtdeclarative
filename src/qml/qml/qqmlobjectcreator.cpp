@@ -445,9 +445,8 @@ bool QQmlPropertyCacheCreator::create(const QV4::CompiledData::Object *obj, QQml
     for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIndex) {
         const QV4::CompiledData::Function *s = qmlUnit->header.functionAt(*functionIndex);
 
-        VMD::MethodData methodData = { int(s->nFormals),
-                                       /* body offset*/0,
-                                       /* body length*/0,
+        VMD::MethodData methodData = { /* runtimeFunctionIndex*/ 0, // ###
+                                       int(s->nFormals),
                                        /* s->location.start.line */0 }; // ###
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
@@ -488,10 +487,8 @@ QmlObjectCreator::QmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledD
     , _vmeMetaObject(0)
     , _qmlContext(0)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    if (compiledData->compilationUnit && !compiledData->compilationUnit->engine)
-        compiledData->compilationUnit->linkToEngine(v4);
-
+    if (!compiledData->isInitialized())
+        compiledData->initialize(engine);
 }
 
 QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
@@ -1242,6 +1239,11 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
             }
         } else {
             Q_ASSERT(typeRef.component);
+            if (typeRef.component->qmlUnit->isSingleton())
+            {
+                recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
+                return 0;
+            }
             QmlObjectCreator subCreator(context, typeRef.component);
             instance = subCreator.create();
             if (!instance) {

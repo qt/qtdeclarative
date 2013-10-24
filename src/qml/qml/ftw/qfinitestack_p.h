@@ -65,6 +65,8 @@ struct QFiniteStack {
     inline void deallocate();
     inline void allocate(int size);
 
+    inline int capacity() const { return _alloc; }
+
     inline bool isEmpty() const;
     inline const T &top() const;
     inline T &top();

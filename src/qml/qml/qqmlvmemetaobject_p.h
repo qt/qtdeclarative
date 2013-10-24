@@ -119,9 +119,8 @@ struct QQmlVMEMetaData
     };
 
     struct MethodData {
+        int runtimeFunctionIndex;
         int parameterCount;
-        int bodyOffset;
-        int bodyLength;
         quint16 lineNumber;
     };
 
@@ -159,7 +158,8 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data,
+                      QV4::ExecutionContext *qmlBindingContext = 0, QQmlCompiledData *compiledData = 0);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;

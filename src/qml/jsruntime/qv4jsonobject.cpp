@@ -881,6 +881,9 @@ JsonObject::JsonObject(ExecutionEngine *engine)
 {
     type = Type_JSONObject;
 
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     defineDefaultProperty(QStringLiteral("parse"), method_parse, 2);
     defineDefaultProperty(QStringLiteral("stringify"), method_stringify, 3);
 }

@@ -325,6 +325,23 @@ bool QQmlDebugConnection::waitForConnected(int msecs)
     return d->gotHello;
 }
 
+QString QQmlDebugConnection::stateString() const
+{
+   QString state;
+
+   if (isConnected())
+       state = "Connected";
+   else
+       state = "Not connected";
+
+   if (d->gotHello)
+       state += ", got hello";
+   else
+       state += ", did not get hello!";
+
+   return state;
+}
+
 QAbstractSocket::SocketState QQmlDebugConnection::state() const
 {
     QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
@@ -423,6 +440,15 @@ QQmlDebugClient::State QQmlDebugClient::state() const
         return Enabled;
 
     return Unavailable;
+}
+
+QString QQmlDebugClient::stateString() const
+{
+    switch (state()) {
+    case NotConnected: return QLatin1String("Not connected");
+    case Unavailable: return QLatin1String("Unavailable");
+    case Enabled: return QLatin1String("Enabled");
+    }
 }
 
 void QQmlDebugClient::sendMessage(const QByteArray &message)

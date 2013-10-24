@@ -2218,7 +2218,24 @@ void QQmlTypeData::dataReceived(const Data &data)
         }
     }
 
-    foreach (const QQmlScript::Pragma &pragma, scriptParser.pragmas()) {
+    // ### convert to use new data structure once old compiler is gone.
+    if (m_useNewCompiler && m_newPragmas.isEmpty()) {
+        m_newPragmas.reserve(parsedQML->pragmas.size());
+        foreach (QtQml::Pragma *p, parsedQML->pragmas) {
+            QQmlScript::Pragma pragma;
+            pragma.location.start.line = p->location.line;
+            pragma.location.start.column = p->location.column;
+
+            switch (p->type) {
+            case QtQml::Pragma::PragmaSingleton: pragma.type = QQmlScript::Pragma::Singleton; break;
+            default: break;
+            }
+
+            m_newPragmas << pragma;
+        }
+    }
+
+    foreach (const QQmlScript::Pragma &pragma, m_useNewCompiler ? m_newPragmas : scriptParser.pragmas()) {
         if (!addPragma(pragma, &errors)) {
             Q_ASSERT(errors.size());
             setError(errors);
@@ -2280,6 +2297,12 @@ void QQmlTypeData::compile()
         foreach (const QString &ns, m_namespaces)
             m_compiledData->importCache->add(ns);
 
+        // Add any Composite Singletons that were used to the import cache
+        for (int i = 0; i < compositeSingletons().count(); ++i) {
+            m_compiledData->importCache->add(compositeSingletons().at(i).type->qmlTypeName(),
+                compositeSingletons().at(i).type->sourceUrl(), compositeSingletons().at(i).prefix);
+        }
+
         m_imports.populateCache(m_compiledData->importCache);
         m_compiledData->importCache->addref();
 
@@ -2335,7 +2358,7 @@ void QQmlTypeData::compile()
         // Compile JS binding expressions and signal handlers
 
         JSCodeGen jsCodeGen;
-        jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
+        const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(finalUrlString(), parsedQML.data());
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
 
@@ -2346,7 +2369,7 @@ void QQmlTypeData::compile()
         // Generate QML compiled type data structures
 
         QmlUnitGenerator qmlGenerator;
-        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data());
+        QV4::CompiledData::QmlUnit *qmlUnit = qmlGenerator.generate(*parsedQML.data(), runtimeFunctionIndices);
 
         if (jsUnit) {
             Q_ASSERT(!jsUnit->data);
@@ -2767,7 +2790,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         m_program->qml = qmlglobal;
         m_program->run();
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         if (error.isValid())
             ep->warning(error);
     }

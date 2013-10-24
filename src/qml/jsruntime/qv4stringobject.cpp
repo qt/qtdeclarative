@@ -82,6 +82,10 @@ StringObject::StringObject(InternalClass *ic)
 {
     vtbl = &static_vtbl;
     type = Type_StringObject;
+
+    Scope scope(engine());
+    ScopedObject protectThis(scope, this);
+
     value = ic->engine->newString("")->asReturnedValue();
 
     tmpProperty.value = Primitive::undefinedValue();
@@ -94,6 +98,10 @@ StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
 {
     vtbl = &static_vtbl;
     type = Type_StringObject;
+
+    Scope scope(engine);
+    ScopedObject protectThis(scope, this);
+
     value = *val;
 
     tmpProperty.value = Primitive::undefinedValue();

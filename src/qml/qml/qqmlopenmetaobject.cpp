@@ -357,9 +357,18 @@ void QQmlOpenMetaObject::setCached(bool c)
 
 int QQmlOpenMetaObject::createProperty(const char *name, const char *)
 {
-    if (d->autoCreate)
-        return d->type->createProperty(name);
-    else
+    if (d->autoCreate) {
+        int result = d->type->createProperty(name);
+
+        if (QQmlData *ddata = QQmlData::get(d->object, /*create*/false)) {
+            if (ddata->propertyCache) {
+                ddata->propertyCache->release();
+                ddata->propertyCache = 0;
+            }
+        }
+
+        return result;
+    } else
         return -1;
 }
 

@@ -79,14 +79,14 @@ static const char vertexShaderCode[] =
     "}\n";
 
 static const char fragmentShaderCode[] =
-    "uniform sampler2D texture;\n"
+    "uniform sampler2D _qt_texture;\n"
     "uniform lowp float qt_Opacity;\n"
     "\n"
     "varying highp vec4 fTexS;\n"
     "varying lowp float progress;\n"
     "\n"
     "void main() {\n"
-    "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), progress) * qt_Opacity;\n"
+    "    gl_FragColor = mix(texture2D(_qt_texture, fTexS.xy), texture2D(_qt_texture, fTexS.zw), progress) * qt_Opacity;\n"
     "}\n";
 
 class QQuickSpriteSequenceMaterial : public QSGMaterial

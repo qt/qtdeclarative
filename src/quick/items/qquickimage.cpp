@@ -666,7 +666,6 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     if (d->pixmapChanged) {
         // force update the texture in the node to trigger reconstruction of
         // geometry and the likes when a atlas segment has changed.
-        node->setTexture(0);
         if (texture->isAtlasTexture() && (hWrap == QSGTexture::Repeat || vWrap == QSGTexture::Repeat))
             node->setTexture(texture->removedFromAtlas());
         else

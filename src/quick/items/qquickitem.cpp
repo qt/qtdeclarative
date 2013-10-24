@@ -7030,58 +7030,6 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
 }
 #endif
 
-qint64 QQuickItemPrivate::consistentTime = -1;
-void QQuickItemPrivate::setConsistentTime(qint64 t)
-{
-    consistentTime = t;
-}
-
-class QElapsedTimerConsistentTimeHack
-{
-public:
-    void start() {
-        t1 = QQuickItemPrivate::consistentTime;
-        t2 = 0;
-    }
-    qint64 elapsed() {
-        return QQuickItemPrivate::consistentTime - t1;
-    }
-    qint64 restart() {
-        qint64 val = QQuickItemPrivate::consistentTime - t1;
-        t1 = QQuickItemPrivate::consistentTime;
-        t2 = 0;
-        return val;
-    }
-
-private:
-    qint64 t1;
-    qint64 t2;
-};
-
-void QQuickItemPrivate::start(QElapsedTimer &t)
-{
-    if (QQuickItemPrivate::consistentTime == -1)
-        t.start();
-    else
-        ((QElapsedTimerConsistentTimeHack*)&t)->start();
-}
-
-qint64 QQuickItemPrivate::elapsed(QElapsedTimer &t)
-{
-    if (QQuickItemPrivate::consistentTime == -1)
-        return t.elapsed();
-    else
-        return ((QElapsedTimerConsistentTimeHack*)&t)->elapsed();
-}
-
-qint64 QQuickItemPrivate::restart(QElapsedTimer &t)
-{
-    if (QQuickItemPrivate::consistentTime == -1)
-        return t.restart();
-    else
-        return ((QElapsedTimerConsistentTimeHack*)&t)->restart();
-}
-
 /*!
     \fn bool QQuickItem::isTextureProvider() const
 

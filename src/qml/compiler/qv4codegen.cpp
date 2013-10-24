@@ -64,11 +64,12 @@
 using namespace QQmlJS;
 using namespace AST;
 
-Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode)
+Codegen::ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
     , _env(0)
     , _allowFuncDecls(true)
+    , defaultProgramMode(defaultProgramMode)
 {
 }
 
@@ -78,9 +79,9 @@ void Codegen::ScanFunctions::operator()(Node *node)
         node->accept(this);
 }
 
-void Codegen::ScanFunctions::enterEnvironment(Node *node)
+void Codegen::ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
 {
-    Environment *e = _cg->newEnvironment(node, _env);
+    Environment *e = _cg->newEnvironment(node, _env, compilationMode);
     if (!e->isStrict)
         e->isStrict = _cg->_strictMode;
     _envStack.append(e);
@@ -146,7 +147,7 @@ void Codegen::ScanFunctions::checkForArguments(AST::FormalParameterList *paramet
 
 bool Codegen::ScanFunctions::visit(Program *ast)
 {
-    enterEnvironment(ast);
+    enterEnvironment(ast, defaultProgramMode);
     checkDirectivePrologue(ast->elements);
     return true;
 }
@@ -374,7 +375,7 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
         wasStrict = _env->isStrict;
     }
 
-    enterEnvironment(ast);
+    enterEnvironment(ast, FunctionCode);
     checkForArguments(formals);
 
     _env->isNamedFunctionExpression = isExpression && !name.isEmpty();
@@ -404,7 +405,6 @@ Codegen::Codegen(bool strict)
     , _exitBlock(0)
     , _throwBlock(0)
     , _returnAddress(0)
-    , _mode(GlobalCode)
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
@@ -413,11 +413,11 @@ Codegen::Codegen(bool strict)
 {
 }
 
-V4IR::Function *Codegen::generateFromProgram(const QString &fileName,
+void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
                                   V4IR::Module *module,
-                                  Mode mode,
+                                  CompilationMode mode,
                                   const QStringList &inheritedLocals)
 {
     assert(node);
@@ -427,38 +427,33 @@ V4IR::Function *Codegen::generateFromProgram(const QString &fileName,
 
     _module->setFileName(fileName);
 
-    ScanFunctions scan(this, sourceCode);
+    ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
-    V4IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0,
-                                              node->elements, mode, inheritedLocals);
+    defineFunction(QStringLiteral("%entry"), node, 0, node->elements, inheritedLocals);
     qDeleteAll(_envMap);
     _envMap.clear();
-
-    return globalCode;
 }
 
-V4IR::Function *Codegen::generateFromFunctionExpression(const QString &fileName,
-                                  const QString &sourceCode,
-                                  AST::FunctionExpression *ast,
-                                  V4IR::Module *module)
+void Codegen::generateFromFunctionExpression(const QString &fileName,
+                                             const QString &sourceCode,
+                                             AST::FunctionExpression *ast,
+                                             V4IR::Module *module)
 {
     _module = module;
     _module->setFileName(fileName);
     _env = 0;
 
-    ScanFunctions scan(this, sourceCode);
+    ScanFunctions scan(this, sourceCode, GlobalCode);
     // fake a global environment
-    scan.enterEnvironment(0);
+    scan.enterEnvironment(0, FunctionCode);
     scan(ast);
     scan.leaveEnvironment();
 
-    V4IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
 
     qDeleteAll(_envMap);
     _envMap.clear();
-
-    return function;
 }
 
 
@@ -804,14 +799,9 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     assert(expr.code);
     initializer = *expr;
 
-    if (! _env->parent || _function->insideWithOrCatch || _mode == QmlBinding) {
-        // it's global code.
-        move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
-    } else {
-        const int index = _env->findMember(ast->name.toString());
-        assert(index != -1);
-        move(_block->LOCAL(index, 0), initializer);
-    }
+    int initialized = _block->newTemp();
+    move(_block->TEMP(initialized), initializer);
+    move(identifier(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), _block->TEMP(initialized));
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -1344,7 +1334,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
 
 bool Codegen::visit(FunctionExpression *ast)
 {
-    V4IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     _expr.code = _block->CLOSURE(function);
     return false;
 }
@@ -1355,10 +1345,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
     Environment *e = _env;
     V4IR::Function *f = _function;
 
-    if (_mode == QmlBinding)
-        return _block->NAME(name, line, col);
-
-    while (f && e->parent) {
+    while (f && e->parent && e->compilationMode != QmlBinding) {
         if (f->insideWithOrCatch || (f->isNamedExpression && f->name == name))
             return _block->NAME(name, line, col);
 
@@ -1382,7 +1369,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         f = f->outer;
     }
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) && _mode != EvalCode && _mode != QmlBinding)
+    if (!e->parent && (!f || !f->insideWithOrCatch) && _env->compilationMode != EvalCode && e->compilationMode != QmlBinding)
         return _block->GLOBALNAME(name, line, col);
 
     // global context or with. Lookup by name
@@ -1468,9 +1455,18 @@ bool Codegen::visit(NumericLiteral *ast)
 }
 
 struct ObjectPropertyValue {
+    ObjectPropertyValue()
+        : value(0)
+        , getter(-1)
+        , setter(-1)
+    {}
+
     V4IR::Expr *value;
-    V4IR::Function *getter;
-    V4IR::Function *setter;
+    int getter; // index in _module->functions or -1 if not set
+    int setter;
+
+    bool hasGetter() const { return getter >= 0; }
+    bool hasSetter() const { return setter >= 0; }
 };
 
 bool Codegen::visit(ObjectLiteral *ast)
@@ -1482,18 +1478,18 @@ bool Codegen::visit(ObjectLiteral *ast)
             QString name = propertyName(nv->name);
             Result value = expression(nv->value);
             ObjectPropertyValue &v = valueMap[name];
-            if (v.getter || v.setter || (_function->isStrict && v.value))
+            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value))
                 throwSyntaxError(nv->lastSourceLocation(),
                                  QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
 
             valueMap[name].value = *value;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             QString name = propertyName(gs->name);
-            V4IR::Function *function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
+            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
             if (v.value ||
-                (gs->type == PropertyGetterSetter::Getter && v.getter) ||
-                (gs->type == PropertyGetterSetter::Setter && v.setter))
+                (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
+                (gs->type == PropertyGetterSetter::Setter && v.hasSetter()))
                 throwSyntaxError(gs->lastSourceLocation(),
                                  QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
             if (gs->type == PropertyGetterSetter::Getter)
@@ -1543,8 +1539,8 @@ bool Codegen::visit(ObjectLiteral *ast)
 
                 unsigned getter = _block->newTemp();
                 unsigned setter = _block->newTemp();
-                move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
 
                 current->next = _function->New<V4IR::ExprList>();
                 current = current->next;
@@ -1589,8 +1585,8 @@ bool Codegen::visit(ObjectLiteral *ast)
                     getter = _block->newTemp();
                     setter = _block->newTemp();
                 }
-                move(_block->TEMP(getter), it->getter ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
-                move(_block->TEMP(setter), it->setter ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(V4IR::UndefinedType, 0));
+                move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(V4IR::UndefinedType, 0));
 
 
                 // __qmljs_builtin_define_getter_setter(Value object, String *name, Value getter, Value setter, ExecutionContext *ctx);
@@ -1752,18 +1748,17 @@ bool Codegen::visit(VoidExpression *ast)
 
 bool Codegen::visit(FunctionDeclaration * ast)
 {
-    if (_mode == QmlBinding)
+    if (_env->compilationMode == QmlBinding)
         move(_block->TEMP(_returnAddress), _block->NAME(ast->name.toString(), 0, 0));
     _expr.accept(nx);
     return false;
 }
 
-V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
-                                      AST::FormalParameterList *formals,
-                                      AST::SourceElements *body, Mode mode,
-                                      const QStringList &inheritedLocals)
+int Codegen::defineFunction(const QString &name, AST::Node *ast,
+                            AST::FormalParameterList *formals,
+                            AST::SourceElements *body,
+                            const QStringList &inheritedLocals)
 {
-    qSwap(_mode, mode); // enter function code.
     Loop *loop = 0;
     qSwap(_loop, loop);
 
@@ -1771,6 +1766,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterEnvironment(ast);
     V4IR::Function *function = _module->newFunction(name, _function);
+    int functionIndex = _module->functions.count() - 1;
 
     V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock());
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), V4IR::Function::DontInsertBlock);
@@ -1789,7 +1785,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         _env->enter("arguments", Environment::VariableDeclaration);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
-    if (_mode == FunctionCode) {
+    if (_env->compilationMode == FunctionCode) {
         unsigned t = 0;
         for (Environment::MemberMap::iterator it = _env->members.begin(); it != _env->members.end(); ++it) {
             const QString &local = it.key();
@@ -1819,7 +1815,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
         if (args) {
             V4IR::ExprList *next = function->New<V4IR::ExprList>();
-            next->expr = entryBlock->CONST(V4IR::BoolType, (mode == EvalCode || mode == QmlBinding));
+            next->expr = entryBlock->CONST(V4IR::BoolType, false); // ### Investigate removal of bool deletable
             next->next = args;
             args = next;
 
@@ -1849,9 +1845,9 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     foreach (const Environment::Member &member, _env->members) {
         if (member.function) {
-            V4IR::Function *function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                    member.function->body ? member.function->body->elements : 0);
-            if (! _env->parent) {
+            const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
+                                                member.function->body ? member.function->body->elements : 0);
+            if (! _env->parent || _env->compilationMode == QmlBinding) {
                 move(_block->NAME(member.function->name.toString(), member.function->identifierToken.startLine, member.function->identifierToken.startColumn),
                      _block->CLOSURE(function));
             } else {
@@ -1882,9 +1878,7 @@ V4IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     leaveEnvironment();
 
-    qSwap(_mode, mode);
-
-    return function;
+    return functionIndex;
 }
 
 bool Codegen::visit(IdentifierPropertyName *ast)
@@ -2008,7 +2002,7 @@ bool Codegen::visit(EmptyStatement *)
 
 bool Codegen::visit(ExpressionStatement *ast)
 {
-    if (_mode == EvalCode || _mode == QmlBinding) {
+    if (_env->compilationMode == EvalCode || _env->compilationMode == QmlBinding) {
         Result e = expression(ast->expression);
         if (*e)
             move(_block->TEMP(_returnAddress), *e);
@@ -2116,7 +2110,7 @@ bool Codegen::visit(LabelledStatement *ast)
     // check that no outer loop contains the label
     Loop *l = _loop;
     while (l) {
-        if (l->labelledStatement->label == ast->label) {
+        if (l->labelledStatement && l->labelledStatement->label == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
             throwSyntaxError(ast->firstSourceLocation(), error);
         }
@@ -2217,7 +2211,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
 bool Codegen::visit(ReturnStatement *ast)
 {
-    if (_mode != FunctionCode && _mode != QmlBinding)
+    if (_env->compilationMode != FunctionCode && _env->compilationMode != QmlBinding)
         throwSyntaxError(ast->returnToken, QCoreApplication::translate("qv4codegen", "Return statement outside of function"));
     if (ast->expression) {
         Result expr = expression(ast->expression);

@@ -193,9 +193,11 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
     Q_Q(QQuickFolderListModel);
 
     QModelIndex parent;
-    q->beginRemoveRows(parent, 0, data.size()-1);
-    data.clear();
-    q->endRemoveRows();
+    if (data.size() > 0) {
+        q->beginRemoveRows(parent, 0, data.size()-1);
+        data.clear();
+        q->endRemoveRows();
+    }
 
     q->beginInsertRows(parent, 0, list.size()-1);
     data = list;

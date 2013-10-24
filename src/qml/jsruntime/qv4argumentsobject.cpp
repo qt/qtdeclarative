@@ -127,12 +127,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
     isNonStrictArgumentsObject = true;
 
     if (isMapped && attrs.isData()) {
-        if (!attrs.isGeneric()) {
-            ScopedCallData callData(scope, 1);
-            callData->thisObject = this->asReturnedValue();
-            callData->args[0] = desc.value;
-            map.setter()->call(callData);
-        }
+        ScopedCallData callData(scope, 1);
+        callData->thisObject = this->asReturnedValue();
+        callData->args[0] = desc.value;
+        map.setter()->call(callData);
+
         if (attrs.isWritable()) {
             *pd = map;
             arrayAttributes[pidx] = mapAttrs;

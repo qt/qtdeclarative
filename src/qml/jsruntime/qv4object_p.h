@@ -255,8 +255,6 @@ public:
         return arrayData + index;
     }
 
-    void markArrayObjects() const;
-
     void push_back(const ValueRef v);
 
     SparseArrayNode *sparseArrayBegin() { return sparseArray ? sparseArray->begin() : 0; }
@@ -340,6 +338,7 @@ struct BooleanObject: Object {
 protected:
     BooleanObject(InternalClass *ic)
         : Object(ic) {
+        vtbl = &static_vtbl;
         type = Type_BooleanObject;
         value = Encode(false);
     }
@@ -357,6 +356,7 @@ struct NumberObject: Object {
 protected:
     NumberObject(InternalClass *ic)
         : Object(ic) {
+        vtbl = &static_vtbl;
         type = Type_NumberObject;
         value = Encode((int)0);
     }
@@ -420,9 +420,12 @@ inline Property *Object::arrayInsert(uint index, PropertyAttributes attributes) 
         if (index >= arrayAlloc)
             arrayReserve(index + 1);
         if (index >= arrayDataLen) {
-            ensureArrayAttributes();
-            for (uint i = arrayDataLen; i < index; ++i)
-                arrayAttributes[i].clear();
+            // mark possible hole in the array
+            for (uint i = arrayDataLen; i < index; ++i) {
+                arrayData[i].value = Primitive::emptyValue();
+                if (arrayAttributes)
+                    arrayAttributes[i].clear();
+            }
             arrayDataLen = index + 1;
         }
         pd = arrayData + index;

@@ -1833,44 +1833,47 @@ bool QQmlImportDatabase::importPlugin(QObject *instance, const QString &basePath
     const char *moduleId = bytes.constData();
 
     QStringList registrationFailures;
+    {
+        // Create a scope for QWriteLocker to keep it as narrow as possible, and
+        // to ensure that we release it before the call to initalizeEngine below
+        QWriteLocker lock(QQmlMetaType::typeRegistrationLock());
 
-    QWriteLocker lock(QQmlMetaType::typeRegistrationLock());
+        if (!typeNamespace.isEmpty()) {
+            // This is an 'identified' module
+            if (typeNamespace != uri) {
+                // The namespace for type registrations must match the URI for locating the module
+                QQmlError error;
+                error.setDescription(tr("Module namespace '%1' does not match import URI '%2'").arg(typeNamespace).arg(uri));
+                errors->prepend(error);
+                return false;
+            }
 
-    if (!typeNamespace.isEmpty()) {
-        // This is an 'identified' module
-        if (typeNamespace != uri) {
-            // The namespace for type registrations must match the URI for locating the module
-            QQmlError error;
-            error.setDescription(tr("Module namespace '%1' does not match import URI '%2'").arg(typeNamespace).arg(uri));
-            errors->prepend(error);
-            return false;
-        }
-
-        if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace)) {
-            // Other modules have already installed to this namespace
-            QQmlError error;
-            error.setDescription(tr("Namespace '%1' has already been used for type registration").arg(typeNamespace));
-            errors->prepend(error);
-            return false;
+            if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace)) {
+                // Other modules have already installed to this namespace
+                QQmlError error;
+                error.setDescription(tr("Namespace '%1' has already been used for type registration").arg(typeNamespace));
+                errors->prepend(error);
+                return false;
+            } else {
+                QQmlMetaType::protectNamespace(typeNamespace);
+            }
         } else {
-            QQmlMetaType::protectNamespace(typeNamespace);
+            // This is not an identified module - provide a warning
+            qWarning().nospace() << qPrintable(tr("Module '%1' does not contain a module identifier directive - it cannot be protected from external registrations.").arg(uri));
         }
-    } else {
-        // This is not an identified module - provide a warning
-        qWarning().nospace() << qPrintable(tr("Module '%1' does not contain a module identifier directive - it cannot be protected from external registrations.").arg(uri));
-    }
 
-    QQmlMetaType::setTypeRegistrationNamespace(typeNamespace);
+        QQmlMetaType::setTypeRegistrationNamespace(typeNamespace);
 
-    if (QQmlExtensionPlugin *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
-        // basepath should point to the directory of the module, not the plugin file itself:
-        QQmlExtensionPluginPrivate::get(plugin)->baseUrl = QUrl::fromLocalFile(basePath);
-    }
+        if (QQmlExtensionPlugin *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
+            // basepath should point to the directory of the module, not the plugin file itself:
+            QQmlExtensionPluginPrivate::get(plugin)->baseUrl = QUrl::fromLocalFile(basePath);
+        }
 
-    iface->registerTypes(moduleId);
+        iface->registerTypes(moduleId);
 
-    registrationFailures = QQmlMetaType::typeRegistrationFailures();
-    QQmlMetaType::setTypeRegistrationNamespace(QString());
+        registrationFailures = QQmlMetaType::typeRegistrationFailures();
+        QQmlMetaType::setTypeRegistrationNamespace(QString());
+    } // QWriteLocker lock(QQmlMetaType::typeRegistrationLock())
 
     if (!registrationFailures.isEmpty()) {
         if (errors) {

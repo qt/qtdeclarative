@@ -56,6 +56,7 @@ class PageAllocation;
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
+class QQmlError;
 
 namespace QV4 {
 namespace Debugging {
@@ -286,7 +287,7 @@ struct Q_QML_EXPORT ExecutionEngine
     Returned<DateObject> *newDateObject(const QDateTime &dt);
 
     Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
-    Returned<RegExpObject> *newRegExpObject(RegExp* re, bool global);
+    Returned<RegExpObject> *newRegExpObject(Referenced<RegExp> re, bool global);
     Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
 
     Returned<Object> *newErrorObject(const ValueRef value);
@@ -326,11 +327,12 @@ struct Q_QML_EXPORT ExecutionEngine
     StackTrace exceptionStackTrace;
 
     void Q_NORETURN throwException(const ValueRef value);
-    void Q_NORETURN rethrowException(ExecutionContext *intermediateCatchingContext);
     ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
 
+    // Use only inside catch(...) -- will re-throw if no JS exception
+    static QQmlError convertJavaScriptException(QV4::ExecutionContext *context);
+
     void Q_NORETURN throwInternal();
-    void Q_NORETURN rethrowInternal();
     // ----
 
 
@@ -350,6 +352,23 @@ inline ExecutionContext *ExecutionEngine::popContext()
     current = current->parent;
     return current;
 }
+
+struct ExecutionContextSaver
+{
+    ExecutionEngine *engine;
+    ExecutionContext *savedContext;
+
+    ExecutionContextSaver(ExecutionContext *context)
+        : engine(context->engine)
+        , savedContext(context)
+    {
+    }
+    ~ExecutionContextSaver()
+    {
+        while (engine->current != savedContext)
+            engine->popContext();
+    }
+};
 
 } // namespace QV4
 

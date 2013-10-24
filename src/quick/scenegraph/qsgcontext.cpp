@@ -408,7 +408,11 @@ QSGDistanceFieldGlyphCache *QSGContext::distanceFieldGlyphCache(const QRawFont &
 QSGGlyphNode *QSGContext::createNativeGlyphNode()
 {
 #if defined(QT_OPENGL_ES) && !defined(QT_OPENGL_ES_2_ANGLE)
-    return createGlyphNode();
+    Q_D(QSGContext);
+    if (d->distanceFieldDisabled)
+        return new QSGDefaultGlyphNode;
+    else
+        return createGlyphNode();
 #else
     return new QSGDefaultGlyphNode;
 #endif

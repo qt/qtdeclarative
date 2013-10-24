@@ -1,7 +1,7 @@
 TEMPLATE = aux
 
 TESTSCRIPT=$$PWD/test262.py
-V4CMD = v4
+V4CMD = qmljs
 
 checktarget.target = check
 checktarget.commands = python $$TESTSCRIPT --command=$$V4CMD --parallel --with-test-expectations --update-expectations

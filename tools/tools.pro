@@ -1,14 +1,13 @@
 TEMPLATE = subdirs
-qtHaveModule(quick): SUBDIRS += qmlscene qmlplugindump
-qtHaveModule(qmltest): SUBDIRS += qmltestrunner
+qtHaveModule(quick): !android|android_app: SUBDIRS += qmlscene qmlplugindump
+qtHaveModule(qmltest): !android|android_app: SUBDIRS += qmltestrunner
 SUBDIRS += \
-    qml \
     qmlmin \
-    qmlprofiler \
-    qmlbundle \
-    v4
+    qmlprofiler
+!android|android_app: SUBDIRS += \
+                          qml \
+                          qmlbundle
 qtHaveModule(quick):qtHaveModule(widgets): SUBDIRS += qmleasing
-qtHaveModule(quick): SUBDIRS += qmlimportscanner
 
 # qmlmin & qmlbundle are build tools.
 # qmlscene is needed by the autotests.
@@ -20,3 +19,10 @@ qtNomakeTools( \
     qmlplugindump \
     qmleasing \
 )
+
+contains(QT_CONFIG, private_tests): SUBDIRS += qmljs
+
+qtHaveModule(quick) {
+    for(subdir, SUBDIRS): $${subdir}.depends += qmlimportscanner
+    SUBDIRS += qmlimportscanner
+}

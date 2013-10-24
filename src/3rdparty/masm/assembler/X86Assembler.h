@@ -683,6 +683,29 @@ public:
         }
     }
 
+    void shrq_i8r(int imm, RegisterID dst)
+    {
+        // ### doesn't work when removing the "0 &&"
+        if (0 && imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SHR, dst);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SHR, dst);
+            m_formatter.immediate8(imm);
+        }
+    }
+
+    void shlq_i8r(int imm, RegisterID dst)
+    {
+        // ### doesn't work when removing the "0 &&"
+        if (0 && imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, GROUP2_OP_SHL, dst);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, GROUP2_OP_SHL, dst);
+            m_formatter.immediate8(imm);
+        }
+    }
+
+
 #endif
 
     void sarl_i8r(int imm, RegisterID dst)

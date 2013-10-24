@@ -136,6 +136,11 @@ public:
         return result;
     }
 
+    void callToRetrieveIP()
+    {
+        m_assembler.call();
+    }
+
     // Address is a memory location containing the address to jump to
     void jump(AbsoluteAddress address)
     {
@@ -293,6 +298,16 @@ public:
     void xor64(TrustedImm32 imm, RegisterID srcDest)
     {
         m_assembler.xorq_ir(imm.m_value, srcDest);
+    }
+
+    void urshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.shrq_i8r(imm.m_value, dest);
+    }
+
+    void lshift64(TrustedImm32 imm, RegisterID dest)
+    {
+        m_assembler.shlq_i8r(imm.m_value, dest);
     }
 
     void load64(ImplicitAddress address, RegisterID dest)

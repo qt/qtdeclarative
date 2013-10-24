@@ -318,7 +318,7 @@ public:
     {
         m_assembler.sarl_i8r(imm.m_value, dest);
     }
-    
+
     void rshift32(RegisterID src, TrustedImm32 imm, RegisterID dest)
     {
         if (src != dest)
@@ -362,7 +362,7 @@ public:
             move(src, dest);
         urshift32(imm, dest);
     }
-    
+
     void sub32(RegisterID src, RegisterID dest)
     {
         m_assembler.subl_rr(src, dest);

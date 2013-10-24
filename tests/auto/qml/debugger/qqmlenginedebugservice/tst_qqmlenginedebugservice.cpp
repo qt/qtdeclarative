@@ -969,7 +969,8 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     QmlDebugPropertyReference onEnteredRef = findProperty(mouseAreaObject.properties, "onEntered");
 
     QCOMPARE(onEnteredRef.name, QString("onEntered"));
-    QCOMPARE(onEnteredRef.value,  QVariant("{ console.log('hello') }"));
+    // Sorry, can't do that anymore: QCOMPARE(onEnteredRef.value,  QVariant("{ console.log('hello') }"));
+    QCOMPARE(onEnteredRef.value,  QVariant("function() { [code] }"));
 
     m_dbg->setBindingForObject(mouseAreaObject.debugId, "onEntered",
                                "{console.log('hello, world') }", false,

@@ -208,7 +208,7 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     QString expectedError = QLatin1String("module \"com.nokia.WrongCase\" plugin \"PluGin\" not found");
 #endif
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_OSX
     if (QSysInfo::MacintoshVersion == QSysInfo::MV_10_8)
         QEXPECT_FAIL("", "See QTBUG-32652", Continue);
 #endif

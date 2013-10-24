@@ -367,7 +367,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
         callData->args[1] = value;
         f->call(callData);
     } catch (...) {
-        QQmlError error = QQmlError::catchJavaScriptException(ctx);
+        QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
         reportScriptException(script, error);
     }
 }
@@ -404,7 +404,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
             program.parse();
             program.run();
         } catch (...) {
-            QQmlError error = QQmlError::catchJavaScriptException(ctx);
+            QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
             reportScriptException(script, error);
         }
     } else {

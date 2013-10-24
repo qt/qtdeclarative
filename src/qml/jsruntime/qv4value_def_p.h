@@ -194,8 +194,8 @@ struct Q_QML_EXPORT Value
     inline bool isUndefined() const { return tag == Undefined_Type; }
     inline bool isNull() const { return tag == _Null_Type; }
     inline bool isBoolean() const { return tag == _Boolean_Type; }
-    inline bool isInteger() const { return tag == _Integer_Type; }
 #if QT_POINTER_SIZE == 8
+    inline bool isInteger() const { return (val >> IsNumber_Shift) == 1; }
     inline bool isDouble() const { return (val >> IsDouble_Shift); }
     inline bool isNumber() const { return (val >> IsNumber_Shift); }
     inline bool isManaged() const { return !(val >> IsManaged_Shift); }
@@ -227,6 +227,7 @@ struct Q_QML_EXPORT Value
     }
     bool isNaN() const { return (tag & 0x7fff8000) == 0x00078000; }
 #else
+    inline bool isInteger() const { return tag == _Integer_Type; }
     inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isManaged() const { return tag == Managed_Type; }
@@ -242,7 +243,7 @@ struct Q_QML_EXPORT Value
     void setDouble(double d) { dbl = d; }
     bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
-    inline bool isString() const;
+    bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
         if (tag == _Integer_Type)

@@ -193,7 +193,6 @@ struct IndexedBuiltinFunction: FunctionObject
         , index(index)
     {
         vtbl = &static_vtbl;
-        isBuiltinFunction = true;
     }
 
     static ReturnedValue construct(Managed *m, CallData *)

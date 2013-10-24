@@ -115,7 +115,6 @@ FunctionObject::FunctionObject(InternalClass *ic)
 
     type = Type_FunctionObject;
     needsActivation = false;
-    usesArgumentsObject = false;
     strictMode = false;
 }
 
@@ -135,7 +134,6 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
     type = Type_FunctionObject;
     needsActivation = true;
-    usesArgumentsObject = false;
     strictMode = false;
 #ifndef QT_NO_DEBUG
      assert(scope->next != (ExecutionContext *)0x1);
@@ -414,7 +412,6 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
     ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject();
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
@@ -446,16 +443,8 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj.asReturnedValue();
     ExecutionContext *ctx = context->newCallContext(f.getPointer(), callData);
 
-    ScopedValue result(scope);
-    SAVE_JS_STACK(f->scope);
-    try {
-        result = f->function->code(ctx, f->function->codeData);
-    } catch (...) {
-        context->rethrowException();
-    }
-    CHECK_JS_STACK(f->scope);
-    ctx->engine->popContext();
-
+    ExecutionContextSaver ctxSaver(context);
+    ScopedValue result(scope, f->function->code(ctx, f->function->codeData));
     if (result->isObject())
         return result.asReturnedValue();
     return obj.asReturnedValue();
@@ -477,16 +466,8 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    ScopedValue result(scope);
-    SAVE_JS_STACK(f->scope);
-    try {
-        result = f->function->code(ctx, f->function->codeData);
-    } catch (...) {
-        context->rethrowException();
-    }
-    CHECK_JS_STACK(f->scope);
-    ctx->engine->popContext();
-    return result.asReturnedValue();
+    ExecutionContextSaver ctxSaver(context);
+    return f->function->code(ctx, f->function->codeData);
 }
 
 DEFINE_MANAGED_VTABLE(SimpleScriptFunction);
@@ -511,7 +492,6 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
     ExecutionEngine *v4 = scope->engine;
 
     needsActivation = function->needsActivation();
-    usesArgumentsObject = function->usesArgumentsObject();
     strictMode = function->isStrict();
     formalParameterCount = function->formals.size();
     formalParameterList = function->formals.constData();
@@ -544,16 +524,12 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj;
     ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
 
-    try {
-        Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
-        ctx->engine->popContext();
+    ExecutionContextSaver ctxSaver(context);
+    Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
 
-        if (!result)
-            return obj.asReturnedValue();
-        return result.asReturnedValue();
-    } catch (...) {
-        context->rethrowException();
-    }
+    if (!result)
+        return obj.asReturnedValue();
+    return result.asReturnedValue();
 }
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
@@ -574,16 +550,8 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
         }
     }
 
-    ScopedValue result(scope);
-    SAVE_JS_STACK(f->scope);
-    try {
-        result = f->function->code(ctx, f->function->codeData);
-    } catch (...) {
-        context->rethrowException();
-    }
-    CHECK_JS_STACK(f->scope);
-    ctx->engine->popContext();
-    return result.asReturnedValue();
+    ExecutionContextSaver ctxSaver(context);
+    return f->function->code(ctx, f->function->codeData);
 }
 
 
@@ -596,7 +564,6 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
     , code(code)
 {
     vtbl = &static_vtbl;
-    isBuiltinFunction = true;
 }
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
@@ -618,15 +585,8 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     v4->pushContext(&ctx);
 
-    ScopedValue result(scope);
-    try {
-        result = f->code(&ctx);
-    } catch (...) {
-        context->rethrowException();
-    }
-
-    context->engine->popContext();
-    return result.asReturnedValue();
+    ExecutionContextSaver ctxSaver(context);
+    return f->code(&ctx);
 }
 
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
@@ -642,15 +602,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.callData = callData;
     v4->pushContext(&ctx);
 
-    ScopedValue result(scope);
-    try {
-        result = f->code(&ctx, f->index);
-    } catch (...) {
-        context->rethrowException();
-    }
-
-    context->engine->popContext();
-    return result.asReturnedValue();
+    ExecutionContextSaver ctxSaver(context);
+    return f->code(&ctx, f->index);
 }
 
 DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);

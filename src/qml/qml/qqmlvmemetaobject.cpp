@@ -559,7 +559,7 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
-                                     const QQmlVMEMetaData *meta)
+                                     const QQmlVMEMetaData *meta, QV4::ExecutionContext *qmlBindingContext, QQmlCompiledData *compiledData)
 : object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
   hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
@@ -603,6 +603,21 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
     if (needsJSWrapper)
         ensureQObjectWrapper();
+
+    if (qmlBindingContext && metaData->methodCount) {
+        v8methods = new QV4::PersistentValue[metaData->methodCount];
+
+        QV4::CompiledData::CompilationUnit *compilationUnit = compiledData->compilationUnit;
+        QV4::Scope scope(QQmlEnginePrivate::get(ctxt->engine)->v4engine());
+        QV4::ScopedObject o(scope);
+        for (int index = 0; index < metaData->methodCount; ++index) {
+            QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
+
+            QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[data->runtimeFunctionIndex];
+            o = QV4::FunctionObject::creatScriptFunction(qmlBindingContext, runtimeFunction);
+            v8methods[index] = o;
+        }
+    }
 }
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
@@ -945,7 +960,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     result = function->call(callData);
                     if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 } catch (...) {
-                    QQmlError error = QQmlError::catchJavaScriptException(ctx);
+                    QQmlError error = QV4::ExecutionEngine::convertJavaScriptException(ctx);
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
@@ -973,19 +988,6 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 
     if (!v8methods) 
         v8methods = new QV4::PersistentValue[metaData->methodCount];
-
-    if (v8methods[index].isUndefined()) {
-        QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
-
-        const char *body = ((const char*)metaData) + data->bodyOffset;
-        int bodyLength = data->bodyLength;
-
-        // XXX We should evaluate all methods in a single big script block to 
-        // improve the call time between dynamic methods defined on the same
-        // object
-        v8methods[index] = QQmlExpressionPrivate::evalFunction(ctxt, object, QString::fromUtf8(body, bodyLength),
-                                                               ctxt->urlString, data->lineNumber);
-    }
 
     return v8methods[index].value();
 }

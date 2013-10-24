@@ -386,11 +386,13 @@ inline uint qHash(const Temp &t, uint seed = 0) Q_DECL_NOTHROW
 bool operator<(const Temp &t1, const Temp &t2) Q_DECL_NOTHROW;
 
 struct Closure: Expr {
-    Function *value;
+    int value; // index in _module->functions
+    const QString *functionName;
 
-    void init(Function *value)
+    void init(int functionInModule, const QString *functionName)
     {
-        this->value = value;
+        this->value = functionInModule;
+        this->functionName = functionName;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitClosure(this); }
@@ -680,10 +682,14 @@ struct Q_QML_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
+    bool isQmlModule; // implies rootFunction is always 0
 
     Function *newFunction(const QString &name, Function *outer);
 
-    Module() : rootFunction(0) {}
+    Module()
+        : rootFunction(0)
+        , isQmlModule(false)
+    {}
     ~Module();
 
     void setFileName(const QString &name);
@@ -812,7 +818,7 @@ struct BasicBlock {
 
     Name *GLOBALNAME(const QString &id, quint32 line, quint32 column);
 
-    Closure *CLOSURE(Function *function);
+    Closure *CLOSURE(int functionInModule);
 
     Expr *CONVERT(Expr *expr, Type type);
     Expr *UNOP(AluOp op, Expr *expr);

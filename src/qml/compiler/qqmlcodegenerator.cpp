@@ -118,6 +118,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     output->program = program;
 
     qSwap(_imports, output->imports);
+    qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
@@ -140,9 +141,6 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
         return false;
     }
 
-    // Reserve space for pseudo context-scope function
-    _functions << program;
-
     AST::UiObjectDefinition *rootObject = AST::cast<AST::UiObjectDefinition*>(program->members->member);
     Q_ASSERT(rootObject);
     output->indexOfRootObject = defineQMLObject(rootObject);
@@ -150,6 +148,7 @@ bool QQmlCodeGenerator::generateFromQml(const QString &code, const QUrl &url, co
     collectTypeReferences();
 
     qSwap(_imports, output->imports);
+    qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
     qSwap(_functions, output->functions);
     qSwap(_typeReferences, output->typeReferences);
@@ -406,6 +405,11 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
         error.setColumn(node->importIdToken.startColumn);
         errors << error;
         return false;
+    } else {
+        // For backward compatibility in how the imports are loaded we
+        // must otherwise initialize the major and minor version to -1.
+        import->majorVersion = -1;
+        import->minorVersion = -1;
     }
 
     import->location.line = node->importToken.startLine;
@@ -418,9 +422,38 @@ bool QQmlCodeGenerator::visit(AST::UiImport *node)
     return false;
 }
 
-bool QQmlCodeGenerator::visit(AST::UiPragma *ast)
+bool QQmlCodeGenerator::visit(AST::UiPragma *node)
 {
-  return true;
+    Pragma *pragma = New<Pragma>();
+
+    // For now the only valid pragma is Singleton, so lets validate the input
+    if (!node->pragmaType->name.isNull())
+    {
+        if (QLatin1String("Singleton") == node->pragmaType->name)
+        {
+            pragma->type = Pragma::PragmaSingleton;
+        } else {
+            QQmlError error;
+            error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+            error.setLine(node->pragmaToken.startLine);
+            error.setColumn(node->pragmaToken.startColumn);
+            errors << error;
+            return false;
+        }
+    } else {
+        QQmlError error;
+        error.setDescription(QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+        error.setLine(node->pragmaToken.startLine);
+        error.setColumn(node->pragmaToken.startColumn);
+        errors << error;
+        return false;
+    }
+
+    pragma->location.line = node->pragmaToken.startLine;
+    pragma->location.column = node->pragmaToken.startColumn;
+    _pragmas.append(pragma);
+
+    return false;
 }
 
 static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
@@ -1028,7 +1061,7 @@ bool QQmlCodeGenerator::isStatementNodeScript(AST::Statement *statement)
     return true;
 }
 
-QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
+QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const QVector<int> &runtimeFunctionIndices)
 {
     jsUnitGenerator = &output.jsGenerator;
     const QmlObject *rootObject = output.objects.at(output.indexOfRootObject);
@@ -1107,7 +1140,7 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
 
         quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (Function *f = o->functions->first; f; f = f->next)
-            *functionsTable++ = f->index;
+            *functionsTable++ = runtimeFunctionIndices[f->index];
 
         char *propertiesPtr = objectPtr + objectToWrite->offsetToProperties;
         for (QmlProperty *p = o->properties->first; p; p = p->next) {
@@ -1120,6 +1153,8 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
         for (Binding *b = o->bindings->first; b; b = b->next) {
             QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
             *bindingToWrite = *b;
+            if (b->type == QV4::CompiledData::Binding::Type_Script)
+                bindingToWrite->value.compiledScriptIndex = runtimeFunctionIndices[b->value.compiledScriptIndex];
             bindingPtr += sizeof(QV4::CompiledData::Binding);
         }
 
@@ -1147,6 +1182,14 @@ QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output)
         objectPtr += signalTableSize;
     }
 
+    // enable flag if we encountered pragma Singleton
+    foreach (Pragma *p, output.pragmas) {
+        if (p->type == Pragma::PragmaSingleton) {
+            qmlUnit->header.flags |= QV4::CompiledData::Unit::IsSingleton;
+            break;
+        }
+    }
+
     return qmlUnit;
 }
 
@@ -1155,30 +1198,37 @@ int QmlUnitGenerator::getStringId(const QString &str) const
     return jsUnitGenerator->getStringId(str);
 }
 
-void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output)
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, ParsedQML *output)
 {
-    _module = &output->jsModule;
+    return generateJSCodeForFunctionsAndBindings(fileName, output->code, &output->jsModule, &output->jsParserEngine,
+                                                 output->program, output->functions);
+}
+
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule,
+                                                      QQmlJS::Engine *jsEngine, AST::UiProgram *qmlRoot, const QList<AST::Node*> &functions)
+{
+    QVector<int> runtimeFunctionIndices(functions.size());
+    _module = jsModule;
     _module->setFileName(fileName);
 
-    QmlScanner scan(this, output->code);
-    scan.begin(output->program);
-    foreach (AST::Node *node, output->functions) {
-        if (node == output->program)
-            continue;
+    QmlScanner scan(this, sourceCode);
+    scan.begin(qmlRoot, QmlBinding);
+    foreach (AST::Node *node, functions) {
+        Q_ASSERT(node != qmlRoot);
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
-        scan.enterEnvironment(node);
+        scan.enterEnvironment(node, function ? FunctionCode : QmlBinding);
         scan(function ? function->body : node);
         scan.leaveEnvironment();
     }
     scan.end();
 
     _env = 0;
-    _function = defineFunction(QString("context scope"), output->program, 0, 0, QmlBinding);
+    _function = _module->functions.at(defineFunction(QString("context scope"), qmlRoot, 0, 0));
 
-    foreach (AST::Node *node, output->functions) {
-        if (node == output->program)
-            continue;
+    for (int i = 0; i < functions.count(); ++i) {
+        AST::Node *node = functions.at(i);
+        Q_ASSERT(node != qmlRoot);
 
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
@@ -1193,26 +1243,34 @@ void JSCodeGen::generateJSCodeForFunctionsAndBindings(const QString &fileName, P
             body = function->body ? function->body->elements : 0;
         else {
             // Synthesize source elements.
-            QQmlJS::MemoryPool *pool = output->jsParserEngine.pool();
-            AST::SourceElement *element = new (pool) AST::StatementSourceElement(static_cast<AST::Statement*>(node));
-            body = new (output->jsParserEngine.pool()) AST::SourceElements(element);
+            QQmlJS::MemoryPool *pool = jsEngine->pool();
+
+            AST::Statement *stmt = node->statementCast();
+            if (!stmt) {
+                Q_ASSERT(node->expressionCast());
+                AST::ExpressionNode *expr = node->expressionCast();
+                stmt = new (pool) AST::ExpressionStatement(expr);
+            }
+            AST::SourceElement *element = new (pool) AST::StatementSourceElement(stmt);
+            body = new (pool) AST::SourceElements(element);
             body = body->finish();
         }
 
-        defineFunction(name, node,
-                       function ? function->formals : 0,
-                       body, function ? FunctionCode : QmlBinding);
-
+        int idx = defineFunction(name, node,
+                                 function ? function->formals : 0,
+                                 body);
+        runtimeFunctionIndices[i] = idx;
     }
 
     qDeleteAll(_envMap);
     _envMap.clear();
+    return runtimeFunctionIndices;
 }
 
 
-void JSCodeGen::QmlScanner::begin(AST::Node *rootNode)
+void JSCodeGen::QmlScanner::begin(AST::Node *rootNode, CompilationMode compilationMode)
 {
-    enterEnvironment(0);
+    enterEnvironment(0, compilationMode);
     enterFunction(rootNode, "context scope", 0, 0, 0, /*isExpression*/false);
 }
 

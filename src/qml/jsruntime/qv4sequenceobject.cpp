@@ -175,6 +175,9 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
+        flags &= ~SimpleArray;
+        QV4::Scope scope(engine);
+        QV4::ScopedObject protectThis(scope, this);
         init();
     }
 
@@ -186,6 +189,9 @@ public:
     {
         type = Type_QmlSequence;
         vtbl = &static_vtbl;
+        flags &= ~SimpleArray;
+        QV4::Scope scope(engine);
+        QV4::ScopedObject protectThis(scope, this);
         loadReference();
         init();
     }

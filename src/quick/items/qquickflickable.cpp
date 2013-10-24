@@ -948,16 +948,15 @@ void QQuickFlickable::setPixelAligned(bool align)
 
 qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event)
 {
-    if (0 != event->timestamp() && QQuickItemPrivate::consistentTime == -1)
+    if (0 != event->timestamp())
         return event->timestamp();
-
-    return QQuickItemPrivate::elapsed(timer);
+    return timer.elapsed();
 }
 
 void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickFlickable);
-    QQuickItemPrivate::start(timer);
+    timer.start();
     if (interactive && timeline.isActive()
         && ((qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity && !hData.fixingUp && !hData.inOvershoot)
             || (qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity && !vData.fixingUp && !vData.inOvershoot))) {
@@ -1016,8 +1015,8 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     if (wasFlicking)
         emit q->flickingChanged();
     lastPosTime = lastPressTime = computeCurrentTime(event);
-    QQuickItemPrivate::start(vData.velocityTime);
-    QQuickItemPrivate::start(hData.velocityTime);
+    vData.velocityTime.start();
+    hData.velocityTime.start();
 }
 
 void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
@@ -1466,7 +1465,7 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
                                            QQuickTimeLineCallback::Callback fixupCallback)
 {
     if (pressed || calcVelocity) {
-        int elapsed = QQuickItemPrivate::restart(data.velocityTime);
+        int elapsed = data.velocityTime.restart();
         if (elapsed > 0) {
             qreal velocity = (data.lastPos - data.move.value()) * 1000 / elapsed;
             if (qAbs(velocity) > 0) {

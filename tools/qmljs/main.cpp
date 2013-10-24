@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
         }
 
         if (args.first() == QLatin1String("--help")) {
-            std::cerr << "Usage: v4 [|--debug|-d] [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
+            std::cerr << "Usage: qmljs [|--debug|-d] [|--jit|--interpret|--compile|--aot|--llvm-jit] file..." << std::endl;
             return EXIT_SUCCESS;
         }
     }
