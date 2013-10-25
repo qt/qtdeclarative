@@ -136,6 +136,13 @@ QT_BEGIN_NAMESPACE
     pixels.
 */
 /*!
+    \qmlattachedproperty real QtQuick.Window::Screen::pixelDensity
+    \readonly
+    \since 5.2
+
+    The number of physical pixels per millimeter.
+*/
+/*!
     \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window::Screen::primaryOrientation
     \readonly
 
@@ -233,6 +240,13 @@ qreal QQuickScreenAttached::logicalPixelDensity() const
     return m_screen->logicalDotsPerInch() / 25.4;
 }
 
+qreal QQuickScreenAttached::pixelDensity() const
+{
+    if (!m_screen)
+        return 0.0;
+    return m_screen->physicalDotsPerInch() / 25.4;
+}
+
 Qt::ScreenOrientation QQuickScreenAttached::primaryOrientation() const
 {
     if (!m_screen)
@@ -291,6 +305,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
             emit desktopGeometryChanged();
         if (!oldScreen || screen->logicalDotsPerInch() != oldScreen->logicalDotsPerInch())
             emit logicalPixelDensityChanged();
+        if (!oldScreen || screen->physicalDotsPerInch() != oldScreen->physicalDotsPerInch())
+            emit pixelDensityChanged();
 
         connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(widthChanged()));
@@ -304,6 +320,8 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
                 this, SIGNAL(desktopGeometryChanged()));
         connect(screen, SIGNAL(logicalDotsPerInchChanged(qreal)),
                 this, SIGNAL(logicalPixelDensityChanged()));
+        connect(screen, SIGNAL(physicalDotsPerInchChanged(qreal)),
+                this, SIGNAL(pixelDensityChanged()));
     }
 }
 
