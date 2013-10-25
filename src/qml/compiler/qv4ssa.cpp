@@ -51,6 +51,7 @@
 #include <QtCore/QStack>
 #include <qv4runtime_p.h>
 #include <qv4context_p.h>
+#include <private/qqmlpropertycache_p.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -1499,7 +1500,12 @@ protected:
     }
 
     virtual void visitMember(Member *e) {
-        // TODO: for QML, try to do a static lookup
+        if (e->type == Member::MemberOfQObject
+            && !e->property->isEnum() // Enums need to go through run-time getters/setters to ensure correct string handling.
+           ) {
+            _ty = TypingResult(irTypeFromPropertyType(e->property->propType));
+            return;
+        }
         _ty = run(e->base);
         _ty.type = VarType;
     }
@@ -1560,6 +1566,21 @@ protected:
         }
 
         setType(s->targetTemp, _ty.type);
+    }
+
+    static int irTypeFromPropertyType(int propType)
+    {
+        switch (propType) {
+        case QMetaType::Bool: return BoolType;
+
+        // Can't propagate integers right now, because QML rounds doubles to integers on assignment, as opposed to EcmaScript
+//        case QMetaType::Int: return SInt32Type;
+
+        case QMetaType::Double: return DoubleType;
+        case QMetaType::QString: return StringType;
+        default: break;
+        }
+        return VarType;
     }
 };
 
@@ -1650,7 +1671,11 @@ public:
             }
 
             foreach (const Conversion &conversion, _conversions) {
-                if (conversion.stmt->asMove() && conversion.stmt->asMove()->source->asTemp()) {
+                V4IR::Move *move = conversion.stmt->asMove();
+
+                // Note: isel only supports move into member when source is a temp, so convert
+                // is not a supported source.
+                if (move && move->source->asTemp() && !move->target->asMember()) {
                     *conversion.expr = bb->CONVERT(*conversion.expr, conversion.targetType);
                 } else if (Const *c = (*conversion.expr)->asConst()) {
                     convertConst(c, conversion.targetType);
@@ -1788,7 +1813,13 @@ protected:
             }
         }
 
-        run(s->source, s->target->type);
+        // Resettable properties need to be able to receive the un-converted
+        // value, because assigning "undefined" to them calls the reset function
+        // of the property.
+        const Member *targetMember = s->target->asMember();
+        const bool inhibitConversion = targetMember && targetMember->type == Member::MemberOfQObject && targetMember->property->isResettable();
+
+        run(s->source, s->target->type, !inhibitConversion);
     }
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) {
