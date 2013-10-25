@@ -127,7 +127,8 @@ AbstractFileDialog {
         implicitHeight: Math.min(maxSize, Screen.pixelDensity * 80)
         color: palette.window
         focus: root.visible && !currentPathField.visible
-
+        property real spacing: 6
+        property real outerSpacing: 12
         SystemPalette { id: palette }
 
         Component {
@@ -312,7 +313,7 @@ AbstractFileDialog {
             Text {
                 id: currentPathText
                 anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: textX; anchors.rightMargin: 4
+                anchors.leftMargin: textX; anchors.rightMargin: content.spacing
                 text: root.urlToPath(view.model.folder)
                 color: palette.text
                 elide: Text.ElideLeft; horizontalAlignment: Text.AlignRight; verticalAlignment: Text.AlignVCenter
@@ -324,7 +325,7 @@ AbstractFileDialog {
             TextField {
                 id: currentPathField
                 anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: textX; anchors.rightMargin: 4
+                anchors.leftMargin: textX; anchors.rightMargin: content.spacing
                 visible: false
                 focus: visible
                 onAccepted: {
@@ -352,7 +353,7 @@ AbstractFileDialog {
                 anchors.right: parent.right
                 anchors.rightMargin: spacing
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
+                spacing: content.spacing
                 TextField {
                     id: filterField
                     text: root.selectedNameFilter
