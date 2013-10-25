@@ -4125,7 +4125,7 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 }
 
 /*!
-  \qmlproperty real QtQuick::Item::visibleChildren
+  \qmlproperty list<Item> QtQuick::Item::visibleChildren
   This read-only property lists all of the item's children that are currently visible.
   Note that a child's visibility may have changed explicitly, or because the visibility
   of this (it's parent) item or another grandparent changed.
