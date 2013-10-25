@@ -62,7 +62,7 @@ AbstractColorDialog {
     Rectangle {
         id: content
         property int maxSize: 0.9 * Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
-        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * (usePaletteMap ? 100 : 50))
+        implicitHeight: Math.min(maxSize, Screen.pixelDensity * (usePaletteMap ? 100 : 50))
         implicitWidth: usePaletteMap ? implicitHeight - bottomMinHeight : implicitHeight * 1.5
         color: palette.window
         property real bottomMinHeight: sliders.height + buttonRow.height + outerSpacing * 3
@@ -295,6 +295,7 @@ AbstractColorDialog {
             }
             Row {
                 spacing: content.spacing
+                height: parent.height
                 TextField {
                     id: colorField
                     text: root.currentColor.toString()

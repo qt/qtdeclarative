@@ -120,9 +120,9 @@ AbstractFileDialog {
     Rectangle {
         property int maxSize: Math.min(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
         // TODO: QTBUG-29817 geometry from AbstractFileDialog
-        implicitWidth: Math.min(maxSize, Screen.logicalPixelDensity * 100)
-        implicitHeight: Math.min(maxSize, Screen.logicalPixelDensity * 80)
         id: window
+        implicitWidth: Math.min(maxSize, Screen.pixelDensity * 100)
+        implicitHeight: Math.min(maxSize, Screen.pixelDensity * 80)
         color: palette.window
 
         SystemPalette { id: palette }
