@@ -1198,8 +1198,9 @@ int QmlUnitGenerator::getStringId(const QString &str) const
     return jsUnitGenerator->getStringId(str);
 }
 
-JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule, Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports)
+JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, const QString &sourceCode, V4IR::Module *jsModule, Engine *jsEngine, AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports)
     : QQmlJS::Codegen(/*strict mode*/false)
+    , engine(enginePrivate)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
@@ -1283,14 +1284,16 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
     return runtimeFunctionIndices;
 }
 
-static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup)
+static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0)
 {
-    *propertyExistsButForceNameLookup = false;
+    if (propertyExistsButForceNameLookup)
+        *propertyExistsButForceNameLookup = false;
     QQmlPropertyData *pd = cache->property(name, /*object*/0, /*context*/0);
 
     // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
     if (pd && pd->isFunction()) {
-        *propertyExistsButForceNameLookup = true;
+        if (propertyExistsButForceNameLookup)
+            *propertyExistsButForceNameLookup = true;
         pd = 0;
     }
 
@@ -1298,6 +1301,49 @@ static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, co
         pd = 0;
 
     return pd;
+}
+
+V4IR::Expr *JSCodeGen::member(V4IR::Expr *base, const QString *name)
+{
+    V4IR::Member *baseAsMember = base->asMember();
+    if (baseAsMember) {
+        QQmlPropertyCache *cache = 0;
+
+        if (baseAsMember->type == V4IR::Member::MemberOfQObject
+            && baseAsMember->property->isQObject()) {
+
+            bool propertySuitable = baseAsMember->property->isFinal();
+
+            if (!propertySuitable) {
+                // Properties of the scope or context object do not need to be final, as we
+                // intend to find the version of a property available at compile time, not at run-time.
+                if (V4IR::Name *baseName = baseAsMember->base->asName())
+                    propertySuitable = baseName->builtin == V4IR::Name::builtin_qml_scope_object || baseName->builtin == V4IR::Name::builtin_qml_context_object;
+            }
+
+            // Check if it's suitable for caching
+            if (propertySuitable)
+                cache = engine->propertyCacheForType(baseAsMember->property->propType);
+        } else if (baseAsMember->type == V4IR::Member::MemberByObjectId) {
+            // Similarly, properties of an id referenced object also don't need to be final, because
+            // we intend to find the version of a property available at compile time, not at run-time.
+            foreach (const IdMapping &mapping, _idObjects) {
+                if (baseAsMember->objectId == mapping.idIndex) {
+                    cache = mapping.type;
+                    break;
+                }
+            }
+        }
+
+        if (cache) {
+            if (QQmlPropertyData *pd = lookupQmlCompliantProperty(cache, *name)) {
+                const unsigned baseTemp = _block->newTemp();
+                move(_block->TEMP(baseTemp), base);
+                return _block->QML_QOBJECT_PROPERTY(_block->TEMP(baseTemp), name, pd);
+            }
+        }
+    }
+    return QQmlJS::Codegen::member(base, name);
 }
 
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)

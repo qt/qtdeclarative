@@ -3657,7 +3657,7 @@ bool QQmlCompiler::completeComponentBuild()
         const QString &sourceCode = jsEngine->code();
         AST::UiProgram *qmlRoot = parser.qmlRoot();
 
-        JSCodeGen jsCodeGen(unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
+        JSCodeGen jsCodeGen(enginePrivate, unit->finalUrlString(), sourceCode, jsModule.data(), jsEngine, qmlRoot, output->importCache);
 
         JSCodeGen::ObjectIdMapping idMapping;
         if (compileState->ids.count() > 0) {
@@ -3666,6 +3666,7 @@ bool QQmlCompiler::completeComponentBuild()
                 JSCodeGen::IdMapping m;
                 m.name = o->id;
                 m.idIndex = o->idIndex;
+                m.type = o->metatype;
                 idMapping << m;
             }
         }

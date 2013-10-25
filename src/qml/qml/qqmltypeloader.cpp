@@ -2307,6 +2307,7 @@ void QQmlTypeData::compile()
         m_compiledData->importCache->addref();
 
         QQmlEngine *engine = typeLoader()->engine();
+        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
 
         for (QHash<int, TypeReference>::ConstIterator resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
              resolvedType != end; ++resolvedType) {
@@ -2357,7 +2358,7 @@ void QQmlTypeData::compile()
 
         // Compile JS binding expressions and signal handlers
 
-        JSCodeGen jsCodeGen(finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
+        JSCodeGen jsCodeGen(enginePrivate, finalUrlString(), parsedQML->code, &parsedQML->jsModule, &parsedQML->jsParserEngine, parsedQML->program, m_compiledData->importCache);
         const QVector<int> runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(parsedQML->functions);
 
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
@@ -2389,7 +2390,7 @@ void QQmlTypeData::compile()
         m_compiledData->datas.reserve(qmlUnit->nObjects);
         m_compiledData->propertyCaches.reserve(qmlUnit->nObjects);
 
-        QQmlPropertyCacheCreator propertyCacheBuilder(QQmlEnginePrivate::get(m_typeLoader->engine()),
+        QQmlPropertyCacheCreator propertyCacheBuilder(enginePrivate,
                                                       qmlUnit, m_compiledData->url,
                                                       &m_imports, &m_compiledData->resolvedTypes);
 
