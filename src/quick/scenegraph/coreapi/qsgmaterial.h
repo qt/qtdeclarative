@@ -48,6 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSGMaterial;
+class QSGMaterialShaderPrivate;
 
 namespace QSGBatchRenderer {
     class ShaderManager;
@@ -88,7 +89,7 @@ public:
     };
 
     QSGMaterialShader();
-    virtual ~QSGMaterialShader() {};
+    virtual ~QSGMaterialShader();
 
     virtual void activate();
     virtual void deactivate();
@@ -99,18 +100,24 @@ public:
     inline QOpenGLShaderProgram *program() { return &m_program; }
 
 protected:
+    Q_DECLARE_PRIVATE(QSGMaterialShader)
+    QSGMaterialShader(QSGMaterialShaderPrivate &dd);
+
     friend class QSGContext;
     friend class QSGBatchRenderer::ShaderManager;
+
+    void setShaderSourceFile(QOpenGLShader::ShaderType type, const QString &sourceFile);
+    void setShaderSourceFiles(QOpenGLShader::ShaderType type, const QStringList &sourceFiles);
 
     virtual void compile();
     virtual void initialize() { }
 
-    virtual const char *vertexShader() const = 0;
-    virtual const char *fragmentShader() const = 0;
+    virtual const char *vertexShader() const;
+    virtual const char *fragmentShader() const;
 
 private:
     QOpenGLShaderProgram m_program;
-    void *m_reserved;
+    QScopedPointer<QSGMaterialShaderPrivate> d_ptr;
 };
 
 struct QSGMaterialType { };

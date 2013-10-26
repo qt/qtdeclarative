@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgbatchrenderer_p.h"
+#include <private/qsgshadersourcebuilder_p.h>
 
 #include <QtCore/QElapsedTimer>
 
@@ -2322,23 +2323,11 @@ void Renderer::renderRenderNode(Batch *batch)
 
     if (!m_shaderManager->blitProgram) {
         m_shaderManager->blitProgram = new QOpenGLShaderProgram();
-        const char *vs =
-                "attribute highp vec4 av;               "
-                "attribute highp vec2 at;               "
-                "varying highp vec2 t;                  "
-                "void main() {                          "
-                "    gl_Position = av;                  "
-                "    t = at;                            "
-                "}                                      ";
-        const char *fs =
-                "uniform lowp sampler2D tex;            "
-                "varying highp vec2 t;                  "
-                "void main() {                          "
-                "    gl_FragColor = texture2D(tex, t);  "
-                "}                                      ";
 
-        m_shaderManager->blitProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, vs);
-        m_shaderManager->blitProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, fs);
+        QSGShaderSourceBuilder::initializeProgramFromFiles(
+            m_shaderManager->blitProgram,
+            QStringLiteral(":/scenegraph/shaders/rendernode.vert"),
+            QStringLiteral(":/scenegraph/shaders/rendernode.frag"));
         m_shaderManager->blitProgram->bindAttributeLocation("av", 0);
         m_shaderManager->blitProgram->bindAttributeLocation("at", 1);
         m_shaderManager->blitProgram->link();

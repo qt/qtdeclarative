@@ -45,6 +45,7 @@
 #include "qquickshadereffect_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
+#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -276,20 +277,15 @@ void QQuickCustomMaterialShader::compile()
         m_log += program()->log();
     }
 
-    static const char fallbackVertexShader[] =
-            "uniform highp mat4 qt_Matrix;"
-            "attribute highp vec4 v;"
-            "void main() { gl_Position = qt_Matrix * v; }";
-    static const char fallbackFragmentShader[] =
-            "void main() { gl_FragColor = vec4(1., 0., 1., 1.); }";
-
     if (!m_compiled) {
         qWarning("QQuickCustomMaterialShader: Shader compilation failed:");
         qWarning() << program()->log();
 
-        program()->removeAllShaders();
-        program()->addShaderFromSourceCode(QOpenGLShader::Vertex, fallbackVertexShader);
-        program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fallbackFragmentShader);
+        QSGShaderSourceBuilder::initializeProgramFromFiles(
+            program(),
+            QStringLiteral(":/items/shaders/shadereffectfallback.vert"),
+            QStringLiteral(":/items/shaders/shadereffectfallback.frag"));
+
 #ifndef QT_NO_DEBUG
         for (int i = 0; i < attrCount; ++i) {
 #else

@@ -54,35 +54,14 @@ inline static bool isPowerOfTwo(int x)
 }
 #endif
 
-const char qt_scenegraph_texture_material_vertex_code[] =
-    "uniform highp mat4 qt_Matrix;                      \n"
-    "attribute highp vec4 qt_VertexPosition;            \n"
-    "attribute highp vec2 qt_VertexTexCoord;            \n"
-    "varying highp vec2 qt_TexCoord;                    \n"
-    "void main() {                                      \n"
-    "    qt_TexCoord = qt_VertexTexCoord;               \n"
-    "    gl_Position = qt_Matrix * qt_VertexPosition;   \n"
-    "}";
-
-const char qt_scenegraph_texture_material_fragment[] =
-    "varying highp vec2 qt_TexCoord;                    \n"
-    "uniform sampler2D qt_Texture;                      \n"
-    "void main() {                                      \n"
-    "    gl_FragColor = texture2D(qt_Texture, qt_TexCoord);\n"
-    "}";
-
-
-const char *QSGOpaqueTextureMaterialShader::vertexShader() const
-{
-    return qt_scenegraph_texture_material_vertex_code;
-}
-
-const char *QSGOpaqueTextureMaterialShader::fragmentShader() const
-{
-    return qt_scenegraph_texture_material_fragment;
-}
-
 QSGMaterialType QSGOpaqueTextureMaterialShader::type;
+
+QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
+    : QSGMaterialShader()
+{
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/opaquetexture.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/opaquetexture.frag"));
+}
 
 char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
 {
@@ -353,14 +332,6 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     a material in the scene graph.
  */
 
-static const char qt_scenegraph_texture_material_opacity_fragment[] =
-    "varying highp vec2 qt_TexCoord;                       \n"
-    "uniform sampler2D qt_Texture;                         \n"
-    "uniform lowp float opacity;                        \n"
-    "void main() {                                      \n"
-    "    gl_FragColor = texture2D(qt_Texture, qt_TexCoord) * opacity; \n"
-    "}";
-
 QSGMaterialType QSGTextureMaterialShader::type;
 
 
@@ -385,6 +356,12 @@ QSGMaterialShader *QSGTextureMaterial::createShader() const
     return new QSGTextureMaterialShader;
 }
 
+QSGTextureMaterialShader::QSGTextureMaterialShader()
+    : QSGOpaqueTextureMaterialShader()
+{
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/texture.frag"));
+}
+
 void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
@@ -398,11 +375,6 @@ void QSGTextureMaterialShader::initialize()
 {
     QSGOpaqueTextureMaterialShader::initialize();
     m_opacity_id = program()->uniformLocation("opacity");
-}
-
-const char *QSGTextureMaterialShader::fragmentShader() const
-{
-    return qt_scenegraph_texture_material_opacity_fragment;
 }
 
 QT_END_NAMESPACE

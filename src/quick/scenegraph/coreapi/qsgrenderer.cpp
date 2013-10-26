@@ -46,6 +46,7 @@
 #include "qsggeometry_p.h"
 
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qsgshadersourcebuilder_p.h>
 
 #include <QOpenGLShaderProgram>
 #include <qopenglframebufferobject.h>
@@ -481,16 +482,10 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
         } else {
             if (!(clipType & StencilClip)) {
                 if (!m_clip_program.isLinked()) {
-                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                        "attribute highp vec4 vCoord;       \n"
-                        "uniform highp mat4 matrix;         \n"
-                        "void main() {                      \n"
-                        "    gl_Position = matrix * vCoord; \n"
-                        "}");
-                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                        "void main() {                                   \n"
-                        "    gl_FragColor = vec4(0.81, 0.83, 0.12, 1.0); \n" // Trolltech green ftw!
-                        "}");
+                    QSGShaderSourceBuilder::initializeProgramFromFiles(
+                        &m_clip_program,
+                        QStringLiteral(":/scenegraph/shaders/stencilclip.vert"),
+                        QStringLiteral(":/scenegraph/shaders/stencilclip.frag"));
                     m_clip_program.bindAttributeLocation("vCoord", 0);
                     m_clip_program.link();
                     m_clip_matrix_id = m_clip_program.uniformLocation("matrix");

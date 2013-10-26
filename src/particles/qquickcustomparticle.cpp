@@ -41,46 +41,10 @@
 
 #include "qquickcustomparticle_p.h"
 #include <QtQuick/private/qquickshadereffectmesh_p.h>
+#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <cstdlib>
 
 QT_BEGIN_NAMESPACE
-
-//Includes comments because the code isn't self explanatory
-static const char qt_particles_template_vertex_code[] =
-        "attribute highp vec2 qt_ParticlePos;\n"
-        "attribute highp vec2 qt_ParticleTex;\n"
-        "attribute highp vec4 qt_ParticleData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
-        "attribute highp vec4 qt_ParticleVec; // x,y = constant velocity,  z,w = acceleration\n"
-        "attribute highp float qt_ParticleR;\n"
-        "uniform highp mat4 qt_Matrix;\n"
-        "uniform highp float qt_Timestamp;\n"
-        "varying highp vec2 qt_TexCoord0;\n"
-        "void defaultMain() {\n"
-        "    qt_TexCoord0 = qt_ParticleTex;\n"
-        "    highp float size = qt_ParticleData.z;\n"
-        "    highp float endSize = qt_ParticleData.w;\n"
-        "    highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;\n"
-        "    highp float currentSize = mix(size, endSize, t * t);\n"
-        "    if (t < 0. || t > 1.)\n"
-        "        currentSize = 0.;\n"
-        "    highp vec2 pos = qt_ParticlePos\n"
-        "                   - currentSize / 2. + currentSize * qt_ParticleTex   // adjust size\n"
-        "                   + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply velocity vector..\n"
-        "                   + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);\n"
-        "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);\n"
-        "}";
-static const char qt_particles_default_vertex_code[] =
-        "void main() {        \n"
-        "    defaultMain();   \n"
-        "}";
-
-static const char qt_particles_default_fragment_code[] =
-        "uniform sampler2D source;                                  \n"
-        "varying highp vec2 qt_TexCoord0;                           \n"
-        "uniform lowp float qt_Opacity;                             \n"
-        "void main() {                                              \n"
-        "    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;   \n"
-        "}";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {
     QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),       // Position
@@ -309,11 +273,18 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
         Q_ASSERT(material);
 
         Key s = m_common.source;
-        if (s.sourceCode[Key::FragmentShader].isEmpty())
-            s.sourceCode[Key::FragmentShader] = qt_particles_default_fragment_code;
+        QSGShaderSourceBuilder builder;
+        if (s.sourceCode[Key::FragmentShader].isEmpty()) {
+            builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.frag"));
+            s.sourceCode[Key::FragmentShader] = builder.source();
+            builder.clear();
+        }
+
+        builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticletemplate.vert"));
         if (s.sourceCode[Key::VertexShader].isEmpty())
-            s.sourceCode[Key::VertexShader] = qt_particles_default_vertex_code;
-        s.sourceCode[Key::VertexShader] = qt_particles_template_vertex_code + s.sourceCode[Key::VertexShader];
+            builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.vert"));
+        s.sourceCode[Key::VertexShader] = builder.source() + s.sourceCode[Key::VertexShader];
+
         s.className = metaObject()->className();
 
         material->setProgramSource(s);

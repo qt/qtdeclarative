@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgflatcolormaterial.h"
+#include <private/qsgmaterialshader_p.h>
 
 #include <qopenglshaderprogram.h>
 
@@ -48,6 +49,8 @@ QT_BEGIN_NAMESPACE
 class FlatColorMaterialShader : public QSGMaterialShader
 {
 public:
+    FlatColorMaterialShader();
+
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
 
@@ -55,14 +58,19 @@ public:
 
 private:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_matrix_id;
     int m_color_id;
 };
 
 QSGMaterialType FlatColorMaterialShader::type;
+
+FlatColorMaterialShader::FlatColorMaterialShader()
+    : QSGMaterialShader(*new QSGMaterialShaderPrivate)
+{
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/flatcolor.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/flatcolor.frag"));
+}
 
 void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
@@ -96,23 +104,6 @@ void FlatColorMaterialShader::initialize()
 {
     m_matrix_id = program()->uniformLocation("matrix");
     m_color_id = program()->uniformLocation("color");
-}
-
-const char *FlatColorMaterialShader::vertexShader() const {
-    return
-        "attribute highp vec4 vCoord;                   \n"
-        "uniform highp mat4 matrix;                     \n"
-        "void main() {                                  \n"
-        "    gl_Position = matrix * vCoord;             \n"
-        "}";
-}
-
-const char *FlatColorMaterialShader::fragmentShader() const {
-    return
-        "uniform lowp vec4 color;                       \n"
-        "void main() {                                  \n"
-        "    gl_FragColor = color;                      \n"
-        "}";
 }
 
 

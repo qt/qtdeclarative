@@ -57,39 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char vertexShaderCode[] =
-    "attribute highp vec2 vPos;\n"
-    "attribute highp vec2 vTex;\n"
-    "uniform highp vec3 animData;// w,h(premultiplied of anim), interpolation progress\n"
-    "uniform highp vec4 animPos;//x,y, x,y (two frames for interpolation)\n"
-    "\n"
-    "uniform highp mat4 qt_Matrix;\n"
-    "\n"
-    "varying highp vec4 fTexS;\n"
-    "varying lowp float progress;\n"
-    "\n"
-    "\n"
-    "void main() {\n"
-    "    progress = animData.z;\n"
-    "    //Calculate frame location in texture\n"
-    "    fTexS.xy = animPos.xy + vTex.xy * animData.xy;\n"
-    "    //Next frame is also passed, for interpolation\n"
-    "    fTexS.zw = animPos.zw + vTex.xy * animData.xy;\n"
-    "\n"
-    "    gl_Position = qt_Matrix * vec4(vPos.x, vPos.y, 0, 1);\n"
-    "}\n";
-
-static const char fragmentShaderCode[] =
-    "uniform sampler2D _qt_texture;\n"
-    "uniform lowp float qt_Opacity;\n"
-    "\n"
-    "varying highp vec4 fTexS;\n"
-    "varying lowp float progress;\n"
-    "\n"
-    "void main() {\n"
-    "    gl_FragColor = mix(texture2D(_qt_texture, fTexS.xy), texture2D(_qt_texture, fTexS.zw), progress) * qt_Opacity;\n"
-    "}\n";
-
 class QQuickAnimatedSpriteMaterial : public QSGMaterial
 {
 public:
@@ -134,8 +101,11 @@ QQuickAnimatedSpriteMaterial::~QQuickAnimatedSpriteMaterial()
 class AnimatedSpriteMaterialData : public QSGMaterialShader
 {
 public:
-    AnimatedSpriteMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
+    AnimatedSpriteMaterialData()
+        : QSGMaterialShader()
     {
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/items/shaders/sprite.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/items/shaders/sprite.frag"));
     }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
@@ -157,9 +127,6 @@ public:
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
     }
-
-    virtual const char *vertexShader() const { return vertexShaderCode; }
-    virtual const char *fragmentShader() const { return fragmentShaderCode; }
 
     virtual char const *const *attributeNames() const {
         static const char *attr[] = {

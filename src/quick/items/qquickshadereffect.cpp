@@ -43,6 +43,7 @@
 #include <private/qquickshadereffectnode_p.h>
 
 #include <QtQuick/qsgmaterial.h>
+#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include "qquickitem_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
@@ -56,24 +57,6 @@
 #include <QtGui/qopenglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
-
-static const char qt_default_vertex_code[] =
-    "uniform highp mat4 qt_Matrix;                                  \n"
-    "attribute highp vec4 qt_Vertex;                                \n"
-    "attribute highp vec2 qt_MultiTexCoord0;                        \n"
-    "varying highp vec2 qt_TexCoord0;                               \n"
-    "void main() {                                                  \n"
-    "    qt_TexCoord0 = qt_MultiTexCoord0;                          \n"
-    "    gl_Position = qt_Matrix * qt_Vertex;                       \n"
-    "}";
-
-static const char qt_default_fragment_code[] =
-    "varying highp vec2 qt_TexCoord0;                                   \n"
-    "uniform sampler2D source;                                          \n"
-    "uniform lowp float qt_Opacity;                                     \n"
-    "void main() {                                                      \n"
-    "    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;   \n"
-    "}";
 
 static const char qt_position_attribute_name[] = "qt_Vertex";
 static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
@@ -979,10 +962,16 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 
     if (m_dirtyProgram) {
         Key s = m_common.source;
-        if (s.sourceCode[Key::FragmentShader].isEmpty())
-            s.sourceCode[Key::FragmentShader] = qt_default_fragment_code;
-        if (s.sourceCode[Key::VertexShader].isEmpty())
-            s.sourceCode[Key::VertexShader] = qt_default_vertex_code;
+        QSGShaderSourceBuilder builder;
+        if (s.sourceCode[Key::FragmentShader].isEmpty()) {
+            builder.appendSourceFile(QStringLiteral(":/items/shaders/shadereffect.frag"));
+            s.sourceCode[Key::FragmentShader] = builder.source();
+            builder.clear();
+        }
+        if (s.sourceCode[Key::VertexShader].isEmpty()) {
+            builder.appendSourceFile(QStringLiteral(":/items/shaders/shadereffect.vert"));
+            s.sourceCode[Key::VertexShader] = builder.source();
+        }
         s.className = metaObject()->className();
 
         material->setProgramSource(s);

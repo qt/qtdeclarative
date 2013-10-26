@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgdefaultglyphnode_p_p.h"
+#include <private/qsgmaterialshader_p.h>
 
 #include <qopenglshaderprogram.h>
 
@@ -75,8 +76,6 @@ public:
 
 protected:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_matrix_id;
     int m_color_id;
@@ -85,30 +84,6 @@ protected:
     QFontEngineGlyphCache::Type m_cacheType;
 };
 
-const char *QSGTextMaskShader::vertexShader() const {
-    return
-        "uniform highp mat4 matrix;                     \n"
-        "uniform highp vec2 textureScale;               \n"
-        "attribute highp vec4 vCoord;                   \n"
-        "attribute highp vec2 tCoord;                   \n"
-        "varying highp vec2 sampleCoord;                \n"
-        "void main() {                                  \n"
-        "     sampleCoord = tCoord * textureScale;      \n"
-        "     gl_Position = matrix * vCoord;            \n"
-        "}";
-}
-
-const char *QSGTextMaskShader::fragmentShader() const {
-    return
-        "varying highp vec2 sampleCoord;                \n"
-        "uniform sampler2D _qt_texture;                 \n"
-        "uniform lowp vec4 color;                       \n"
-        "void main() {                                  \n"
-        "    lowp vec4 glyph = texture2D(_qt_texture, sampleCoord); \n"
-        "    gl_FragColor = vec4(glyph.rgb * color.a, glyph.a); \n"
-        "}";
-}
-
 char const *const *QSGTextMaskShader::attributeNames() const
 {
     static char const *const attr[] = { "vCoord", "tCoord", 0 };
@@ -116,8 +91,11 @@ char const *const *QSGTextMaskShader::attributeNames() const
 }
 
 QSGTextMaskShader::QSGTextMaskShader(QFontEngineGlyphCache::Type cacheType)
-    : m_cacheType(cacheType)
+    : QSGMaterialShader(*new QSGMaterialShaderPrivate),
+      m_cacheType(cacheType)
 {
+    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/textmask.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/textmask.frag"));
 }
 
 static inline qreal fontSmoothingGamma()
@@ -186,21 +164,12 @@ class QSG8BitTextMaskShader : public QSGTextMaskShader
 public:
     QSG8BitTextMaskShader(QFontEngineGlyphCache::Type cacheType)
         : QSGTextMaskShader(cacheType)
-    {}
+    {
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/8bittextmask.frag"));
+    }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
-    virtual const char *fragmentShader() const;
 };
-
-const char *QSG8BitTextMaskShader::fragmentShader() const {
-    return
-        "varying highp vec2 sampleCoord;                                \n"
-        "uniform lowp sampler2D texture;                                \n"
-        "uniform lowp vec4 color;                                       \n"
-        "void main() {                                                  \n"
-        "    gl_FragColor = color * texture2D(texture, sampleCoord).a;  \n"
-        "}";
-}
 
 void QSG8BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
@@ -220,27 +189,17 @@ public:
     QSG24BitTextMaskShader(QFontEngineGlyphCache::Type cacheType)
         : QSGTextMaskShader(cacheType)
         , m_useSRGB(false)
-    {}
+    {
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/24bittextmask.frag"));
+    }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual void initialize();
     void activate();
     void deactivate();
-    virtual const char *fragmentShader() const;
 
     uint m_useSRGB : 1;
 };
-
-const char *QSG24BitTextMaskShader::fragmentShader() const {
-    return
-        "varying highp vec2 sampleCoord;                            \n"
-        "uniform lowp sampler2D texture;                            \n"
-        "uniform lowp float color; // just the alpha, really...     \n"
-        "void main() {                                              \n"
-        "    lowp vec4 glyph = texture2D(texture, sampleCoord);     \n"
-        "    gl_FragColor = vec4(glyph.rgb * color, glyph.a);       \n"
-        "}";
-}
 
 void QSG24BitTextMaskShader::initialize()
 {
@@ -302,14 +261,15 @@ class QSGStyledTextShader : public QSG8BitTextMaskShader
 public:
     QSGStyledTextShader(QFontEngineGlyphCache::Type cacheType)
         : QSG8BitTextMaskShader(cacheType)
-    { }
+    {
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/styledtext.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/styledtext.frag"));
+    }
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
 
 private:
     virtual void initialize();
-    virtual const char *vertexShader() const;
-    virtual const char *fragmentShader() const;
 
     int m_shift_id;
     int m_styleColor_id;
@@ -367,97 +327,16 @@ void QSGStyledTextShader::updateState(const RenderState &state,
         program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
-const char *QSGStyledTextShader::vertexShader() const
-{
-    return
-        "uniform highp mat4 matrix;                     \n"
-        "uniform highp vec2 textureScale;               \n"
-        "uniform highp vec2 shift;                      \n"
-        "attribute highp vec4 vCoord;                   \n"
-        "attribute highp vec2 tCoord;                   \n"
-        "varying highp vec2 sampleCoord;                \n"
-        "varying highp vec2 shiftedSampleCoord;         \n"
-        "void main() {                                  \n"
-        "     sampleCoord = tCoord * textureScale;      \n"
-        "     shiftedSampleCoord = (tCoord - shift) * textureScale; \n"
-        "     gl_Position = matrix * vCoord;            \n"
-        "}";
-}
-
-const char *QSGStyledTextShader::fragmentShader() const
-{
-    return
-        "varying highp vec2 sampleCoord;                \n"
-        "varying highp vec2 shiftedSampleCoord;         \n"
-        "uniform sampler2D _qt_texture;                 \n"
-        "uniform lowp vec4 color;                       \n"
-        "uniform lowp vec4 styleColor;                  \n"
-        "void main() {                                                                      \n"
-        "    lowp float glyph = texture2D(_qt_texture, sampleCoord).a;                      \n"
-        "    lowp float style = clamp(texture2D(_qt_texture, shiftedSampleCoord).a - glyph, \n"
-        "                             0.0, 1.0);                                            \n"
-        "    gl_FragColor = style * styleColor + glyph * color;                             \n"
-        "}";
-}
-
-
 class QSGOutlinedTextShader : public QSGStyledTextShader
 {
 public:
     QSGOutlinedTextShader(QFontEngineGlyphCache::Type cacheType)
         : QSGStyledTextShader(cacheType)
-    { }
-
-private:
-    const char *vertexShader() const;
-    const char *fragmentShader() const;
+    {
+        setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/outlinedtext.vert"));
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/outlinedtext.frag"));
+    }
 };
-
-const char *QSGOutlinedTextShader::vertexShader() const
-{
-    return
-        "uniform highp mat4 matrix;                     \n"
-        "uniform highp vec2 textureScale;               \n"
-        "uniform highp vec2 shift;                      \n"
-        "attribute highp vec4 vCoord;                   \n"
-        "attribute highp vec2 tCoord;                   \n"
-        "varying highp vec2 sampleCoord;                \n"
-        "varying highp vec2 sCoordUp;                   \n"
-        "varying highp vec2 sCoordDown;                 \n"
-        "varying highp vec2 sCoordLeft;                 \n"
-        "varying highp vec2 sCoordRight;                \n"
-        "void main() {                                  \n"
-        "     sampleCoord = tCoord * textureScale;                    \n"
-        "     sCoordUp = (tCoord - vec2(0.0, -1.0)) * textureScale;   \n"
-        "     sCoordDown = (tCoord - vec2(0.0, 1.0)) * textureScale;  \n"
-        "     sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * textureScale; \n"
-        "     sCoordRight = (tCoord - vec2(1.0, 0.0)) * textureScale; \n"
-        "     gl_Position = matrix * vCoord;                          \n"
-        "}";
-}
-
-const char *QSGOutlinedTextShader::fragmentShader() const
-{
-    return
-        "varying highp vec2 sampleCoord;                \n"
-        "varying highp vec2 sCoordUp;                   \n"
-        "varying highp vec2 sCoordDown;                 \n"
-        "varying highp vec2 sCoordLeft;                 \n"
-        "varying highp vec2 sCoordRight;                \n"
-        "uniform sampler2D _qt_texture;                 \n"
-        "uniform lowp vec4 color;                       \n"
-        "uniform lowp vec4 styleColor;                  \n"
-        "void main() {                                                                \n"
-            "lowp float glyph = texture2D(_qt_texture, sampleCoord).a;                \n"
-        "    lowp float outline = clamp(clamp(texture2D(_qt_texture, sCoordUp).a +    \n"
-        "                                     texture2D(_qt_texture, sCoordDown).a +  \n"
-        "                                     texture2D(_qt_texture, sCoordLeft).a +  \n"
-        "                                     texture2D(_qt_texture, sCoordRight).a,  \n"
-        "                                     0.0, 1.0) - glyph,                      \n"
-        "                               0.0, 1.0);                                    \n"
-        "    gl_FragColor = outline * styleColor + glyph * color;                     \n"
-        "}";
-}
 
 QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font, int cacheType)
     : m_texture(0)

@@ -5,4 +5,11 @@
         <file>particleresources/glowdot.png</file>
         <file>particleresources/star.png</file>
     </qresource>
+    <qresource prefix="/particles">
+        <file>shaders/customparticle.frag</file>
+        <file>shaders/customparticle.vert</file>
+        <file>shaders/customparticletemplate.vert</file>
+        <file>shaders/imageparticle.frag</file>
+        <file>shaders/imageparticle.vert</file>
+    </qresource>
 </RCC>

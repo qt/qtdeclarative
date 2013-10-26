@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/scenegraph">
+        <file>shaders/flatcolor.frag</file>
+        <file>shaders/flatcolor.vert</file>
+        <file>shaders/8bittextmask.frag</file>
+        <file>shaders/24bittextmask.frag</file>
+        <file>shaders/opaquetexture.frag</file>
+        <file>shaders/opaquetexture.vert</file>
+        <file>shaders/outlinedtext.frag</file>
+        <file>shaders/outlinedtext.vert</file>
+        <file>shaders/smoothcolor.frag</file>
+        <file>shaders/smoothcolor.vert</file>
+        <file>shaders/smoothtexture.frag</file>
+        <file>shaders/smoothtexture.vert</file>
+        <file>shaders/styledtext.frag</file>
+        <file>shaders/styledtext.vert</file>
+        <file>shaders/textmask.frag</file>
+        <file>shaders/textmask.vert</file>
+        <file>shaders/texture.frag</file>
+        <file>shaders/distancefieldoutlinetext.frag</file>
+        <file>shaders/distancefieldshiftedtext.frag</file>
+        <file>shaders/distancefieldshiftedtext.vert</file>
+        <file>shaders/distancefieldtext.frag</file>
+        <file>shaders/distancefieldtext.vert</file>
+        <file>shaders/hiqsubpixeldistancefieldtext.frag</file>
+        <file>shaders/hiqsubpixeldistancefieldtext.vert</file>
+        <file>shaders/loqsubpixeldistancefieldtext.frag</file>
+        <file>shaders/loqsubpixeldistancefieldtext.vert</file>
+        <file>shaders/vertexcolor.frag</file>
+        <file>shaders/vertexcolor.vert</file>
+        <file>shaders/rendernode.vert</file>
+        <file>shaders/rendernode.frag</file>
+        <file>shaders/stencilclip.frag</file>
+        <file>shaders/stencilclip.vert</file>
+    </qresource>
+</RCC>

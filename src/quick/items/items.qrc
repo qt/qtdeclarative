@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/items">
+        <file>shaders/sprite.frag</file>
+        <file>shaders/sprite.vert</file>
+        <file>shaders/shadereffect.vert</file>
+        <file>shaders/shadereffect.frag</file>
+        <file>shaders/shadereffectfallback.frag</file>
+        <file>shaders/shadereffectfallback.vert</file>
+    </qresource>
+</RCC>

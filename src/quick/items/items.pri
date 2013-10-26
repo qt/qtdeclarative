@@ -139,6 +139,15 @@ HEADERS += \
     $$PWD/qquickshadereffectnode_p.h \
     $$PWD/qquickshadereffectsource_p.h \
 
+OTHER_FILES += \
+    $$PWD/shaders/sprite.vert \
+    $$PWD/shaders/sprite.frag \
+    $$PWD/shaders/shadereffect.vert \
+    $$PWD/shaders/shadereffect.frag \
+    $$PWD/shaders/shadereffectfallback.vert \
+    $$PWD/shaders/shadereffectfallback.frag
+
+RESOURCES += \
+    $$PWD/items.qrc
+
 include(context2d/context2d.pri)
-
-
