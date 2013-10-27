@@ -297,9 +297,8 @@ void QQmlSettingsPrivate::load()
         const QVariant previousValue = property.read(q);
         const QVariant currentValue = instance()->value(property.name(), previousValue);
 
-        if (!currentValue.isNull()
-                && currentValue.canConvert(previousValue.type())
-                && previousValue != currentValue) {
+        if (!currentValue.isNull() && (!previousValue.isValid()
+                || (currentValue.canConvert(previousValue.type()) && previousValue != currentValue))) {
             property.write(q, currentValue);
 #ifdef SETTINGS_DEBUG
             qDebug() << "QQmlSettings: load" << property.name() << "setting:" << currentValue << "default:" << previousValue;
