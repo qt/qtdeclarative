@@ -340,9 +340,9 @@ void QQmlSettingsPrivate::_q_propertyChanged()
     for (int i = offset; i < count; ++i) {
         const QMetaProperty &property = mo->property(i);
         changedProperties.insert(property.name(), property.read(q));
-    #ifdef SETTINGS_DEBUG
+#ifdef SETTINGS_DEBUG
         qDebug() << "QQmlSettings: cache" << property.name() << ":" << property.read(q);
-    #endif
+#endif
     }
     if (timerId != 0)
         q->killTimer(timerId);
