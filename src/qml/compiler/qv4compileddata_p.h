@@ -160,6 +160,8 @@ struct Unit
     uint offsetToLookupTable;
     uint regexpTableSize;
     uint offsetToRegexpTable;
+    uint constantTableSize;
+    uint offsetToConstantTable;
     uint jsClassTableSize;
     uint offsetToJSClassTable;
     qint32 indexOfRootFunction;
@@ -186,6 +188,9 @@ struct Unit
     const RegExp *regexpAt(int index) const {
         return reinterpret_cast<const RegExp*>(reinterpret_cast<const char *>(this) + offsetToRegexpTable + index * sizeof(RegExp));
     }
+    const QV4::SafeValue *constants() const {
+        return reinterpret_cast<const QV4::SafeValue*>(reinterpret_cast<const char *>(this) + offsetToConstantTable);
+    }
 
     const JSClassMember *jsClassAt(int idx, int *nMembers) const {
         const uint *offsetTable = reinterpret_cast<const uint *>(reinterpret_cast<const char *>(this) + offsetToJSClassTable);
@@ -196,11 +201,12 @@ struct Unit
         return reinterpret_cast<const JSClassMember*>(ptr + sizeof(JSClass));
     }
 
-    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps,
+    static int calculateSize(uint headerSize, uint nStrings, uint nFunctions, uint nRegExps, uint nConstants,
                              uint nLookups, uint nClasses) {
         return (headerSize
                 + (nStrings + nFunctions + nClasses) * sizeof(uint)
                 + nRegExps * RegExp::calculateSize()
+                + nConstants * sizeof(QV4::ReturnedValue)
                 + nLookups * Lookup::calculateSize()
                 + 7) & ~7; }
 };

@@ -115,6 +115,15 @@ int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::V4IR::RegExp *regexp)
     return regexps.size() - 1;
 }
 
+int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
+{
+    int idx = constants.indexOf(v);
+    if (idx >= 0)
+        return idx;
+    constants.append(v);
+    return constants.size() - 1;
+}
+
 void QV4::Compiler::JSUnitGenerator::registerLineNumberMapping(QQmlJS::V4IR::Function *function, const QVector<uint> &mappings)
 {
     lineNumberMappingsPerFunction.insert(function, mappings);
@@ -162,7 +171,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
             registerString(*f->locals.at(i));
     }
 
-    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, strings.size(), irModule->functions.size(), regexps.size(), lookups.size(), jsClasses.count());
+    int unitSize = QV4::CompiledData::Unit::calculateSize(headerSize, strings.size(), irModule->functions.size(), regexps.size(),
+                                                          constants.size(), lookups.size(), jsClasses.count());
 
     uint functionDataSize = 0;
     for (int i = 0; i < irModule->functions.size(); ++i) {
@@ -196,8 +206,10 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
     unit->offsetToLookupTable = unit->offsetToFunctionTable + unit->functionTableSize * sizeof(uint);
     unit->regexpTableSize = regexps.size();
     unit->offsetToRegexpTable = unit->offsetToLookupTable + unit->lookupTableSize * CompiledData::Lookup::calculateSize();
+    unit->constantTableSize = constants.size();
+    unit->offsetToConstantTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
     unit->jsClassTableSize = jsClasses.count();
-    unit->offsetToJSClassTable = unit->offsetToRegexpTable + unit->regexpTableSize * CompiledData::RegExp::calculateSize();
+    unit->offsetToJSClassTable = unit->offsetToConstantTable + unit->constantTableSize * sizeof(ReturnedValue);
     unit->indexOfRootFunction = -1;
     unit->sourceFileIndex = getStringId(irModule->fileName);
 
@@ -241,6 +253,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
 
     CompiledData::RegExp *regexpTable = (CompiledData::RegExp *)(data + unit->offsetToRegexpTable);
     memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
+
+    ReturnedValue *constantTable = (ReturnedValue *)(data + unit->offsetToConstantTable);
+    memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
 
     // write js classes and js class lookup table
     uint *jsClassTable = (uint*)(data + unit->offsetToJSClassTable);
