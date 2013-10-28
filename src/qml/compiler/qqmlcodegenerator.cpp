@@ -1324,11 +1324,11 @@ V4IR::Expr *JSCodeGen::member(V4IR::Expr *base, const QString *name)
             // Check if it's suitable for caching
             if (propertySuitable)
                 cache = engine->propertyCacheForType(baseAsMember->property->propType);
-        } else if (baseAsMember->type == V4IR::Member::MemberByObjectId) {
+        } else if (baseAsMember->type == V4IR::Member::MemberOfQmlContext) {
             // Similarly, properties of an id referenced object also don't need to be final, because
             // we intend to find the version of a property available at compile time, not at run-time.
             foreach (const IdMapping &mapping, _idObjects) {
-                if (baseAsMember->objectId == mapping.idIndex) {
+                if (baseAsMember->memberIndex == mapping.idIndex) {
                     cache = mapping.type;
                     break;
                 }
@@ -1363,15 +1363,21 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
     // Look for IDs first.
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
-            result = _block->QML_CONTEXT_ID_MEMBER(_block->NAME(V4IR::Name::builtin_qml_id_scope, line, col),
+            result = _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_id_scope, line, col),
                                                    _function->newString(mapping.name), mapping.idIndex);
             break;
         }
 
     if (!result) {
         QQmlTypeNameCache::Result r = imports->query(name);
-        if (r.isValid())
-            return 0; // TODO: We can't do fast lookup for these yet.
+        if (r.isValid()) {
+            if (r.scriptIndex != -1) {
+                result = _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_scope, line, col),
+                                                       _function->newString(name), r.scriptIndex);
+            } else {
+                return 0; // TODO: We can't do fast lookup for these yet.
+            }
+        }
     }
 
     if (!result && _scopeObject) {

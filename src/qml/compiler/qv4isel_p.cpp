@@ -140,9 +140,17 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 return;
             }
         } else if (V4IR::Member *m = s->source->asMember()) {
-            if (m->type == V4IR::Member::MemberByObjectId) {
-                loadIdObject(m->objectId, t);
-                return;
+            if (m->type == V4IR::Member::MemberOfQmlContext) {
+                V4IR::Name *base = m->base->asName();
+                Q_ASSERT(base);
+
+                if (base->builtin == V4IR::Name::builtin_qml_id_scope) {
+                    loadQmlIdObject(m->memberIndex, t);
+                    return;
+                } else if (base->builtin == V4IR::Name::builtin_qml_imported_scripts_scope) {
+                    loadQmlImportedScript(m->memberIndex, t);
+                    return;
+                }
             } else if (m->type == V4IR::Member::MemberOfQObject) {
                 getQObjectProperty(m->base, m->property->coreIndex, t);
                 return;

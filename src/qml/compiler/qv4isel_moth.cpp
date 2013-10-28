@@ -454,11 +454,19 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
     addInstruction(load);
 }
 
-void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
+void InstructionSelection::loadQmlIdObject(int id, V4IR::Temp *temp)
 {
     Instruction::LoadQmlIdObject load;
     load.result = getResultParam(temp);
     load.id = id;
+    addInstruction(load);
+}
+
+void InstructionSelection::loadQmlImportedScript(int index, V4IR::Temp *temp)
+{
+    Instruction::LoadQmlImportedScript load;
+    load.result = getResultParam(temp);
+    load.index = index;
     addInstruction(load);
 }
 

@@ -325,6 +325,7 @@ struct Name: Expr {
         builtin_define_object_literal,
         builtin_setup_argument_object,
         builtin_qml_id_scope,
+        builtin_qml_imported_scripts_scope,
         builtin_qml_context_object,
         builtin_qml_scope_object
     };
@@ -519,14 +520,14 @@ struct Member: Expr {
     enum MemberType {
         MemberByName,
         // QML extensions
-        MemberByObjectId, // lookup in context's id values
+        MemberOfQmlContext, // lookup in context's id values
         MemberOfQObject
     };
 
     MemberType type;
     Expr *base;
     const QString *name;
-    int objectId;
+    int memberIndex; // used if type == MemberOfQmlContext
     QQmlPropertyData *property;
 
     void init(Expr *base, const QString *name)
@@ -534,16 +535,16 @@ struct Member: Expr {
         this->type = MemberByName;
         this->base = base;
         this->name = name;
-        this->objectId = -1;
+        this->memberIndex = -1;
         this->property = 0;
     }
 
-    void initQmlIdObject(Expr *base, const QString *name, int objectId)
+    void initQmlContextMember(Expr *base, const QString *name, int memberIndex)
     {
-        this->type = MemberByObjectId;
+        this->type = MemberOfQmlContext;
         this->base = base;
         this->name = name;
-        this->objectId = objectId;
+        this->memberIndex = memberIndex;
         this->property = 0;
     }
 
@@ -846,7 +847,7 @@ struct BasicBlock {
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
     Expr *MEMBER(Expr *base, const QString *name);
-    Expr *QML_CONTEXT_ID_MEMBER(Expr *base, const QString *id, int idIndex);
+    Expr *QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIndex);
     Expr *QML_QOBJECT_PROPERTY(Expr *base, const QString *id, QQmlPropertyData *property);
 
     Stmt *EXP(Expr *expr);

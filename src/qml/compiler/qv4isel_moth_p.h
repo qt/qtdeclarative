@@ -114,7 +114,8 @@ protected:
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void loadThisObject(V4IR::Temp *temp);
-    virtual void loadIdObject(int id, V4IR::Temp *temp);
+    virtual void loadQmlIdObject(int id, V4IR::Temp *temp);
+    virtual void loadQmlImportedScript(int index, V4IR::Temp *temp);
     virtual void loadQmlContextObject(V4IR::Temp *temp);
     virtual void loadQmlScopeObject(V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);

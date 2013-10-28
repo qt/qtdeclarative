@@ -948,9 +948,14 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
 #endif
 }
 
-void InstructionSelection::loadIdObject(int id, V4IR::Temp *temp)
+void InstructionSelection::loadQmlIdObject(int id, V4IR::Temp *temp)
 {
     generateFunctionCall(temp, __qmljs_get_id_object, Assembler::ContextRegister, Assembler::TrustedImm32(id));
+}
+
+void InstructionSelection::loadQmlImportedScript(int index, V4IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_imported_script, Assembler::ContextRegister, Assembler::TrustedImm32(index));
 }
 
 void InstructionSelection::loadQmlContextObject(V4IR::Temp *temp)

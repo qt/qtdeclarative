@@ -424,6 +424,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_setup_argument_object";
     case V4IR::Name::builtin_qml_id_scope:
         return "builtin_qml_id_scope";
+    case V4IR::Name::builtin_qml_imported_scripts_scope:
+        return "builtin_qml_imported_scripts_scope";
     case V4IR::Name::builtin_qml_scope_object:
         return "builtin_qml_scope_object";
     case V4IR::Name::builtin_qml_context_object:
@@ -826,11 +828,10 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
     return e;
 }
 
-Expr *BasicBlock::QML_CONTEXT_ID_MEMBER(Expr *base, const QString *id, int objectId)
+Expr *BasicBlock::QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIndex)
 {
     Member*e = function->New<Member>();
-    Q_ASSERT(base->asName() && base->asName()->builtin == Name::builtin_qml_id_scope);
-    e->initQmlIdObject(base, id, objectId);
+    e->initQmlContextMember(base, id, memberIndex);
     return e;
 }
 
@@ -1029,8 +1030,8 @@ void CloneExpr::visitMember(Member *e)
 {
     if (e->type == Member::MemberByName)
         cloned = block->MEMBER(clone(e->base), e->name);
-    else if (e->type == Member::MemberByObjectId)
-        cloned = block->QML_CONTEXT_ID_MEMBER(clone(e->base), e->name, e->objectId);
+    else if (e->type == Member::MemberOfQmlContext)
+        cloned = block->QML_CONTEXT_MEMBER(clone(e->base), e->name, e->memberIndex);
     else if (e->type == Member::MemberOfQObject)
         cloned = block->QML_QOBJECT_PROPERTY(clone(e->base), e->name, e->property);
     else
@@ -1039,9 +1040,12 @@ void CloneExpr::visitMember(Member *e)
 
 void QmlDependenciesCollector::visitMember(Member *e) {
     e->base->accept(this);
-    if (e->type == Member::MemberByObjectId)
-        _usedIdObjects.insert(e->objectId);
-    else if (e->type == Member::MemberOfQObject
+    if (e->type == Member::MemberOfQmlContext) {
+        V4IR::Name *base = e->base->asName();
+        Q_ASSERT(base);
+        if (base->builtin == V4IR::Name::builtin_qml_id_scope)
+            _usedIdObjects.insert(e->memberIndex);
+    } else if (e->type == Member::MemberOfQObject
              && !e->property->isFunction()) { // only non-functions have notifyIndex
 
         if (Name *base = e->base->asName()) {

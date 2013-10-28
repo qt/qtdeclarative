@@ -334,7 +334,13 @@ protected: // IRDecoder
         addDef(temp);
     }
 
-    virtual void loadIdObject(int id, V4IR::Temp *temp)
+    virtual void loadQmlIdObject(int id, V4IR::Temp *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
+    virtual void loadQmlImportedScript(int index, V4IR::Temp *temp)
     {
         addDef(temp);
         addCall();

@@ -165,6 +165,7 @@ QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::Va
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
 QV4::ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id);
+QV4::ReturnedValue __qmljs_get_imported_script(ExecutionContext *ctx, int index);
 QV4::ReturnedValue __qmljs_get_context_object(ExecutionContext *ctx);
 QV4::ReturnedValue __qmljs_get_scope_object(ExecutionContext *ctx);
 QV4::ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex);

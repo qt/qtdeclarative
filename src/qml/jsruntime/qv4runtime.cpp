@@ -1218,6 +1218,12 @@ void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, 
     wrapper->setProperty(ctx, propertyIndex, value);
 }
 
+ReturnedValue __qmljs_get_imported_script(ExecutionContext *ctx, int index)
+{
+    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
+    return context->importedScripts.at(index).value();
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE
