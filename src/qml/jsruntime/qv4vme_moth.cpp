@@ -89,11 +89,11 @@ using namespace QQmlJS::Moth;
     MOTH_BEGIN_INSTR_COMMON(I)
 
 #  define MOTH_NEXT_INSTR(I) { \
-    break; \
+    continue; \
     }
 
 #  define MOTH_END_INSTR(I) } \
-    break;
+    continue;
 
 #endif
 
