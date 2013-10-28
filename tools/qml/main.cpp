@@ -350,7 +350,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
-    QCoreApplication *app;
+    QCoreApplication *app = 0;
     switch (applicationType) {
     case QmlApplicationTypeCore:
         app = new QCoreApplication(argc, argv);
