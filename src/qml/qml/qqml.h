@@ -485,6 +485,24 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
+inline int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+{
+    if (url.isRelative()) {
+        // User input check must go here, because QQmlPrivate::qmlregister is also used internally for composite types
+        qWarning("qmlRegisterSingletonType requires absolute URLs.");
+        return 0;
+    }
+
+    QQmlPrivate::RegisterCompositeSingletonType type = {
+        url,
+        uri,
+        versionMajor,
+        versionMinor,
+        qmlName
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &type);
+}
 
 inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {

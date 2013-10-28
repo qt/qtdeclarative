@@ -51,7 +51,7 @@
   \fn void qmlClearTypeRegistrations()
   \relates QQmlEngine
 
-  Clears all stored type registrations, such as those produced with qmlRegisterType().
+  Clears all stored type registrations, such as those produced with \l qmlRegisterType.
 
   Do not call this function while a QQmlEngine exists or behavior will be undefined.
   Any existing QQmlEngines must be deleted before calling this function.  This function
@@ -396,6 +396,55 @@
    \endcode
 
   */
+
+/*!
+   \fn int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+   \relates QQmlEngine
+
+   This function may be used to register a singleton type with the name \a qmlName, in the library imported from \a uri having
+   the version number composed from \a versionMajor and \a versionMinor. The type is defined by the QML file located at \a url.
+   The url must be an absolute URL, i.e. url.isRelative() == false.
+
+   In addition the type's QML file must have pragma Singleton statement among its import statements.
+
+   A singleton type may be referenced via the type name with which it was registered, and this typename may be used as the
+   target in a \l Connections type or otherwise used as any other type id would. One exception to this is that a singleton
+   type property may not be aliased (because the singleton type name does not identify an object within the same component
+   as any other item).
+
+   Usage:
+   // First, define your QML singleton type which provides the functionality.
+   \qml
+   pragma Singleton
+   import QtQuick 2.0
+   Item {
+       property int testProp1: 125
+   }
+   \endqml
+
+   \code
+   // Second, register the QML singleton type by calling this function in an initialization function.
+   #include <QtQml>
+   ...
+   qmlRegisterSingletonType(QUrl("file:///absolute/path/SingletonType.qml"), "Qt.example.qobjectSingleton", 1, 0, "RegisteredSingleton");
+   ...
+   \endcode
+
+   In order to use the registered singleton type in QML, you must import the singleton type.
+   \qml
+   import QtQuick 2.0
+   import Qt.example.qobjectSingleton 1.0
+   Item {
+       id: root
+       property int someValue: RegisteredSingleton.testProp1
+   }
+   \endqml
+
+   It is also possible to have QML singleton types registered without using the qmlRegisterSingletonType function.
+   That can be done by adding a pragma Singleton statement among the imports of the type's QML file. In addition
+   the type must be defined in a qmldir file with a singleton keyword and the qmldir must be imported by the QML
+   files using the singleton.
+*/
 
 /*!
   \fn int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName);

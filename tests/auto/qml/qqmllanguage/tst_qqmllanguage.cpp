@@ -212,6 +212,7 @@ private slots:
     void compositeSingletonRemote();
     void compositeSingletonJavaScriptPragma();
     void compositeSingletonSelectors();
+    void compositeSingletonRegistered();
 
 private:
     QQmlEngine engine;
@@ -2847,6 +2848,9 @@ void tst_qqmllanguage::initTestCase()
     QFile out(testFileUrl(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
     QVERIFY2(out.open(QIODevice::WriteOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(out.fileName(), out.errorString())));
     out.write(in.readAll());
+
+    // Register a Composite Singleton.
+    qmlRegisterSingletonType(testFileUrl("singleton/RegisteredCompositeSingletonType.qml"), "org.qtproject.Test", 1, 0, "RegisteredSingleton");
 }
 
 void tst_qqmllanguage::aliasPropertyChangeSignals()
@@ -3519,6 +3523,18 @@ void tst_qqmllanguage::compositeSingletonSelectors()
     QVERIFY(o != 0);
 
     verifyCompositeSingletonPropertyValues(o, "value1", 625, "value2", 455);
+}
+
+// Reads values from a Singleton that was registered through the C++ API:
+// qmlRegisterSingletonType.
+void tst_qqmllanguage::compositeSingletonRegistered()
+{
+    QQmlComponent component(&engine, testFile("singletonTest17.qml"));
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    verifyCompositeSingletonPropertyValues(o, "value1", 925, "value2", 755);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
