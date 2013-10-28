@@ -889,6 +889,10 @@ void tst_qqmllocale::dateToLocaleTimeStringFormatted_data()
 
 void tst_qqmllocale::dateToLocaleTimeStringFormatted()
 {
+#if defined(Q_OS_WIN)
+    // QTBUG-34406
+    QSKIP("These tests are not DST-proof under Windows");
+#endif
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
