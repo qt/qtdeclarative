@@ -168,6 +168,7 @@ QV4::ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id);
 QV4::ReturnedValue __qmljs_get_context_object(ExecutionContext *ctx);
 QV4::ReturnedValue __qmljs_get_scope_object(ExecutionContext *ctx);
 QV4::ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex);
+void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
 
 // For each
 QV4::ReturnedValue __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, const QV4::ValueRef in);

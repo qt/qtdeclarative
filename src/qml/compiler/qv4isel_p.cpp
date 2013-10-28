@@ -183,8 +183,13 @@ void IRDecoder::visitMove(V4IR::Move *s)
     } else if (V4IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                setProperty(s->source, m->base, *m->name);
-                return;
+                if (m->type == V4IR::Member::MemberOfQObject) {
+                    setQObjectProperty(s->source, m->base, m->property->coreIndex);
+                    return;
+                } else {
+                    setProperty(s->source, m->base, *m->name);
+                    return;
+                }
             }
         }
     } else if (V4IR::Subscript *ss = s->target->asSubscript()) {

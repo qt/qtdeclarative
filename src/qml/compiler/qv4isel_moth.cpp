@@ -569,6 +569,15 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
     addInstruction(store);
 }
 
+void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex)
+{
+    Instruction::StoreQObjectProperty store;
+    store.base = getParam(targetBase);
+    store.propertyIndex = propertyIndex;
+    store.source = getParam(source);
+    addInstruction(store);
+}
+
 void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target)
 {
     Instruction::LoadQObjectProperty load;

@@ -305,6 +305,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
 
+    MOTH_BEGIN_INSTR(StoreQObjectProperty)
+        __qmljs_set_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex, VALUEPTR(instr.source));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(StoreQObjectProperty)
+
     MOTH_BEGIN_INSTR(LoadQObjectProperty)
         STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadQObjectProperty)

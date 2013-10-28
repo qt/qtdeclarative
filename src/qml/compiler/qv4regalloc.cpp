@@ -400,6 +400,13 @@ protected: // IRDecoder
         addCall();
     }
 
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int /*propertyIndex*/)
+    {
+        addUses(source->asTemp(), Use::CouldHaveRegister);
+        addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
     virtual void getQObjectProperty(V4IR::Expr *base, int /*propertyIndex*/, V4IR::Temp *target)
     {
         addDef(target);

@@ -1061,6 +1061,12 @@ void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBas
     }
 }
 
+void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex)
+{
+    generateFunctionCall(Assembler::Void, __qmljs_set_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(targetBase),
+                         Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+}
+
 void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target)
 {
 #if QT_POINTER_SIZE == 8

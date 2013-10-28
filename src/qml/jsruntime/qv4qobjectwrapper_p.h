@@ -95,9 +95,11 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     using Object::get;
 
     ReturnedValue getProperty(ExecutionContext *ctx, int propertyIndex);
+    void setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value);
 
 private:
     ReturnedValue getProperty(ExecutionContext *ctx, QQmlPropertyData *property);
+    static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value);
 
     static ReturnedValue create(ExecutionEngine *engine, QQmlData *ddata, QObject *object);
 

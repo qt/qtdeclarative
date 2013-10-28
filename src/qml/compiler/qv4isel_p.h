@@ -152,6 +152,7 @@ public: // to implement by subclasses:
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target) = 0;
     virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *targetTemp) = 0;
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName) = 0;
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex) = 0;
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target) = 0;
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex) = 0;
     virtual void copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp) = 0;

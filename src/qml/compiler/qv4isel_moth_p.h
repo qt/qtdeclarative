@@ -125,6 +125,7 @@ protected:
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target);
     virtual void getProperty(V4IR::Expr *base, const QString &name, V4IR::Temp *target);
     virtual void setProperty(V4IR::Expr *source, V4IR::Expr *targetBase, const QString &targetName);
+    virtual void setQObjectProperty(V4IR::Expr *source, V4IR::Expr *targetBase, int propertyIndex);
     virtual void getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target);
     virtual void getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR::Temp *target);
     virtual void setElement(V4IR::Expr *source, V4IR::Expr *targetBase, V4IR::Expr *targetIndex);

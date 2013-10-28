@@ -1207,6 +1207,17 @@ ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef
     return wrapper->getProperty(ctx, propertyIndex);
 }
 
+void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value)
+{
+    Scope scope(ctx);
+    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
+    if (!wrapper) {
+        ctx->throwTypeError(QStringLiteral("Cannot write property of null"));
+        return;
+    }
+    wrapper->setProperty(ctx, propertyIndex, value);
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

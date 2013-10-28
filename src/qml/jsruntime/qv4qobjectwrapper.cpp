@@ -393,7 +393,6 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, QQmlPropertyDat
     }
 }
 
-
 ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
 {
     QV4::Scope scope(ctx);
@@ -424,8 +423,6 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     if (QQmlData::wasDeleted(object))
         return false;
 
-    QV4::Scope scope(ctx);
-
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
@@ -441,25 +438,33 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
             return false;
     }
 
-    if (!result->isWritable() && !result->isQList()) {
+    setProperty(object, ctx, result, value);
+    return true;
+}
+
+void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value)
+{
+    if (!property->isWritable() && !property->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
-                        name->toQString() + QLatin1Char('\"');
-        return ctx->throwTypeError(error);
+                        property->name(object) + QLatin1Char('\"');
+        ctx->throwTypeError(error);
+        return;
     }
 
     QQmlBinding *newBinding = 0;
+    QV4::Scope scope(ctx);
     QV4::ScopedFunctionObject f(scope, value);
     if (f) {
         if (!f->bindingKeyFlag) {
-            if (!result->isVarProperty() && result->propType != qMetaTypeId<QJSValue>()) {
+            if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
-                if (!QMetaType::typeName(result->propType))
+                if (!QMetaType::typeName(property->propType))
                     error += QLatin1String("[unknown property type]");
                 else
-                    error += QLatin1String(QMetaType::typeName(result->propType));
+                    error += QLatin1String(QMetaType::typeName(property->propType));
                 ctx->throwError(error);
-                return false;
+                return;
             }
         } else {
             // binding assignment.
@@ -469,23 +474,23 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
 
             newBinding = new QQmlBinding(value, object, callingQmlContext, frame.source,
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
-            newBinding->setTarget(object, *result, callingQmlContext);
+            newBinding->setTarget(object, *property, callingQmlContext);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);
         }
     }
 
     QQmlAbstractBinding *oldBinding =
-        QQmlPropertyPrivate::setBinding(object, result->coreIndex, -1, newBinding);
+        QQmlPropertyPrivate::setBinding(object, property->coreIndex, -1, newBinding);
     if (oldBinding)
         oldBinding->destroy();
 
-    if (!newBinding && result->isVarProperty()) {
+    if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, value);
-        return true;
+        vmemo->setVMEProperty(property->coreIndex, value);
+        return;
     }
 
 #define PROPERTY_STORE(cpptype, value) \
@@ -493,57 +498,57 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     int status = -1; \
     int flags = 0; \
     void *argv[] = { &o, 0, &status, &flags }; \
-    QMetaObject::metacall(object, QMetaObject::WriteProperty, result->coreIndex, argv);
+    QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex, argv);
 
-    if (value->isNull() && result->isQObject()) {
+    if (value->isNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, 0);
-    } else if (value->isUndefined() && result->isResettable()) {
+    } else if (value->isUndefined() && property->isResettable()) {
         void *a[] = { 0 };
-        QMetaObject::metacall(object, QMetaObject::ResetProperty, result->coreIndex, a);
-    } else if (value->isUndefined() && result->propType == qMetaTypeId<QVariant>()) {
+        QMetaObject::metacall(object, QMetaObject::ResetProperty, property->coreIndex, a);
+    } else if (value->isUndefined() && property->propType == qMetaTypeId<QVariant>()) {
         PROPERTY_STORE(QVariant, QVariant());
-    } else if (value->isUndefined() && result->propType == QMetaType::QJsonValue) {
+    } else if (value->isUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
-    } else if (!newBinding && result->propType == qMetaTypeId<QJSValue>()) {
+    } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, new QJSValuePrivate(ctx->engine, value));
     } else if (value->isUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
-        if (!QMetaType::typeName(result->propType))
+        if (!QMetaType::typeName(property->propType))
             error += QLatin1String("[unknown property type]");
         else
-            error += QLatin1String(QMetaType::typeName(result->propType));
+            error += QLatin1String(QMetaType::typeName(property->propType));
         ctx->throwError(error);
-        return false;
+        return;
     } else if (value->asFunctionObject()) {
         // this is handled by the binding creation above
-    } else if (result->propType == QMetaType::Int && value->isNumber()) {
+    } else if (property->propType == QMetaType::Int && value->isNumber()) {
         PROPERTY_STORE(int, qRound(value->asDouble()));
-    } else if (result->propType == QMetaType::QReal && value->isNumber()) {
+    } else if (property->propType == QMetaType::QReal && value->isNumber()) {
         PROPERTY_STORE(qreal, qreal(value->asDouble()));
-    } else if (result->propType == QMetaType::Float && value->isNumber()) {
+    } else if (property->propType == QMetaType::Float && value->isNumber()) {
         PROPERTY_STORE(float, float(value->asDouble()));
-    } else if (result->propType == QMetaType::Double && value->isNumber()) {
+    } else if (property->propType == QMetaType::Double && value->isNumber()) {
         PROPERTY_STORE(double, double(value->asDouble()));
-    } else if (result->propType == QMetaType::QString && value->isString()) {
+    } else if (property->propType == QMetaType::QString && value->isString()) {
         PROPERTY_STORE(QString, value->toQStringNoThrow());
-    } else if (result->isVarProperty()) {
+    } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(result->coreIndex, value);
+        vmemo->setVMEProperty(property->coreIndex, value);
     } else {
         QVariant v;
-        if (result->isQList())
+        if (property->isQList())
             v = ctx->engine->v8Engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
         else
-            v = ctx->engine->v8Engine->toVariant(value, result->propType);
+            v = ctx->engine->v8Engine->toVariant(value, property->propType);
 
         QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->engine);
-        if (!QQmlPropertyPrivate::write(object, *result, v, callingQmlContext)) {
+        if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
             const char *valueType = 0;
             if (v.userType() == QVariant::Invalid) valueType = "null";
             else valueType = QMetaType::typeName(v.userType());
 
-            const char *targetTypeName = QMetaType::typeName(result->propType);
+            const char *targetTypeName = QMetaType::typeName(property->propType);
             if (!targetTypeName)
                 targetTypeName = "an unregistered type";
 
@@ -552,11 +557,9 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
                             QLatin1String(" to ") +
                             QLatin1String(targetTypeName);
             ctx->throwError(error);
-            return false;
+            return;
         }
     }
-
-    return true;
 }
 
 ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
@@ -624,6 +627,21 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionContext *ctx, int propertyInd
     QQmlPropertyData *property = cache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
     return getProperty(ctx, property);
+}
+
+void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value)
+{
+    if (QQmlData::wasDeleted(m_object))
+        return;
+    QQmlData *ddata = QQmlData::get(m_object, /*create*/false);
+    if (!ddata)
+        return;
+
+    QQmlPropertyCache *cache = ddata->propertyCache;
+    Q_ASSERT(cache);
+    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
+    return setProperty(m_object, ctx, property, value);
 }
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
