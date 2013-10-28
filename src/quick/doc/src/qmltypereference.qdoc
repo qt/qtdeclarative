@@ -212,6 +212,12 @@ Type-specific Animations
 \li \l {ParentAnimation} - Animates parent changes
 \li \l {AnchorAnimation} - Animates anchor changes
 \li \l {PathAnimation} - Animates position along a path
+\li \l {XAnimator} - Animates x position asynchronously
+\li \l {YAnimator} - Animates y position asynchronously
+\li \l {ScaleAnimator} - Animates scale asynchronously
+\li \l {RotationAnimator} - Animates rotation asynchronously
+\li \l {OpacityAnimator} - Animates opacity asynchronously
+\li \l {UniformAnimator} - Animates a \l ShaderEffect uniform asynchronously
 \endlist
 
 Lower-level Animation Types
