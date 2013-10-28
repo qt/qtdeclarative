@@ -134,7 +134,7 @@ static VMStats vmStats;
 #endif // WITH_STATS
 
 static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
-                                     QV4::SafeValue* stack,
+                                      QV4::SafeValue* stack,
                                      const Param &param
 #if !defined(QT_NO_DEBUG)
                                      , unsigned stackSize
@@ -157,9 +157,10 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
     }
 #endif // DO_TRACE_INSTR
 
-    if (param.isValue()) {
+    if (param.isConstant()) {
         VMSTATS(paramIsValue);
-        return const_cast<QV4::Value *>(&static_cast<const QV4::Value &>(param.value));
+        const QV4::SafeValue *v = context->compilationUnit->data->constants() + param.index;
+        return const_cast<QV4::SafeValue *>(v);
     } else if (param.isArgument()) {
         VMSTATS(paramIsArg);
         QV4::ExecutionContext *c = context;

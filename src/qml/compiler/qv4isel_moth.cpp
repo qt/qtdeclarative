@@ -774,7 +774,8 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
     Instruction::LoadValue load;
-    load.value = Param::createValue(QV4::Primitive::fromBoolean(false));
+    int idx = jsUnitGenerator()->registerConstant(QV4::Encode(false));
+    load.value = Param::createConstant(idx);
     load.result = getResultParam(result);
     addInstruction(load);
 }
@@ -797,7 +798,8 @@ void InstructionSelection::callBuiltinReThrow()
         _patches[_block->catchBlock].append(loc);
     } else {
         Instruction::Ret ret;
-        ret.result = Param::createValue(QV4::Primitive::undefinedValue());
+        int idx = jsUnitGenerator()->registerConstant(QV4::Encode::undefined());
+        ret.result = Param::createConstant(idx);
         addInstruction(ret);
     }
 }
@@ -988,7 +990,8 @@ Param InstructionSelection::getParam(V4IR::Expr *e) {
     assert(e);
 
     if (V4IR::Const *c = e->asConst()) {
-        return Param::createValue(convertToValue(c));
+        int idx = jsUnitGenerator()->registerConstant(convertToValue(c).asReturnedValue());
+        return Param::createConstant(idx);
     } else if (V4IR::Temp *t = e->asTemp()) {
         switch (t->kind) {
         case V4IR::Temp::Formal:

@@ -125,29 +125,28 @@ namespace Moth {
 
 struct Param {
     enum {
-        ValueType    = 0,
+        ConstantType    = 0,
         ArgumentType = 1,
         LocalType    = 2,
         TempType     = 3,
         ScopedLocalType  = 4
     };
-    QV4::Primitive value;
     unsigned type  : 3;
     unsigned scope : 29;
     unsigned index;
 
-    bool isValue() const { return type == ValueType; }
+    bool isConstant() const { return type == ConstantType; }
     bool isArgument() const { return type == ArgumentType; }
     bool isLocal() const { return type == LocalType; }
     bool isTemp() const { return type == TempType; }
     bool isScopedLocal() const { return type == ScopedLocalType; }
 
-    static Param createValue(const QV4::Primitive &v)
+    static Param createConstant(int index)
     {
         Param p;
-        p.type = ValueType;
+        p.type = ConstantType;
         p.scope = 0;
-        p.value = v;
+        p.index = index;
         return p;
     }
 
