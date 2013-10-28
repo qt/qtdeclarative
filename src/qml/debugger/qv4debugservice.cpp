@@ -45,6 +45,7 @@
 #include "qv4debugging_p.h"
 #include "qv4engine_p.h"
 #include "qv4function_p.h"
+#include "qqmldebugserver_p.h"
 
 #include <private/qv8engine_p.h>
 
@@ -137,6 +138,8 @@ void QV4DebugService::addEngine(const QQmlEngine *engine)
             QV4::Debugging::Debugger *debugger = ee->debugger;
             d->debuggerMap.insert(d->debuggerIndex++, debugger);
             d->debuggerAgent.addDebugger(debugger);
+            d->debuggerAgent.moveToThread(d->server->thread());
+            moveToThread(d->server->thread());
         }
     }
 }
@@ -260,6 +263,9 @@ void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger)
     message << V4_LINENUMBER << QByteArray().number(state.lineNumber);
 
     QV4DebugService::instance()->sendMessage(QV4DebugServicePrivate::packMessage(V4_BREAK, -1, data));
+    // ### TODO: Once the remote side supports V4_BREAK properly and sends us a V4_CONTINUE, then we
+    // can remove the following line:
+    resumeAll();
 
     qDebug() << Q_FUNC_INFO;
 }
