@@ -316,7 +316,8 @@ void QQuickTransformAnimatorJob::Helper::sync()
 {
     const quint32 mask = QQuickItemPrivate::Position
             | QQuickItemPrivate::BasicTransform
-            | QQuickItemPrivate::TransformOrigin;
+            | QQuickItemPrivate::TransformOrigin
+            | QQuickItemPrivate::Size;
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
     if (d->extra.isAllocated()
@@ -347,7 +348,7 @@ void QQuickTransformAnimatorJob::Helper::sync()
         rotation = item->rotation();
     }
 
-    if (dirty & QQuickItemPrivate::TransformOrigin) {
+    if (dirty & (QQuickItemPrivate::TransformOrigin | QQuickItemPrivate::Size)) {
         QPointF o = item->transformOriginPoint();
         ox = o.x();
         oy = o.y();
