@@ -123,27 +123,26 @@ namespace QQmlJS {
 namespace Moth {
 
 struct Param {
-    enum {
-        ConstantType    = 0,
-        ArgumentType = 1,
-        LocalType    = 2,
-        TempType     = 3,
-        ScopedLocalType  = 4
-    };
-    unsigned type  : 3;
-    unsigned scope : 29;
+    // Params are looked up as follows:
+    // Constant: 0
+    // Temp: 1
+    // Argument: 2
+    // Local: 3
+    // Arg(outer): 4
+    // Local(outer): 5
+    // ...
+    unsigned scope;
     unsigned index;
 
-    bool isConstant() const { return type == ConstantType; }
-    bool isArgument() const { return type == ArgumentType; }
-    bool isLocal() const { return type == LocalType; }
-    bool isTemp() const { return type == TempType; }
-    bool isScopedLocal() const { return type == ScopedLocalType; }
+    bool isConstant() const { return !scope; }
+    bool isArgument() const { return scope >= 2 && !(scope &1); }
+    bool isLocal() const { return scope == 3; }
+    bool isTemp() const { return scope == 1; }
+    bool isScopedLocal() const { return scope >= 3 && (scope & 1); }
 
     static Param createConstant(int index)
     {
         Param p;
-        p.type = ConstantType;
         p.scope = 0;
         p.index = index;
         return p;
@@ -152,8 +151,7 @@ struct Param {
     static Param createArgument(unsigned idx, uint scope)
     {
         Param p;
-        p.type = ArgumentType;
-        p.scope = scope;
+        p.scope = 2 + 2*scope;
         p.index = idx;
         return p;
     }
@@ -161,8 +159,7 @@ struct Param {
     static Param createLocal(unsigned idx)
     {
         Param p;
-        p.type = LocalType;
-        p.scope = 0;
+        p.scope = 3;
         p.index = idx;
         return p;
     }
@@ -170,8 +167,7 @@ struct Param {
     static Param createTemp(unsigned idx)
     {
         Param p;
-        p.type = TempType;
-        p.scope = 0;
+        p.scope = 1;
         p.index = idx;
         return p;
     }
@@ -179,14 +175,13 @@ struct Param {
     static Param createScopedLocal(unsigned idx, uint scope)
     {
         Param p;
-        p.type = ScopedLocalType;
-        p.scope = scope;
+        p.scope = 3 + 2*scope;
         p.index = idx;
         return p;
     }
 
     inline bool operator==(const Param &other) const
-    { return type == other.type && scope == other.scope && index == other.index; }
+    { return scope == other.scope && index == other.index; }
 
     inline bool operator!=(const Param &other) const
     { return !(*this == other); }

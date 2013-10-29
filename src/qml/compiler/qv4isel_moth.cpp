@@ -986,7 +986,6 @@ QByteArray InstructionSelection::squeezeCode() const
 }
 
 Param InstructionSelection::getParam(V4IR::Expr *e) {
-    typedef Param Param;
     assert(e);
 
     if (V4IR::Const *c = e->asConst()) {

@@ -133,17 +133,11 @@ static VMStats vmStats;
 #define VMSTATS(what) {}
 #endif // WITH_STATS
 
-static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
-                                      QV4::SafeValue* stack,
-                                     const Param &param
-#if !defined(QT_NO_DEBUG)
-                                     , unsigned stackSize
-#endif
-                                     )
-{
 #ifdef DO_TRACE_INSTR
-    if (param.isValue()) {
-        fprintf(stderr, "    value %s\n", param.value.toString(context)->toQString().toUtf8().constData());
+Param traceParam(const Param &param)
+{
+    if (param.isConstant()) {
+        fprintf(stderr, "    constant\n");
     } else if (param.isArgument()) {
         fprintf(stderr, "    argument %d@%d\n", param.index, param.scope);
     } else if (param.isLocal()) {
@@ -155,68 +149,15 @@ static inline QV4::Value *getValueRef(QV4::ExecutionContext *context,
     } else {
         Q_ASSERT(!"INVALID");
     }
-#endif // DO_TRACE_INSTR
-
-    if (param.isConstant()) {
-        VMSTATS(paramIsValue);
-        const QV4::SafeValue *v = context->compilationUnit->data->constants() + param.index;
-        return const_cast<QV4::SafeValue *>(v);
-    } else if (param.isArgument()) {
-        VMSTATS(paramIsArg);
-        QV4::ExecutionContext *c = context;
-        uint scope = param.scope;
-        while (scope--)
-            c = c->outer;
-        QV4::CallContext *cc = static_cast<QV4::CallContext *>(c);
-        const unsigned arg = param.index;
-        Q_ASSERT(arg >= 0);
-        Q_ASSERT((unsigned) arg < cc->callData->argc);
-        Q_ASSERT(cc->callData->args);
-        return cc->callData->args + arg;
-    } else if (param.isLocal()) {
-        VMSTATS(paramIsLocal);
-        const unsigned index = param.index;
-        QV4::CallContext *c = static_cast<QV4::CallContext *>(context);
-        Q_ASSERT(index >= 0);
-        Q_ASSERT(index < context->variableCount());
-        Q_ASSERT(c->locals);
-        return c->locals + index;
-    } else if (param.isTemp()) {
-        VMSTATS(paramIsTemp);
-#if !defined(QT_NO_DEBUG)
-        Q_ASSERT(param.index < stackSize);
-#endif
-        return stack + param.index;
-    } else if (param.isScopedLocal()) {
-        VMSTATS(paramIsScopedLocal);
-        QV4::ExecutionContext *c = context;
-        uint scope = param.scope;
-        while (scope--)
-            c = c->outer;
-        const unsigned index = param.index;
-        QV4::CallContext *cc = static_cast<QV4::CallContext *>(c);
-        Q_ASSERT(index >= 0);
-        Q_ASSERT(index < cc->variableCount());
-        Q_ASSERT(cc->locals);
-        return cc->locals + index;
-    } else {
-        Q_UNIMPLEMENTED();
-        return 0;
-    }
+    return Param
 }
-
-#if defined(QT_NO_DEBUG)
 # define VALUE(param) (*VALUEPTR(param))
-
-// The non-temp case might need some tweaking for QML: there it would probably be a value instead of a local.
-# define VALUEPTR(param) \
-    (param.isTemp() ? stack + param.index \
-                    : (param.isLocal() ? static_cast<QV4::CallContext *>(context)->locals + param.index \
-                                       : getValueRef(context, stack, param)))
+# define VALUEPTR(param) (scopes[traceParam(param).scope] + param.index)
 #else
-# define VALUE(param) (*getValueRef(context, stack, param, stackSize))
-# define VALUEPTR(param) getValueRef(context, stack, param, stackSize)
+# define VALUE(param) (*VALUEPTR(param))
+# define VALUEPTR(param) (scopes[param.scope] + param.index)
 #endif
+
 #define STOREVALUE(param, value) { \
     QV4::ReturnedValue tmp = (value); \
     if (context->engine->hasException) \
@@ -254,6 +195,37 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     QV4::SafeString * const runtimeStrings = context->compilationUnit->runtimeStrings;
     context->interpreterInstructionPointer = &code;
+
+    // setup lookup scopes
+    int scopeDepth = 0;
+    {
+        QV4::ExecutionContext *scope = context;
+        while (scope) {
+            ++scopeDepth;
+            scope = scope->outer;
+        }
+    }
+
+    QV4::SafeValue **scopes = static_cast<QV4::SafeValue **>(alloca(sizeof(QV4::SafeValue *)*(2 + 2*scopeDepth)));
+    {
+        scopes[0] = const_cast<QV4::SafeValue *>(context->compilationUnit->data->constants());
+        // stack gets setup in push instruction
+        scopes[1] = 0;
+        QV4::ExecutionContext *scope = context;
+        int i = 0;
+        while (scope) {
+            if (scope->type >= QV4::ExecutionContext::Type_CallContext) {
+                QV4::CallContext *cc = static_cast<QV4::CallContext *>(scope);
+                scopes[2*i + 2] = cc->callData->args;
+                scopes[2*i + 3] = cc->locals;
+            } else {
+                scopes[2*i + 2] = 0;
+                scopes[2*i + 3] = 0;
+            }
+            ++i;
+            scope = scope->outer;
+        }
+    }
 
 
     for (;;) {
@@ -320,6 +292,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         stackSize = instr.value;
         stack = context->engine->stackPush(stackSize);
         memset(stack, 0, stackSize * sizeof(QV4::SafeValue));
+        scopes[1] = stack;
     MOTH_END_INSTR(Push)
 
     MOTH_BEGIN_INSTR(CallValue)
