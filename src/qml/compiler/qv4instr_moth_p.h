@@ -100,6 +100,12 @@ QT_BEGIN_NAMESPACE
     F(Increment, increment) \
     F(Decrement, decrement) \
     F(Binop, binop) \
+    F(Add, add) \
+    F(BitAnd, bitAnd) \
+    F(BitOr, bitOr) \
+    F(BitXor, bitXor) \
+    F(Mul, mul) \
+    F(Sub, sub) \
     F(BinopContext, binopContext) \
     F(AddNumberParams, addNumberParams) \
     F(MulNumberParams, mulNumberParams) \
@@ -474,6 +480,42 @@ union Instr
         Param rhs;
         Param result;
     };
+    struct instr_add {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitAnd {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitOr {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_bitXor {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_mul {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
+    struct instr_sub {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        Param rhs;
+        Param result;
+    };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
         QV4::BinOpContext alu;
@@ -560,6 +602,12 @@ union Instr
     instr_increment increment;
     instr_decrement decrement;
     instr_binop binop;
+    instr_add add;
+    instr_bitAnd bitAnd;
+    instr_bitOr bitOr;
+    instr_bitXor bitXor;
+    instr_mul mul;
+    instr_sub sub;
     instr_binopContext binopContext;
     instr_addNumberParams addNumberParams;
     instr_mulNumberParams mulNumberParams;

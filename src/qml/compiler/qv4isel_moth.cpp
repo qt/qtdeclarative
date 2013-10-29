@@ -560,6 +560,14 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
         return;
     }
     case V4IR::OpUPlus: {
+        if (isNumberType(sourceTemp)) {
+            // use a move
+            Instruction::Move move;
+            move.source = getParam(sourceTemp);
+            move.result = getResultParam(targetTemp);
+            addInstruction(move);
+            return;
+        }
         Instruction::UPlus uplus;
         uplus.source = getParam(sourceTemp);
         uplus.result = getResultParam(targetTemp);
@@ -633,6 +641,55 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
 
     if (_stackSlotAllocator && target && leftSource->asTemp())
         _stackSlotAllocator->addHint(*leftSource->asTemp(), *target);
+
+    if (oper == V4IR::OpAdd) {
+        Instruction::Add add;
+        add.lhs = getParam(leftSource);
+        add.rhs = getParam(rightSource);
+        add.result = getResultParam(target);
+        addInstruction(add);
+        return add.result;
+    }
+    if (oper == V4IR::OpSub) {
+        Instruction::Sub sub;
+        sub.lhs = getParam(leftSource);
+        sub.rhs = getParam(rightSource);
+        sub.result = getResultParam(target);
+        addInstruction(sub);
+        return sub.result;
+    }
+    if (oper == V4IR::OpMul) {
+        Instruction::Mul mul;
+        mul.lhs = getParam(leftSource);
+        mul.rhs = getParam(rightSource);
+        mul.result = getResultParam(target);
+        addInstruction(mul);
+        return mul.result;
+    }
+    if (oper == V4IR::OpBitAnd) {
+        Instruction::BitAnd bitAnd;
+        bitAnd.lhs = getParam(leftSource);
+        bitAnd.rhs = getParam(rightSource);
+        bitAnd.result = getResultParam(target);
+        addInstruction(bitAnd);
+        return bitAnd.result;
+    }
+    if (oper == V4IR::OpBitOr) {
+        Instruction::BitOr bitOr;
+        bitOr.lhs = getParam(leftSource);
+        bitOr.rhs = getParam(rightSource);
+        bitOr.result = getResultParam(target);
+        addInstruction(bitOr);
+        return bitOr.result;
+    }
+    if (oper == V4IR::OpBitXor) {
+        Instruction::BitXor bitXor;
+        bitXor.lhs = getParam(leftSource);
+        bitXor.rhs = getParam(rightSource);
+        bitXor.result = getResultParam(target);
+        addInstruction(bitXor);
+        return bitXor.result;
+    }
 
     if (oper == V4IR::OpInstanceof || oper == V4IR::OpIn || oper == V4IR::OpAdd) {
         Instruction::BinopContext binop;

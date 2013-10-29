@@ -500,6 +500,30 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, instr.alu(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(Binop)
 
+    MOTH_BEGIN_INSTR(Add)
+        STOREVALUE(instr.result, __qmljs_add(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(Add)
+
+    MOTH_BEGIN_INSTR(BitAnd)
+        STOREVALUE(instr.result, __qmljs_bit_and(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(BitAnd)
+
+    MOTH_BEGIN_INSTR(BitOr)
+        STOREVALUE(instr.result, __qmljs_bit_or(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(BitOr)
+
+    MOTH_BEGIN_INSTR(BitXor)
+        STOREVALUE(instr.result, __qmljs_bit_xor(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(BitXor)
+
+    MOTH_BEGIN_INSTR(Mul)
+        STOREVALUE(instr.result, __qmljs_mul(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(Mul)
+
+    MOTH_BEGIN_INSTR(Sub)
+        STOREVALUE(instr.result, __qmljs_sub(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(Sub)
+
     MOTH_BEGIN_INSTR(BinopContext)
         STOREVALUE(instr.result, instr.alu(context, VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
     MOTH_END_INSTR(BinopContext)
