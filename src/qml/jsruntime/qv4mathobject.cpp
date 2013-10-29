@@ -46,6 +46,9 @@
 #include <qmath.h>
 #include <qnumeric.h>
 
+#include <QtCore/qdatetime.h>
+#include <QtCore/qthreadstorage.h>
+
 using namespace QV4;
 
 static const double qt_PI = 2.0 * ::asin(1.0);
@@ -278,8 +281,14 @@ ReturnedValue MathObject::method_pow(SimpleCallContext *context)
     return Encode(qSNaN());
 }
 
-ReturnedValue MathObject::method_random(SimpleCallContext *)
+Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
+
+ReturnedValue MathObject::method_random(SimpleCallContext *context)
 {
+    if (!seedCreatedStorage()->hasLocalData()) {
+        qsrand(QTime(0,0,0).msecsTo(QTime::currentTime()) ^ reinterpret_cast<quintptr>(context));
+        seedCreatedStorage()->setLocalData(new bool(true));
+    }
     return Encode(qrand() / (double) RAND_MAX);
 }
 
