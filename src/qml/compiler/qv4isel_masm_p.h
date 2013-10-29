@@ -1470,7 +1470,7 @@ protected:
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void loadThisObject(V4IR::Temp *temp);
     virtual void loadQmlIdObject(int id, V4IR::Temp *temp);
-    virtual void loadQmlImportedScript(int index, V4IR::Temp *temp);
+    virtual void loadQmlImportedScripts(V4IR::Temp *temp);
     virtual void loadQmlContextObject(V4IR::Temp *temp);
     virtual void loadQmlScopeObject(V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);

@@ -192,11 +192,8 @@ ReturnedValue QmlContextWrapper::get(Managed *m, const StringRef name, bool *has
             if (hasProperty)
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
-                int index = r.scriptIndex;
-                if (index < context->importedScripts.count())
-                    return context->importedScripts.at(index).value();
-                else
-                    return QV4::Primitive::undefinedValue().asReturnedValue();
+                QV4::ScopedObject scripts(scope, context->importedScripts);
+                return scripts->getIndexed(r.scriptIndex);
             } else if (r.type) {
                 return QmlTypeWrapper::create(engine, scopeObject, r.type);
             } else if (r.importNamespace) {

@@ -107,6 +107,8 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 loadQmlContextObject(t);
             else if (n->builtin == V4IR::Name::builtin_qml_scope_object)
                 loadQmlScopeObject(t);
+            else if (n->builtin == V4IR::Name::builtin_qml_imported_scripts_object)
+                loadQmlImportedScripts(t);
             else
                 getActivationProperty(n, t);
             return;
@@ -146,9 +148,6 @@ void IRDecoder::visitMove(V4IR::Move *s)
 
                 if (base->builtin == V4IR::Name::builtin_qml_id_scope) {
                     loadQmlIdObject(m->memberIndex, t);
-                    return;
-                } else if (base->builtin == V4IR::Name::builtin_qml_imported_scripts_scope) {
-                    loadQmlImportedScript(m->memberIndex, t);
                     return;
                 }
             } else if (m->type == V4IR::Member::MemberOfQObject) {

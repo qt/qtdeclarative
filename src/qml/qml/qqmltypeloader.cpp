@@ -2770,9 +2770,15 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
     }
 
-    for (int ii = 0; ii < scripts.count(); ++ii) {
-        ctxt->importedScripts << scripts.at(ii)->scriptData()->scriptValueForContext(ctxt);
+    QV4::ScopedObject scriptsArray(scope);
+    if (ctxt->importedScripts.isNullOrUndefined()) {
+        scriptsArray = v4->newArrayObject(scripts.count());
+        ctxt->importedScripts = scriptsArray;
+    } else {
+        scriptsArray = ctxt->importedScripts;
     }
+    for (int ii = 0; ii < scripts.count(); ++ii)
+        scriptsArray->putIndexed(ii, scripts.at(ii)->scriptData()->scriptValueForContext(ctxt));
 
     if (!hasEngine())
         initialize(parentCtxt->engine);

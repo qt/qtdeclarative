@@ -424,8 +424,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_setup_argument_object";
     case V4IR::Name::builtin_qml_id_scope:
         return "builtin_qml_id_scope";
-    case V4IR::Name::builtin_qml_imported_scripts_scope:
-        return "builtin_qml_imported_scripts_scope";
+    case V4IR::Name::builtin_qml_imported_scripts_object:
+        return "builtin_qml_imported_scripts_object";
     case V4IR::Name::builtin_qml_scope_object:
         return "builtin_qml_scope_object";
     case V4IR::Name::builtin_qml_context_object:

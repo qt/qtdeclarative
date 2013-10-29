@@ -3890,15 +3890,15 @@ void tst_qqmlecmascript::singletonTypeResolution()
 void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
     QQmlContextData *childCtxt = ctxt->childContexts;
 
-    if (!ctxt->importedScripts.isEmpty()) {
+    if (!ctxt->importedScripts.isNullOrUndefined()) {
         QV8Engine *engine = QV8Engine::get(ctxt->engine);
-        foreach (const QV4::PersistentValue& qmlglobal, ctxt->importedScripts) {
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QV4::Scope scope(v4);
+        QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts);
+        QV4::ScopedValue qml(scope);
+        for (quint32 i = 0; i < scripts->arrayLength(); ++i) {
             QQmlContextData *scriptContext, *newContext;
-
-            if (qmlglobal.isUndefined())
-                continue;
-            QV4::Scope scope(QV8Engine::getV4((engine)));
-            QV4::ScopedValue qml(scope, qmlglobal.value());
+            qml = scripts->getIndexed(i);
 
             scriptContext = QV4::QmlContextWrapper::getContext(qml);
             qml = QV4::Encode::undefined();
@@ -3910,7 +3910,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             }
 
             engine->gc();
-            qml = qmlglobal.value();
+            qml = scripts->getIndexed(i);
             newContext = QV4::QmlContextWrapper::getContext(qml);
             QVERIFY(scriptContext == newContext);
         }

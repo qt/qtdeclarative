@@ -1211,10 +1211,10 @@ void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, 
     wrapper->setProperty(ctx, propertyIndex, value);
 }
 
-ReturnedValue __qmljs_get_imported_script(ExecutionContext *ctx, int index)
+ReturnedValue __qmljs_get_imported_scripts(ExecutionContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
-    return context->importedScripts.at(index).value();
+    return context->importedScripts.value();
 }
 
 } // namespace QV4

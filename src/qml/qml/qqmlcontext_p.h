@@ -158,7 +158,7 @@ public:
     QObject *contextObject;
 
     // Any script blocks that exist on this context
-    QList<QV4::PersistentValue> importedScripts;
+    QV4::PersistentValue importedScripts; // This is a JS Array
 
     // Context base url
     QUrl url;

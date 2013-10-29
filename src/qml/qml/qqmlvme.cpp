@@ -791,7 +791,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
-            CTXT->importedScripts << SCRIPTS.at(instr.value)->scriptValueForContext(CTXT);
+            QV4::Scope scope(v4);
+            QV4::ScopedObject scripts(scope, CTXT->importedScripts.value());
+            if (!scripts) {
+                scripts = v4->newArrayObject();
+                CTXT->importedScripts = scripts;
+            }
+            scripts->putIndexed(instr.value, SCRIPTS.at(instr.value)->scriptValueForContext(CTXT));
         QML_END_INSTR(StoreImportedScript)
 
         QML_BEGIN_INSTR(StoreScriptString)

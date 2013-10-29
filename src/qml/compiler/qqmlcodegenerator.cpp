@@ -47,6 +47,10 @@
 #include <private/qqmlcompiler_p.h>
 #include <QCoreApplication>
 
+#ifdef CONST
+#undef CONST
+#endif
+
 QT_USE_NAMESPACE
 
 using namespace QtQml;
@@ -1372,8 +1376,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {
-                result = _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_scope, line, col),
-                                                       _function->newString(name), r.scriptIndex);
+                result = subscript(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, line, col), _block->CONST(V4IR::NumberType, r.scriptIndex));
             } else {
                 return 0; // TODO: We can't do fast lookup for these yet.
             }

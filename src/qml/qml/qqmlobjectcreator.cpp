@@ -525,8 +525,14 @@ QObject *QmlObjectCreator::create(int subComponentIndex, QObject *parent)
     context->setIdPropertyData(mapping);
 
     if (subComponentIndex == -1) {
-        foreach (QQmlScriptData *script, compiledData->scripts)
-            context->importedScripts << script->scriptValueForContext(context);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QV4::Scope scope(v4);
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
+        for (int i = 0; i < compiledData->scripts.count(); ++i) {
+            QQmlScriptData *s = compiledData->scripts.at(i);
+            scripts->putIndexed(i, s->scriptValueForContext(context));
+        }
+        context->importedScripts = scripts;
     } else if (parentContext) {
         context->importedScripts = parentContext->importedScripts;
     }
