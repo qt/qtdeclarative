@@ -94,9 +94,11 @@ QT_BEGIN_NAMESPACE
     F(Jump, jump) \
     F(CJump, cjump) \
     F(UNot, unot) \
+    F(UNotBool, unotBool) \
     F(UPlus, uplus) \
     F(UMinus, uminus) \
     F(UCompl, ucompl) \
+    F(UComplInt, ucomplInt) \
     F(Increment, increment) \
     F(Decrement, decrement) \
     F(Binop, binop) \
@@ -104,6 +106,9 @@ QT_BEGIN_NAMESPACE
     F(BitAnd, bitAnd) \
     F(BitOr, bitOr) \
     F(BitXor, bitXor) \
+    F(BitAndConst, bitAndConst) \
+    F(BitOrConst, bitOrConst) \
+    F(BitXorConst, bitXorConst) \
     F(Mul, mul) \
     F(Sub, sub) \
     F(BinopContext, binopContext) \
@@ -448,6 +453,11 @@ union Instr
         Param source;
         Param result;
     };
+    struct instr_unotBool {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
     struct instr_uplus {
         MOTH_INSTR_HEADER
         Param source;
@@ -459,6 +469,11 @@ union Instr
         Param result;
     };
     struct instr_ucompl {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_ucomplInt {
         MOTH_INSTR_HEADER
         Param source;
         Param result;
@@ -502,6 +517,24 @@ union Instr
         MOTH_INSTR_HEADER
         Param lhs;
         Param rhs;
+        Param result;
+    };
+    struct instr_bitAndConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_bitOrConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
+        Param result;
+    };
+    struct instr_bitXorConst {
+        MOTH_INSTR_HEADER
+        Param lhs;
+        int rhs;
         Param result;
     };
     struct instr_mul {
@@ -596,9 +629,11 @@ union Instr
     instr_jump jump;
     instr_cjump cjump;
     instr_unot unot;
+    instr_unotBool unotBool;
     instr_uplus uplus;
     instr_uminus uminus;
     instr_ucompl ucompl;
+    instr_ucomplInt ucomplInt;
     instr_increment increment;
     instr_decrement decrement;
     instr_binop binop;
@@ -606,6 +641,9 @@ union Instr
     instr_bitAnd bitAnd;
     instr_bitOr bitOr;
     instr_bitXor bitXor;
+    instr_bitAndConst bitAndConst;
+    instr_bitOrConst bitOrConst;
+    instr_bitXorConst bitXorConst;
     instr_mul mul;
     instr_sub sub;
     instr_binopContext binopContext;

@@ -134,6 +134,22 @@ inline bool isNumberType(V4IR::Expr *e)
     }
 }
 
+inline bool isIntegerType(V4IR::Expr *e)
+{
+    switch (e->type) {
+    case V4IR::SInt32Type:
+    case V4IR::UInt32Type:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool isBoolType(V4IR::Expr *e)
+{
+    return (e->type == V4IR::BoolType);
+}
+
 } // anonymous namespace
 
 // TODO: extend to optimize out temp-to-temp moves, where the lifetime of one temp ends at that statement.
@@ -546,6 +562,14 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     case V4IR::OpIfTrue:
         Q_ASSERT(!"unreachable"); break;
     case V4IR::OpNot: {
+        // ### enabling this fails in some cases, where apparently the value is not a bool at runtime
+        if (0 && isBoolType(sourceTemp)) {
+            Instruction::UNotBool unot;
+            unot.source = getParam(sourceTemp);
+            unot.result = getResultParam(targetTemp);
+            addInstruction(unot);
+            return;
+        }
         Instruction::UNot unot;
         unot.source = getParam(sourceTemp);
         unot.result = getResultParam(targetTemp);
@@ -575,6 +599,14 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
         return;
     }
     case V4IR::OpCompl: {
+        // ### enabling this fails in some cases, where apparently the value is not a int at runtime
+        if (0 && isIntegerType(sourceTemp)) {
+            Instruction::UComplInt unot;
+            unot.source = getParam(sourceTemp);
+            unot.result = getResultParam(targetTemp);
+            addInstruction(unot);
+            return;
+        }
         Instruction::UCompl ucompl;
         ucompl.source = getParam(sourceTemp);
         ucompl.result = getResultParam(targetTemp);
@@ -667,6 +699,16 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
         return mul.result;
     }
     if (oper == V4IR::OpBitAnd) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitAndConst bitAnd;
+            bitAnd.lhs = getParam(leftSource);
+            bitAnd.rhs = convertToValue(c).Value::toInt32();
+            bitAnd.result = getResultParam(target);
+            addInstruction(bitAnd);
+            return bitAnd.result;
+        }
         Instruction::BitAnd bitAnd;
         bitAnd.lhs = getParam(leftSource);
         bitAnd.rhs = getParam(rightSource);
@@ -675,6 +717,16 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
         return bitAnd.result;
     }
     if (oper == V4IR::OpBitOr) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitOrConst bitOr;
+            bitOr.lhs = getParam(leftSource);
+            bitOr.rhs = convertToValue(c).Value::toInt32();
+            bitOr.result = getResultParam(target);
+            addInstruction(bitOr);
+            return bitOr.result;
+        }
         Instruction::BitOr bitOr;
         bitOr.lhs = getParam(leftSource);
         bitOr.rhs = getParam(rightSource);
@@ -683,6 +735,16 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
         return bitOr.result;
     }
     if (oper == V4IR::OpBitXor) {
+        if (leftSource->asConst())
+            qSwap(leftSource, rightSource);
+        if (V4IR::Const *c = rightSource->asConst()) {
+            Instruction::BitXorConst bitXor;
+            bitXor.lhs = getParam(leftSource);
+            bitXor.rhs = convertToValue(c).Value::toInt32();
+            bitXor.result = getResultParam(target);
+            addInstruction(bitXor);
+            return bitXor.result;
+        }
         Instruction::BitXor bitXor;
         bitXor.lhs = getParam(leftSource);
         bitXor.rhs = getParam(rightSource);

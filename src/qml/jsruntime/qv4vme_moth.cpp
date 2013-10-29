@@ -476,6 +476,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_not(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UNot)
 
+    MOTH_BEGIN_INSTR(UNotBool)
+        bool b = VALUE(instr.source).booleanValue();
+        VALUE(instr.result) = QV4::Encode(!b);
+    MOTH_END_INSTR(UNotBool)
+
     MOTH_BEGIN_INSTR(UPlus)
         STOREVALUE(instr.result, __qmljs_uplus(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UPlus)
@@ -487,6 +492,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_BEGIN_INSTR(UCompl)
         STOREVALUE(instr.result, __qmljs_compl(VALUEPTR(instr.source)));
     MOTH_END_INSTR(UCompl)
+
+    MOTH_BEGIN_INSTR(UComplInt)
+        VALUE(instr.result) = QV4::Encode((int)~VALUE(instr.source).integerValue());
+    MOTH_END_INSTR(UComplInt)
 
     MOTH_BEGIN_INSTR(Increment)
         STOREVALUE(instr.result, __qmljs_increment(VALUEPTR(instr.source)));
@@ -514,6 +523,21 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
 
     MOTH_BEGIN_INSTR(BitXor)
         STOREVALUE(instr.result, __qmljs_bit_xor(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));
+    MOTH_END_INSTR(BitXor)
+
+    MOTH_BEGIN_INSTR(BitAndConst)
+        int lhs = VALUEPTR(instr.lhs)->toInt32();
+        STOREVALUE(instr.result, QV4::Encode((int)(lhs & instr.rhs)));
+    MOTH_END_INSTR(BitAnd)
+
+    MOTH_BEGIN_INSTR(BitOrConst)
+        int lhs = VALUEPTR(instr.lhs)->toInt32();
+        STOREVALUE(instr.result, QV4::Encode((int)(lhs | instr.rhs)));
+    MOTH_END_INSTR(BitOr)
+
+    MOTH_BEGIN_INSTR(BitXorConst)
+        int lhs = VALUEPTR(instr.lhs)->toInt32();
+        STOREVALUE(instr.result, QV4::Encode((int)(lhs ^ instr.rhs)));
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Mul)
