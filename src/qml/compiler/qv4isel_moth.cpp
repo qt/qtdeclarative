@@ -249,7 +249,7 @@ void InstructionSelection::run(int functionIndex)
     opt.run();
     StackSlotAllocator *stackSlotAllocator = 0;
     if (opt.isInSSA()) {
-        stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
+        //stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
         opt.convertOutOfSSA();
     }
 
