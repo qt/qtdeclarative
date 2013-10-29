@@ -365,6 +365,7 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames);
 
 protected:
+    virtual void beginFunctionBodyHook();
     virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 
 private:
@@ -377,6 +378,10 @@ private:
     ObjectIdMapping _idObjects;
     QQmlPropertyCache *_contextObject;
     QQmlPropertyCache *_scopeObject;
+    int _contextObjectTemp;
+    int _scopeObjectTemp;
+    int _importedScriptsTemp;
+    int _idScopeTemp;
 };
 
 } // namespace QtQml

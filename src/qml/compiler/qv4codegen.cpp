@@ -2050,6 +2050,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
 
+    beginFunctionBodyHook();
+
     sourceElements(body);
 
     _function->insertBasicBlock(_exitBlock);

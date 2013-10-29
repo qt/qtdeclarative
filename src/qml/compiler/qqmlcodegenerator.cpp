@@ -1208,6 +1208,11 @@ JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, 
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
     , imports(imports)
+    , _contextObject(0)
+    , _scopeObject(0)
+    , _contextObjectTemp(-1)
+    , _scopeObjectTemp(-1)
+    , _importedScriptsTemp(-1)
 {
     _module = jsModule;
     _module->setFileName(fileName);
@@ -1362,8 +1367,27 @@ static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQm
     resolver->data = metaObject;
 }
 
+void JSCodeGen::beginFunctionBodyHook()
+{
+    _contextObjectTemp = _block->newTemp();
+    _scopeObjectTemp = _block->newTemp();
+    _importedScriptsTemp = _block->newTemp();
+
+    V4IR::Temp *temp = _block->TEMP(_contextObjectTemp);
+    initMetaObjectResolver(&temp->memberResolver, _contextObject);
+    move(temp, _block->NAME(V4IR::Name::builtin_qml_context_object, 0, 0));
+
+    temp = _block->TEMP(_scopeObjectTemp);
+    initMetaObjectResolver(&temp->memberResolver, _scopeObject);
+    move(temp, _block->NAME(V4IR::Name::builtin_qml_scope_object, 0, 0));
+
+    move(_block->TEMP(_importedScriptsTemp), _block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, 0, 0));
+}
+
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
 {
+    Q_UNUSED(line)
+    Q_UNUSED(col)
     // Implement QML lookup semantics in the current file context.
     //
     // Note: We do not check if properties of the qml scope object or context object
@@ -1387,7 +1411,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1)
-                return subscript(_block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, line, col), _block->CONST(V4IR::NumberType, r.scriptIndex));
+                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(V4IR::NumberType, r.scriptIndex));
             else
                 return 0; // TODO: We can't do fast lookup for these yet.
         }
@@ -1401,12 +1425,9 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (pd) {
             if (!pd->isConstant())
                 _function->scopeObjectDependencies.insert(pd);
-            int temp = _block->newTemp();
-            _block->MOVE(_block->TEMP(temp), _block->NAME(V4IR::Name::builtin_qml_scope_object, line, col));
-            V4IR::Temp *base = _block->TEMP(temp);
+            V4IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
-            return _block->QML_QOBJECT_PROPERTY(base,
-                                                _function->newString(name), pd);
+            return _block->QML_QOBJECT_PROPERTY(base, _function->newString(name), pd);
         }
     }
 
@@ -1418,9 +1439,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (pd) {
             if (!pd->isConstant())
                 _function->contextObjectDependencies.insert(pd);
-            int temp = _block->newTemp();
-            _block->MOVE(_block->TEMP(temp), _block->NAME(V4IR::Name::builtin_qml_context_object, line, col));
-            V4IR::Temp *base = _block->TEMP(temp);
+            V4IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
             return _block->QML_QOBJECT_PROPERTY(base, _function->newString(name), pd);
         }

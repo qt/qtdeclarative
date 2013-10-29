@@ -330,6 +330,7 @@ protected:
     V4IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
     // Hook provided to implement QML lookup semantics
     virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual void beginFunctionBodyHook() {}
 
     // nodes
     virtual bool visit(AST::ArgumentList *ast);
