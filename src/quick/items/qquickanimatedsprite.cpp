@@ -138,14 +138,6 @@ public:
     {
     }
 
-    void deactivate() {
-        QSGMaterialShader::deactivate();
-
-        for (int i=0; i<8; ++i) {
-            program()->setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
-        }
-    }
-
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
     {
         QQuickAnimatedSpriteMaterial *m = static_cast<QQuickAnimatedSpriteMaterial *>(newEffect);
@@ -182,11 +174,7 @@ public:
     int m_opacity_id;
     int m_animData_id;
     int m_animPos_id;
-
-    static float chunkOfBytes[1024];
 };
-
-float AnimatedSpriteMaterialData::chunkOfBytes[1024];
 
 QSGMaterialShader *QQuickAnimatedSpriteMaterial::createShader() const
 {
