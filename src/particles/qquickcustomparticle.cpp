@@ -286,8 +286,11 @@ QSGNode *QQuickCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
         rootNode = prepareNextFrame(rootNode);
-        if (rootNode)
+        if (rootNode) {
+            foreach (QSGGeometryNode* node, m_nodes)
+                node->markDirty(QSGNode::DirtyGeometry);
             update();
+        }
     }
 
     return rootNode;
