@@ -262,10 +262,10 @@ inline QV4::ReturnedValue __qmljs_uplus(const QV4::ValueRef value)
 {
     TRACE1(value);
 
-    if (value->integerCompatible())
-        return Encode(value->int_32);
+    if (value->integerCompatible() || value->isDouble())
+        return value.asReturnedValue();
 
-    double n = value->toNumber();
+    double n = value->toNumberImpl();
     return Encode(n);
 }
 

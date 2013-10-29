@@ -472,9 +472,29 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
             code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)
 
-    MOTH_BEGIN_INSTR(Unop)
-        STOREVALUE(instr.result, instr.alu(VALUEPTR(instr.source)));
-    MOTH_END_INSTR(Unop)
+    MOTH_BEGIN_INSTR(UNot)
+        STOREVALUE(instr.result, __qmljs_not(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(UNot)
+
+    MOTH_BEGIN_INSTR(UPlus)
+        STOREVALUE(instr.result, __qmljs_uplus(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(UPlus)
+
+    MOTH_BEGIN_INSTR(UMinus)
+        STOREVALUE(instr.result, __qmljs_uminus(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(UMinus)
+
+    MOTH_BEGIN_INSTR(UCompl)
+        STOREVALUE(instr.result, __qmljs_compl(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(UCompl)
+
+    MOTH_BEGIN_INSTR(Increment)
+        STOREVALUE(instr.result, __qmljs_increment(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(Increment)
+
+    MOTH_BEGIN_INSTR(Decrement)
+        STOREVALUE(instr.result, __qmljs_decrement(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)
         STOREVALUE(instr.result, instr.alu(VALUEPTR(instr.lhs), VALUEPTR(instr.rhs)));

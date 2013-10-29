@@ -535,25 +535,54 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
 
     QV4::UnaryOpName op = 0;
     switch (oper) {
-    case V4IR::OpIfTrue: assert(!"unreachable"); break;
-    case V4IR::OpNot: op = QV4::__qmljs_not; break;
-    case V4IR::OpUMinus: op = QV4::__qmljs_uminus; break;
-    case V4IR::OpUPlus: op = QV4::__qmljs_uplus; break;
-    case V4IR::OpCompl: op = QV4::__qmljs_compl; break;
-    case V4IR::OpIncrement: op = QV4::__qmljs_increment; break;
-    case V4IR::OpDecrement: op = QV4::__qmljs_decrement; break;
-    default: assert(!"unreachable"); break;
+    case V4IR::OpIfTrue:
+        Q_ASSERT(!"unreachable"); break;
+    case V4IR::OpNot: {
+        Instruction::UNot unot;
+        unot.source = getParam(sourceTemp);
+        unot.result = getResultParam(targetTemp);
+        addInstruction(unot);
+        return;
+    }
+    case V4IR::OpUMinus: {
+        Instruction::UMinus uminus;
+        uminus.source = getParam(sourceTemp);
+        uminus.result = getResultParam(targetTemp);
+        addInstruction(uminus);
+        return;
+    }
+    case V4IR::OpUPlus: {
+        Instruction::UPlus uplus;
+        uplus.source = getParam(sourceTemp);
+        uplus.result = getResultParam(targetTemp);
+        addInstruction(uplus);
+        return;
+    }
+    case V4IR::OpCompl: {
+        Instruction::UCompl ucompl;
+        ucompl.source = getParam(sourceTemp);
+        ucompl.result = getResultParam(targetTemp);
+        addInstruction(ucompl);
+        return;
+    }
+    case V4IR::OpIncrement: {
+        Instruction::Increment inc;
+        inc.source = getParam(sourceTemp);
+        inc.result = getResultParam(targetTemp);
+        addInstruction(inc);
+        return;
+    }
+    case V4IR::OpDecrement: {
+        Instruction::Decrement dec;
+        dec.source = getParam(sourceTemp);
+        dec.result = getResultParam(targetTemp);
+        addInstruction(dec);
+        return;
+    }
+    default:  break;
     } // switch
 
-    if (op) {
-        Instruction::Unop unop;
-        unop.alu = op;
-        unop.source = getParam(sourceTemp);
-        unop.result = getResultParam(targetTemp);
-        addInstruction(unop);
-    } else {
-        qWarning("  UNOP1");
-    }
+    Q_ASSERT(!"unreachable");
 }
 
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)

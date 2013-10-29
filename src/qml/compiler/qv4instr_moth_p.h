@@ -93,7 +93,12 @@ QT_BEGIN_NAMESPACE
     F(CreateActivationProperty, createActivationProperty) \
     F(Jump, jump) \
     F(CJump, cjump) \
-    F(Unop, unop) \
+    F(UNot, unot) \
+    F(UPlus, uplus) \
+    F(UMinus, uminus) \
+    F(UCompl, ucompl) \
+    F(Increment, increment) \
+    F(Decrement, decrement) \
     F(Binop, binop) \
     F(BinopContext, binopContext) \
     F(AddNumberParams, addNumberParams) \
@@ -431,9 +436,33 @@ union Instr
         Param condition;
         bool invert;
     };
-    struct instr_unop {
+    struct instr_unot {
         MOTH_INSTR_HEADER
-        QV4::UnaryOpName alu;
+        Param source;
+        Param result;
+    };
+    struct instr_uplus {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_uminus {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_ucompl {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_increment {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_decrement {
+        MOTH_INSTR_HEADER
         Param source;
         Param result;
     };
@@ -518,7 +547,12 @@ union Instr
     instr_createActivationProperty createActivationProperty;
     instr_jump jump;
     instr_cjump cjump;
-    instr_unop unop;
+    instr_unot unot;
+    instr_uplus uplus;
+    instr_uminus uminus;
+    instr_ucompl ucompl;
+    instr_increment increment;
+    instr_decrement decrement;
     instr_binop binop;
     instr_binopContext binopContext;
     instr_addNumberParams addNumberParams;
