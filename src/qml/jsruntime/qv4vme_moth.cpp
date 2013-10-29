@@ -264,18 +264,13 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         switch (genericInstr->common.instructionType) {
 #endif
 
-    MOTH_BEGIN_INSTR(MoveTemp)
+    MOTH_BEGIN_INSTR(Move)
         VALUE(instr.result) = VALUE(instr.source);
-    MOTH_END_INSTR(MoveTemp)
+    MOTH_END_INSTR(Move)
 
     MOTH_BEGIN_INSTR(SwapTemps)
         qSwap(VALUE(instr.left),  VALUE(instr.right));
     MOTH_END_INSTR(MoveTemp)
-
-    MOTH_BEGIN_INSTR(LoadValue)
-//        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = VALUE(instr.value);
-    MOTH_END_INSTR(LoadValue)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());

@@ -423,10 +423,10 @@ void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targe
 {
     assert(sourceConst);
 
-    Instruction::LoadValue load;
-    load.value = getParam(sourceConst);
-    load.result = getResultParam(targetTemp);
-    addInstruction(load);
+    Instruction::Move move;
+    move.source = getParam(sourceConst);
+    move.result = getResultParam(targetTemp);
+    addInstruction(move);
 }
 
 void InstructionSelection::loadString(const QString &str, V4IR::Temp *targetTemp)
@@ -513,7 +513,7 @@ void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetT
     if (_stackSlotAllocator)
         _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
 
-    Instruction::MoveTemp move;
+    Instruction::Move move;
     move.source = getParam(sourceTemp);
     move.result = getResultParam(targetTemp);
     if (move.source != move.result)
@@ -633,7 +633,7 @@ void InstructionSelection::prepareCallArgs(V4IR::ExprList *e, quint32 &argc, qui
         // We need to move all the temps into the function arg array
         assert(argLocation >= 0);
         while (e) {
-            Instruction::MoveTemp move;
+            Instruction::Move move;
             move.source = getParam(e->expr);
             move.result = Param::createTemp(argLocation);
             addInstruction(move);
@@ -773,11 +773,11 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, V4IR::Temp
 
 void InstructionSelection::callBuiltinDeleteValue(V4IR::Temp *result)
 {
-    Instruction::LoadValue load;
+    Instruction::Move move;
     int idx = jsUnitGenerator()->registerConstant(QV4::Encode(false));
-    load.value = Param::createConstant(idx);
-    load.result = getResultParam(result);
-    addInstruction(load);
+    move.source = Param::createConstant(idx);
+    move.result = getResultParam(result);
+    addInstruction(move);
 }
 
 void InstructionSelection::callBuiltinThrow(V4IR::Expr *arg)
@@ -896,7 +896,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         bool isData = it->expr->asConst()->value;
         it = it->next;
 
-        Instruction::MoveTemp move;
+        Instruction::Move move;
         move.source = getParam(it->expr);
         move.result = Param::createTemp(argLocation);
         addInstruction(move);
@@ -905,7 +905,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4
         if (!isData) {
             it = it->next;
 
-            Instruction::MoveTemp move;
+            Instruction::Move move;
             move.source = getParam(it->expr);
             move.result = Param::createTemp(argLocation);
             addInstruction(move);

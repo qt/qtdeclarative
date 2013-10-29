@@ -51,11 +51,10 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
-    F(LoadValue, loadValue) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
-    F(MoveTemp, moveTemp) \
+    F(Move, move) \
     F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
     F(StoreName, storeName) \
@@ -206,11 +205,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     }; 
-    struct instr_loadValue {
-        MOTH_INSTR_HEADER
-        Param value;
-        Param result;
-    };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
@@ -221,7 +215,7 @@ union Instr
         int regExpId;
         Param result;
     };
-    struct instr_moveTemp {
+    struct instr_move {
         MOTH_INSTR_HEADER
         Param source;
         Param result;
@@ -487,10 +481,9 @@ union Instr
 
     instr_common common;
     instr_ret ret;
-    instr_loadValue loadValue;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
-    instr_moveTemp moveTemp;
+    instr_move move;
     instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
