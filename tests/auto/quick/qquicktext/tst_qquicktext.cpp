@@ -44,6 +44,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <private/qquicktext_p_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
@@ -150,6 +151,8 @@ private slots:
     void htmlLists_data();
 
     void elideBeforeMaximumLineCount();
+
+    void hover();
 
 private:
     QStringList standard;
@@ -3742,6 +3745,31 @@ void tst_qquicktext::elideBeforeMaximumLineCount()
     QVERIFY(item);
 
     QCOMPARE(item->lineCount(), 2);
+}
+
+void tst_qquicktext::hover()
+{   // QTBUG-33842
+    QQmlComponent component(&engine, testFile("hover.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(object.data());
+    QVERIFY(window);
+
+    QQuickMouseArea *mouseArea = window->property("mouseArea").value<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    QQuickText *textItem = window->property("textItem").value<QQuickText *>();
+    QVERIFY(textItem);
+
+    QVERIFY(!mouseArea->property("wasHovered").toBool());
+
+    QPoint center(window->width() / 2, window->height() / 2);
+    QPoint delta(window->width() / 10, window->height() / 10);
+
+    QTest::mouseMove(window, center - delta);
+    QTest::mouseMove(window, center + delta);
+
+    QVERIFY(mouseArea->property("wasHovered").toBool());
 }
 
 QTEST_MAIN(tst_qquicktext)
