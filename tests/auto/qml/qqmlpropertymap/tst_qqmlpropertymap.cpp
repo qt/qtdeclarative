@@ -86,21 +86,21 @@ void tst_QQmlPropertyMap::insert()
 
     //inserting property names same with existing method(signal, slot, method) names is not allowed
     //QQmlPropertyMap has an invokable keys() method
-    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"keys\" is not permitted, conflicts with internal symbols. ");
+    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"keys\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("keys"), 1);
     QVERIFY(map.keys().count() == 2);
     QVERIFY(!map.contains(QLatin1String("keys")));
     QVERIFY(map.value(QLatin1String("keys")).isNull());
 
     //QQmlPropertyMap has a deleteLater() slot
-    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"deleteLater\" is not permitted, conflicts with internal symbols. ");
+    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"deleteLater\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("deleteLater"), 1);
     QVERIFY(map.keys().count() == 2);
     QVERIFY(!map.contains(QLatin1String("deleteLater")));
     QVERIFY(map.value(QLatin1String("deleteLater")).isNull());
 
     //QQmlPropertyMap has an valueChanged() signal
-    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"valueChanged\" is not permitted, conflicts with internal symbols. ");
+    QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"valueChanged\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("valueChanged"), 1);
     QVERIFY(map.keys().count() == 2);
     QVERIFY(!map.contains(QLatin1String("valueChanged")));

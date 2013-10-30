@@ -164,7 +164,7 @@ void tst_QQmlDebugService::state()
 
     QTRY_COMPARE(service.state(), QQmlDebugService::Unavailable);
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::state()\" ");
+    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::state()\"");
     QQmlDebugTestService duplicate("tst_QQmlDebugService::state()");
     QCOMPARE(duplicate.state(), QQmlDebugService::NotConnected);
 }
@@ -183,7 +183,7 @@ void tst_QQmlDebugService::sendMessage()
     QByteArray resp = client.waitForResponse();
     QCOMPARE(resp, msg);
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::sendMessage()\" ");
+    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::sendMessage()\"");
     QQmlDebugTestService duplicate("tst_QQmlDebugService::sendMessage()");
     duplicate.sendMessage("msg");
 }

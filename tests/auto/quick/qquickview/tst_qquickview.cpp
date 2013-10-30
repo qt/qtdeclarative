@@ -229,7 +229,7 @@ void tst_QQuickView::engine()
     QCOMPARE(view3->engine(), view4->engine());
     delete view3;
     QVERIFY(!view4->engine());
-    QTest::ignoreMessage(QtWarningMsg, "QQuickView: invalid qml engine. ");
+    QTest::ignoreMessage(QtWarningMsg, "QQuickView: invalid qml engine.");
     view4->setSource(QUrl());
 
     QCOMPARE(view4->status(), QQuickView::Error);

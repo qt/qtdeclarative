@@ -63,7 +63,7 @@ void tst_qqmlglobal::initTestCase()
 
 void tst_qqmlglobal::colorProviderWarning()
 {
-    const QLatin1String expected("Warning: QQml_colorProvider: no color provider has been set! ");
+    const QLatin1String expected("Warning: QQml_colorProvider: no color provider has been set!");
     QTest::ignoreMessage(QtWarningMsg, expected.data());
     QQml_colorProvider();
 }

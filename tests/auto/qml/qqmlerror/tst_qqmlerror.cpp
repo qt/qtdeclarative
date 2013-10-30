@@ -203,7 +203,7 @@ void tst_qqmlerror::debug()
         error.setLine(92);
         error.setColumn(13);
 
-        QTest::ignoreMessage(QtWarningMsg, "http://www.qt-project.org/main.qml:92:13: An Error ");
+        QTest::ignoreMessage(QtWarningMsg, "http://www.qt-project.org/main.qml:92:13: An Error");
         qWarning() << error;
     }
 

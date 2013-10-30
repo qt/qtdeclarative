@@ -500,7 +500,7 @@ void tst_qqmlinstruction::dump()
         << "8\t\tSTORE_INTEGER\t\t5\t9"
         << "9\t\tSTORE_BOOL\t\t6\ttrue"
         << "10\t\tSTORE_STRING\t\t7\t1\t\t\"Test String\""
-        << "11\t\tSTORE_URL\t\t8\t0\t\tQUrl(\"http://www.qt-project.org\") "
+        << "11\t\tSTORE_URL\t\t8\t0\t\tQUrl(\"http://www.qt-project.org\")"
         << "12\t\tSTORE_COLOR\t\t9\t\t\t\"ff00ff00\""
         << "13\t\tSTORE_DATE\t\t10\t9"
         << "14\t\tSTORE_TIME\t\t11"
@@ -552,7 +552,6 @@ void tst_qqmlinstruction::dump()
 
     data->dumpInstructions();
 
-    QSKIP("Disable test temporarily until codereview.qt-project.org/#change,69731 integrated");
     const int messageCount = messageHandler.messages().count();
     QCOMPARE(messageCount, expect.count());
     for (int ii = 0; ii < messageCount; ++ii) {

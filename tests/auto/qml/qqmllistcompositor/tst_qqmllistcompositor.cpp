@@ -1725,11 +1725,11 @@ void tst_qqmllistcompositor::changeDebug()
 
 void tst_qqmllistcompositor::groupDebug()
 {
-    QTest::ignoreMessage(QtDebugMsg, "Default ");
+    QTest::ignoreMessage(QtDebugMsg, "Default");
     qDebug() << C::Default;
-    QTest::ignoreMessage(QtDebugMsg, "Cache ");
+    QTest::ignoreMessage(QtDebugMsg, "Cache");
     qDebug() << C::Cache;
-    QTest::ignoreMessage(QtDebugMsg, "Group3 ");
+    QTest::ignoreMessage(QtDebugMsg, "Group3");
     qDebug() << Selection;
 }
 

@@ -804,7 +804,7 @@ void tst_qqmlvaluetypes::font()
     // Test pixelSize and pointSize
     {
         QQmlComponent component(&engine, testFileUrl("font_write.3.qml"));
-        QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size. ");
+        QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size.");
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -814,7 +814,7 @@ void tst_qqmlvaluetypes::font()
     }
     {
         QQmlComponent component(&engine, testFileUrl("font_write.4.qml"));
-        QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size. ");
+        QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size.");
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 

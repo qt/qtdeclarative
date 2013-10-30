@@ -124,7 +124,7 @@ void tst_QQmlDebugClient::state()
     QTRY_COMPARE(client.state(), QQmlDebugClient::Unavailable);
 
     // duplicate plugin name
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugClient: Conflicting plugin name \"tst_QQmlDebugClient::state()\" ");
+    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugClient: Conflicting plugin name \"tst_QQmlDebugClient::state()\"");
     QQmlDebugClient client2("tst_QQmlDebugClient::state()", m_conn);
     QCOMPARE(client2.state(), QQmlDebugClient::NotConnected);
 
