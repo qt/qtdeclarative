@@ -889,6 +889,8 @@ void QSGThreadedRenderLoop::handleExposure(Window *w)
 
         if (!w->thread->gl) {
             w->thread->gl = new QOpenGLContext();
+            if (QSGContext::sharedOpenGLContext())
+                w->thread->gl->setShareContext(QSGContext::sharedOpenGLContext());
             w->thread->gl->setFormat(w->window->requestedFormat());
             if (!w->thread->gl->create()) {
                 delete w->thread->gl;

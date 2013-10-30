@@ -42,8 +42,8 @@
 #include <qtest.h>
 
 #include <QtQuick>
-#include <private/qquickanimator_p.h>
 
+#include <private/qsgcontext_p.h>
 
 
 #include <QtQml>
@@ -99,9 +99,13 @@ bool containsSomethingOtherThanWhite(const QImage &image)
     return false;
 }
 
-// To compare images, we need a special function with a bit of error
-// as glyphs has an invisible, but measurable variance depending
-// on where in the glyph cache they end up.
+// When running on native Nvidia graphics cards on linux, the
+// distance field glyph pixels have a measurable, but not visible
+// pixel error. Use a custom compare function to avoid
+//
+// This was GT-216 with the ubuntu "nvidia-319" driver package.
+// llvmpipe does not show the same issue.
+//
 bool compareImages(const QImage &ia, const QImage &ib)
 {
     if (ia.size() != ib.size())
@@ -137,21 +141,44 @@ void tst_SceneGraph::manyWindows_data()
 {
     QTest::addColumn<QString>("file");
     QTest::addColumn<bool>("toplevel");
+    QTest::addColumn<bool>("shared");
 
-    QTest::newRow("image,toplevel") << QStringLiteral("manyWindows_image.qml") << true;
-    QTest::newRow("image,subwindow") << QStringLiteral("manyWindows_image.qml") << false;
-    QTest::newRow("dftext,toplevel") << QStringLiteral("manyWindows_dftext.qml") << true;
-    QTest::newRow("dftext,subwindow") << QStringLiteral("manyWindows_dftext.qml") << false;
-    QTest::newRow("ntext,toplevel") << QStringLiteral("manyWindows_ntext.qml") << true;
-    QTest::newRow("ntext,subwindow") << QStringLiteral("manyWindows_ntext.qml") << false;
-    QTest::newRow("rects,toplevel") << QStringLiteral("manyWindows_rects.qml") << true;
-    QTest::newRow("rects,subwindow") << QStringLiteral("manyWindows_rects.qml") << false;
+    QTest::newRow("image,toplevel") << QStringLiteral("manyWindows_image.qml") << true << false;
+    QTest::newRow("image,subwindow") << QStringLiteral("manyWindows_image.qml") << false << false;
+    QTest::newRow("dftext,toplevel") << QStringLiteral("manyWindows_dftext.qml") << true << false;
+    QTest::newRow("dftext,subwindow") << QStringLiteral("manyWindows_dftext.qml") << false << false;
+    QTest::newRow("ntext,toplevel") << QStringLiteral("manyWindows_ntext.qml") << true << false;
+    QTest::newRow("ntext,subwindow") << QStringLiteral("manyWindows_ntext.qml") << false << false;
+    QTest::newRow("rects,toplevel") << QStringLiteral("manyWindows_rects.qml") << true << false;
+    QTest::newRow("rects,subwindow") << QStringLiteral("manyWindows_rects.qml") << false << false;
+
+    QTest::newRow("image,toplevel,sharing") << QStringLiteral("manyWindows_image.qml") << true << true;
+    QTest::newRow("image,subwindow,sharing") << QStringLiteral("manyWindows_image.qml") << false << true;
+    QTest::newRow("dftext,toplevel,sharing") << QStringLiteral("manyWindows_dftext.qml") << true << true;
+    QTest::newRow("dftext,subwindow,sharing") << QStringLiteral("manyWindows_dftext.qml") << false << true;
+    QTest::newRow("ntext,toplevel,sharing") << QStringLiteral("manyWindows_ntext.qml") << true << true;
+    QTest::newRow("ntext,subwindow,sharing") << QStringLiteral("manyWindows_ntext.qml") << false << true;
+    QTest::newRow("rects,toplevel,sharing") << QStringLiteral("manyWindows_rects.qml") << true << true;
+    QTest::newRow("rects,subwindow,sharing") << QStringLiteral("manyWindows_rects.qml") << false << true;
 }
+
+struct ShareContextResetter {
+public:
+    ~ShareContextResetter() { QSGContext::setSharedOpenGLContext(0); }
+};
 
 void tst_SceneGraph::manyWindows()
 {
     QFETCH(QString, file);
     QFETCH(bool, toplevel);
+    QFETCH(bool, shared);
+
+    QOpenGLContext sharedGLContext;
+    ShareContextResetter cleanup; // To avoid dangling pointer in case of test-failure.
+    if (shared) {
+        sharedGLContext.create();
+        QSGContext::setSharedOpenGLContext(&sharedGLContext);
+    }
 
     QScopedPointer<QWindow> parent;
     if (!toplevel) {

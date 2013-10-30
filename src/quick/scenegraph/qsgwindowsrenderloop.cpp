@@ -178,6 +178,8 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         RLDEBUG(" - creating GL context");
         m_gl = new QOpenGLContext();
         m_gl->setFormat(window->requestedFormat());
+        if (QSGContext::sharedOpenGLContext())
+            m_gl->setShareContext(QSGContext::sharedOpenGLContext());
         m_gl->create();
         QSG_RENDER_TIMING_SAMPLE(time_created);
         RLDEBUG(" - making current");

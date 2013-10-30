@@ -264,6 +264,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!gl) {
         gl = new QOpenGLContext();
         gl->setFormat(window->requestedFormat());
+        if (QSGContext::sharedOpenGLContext())
+            gl->setShareContext(QSGContext::sharedOpenGLContext());
         if (!gl->create()) {
             delete gl;
             gl = 0;
