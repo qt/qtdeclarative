@@ -257,6 +257,7 @@ public:
     inline static QQmlEnginePrivate *get(QQmlContext *c);
     inline static QQmlEnginePrivate *get(QQmlContextData *c);
     inline static QQmlEngine *get(QQmlEnginePrivate *p);
+    inline static QQmlEnginePrivate *get(QV4::ExecutionEngine *e);
 
     static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor);
@@ -516,7 +517,17 @@ QQmlEngine *QQmlEnginePrivate::get(QQmlEnginePrivate *p)
 { 
     Q_ASSERT(p);
 
-    return p->q_func(); 
+    return p->q_func();
+}
+
+QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
+{
+    if (!e->v8Engine)
+        return 0;
+    QQmlEngine *qmlEngine = e->v8Engine->engine();
+    if (!qmlEngine)
+        return 0;
+    return get(qmlEngine);
 }
 
 void QQmlEnginePrivate::captureProperty(QQmlNotifier *n)

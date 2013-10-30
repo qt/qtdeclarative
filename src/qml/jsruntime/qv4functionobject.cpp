@@ -55,6 +55,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmlengine_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
@@ -281,7 +282,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
     QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 

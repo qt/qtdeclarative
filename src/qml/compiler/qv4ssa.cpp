@@ -52,6 +52,7 @@
 #include <qv4runtime_p.h>
 #include <qv4context_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmlengine_p.h>
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -1209,6 +1210,7 @@ protected:
         e->expr->accept(this);
 
         switch (e->expr->type) {
+        case QObjectType:
         case StringType:
         case VarType:
             markAsSideEffect();
@@ -1227,7 +1229,7 @@ protected:
         case OpNot:
         case OpIncrement:
         case OpDecrement:
-            if (e->expr->type == VarType || e->expr->type == StringType)
+            if (e->expr->type == VarType || e->expr->type == StringType || e->expr->type == QObjectType)
                 markAsSideEffect();
             break;
 
@@ -1243,8 +1245,8 @@ protected:
         _sideEffect = checkForSideEffects(e->left);
         _sideEffect |= checkForSideEffects(e->right);
 
-        if (e->left->type == VarType || e->left->type == StringType
-                || e->right->type == VarType || e->right->type == StringType)
+        if (e->left->type == VarType || e->left->type == StringType || e->left->type == QObjectType
+                || e->right->type == VarType || e->right->type == StringType || e->right->type == QObjectType)
             markAsSideEffect();
     }
 
@@ -1275,22 +1277,42 @@ protected:
 };
 
 class TypeInference: public StmtVisitor, public ExprVisitor {
+    struct DiscoveredType {
+        int type;
+        MemberExpressionResolver memberResolver;
+
+        DiscoveredType() : type(UnknownType) {}
+        DiscoveredType(Type t) : type(t) { Q_ASSERT(type != QObjectType); }
+        explicit DiscoveredType(int t) : type(t) { Q_ASSERT(type != QObjectType); }
+        explicit DiscoveredType(MemberExpressionResolver memberResolver) : type(QObjectType), memberResolver(memberResolver) {}
+
+        bool test(Type t) const { return type & t; }
+        bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
+
+        bool operator!=(Type other) const { return type != other; }
+        bool operator==(Type other) const { return type == other; }
+        bool operator==(const DiscoveredType &other) const { return type == other.type; }
+        bool operator!=(const DiscoveredType &other) const { return type != other.type; }
+    };
+
+    QQmlEnginePrivate *qmlEngine;
     bool _variablesCanEscape;
     const DefUsesCalculator &_defUses;
-    QHash<Temp, int> _tempTypes;
+    QHash<Temp, DiscoveredType> _tempTypes;
     QSet<Stmt *> _worklist;
     struct TypingResult {
-        int type;
+        DiscoveredType type;
         bool fullyTyped;
 
-        TypingResult(int type, bool fullyTyped): type(type), fullyTyped(fullyTyped) {}
-        explicit TypingResult(int type = UnknownType): type(type), fullyTyped(type != UnknownType) {}
+        TypingResult(const DiscoveredType &type = DiscoveredType()) : type(type), fullyTyped(type.type != UnknownType) {}
+        explicit TypingResult(MemberExpressionResolver memberResolver): type(memberResolver), fullyTyped(true) {}
     };
     TypingResult _ty;
 
 public:
-    TypeInference(const DefUsesCalculator &defUses)
-        : _defUses(defUses)
+    TypeInference(QQmlEnginePrivate *qmlEngine, const DefUsesCalculator &defUses)
+        : qmlEngine(qmlEngine)
+        , _defUses(defUses)
         , _ty(UnknownType)
     {}
 
@@ -1336,7 +1358,7 @@ private:
     class PropagateTempTypes: public StmtVisitor, ExprVisitor
     {
     public:
-        PropagateTempTypes(const QHash<Temp, int> &tempTypes)
+        PropagateTempTypes(const QHash<Temp, DiscoveredType> &tempTypes)
             : _tempTypes(tempTypes)
         {}
 
@@ -1352,7 +1374,11 @@ private:
         virtual void visitString(String *) {}
         virtual void visitRegExp(RegExp *) {}
         virtual void visitName(Name *) {}
-        virtual void visitTemp(Temp *e) { e->type = (Type) _tempTypes[*e]; }
+        virtual void visitTemp(Temp *e) {
+            DiscoveredType t = _tempTypes[*e];
+            e->type = (Type) t.type;
+            e->memberResolver = t.memberResolver;
+        }
         virtual void visitClosure(Closure *) {}
         virtual void visitConvert(Convert *e) { e->expr->accept(this); }
         virtual void visitUnop(Unop *e) { e->expr->accept(this); }
@@ -1393,7 +1419,7 @@ private:
         }
 
     private:
-        QHash<Temp, int> _tempTypes;
+        QHash<Temp, DiscoveredType> _tempTypes;
     };
 
 private:
@@ -1429,13 +1455,13 @@ private:
         }
     }
 
-    void setType(Expr *e, int ty) {
+    void setType(Expr *e, DiscoveredType ty) {
         if (Temp *t = e->asTemp()) {
 #if defined(SHOW_SSA)
             qout<<"Setting type for "<< (t->scope?"scoped temp ":"temp ") <<t->index<< " to "<<typeName(Type(ty)) << " (" << ty << ")" << endl;
 #endif
             if (isAlwaysAnObject(t))
-                ty = VarType;
+                ty = DiscoveredType(VarType);
             if (_tempTypes[*t] != ty) {
                 _tempTypes[*t] = ty;
 
@@ -1450,7 +1476,7 @@ private:
                 _worklist += QSet<Stmt *>::fromList(_defUses.uses(*t));
             }
         } else {
-            e->type = (Type) ty;
+            e->type = (Type) ty.type;
         }
     }
 
@@ -1472,8 +1498,10 @@ protected:
     virtual void visitTemp(Temp *e) {
         if (isAlwaysAnObject(e))
             _ty = TypingResult(VarType);
+        else if (e->memberResolver.isValid())
+            _ty = TypingResult(e->memberResolver);
         else
-            _ty = TypingResult(_tempTypes.value(*e, UnknownType));
+            _ty = TypingResult(_tempTypes.value(*e));
         setType(e, _ty.type);
     }
     virtual void visitClosure(Closure *) { _ty = TypingResult(VarType); }
@@ -1505,9 +1533,9 @@ protected:
 
         switch (e->op) {
         case OpAdd:
-            if (leftTy.type & VarType || rightTy.type & VarType)
+            if (leftTy.type.test(VarType) || leftTy.type.test(QObjectType) || rightTy.type.test(VarType) || rightTy.type.test(QObjectType))
                 _ty.type = VarType;
-            else if (leftTy.type & StringType || rightTy.type & StringType)
+            else if (leftTy.type.test(StringType) || rightTy.type.test(StringType))
                 _ty.type = StringType;
             else if (leftTy.type != UnknownType && rightTy.type != UnknownType)
                 _ty.type = DoubleType;
@@ -1574,14 +1602,13 @@ protected:
     }
 
     virtual void visitMember(Member *e) {
-        if (e->type == Member::MemberOfQObject
-            && !e->property->isEnum() // Enums need to go through run-time getters/setters to ensure correct string handling.
-           ) {
-            _ty = TypingResult(irTypeFromPropertyType(e->property->propType));
-            return;
-        }
         _ty = run(e->base);
-        _ty.type = VarType;
+
+        if (_ty.fullyTyped && _ty.type.memberResolver.isValid()) {
+            MemberExpressionResolver &resolver = _ty.type.memberResolver;
+            _ty.type.type = resolver.resolveMember(qmlEngine, &resolver, e);
+        } else
+            _ty.type = VarType;
     }
 
     virtual void visitExp(Exp *s) { _ty = run(s->expr); }
@@ -1611,11 +1638,13 @@ protected:
                 _ty.fullyTyped = false;
                 break;
             }
-            _ty.type |= ty.type;
+            _ty.type.type |= ty.type.type;
             _ty.fullyTyped &= ty.fullyTyped;
+            if (_ty.type.test(QObjectType))
+                _ty.type.memberResolver.clear(); // ### TODO: find common ancestor meta-object
         }
 
-        switch (_ty.type) {
+        switch (_ty.type.type) {
         case UnknownType:
         case UndefinedType:
         case NullType:
@@ -1624,13 +1653,14 @@ protected:
         case UInt32Type:
         case DoubleType:
         case StringType:
+        case QObjectType:
         case VarType:
             // The type is not a combination of two or more types, so we're done.
             break;
 
         default:
             // There are multiple types involved, so:
-            if ((_ty.type & NumberType) && !(_ty.type & ~NumberType))
+            if (_ty.type.isNumber())
                 // The type is any combination of double/int32/uint32, but nothing else. So we can
                 // type it as double.
                 _ty.type = DoubleType;
@@ -1640,18 +1670,6 @@ protected:
         }
 
         setType(s->targetTemp, _ty.type);
-    }
-
-    static int irTypeFromPropertyType(int propType)
-    {
-        switch (propType) {
-        case QMetaType::Bool: return BoolType;
-        case QMetaType::Int: return SInt32Type;
-        case QMetaType::Double: return DoubleType;
-        case QMetaType::QString: return StringType;
-        default: break;
-        }
-        return VarType;
     }
 };
 
@@ -2356,10 +2374,10 @@ bool tryOptimizingComparison(Expr *&expr)
     if (!b)
         return false;
     Const *leftConst = b->left->asConst();
-    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
+    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType || leftConst->type == QObjectType)
         return false;
     Const *rightConst = b->right->asConst();
-    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
+    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType || rightConst->type == QObjectType)
         return false;
 
     QV4::Primitive l = convertToValue(leftConst);
@@ -2570,10 +2588,10 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                     // TODO: If the result of the move is only used in one single cjump, then
                     //       inline the binop into the cjump.
                     Const *leftConst = binop->left->asConst();
-                    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType)
+                    if (!leftConst || leftConst->type == StringType || leftConst->type == VarType || leftConst->type == QObjectType)
                         continue;
                     Const *rightConst = binop->right->asConst();
-                    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType)
+                    if (!rightConst || rightConst->type == StringType || rightConst->type == VarType || rightConst->type == QObjectType)
                         continue;
 
                     QV4::Primitive lc = convertToValue(leftConst);
@@ -2957,7 +2975,7 @@ bool LifeTimeInterval::lessThanForTemp(const LifeTimeInterval &r1, const LifeTim
     return r1.temp() < r2.temp();
 }
 
-void Optimizer::run()
+void Optimizer::run(QQmlEnginePrivate *qmlEngine)
 {
 #if defined(SHOW_SSA)
     qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
@@ -2999,7 +3017,7 @@ void Optimizer::run()
 //        showMeTheCode(function);
 
 //        qout << "Running type inference..." << endl;
-        TypeInference(defUses).run(function);
+        TypeInference(qmlEngine, defUses).run(function);
 //        showMeTheCode(function);
 
 //        qout << "Doing type propagation..." << endl;

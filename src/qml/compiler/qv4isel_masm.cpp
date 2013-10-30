@@ -539,10 +539,11 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     return codeRef;
 }
 
-InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _block(0)
     , _as(0)
+    , qmlEngine(qmlEngine)
 {
     compilationUnit = new CompilationUnit;
     compilationUnit->codeRefs.resize(module->functions.size());
@@ -561,7 +562,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(_function, function);
 
     V4IR::Optimizer opt(_function);
-    opt.run();
+    opt.run(qmlEngine);
 
 #if (CPU(X86_64) && (OS(MAC_OS_X) || OS(LINUX))) || (CPU(X86) && OS(LINUX))
     static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();

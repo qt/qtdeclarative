@@ -72,6 +72,7 @@ QString typeName(Type t)
     case NumberType: return QStringLiteral("number");
     case StringType: return QStringLiteral("string");
     case VarType: return QStringLiteral("var");
+    case QObjectType: return QStringLiteral("qobject");
     default: return QStringLiteral("multiple");
     }
 }
@@ -274,8 +275,16 @@ static QString dumpStart(const Expr *e) {
     if (e->type == UnknownType)
 //        return QStringLiteral("**UNKNOWN**");
         return QString();
-    else
-        return typeName(e->type) + QStringLiteral("{");
+
+    QString result = typeName(e->type);
+    const Temp *temp = const_cast<Expr*>(e)->asTemp();
+    if (e->type == QObjectType && temp && temp->memberResolver.data) {
+        result += QLatin1Char('<');
+        result += QString::fromUtf8(static_cast<QQmlPropertyCache*>(temp->memberResolver.data)->className());
+        result += QLatin1Char('>');
+    }
+    result += QLatin1Char('{');
+    return result;
 }
 
 static const char *dumpEnd(const Expr *e) {

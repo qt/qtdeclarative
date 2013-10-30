@@ -51,6 +51,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmlengine_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 
@@ -229,7 +230,7 @@ void Script::parse()
             return;
 
         QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, &module, &jsGenerator));
+        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
         if (inheritContext)
             isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *compilationUnit = isel->compile();
@@ -355,7 +356,7 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
     }
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(engine->iselFactory->create(engine->executableAllocator, &module, &jsGenerator));
+    QScopedPointer<QQmlJS::EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, &module, &jsGenerator));
     isel->setUseFastLookups(false);
     return isel->compile();
 }

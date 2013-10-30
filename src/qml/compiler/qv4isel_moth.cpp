@@ -152,8 +152,9 @@ inline bool isBoolType(V4IR::Expr *e)
 
 } // anonymous namespace
 
-InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+InstructionSelection::InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
+    , qmlEngine(qmlEngine)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
@@ -191,7 +192,7 @@ void InstructionSelection::run(int functionIndex)
     qSwap(codeEnd, _codeEnd);
 
     V4IR::Optimizer opt(_function);
-    opt.run();
+    opt.run(qmlEngine);
     if (opt.isInSSA()) {
         opt.convertOutOfSSA();
         opt.showMeTheCode(_function);

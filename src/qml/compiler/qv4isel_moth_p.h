@@ -68,7 +68,7 @@ class Q_QML_EXPORT InstructionSelection:
         public EvalInstructionSelection
 {
 public:
-    InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
+    InstructionSelection(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator);
     ~InstructionSelection();
 
     virtual void run(int functionIndex);
@@ -168,6 +168,8 @@ private:
     void patchJumpAddresses();
     QByteArray squeezeCode() const;
 
+    QQmlEnginePrivate *qmlEngine;
+
     V4IR::BasicBlock *_block;
     V4IR::BasicBlock *_nextBlock;
 
@@ -189,8 +191,8 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 {
 public:
     virtual ~ISelFactory() {}
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
-    { return new InstructionSelection(execAllocator, module, jsGenerator); }
+    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
+    { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator); }
     virtual bool jitCompileRegexps() const
     { return false; }
 };

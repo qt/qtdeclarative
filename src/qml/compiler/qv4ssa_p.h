@@ -46,6 +46,7 @@
 
 QT_BEGIN_NAMESPACE
 class QTextStream;
+class QQmlEnginePrivate;
 
 namespace QQmlJS {
 namespace V4IR {
@@ -129,7 +130,7 @@ public:
         , inSSA(false)
     {}
 
-    void run();
+    void run(QQmlEnginePrivate *qmlEngine);
     void convertOutOfSSA();
 
     bool isInSSA() const

@@ -73,6 +73,8 @@ QT_BEGIN_NAMESPACE
 class QTextStream;
 class QQmlType;
 class QQmlPropertyData;
+class QQmlPropertyCache;
+class QQmlEnginePrivate;
 
 namespace QV4 {
 struct ExecutionContext;
@@ -181,7 +183,8 @@ enum Type {
     NumberType    = SInt32Type | UInt32Type | DoubleType,
 
     StringType    = 1 << 7,
-    VarType       = 1 << 8
+    QObjectType   = 1 << 8,
+    VarType       = 1 << 9
 };
 
 inline bool strictlyEqualTypes(Type t1, Type t2)
@@ -216,6 +219,21 @@ struct StmtVisitor {
     virtual void visitCJump(CJump *) = 0;
     virtual void visitRet(Ret *) = 0;
     virtual void visitPhi(Phi *) = 0;
+};
+
+
+struct MemberExpressionResolver
+{
+    typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
+
+    MemberExpressionResolver()
+        : resolveMember(0), data(0) {}
+
+    bool isValid() const { return !!resolveMember; }
+    void clear() { *this = MemberExpressionResolver(); }
+
+    ResolveFunction resolveMember;
+    void *data; // Could be pointer to meta object, QQmlTypeNameCache, etc. - depends on resolveMember implementation
 };
 
 struct Expr {
@@ -363,6 +381,8 @@ struct Temp: Expr {
     unsigned scope : 28; // how many scopes outside the current one?
     unsigned kind  : 3;
     unsigned isArgumentsOrEval : 1;
+    // Used when temp is used as base in member expression
+    MemberExpressionResolver memberResolver;
 
     void init(unsigned kind, unsigned index, unsigned scope)
     {
@@ -536,7 +556,6 @@ struct Member: Expr {
         this->type = MemberByName;
         this->base = base;
         this->name = name;
-        this->memberIndex = -1;
         this->property = 0;
     }
 
@@ -554,6 +573,7 @@ struct Member: Expr {
         this->type = MemberOfQObject;
         this->base = base;
         this->name = name;
+        this->memberIndex = -1;
         this->property = property;
     }
 
@@ -937,6 +957,7 @@ public:
         Temp *newTemp = f->New<Temp>();
         newTemp->init(t->kind, t->index, t->scope);
         newTemp->type = t->type;
+        newTemp->memberResolver = t->memberResolver;
         return newTemp;
     }
 

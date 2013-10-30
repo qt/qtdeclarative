@@ -1311,47 +1311,55 @@ static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, co
     return pd;
 }
 
-V4IR::Expr *JSCodeGen::member(V4IR::Expr *base, const QString *name)
+static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+
+static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpressionResolver *resolver, V4IR::Member *member)
 {
-    V4IR::Member *baseAsMember = base->asMember();
-    if (baseAsMember) {
-        QQmlPropertyCache *cache = 0;
+    V4IR::Type result = V4IR::VarType;
+    // Try to resolve members of QObjects in QML mode
+    if (qmlEngine) {
+        QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
+        QQmlPropertyData *property = member->property;
 
-        if (baseAsMember->type == V4IR::Member::MemberOfQObject
-            && baseAsMember->property->isQObject()) {
-
-            bool propertySuitable = baseAsMember->property->isFinal();
-
-            if (!propertySuitable) {
-                // Properties of the scope or context object do not need to be final, as we
-                // intend to find the version of a property available at compile time, not at run-time.
-                if (V4IR::Name *baseName = baseAsMember->base->asName())
-                    propertySuitable = baseName->builtin == V4IR::Name::builtin_qml_scope_object || baseName->builtin == V4IR::Name::builtin_qml_context_object;
-            }
-
-            // Check if it's suitable for caching
-            if (propertySuitable)
-                cache = engine->propertyCacheForType(baseAsMember->property->propType);
-        } else if (baseAsMember->type == V4IR::Member::MemberOfQmlContext) {
-            // Similarly, properties of an id referenced object also don't need to be final, because
-            // we intend to find the version of a property available at compile time, not at run-time.
-            foreach (const IdMapping &mapping, _idObjects) {
-                if (baseAsMember->memberIndex == mapping.idIndex) {
-                    cache = mapping.type;
-                    break;
-                }
+        if (!property && metaObject) {
+            QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0);
+            if (candidate && candidate->isFinal() && metaObject->isAllowedInRevision(candidate)
+                && !candidate->isFunction()) {
+                property = candidate;
+                member->property = candidate; // Cache for next iteration and isel needs it.
             }
         }
 
-        if (cache) {
-            if (QQmlPropertyData *pd = lookupQmlCompliantProperty(cache, *name)) {
-                const unsigned baseTemp = _block->newTemp();
-                move(_block->TEMP(baseTemp), base);
-                return _block->QML_QOBJECT_PROPERTY(_block->TEMP(baseTemp), name, pd);
+        if (property) {
+            // Enums cannot be mapped to IR types, they need to go through the run-time handling
+            // of accepting strings that will then be converted to the right values.
+            if (property->isEnum())
+                return V4IR::VarType;
+
+            switch (property->propType) {
+            case QMetaType::Bool: result = V4IR::BoolType; break;
+            case QMetaType::Int: result = V4IR::SInt32Type; break;
+            case QMetaType::Double: result = V4IR::DoubleType; break;
+            case QMetaType::QString: result = V4IR::StringType; break;
+            default:
+                if (property->isQObject()) {
+                    if (QQmlPropertyCache *cache = qmlEngine->propertyCacheForType(property->propType)) {
+                        initMetaObjectResolver(resolver, cache);
+                        return V4IR::QObjectType;
+                    }
+                }
+                break;
             }
         }
     }
-    return QQmlJS::Codegen::member(base, name);
+    resolver->clear();
+    return result;
+}
+
+static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject)
+{
+    resolver->resolveMember = &resolveMetaObjectProperty;
+    resolver->data = metaObject;
 }
 
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
@@ -1393,9 +1401,12 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (pd) {
             if (!pd->isConstant())
                 _function->scopeObjectDependencies.insert(pd);
-            int base = _block->newTemp();
-            move(_block->TEMP(base), _block->NAME(V4IR::Name::builtin_qml_scope_object, line, col));
-            return  _block->QML_QOBJECT_PROPERTY(_block->TEMP(base), _function->newString(name), pd);
+            int temp = _block->newTemp();
+            _block->MOVE(_block->TEMP(temp), _block->NAME(V4IR::Name::builtin_qml_scope_object, line, col));
+            V4IR::Temp *base = _block->TEMP(temp);
+            initMetaObjectResolver(&base->memberResolver, _scopeObject);
+            return _block->QML_QOBJECT_PROPERTY(base,
+                                                _function->newString(name), pd);
         }
     }
 
@@ -1407,9 +1418,11 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
         if (pd) {
             if (!pd->isConstant())
                 _function->contextObjectDependencies.insert(pd);
-            int base = _block->newTemp();
-            move(_block->TEMP(base), _block->NAME(V4IR::Name::builtin_qml_context_object, line, col));
-            return _block->QML_QOBJECT_PROPERTY(_block->TEMP(base), _function->newString(name), pd);
+            int temp = _block->newTemp();
+            _block->MOVE(_block->TEMP(temp), _block->NAME(V4IR::Name::builtin_qml_context_object, line, col));
+            V4IR::Temp *base = _block->TEMP(temp);
+            initMetaObjectResolver(&base->memberResolver, _contextObject);
+            return _block->QML_QOBJECT_PROPERTY(base, _function->newString(name), pd);
         }
     }
 

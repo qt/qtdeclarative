@@ -293,7 +293,7 @@ protected:
         _exceptionHandlers.pop();
     }
 
-    virtual V4IR::Expr *member(V4IR::Expr *base, const QString *name); // Re-implemented by QML to resolve QObject property members
+    V4IR::Expr *member(V4IR::Expr *base, const QString *name);
     V4IR::Expr *subscript(V4IR::Expr *base, V4IR::Expr *index);
     V4IR::Expr *argument(V4IR::Expr *expr);
     V4IR::Expr *reference(V4IR::Expr *expr);

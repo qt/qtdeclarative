@@ -589,6 +589,7 @@ private:
         Q_ASSERT(!_defs.contains(*t));
         bool canHaveReg = true;
         switch (t->type) {
+        case QObjectType:
         case VarType:
         case StringType:
         case UndefinedType:

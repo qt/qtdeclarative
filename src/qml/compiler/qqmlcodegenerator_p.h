@@ -364,9 +364,6 @@ struct Q_QML_EXPORT JSCodeGen : public QQmlJS::Codegen
     // Returns mapping from input functions to index in V4IR::Module::functions / compiledData->runtimeFunctions
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames);
 
-    // Resolve QObject members with the help of QQmlEngine's meta type registry
-    virtual V4IR::Expr *member(V4IR::Expr *base, const QString *name);
-
 protected:
     virtual V4IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
 

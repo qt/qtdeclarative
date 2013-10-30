@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlEnginePrivate;
+
 namespace QV4 {
 class ExecutableAllocator;
 struct Function;
@@ -92,7 +94,7 @@ class Q_QML_EXPORT EvalISelFactory
 {
 public:
     virtual ~EvalISelFactory() = 0;
-    virtual EvalInstructionSelection *create(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
+    virtual EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) = 0;
     virtual bool jitCompileRegexps() const = 0;
 };
 

@@ -919,7 +919,7 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
     if (!jsModule->functions.isEmpty()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         QV4::Compiler::JSUnitGenerator jsUnitGenerator(jsModule.data());
-        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(v4->executableAllocator, jsModule.data(), &jsUnitGenerator));
+        QScopedPointer<QQmlJS::EvalInstructionSelection> isel(v4->iselFactory->create(enginePrivate, v4->executableAllocator, jsModule.data(), &jsUnitGenerator));
         isel->setUseFastLookups(false);
         QV4::CompiledData::CompilationUnit *jsUnit = isel->compile(/*generated unit data*/true);
         output->compilationUnit = jsUnit;
