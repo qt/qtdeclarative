@@ -697,14 +697,20 @@ void InstructionSelection::run(int functionIndex)
     _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::SafeValue)*locals), Assembler::LocalsRegister);
     _as->storePtr(Assembler::LocalsRegister, Address(Assembler::ScratchRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
 
+    int lastLine = -1;
     for (int i = 0, ei = _function->basicBlocks.size(); i != ei; ++i) {
         V4IR::BasicBlock *nextBlock = (i < ei - 1) ? _function->basicBlocks[i + 1] : 0;
         _block = _function->basicBlocks[i];
         _as->registerBlock(_block, nextBlock);
 
         foreach (V4IR::Stmt *s, _block->statements) {
-            if (s->location.isValid())
+            if (s->location.isValid()) {
                 _as->recordLineNumber(s->location.startLine);
+                if (s->location.startLine != lastLine) {
+                    _as->saveInstructionPointer(Assembler::ScratchRegister);
+                    lastLine = s->location.startLine;
+                }
+            }
             s->accept(this);
         }
     }

@@ -468,7 +468,6 @@ public:
     }
 
     void callAbsolute(const char* functionName, FunctionPtr function) {
-        saveInstructionPointer(ScratchRegister);
         CallToLink ctl;
         ctl.call = call();
         ctl.externalFunction = function;
@@ -477,13 +476,11 @@ public:
     }
 
     void callAbsolute(const char* /*functionName*/, Address addr) {
-        saveInstructionPointer(ScratchRegister);
         call(addr);
     }
 
     void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
     {
-        saveInstructionPointer(ScratchRegister);
         call(relativeCall.addr);
     }
 
