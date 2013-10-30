@@ -286,27 +286,6 @@ Function *Script::function()
     return vmFunction;
 }
 
-struct PrecompilingCodeGen : public QQmlJS::Codegen
-{
-    struct CompileError {};
-
-    PrecompilingCodeGen(bool strict)
-        : QQmlJS::Codegen(strict)
-    {}
-
-    virtual void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail)
-    {
-        QQmlJS::Codegen::throwSyntaxError(loc, detail);
-        throw CompileError();
-    }
-
-    virtual void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail)
-    {
-        QQmlJS::Codegen::throwReferenceError(loc, detail);
-        throw CompileError();
-    }
-};
-
 CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const QUrl &url, const QString &source, bool parseAsBinding, QList<QQmlError> *reportedErrors)
 {
     using namespace QQmlJS;
@@ -350,10 +329,10 @@ CompiledData::CompilationUnit *Script::precompile(ExecutionEngine *engine, const
         return 0;
     }
 
-    PrecompilingCodeGen cg(/*strict mode*/false);
-    try {
-        cg.generateFromProgram(url.toString(), source, program, &module, parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::GlobalCode);
-    } catch (const PrecompilingCodeGen::CompileError &) {
+    QQmlJS::Codegen cg(/*strict mode*/false);
+    cg.generateFromProgram(url.toString(), source, program, &module, parseAsBinding ? QQmlJS::Codegen::QmlBinding : QQmlJS::Codegen::GlobalCode);
+    errors = cg.errors();
+    if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << cg.errors();
         return 0;

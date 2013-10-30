@@ -1,5 +1,3 @@
-CONFIG += exceptions
-
 CONFIG += warn_off
 
 INCLUDEPATH += $$PWD

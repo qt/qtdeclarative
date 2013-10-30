@@ -4,6 +4,4 @@ SOURCES = main.cpp
 
 include($$PWD/../../src/3rdparty/masm/masm-defs.pri)
 
-CONFIG += exceptions
-
 load(qt_tool)
