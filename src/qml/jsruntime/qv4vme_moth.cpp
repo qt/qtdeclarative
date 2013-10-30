@@ -638,19 +638,19 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(LoadQmlIdObject)
-        VALUE(instr.result) = __qmljs_get_id_object(context, instr.id);
+        VALUE(instr.result) = __qmljs_get_id_object(static_cast<QV4::NoThrowContext*>(context), instr.id);
     MOTH_END_INSTR(LoadQmlIdObject)
 
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-        VALUE(instr.result) = __qmljs_get_imported_scripts(context);
+        VALUE(instr.result) = __qmljs_get_imported_scripts(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
     MOTH_BEGIN_INSTR(LoadQmlContextObject)
-        VALUE(instr.result) = __qmljs_get_context_object(context);
+        VALUE(instr.result) = __qmljs_get_context_object(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadContextObject)
 
     MOTH_BEGIN_INSTR(LoadQmlScopeObject)
-        VALUE(instr.result) = __qmljs_get_scope_object(context);
+        VALUE(instr.result) = __qmljs_get_scope_object(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadScopeObject)
 
 #ifdef MOTH_THREADED_INTERPRETER

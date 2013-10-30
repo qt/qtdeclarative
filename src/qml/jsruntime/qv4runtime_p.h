@@ -111,6 +111,12 @@ struct ErrorObject;
 struct ExecutionEngine;
 struct InternalClass;
 
+// This is a trick to tell the code generators that functions taking a NoThrowContext won't
+// throw exceptions and therefore don't need a check after the call.
+struct NoThrowContext : public ExecutionContext
+{
+};
+
 // context
 QV4::ReturnedValue __qmljs_call_activation_property(QV4::ExecutionContext *, const QV4::StringRef name, CallDataRef callData);
 QV4::ReturnedValue __qmljs_call_property(QV4::ExecutionContext *context, const QV4::StringRef name, CallDataRef callData);
@@ -163,10 +169,10 @@ QV4::ReturnedValue __qmljs_construct_global_lookup(QV4::ExecutionContext *contex
 QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index);
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
-QV4::ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id);
-QV4::ReturnedValue __qmljs_get_imported_scripts(ExecutionContext *ctx);
-QV4::ReturnedValue __qmljs_get_context_object(ExecutionContext *ctx);
-QV4::ReturnedValue __qmljs_get_scope_object(ExecutionContext *ctx);
+QV4::ReturnedValue __qmljs_get_id_object(NoThrowContext *ctx, int id);
+QV4::ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx);
+QV4::ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx);
+QV4::ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex);
 void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
 

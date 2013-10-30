@@ -104,6 +104,22 @@ template <typename A>
 struct ExceptionCheck<QV4::ExecutionContext *(*)(QV4::ExecutionContext *, A)> {
     enum { NeedsCheck = 0 };
 };
+template <>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowContext *)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowContext *, A)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B>
+struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowContext *, A, B)> {
+    enum { NeedsCheck = 0 };
+};
+template <typename A, typename B, typename C>
+struct ExceptionCheck<void (*)(QV4::NoThrowContext *, A, B, C)> {
+    enum { NeedsCheck = 0 };
+};
 
 class Assembler : public JSC::MacroAssembler
 {

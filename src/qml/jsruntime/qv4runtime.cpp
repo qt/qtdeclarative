@@ -1170,19 +1170,19 @@ ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
     return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue __qmljs_get_id_object(ExecutionContext *ctx, int id)
+ReturnedValue __qmljs_get_id_object(NoThrowContext *ctx, int id)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
     return QObjectWrapper::wrap(ctx->engine, context->idValues[id].data());
 }
 
-ReturnedValue __qmljs_get_context_object(ExecutionContext *ctx)
+ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
     return QObjectWrapper::wrap(ctx->engine, context->contextObject);
 }
 
-ReturnedValue __qmljs_get_scope_object(ExecutionContext *ctx)
+ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx)
 {
     Scope scope(ctx);
     QV4::Scoped<QmlContextWrapper> c(scope, ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
@@ -1211,7 +1211,7 @@ void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, 
     wrapper->setProperty(ctx, propertyIndex, value);
 }
 
-ReturnedValue __qmljs_get_imported_scripts(ExecutionContext *ctx)
+ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx)
 {
     QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
     return context->importedScripts.value();
