@@ -3632,6 +3632,8 @@ bool QQmlCompiler::completeComponentBuild()
     QQmlJS::Engine *jsEngine = parser.jsEngine();
     QQmlJS::MemoryPool *pool = jsEngine->pool();
 
+    QHash<int, QString> expressionNames;
+
     for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
         JSBindingReference &binding = *b;
@@ -3648,6 +3650,7 @@ bool QQmlCompiler::completeComponentBuild()
         ComponentCompileState::PerObjectCompileData *cd = &compileState->jsCompileData[b->bindingContext.object];
         cd->functionsToCompile.append(node);
         binding.compiledIndex = cd->functionsToCompile.count() - 1;
+        expressionNames.insert(binding.compiledIndex, binding.property->name().toString().prepend(QStringLiteral("expression for ")));
 
         if (componentStats)
             componentStats->componentStat.scriptBindings.append(b->value->location);
@@ -3680,7 +3683,7 @@ bool QQmlCompiler::completeComponentBuild()
 
             jsCodeGen.beginObjectScope(scopeObject->metatype);
 
-            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile);
+            cd->runtimeFunctionIndices = jsCodeGen.generateJSCodeForFunctionsAndBindings(cd->functionsToCompile, expressionNames);
 
             foreach (const QQmlCompilerTypes::ComponentCompileState::CompiledMetaMethod &cmm, cd->compiledMetaMethods) {
                 typedef QQmlVMEMetaData VMD;

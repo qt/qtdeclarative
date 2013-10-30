@@ -1226,7 +1226,7 @@ void JSCodeGen::beginObjectScope(QQmlPropertyCache *scopeObject)
     _scopeObject = scopeObject;
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions)
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::Node*> &functions, const QHash<int, QString> &functionNames)
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
@@ -1257,7 +1257,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
         if (function)
             name = function->name.toString();
         else
-            name = QStringLiteral("%qml-expression-entry");
+            name = functionNames.value(i, QStringLiteral("%qml-expression-entry"));
 
         AST::SourceElements *body;
         if (function)
