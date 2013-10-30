@@ -311,6 +311,7 @@ QSGRenderContext::QSGRenderContext(QSGContext *context)
     , m_atlasManager(0)
     , m_depthStencilManager(0)
     , m_distanceFieldCacheManager(0)
+    , m_brokenIBOs(false)
 {
 }
 
@@ -407,6 +408,12 @@ void QSGRenderContext::initialize(QOpenGLContext *context)
     m_gl = context;
     m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
     m_sg->renderContextInitialized(this);
+
+#ifdef Q_OS_LINUX
+    const char *vendor = (const char *) glGetString(GL_VENDOR);
+    if (strstr(vendor, "nouveau"))
+        m_brokenIBOs = true;
+#endif
 
     emit initialized();
 }

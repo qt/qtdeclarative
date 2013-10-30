@@ -1889,7 +1889,14 @@ void Renderer::renderMergedBatch(const Batch *batch)
     updateClip(gn->clipList(), batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+
+    char *indexBase = 0;
+    if (m_context->hasBrokenIndexBufferObjects()) {
+        indexBase = batch->vbo.data;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    } else {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+    }
 
 
     QSGMaterial *material = gn->activeMaterial();
@@ -1924,7 +1931,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
         }
         glVertexAttribPointer(sms->pos_order, 1, GL_FLOAT, false, 0, (void *) (qintptr) (draw.zorders));
 
-        glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (draw.indices));
+        glDrawElements(g->drawingMode(), draw.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (indexBase + draw.indices));
     }
 }
 
@@ -1957,8 +1964,15 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     updateClip(gn->clipList(), batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
-    if (batch->indexCount)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+    char *indexBase = 0;
+    if (batch->indexCount) {
+        if (m_context->hasBrokenIndexBufferObjects()) {
+            indexBase = batch->vbo.data;
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        } else {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->vbo.id);
+        }
+    }
 
     // We always have dirty matrix as all batches are at a unique z range.
     QSGMaterialShader::RenderState::DirtyStates dirty = QSGMaterialShader::RenderState::DirtyMatrix;
@@ -1977,7 +1991,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     }
 
     int vOffset = 0;
-    int iOffset = batch->vertexCount * gn->geometry()->sizeOfVertex();
+    char *iOffset = indexBase + batch->vertexCount * gn->geometry()->sizeOfVertex();
 
     QMatrix4x4 rootMatrix = batch->root ? matrixForRoot(batch->root) : QMatrix4x4();
 
@@ -2008,7 +2022,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         }
 
         if (g->indexCount())
-            glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), (void *) (qintptr) iOffset);
+            glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), iOffset);
         else
             glDrawArrays(g->drawingMode(), 0, g->vertexCount());
 

@@ -1385,6 +1385,12 @@ void QQuickImageParticle::finishBuildParticleNodes()
     }
 #endif
 
+#ifdef Q_OS_LINUX
+    // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
+    if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "nouveau"))
+        perfLevel = Deformable;
+#endif
+
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
 

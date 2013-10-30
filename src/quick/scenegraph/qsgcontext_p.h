@@ -109,10 +109,11 @@ public:
 
     static QSGRenderContext *from(QOpenGLContext *context);
 
+    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
+
 Q_SIGNALS:
     void initialized();
     void invalidated();
-
 
 public Q_SLOTS:
     void textureFactoryDestroyed(QObject *o);
@@ -129,6 +130,8 @@ protected:
     QSGDistanceFieldGlyphCacheManager *m_distanceFieldCacheManager;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
+
+    bool m_brokenIBOs;
 };
 
 
