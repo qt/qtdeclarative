@@ -197,21 +197,21 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     QList<QQmlError> errors = component.errors();
     QCOMPARE(errors.count(), 1);
 
+    QString expectedError = QLatin1String("module \"org.qtproject.WrongCase\" plugin \"PluGin\" not found");
+
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
+    bool caseSensitive = true;
 #if defined(Q_OS_MAC)
+    caseSensitive = pathconf(QDir::currentPath().toLatin1().constData(), _PC_CASE_SENSITIVE);
     QString libname = "libPluGin.dylib";
 #elif defined(Q_OS_WIN32)
+    caseSensitive = false;
     QString libname = "PluGin.dll";
 #endif
-    QString expectedError = QLatin1String("plugin cannot be loaded for module \"org.qtproject.WrongCase\": File name case mismatch for \"") + QDir(m_importsDirectory).filePath("org/qtproject/WrongCase/" + libname) + QLatin1String("\"");
-#else
-    QString expectedError = QLatin1String("module \"org.qtproject.WrongCase\" plugin \"PluGin\" not found");
+    if (!caseSensitive)
+        expectedError = QLatin1String("plugin cannot be loaded for module \"org.qtproject.WrongCase\": File name case mismatch for \"") + QDir(m_importsDirectory).filePath("org/qtproject/WrongCase/" + libname) + QLatin1String("\"");
 #endif
 
-#ifdef Q_OS_OSX
-    if (QSysInfo::MacintoshVersion == QSysInfo::MV_10_8)
-        QEXPECT_FAIL("", "See QTBUG-32652", Continue);
-#endif
     QCOMPARE(errors.at(0).description(), expectedError);
 }
 
