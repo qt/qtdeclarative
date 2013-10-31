@@ -75,7 +75,7 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.WrongCase");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.WrongCase");
         qmlRegisterType<MyPluginType>(uri, 1, 0, "MyPluginType");
     }
 };

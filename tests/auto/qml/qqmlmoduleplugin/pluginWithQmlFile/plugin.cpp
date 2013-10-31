@@ -51,7 +51,7 @@ class MyPlugin : public QQmlExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.AutoTestPluginWithQmlFile");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestPluginWithQmlFile");
     }
 };
 

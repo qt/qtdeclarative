@@ -1,2 +1,2 @@
-module com.nokia.AwesomeModule
+module org.qtproject.AwesomeModule
 plugin invalidNamespaceModule

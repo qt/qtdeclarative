@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += plugin
 SOURCES = plugin.cpp
 QT = core qml
-DESTDIR = ../imports/com/nokia/InvalidFirstCommandModule
+DESTDIR = ../imports/org/qtproject/InvalidFirstCommandModule
 
 QT += core-private gui-private qml-private
 

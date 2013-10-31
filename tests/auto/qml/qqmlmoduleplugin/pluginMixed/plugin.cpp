@@ -65,7 +65,7 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.AutoTestQmlMixedPluginType");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlMixedPluginType");
         qmlRegisterType<BarPluginType>(uri, 1, 0, "Bar");
     }
 };

@@ -61,10 +61,10 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.NonstrictModule");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.NonstrictModule");
 
         // Install into a namespace that should be protected
-        qmlRegisterType<MyPluginType>("com.nokia.StrictModule", 1, 0, "MyPluginType");
+        qmlRegisterType<MyPluginType>("org.qtproject.StrictModule", 1, 0, "MyPluginType");
     }
 };
 

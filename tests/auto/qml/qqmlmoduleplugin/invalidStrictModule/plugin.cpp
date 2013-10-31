@@ -61,8 +61,8 @@ public:
 
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == "com.nokia.InvalidStrictModule");
-        qmlRegisterType<MyPluginType>("com.nokia.SomeOtherModule", 1, 0, "MyPluginType");
+        Q_ASSERT(QLatin1String(uri) == "org.qtproject.InvalidStrictModule");
+        qmlRegisterType<MyPluginType>("org.qtproject.SomeOtherModule", 1, 0, "MyPluginType");
     }
 };
 

@@ -1,4 +1,4 @@
-import com.nokia.AutoTestQmlMixedPluginType 1.0
+import org.qtproject.AutoTestQmlMixedPluginType 1.0
 import QtQuick 2.0
 
 Item {

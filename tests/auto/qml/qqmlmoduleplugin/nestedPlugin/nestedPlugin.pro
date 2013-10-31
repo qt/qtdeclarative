@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += nestedPlugin
 SOURCES = nestedPlugin.cpp
 QT = core qml
-DESTDIR = ../imports/com/nokia/AutoTestQmlNestedPluginType
+DESTDIR = ../imports/org/qtproject/AutoTestQmlNestedPluginType
 
 QT += core-private gui-private qml-private
 

@@ -3,7 +3,7 @@ CONFIG += plugin
 SOURCES = plugin.cpp
 QT = core qml
 TARGET = Plugin
-DESTDIR = ../imports/com/nokia/WrongCase
+DESTDIR = ../imports/org/qtproject/WrongCase
 
 QT += core-private gui-private qml-private
 

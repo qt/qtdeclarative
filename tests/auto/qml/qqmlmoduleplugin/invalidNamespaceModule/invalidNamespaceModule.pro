@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += plugin
 SOURCES = plugin.cpp
 QT = core qml
-DESTDIR = ../imports/com/nokia/InvalidNamespaceModule
+DESTDIR = ../imports/org/qtproject/InvalidNamespaceModule
 
 QT += core-private gui-private qml-private
 
