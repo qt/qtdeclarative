@@ -56,6 +56,8 @@ private slots:
     void manyWindows_data();
     void manyWindows();
 
+    void render_data();
+    void render();
 };
 
 template <typename T> class ScopedList : public QList<T> {
@@ -229,6 +231,173 @@ void tst_SceneGraph::manyWindows()
     }
 }
 
+struct Sample {
+    Sample(int xx, int yy, qreal rr, qreal gg, qreal bb, qreal errorMargin = 0.05)
+        : x(xx)
+        , y(yy)
+        , r(rr)
+        , g(gg)
+        , b(bb)
+        , tolerance(errorMargin)
+    {
+    }
+    Sample(const Sample &o) : x(o.x), y(o.y), r(o.r), g(o.g), b(o.b), tolerance(o.tolerance) { }
+    Sample() : x(0), y(0), r(0), g(0), b(0), tolerance(0) { }
+
+    QString toString(const QImage &image) const {
+        QColor color(image.pixel(x,y));
+        return QString::fromLatin1("pixel(%1,%2), rgb(%3,%4,%5), tolerance=%6 -- image(%7,%8,%9)")
+                .arg(x).arg(y)
+                .arg(r).arg(g).arg(b)
+                .arg(tolerance)
+                .arg(color.redF()).arg(color.greenF()).arg(color.blueF());
+    }
+
+    bool check(const QImage &image) {
+        QColor color(image.pixel(x, y));
+        return qAbs(color.redF() - r) <= tolerance
+                && qAbs(color.greenF() - g) <= tolerance
+                && qAbs(color.blueF() - b) <= tolerance;
+    }
+
+
+    int x, y;
+    qreal r, g, b;
+    qreal tolerance;
+};
+
+static Sample sample_from_regexp(QRegExp *re) {
+    return Sample(re->cap(1).toInt(),
+                  re->cap(2).toInt(),
+                  re->cap(3).toFloat(),
+                  re->cap(4).toFloat(),
+                  re->cap(5).toFloat(),
+                  re->cap(6).toFloat()
+                  );
+}
+
+Q_DECLARE_METATYPE(Sample);
+
+/*
+  The render() test implements a small test framework for itself with
+  the purpose of testing odds and ends of the scene graph
+  rendering. Each .qml file can consist of one or two stages. The
+  first stage is when the file is first displayed. The content is
+  grabbed and matched against 'base' samples defined in the .qml file
+  itself.  The samples contain a pixel position, and RGB value and a
+  margin of error. The samples are defined in the .qml file so it is
+  easy to make the connection between colors and positions on the screen.
+
+  If the base stage samples all succeed, the test emits
+  'enterFinalStage' on the root item and waits for the .qml file to
+  update the value of 'finalStageComplete' The test can set this
+  directly or run an animation and set it later. Once the
+  'finalStageComplete' variable is true, we grab and match against the
+  second set of samples 'final'
+
+  The samples in the .qml file are defined in comments on the format:
+      #base: x y r g b error-tolerance
+      #final: x y r g b error-tolerance
+      - x and y are integers
+      - r g b are floats in the range of 0.0-1.0
+      - error-tolerance is a float in the range of 0.0-1.0
+
+  We also include a
+      #samples: count
+  to sanity check that all base/final samples were matched correctly
+  as the matching regexp is a bit crude.
+
+  To add new tests, add them to the 'files' list and put #base,
+  #final, #samples tags into the .qml file
+*/
+
+void tst_SceneGraph::render_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QList<Sample> >("baseStage");
+    QTest::addColumn<QList<Sample> >("finalStage");
+
+    QList<QString> files;
+    files << "data/render_DrawSets.qml"
+          << "data/render_Overlap.qml"
+          << "data/render_MovingOverlap.qml"
+          << "data/render_BreakOpacityBatch.qml"
+        ;
+
+    QRegExp sampleCount("#samples: *(\\d+)");
+    //                          X:int   Y:int   R:float       G:float       B:float       Error:float
+    QRegExp baseSamples("#base: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
+    QRegExp finalSamples("#final: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
+
+    foreach (QString fileName, files) {
+        QFile file(fileName);
+        if (!file.open(QFile::ReadOnly)) {
+            qFatal("render_data: QFile::open failed! file=%s, error=%s",
+                   qPrintable(fileName), qPrintable(file.errorString()));
+        }
+        QStringList contents = QString::fromLatin1(file.readAll()).split(QLatin1Char('\n'));
+
+        int samples = -1;
+        foreach (QString line, contents) {
+            if (sampleCount.indexIn(line) >= 0) {
+                samples = sampleCount.cap(1).toInt();
+                break;
+            }
+        }
+        if (samples == -1)
+            qFatal("render_data: failed to find string '#samples: [count], file=%s", qPrintable(fileName));
+
+        QList<Sample> baseStage, finalStage;
+        foreach (QString line, contents) {
+            if (baseSamples.indexIn(line) >= 0)
+                baseStage << sample_from_regexp(&baseSamples);
+            else if (finalSamples.indexIn(line) >= 0)
+                finalStage << sample_from_regexp(&finalSamples);
+        }
+
+        if (baseStage.size() + finalStage.size() != samples)
+            qFatal("render_data: #samples does not add up to number of counted samples, file=%s", qPrintable(fileName));
+
+        QTest::newRow(qPrintable(fileName)) << fileName << baseStage << finalStage;
+    }
+}
+
+void tst_SceneGraph::render()
+{
+    QFETCH(QString, file);
+    QFETCH(QList<Sample>, baseStage);
+    QFETCH(QList<Sample>, finalStage);
+
+    QObject suite;
+    suite.setObjectName("The Suite");
+
+    QQuickView view;
+    view.rootContext()->setContextProperty("suite", &suite);
+    view.setSource(QUrl::fromLocalFile(file));
+    view.setResizeMode(QQuickView::SizeViewToRootObject);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    // Grab the window and check all our base stage samples
+    QImage content = view.grabWindow();
+    for (int i=0; i<baseStage.size(); ++i) {
+        Sample sample = baseStage.at(i);
+        QVERIFY2(sample.check(content), qPrintable(sample.toString(content)));
+    }
+
+    // Put the qml file into the final stage and wait for it to
+    // complete it.
+    QQuickItem *rootItem = view.rootObject();
+    QMetaObject::invokeMethod(rootItem, "enterFinalStage");
+    QTRY_VERIFY(rootItem->property("finalStageComplete").toBool());
+
+    // The grab the results and verify the samples in the end state.
+    content = view.grabWindow();
+    for (int i=0; i<finalStage.size(); ++i) {
+        Sample sample = finalStage.at(i);
+        QVERIFY2(sample.check(content), qPrintable(sample.toString(content)));
+    }
+}
 
 #include "tst_scenegraph.moc"
 
