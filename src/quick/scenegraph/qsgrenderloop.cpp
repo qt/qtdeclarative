@@ -144,8 +144,13 @@ QSGRenderLoop *QSGRenderLoop::instance()
     if (!s_instance) {
         s_instance = QSGContext::createWindowManager();
 
-        if (useConsistentTiming())
+        bool info = qEnvironmentVariableIsSet("QSG_INFO");
+
+        if (useConsistentTiming()) {
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
+            if (info)
+                qDebug() << "QSG: using fixed animation steps";
+        }
 
         if (!s_instance) {
 
@@ -178,12 +183,15 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
             switch (loopType) {
             case ThreadedRenderLoop:
+                if (info) qDebug() << "QSG: threaded render loop";
                 s_instance = new QSGThreadedRenderLoop();
                 break;
             case WindowsRenderLoop:
+                if (info) qDebug() << "QSG: windows render loop";
                 s_instance = new QSGWindowsRenderLoop();
                 break;
             default:
+                if (info) qDebug() << "QSG: basic render loop";
                 s_instance = new QSGGuiThreadRenderLoop();
                 break;
             }

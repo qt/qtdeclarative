@@ -206,6 +206,16 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
                 d->antialiasingMethod = VertexAntialiasing;
         }
     }
+
+    static bool dumped = false;
+    if (!dumped && qEnvironmentVariableIsSet("QSG_INFO")) {
+        dumped = true;
+        qDebug() << "GL_VENDOR:     " << (const char *) glGetString(GL_VENDOR);
+        qDebug() << "GL_RENDERER:   " << (const char *) glGetString(GL_RENDERER);
+        qDebug() << "GL_VERSION:    " << (const char *) glGetString(GL_VERSION);
+        qDebug() << "GL_EXTENSIONS:\n   " << QByteArray((const char *) glGetString(GL_EXTENSIONS)).replace(" ", "\n    ").constData();
+    }
+
     d->mutex.unlock();
 }
 

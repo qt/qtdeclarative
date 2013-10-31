@@ -104,6 +104,9 @@ Manager::Manager()
 
     m_atlas_size_limit = qsg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
     m_atlas_size = QSize(w, h);
+
+    if (qEnvironmentVariableIsSet("QSG_INFO"))
+        qDebug() << "QSG: texture atlas dimensions:" << w << "x" << h;
 }
 
 
