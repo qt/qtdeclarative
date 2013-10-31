@@ -102,16 +102,11 @@ void QSGNodeUpdater::updateStates(QSGNode *n)
 
 bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 {
-    qreal opacity = 1;
     while (node != root && node != 0) {
-        if (node->type() == QSGNode::OpacityNodeType) {
-            opacity *= static_cast<QSGOpacityNode *>(node)->opacity();
-            if (opacity < 0.001)
-                return true;
-        }
+        if (node->isSubtreeBlocked())
+            return true;
         node = node->parent();
     }
-
     return false;
 }
 
