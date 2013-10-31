@@ -420,6 +420,7 @@ private:
     void prepareOpaqueBatches();
     bool checkOverlap(int first, int last, const Rect &bounds);
     void prepareAlphaBatches();
+    void invalidateAlphaBatchesForRoot(Node *root);
 
     void uploadBatch(Batch *b);
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, quint16 *iBase, int *indexCount);

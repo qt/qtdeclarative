@@ -389,6 +389,9 @@ void Updater::visitOpacityNode(Node *n)
         if (was != is) {
             renderer->m_rebuild = Renderer::FullRebuild;
             n->isOpaque = is;
+        } else if (!is) {
+            renderer->invalidateAlphaBatchesForRoot(m_roots.last());
+            renderer->m_rebuild |= Renderer::BuildBatches;
         }
         ++m_force_update;
         SHADOWNODE_TRAVERSE(n) visitNode(*child);
@@ -1342,6 +1345,15 @@ void Renderer::buildRenderListsFromScratch()
     m_nextRenderOrder = 0;
 
     buildRenderLists(rootNode());
+}
+
+void Renderer::invalidateAlphaBatchesForRoot(Node *root)
+{
+    for (int i=0; i<m_alphaBatches.size(); ++i) {
+        Batch *b = m_alphaBatches.at(i);
+        if (b->root == root || root == 0)
+            b->invalidate();
+    }
 }
 
 /* Clean up batches by making it a consecutive list of "valid"
