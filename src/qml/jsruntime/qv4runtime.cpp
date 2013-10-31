@@ -308,7 +308,13 @@ QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left
             pleft = __qmljs_to_string(pleft, ctx);
         if (!pright->isString())
             pright = __qmljs_to_string(pright, ctx);
-        return __qmljs_string_concat(ctx, pleft->stringValue(), pright->stringValue())->asReturnedValue();
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        if (!pleft->stringValue()->length())
+            return right->asReturnedValue();
+        if (!pright->stringValue()->length())
+            return pleft->asReturnedValue();
+        return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
     }
     double x = __qmljs_to_number(pleft);
     double y = __qmljs_to_number(pright);
@@ -363,19 +369,6 @@ Returned<String> *__qmljs_string_from_number(ExecutionContext *ctx, double numbe
     QString qstr;
     __qmljs_numberToString(&qstr, number, 10);
     return ctx->engine->newString(qstr);
-}
-
-Returned<String> *__qmljs_string_concat(ExecutionContext *ctx, String *first, String *second)
-{
-    const QString &a = first->toQString();
-    const QString &b = second->toQString();
-    QString newStr(a.length() + b.length(), Qt::Uninitialized);
-    QChar *data = newStr.data();
-    memcpy(data, a.constData(), a.length()*sizeof(QChar));
-    data += a.length();
-    memcpy(data, b.constData(), b.length()*sizeof(QChar));
-
-    return ctx->engine->newString(newStr);
 }
 
 ReturnedValue __qmljs_object_default_value(Object *object, int typeHint)

@@ -105,7 +105,7 @@ const ManagedVTable String::static_vtbl =
 {
     call,
     construct,
-    0 /*markObjects*/,
+    markObjects,
     destroy,
     0 /*collectDeletables*/,
     hasInstance,
@@ -129,6 +129,15 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
+void String::markObjects(Managed *that)
+{
+    String *s = static_cast<String *>(that);
+    if (s->depth) {
+        s->left->mark();
+        s->right->mark();
+    }
+}
+
 ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
 {
     ExecutionEngine *v4 = m->engine();
@@ -138,7 +147,7 @@ ReturnedValue String::get(Managed *m, const StringRef name, bool *hasProperty)
     if (name->equals(v4->id_length)) {
         if (hasProperty)
             *hasProperty = true;
-        return Primitive::fromInt32(that->_text.length()).asReturnedValue();
+        return Primitive::fromInt32(that->_text->size).asReturnedValue();
     }
     PropertyAttributes attrs;
     Property *pd = v4->stringClass->prototype->__getPropertyDescriptor__(name, &attrs);
@@ -158,7 +167,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     Scope scope(engine);
     ScopedString that(scope, static_cast<String *>(m));
 
-    if (index < that->_text.length()) {
+    if (index < (uint)that->_text->size) {
         if (hasProperty)
             *hasProperty = true;
         return Encode(engine->newString(that->toQString().mid(index, 1)));
@@ -207,7 +216,7 @@ PropertyAttributes String::query(const Managed *m, StringRef name)
 PropertyAttributes String::queryIndexed(const Managed *m, uint index)
 {
     const String *that = static_cast<const String *>(m);
-    return (index < that->_text.length()) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
+    return (index < (uint)that->_text->size) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
 bool String::deleteProperty(Managed *, const StringRef)
@@ -215,7 +224,7 @@ bool String::deleteProperty(Managed *, const StringRef)
     return false;
 }
 
-bool String::deleteIndexedProperty(Managed *m, uint index)
+bool String::deleteIndexedProperty(Managed *, uint)
 {
     return false;
 }
@@ -240,11 +249,28 @@ bool String::isEqualTo(Managed *t, Managed *o)
 
 
 String::String(ExecutionEngine *engine, const QString &text)
-    : Managed(engine ? engine->emptyClass : 0), _text(text), identifier(0), stringHash(UINT_MAX)
+    : Managed(engine ? engine->emptyClass : 0), _text(const_cast<QString &>(text).data_ptr())
+    , identifier(0), stringHash(UINT_MAX)
+    , depth(0)
+{
+    _text->ref.ref();
+    vtbl = &static_vtbl;
+    type = Type_String;
+    subtype = StringType_Unknown;
+}
+
+String::String(ExecutionEngine *engine, String *l, String *r)
+    : Managed(engine ? engine->emptyClass : 0)
+    , left(l), right(r)
+    , stringHash(UINT_MAX), depth(qMax(l->depth, r->depth) + 1)
 {
     vtbl = &static_vtbl;
     type = Type_String;
     subtype = StringType_Unknown;
+
+    // make sure we don't get excessive depth in our strings
+    if (depth >= 16)
+        simplifyString();
 }
 
 uint String::toUInt(bool *ok) const
@@ -281,13 +307,46 @@ bool String::equals(const StringRef other) const
 
 void String::makeIdentifierImpl() const
 {
+    if (depth)
+        simplifyString();
+    Q_ASSERT(!depth);
     engine()->identifierTable->identifier(this);
 }
 
+void String::simplifyString() const
+{
+    Q_ASSERT(depth);
+
+    int l = length();
+    QString result(l, Qt::Uninitialized);
+    QChar *ch = const_cast<QChar *>(result.constData());
+    recursiveAppend(ch);
+    _text = result.data_ptr();
+    _text->ref.ref();
+    identifier = 0;
+    depth = 0;
+}
+
+QChar *String::recursiveAppend(QChar *ch) const
+{
+    if (depth) {
+        ch = left->recursiveAppend(ch);
+        ch = right->recursiveAppend(ch);
+    } else {
+        memcpy(ch, _text->data(), _text->size*sizeof(QChar));
+        ch += _text->size;
+    }
+    return ch;
+}
+
+
 void String::createHashValue() const
 {
-    const QChar *ch = _text.constData();
-    const QChar *end = ch + _text.length();
+    if (depth)
+        simplifyString();
+    Q_ASSERT(!depth);
+    const QChar *ch = reinterpret_cast<const QChar *>(_text->data());
+    const QChar *end = ch + _text->size;
 
     // array indices get their number as hash value
     bool ok;
@@ -338,7 +397,7 @@ uint String::createHashValue(const char *ch, int length)
 
     uint h = 0xffffffff;
     while (ch < end) {
-        if (*ch >= 0x80)
+        if ((uchar)(*ch) >= 0x80)
             return UINT_MAX;
         h = 31 * h + *ch;
         ++ch;

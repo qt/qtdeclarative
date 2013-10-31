@@ -148,7 +148,6 @@ QV4::ReturnedValue __qmljs_init_closure(QV4::ExecutionContext *ctx, int function
 // strings
 Q_QML_EXPORT double __qmljs_string_to_number(const QString &s);
 Returned<String> *__qmljs_string_from_number(QV4::ExecutionContext *ctx, double number);
-Returned<String> *__qmljs_string_concat(QV4::ExecutionContext *ctx, QV4::String *first, QV4::String *second);
 
 // objects
 Q_QML_EXPORT ReturnedValue __qmljs_object_default_value(QV4::Object *object, int typeHint);

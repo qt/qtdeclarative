@@ -60,10 +60,17 @@ struct Q_QML_EXPORT String : public Managed {
         StringType_ArrayIndex
     };
 
-    String() : Managed(0), identifier(0), stringHash(UINT_MAX)
+    String()
+        : Managed(0), _text(QStringData::sharedNull()), identifier(0)
+        , stringHash(UINT_MAX), depth(0)
     { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
-    ~String() { _data = 0; }
+    String(ExecutionEngine *engine, String *l, String *n);
+    ~String() {
+        if (!depth && !_text->ref.deref())
+            QStringData::deallocate(_text);
+        _data = 0;
+    }
 
     bool equals(const StringRef other) const;
     inline bool isEqualTo(const String *other) const {
@@ -71,6 +78,7 @@ struct Q_QML_EXPORT String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
+        Q_ASSERT(!depth);
         if (identifier && identifier == other->identifier)
             return true;
         if (subtype >= StringType_UInt && subtype == other->subtype)
@@ -82,20 +90,28 @@ struct Q_QML_EXPORT String : public Managed {
         return toQString() < other->toQString();
     }
 
-    inline bool isEmpty() const { return _text.isEmpty(); }
-    inline const QString &toQString() const {
-        return _text;
+    inline bool isEmpty() const { return _text && !_text->size; }
+    inline QString toQString() const {
+        if (depth)
+            simplifyString();
+        QStringDataPtr ptr = { _text };
+        _text->ref.ref();
+        return QString(ptr);
     }
+
+    void simplifyString() const;
 
     inline unsigned hashValue() const {
         if (subtype == StringType_Unknown)
             createHashValue();
+        Q_ASSERT(!depth);
 
         return stringHash;
     }
     uint asArrayIndex() const {
         if (subtype == StringType_Unknown)
             createHashValue();
+        Q_ASSERT(!depth);
         if (subtype == StringType_ArrayIndex)
             return stringHash;
         return UINT_MAX;
@@ -115,19 +131,32 @@ struct Q_QML_EXPORT String : public Managed {
     static uint createHashValue(const char *ch, int length);
 
     bool startsWithUpper() const {
-        return _text.length() && _text.at(0).isUpper();
+        const String *l = this;
+        while (l->depth)
+            l = l->left;
+        return l->_text->size && QChar::isUpper(l->_text->data()[0]);
     }
     int length() const {
-        return _text.length();
+        if (!depth)
+            return _text->size;
+        return left->length() + right->length();
     }
 
-    QString _text;
-    mutable Identifier *identifier;
+    union {
+        mutable QStringData *_text;
+        mutable String *left;
+    };
+    union {
+        mutable Identifier *identifier;
+        mutable String *right;
+    };
     mutable uint stringHash;
+    mutable uint depth;
 
 
 protected:
     static void destroy(Managed *);
+    static void markObjects(Managed *that);
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
@@ -137,6 +166,9 @@ protected:
     static bool deleteProperty(Managed *, const StringRef);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
+
+private:
+    QChar *recursiveAppend(QChar *ch) const;
 };
 
 template<>
