@@ -49,16 +49,6 @@ using namespace QV4;
 Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 {
     int i = 0;
-    while (i < level && obj && obj->internalClass == classList[i]) {
-        obj = obj->prototype();
-        ++i;
-    }
-
-    if (index != UINT_MAX && obj->internalClass == classList[i]) {
-        *attrs = obj->internalClass->propertyData.at(index);
-        return obj->memberData + index;
-    }
-
     while (i < Size && obj) {
         classList[i] = obj->internalClass;
 
@@ -72,7 +62,7 @@ Property *Lookup::lookup(Object *obj, PropertyAttributes *attrs)
         obj = obj->prototype();
         ++i;
     }
-    level = i;
+    level = Size;
 
     while (obj) {
         index = obj->internalClass->find(name);
@@ -140,9 +130,12 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass)
-            return o->memberData[l->index].value.asReturnedValue();
+            return static_cast<Object *>(o)->memberData[l->index].value.asReturnedValue();
     }
     l->getter = getterGeneric;
     return getterGeneric(l, object);
@@ -150,7 +143,10 @@ ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getter1(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass)
             return o->prototype()->memberData[l->index].value.asReturnedValue();
@@ -161,7 +157,10 @@ ReturnedValue Lookup::getter1(Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getter2(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass) {
             o = o->prototype();
             if (l->classList[1] == o->internalClass) {
@@ -177,7 +176,10 @@ ReturnedValue Lookup::getter2(Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass) {
             Scope scope(o->engine());
             FunctionObject *getter = o->memberData[l->index].getter();
@@ -195,7 +197,10 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype()->internalClass) {
             Scope scope(o->engine());
@@ -214,7 +219,10 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
 
 ReturnedValue Lookup::getterAccessor2(Lookup *l, const ValueRef object)
 {
-    if (Object *o = object->asObject()) {
+    if (object->isManaged()) {
+        // we can safely cast to a QV4::Object here. If object is actually a string,
+        // the internal class won't match
+        Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass) {
             o = o->prototype();
             if (l->classList[1] == o->internalClass) {
