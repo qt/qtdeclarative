@@ -82,7 +82,8 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             }
         }
 
-        m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
+        if (!QQmlData::wasDeleted(m_target->object))
+            m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
     }
 }
 
