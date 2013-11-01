@@ -85,7 +85,7 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *local
     if (function->varCount)
         std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
 
-    if (callData->argc < function->formalParameterCount) {
+    if (callData->argc < static_cast<int>(function->formalParameterCount)) {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
 #endif
@@ -128,7 +128,7 @@ CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData
 
     c->callData = reinterpret_cast<CallData *>(c->locals + function->varCount);
     ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(SafeValue));
-    if (callData->argc < function->formalParameterCount)
+    if (callData->argc < static_cast<int>(function->formalParameterCount))
         std::fill(c->callData->args + c->callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, function->formalParameterCount);
 
@@ -309,13 +309,13 @@ bool ExecutionContext::deleteProperty(const StringRef name)
     }
 
     if (strictMode)
-        throwSyntaxError(QString("Can't delete property %1").arg(name->toQString()));
+        throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name->toQString()));
     return true;
 }
 
 bool CallContext::needsOwnArguments() const
 {
-    return function->needsActivation || callData->argc < function->formalParameterCount;
+    return function->needsActivation || callData->argc < static_cast<int>(function->formalParameterCount);
 }
 
 void ExecutionContext::mark()
@@ -328,7 +328,7 @@ void ExecutionContext::mark()
         outer->mark();
 
     callData->thisObject.mark();
-    for (unsigned arg = 0; arg < callData->argc; ++arg)
+    for (int arg = 0; arg < callData->argc; ++arg)
         callData->args[arg].mark();
 
     if (type >= Type_CallContext) {

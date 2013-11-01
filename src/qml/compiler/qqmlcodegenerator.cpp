@@ -542,7 +542,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             for (int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
                 const TypeNameToType *t = propTypeNameToTypes + typeIndex;
                 if (t->nameLength == size_t(memberType.length()) &&
-                    QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                    QHashedString::compare(memberType.constData(), t->name, static_cast<int>(t->nameLength))) {
                     type = t;
                     break;
                 }
@@ -600,7 +600,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         QV4::CompiledData::Property::Type type;
 
         if ((unsigned)memberType.length() == strlen("alias") &&
-            QHashedString::compare(memberType.constData(), "alias", strlen("alias"))) {
+            QHashedString::compare(memberType.constData(), "alias", static_cast<int>(strlen("alias")))) {
             type = QV4::CompiledData::Property::Alias;
             typeFound = true;
         }
@@ -608,7 +608,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
         for (int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
             const TypeNameToType *t = propTypeNameToTypes + ii;
             if (t->nameLength == size_t(memberType.length()) &&
-                QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                QHashedString::compare(memberType.constData(), t->name, static_cast<int>(t->nameLength))) {
                 type = t->type;
                 typeFound = true;
             }
@@ -620,7 +620,7 @@ bool QQmlCodeGenerator::visit(AST::UiPublicMember *node)
             if (typeModifier.isEmpty()) {
                 type = QV4::CompiledData::Property::Custom;
             } else if ((unsigned)typeModifier.length() == strlen("list") &&
-                      QHashedString::compare(typeModifier.constData(), "list", strlen("list"))) {
+                      QHashedString::compare(typeModifier.constData(), "list", static_cast<int>(strlen("list")))) {
                 type = QV4::CompiledData::Property::CustomList;
             } else {
                 QQmlError error;
@@ -1044,18 +1044,18 @@ bool QQmlCodeGenerator::isStatementNodeScript(AST::Statement *statement)
 {
     if (AST::ExpressionStatement *stmt = AST::cast<AST::ExpressionStatement *>(statement)) {
         AST::ExpressionNode *expr = stmt->expression;
-        if (AST::StringLiteral *lit = AST::cast<AST::StringLiteral *>(expr))
+        if (AST::cast<AST::StringLiteral *>(expr))
             return false;
         else if (expr->kind == AST::Node::Kind_TrueLiteral)
             return false;
         else if (expr->kind == AST::Node::Kind_FalseLiteral)
             return false;
-        else if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(expr))
+        else if (AST::cast<AST::NumericLiteral *>(expr))
             return false;
         else {
 
             if (AST::UnaryMinusExpression *unaryMinus = AST::cast<AST::UnaryMinusExpression *>(expr)) {
-               if (AST::NumericLiteral *lit = AST::cast<AST::NumericLiteral *>(unaryMinus->expression)) {
+               if (AST::cast<AST::NumericLiteral *>(unaryMinus->expression)) {
                    return false;
                }
             }
@@ -1068,7 +1068,6 @@ bool QQmlCodeGenerator::isStatementNodeScript(AST::Statement *statement)
 QV4::CompiledData::QmlUnit *QmlUnitGenerator::generate(ParsedQML &output, const QVector<int> &runtimeFunctionIndices)
 {
     jsUnitGenerator = &output.jsGenerator;
-    const QmlObject *rootObject = output.objects.at(output.indexOfRootObject);
     int unitSize = 0;
     QV4::CompiledData::Unit *jsUnit = jsUnitGenerator->generateUnit(&unitSize);
 
@@ -1232,7 +1231,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
 
     ScanFunctions scan(this, sourceCode, GlobalCode);
     scan.enterEnvironment(0, QmlBinding);
-    scan.enterQmlScope(qmlRoot, "context scope");
+    scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
     foreach (AST::Node *node, functions) {
         Q_ASSERT(node != qmlRoot);
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
@@ -1245,7 +1244,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
     scan.leaveEnvironment();
 
     _env = 0;
-    _function = _module->functions.at(defineFunction(QString("context scope"), qmlRoot, 0, 0));
+    _function = _module->functions.at(defineFunction(QStringLiteral("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {
         AST::Node *node = functions.at(i);
@@ -1521,7 +1520,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
             QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
             if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
-                QString alternateName = propertyName.mid(0, propertyName.length() - strlen("Changed"));
+                QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
                 entry = customSignals.find(alternateName);
             }
 
@@ -1613,7 +1612,7 @@ QQmlPropertyData *PropertyResolver::signal(const QString &name, bool *notInRevis
     }
 
     if (name.endsWith(QStringLiteral("Changed"))) {
-        QString propName = name.mid(0, name.length() - strlen("Changed"));
+        QString propName = name.mid(0, name.length() - static_cast<int>(strlen("Changed")));
 
         d = property(propName, notInRevision);
         if (d)

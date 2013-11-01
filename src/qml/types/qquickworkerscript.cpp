@@ -229,9 +229,9 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     "})"
 
     QV4::Scope scope(m_v4Engine);
-    onmessage = QV4::Script(m_v4Engine->rootContext, CALL_ONMESSAGE_SCRIPT).run();
+    onmessage = QV4::Script(m_v4Engine->rootContext, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run(); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     Q_ASSERT(!scope.engine->hasException);
-    QV4::Script createsendscript(m_v4Engine->rootContext, SEND_MESSAGE_CREATE_SCRIPT);
+    QV4::Script createsendscript(m_v4Engine->rootContext, QString::fromUtf8(SEND_MESSAGE_CREATE_SCRIPT)); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
     Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
@@ -315,9 +315,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         w->setReadOnly(false);
 
         QV4::Scoped<QV4::Object> api(scope, v4->newObject());
-        api->put(QV4::ScopedString(scope, v4->newString("sendMessage")), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
+        api->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("sendMessage"))), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
-        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString("WorkerScript")), api);
+        w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))), api);
 
         w->setReadOnly(true);
     }

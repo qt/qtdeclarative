@@ -1274,7 +1274,7 @@ private:
         }
 
     protected:
-        virtual void visitConst(Const *e) {}
+        virtual void visitConst(Const *) {}
         virtual void visitString(String *) {}
         virtual void visitRegExp(RegExp *) {}
         virtual void visitName(Name *) {}
@@ -1897,8 +1897,8 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
         I(const DominatorTree &df, QVector<BasicBlock *> &sequence,
           QHash<BasicBlock *, BasicBlock *> &startEndLoops)
             : df(df)
-            , sequence(sequence)
             , startEndLoops(startEndLoops)
+            , sequence(sequence)
             , currentGroup(0)
         {}
 
@@ -1963,6 +1963,7 @@ QHash<BasicBlock *, BasicBlock *> scheduleBlocks(Function *function, const Domin
     return startEndLoops;
 }
 
+#ifndef QT_NO_DEBUG
 void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
     foreach (BasicBlock *bb, basicBlocks) {
         if (bb && bb->out.size() > 1) {
@@ -1976,6 +1977,7 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
         }
     }
 }
+#endif
 
 void cleanupBasicBlocks(Function *function)
 {
@@ -2034,20 +2036,6 @@ inline Const *isConstPhi(Phi *phi)
             }
         }
         return c;
-    }
-    return 0;
-}
-
-inline Temp *isSameTempPhi(Phi *phi)
-{
-    if (Temp *t = phi->d->incoming[0]->asTemp()) {
-        for (int i = 1, ei = phi->d->incoming.size(); i != ei; ++i) {
-            if (Temp *tt = phi->d->incoming[i]->asTemp())
-                if (t->index == tt->index)
-                    continue;
-            return 0;
-        }
-        return t;
     }
     return 0;
 }
@@ -2636,7 +2624,7 @@ protected:
     virtual void visitJump(Jump *) {}
     virtual void visitCJump(CJump *s) { s->cond->accept(this); }
     virtual void visitRet(Ret *s) { s->expr->accept(this); }
-    virtual void visitPhi(Phi *s) {
+    virtual void visitPhi(Phi *) {
         // Handled separately
     }
 };

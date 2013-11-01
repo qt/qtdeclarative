@@ -578,7 +578,14 @@ struct Stmt {
     AST::SourceLocation location;
 
     Stmt(): d(0), id(-1) {}
-    virtual ~Stmt() { Q_UNREACHABLE(); }
+    virtual ~Stmt()
+    {
+#ifdef Q_CC_MSVC
+         // MSVC complains about potential memory leaks if a destructor never returns.
+#else
+        Q_UNREACHABLE();
+#endif
+    }
     virtual Stmt *asTerminator() { return 0; }
 
     virtual void accept(StmtVisitor *) = 0;

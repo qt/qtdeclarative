@@ -614,8 +614,8 @@ bool JsonParser::parseString(QString *string)
             }
             qDebug() << "scanEscape" << hex << ch;
             if (QChar::requiresSurrogates(ch)) {
-                *string += QChar::highSurrogate(ch);
-                *string += QChar::lowSurrogate(ch);
+                *string += QChar(QChar::highSurrogate(ch));
+                *string += QChar(QChar::lowSurrogate(ch));
             } else {
                 *string += QChar(ch);
             }
@@ -661,42 +661,42 @@ struct Stringify
 
 static QString quote(const QString &str)
 {
-    QString product = "\"";
+    QString product = QStringLiteral("\"");
     for (int i = 0; i < str.length(); ++i) {
         QChar c = str.at(i);
         switch (c.unicode()) {
         case '"':
-            product += "\\\"";
+            product += QStringLiteral("\\\"");
             break;
         case '\\':
-            product += "\\\\";
+            product += QStringLiteral("\\\\");
             break;
         case '\b':
-            product += "\\b";
+            product += QStringLiteral("\\b");
             break;
         case '\f':
-            product += "\\f";
+            product += QStringLiteral("\\f");
             break;
         case '\n':
-            product += "\\n";
+            product += QStringLiteral("\\n");
             break;
         case '\r':
-            product += "\\r";
+            product += QStringLiteral("\\r");
             break;
         case '\t':
-            product += "\\t";
+            product += QStringLiteral("\\t");
             break;
         default:
             if (c.unicode() <= 0x1f) {
-                product += "\\u00";
-                product += c.unicode() > 0xf ? '1' : '0';
-                product += "0123456789abcdef"[c.unicode() & 0xf];
+                product += QStringLiteral("\\u00");
+                product += c.unicode() > 0xf ? QLatin1Char('1') : QLatin1Char('0');
+                product += QLatin1Char("0123456789abcdef"[c.unicode() & 0xf]);
             } else {
                 product += c;
             }
         }
     }
-    product += '"';
+    product += QLatin1Char('"');
     return product;
 }
 
@@ -768,9 +768,9 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
 {
     QString strP = Str(key, v);
     if (!strP.isEmpty()) {
-        QString member = quote(key) + ':';
+        QString member = quote(key) + QLatin1Char(':');
         if (!gap.isEmpty())
-            member += ' ';
+            member += QLatin1Char(' ');
         member += strP;
         return member;
     }
@@ -823,10 +823,10 @@ QString Stringify::JO(ObjectRef o)
     if (partial.isEmpty()) {
         result = QStringLiteral("{}");
     } else if (gap.isEmpty()) {
-        result = "{" + partial.join(",") + "}";
+        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QStringLiteral("}");
     } else {
-        QString separator = ",\n" + indent;
-        result = "{\n" + indent + partial.join(separator) + "\n" + stepback + "}";
+        QString separator = QStringLiteral(",\n") + indent;
+        result = QStringLiteral("{\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("}");
     }
 
     indent = stepback;
@@ -868,10 +868,10 @@ QString Stringify::JA(ArrayObjectRef a)
     if (partial.isEmpty()) {
         result = QStringLiteral("[]");
     } else if (gap.isEmpty()) {
-        result = "[" + partial.join(",") + "]";
+        result = QStringLiteral("[") + partial.join(QLatin1Char(',')) + QStringLiteral("]");
     } else {
-        QString separator = ",\n" + indent;
-        result = "[\n" + indent + partial.join(separator) + "\n" + stepback + "]";
+        QString separator = QStringLiteral(",\n") + indent;
+        result = QStringLiteral("[\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("]");
     }
 
     indent = stepback;
@@ -905,7 +905,7 @@ ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
     ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        return ctx->throwSyntaxError("JSON.parse: Parse error");
+        return ctx->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
     }
 
     return result.asReturnedValue();

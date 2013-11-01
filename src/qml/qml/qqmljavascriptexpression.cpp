@@ -148,9 +148,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
 
-    QQmlContextData *lastSharedContext = 0;
-    QObject *lastSharedScope = 0;
-
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
     DeleteWatcher watcher(this);
@@ -275,6 +272,8 @@ void QQmlJavaScriptExpression::clearError()
 
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
+    Q_UNUSED(engine);
+
     if (m_vtable.hasValue())
         return m_vtable.constValue()->error();
     else

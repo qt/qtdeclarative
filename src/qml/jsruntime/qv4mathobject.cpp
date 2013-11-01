@@ -210,7 +210,7 @@ ReturnedValue MathObject::method_log(SimpleCallContext *context)
 ReturnedValue MathObject::method_max(SimpleCallContext *context)
 {
     double mx = -qInf();
-    for (unsigned i = 0; i < context->callData->argc; ++i) {
+    for (int i = 0; i < context->callData->argc; ++i) {
         double x = context->callData->args[i].toNumber();
         if (x > mx || std::isnan(x))
             mx = x;
@@ -221,7 +221,7 @@ ReturnedValue MathObject::method_max(SimpleCallContext *context)
 ReturnedValue MathObject::method_min(SimpleCallContext *context)
 {
     double mx = qInf();
-    for (unsigned i = 0; i < context->callData->argc; ++i) {
+    for (int i = 0; i < context->callData->argc; ++i) {
         double x = context->callData->args[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || std::isnan(x)) {

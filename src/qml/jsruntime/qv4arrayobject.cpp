@@ -143,7 +143,7 @@ ReturnedValue ArrayPrototype::method_toString(SimpleCallContext *ctx)
     ScopedObject o(scope, ctx->callData->thisObject, ScopedObject::Convert);
     if (ctx->engine->hasException)
         return Encode::undefined();
-    ScopedString s(scope, ctx->engine->newString("join"));
+    ScopedString s(scope, ctx->engine->newString(QStringLiteral("join")));
     ScopedFunctionObject f(scope, o->get(s));
     if (!!f) {
         ScopedCallData d(scope, 0);
@@ -174,7 +174,7 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     }
 
     ScopedArrayObject elt(scope);
-    for (uint i = 0; i < ctx->callData->argc; ++i) {
+    for (int i = 0; i < ctx->callData->argc; ++i) {
         elt = ctx->callData->args[i];
         if (elt)
             result->arrayConcat(elt.getPointer());
@@ -299,7 +299,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
     }
 
     if (!instance->protoHasArray() && instance->arrayDataLen <= len) {
-        for (uint i = 0; i < ctx->callData->argc; ++i) {
+        for (int i = 0; i < ctx->callData->argc; ++i) {
             if (!instance->sparseArray) {
                 if (len >= instance->arrayAlloc)
                     instance->arrayReserve(len + 1);
@@ -308,13 +308,13 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
                     instance->arrayAttributes[len] = Attr_Data;
                 instance->arrayDataLen = len + 1;
             } else {
-                uint i = instance->allocArrayValue(ctx->callData->args[i]);
-                instance->sparseArray->push_back(i, len);
+                uint j = instance->allocArrayValue(ctx->callData->args[i]);
+                instance->sparseArray->push_back(j, len);
             }
             ++len;
         }
     } else {
-        for (uint i = 0; i < ctx->callData->argc; ++i)
+        for (int i = 0; i < ctx->callData->argc; ++i)
             instance->putIndexed(len + i, ctx->callData->args[i]);
         len += ctx->callData->argc;
     }
@@ -591,7 +591,7 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
             else
                 instance->deleteIndexedProperty(k + ctx->callData->argc - 1);
         }
-        for (uint i = 0; i < ctx->callData->argc; ++i)
+        for (int i = 0; i < ctx->callData->argc; ++i)
             instance->putIndexed(i, ctx->callData->args[i]);
     }
 

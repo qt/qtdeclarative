@@ -356,6 +356,8 @@ void Debugger::maybeBreakAtInstruction(const uchar *code, bool breakPointHit)
 
 void Debugger::aboutToThrow(const QV4::ValueRef value)
 {
+    Q_UNUSED(value);
+
     qDebug() << "*** We are about to throw...";
 }
 
@@ -470,7 +472,7 @@ void Debugger::BreakPoints::applyToFunction(Function *function, bool removeBreak
     while (breakPoint != breakPointsForFile->end()) {
         bool breakPointFound = false;
         const quint32 *lineNumberMappings = function->compiledFunction->lineNumberMapping();
-        for (int i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
+        for (quint32 i = 0; i < function->compiledFunction->nLineNumberMappingEntries; ++i) {
             const int codeOffset = lineNumberMappings[i * 2];
             const int lineNumber = lineNumberMappings[i * 2 + 1];
             if (lineNumber == *breakPoint) {

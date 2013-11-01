@@ -247,7 +247,7 @@ void QV8ProfilerService::stopProfiling(const QString &title)
 
 void QV8ProfilerService::takeSnapshot()
 {
-    Q_D(QV8ProfilerService);
+//    Q_D(QV8ProfilerService);
     // ### FIXME: v4
 //    d->takeSnapshot(v8::HeapSnapshot::kFull);
 }
@@ -260,7 +260,7 @@ void QV8ProfilerService::deleteSnapshots()
 
 void QV8ProfilerService::sendProfilingData()
 {
-    Q_D(QV8ProfilerService);
+//    Q_D(QV8ProfilerService);
     // Send messages to client
     // ### FIXME: v4
 //    d->sendMessages();

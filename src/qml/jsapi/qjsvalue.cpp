@@ -712,11 +712,12 @@ void QJSValue::setPrototype(const QJSValue& prototype)
 */
 QJSValue& QJSValue::operator=(const QJSValue& other)
 {
-    if (d == other.d)
-        return *this;
-    d->deref();
-    d = other.d;
-    d->ref();
+    if (d != other.d) {
+        d->deref();
+        d = other.d;
+        d->ref();
+    }
+    return *this;
 }
 
 /*!

@@ -66,7 +66,7 @@ ArgumentsObject::ArgumentsObject(CallContext *context)
         memberData[CallerPropertyIndex] = pd;
 
         arrayReserve(context->callData->argc);
-        for (unsigned int i = 0; i < context->callData->argc; ++i)
+        for (int i = 0; i < context->callData->argc; ++i)
             arrayData[i].value = context->callData->args[i];
         arrayDataLen = context->callData->argc;
     } else {
@@ -154,7 +154,7 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
     if (!o)
         return v4->current->throwTypeError();
 
-    Q_ASSERT(g->index < o->context->callData->argc);
+    Q_ASSERT(g->index < static_cast<unsigned>(o->context->callData->argc));
     return o->context->argument(g->index);
 }
 
@@ -169,7 +169,7 @@ ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
     if (!o)
         return v4->current->throwTypeError();
 
-    Q_ASSERT(s->index < o->context->callData->argc);
+    Q_ASSERT(s->index < static_cast<unsigned>(o->context->callData->argc));
     o->context->callData->args[s->index] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
     return Encode::undefined();
 }

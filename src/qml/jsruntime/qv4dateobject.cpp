@@ -1282,25 +1282,25 @@ ReturnedValue DatePrototype::method_toISOString(SimpleCallContext *ctx)
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
             return ctx->engine->newString(QStringLiteral("Invalid Date"))->asReturnedValue();
-        result += year < 0 ? '-' : '+';
+        result += year < 0 ? QLatin1Char('-') : QLatin1Char('+');
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
     } else {
         addZeroPrefixedInt(result, year, 4);
     }
-    result += '-';
+    result += QLatin1Char('-');
     addZeroPrefixedInt(result, (int)MonthFromTime(t) + 1, 2);
-    result += '-';
+    result += QLatin1Char('-');
     addZeroPrefixedInt(result, (int)DateFromTime(t), 2);
-    result += 'T';
+    result += QLatin1Char('T');
     addZeroPrefixedInt(result, HourFromTime(t), 2);
-    result += ':';
+    result += QLatin1Char(':');
     addZeroPrefixedInt(result, MinFromTime(t), 2);
-    result += ':';
+    result += QLatin1Char(':');
     addZeroPrefixedInt(result, SecFromTime(t), 2);
-    result += '.';
+    result += QLatin1Char('.');
     addZeroPrefixedInt(result, msFromTime(t), 3);
-    result += 'Z';
+    result += QLatin1Char('Z');
 
     return ctx->engine->newString(result)->asReturnedValue();
 }

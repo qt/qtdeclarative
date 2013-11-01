@@ -1266,7 +1266,7 @@ QObject *QmlObjectCreator::createInstance(int index, QObject *parent)
     }
 
     QQmlData *ddata = QQmlData::get(instance, /*create*/true);
-    if (index == qmlUnit->indexOfRootObject) {
+    if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
@@ -1433,7 +1433,7 @@ bool QQmlComponentAndAliasResolver::resolve()
     // when someProperty _is_ a QQmlComponent. In that case the Item {}
     // should be implicitly surrounded by Component {}
 
-    for (int i = 0; i < qmlUnit->nObjects; ++i) {
+    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
@@ -1517,14 +1517,14 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
     }
 
     const QV4::CompiledData::Property *property = obj->propertyTable();
-    for (int i = 0; i < obj->nProperties; ++i, ++property)
+    for (quint32 i = 0; i < obj->nProperties; ++i, ++property)
         if (property->type == QV4::CompiledData::Property::Alias) {
             _objectsWithAliases.append(objectIndex);
             break;
         }
 
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
-    for (int i = 0; i < obj->nBindings; ++i, ++binding) {
+    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object
             && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
             && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
@@ -1700,7 +1700,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(const QUrl &url, const QV4::Compile
 
 bool QQmlPropertyValidator::validate()
 {
-    for (int i = 0; i < qmlUnit->nObjects; ++i) {
+    for (quint32 i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(i);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty())
             continue;
@@ -1724,7 +1724,7 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
     QQmlPropertyData *defaultProperty = propertyCache->defaultProperty();
 
     const QV4::CompiledData::Binding *binding = obj->bindingTable();
-    for (int i = 0; i < obj->nBindings; ++i, ++binding) {
+    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
             || binding->type == QV4::CompiledData::Binding::Type_GroupProperty)
             continue;
@@ -1760,4 +1760,6 @@ bool QQmlPropertyValidator::validateObject(const QV4::CompiledData::Object *obj,
             }
         }
     }
+
+    return true;
 }

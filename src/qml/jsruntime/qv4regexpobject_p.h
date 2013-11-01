@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct RegExp;
+class RegExp;
 
 struct RegExpObject: Object {
     Q_MANAGED

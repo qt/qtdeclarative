@@ -1265,7 +1265,6 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     Q_ASSERT(object->isObject());
 
     if (!valuemap->isUndefined()) {
-        QQmlComponentExtension *e = componentExtension(args->engine());
         QV4::ScopedObject qmlglobal(scope, args->qmlGlobal());
         QV4::ScopedValue f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlglobal));
         Q_ASSERT(f->asFunctionObject());
@@ -1420,7 +1419,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     Q_ASSERT(object->asObject());
 
     if (!valuemap->isUndefined()) {
-        QQmlComponentExtension *e = componentExtension(v8engine);
         QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
         QV4::Scoped<QV4::FunctionObject>  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
                                                                     QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
@@ -1521,8 +1519,6 @@ void QmlIncubatorObject::setInitialState(QObject *o)
     QQmlComponent_setQmlParent(o, parent);
 
     if (!valuemap.isUndefined()) {
-        QQmlComponentExtension *e = componentExtension(v8);
-
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
         QV4::Scope scope(v4);
 

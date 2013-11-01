@@ -474,7 +474,7 @@ void Closure::dump(QTextStream &out) const
 {
     QString name = functionName ? *functionName : QString();
     if (name.isEmpty())
-        name.sprintf("%p", value);
+        name.sprintf("%x", value);
     out << "closure(" << name << ')';
 }
 
@@ -597,6 +597,8 @@ void Ret::dump(QTextStream &out, Mode)
 
 void Phi::dump(QTextStream &out, Stmt::Mode mode)
 {
+    Q_UNUSED(mode);
+
     targetTemp->dump(out);
     out << " = phi(";
     for (int i = 0, ei = d->incoming.size(); i < ei; ++i) {

@@ -244,7 +244,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     QString arguments;
     QString body;
     if (callData->argc > 0) {
-        for (uint i = 0; i < callData->argc - 1; ++i) {
+        for (int i = 0; i < callData->argc - 1; ++i) {
             if (i)
                 arguments += QLatin1String(", ");
             arguments += callData->args[i].toString(ctx)->toQString();
@@ -264,13 +264,13 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        return f->engine()->current->throwSyntaxError(0);
+        return f->engine()->current->throwSyntaxError(QLatin1String("Parse error"));
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
     ExecutionEngine *v4 = f->engine();
     if (!fe)
-        return v4->current->throwSyntaxError(0);
+        return f->engine()->current->throwSyntaxError(QLatin1String("Parse error"));
 
     QQmlJS::V4IR::Module module(v4->debugger != 0);
 
@@ -350,7 +350,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
                 callData->args[i] = arr->getIndexed(i);
         } else {
             int alen = qMin(len, arr->arrayDataLen);
-            for (quint32 i = 0; i < alen; ++i)
+            for (int i = 0; i < alen; ++i)
                 callData->args[i] = arr->arrayData[i].value;
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
@@ -387,7 +387,7 @@ ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
 
     ScopedValue boundThis(scope, ctx->argument(0));
     QVector<SafeValue> boundArgs;
-    for (uint i = 1; i < ctx->callData->argc; ++i)
+    for (int i = 1; i < ctx->callData->argc; ++i)
         boundArgs += ctx->callData->args[i];
 
     return ctx->engine->newBoundFunction(ctx->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
@@ -462,7 +462,6 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    void *stackSpace;
     ExecutionContext *context = f->engine()->current;
     Scope scope(context);
     if (scope.hasException())
@@ -642,7 +641,7 @@ DEFINE_MANAGED_VTABLE(IndexedBuiltinFunction);
 DEFINE_MANAGED_VTABLE(BoundFunction);
 
 BoundFunction::BoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs)
-    : FunctionObject(scope, 0)
+    : FunctionObject(scope, QStringLiteral("__bound function__"))
     , target(target)
     , boundArgs(boundArgs)
 {

@@ -131,7 +131,7 @@ void Codegen::ScanFunctions::checkName(const QStringRef &name, const SourceLocat
                 || name == QLatin1String("public")
                 || name == QLatin1String("static")
                 || name == QLatin1String("yield")) {
-            _cg->throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Unexpected strict mode reserved word"));
+            _cg->throwSyntaxError(loc, QStringLiteral("Unexpected strict mode reserved word"));
         }
     }
 }
@@ -202,7 +202,7 @@ bool Codegen::ScanFunctions::visit(ArrayLiteral *ast)
 bool Codegen::ScanFunctions::visit(VariableDeclaration *ast)
 {
     if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-        _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
     checkName(ast->name, ast->identifierToken);
     if (ast->name == QLatin1String("arguments"))
         _env->usesArgumentsObject = Environment::ArgumentsObjectNotUsed;
@@ -222,7 +222,7 @@ bool Codegen::ScanFunctions::visit(ExpressionStatement *ast)
 {
     if (FunctionExpression* expr = AST::cast<AST::FunctionExpression*>(ast->expression)) {
         if (!_allowFuncDecls)
-            _cg->throwSyntaxError(expr->functionToken, QCoreApplication::translate("qv4codegen", "conditional function or closure declaration"));
+            _cg->throwSyntaxError(expr->functionToken, QStringLiteral("conditional function or closure declaration"));
 
         enterFunction(expr, /*enterName*/ true);
         Node::accept(expr->formals, this);
@@ -232,7 +232,7 @@ bool Codegen::ScanFunctions::visit(ExpressionStatement *ast)
     } else {
         SourceLocation firstToken = ast->firstSourceLocation();
         if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QStringLiteral("function")) {
-            _cg->throwSyntaxError(firstToken, QCoreApplication::translate("qv4codegen", "unexpected token"));
+            _cg->throwSyntaxError(firstToken, QStringLiteral("unexpected token"));
         }
     }
     return true;
@@ -247,7 +247,7 @@ bool Codegen::ScanFunctions::visit(FunctionExpression *ast)
 void Codegen::ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName, bool isExpression)
 {
     if (_env->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
-        _cg->throwSyntaxError(ast->identifierToken, QCoreApplication::translate("qv4codegen", "Function name may not be eval or arguments in strict mode"));
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
     enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
 }
 
@@ -297,7 +297,7 @@ void Codegen::ScanFunctions::endVisit(FunctionDeclaration *)
 bool Codegen::ScanFunctions::visit(WithStatement *ast)
 {
     if (_env->isStrict) {
-        _cg->throwSyntaxError(ast->withToken, QCoreApplication::translate("qv4codegen", "'with' statement is not allowed in strict mode"));
+        _cg->throwSyntaxError(ast->withToken, QStringLiteral("'with' statement is not allowed in strict mode"));
         return false;
     }
 
@@ -388,11 +388,11 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
         for (FormalParameterList *it = formals; it; it = it->next) {
             QString arg = it->name.toString();
             if (args.contains(arg)) {
-                _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
+                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
                 return;
             }
             if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
-                _cg->throwSyntaxError(it->identifierToken, QCoreApplication::translate("qv4codegen", "'%1' cannot be used as parameter name in strict mode").arg(arg));
+                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
                 return;
             }
             args += arg;
@@ -1177,7 +1177,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         V4IR::Expr* right = *expression(ast->right);
         if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
-            throwReferenceError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of assignment operator is not an lvalue"));
+            throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
         }
 
@@ -1207,7 +1207,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         V4IR::Expr* right = *expression(ast->right);
         if (!left->isLValue()) {
-            throwSyntaxError(ast->operatorToken, QCoreApplication::translate("qv4codegen", "left-hand side of inplace operator is not an lvalue"));
+            throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
             return false;
         }
 
@@ -1344,17 +1344,17 @@ bool Codegen::visit(DeleteExpression *ast)
     V4IR::Expr* expr = *expression(ast->expression);
     // Temporaries cannot be deleted
     V4IR::Temp *t = expr->asTemp();
-    if (t && t->index < _env->members.size()) {
+    if (t && t->index < static_cast<unsigned>(_env->members.size())) {
         // Trying to delete a function argument might throw.
         if (_function->isStrict) {
-            throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+            throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
         _expr.code = _block->CONST(V4IR::BoolType, 0);
         return false;
     }
     if (_function->isStrict && expr->asName()) {
-        throwSyntaxError(ast->deleteToken, "Delete of an unqualified identifier in strict mode.");
+        throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
         return false;
     }
 
@@ -1371,7 +1371,7 @@ bool Codegen::visit(DeleteExpression *ast)
         _expr.code = _block->CONST(V4IR::BoolType, 1);
         return false;
     }
-    if (expr->asTemp() && expr->asTemp()->index >=  _env->members.size()) {
+    if (expr->asTemp() && expr->asTemp()->index >=  static_cast<unsigned>(_env->members.size())) {
         _expr.code = _block->CONST(V4IR::BoolType, 1);
         return false;
     }
@@ -1432,7 +1432,7 @@ V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
             V4IR::Temp *t = _block->LOCAL(index, scope);
-            if (name == "arguments" || name == "eval")
+            if (name == QStringLiteral("arguments") || name == QStringLiteral("eval"))
                 t->isArgumentsOrEval = true;
             return t;
         }
@@ -1595,7 +1595,7 @@ bool Codegen::visit(ObjectLiteral *ast)
             ObjectPropertyValue &v = valueMap[name];
             if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
                 throwSyntaxError(nv->lastSourceLocation(),
-                                 QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
+                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
                 return false;
             }
 
@@ -1608,7 +1608,7 @@ bool Codegen::visit(ObjectLiteral *ast)
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
                 (gs->type == PropertyGetterSetter::Setter && v.hasSetter())) {
                 throwSyntaxError(gs->lastSourceLocation(),
-                                 QCoreApplication::translate("qv4codegen", "Illegal duplicate key '%1' in object literal").arg(name));
+                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
                 return false;
             }
             if (gs->type == PropertyGetterSetter::Getter)
@@ -1729,7 +1729,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
 
     Result expr = expression(ast->base);
     if (!expr->isLValue()) {
-        throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
+        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
@@ -1755,7 +1755,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
 
     Result expr = expression(ast->base);
     if (!expr->isLValue()) {
-        throwReferenceError(ast->base->lastSourceLocation(), "Invalid left-hand side expression in postfix operation");
+        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
@@ -1962,7 +1962,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->column = loc.startColumn;
 
     if (function->usesArgumentsObject)
-        _env->enter("arguments", Environment::VariableDeclaration);
+        _env->enter(QStringLiteral("arguments"), Environment::VariableDeclaration);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_env->compilationMode == FunctionCode || _env->compilationMode == QmlBinding) {
@@ -2032,7 +2032,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_function->usesArgumentsObject) {
-        move(identifier("arguments", ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
+        move(identifier(QStringLiteral("arguments"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
              _block->CALL(_block->NAME(V4IR::Name::builtin_setup_argument_object,
                      ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
@@ -2118,7 +2118,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
 
     if (!_loop) {
-        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Break outside of loop"));
+        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
     }
     Loop *loop = 0;
@@ -2130,7 +2130,7 @@ bool Codegen::visit(BreakStatement *ast)
                 break;
         }
         if (!loop) {
-            throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
             return false;
         }
     }
@@ -2159,12 +2159,12 @@ bool Codegen::visit(ContinueStatement *ast)
             }
         }
         if (!loop) {
-            throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "Undefined label '%1'").arg(ast->label.toString()));
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
             return false;
         }
     }
     if (!loop) {
-        throwSyntaxError(ast->lastSourceLocation(), QCoreApplication::translate("qv4codegen", "continue outside of loop"));
+        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("continue outside of loop"));
         return false;
     }
     unwindException(loop->scopeAndFinally);
@@ -2451,7 +2451,7 @@ bool Codegen::visit(ReturnStatement *ast)
         return true;
 
     if (_env->compilationMode != FunctionCode && _env->compilationMode != QmlBinding) {
-        throwSyntaxError(ast->returnToken, QCoreApplication::translate("qv4codegen", "Return statement outside of function"));
+        throwSyntaxError(ast->returnToken, QStringLiteral("Return statement outside of function"));
         return false;
     }
     if (ast->expression) {
@@ -2580,7 +2580,7 @@ bool Codegen::visit(TryStatement *ast)
 
     if (_function->isStrict && ast->catchExpression &&
             (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
-        throwSyntaxError(ast->catchExpression->identifierToken, QCoreApplication::translate("qv4codegen", "Catch variable name may not be eval or arguments in strict mode"));
+        throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
         return false;
     }
 
@@ -2827,7 +2827,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(V4IR::Expr *expr, co
     } else {
         return false;
     }
-    throwSyntaxError(loc, QCoreApplication::translate("qv4codegen", "Variable name may not be eval or arguments in strict mode"));
+    throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
     return true;
 }
 

@@ -101,16 +101,16 @@ static QString escape(const QString &input)
                 output.append(QChar(uc));
             } else {
                 output.append('%');
-                output.append(QChar(toHex(uc >> 4)));
-                output.append(QChar(toHex(uc)));
+                output.append(QLatin1Char(toHex(uc >> 4)));
+                output.append(QLatin1Char(toHex(uc)));
             }
         } else {
             output.append('%');
             output.append('u');
-            output.append(QChar(toHex(uc >> 12)));
-            output.append(QChar(toHex(uc >> 8)));
-            output.append(QChar(toHex(uc >> 4)));
-            output.append(QChar(toHex(uc)));
+            output.append(QLatin1Char(toHex(uc >> 12)));
+            output.append(QLatin1Char(toHex(uc >> 8)));
+            output.append(QLatin1Char(toHex(uc >> 4)));
+            output.append(QLatin1Char(toHex(uc)));
         }
     }
     return output;
@@ -396,7 +396,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     const QString code = callData->args[0].stringValue()->toQString();
     bool inheritContext = !ctx->strictMode;
 
-    Script script(ctx, code, QString("eval code"));
+    Script script(ctx, code, QStringLiteral("eval code"));
     script.strictMode = (directCall && parentContext->strictMode);
     script.inheritContext = inheritContext;
     script.parse();
@@ -558,7 +558,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
     if (trimmed.startsWith(QLatin1String("Infinity"))
             || trimmed.startsWith(QLatin1String("+Infinity")))
         return Encode(Q_INFINITY);
-    if (trimmed.startsWith("-Infinity"))
+    if (trimmed.startsWith(QStringLiteral("-Infinity")))
         return Encode(-Q_INFINITY);
     QByteArray ba = trimmed.toLatin1();
     bool ok;

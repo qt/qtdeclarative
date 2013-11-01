@@ -106,7 +106,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
     const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
-    Result result = result = typeSearch(i->modules, name);
+    Result result = typeSearch(i->modules, name);
 
     if (!result.isValid())
         result = query(i->compositeSingletons, name);

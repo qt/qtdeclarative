@@ -56,9 +56,8 @@ QQmlAbstractBinding::VTable *QQmlAbstractBinding::vTables[] = {
 };
 
 QQmlAbstractBinding::QQmlAbstractBinding(BindingType bt)
-: m_nextBindingPtr(bt)
+    : m_nextBindingPtr(bt)
 {
-    Q_ASSERT(bt <= 0x03);
 }
 
 QQmlAbstractBinding::~QQmlAbstractBinding()

@@ -141,7 +141,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint)
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
-        } else if (QV4::QmlContextWrapper *wrapper = object->as<QV4::QmlContextWrapper>()) {
+        } else if (object->as<QV4::QmlContextWrapper>()) {
             return QVariant();
         } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
             return w->toVariant();

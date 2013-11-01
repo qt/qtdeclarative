@@ -942,7 +942,7 @@ void QQmlListCompositor::move(
 
 void QQmlListCompositor::clear()
 {
-    QT_QML_TRACE_LISTCOMPOSITOR( )
+    QT_QML_TRACE_LISTCOMPOSITOR("")
     for (Range *range = m_ranges.next; range != &m_ranges; range = erase(range)) {}
     m_end = iterator(m_ranges.next, 0, Default, m_groupCount);
     m_cacheIt = m_end;

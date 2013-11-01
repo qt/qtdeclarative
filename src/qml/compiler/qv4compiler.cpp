@@ -270,11 +270,11 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
     }
 
     uint *functionTable = (uint *)(data + unit->offsetToFunctionTable);
-    for (uint i = 0; i < irModule->functions.size(); ++i)
+    for (int i = 0; i < irModule->functions.size(); ++i)
         functionTable[i] = functionOffsets.value(irModule->functions.at(i));
 
     char *f = data + unitSize + stringDataSize;
-    for (uint i = 0; i < irModule->functions.size(); ++i) {
+    for (int i = 0; i < irModule->functions.size(); ++i) {
         QQmlJS::V4IR::Function *function = irModule->functions.at(i);
         if (function == irModule->rootFunction)
             unit->indexOfRootFunction = i;

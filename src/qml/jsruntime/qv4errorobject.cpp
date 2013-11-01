@@ -82,7 +82,7 @@ ErrorObject::ErrorObject(InternalClass *ic)
     Scope scope(engine());
     ScopedValue protectThis(scope, this);
 
-    ScopedString s(scope, ic->engine->newString("Error"));
+    ScopedString s(scope, ic->engine->newString(QStringLiteral("Error")));
     defineDefaultProperty(QStringLiteral("name"), s);
 }
 

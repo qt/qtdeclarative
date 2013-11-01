@@ -244,10 +244,10 @@ void Object::markObjects(Managed *that)
     Object *o = static_cast<Object *>(that);
 
     if (!o->hasAccessorProperty) {
-        for (int i = 0; i < o->internalClass->size; ++i)
+        for (uint i = 0; i < o->internalClass->size; ++i)
             o->memberData[i].value.mark();
     } else {
-        for (int i = 0; i < o->internalClass->size; ++i) {
+        for (uint i = 0; i < o->internalClass->size; ++i) {
             const Property &pd = o->memberData[i];
             if (o->internalClass->propertyData[i].isAccessor()) {
                 if (pd.getter())
@@ -1128,6 +1128,8 @@ void Object::copyArrayData(Object *other)
 
 ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endIndex, ExecutionContext *ctx, Object *o)
 {
+    Q_UNUSED(ctx);
+
     Scope scope(engine());
     ScopedValue value(scope);
 
@@ -1150,7 +1152,7 @@ ReturnedValue Object::arrayIndexOf(const ValueRef v, uint fromIndex, uint endInd
                 return Encode(n->key());
         }
     } else {
-        if ((int) endIndex > arrayDataLen)
+        if (endIndex > arrayDataLen)
             endIndex = arrayDataLen;
         Property *pd = arrayData;
         Property *end = pd + endIndex;
@@ -1191,14 +1193,14 @@ void Object::arrayConcat(const ArrayObject *other)
             }
         }
     } else {
-        int oldSize = arrayLength();
+        uint oldSize = arrayLength();
         arrayReserve(oldSize + other->arrayDataLen);
         if (oldSize > arrayDataLen) {
-            for (int i = arrayDataLen; i < oldSize; ++i)
+            for (uint i = arrayDataLen; i < oldSize; ++i)
                 arrayData[i].value = Primitive::emptyValue();
         }
         if (other->arrayAttributes) {
-            for (int i = 0; i < other->arrayDataLen; ++i) {
+            for (uint i = 0; i < other->arrayDataLen; ++i) {
                 bool exists;
                 arrayData[oldSize + i].value = const_cast<ArrayObject *>(other)->getIndexed(i, &exists);
                 arrayDataLen = oldSize + i + 1;
@@ -1223,7 +1225,7 @@ void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const Va
         return;
 
     if (sparseArray) {
-        context->throwUnimplemented("Object::sort unimplemented for sparse arrays");
+        context->throwUnimplemented(QStringLiteral("Object::sort unimplemented for sparse arrays"));
         return;
     }
 
@@ -1267,7 +1269,7 @@ void Object::arraySort(ExecutionContext *context, ObjectRef thisObject, const Va
     // and aborts otherwise. We do not want JavaScript to easily crash
     // the entire application and therefore choose qSort, which doesn't
     // have this property.
-    qSort(begin, begin + len, lessThan);
+    std::sort(begin, begin + len, lessThan);
 }
 
 
@@ -1276,7 +1278,7 @@ void Object::initSparse()
     if (!sparseArray) {
         flags &= ~SimpleArray;
         sparseArray = new SparseArray;
-        for (int i = 0; i < arrayDataLen; ++i) {
+        for (uint i = 0; i < arrayDataLen; ++i) {
             if (!((arrayAttributes && arrayAttributes[i].isGeneric()) || arrayData[i].value.isEmpty())) {
                 SparseArrayNode *n = sparseArray->insert(i);
                 n->value = i + arrayOffset;
@@ -1296,7 +1298,7 @@ void Object::initSparse()
             }
             arrayData[o - 1].value = Primitive::fromInt32(arrayDataLen + off);
         }
-        for (int i = arrayDataLen + off; i < arrayAlloc; ++i) {
+        for (uint i = arrayDataLen + off; i < arrayAlloc; ++i) {
             arrayData[i].value = Primitive::fromInt32(i + 1);
         }
     }
@@ -1443,6 +1445,8 @@ ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 
 void ArrayObject::init(ExecutionEngine *engine)
 {
+    Q_UNUSED(engine);
+
     type = Type_ArrayObject;
     memberData[LengthPropertyIndex].value = Primitive::fromInt32(0);
 }

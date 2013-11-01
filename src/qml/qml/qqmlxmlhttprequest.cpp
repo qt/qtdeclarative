@@ -189,8 +189,8 @@ class NamedNodeMap : public Object
 public:
     NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
         : Object(engine)
-        , d(data)
         , list(list)
+        , d(data)
     {
         vtbl = &static_vtbl;
 
@@ -608,7 +608,6 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
 
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
     Scoped<Node> instance(scope, new (v4->memoryManager) Node(v4, data));
     ScopedObject p(scope);
 
@@ -992,7 +991,6 @@ ReturnedValue NodeList::get(Managed *m, const StringRef name, bool *hasProperty)
 
 ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
-    QQmlXMLHttpRequestData *d = xhrdata(engine);
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
     Scoped<NodeList> instance(scope, new (v4->memoryManager) NodeList(v4, data));

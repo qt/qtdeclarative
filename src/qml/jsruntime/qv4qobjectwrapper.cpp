@@ -257,6 +257,8 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
 {
+    Q_UNUSED(revisionMode);
+
     QQmlData *ddata = QQmlData::get(m_object, false);
     if (!ddata)
         return 0;
@@ -277,7 +279,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         return QV4::Encode::undefined();
     }
 
-    QV4:Scope scope(ctx);
+    QV4::Scope scope(ctx);
     QV4::ScopedString name(scope, n);
 
     if (name->equals(m_destroy) || name->equals(scope.engine->id_toString)) {
@@ -704,7 +706,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
 
     const QMetaObject *mo = that->m_object->metaObject();
     const int propertyCount = mo->propertyCount();
-    if (it->arrayIndex < propertyCount) {
+    if (it->arrayIndex < static_cast<uint>(propertyCount)) {
         name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()));
         ++it->arrayIndex;
         if (attributes)
@@ -713,7 +715,7 @@ Property *QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String
         return &it->tmpDynamicProperty;
     }
     const int methodCount = mo->methodCount();
-    if (it->arrayIndex < propertyCount + methodCount) {
+    if (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
         name = that->engine()->newString(QString::fromUtf8(mo->method(it->arrayIndex - propertyCount).name()));
         ++it->arrayIndex;
         if (attributes)
@@ -1226,7 +1228,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
     } else if (QV4::Object *obj = actual->asObject()) {
         QV8Engine *engine = obj->engine()->v8Engine;
 
-        if (QV4::VariantObject *v = obj->as<QV4::VariantObject>()) {
+        if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
             if (engine->toVariant(actual, -1).userType() == conversionType)

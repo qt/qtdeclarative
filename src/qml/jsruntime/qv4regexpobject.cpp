@@ -185,6 +185,7 @@ void RegExpObject::markObjects(Managed *that)
 
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
+    Q_UNUSED(ctx);
     Q_ASSERT(0 == internalClass->find(ctx->engine->newIdentifier(QStringLiteral("lastIndex"))));
     return &memberData[0];
 }
@@ -200,14 +201,14 @@ QRegExp RegExpObject::toQRegExp() const
 
 QString RegExpObject::toString() const
 {
-    QString result = QChar('/') + source();
-    result += QChar('/');
+    QString result = QLatin1Char('/') + source();
+    result += QLatin1Char('/');
     if (global)
-        result += QChar('g');
+        result += QLatin1Char('g');
     if (value->ignoreCase())
-        result += QChar('i');
+        result += QLatin1Char('i');
     if (value->multiLine())
-        result += QChar('m');
+        result += QLatin1Char('m');
     return result;
 }
 
@@ -270,21 +271,21 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         if (scope.hasException())
             return Encode::undefined();
         for (int i = 0; i < str.length(); ++i) {
-            if (str.at(i) == QChar('g') && !global) {
+            if (str.at(i) == QLatin1Char('g') && !global) {
                 global = true;
-            } else if (str.at(i) == QChar('i') && !ignoreCase) {
+            } else if (str.at(i) == QLatin1Char('i') && !ignoreCase) {
                 ignoreCase = true;
-            } else if (str.at(i) == QChar('m') && !multiLine) {
+            } else if (str.at(i) == QLatin1Char('m') && !multiLine) {
                 multiLine = true;
             } else {
-                return ctx->throwSyntaxError(0);
+                return ctx->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
             }
         }
     }
 
     Scoped<RegExp> regexp(scope, RegExp::create(ctx->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
-        return ctx->throwSyntaxError(0);
+        return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 
     return Encode(ctx->engine->newRegExpObject(regexp, global));
 }

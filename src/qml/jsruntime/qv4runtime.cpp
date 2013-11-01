@@ -823,7 +823,7 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
 
     Scoped<FunctionObject> o(scope, baseObject->get(name));
     if (!o) {
-        QString error = QString("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
+        QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         return context->throwTypeError(error);
     }
 
@@ -1065,7 +1065,7 @@ ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, 
     QV4::InternalClass *klass = ctx->compilationUnit->runtimeClasses[classId];
     Scoped<Object> o(scope, ctx->engine->newObject(klass));
 
-    for (int i = 0; i < klass->size; ++i) {
+    for (uint i = 0; i < klass->size; ++i) {
         if (klass->propertyData[i].isData())
             o->memberData[i].value = *args++;
         else {

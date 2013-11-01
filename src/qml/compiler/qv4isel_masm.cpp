@@ -235,6 +235,8 @@ void Assembler::registerBlock(V4IR::BasicBlock* block, V4IR::BasicBlock *nextBlo
 
 void Assembler::jumpToBlock(V4IR::BasicBlock* current, V4IR::BasicBlock *target)
 {
+    Q_UNUSED(current);
+
     if (target != _nextBlock)
         _patches[target].append(jump());
 }
@@ -371,6 +373,8 @@ void Assembler::copyValue(Result result, V4IR::Expr* source)
         storeDouble(toDoubleRegister(source), result);
     } else if (V4IR::Temp *temp = source->asTemp()) {
 #ifdef VALUE_FITS_IN_REGISTER
+        Q_UNUSED(temp);
+
         // Use ReturnValueRegister as "scratch" register because loadArgument
         // and storeArgument are functions that may need a scratch register themselves.
         loadArgumentInRegister(source, ReturnValueRegister, 0);
@@ -706,7 +710,7 @@ void InstructionSelection::run(int functionIndex)
         foreach (V4IR::Stmt *s, _block->statements) {
             if (s->location.isValid()) {
                 _as->recordLineNumber(s->location.startLine);
-                if (s->location.startLine != lastLine) {
+                if (int(s->location.startLine) != lastLine) {
                     _as->saveInstructionPointer(Assembler::ScratchRegister);
                     lastLine = s->location.startLine;
                 }
@@ -744,7 +748,7 @@ QV4::CompiledData::CompilationUnit *InstructionSelection::backendCompileStep()
 
 void InstructionSelection::callBuiltinInvalid(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    int argc = prepareCallData(args, 0);
+    prepareCallData(args, 0);
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
@@ -936,7 +940,7 @@ void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4
 {
     Q_ASSERT(value);
 
-    int argc = prepareCallData(args, 0);
+    prepareCallData(args, 0);
     generateFunctionCall(result, __qmljs_call_value, Assembler::ContextRegister,
                          Assembler::Reference(value),
                          baseAddressForCallData());
@@ -1350,7 +1354,7 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     }
 }
 
-static inline Assembler::FPRegisterID getFreeFPReg(V4IR::Expr *shouldNotOverlap, int hint)
+static inline Assembler::FPRegisterID getFreeFPReg(V4IR::Expr *shouldNotOverlap, unsigned hint)
 {
     if (V4IR::Temp *t = shouldNotOverlap->asTemp())
         if (t->type == V4IR::DoubleType)
@@ -1481,7 +1485,7 @@ void InstructionSelection::callProperty(V4IR::Expr *base, const QString &name, V
 {
     assert(base != 0);
 
-    int argc = prepareCallData(args, base);
+    prepareCallData(args, base);
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
@@ -1502,7 +1506,7 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 {
     assert(base != 0);
 
-    int argc = prepareCallData(args, base);
+    prepareCallData(args, base);
     generateFunctionCall(result, __qmljs_call_element, Assembler::ContextRegister,
                          Assembler::PointerToValue(index),
                          baseAddressForCallData());
@@ -1806,7 +1810,7 @@ void InstructionSelection::convertTypeToUInt32(V4IR::Temp *source, V4IR::Temp *t
 void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::ExprList *args, V4IR::Temp *result)
 {
     assert(func != 0);
-    int argc = prepareCallData(args, 0);
+    prepareCallData(args, 0);
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
@@ -1825,7 +1829,7 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    int argc = prepareCallData(args, 0);
+    prepareCallData(args, 0);
     generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister,
                          Assembler::Reference(base), Assembler::PointerToString(name),
                          baseAddressForCallData());
@@ -1835,7 +1839,7 @@ void InstructionSelection::constructValue(V4IR::Temp *value, V4IR::ExprList *arg
 {
     assert(value != 0);
 
-    int argc = prepareCallData(args, 0);
+    prepareCallData(args, 0);
     generateFunctionCall(result, __qmljs_construct_value,
                          Assembler::ContextRegister,
                          Assembler::Reference(value),

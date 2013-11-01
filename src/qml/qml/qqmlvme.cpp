@@ -638,7 +638,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CreateSimpleObject)
             QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QQmlData));   
-            ::memset(o, 0, instr.typeSize + sizeof(QQmlData));
+            ::memset(static_cast<void *>(o), 0, instr.typeSize + sizeof(QQmlData));
             instr.create(o);
 
             QQmlData *ddata = (QQmlData *)(((const char *)o) + instr.typeSize);

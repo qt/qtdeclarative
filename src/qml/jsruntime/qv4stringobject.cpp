@@ -86,7 +86,7 @@ StringObject::StringObject(InternalClass *ic)
     Scope scope(engine());
     ScopedObject protectThis(scope, this);
 
-    value = ic->engine->newString("")->asReturnedValue();
+    value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
 
     tmpProperty.value = Primitive::undefinedValue();
 
@@ -129,7 +129,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
         return false;
     }
 
-    if (index < o->value.stringValue()->toQString().length()) {
+    if (index < static_cast<uint>(o->value.stringValue()->toQString().length())) {
         if (v4->current->strictMode)
             v4->current->throwTypeError();
         return false;
@@ -444,7 +444,7 @@ static void appendReplacementString(QString *result, const QString &input, const
             uint substStart = JSC::Yarr::offsetNoMatch;
             uint substEnd = JSC::Yarr::offsetNoMatch;
             if (ch == '$') {
-                *result += ch;
+                *result += QLatin1Char(ch);
                 continue;
             } else if (ch == '&') {
                 substStart = matchOffsets[0];
@@ -457,7 +457,7 @@ static void appendReplacementString(QString *result, const QString &input, const
                 substEnd = input.length();
             } else if (ch >= '1' && ch <= '9') {
                 uint capture = ch - '0';
-                if (capture > 0 && capture < captureCount) {
+                if (capture > 0 && capture < static_cast<uint>(captureCount)) {
                     substStart = matchOffsets[capture * 2];
                     substEnd = matchOffsets[capture * 2 + 1];
                 }
@@ -557,7 +557,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
                 callData->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
-            Q_ASSERT(matchStart >= lastEnd);
+            Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = ctx->engine->newString(string);

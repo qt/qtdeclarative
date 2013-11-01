@@ -857,7 +857,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
     if (!!errorObj && errorObj->asSyntaxError()) {
-        QV4::ScopedString m(scope, errorObj->engine()->newString("message"));
+        QV4::ScopedString m(scope, errorObj->engine()->newString(QStringLiteral("message")));
         QV4::ScopedValue v(scope, errorObj->get(m));
         error.setDescription(v->toQStringNoThrow());
     } else

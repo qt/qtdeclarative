@@ -122,6 +122,8 @@ ReturnedValue QmlListWrapper::get(Managed *m, const StringRef name, bool *hasPro
 
 ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
+    Q_UNUSED(hasProperty);
+
     QV4::ExecutionEngine *e = m->engine();
     QmlListWrapper *w = m->as<QmlListWrapper>();
     if (!w)

@@ -67,7 +67,7 @@ struct DelegateModelGroupFunction: QV4::FunctionObject
     uint flag;
 
     DelegateModelGroupFunction(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
-        : FunctionObject(scope, /*name*/0)
+        : FunctionObject(scope, QStringLiteral("DelegateModelGroupFunction"))
         , code(code)
         , flag(flag)
     {
@@ -1622,7 +1622,6 @@ void QQmlDelegateModelItemMetaType::initializeMetaObject()
 
 void QQmlDelegateModelItemMetaType::initializePrototype()
 {
-    QQmlDelegateModelEngineData *data = engineData(v8Engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8Engine);
     QV4::Scope scope(v4);
 

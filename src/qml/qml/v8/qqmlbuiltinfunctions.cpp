@@ -102,11 +102,11 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            put((str = v4->newString(enumerator.key(jj))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
+            put((str = v4->newString(QString::fromUtf8(enumerator.key(jj)))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
         }
     }
-    put((str = v4->newString("Asynchronous")), (v = QV4::Primitive::fromInt32(0)));
-    put((str = v4->newString("Synchronous")), (v = QV4::Primitive::fromInt32(1)));
+    put((str = v4->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
+    put((str = v4->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
 
     defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     defineDefaultProperty(QStringLiteral("isQtObject"), method_isQtObject);
@@ -962,16 +962,16 @@ ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
                 qmlerror = v4->newObject();
-                qmlerror->put((s = v4->newString("lineNumber")), (v = QV4::Primitive::fromInt32(error.line())));
-                qmlerror->put((s = v4->newString("columnNumber")), (v = QV4::Primitive::fromInt32(error.column())));
-                qmlerror->put((s = v4->newString("fileName")), (v = v4->newString(error.url().toString())));
-                qmlerror->put((s = v4->newString("message")), (v = v4->newString(error.description())));
+                qmlerror->put((s = v4->newString(QStringLiteral("lineNumber"))), (v = QV4::Primitive::fromInt32(error.line())));
+                qmlerror->put((s = v4->newString(QStringLiteral("columnNumber"))), (v = QV4::Primitive::fromInt32(error.column())));
+                qmlerror->put((s = v4->newString(QStringLiteral("fileName"))), (v = v4->newString(error.url().toString())));
+                qmlerror->put((s = v4->newString(QStringLiteral("message"))), (v = v4->newString(error.description())));
                 qmlerrors->putIndexed(ii, qmlerror);
             }
 
             v = v4->newString(errorstr);
             Scoped<Object> errorObject(scope, v4->newErrorObject(v));
-            errorObject->put((s = v4->newString("qmlErrors")), qmlerrors);
+            errorObject->put((s = v4->newString(QStringLiteral("qmlErrors"))), qmlerrors);
             return errorObject.asReturnedValue();
         }
     };
@@ -1358,7 +1358,7 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
                                                              QString::number(frame.line));
 
         if (i)
-            stack += QChar('\n');
+            stack += QLatin1Char('\n');
         stack += stackFrame;
     }
     return stack;

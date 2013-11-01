@@ -2691,8 +2691,8 @@ QQmlScriptData::QQmlScriptData()
     : importCache(0)
     , pragmas(QQmlScript::Object::ScriptBlock::None)
     , m_loaded(false)
-    , m_program(0)
     , m_precompiledScript(0)
+    , m_program(0)
 {
 }
 

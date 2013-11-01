@@ -167,7 +167,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     Scope scope(engine);
     ScopedString that(scope, static_cast<String *>(m));
 
-    if (index < (uint)that->_text->size) {
+    if (index < static_cast<uint>(that->_text->size)) {
         if (hasProperty)
             *hasProperty = true;
         return Encode(engine->newString(that->toQString().mid(index, 1)));
@@ -216,7 +216,7 @@ PropertyAttributes String::query(const Managed *m, StringRef name)
 PropertyAttributes String::queryIndexed(const Managed *m, uint index)
 {
     const String *that = static_cast<const String *>(m);
-    return (index < (uint)that->_text->size) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
+    return (index < static_cast<uint>(that->_text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
 }
 
 bool String::deleteProperty(Managed *, const StringRef)

@@ -638,7 +638,6 @@ void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::
     if (_stackSlotAllocator)
         _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
 
-    QV4::UnaryOpName op = 0;
     switch (oper) {
     case V4IR::OpIfTrue:
         Q_ASSERT(!"unreachable"); break;

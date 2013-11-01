@@ -51,7 +51,7 @@ struct Use {
     unsigned flag : 1;
     unsigned pos  : 31;
 
-    Use(): pos(0), flag(MustHaveRegister) {}
+    Use(): flag(MustHaveRegister), pos(0) {}
     Use(int pos, RegisterFlag flag): flag(flag), pos(pos) {}
 
     bool mustHaveRegister() const { return flag == MustHaveRegister; }
@@ -219,6 +219,8 @@ protected: // IRDecoder
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args,
                               V4IR::Temp *result)
     {
+        Q_UNUSED(name)
+
         addDef(result);
         addUses(base->asTemp(), Use::CouldHaveRegister);
         addUses(args, Use::CouldHaveRegister);
@@ -336,6 +338,7 @@ protected: // IRDecoder
 
     virtual void loadQmlIdObject(int id, V4IR::Temp *temp)
     {
+        Q_UNUSED(id);
         addDef(temp);
         addCall();
     }
@@ -354,22 +357,30 @@ protected: // IRDecoder
 
     virtual void loadQmlScopeObject(Temp *temp)
     {
+        Q_UNUSED(temp);
+
         addDef(temp);
         addCall();
     }
 
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(sourceConst);
+
         addDef(targetTemp);
     }
 
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(str);
+
         addDef(targetTemp);
     }
 
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp)
     {
+        Q_UNUSED(sourceRegexp);
+
         addDef(targetTemp);
         addCall();
     }
@@ -388,6 +399,8 @@ protected: // IRDecoder
 
     virtual void initClosure(V4IR::Closure *closure, V4IR::Temp *target)
     {
+        Q_UNUSED(closure);
+
         addDef(target);
         addCall();
     }
@@ -534,7 +547,7 @@ protected: // IRDecoder
 #endif
         } else if (Binop *b = s->cond->asBinop()) {
             binop(b->op, b->left, b->right, 0);
-        } else if (Const *c = s->cond->asConst()) {
+        } else if (s->cond->asConst()) {
             // TODO: SSA optimization for constant condition evaluation should remove this.
             // See also visitCJump() in masm.
             addCall();
@@ -873,7 +886,7 @@ private:
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
                     foreach (const Use &use, _info->uses(it.temp()))
-                        Q_ASSERT(use.pos < successorStart || use.pos > successorEnd);
+                        Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) || use.pos > static_cast<unsigned>(successorEnd));
                 }
 #endif
 
@@ -954,7 +967,6 @@ protected:
             int pReg = platformRegister(i);
             t->kind = Temp::PhysicalRegister;
             t->index = pReg;
-            Q_ASSERT(t->index >= 0);
         } else {
             int stackSlot = _assignedSpillSlots.value(*t, -1);
             Q_ASSERT(stackSlot >= 0);

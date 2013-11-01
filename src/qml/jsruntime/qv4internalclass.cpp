@@ -69,8 +69,8 @@ static inline int primeForNumBits(int numBits)
 }
 
 PropertyHashData::PropertyHashData(int numBits)
-    : numBits(numBits)
-    , size(0)
+    : size(0)
+    , numBits(numBits)
 {
     refCount.store(1);
     alloc = primeForNumBits(numBits);
@@ -85,9 +85,9 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
 
     if (classSize < d->size || grow) {
         PropertyHashData *dd = new PropertyHashData(grow ? d->numBits + 1 : d->numBits);
-        for (uint i = 0; i < d->alloc; ++i) {
+        for (int i = 0; i < d->alloc; ++i) {
             const Entry &e = d->entries[i];
-            if (!e.identifier || e.index >= classSize)
+            if (!e.identifier || e.index >= static_cast<unsigned>(classSize))
                 continue;
             uint idx = e.identifier->hashValue % dd->alloc;
             while (dd->entries[idx].identifier) {
@@ -155,7 +155,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
         return this;
 
 
-    Transition t = { string->identifier, (int)data.flags() };
+    Transition t = { { string->identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
     if (tit != transitions.constEnd())
         return tit.value();
@@ -211,7 +211,7 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
     if (propertyTable.lookup(string->identifier) < size)
         return changeMember(string, data, index);
 
-    Transition t = { string->identifier, (int)data.flags() };
+    Transition t = { { string->identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (index)
@@ -239,9 +239,9 @@ InternalClass *InternalClass::addMember(String *string, PropertyAttributes data,
 void InternalClass::removeMember(Object *object, Identifier *id)
 {
     int propIdx = propertyTable.lookup(id);
-    assert(propIdx < size);
+    assert(propIdx < static_cast<int>(size));
 
-    Transition t = { id, -1 };
+    Transition t = { { id } , -1 };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (tit != transitions.constEnd()) {

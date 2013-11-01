@@ -91,7 +91,7 @@ void IdentifierTable::addEntry(String *str)
         int newAlloc = primeForNumBits(numBits);
         String **newEntries = (String **)malloc(newAlloc*sizeof(String *));
         memset(newEntries, 0, newAlloc*sizeof(String *));
-        for (uint i = 0; i < alloc; ++i) {
+        for (int i = 0; i < alloc; ++i) {
             String *e = entries[i];
             if (!e)
                 continue;

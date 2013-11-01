@@ -839,11 +839,12 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     foreach (const QStaticPlugin &plugin, plugins) {
         // Since a module can list more than one plugin, we keep iterating even after we found a match.
         if (QQmlExtensionPlugin *instance = qobject_cast<QQmlExtensionPlugin *>(plugin.instance())) {
-            const QJsonArray metaTagsUriList = plugin.metaData().value("uri").toArray();
+            const QJsonArray metaTagsUriList = plugin.metaData().value(QStringLiteral("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
                     QQmlError error;
-                    error.setDescription(QQmlImportDatabase::tr("static plugin for module \"%1\" with name \"%2\" has no metadata URI").arg(uri).arg(instance->metaObject()->className()));
+                    error.setDescription(QQmlImportDatabase::tr("static plugin for module \"%1\" with name \"%2\" has no metadata URI")
+                                         .arg(uri).arg(QString::fromUtf8(instance->metaObject()->className())));
                     error.setUrl(QUrl::fromLocalFile(qmldirPath));
                     errors->prepend(error);
                 }
@@ -945,7 +946,8 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                 if (errors) {
                                     QQmlError poppedError = errors->takeFirst();
                                     QQmlError error;
-                                    error.setDescription(QQmlImportDatabase::tr("static plugin for module \"%1\" with name \"%2\" cannot be loaded: %3").arg(uri).arg(instance->metaObject()->className()).arg(poppedError.description()));
+                                    error.setDescription(QQmlImportDatabase::tr("static plugin for module \"%1\" with name \"%2\" cannot be loaded: %3")
+                                                         .arg(uri).arg(QString::fromUtf8(instance->metaObject()->className())).arg(poppedError.description()));
                                     error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                                     errors->prepend(error);
                                 }

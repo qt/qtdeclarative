@@ -371,7 +371,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         QQmlListModelWorkerAgent::VariantRef ref(agent);
         QVariant var = qVariantFromValue(ref);
         QV4::ScopedValue v(scope, engine->fromVariant((var)));
-        QV4::ScopedString s(scope, v4->newString("__qml:hidden:ref"));
+        QV4::ScopedString s(scope, v4->newString(QStringLiteral("__qml:hidden:ref")));
         rv->asObject()->defineReadonlyProperty(s, v);
 
         agent->release();

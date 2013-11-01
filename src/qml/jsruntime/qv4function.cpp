@@ -58,19 +58,21 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , codeData(0)
         , codeSize(_codeSize)
 {
+    Q_UNUSED(engine);
+
     name = compilationUnit->runtimeStrings[compiledFunction->nameIndex].asString();
 
     formals.resize(compiledFunction->nFormals);
     formals.fill(0);
     const quint32 *formalsIndices = compiledFunction->formalsTable();
-    for (int i = 0; i < compiledFunction->nFormals; ++i)
+    for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
         formals[i] = compilationUnit->runtimeStrings[formalsIndices[i]].asString();
 
 
     locals.resize(compiledFunction->nLocals);
     locals.fill(0);
     const quint32 *localsIndices = compiledFunction->localsTable();
-    for (int i = 0; i < compiledFunction->nLocals; ++i)
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         locals[i] = compilationUnit->runtimeStrings[localsIndices[i]].asString();
 }
 
@@ -92,7 +94,7 @@ namespace QV4 {
 struct LineNumberMappingHelper
 {
     const quint32 *table;
-    int lowerBound(int begin, int end, qptrdiff offset) {
+    int lowerBound(int begin, int end, quint32 offset) {
         int middle;
         int n = int(end - begin);
         int half;
@@ -122,7 +124,7 @@ int Function::lineNumberForProgramCounter(qptrdiff offset) const
     int pos = helper.lowerBound(0, count, offset);
     if (pos != 0 && count > 0)
         --pos;
-    if (pos == count)
+    if (static_cast<uint>(pos) == count)
         return -1;
     return helper.table[pos * 2 + 1];
 }

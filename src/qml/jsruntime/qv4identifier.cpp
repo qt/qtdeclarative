@@ -57,8 +57,8 @@ static inline int primeForNumBits(int numBits)
 
 
 IdentifierHashData::IdentifierHashData(int numBits)
-    : numBits(numBits)
-    , size(0)
+    : size(0)
+    , numBits(numBits)
 {
     refCount.store(1);
     alloc = primeForNumBits(numBits);
@@ -83,7 +83,7 @@ IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
         int newAlloc = primeForNumBits(d->numBits);
         IdentifierHashEntry *newEntries = (IdentifierHashEntry *)malloc(newAlloc * sizeof(IdentifierHashEntry));
         memset(newEntries, 0, newAlloc*sizeof(IdentifierHashEntry));
-        for (uint i = 0; i < d->alloc; ++i) {
+        for (int i = 0; i < d->alloc; ++i) {
             const IdentifierHashEntry &e = d->entries[i];
             if (!e.identifier)
                 continue;

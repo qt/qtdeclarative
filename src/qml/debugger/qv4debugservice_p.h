@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 { class ExecutionEngine; }
+namespace QV4 { struct ExecutionEngine; }
 class QQmlEngine;
 class QV4DebugServicePrivate;
 

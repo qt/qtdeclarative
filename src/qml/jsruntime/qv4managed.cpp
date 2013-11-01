@@ -168,6 +168,12 @@ QString Managed::className() const
     case Type_ForeachIteratorObject:
         s = "__ForeachIterator";
         break;
+    case Type_RegExp:
+        s = "RegExp";
+        break;
+    case Type_QmlSequence:
+        s = "QmlSequence";
+        break;
     }
     return QString::fromLatin1(s);
 }

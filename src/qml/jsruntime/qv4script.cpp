@@ -223,7 +223,7 @@ void Script::parse()
 
     if (!vmFunction) {
         // ### FIX file/line number
-        Scoped<Object> error(valueScope, v4->newSyntaxErrorObject("Syntax error"));
+        Scoped<Object> error(valueScope, v4->newSyntaxErrorObject(QStringLiteral("Syntax error")));
         v4->current->throwError(error);
     }
 }

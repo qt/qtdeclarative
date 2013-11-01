@@ -178,6 +178,7 @@ public:
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
+        Q_UNUSED(protectThis);
         init();
     }
 
@@ -192,6 +193,7 @@ public:
         flags &= ~SimpleArray;
         QV4::Scope scope(engine);
         QV4::ScopedObject protectThis(scope, this);
+        Q_UNUSED(protectThis);
         loadReference();
         init();
     }
@@ -297,7 +299,7 @@ public:
             loadReference();
         }
 
-        if (it->arrayIndex < m_container.count()) {
+        if (it->arrayIndex < static_cast<uint>(m_container.count())) {
             if (attrs)
                 *attrs = QV4::Attr_Data;
             *index = it->arrayIndex;
@@ -569,6 +571,7 @@ QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
+        {}
     return o.asReturnedValue();
 }
 

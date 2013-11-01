@@ -83,7 +83,7 @@ Property *ObjectIterator::next(StringRef name, uint *index, PropertyAttributes *
         if (!current)
             break;
 
-        while (p = current->advanceIterator(this, name, index, attrs)) {
+        while ((p = current->advanceIterator(this, name, index, attrs))) {
             // check the property is not already defined earlier in the proto chain
             if (current != object) {
                 Property *pp;

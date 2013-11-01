@@ -343,7 +343,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
     }
     Scope scope(ctx);
     Scoped<String> n(scope, l->name);
-    ctx->throwReferenceError(n);
+    return ctx->throwReferenceError(n);
 }
 
 ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionContext *ctx)

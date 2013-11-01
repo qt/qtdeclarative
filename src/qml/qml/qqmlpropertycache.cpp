@@ -1154,7 +1154,7 @@ QString QQmlPropertyCache::signalParameterStringForJS(QQmlEngine *engine, const 
             if (errorString)
                 *errorString = QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
             return QString();
-        } else if (illegalNames.contains(param)) {
+        } else if (illegalNames.contains(QString::fromUtf8(param))) {
             if (errorString)
                 *errorString = QCoreApplication::translate("QQmlRewrite", "Signal parameter \"%1\" hides global variable.").arg(QString::fromUtf8(param));
             return QString();
