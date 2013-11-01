@@ -1780,6 +1780,11 @@ bool Codegen::visit(PreDecrementExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (!expr->isLValue()) {
+        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
+        return false;
+    }
+
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
         return false;
     V4IR::Expr *op = binop(V4IR::OpSub, *expr, _block->CONST(V4IR::NumberType, 1));
@@ -1800,6 +1805,11 @@ bool Codegen::visit(PreIncrementExpression *ast)
         return false;
 
     Result expr = expression(ast->expression);
+    if (!expr->isLValue()) {
+        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
+        return false;
+    }
+
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
         return false;
     V4IR::Expr *op = binop(V4IR::OpAdd, unop(V4IR::OpUPlus, *expr), _block->CONST(V4IR::NumberType, 1));

@@ -597,7 +597,7 @@ ReturnedValue ExecutionContext::throwReferenceError(const ValueRef value)
 ReturnedValue ExecutionContext::throwReferenceError(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
-    QString msg = message + QStringLiteral(" is not defined");
+    QString msg = message;
     Scoped<Object> error(scope, engine->newReferenceErrorObject(msg, fileName, line, column));
     return throwError(error);
 }
