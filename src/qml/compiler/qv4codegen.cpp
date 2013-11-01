@@ -1418,7 +1418,7 @@ bool Codegen::visit(FunctionExpression *ast)
 V4IR::Expr *Codegen::identifier(const QString &name, int line, int col)
 {
     if (hasError)
-        return false;
+        return 0;
 
     uint scope = 0;
     Environment *e = _env;
