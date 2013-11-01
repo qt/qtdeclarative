@@ -993,7 +993,7 @@ class MyRevisionedClass : public MyRevisionedBaseClassUnregistered
     Q_PROPERTY(qreal prop2 READ prop2 WRITE setProp2 NOTIFY prop2Changed REVISION 1)
 
 public:
-    MyRevisionedClass() {}
+    MyRevisionedClass() : m_p1(0), m_p2(0) {}
 
     qreal prop1() const { return m_p1; }
     void setProp1(qreal p) {
