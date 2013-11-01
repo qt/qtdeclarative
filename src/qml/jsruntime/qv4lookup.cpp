@@ -473,6 +473,8 @@ void Lookup::setterInsert0(Lookup *l, const ValueRef object, const ValueRef valu
     Object *o = object->asObject();
     if (o && o->internalClass == l->classList[0]) {
         if (!o->prototype()) {
+            if (l->index >= o->memberDataAlloc)
+                o->ensureMemberIndex(l->index);
             o->memberData[l->index].value = *value;
             o->internalClass = l->classList[3];
             return;
@@ -489,6 +491,8 @@ void Lookup::setterInsert1(Lookup *l, const ValueRef object, const ValueRef valu
     if (o && o->internalClass == l->classList[0]) {
         Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
+            if (l->index >= o->memberDataAlloc)
+                o->ensureMemberIndex(l->index);
             o->memberData[l->index].value = *value;
             o->internalClass = l->classList[3];
             return;
@@ -507,7 +511,8 @@ void Lookup::setterInsert2(Lookup *l, const ValueRef object, const ValueRef valu
         if (p && p->internalClass == l->classList[1]) {
             p = p->prototype();
             if (p && p->internalClass == l->classList[2]) {
-                o->ensureMemberIndex(l->index);
+                if (l->index >= o->memberDataAlloc)
+                    o->ensureMemberIndex(l->index);
                 o->memberData[l->index].value = *value;
                 o->internalClass = l->classList[3];
                 return;
