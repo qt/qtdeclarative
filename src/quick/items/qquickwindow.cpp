@@ -420,7 +420,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     q->setFormat(sg->defaultSurfaceFormat());
 
     animationController = new QQuickAnimatorController();
-    animationController->window = q;
+    animationController->m_window = q;
 
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);

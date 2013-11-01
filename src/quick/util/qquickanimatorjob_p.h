@@ -63,7 +63,7 @@ class QQuickShaderEffectNode;
 
 class QSGOpacityNode;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorProxyJob : public QObject, public QAbstractAnimationJob, public QAnimationJobChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorProxyJob : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 
@@ -73,7 +73,10 @@ public:
 
     int duration() const { return m_duration; }
 
-    virtual void animationFinished(QAbstractAnimationJob *);
+    QAbstractAnimationJob *job() const { return m_job; }
+
+    void startedByController();
+    void controllerWasDeleted();
 
 protected:
     bool event(QEvent *);
@@ -91,7 +94,6 @@ private:
     void readyToAnimate();
     void setWindow(QQuickWindow *window);
     static QObject *findAnimationContext(QQuickAbstractAnimation *);
-    void startOnRenderThread();
 
     QQuickAnimatorController *m_controller;
     QQuickAbstractAnimation *m_animation;
@@ -134,6 +136,7 @@ public:
     bool isUniform() const { return m_isUniform; }
 
     bool hasBeenRunning() const { return m_hasBeenRunning; }
+    void setHasBeenRunning(bool has) { m_hasBeenRunning = has; }
 
     qreal value() const;
 
@@ -141,7 +144,6 @@ public:
 
 protected:
     QQuickAnimatorJob();
-    void updateState(State newState, State oldState);
 
     QQuickItem *m_target;
     QQuickAnimatorController *m_controller;
@@ -179,8 +181,6 @@ public:
             , wasChanged(false)
         {
         }
-
-        ~Helper();
 
         void sync();
         void apply();

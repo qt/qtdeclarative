@@ -177,7 +177,7 @@ private Q_SLOTS:
 
 private:
     friend class QQuickItem;
-    friend class QQuickWindowRenderLoop;
+    friend class QQuickAnimatorController;
     Q_DISABLE_COPY(QQuickWindow)
 };
 

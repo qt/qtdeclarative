@@ -387,19 +387,16 @@ bool QSGRenderThread::event(QEvent *e)
         }
 
         window = se->window;
-        connect(animatorDriver, SIGNAL(started()), QQuickWindowPrivate::get(se->window)->animationController, SLOT(animationsStarted()));
         return true; }
 
     case WM_Obscure: {
         RLDEBUG1("    Render: WM_Obscure");
 
-        WMWindowEvent *ce = static_cast<WMWindowEvent *>(e);
-        Q_ASSERT(!window || window == ce->window);
+        Q_ASSERT(!window || window == static_cast<WMWindowEvent *>(e)->window);
 
         if (window) {
             RLDEBUG1("    Render:  - removed one...");
             window = 0;
-            disconnect(animatorDriver, SIGNAL(started()), QQuickWindowPrivate::get(ce->window)->animationController, SLOT(animationsStarted()));
         }
 
         return true; }
@@ -583,10 +580,14 @@ void QSGRenderThread::syncAndRender()
 #endif
     RLDEBUG("    Render:  - rendering starting");
 
-    if (animatorDriver->isRunning())
-        animatorDriver->advance();
-
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+
+    if (animatorDriver->isRunning()) {
+        d->animationController->lock();
+        animatorDriver->advance();
+        d->animationController->unlock();
+    }
+
     if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0) {
         gl->makeCurrent(window);
         d->renderSceneGraph(windowSize);
