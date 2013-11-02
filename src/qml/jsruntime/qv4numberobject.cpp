@@ -250,7 +250,7 @@ ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
         return Encode::undefined();
 
     if (!ctx->callData->argc || ctx->callData->args[0].isUndefined())
-        return __qmljs_to_string(v, ctx);
+        return __qmljs_to_string(ctx, v);
 
     double precision = ctx->callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {

@@ -266,10 +266,10 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
-        f = __qmljs_to_string(f, ctx);
-        QString str = f->stringValue()->toQString();
+        f = __qmljs_to_string(ctx, f);
         if (scope.hasException())
             return Encode::undefined();
+        QString str = f->stringValue()->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !global) {
                 global = true;
@@ -322,7 +322,9 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
         return ctx->throwTypeError();
 
     ScopedValue arg(scope, ctx->argument(0));
-    arg = __qmljs_to_string(arg, ctx);
+    arg = __qmljs_to_string(ctx, arg);
+    if (scope.hasException())
+        return Encode::undefined();
     QString s = arg->stringValue()->toQString();
 
     int offset = r->global ? r->lastIndexProperty(ctx)->value.toInt32() : 0;

@@ -1446,7 +1446,7 @@ Assembler::Jump InstructionSelection::genInlineBinop(V4IR::AluOp oper, V4IR::Exp
 
 void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR::Expr *rightSource, V4IR::Temp *target)
 {
-    if (oper != V4IR:: OpMod
+    if (oper != V4IR::OpMod
             && leftSource->type == V4IR::DoubleType && rightSource->type == V4IR::DoubleType
             && isPregOrConst(leftSource) && isPregOrConst(rightSource)) {
         doubleBinop(oper, leftSource, rightSource, target);
@@ -1462,7 +1462,14 @@ void InstructionSelection::binop(V4IR::AluOp oper, V4IR::Expr *leftSource, V4IR:
         done = genInlineBinop(oper, leftSource, rightSource, target);
 
     // TODO: inline var===null and var!==null
-    const Assembler::BinaryOperationInfo& info = Assembler::binaryOperation(oper);
+    Assembler::BinaryOperationInfo info = Assembler::binaryOperation(oper);
+
+    if (oper == V4IR::OpAdd &&
+            (leftSource->type == V4IR::StringType || rightSource->type == V4IR::StringType)) {
+        const Assembler::BinaryOperationInfo stringAdd = OPCONTEXT(__qmljs_add_string);
+        info = stringAdd;
+    }
+
     if (info.fallbackImplementation) {
         _as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
                                      Assembler::PointerToValue(leftSource),

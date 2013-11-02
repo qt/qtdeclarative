@@ -297,30 +297,6 @@ ReturnedValue __qmljs_delete_name(ExecutionContext *ctx, const StringRef name)
     return Encode(ctx->deleteProperty(name));
 }
 
-QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
-{
-    Scope scope(ctx);
-
-    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
-    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
-    if (pleft->isString() || pright->isString()) {
-        if (!pleft->isString())
-            pleft = __qmljs_to_string(pleft, ctx);
-        if (!pright->isString())
-            pright = __qmljs_to_string(pright, ctx);
-        if (scope.engine->hasException)
-            return Encode::undefined();
-        if (!pleft->stringValue()->length())
-            return right->asReturnedValue();
-        if (!pright->stringValue()->length())
-            return pleft->asReturnedValue();
-        return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
-    }
-    double x = __qmljs_to_number(pleft);
-    double y = __qmljs_to_number(pright);
-    return Encode(x + y);
-}
-
 QV4::ReturnedValue __qmljs_instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
 {
     Object *o = right->asObject();
@@ -467,6 +443,90 @@ Returned<String> *__qmljs_convert_to_string(ExecutionContext *ctx, const ValueRe
     default: // double
         return __qmljs_string_from_number(ctx, value->doubleValue());
     } // switch
+}
+
+// This is slightly different from the method above, as
+// the + operator requires a slightly different conversion
+static Returned<String> *convert_to_string_add(ExecutionContext *ctx, const ValueRef value)
+{
+    switch (value->type()) {
+    case Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+    case Value::Undefined_Type:
+        return ctx->engine->id_undefined.ret();
+    case Value::Null_Type:
+        return ctx->engine->id_null.ret();
+    case Value::Boolean_Type:
+        if (value->booleanValue())
+            return ctx->engine->id_true.ret();
+        else
+            return ctx->engine->id_false.ret();
+    case Value::Managed_Type:
+        if (value->isString())
+            return value->stringValue()->asReturned<String>();
+        {
+            Scope scope(ctx);
+            ScopedValue prim(scope, __qmljs_to_primitive(value, PREFERREDTYPE_HINT));
+            return __qmljs_convert_to_string(ctx, prim);
+        }
+    case Value::Integer_Type:
+        return __qmljs_string_from_number(ctx, value->int_32);
+    default: // double
+        return __qmljs_string_from_number(ctx, value->doubleValue());
+    } // switch
+}
+
+QV4::ReturnedValue __qmljs_add_helper(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+{
+    Scope scope(ctx);
+
+    ScopedValue pleft(scope, __qmljs_to_primitive(left, PREFERREDTYPE_HINT));
+    ScopedValue pright(scope, __qmljs_to_primitive(right, PREFERREDTYPE_HINT));
+    if (pleft->isString() || pright->isString()) {
+        if (!pleft->isString())
+            pleft = convert_to_string_add(ctx, pleft);
+        if (!pright->isString())
+            pright = convert_to_string_add(ctx, pright);
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        if (!pleft->stringValue()->length())
+            return pright->asReturnedValue();
+        if (!pright->stringValue()->length())
+            return pleft->asReturnedValue();
+        return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
+    }
+    double x = __qmljs_to_number(pleft);
+    double y = __qmljs_to_number(pright);
+    return Encode(x + y);
+}
+
+QV4::ReturnedValue __qmljs_add_string(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right)
+{
+    Q_ASSERT(left->isString() || right->isString());
+
+    if (left->isString() && right->isString()) {
+        if (!left->stringValue()->length())
+            return right->asReturnedValue();
+        if (!right->stringValue()->length())
+            return left->asReturnedValue();
+        return (new (ctx->engine->memoryManager) String(ctx->engine, left->stringValue(), right->stringValue()))->asReturnedValue();
+    }
+
+    Scope scope(ctx);
+    ScopedValue pleft(scope, *left);
+    ScopedValue pright(scope, *right);
+
+    if (!pleft->isString())
+        pleft = convert_to_string_add(ctx, left);
+    if (!pright->isString())
+        pright = convert_to_string_add(ctx, right);
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    if (!pleft->stringValue()->length())
+        return pright->asReturnedValue();
+    if (!pright->stringValue()->length())
+        return pleft->asReturnedValue();
+    return (new (ctx->engine->memoryManager) String(ctx->engine, pleft->stringValue(), pright->stringValue()))->asReturnedValue();
 }
 
 void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, const StringRef name, const ValueRef value)
@@ -1110,7 +1170,7 @@ QV4::ReturnedValue __qmljs_decrement(const QV4::ValueRef value)
     }
 }
 
-QV4::ReturnedValue __qmljs_to_string(const QV4::ValueRef value, QV4::ExecutionContext *ctx)
+QV4::ReturnedValue __qmljs_to_string(QV4::ExecutionContext *ctx, const QV4::ValueRef value)
 {
     if (value->isString())
         return value.asReturnedValue();

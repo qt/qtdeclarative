@@ -301,8 +301,10 @@ ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
 
     ScopedValue v(scope);
     for (int i = 0; i < context->callData->argc; ++i) {
-        v = __qmljs_to_string(ValueRef(&context->callData->args[i]), context);
-        assert(v->isString());
+        v = __qmljs_to_string(context, ValueRef(&context->callData->args[i]));
+        if (scope.hasException())
+            return Encode::undefined();
+        Q_ASSERT(v->isString());
         value += v->stringValue()->toQString();
     }
 

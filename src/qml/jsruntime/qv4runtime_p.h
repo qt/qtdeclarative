@@ -184,7 +184,7 @@ QV4::ReturnedValue __qmljs_foreach_next_property_name(const ValueRef foreach_ite
 QV4::ReturnedValue __qmljs_to_primitive(const ValueRef value, int typeHint);
 Q_QML_EXPORT QV4::Bool __qmljs_to_boolean(const QV4::ValueRef value);
 double __qmljs_to_number(const QV4::ValueRef value);
-QV4::ReturnedValue __qmljs_to_string(const ValueRef value, QV4::ExecutionContext *ctx);
+QV4::ReturnedValue __qmljs_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 Q_QML_EXPORT Returned<String> *__qmljs_convert_to_string(QV4::ExecutionContext *ctx, const ValueRef value);
 void __qmljs_numberToString(QString *result, double num, int radix = 10);
 ReturnedValue __qmljs_to_object(QV4::ExecutionContext *ctx, const ValueRef value);
@@ -221,6 +221,7 @@ typedef QV4::ReturnedValue (*BinOpContext)(QV4::ExecutionContext *ctx, const QV4
 QV4::ReturnedValue __qmljs_instanceof(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::ReturnedValue __qmljs_in(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::ReturnedValue __qmljs_add(ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
+QV4::ReturnedValue __qmljs_add_string(QV4::ExecutionContext *ctx, const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::ReturnedValue __qmljs_bit_or(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::ReturnedValue __qmljs_bit_xor(const QV4::ValueRef left, const QV4::ValueRef right);
 QV4::ReturnedValue __qmljs_bit_and(const QV4::ValueRef left, const QV4::ValueRef right);
