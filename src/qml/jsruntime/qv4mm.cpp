@@ -146,6 +146,8 @@ struct MemoryManager::Data
     uint nChunks[MaxItemSize/16];
     uint availableItems[MaxItemSize/16];
     uint allocCount[MaxItemSize/16];
+    int totalItems;
+    int totalAlloc;
     struct Chunk {
         PageAllocation memory;
         int chunkSize;
@@ -249,21 +251,20 @@ Managed *MemoryManager::alloc(std::size_t size)
     willAllocate(size);
 #endif // DETAILED_MM_STATS
 
-    assert(size >= 16);
-    assert(size % 16 == 0);
+    Q_ASSERT(size >= 16);
+    Q_ASSERT(size % 16 == 0);
 
     size_t pos = size >> 4;
-    ++m_d->allocCount[pos];
 
     // fits into a small bucket
-    assert(size < MemoryManager::Data::MaxItemSize);
+    Q_ASSERT(size < MemoryManager::Data::MaxItemSize);
 
     Managed *m = m_d->smallItems[pos];
     if (m)
         goto found;
 
     // try to free up space, otherwise allocate
-    if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && !m_d->aggressiveGC) {
+    if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
         runGC();
         m = m_d->smallItems[pos];
         if (m)
@@ -299,6 +300,7 @@ Managed *MemoryManager::alloc(std::size_t size)
         *last = 0;
         m = m_d->smallItems[pos];
         m_d->availableItems[pos] += allocation.memory.size()/size - 1;
+        m_d->totalItems += allocation.memory.size()/size - 1;
 #ifdef V4_USE_VALGRIND
         VALGRIND_MAKE_MEM_NOACCESS(allocation.memory, allocation.chunkSize);
 #endif
@@ -309,6 +311,8 @@ Managed *MemoryManager::alloc(std::size_t size)
     VALGRIND_MEMPOOL_ALLOC(this, m, size);
 #endif
 
+    ++m_d->allocCount[pos];
+    ++m_d->totalAlloc;
     m_d->smallItems[pos] = m->nextFree();
     return m;
 }
@@ -477,7 +481,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size, 
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
 
-        assert((qintptr) chunk % 16 == 0);
+        Q_ASSERT((qintptr) chunk % 16 == 0);
 
         if (m->inUse) {
             if (m->markBit) {
@@ -538,6 +542,7 @@ void MemoryManager::runGC()
 //              << " objects in " << t.elapsed()
 //              << "ms" << std::endl;
     memset(m_d->allocCount, 0, sizeof(m_d->allocCount));
+    m_d->totalAlloc = 0;
 }
 
 void MemoryManager::setEnableGC(bool enableGC)
@@ -621,7 +626,7 @@ void MemoryManager::collectFromStack() const
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) - 1;
         heapChunkBoundaries[i++] = reinterpret_cast<char*>(it->memory.base()) + it->memory.size() - it->chunkSize;
     }
-    assert(i == m_d->heapChunks.count() * 2);
+    Q_ASSERT(i == m_d->heapChunks.count() * 2);
 
     for (; current < m_d->stackTop; ++current) {
         char* genericPtr = reinterpret_cast<char *>(*current);
@@ -630,7 +635,7 @@ void MemoryManager::collectFromStack() const
             continue;
         int index = std::lower_bound(heapChunkBoundaries, heapChunkBoundariesEnd, genericPtr) - heapChunkBoundaries;
         // An odd index means the pointer is _before_ the end of a heap chunk and therefore valid.
-        assert(index >= 0 && index < m_d->heapChunks.count() * 2);
+        Q_ASSERT(index >= 0 && index < m_d->heapChunks.count() * 2);
         if (index & 1) {
             int size = m_d->heapChunks.at(index >> 1).chunkSize;
             Managed *m = reinterpret_cast<Managed *>(genericPtr);
