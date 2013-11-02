@@ -208,9 +208,6 @@ inline const CallContext *ExecutionContext::asCallContext() const
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
 #define requiredMemoryForExecutionContectSimple(f) \
     sizeof(CallContext)
-#define requiredMemoryForQmlExecutionContect(f) \
-    sizeof(CallContext) + sizeof(Value) * (f->locals.size())
-#define stackContextSize (sizeof(CallContext) + 32*sizeof(Value))
 
 } // namespace QV4
 
