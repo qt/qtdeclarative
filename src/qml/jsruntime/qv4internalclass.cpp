@@ -348,7 +348,7 @@ void InternalClass::markObjects()
          it != end; ++it) {
         if (it.key().flags == Transition::ProtoChange) {
             Q_ASSERT(it.value()->prototype);
-            it.value()->prototype->mark();
+            it.value()->prototype->mark(engine);
         }
     }
 }

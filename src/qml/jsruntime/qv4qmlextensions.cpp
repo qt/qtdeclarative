@@ -44,8 +44,8 @@
 
 using namespace QV4;
 
-void QmlExtensions::markObjects()
+void QmlExtensions::markObjects(ExecutionEngine *e)
 {
     if (valueTypeWrapperPrototype)
-        valueTypeWrapperPrototype->mark();
+        valueTypeWrapperPrototype->mark(e);
 }

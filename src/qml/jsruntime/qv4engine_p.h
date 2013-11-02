@@ -134,10 +134,19 @@ struct Q_QML_EXPORT ExecutionEngine
         jsStackTop = ptr + nValues;
         return ptr;
     }
-
     void stackPop(uint nValues) {
         jsStackTop -= nValues;
     }
+
+    void pushForGC(Managed *m) {
+        *jsStackTop = Value::fromManaged(m);
+        ++jsStackTop;
+    }
+    Managed *popForGC() {
+        --jsStackTop;
+        return jsStackTop->managed();
+    }
+
 
     IdentifierTable *identifierTable;
 
@@ -364,6 +373,17 @@ struct ExecutionContextSaver
             engine->popContext();
     }
 };
+
+inline
+void Managed::mark(QV4::ExecutionEngine *engine)
+{
+    if (markBit)
+        return;
+    markBit = 1;
+    engine->pushForGC(this);
+}
+
+
 
 } // namespace QV4
 

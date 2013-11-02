@@ -114,7 +114,7 @@ private:
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static PropertyAttributes query(const Managed *, StringRef name);
     static Property *advanceIterator(Managed *m, ObjectIterator *it, StringRef name, uint *index, PropertyAttributes *attributes);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
     static void collectDeletables(Managed *m, GCDeletable **deletable);
     static void destroy(Managed *that)
     {

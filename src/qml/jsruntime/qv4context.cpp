@@ -327,27 +327,27 @@ void ExecutionContext::mark()
     if (type != Type_SimpleCallContext && outer)
         outer->mark();
 
-    callData->thisObject.mark();
+    callData->thisObject.mark(engine);
     for (int arg = 0; arg < callData->argc; ++arg)
-        callData->args[arg].mark();
+        callData->args[arg].mark(engine);
 
     if (type >= Type_CallContext) {
         QV4::CallContext *c = static_cast<CallContext *>(this);
         for (unsigned local = 0, lastLocal = c->variableCount(); local < lastLocal; ++local)
-            c->locals[local].mark();
+            c->locals[local].mark(engine);
         if (c->activation)
-            c->activation->mark();
-        c->function->mark();
+            c->activation->mark(engine);
+        c->function->mark(engine);
     } else if (type == Type_WithContext) {
         WithContext *w = static_cast<WithContext *>(this);
-        w->withObject->mark();
+        w->withObject->mark(engine);
     } else if (type == Type_CatchContext) {
         CatchContext *c = static_cast<CatchContext *>(this);
-        c->exceptionVarName->mark();
-        c->exceptionValue.mark();
+        c->exceptionVarName->mark(engine);
+        c->exceptionValue.mark(engine);
     } else if (type == Type_GlobalContext) {
         GlobalContext *g = static_cast<GlobalContext *>(this);
-        g->global->mark();
+        g->global->mark(engine);
     }
 }
 

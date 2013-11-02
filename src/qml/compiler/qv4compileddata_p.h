@@ -505,7 +505,7 @@ struct Q_QML_EXPORT CompilationUnit
     // ### runtime data
     // pointer to qml data for QML unit
 
-    void markObjects();
+    void markObjects(QV4::ExecutionEngine *e);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

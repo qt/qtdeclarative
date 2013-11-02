@@ -335,7 +335,7 @@ struct Q_QML_EXPORT Value
     // Section 9.12
     bool sameValue(Value other) const;
 
-    inline void mark() const;
+    inline void mark(ExecutionEngine *e) const;
 };
 
 inline Managed *Value::asManaged() const
@@ -445,7 +445,7 @@ struct Safe : public SafeValue
     T *getPointer() const { return static_cast<T *>(managed()); }
     Returned<T> *ret() const;
 
-    void mark() { if (managed()) managed()->mark(); }
+    void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
 };
 typedef Safe<String> SafeString;
 typedef Safe<Object> SafeObject;

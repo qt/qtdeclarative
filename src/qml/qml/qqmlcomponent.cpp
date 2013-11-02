@@ -1120,7 +1120,7 @@ public:
     static QV4::ReturnedValue method_forceCompletion(QV4::SimpleCallContext *ctx);
 
     static void destroy(Managed *that);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
 
     QScopedPointer<QQmlComponentIncubator> incubator;
     QV8Engine *v8;
@@ -1538,14 +1538,14 @@ void QmlIncubatorObject::destroy(Managed *that)
     o->~QmlIncubatorObject();
 }
 
-void QmlIncubatorObject::markObjects(QV4::Managed *that)
+void QmlIncubatorObject::markObjects(QV4::Managed *that, QV4::ExecutionEngine *e)
 {
     QmlIncubatorObject *o = that->as<QmlIncubatorObject>();
     Q_ASSERT(o);
-    o->valuemap.mark();
-    o->qmlGlobal.mark();
-    o->m_statusChanged.mark();
-    Object::markObjects(that);
+    o->valuemap.mark(e);
+    o->qmlGlobal.mark(e);
+    o->m_statusChanged.mark(e);
+    Object::markObjects(that, e);
 }
 
 void QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)

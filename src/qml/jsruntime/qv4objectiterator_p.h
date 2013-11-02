@@ -96,7 +96,7 @@ struct ForEachIteratorObject: Object {
     ReturnedValue nextPropertyName() { return it.nextPropertyNameAsString(); }
 
 protected:
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 
     SafeObject workArea[2];
 };

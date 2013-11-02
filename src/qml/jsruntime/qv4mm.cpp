@@ -152,7 +152,6 @@ struct MemoryManager::Data
     };
 
     QVector<Chunk> heapChunks;
-    QHash<Managed *, uint> protectedObject;
 
     // statistics:
 #ifdef DETAILED_MM_STATS
@@ -316,10 +315,9 @@ Managed *MemoryManager::alloc(std::size_t size)
 
 void MemoryManager::mark()
 {
-    m_d->engine->markObjects();
+    SafeValue *markBase = m_d->engine->jsStackTop;
 
-    for (QHash<Managed *, uint>::const_iterator it = m_d->protectedObject.begin(); it != m_d->protectedObject.constEnd(); ++it)
-        it.key()->mark();
+    m_d->engine->markObjects();
 
     PersistentValuePrivate *persistent = m_persistentValues;
     while (persistent) {
@@ -330,7 +328,7 @@ void MemoryManager::mark()
             persistent = n;
             continue;
         }
-        persistent->value.mark();
+        persistent->value.mark(m_d->engine);
         persistent = persistent->next;
     }
 
@@ -394,7 +392,14 @@ void MemoryManager::mark()
         }
 
         if (keepAlive)
-            qobjectWrapper->getPointer()->mark();
+            qobjectWrapper->getPointer()->mark(m_d->engine);
+    }
+
+    // now that we marked all roots, start marking recursively and popping from the mark stack
+    while (m_d->engine->jsStackTop > markBase) {
+        Managed *m = m_d->engine->popForGC();
+        Q_ASSERT (m->vtbl->markObjects);
+        m->vtbl->markObjects(m, m_d->engine);
     }
 }
 
@@ -558,17 +563,6 @@ MemoryManager::~MemoryManager()
 #endif
 }
 
-void MemoryManager::protect(Managed *m)
-{
-    ++m_d->protectedObject[m];
-}
-
-void MemoryManager::unprotect(Managed *m)
-{
-    if (!--m_d->protectedObject[m])
-        m_d->protectedObject.remove(m);
-}
-
 void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
 {
     m_d->engine = engine;
@@ -651,7 +645,7 @@ void MemoryManager::collectFromStack() const
                 continue;
 
 //            qDebug() << "       marking";
-            m->mark();
+            m->mark(m_d->engine);
         }
     }
 }
@@ -664,7 +658,7 @@ void MemoryManager::collectFromJSStack() const
         Managed *m = v->asManaged();
         if (m && m->inUse)
             // Skip pointers to already freed objects, they are bogus as well
-            m->mark();
+            m->mark(m_d->engine);
         ++v;
     }
 }

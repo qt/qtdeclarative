@@ -396,11 +396,11 @@ WeakValue::~WeakValue()
         d->deref();
 }
 
-void WeakValue::markOnce()
+void WeakValue::markOnce(ExecutionEngine *e)
 {
     if (!d)
         return;
-    d->value.mark();
+    d->value.mark(e);
 }
 
 PersistentValuePrivate::PersistentValuePrivate(ReturnedValue v, ExecutionEngine *e, bool weak)

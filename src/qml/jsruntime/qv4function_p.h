@@ -126,7 +126,7 @@ struct Function {
     inline bool needsActivation() const
     { return compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject)); }
 
-    void mark();
+    void mark(ExecutionEngine *e);
 
     int lineNumberForProgramCounter(qptrdiff offset) const;
 };

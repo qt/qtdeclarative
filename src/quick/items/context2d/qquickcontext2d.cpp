@@ -908,8 +908,9 @@ struct QQuickJSContext2DImageData : public QV4::Object
     static QV4::ReturnedValue method_get_height(QV4::SimpleCallContext *ctx);
     static QV4::ReturnedValue method_get_data(QV4::SimpleCallContext *ctx);
 
-    static void markObjects(Managed *that) {
-        static_cast<QQuickJSContext2DImageData *>(that)->pixelData.mark();
+    static void markObjects(Managed *that, QV4::ExecutionEngine *engine) {
+        static_cast<QQuickJSContext2DImageData *>(that)->pixelData.mark(engine);
+        QV4::Object::markObjects(that, engine);
     }
 
 

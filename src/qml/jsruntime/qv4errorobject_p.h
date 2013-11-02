@@ -74,7 +74,7 @@ struct ErrorObject: Object {
     String *stack;
 
     static ReturnedValue method_get_stack(SimpleCallContext *ctx);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
     static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->~ErrorObject(); }
 };
 

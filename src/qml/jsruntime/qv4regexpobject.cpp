@@ -175,12 +175,12 @@ void RegExpObject::destroy(Managed *that)
     static_cast<RegExpObject *>(that)->~RegExpObject();
 }
 
-void RegExpObject::markObjects(Managed *that)
+void RegExpObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     RegExpObject *re = static_cast<RegExpObject*>(that);
     if (re->value)
-        re->value->mark();
-    Object::markObjects(that);
+        re->value->mark(e);
+    Object::markObjects(that, e);
 }
 
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)

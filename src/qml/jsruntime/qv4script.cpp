@@ -102,12 +102,12 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     return result.asReturnedValue();
 }
 
-void QmlBindingWrapper::markObjects(Managed *m)
+void QmlBindingWrapper::markObjects(Managed *m, ExecutionEngine *e)
 {
     QmlBindingWrapper *wrapper = static_cast<QmlBindingWrapper*>(m);
     if (wrapper->qml)
-        wrapper->qml->mark();
-    FunctionObject::markObjects(m);
+        wrapper->qml->mark(e);
+    FunctionObject::markObjects(m, e);
     wrapper->qmlContext->mark();
 }
 

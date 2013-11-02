@@ -1232,9 +1232,9 @@ void QQmlVMEMetaObject::ensureQObjectWrapper()
     QV4::QObjectWrapper::wrap(v4, object);
 }
 
-void QQmlVMEMetaObject::mark()
+void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 {
-    varProperties.markOnce();
+    varProperties.markOnce(e);
 
     // add references created by VMEVariant properties
     int maxDataIdx = metaData->propertyCount - metaData->varPropertyCount;
@@ -1245,13 +1245,13 @@ void QQmlVMEMetaObject::mark()
             if (ref) {
                 QQmlData *ddata = QQmlData::get(ref);
                 if (ddata)
-                    ddata->jsWrapper.markOnce();
+                    ddata->jsWrapper.markOnce(e);
             }
         }
     }
 
     if (QQmlVMEMetaObject *parent = parentVMEMetaObject())
-        parent->mark();
+        parent->mark(e);
 }
 
 void QQmlVMEMetaObject::allocateVarPropertiesArray()

@@ -682,19 +682,19 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
 
 void ExecutionEngine::markObjects()
 {
-    identifierTable->mark();
+    identifierTable->mark(this);
 
-    globalObject->mark();
+    globalObject->mark(this);
 
     if (globalCode)
-        globalCode->mark();
+        globalCode->mark(this);
 
     for (int i = 0; i < argumentsAccessors.size(); ++i) {
         const Property &pd = argumentsAccessors.at(i);
         if (FunctionObject *getter = pd.getter())
-            getter->mark();
+            getter->mark(this);
         if (FunctionObject *setter = pd.setter())
-            setter->mark();
+            setter->mark(this);
     }
 
     ExecutionContext *c = current;
@@ -703,55 +703,55 @@ void ExecutionEngine::markObjects()
         c = c->parent;
     }
 
-    id_length->mark();
-    id_prototype->mark();
-    id_constructor->mark();
-    id_arguments->mark();
-    id_caller->mark();
-    id_this->mark();
-    id___proto__->mark();
-    id_enumerable->mark();
-    id_configurable->mark();
-    id_writable->mark();
-    id_value->mark();
-    id_get->mark();
-    id_set->mark();
-    id_eval->mark();
-    id_uintMax->mark();
-    id_name->mark();
-    id_index->mark();
-    id_input->mark();
-    id_toString->mark();
-    id_valueOf->mark();
+    id_length->mark(this);
+    id_prototype->mark(this);
+    id_constructor->mark(this);
+    id_arguments->mark(this);
+    id_caller->mark(this);
+    id_this->mark(this);
+    id___proto__->mark(this);
+    id_enumerable->mark(this);
+    id_configurable->mark(this);
+    id_writable->mark(this);
+    id_value->mark(this);
+    id_get->mark(this);
+    id_set->mark(this);
+    id_eval->mark(this);
+    id_uintMax->mark(this);
+    id_name->mark(this);
+    id_index->mark(this);
+    id_input->mark(this);
+    id_toString->mark(this);
+    id_valueOf->mark(this);
 
-    objectCtor.mark();
-    stringCtor.mark();
-    numberCtor.mark();
-    booleanCtor.mark();
-    arrayCtor.mark();
-    functionCtor.mark();
-    dateCtor.mark();
-    regExpCtor.mark();
-    errorCtor.mark();
-    evalErrorCtor.mark();
-    rangeErrorCtor.mark();
-    referenceErrorCtor.mark();
-    syntaxErrorCtor.mark();
-    typeErrorCtor.mark();
-    uRIErrorCtor.mark();
+    objectCtor.mark(this);
+    stringCtor.mark(this);
+    numberCtor.mark(this);
+    booleanCtor.mark(this);
+    arrayCtor.mark(this);
+    functionCtor.mark(this);
+    dateCtor.mark(this);
+    regExpCtor.mark(this);
+    errorCtor.mark(this);
+    evalErrorCtor.mark(this);
+    rangeErrorCtor.mark(this);
+    referenceErrorCtor.mark(this);
+    syntaxErrorCtor.mark(this);
+    typeErrorCtor.mark(this);
+    uRIErrorCtor.mark(this);
 
-    exceptionValue.mark();
+    exceptionValue.mark(this);
 
-    thrower->mark();
+    thrower->mark(this);
 
     if (m_qmlExtensions)
-        m_qmlExtensions->markObjects();
+        m_qmlExtensions->markObjects(this);
 
     emptyClass->markObjects();
 
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
          it != end; ++it)
-        (*it)->markObjects();
+        (*it)->markObjects(this);
 }
 
 namespace {

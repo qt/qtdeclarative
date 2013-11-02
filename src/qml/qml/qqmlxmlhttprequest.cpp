@@ -1646,10 +1646,10 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static void destroy(Managed *that) {
         that->as<QQmlXMLHttpRequestCtor>()->~QQmlXMLHttpRequestCtor();
     }
-    static void markObjects(Managed *that) {
+    static void markObjects(Managed *that, ExecutionEngine *e) {
         QQmlXMLHttpRequestCtor *c = that->as<QQmlXMLHttpRequestCtor>();
         if (c->proto)
-            c->proto->mark();
+            c->proto->mark(e);
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {

@@ -97,7 +97,7 @@ struct RegExpObject: Object {
 protected:
     RegExpObject(InternalClass *ic);
     static void destroy(Managed *that);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 };
 
 

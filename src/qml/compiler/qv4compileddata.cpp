@@ -158,20 +158,20 @@ void CompilationUnit::unlink()
     runtimeFunctions.clear();
 }
 
-void CompilationUnit::markObjects()
+void CompilationUnit::markObjects(QV4::ExecutionEngine *e)
 {
     for (uint i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i].mark();
+        runtimeStrings[i].mark(e);
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
-            runtimeRegularExpressions[i].mark();
+            runtimeRegularExpressions[i].mark(e);
     }
     for (int i = 0; i < runtimeFunctions.count(); ++i)
         if (runtimeFunctions[i])
-            runtimeFunctions[i]->mark();
+            runtimeFunctions[i]->mark(e);
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)
-            runtimeLookups[i].name->mark();
+            runtimeLookups[i].name->mark(e);
     }
 }
 

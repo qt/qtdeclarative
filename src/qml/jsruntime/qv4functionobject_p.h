@@ -139,7 +139,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 protected:
     FunctionObject(InternalClass *ic);
 
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
     static bool hasInstance(Managed *that, const ValueRef value);
     static void destroy(Managed *that)
     { static_cast<FunctionObject*>(that)->~FunctionObject(); }
@@ -234,7 +234,7 @@ struct BoundFunction: FunctionObject {
     static ReturnedValue call(Managed *that, CallData *dd);
 
     static void destroy(Managed *);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
     static bool hasInstance(Managed *that, const ValueRef value);
 };
 

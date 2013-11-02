@@ -129,12 +129,12 @@ void String::destroy(Managed *that)
     static_cast<String*>(that)->~String();
 }
 
-void String::markObjects(Managed *that)
+void String::markObjects(Managed *that, ExecutionEngine *e)
 {
     String *s = static_cast<String *>(that);
     if (s->largestSubLength) {
-        s->left->mark();
-        s->right->mark();
+        s->left->mark(e);
+        s->right->mark(e);
     }
 }
 

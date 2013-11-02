@@ -1193,11 +1193,11 @@ struct BindingFunction : public QV4::FunctionObject
         return This->originalFunction->call(callData);
     }
 
-    static void markObjects(Managed *that)
+    static void markObjects(Managed *that, ExecutionEngine *e)
     {
         BindingFunction *This = static_cast<BindingFunction*>(that);
-        This->originalFunction->mark();
-        QV4::FunctionObject::markObjects(that);
+        This->originalFunction->mark(e);
+        QV4::FunctionObject::markObjects(that, e);
     }
 
     QV4::FunctionObject *originalFunction;

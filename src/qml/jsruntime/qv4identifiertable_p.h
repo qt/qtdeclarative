@@ -79,10 +79,10 @@ public:
 
     Identifier *identifierImpl(const String *str);
 
-    void mark() {
+    void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i)
             if (entries[i])
-                entries[i]->mark();
+                entries[i]->mark(e);
     }
 };
 

@@ -203,11 +203,11 @@ ReturnedValue FunctionObject::call(Managed *, CallData *)
     return Encode::undefined();
 }
 
-void FunctionObject::markObjects(Managed *that)
+void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     FunctionObject *o = static_cast<FunctionObject *>(that);
     if (o->name.managed())
-        o->name->mark();
+        o->name->mark(e);
     // these are marked in VM::Function:
 //    for (uint i = 0; i < formalParameterCount; ++i)
 //        formalParameterList[i]->mark();
@@ -215,9 +215,9 @@ void FunctionObject::markObjects(Managed *that)
 //        varList[i]->mark();
     o->scope->mark();
     if (o->function)
-        o->function->mark();
+        o->function->mark(e);
 
-    Object::markObjects(that);
+    Object::markObjects(that, e);
 }
 
 FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function)
@@ -703,12 +703,12 @@ bool BoundFunction::hasInstance(Managed *that, const ValueRef value)
     return FunctionObject::hasInstance(f->target, value);
 }
 
-void BoundFunction::markObjects(Managed *that)
+void BoundFunction::markObjects(Managed *that, ExecutionEngine *e)
 {
     BoundFunction *o = static_cast<BoundFunction *>(that);
-    o->target->mark();
-    o->boundThis.mark();
+    o->target->mark(e);
+    o->boundThis.mark(e);
     for (int i = 0; i < o->boundArgs.size(); ++i)
-        o->boundArgs.at(i).mark();
-    FunctionObject::markObjects(that);
+        o->boundArgs.at(i).mark(e);
+    FunctionObject::markObjects(that, e);
 }

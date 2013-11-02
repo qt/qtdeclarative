@@ -61,7 +61,7 @@ struct QmlBindingWrapper : FunctionObject {
     QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml);
 
     static ReturnedValue call(Managed *that, CallData *);
-    static void markObjects(Managed *m);
+    static void markObjects(Managed *m, ExecutionEngine *e);
 
     CallContext *context() const { return qmlContext; }
 

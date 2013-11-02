@@ -239,40 +239,40 @@ void Object::defineReadonlyProperty(const StringRef name, ValueRef value)
     pd->value = *value;
 }
 
-void Object::markObjects(Managed *that)
+void Object::markObjects(Managed *that, ExecutionEngine *e)
 {
     Object *o = static_cast<Object *>(that);
 
     if (!o->hasAccessorProperty) {
         for (uint i = 0; i < o->internalClass->size; ++i)
-            o->memberData[i].value.mark();
+            o->memberData[i].value.mark(e);
     } else {
         for (uint i = 0; i < o->internalClass->size; ++i) {
             const Property &pd = o->memberData[i];
             if (o->internalClass->propertyData[i].isAccessor()) {
                 if (pd.getter())
-                    pd.getter()->mark();
+                    pd.getter()->mark(e);
                 if (pd.setter())
-                    pd.setter()->mark();
+                    pd.setter()->mark(e);
             } else {
-                pd.value.mark();
+                pd.value.mark(e);
             }
         }
     }
     if (o->flags & SimpleArray) {
         for (uint i = 0; i < o->arrayDataLen; ++i)
-            o->arrayData[i].value.mark();
+            o->arrayData[i].value.mark(e);
         return;
     } else {
         for (uint i = 0; i < o->arrayDataLen; ++i) {
             const Property &pd = o->arrayData[i];
             if (o->arrayAttributes && o->arrayAttributes[i].isAccessor()) {
                 if (pd.getter())
-                    pd.getter()->mark();
+                    pd.getter()->mark(e);
                 if (pd.setter())
-                    pd.setter()->mark();
+                    pd.setter()->mark(e);
             } else {
-                pd.value.mark();
+                pd.value.mark(e);
             }
         }
     }

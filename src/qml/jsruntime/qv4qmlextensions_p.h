@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 struct Object;
+struct ExecutionEngine;
 
 struct Q_QML_EXPORT QmlExtensions
 {
@@ -56,7 +57,7 @@ struct Q_QML_EXPORT QmlExtensions
 
     Object *valueTypeWrapperPrototype;
 
-    void markObjects();
+    void markObjects(ExecutionEngine *e);
 };
 
 } // namespace QV4

@@ -81,13 +81,13 @@ Function::~Function()
 }
 
 
-void Function::mark()
+void Function::mark(ExecutionEngine *e)
 {
-    name.mark();
+    name.mark(e);
     for (int i = 0; i < formals.size(); ++i)
-        formals.at(i)->mark();
+        formals.at(i)->mark(e);
     for (int i = 0; i < locals.size(); ++i)
-        locals.at(i)->mark();
+        locals.at(i)->mark(e);
 }
 
 namespace QV4 {

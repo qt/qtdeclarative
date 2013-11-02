@@ -192,12 +192,12 @@ ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
     return This->stack->asReturnedValue();
 }
 
-void ErrorObject::markObjects(Managed *that)
+void ErrorObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     ErrorObject *This = that->asErrorObject();
     if (This->stack)
-        This->stack->mark();
-    Object::markObjects(that);
+        This->stack->mark(e);
+    Object::markObjects(that, e);
 }
 
 DEFINE_MANAGED_VTABLE(ErrorObject);

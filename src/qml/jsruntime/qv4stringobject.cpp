@@ -159,12 +159,12 @@ Property *StringObject::advanceIterator(Managed *m, ObjectIterator *it, StringRe
     return Object::advanceIterator(m, it, name, index, attrs);
 }
 
-void StringObject::markObjects(Managed *that)
+void StringObject::markObjects(Managed *that, ExecutionEngine *e)
 {
     StringObject *o = static_cast<StringObject *>(that);
-    o->value.stringValue()->mark();
-    o->tmpProperty.value.mark();
-    Object::markObjects(that);
+    o->value.stringValue()->mark(e);
+    o->tmpProperty.value.mark(e);
+    Object::markObjects(that, e);
 }
 
 DEFINE_MANAGED_VTABLE(StringCtor);

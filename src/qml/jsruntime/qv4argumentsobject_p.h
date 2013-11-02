@@ -85,7 +85,7 @@ struct ArgumentsObject: Object {
     };
     bool defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs);
 
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, ExecutionEngine *e);
 protected:
     static void destroy(Managed *);
 };

@@ -49,6 +49,7 @@
 #include "qv4string_p.h"
 #include <QtCore/QDebug>
 #include "qv4managed_p.h"
+#include "qv4engine_p.h"
 #include <private/qtqmlglobal_p.h>
 
 //#include <wtf/MathExtras.h>
@@ -77,17 +78,19 @@ inline bool Value::isPrimitive() const
     return !isObject();
 }
 
-inline ExecutionEngine *Value::engine() const {
+inline ExecutionEngine *Value::engine() const
+{
     Managed *m = asManaged();
     return m ? m->engine() : 0;
 }
 
-inline void Value::mark() const {
+inline void Value::mark(ExecutionEngine *e) const
+{
     if (!val)
         return;
     Managed *m = asManaged();
     if (m)
-        m->mark();
+        m->mark(e);
 }
 
 inline Primitive Primitive::nullValue()
@@ -389,7 +392,7 @@ public:
         *this = WeakValue();
     }
 
-    void markOnce();
+    void markOnce(ExecutionEngine *e);
 
 private:
     friend struct ValueRef;

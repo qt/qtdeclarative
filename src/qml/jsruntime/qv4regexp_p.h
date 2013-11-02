@@ -110,7 +110,7 @@ public:
 
 protected:
     static void destroy(Managed *that);
-    static void markObjects(Managed *that);
+    static void markObjects(Managed *that, QV4::ExecutionEngine *e);
     static ReturnedValue get(Managed *, const StringRef, bool *);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);

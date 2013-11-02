@@ -132,9 +132,10 @@ void RegExp::destroy(Managed *that)
     static_cast<RegExp*>(that)->~RegExp();
 }
 
-void RegExp::markObjects(Managed *that)
+void RegExp::markObjects(Managed *that, ExecutionEngine *e)
 {
     Q_UNUSED(that);
+    Q_UNUSED(e);
 }
 
 ReturnedValue RegExp::get(Managed *, const StringRef, bool *)
