@@ -132,7 +132,7 @@ void String::destroy(Managed *that)
 void String::markObjects(Managed *that)
 {
     String *s = static_cast<String *>(that);
-    if (s->depth) {
+    if (s->largestSubLength) {
         s->left->mark();
         s->right->mark();
     }
@@ -251,9 +251,10 @@ bool String::isEqualTo(Managed *t, Managed *o)
 String::String(ExecutionEngine *engine, const QString &text)
     : Managed(engine ? engine->emptyClass : 0), _text(const_cast<QString &>(text).data_ptr())
     , identifier(0), stringHash(UINT_MAX)
-    , depth(0)
+    , largestSubLength(0)
 {
     _text->ref.ref();
+    len = _text->size;
     vtbl = &static_vtbl;
     type = Type_String;
     subtype = StringType_Unknown;
@@ -262,14 +263,20 @@ String::String(ExecutionEngine *engine, const QString &text)
 String::String(ExecutionEngine *engine, String *l, String *r)
     : Managed(engine ? engine->emptyClass : 0)
     , left(l), right(r)
-    , stringHash(UINT_MAX), depth(qMax(l->depth, r->depth) + 1)
+    , stringHash(UINT_MAX), largestSubLength(qMax(l->largestSubLength, r->largestSubLength))
+    , len(l->len + r->len)
 {
     vtbl = &static_vtbl;
     type = Type_String;
     subtype = StringType_Unknown;
 
+    if (!l->largestSubLength && l->len > largestSubLength)
+        largestSubLength = l->len;
+    if (!r->largestSubLength && r->len > largestSubLength)
+        largestSubLength = r->len;
+
     // make sure we don't get excessive depth in our strings
-    if (depth >= 16)
+    if (len > 256 && len >= 2*largestSubLength)
         simplifyString();
 }
 
@@ -307,15 +314,15 @@ bool String::equals(const StringRef other) const
 
 void String::makeIdentifierImpl() const
 {
-    if (depth)
+    if (largestSubLength)
         simplifyString();
-    Q_ASSERT(!depth);
+    Q_ASSERT(!largestSubLength);
     engine()->identifierTable->identifier(this);
 }
 
 void String::simplifyString() const
 {
-    Q_ASSERT(depth);
+    Q_ASSERT(largestSubLength);
 
     int l = length();
     QString result(l, Qt::Uninitialized);
@@ -324,12 +331,12 @@ void String::simplifyString() const
     _text = result.data_ptr();
     _text->ref.ref();
     identifier = 0;
-    depth = 0;
+    largestSubLength = 0;
 }
 
 QChar *String::recursiveAppend(QChar *ch) const
 {
-    if (depth) {
+    if (largestSubLength) {
         ch = left->recursiveAppend(ch);
         ch = right->recursiveAppend(ch);
     } else {
@@ -342,9 +349,9 @@ QChar *String::recursiveAppend(QChar *ch) const
 
 void String::createHashValue() const
 {
-    if (depth)
+    if (largestSubLength)
         simplifyString();
-    Q_ASSERT(!depth);
+    Q_ASSERT(!largestSubLength);
     const QChar *ch = reinterpret_cast<const QChar *>(_text->data());
     const QChar *end = ch + _text->size;
 

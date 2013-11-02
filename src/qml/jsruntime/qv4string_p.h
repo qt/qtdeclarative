@@ -62,12 +62,12 @@ struct Q_QML_EXPORT String : public Managed {
 
     String()
         : Managed(0), _text(QStringData::sharedNull()), identifier(0)
-        , stringHash(UINT_MAX), depth(0)
+        , stringHash(UINT_MAX), largestSubLength(0), len(0)
     { vtbl = &static_vtbl; type = Type_String; subtype = StringType_Unknown; }
     String(ExecutionEngine *engine, const QString &text);
     String(ExecutionEngine *engine, String *l, String *n);
     ~String() {
-        if (!depth && !_text->ref.deref())
+        if (!largestSubLength && !_text->ref.deref())
             QStringData::deallocate(_text);
         _data = 0;
     }
@@ -78,7 +78,7 @@ struct Q_QML_EXPORT String : public Managed {
             return true;
         if (hashValue() != other->hashValue())
             return false;
-        Q_ASSERT(!depth);
+        Q_ASSERT(!largestSubLength);
         if (identifier && identifier == other->identifier)
             return true;
         if (subtype >= StringType_UInt && subtype == other->subtype)
@@ -90,9 +90,8 @@ struct Q_QML_EXPORT String : public Managed {
         return toQString() < other->toQString();
     }
 
-    inline bool isEmpty() const { return _text && !_text->size; }
     inline QString toQString() const {
-        if (depth)
+        if (largestSubLength)
             simplifyString();
         QStringDataPtr ptr = { _text };
         _text->ref.ref();
@@ -104,14 +103,14 @@ struct Q_QML_EXPORT String : public Managed {
     inline unsigned hashValue() const {
         if (subtype == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!depth);
+        Q_ASSERT(!largestSubLength);
 
         return stringHash;
     }
     uint asArrayIndex() const {
         if (subtype == StringType_Unknown)
             createHashValue();
-        Q_ASSERT(!depth);
+        Q_ASSERT(!largestSubLength);
         if (subtype == StringType_ArrayIndex)
             return stringHash;
         return UINT_MAX;
@@ -132,14 +131,13 @@ struct Q_QML_EXPORT String : public Managed {
 
     bool startsWithUpper() const {
         const String *l = this;
-        while (l->depth)
+        while (l->largestSubLength)
             l = l->left;
         return l->_text->size && QChar::isUpper(l->_text->data()[0]);
     }
     int length() const {
-        if (!depth)
-            return _text->size;
-        return left->length() + right->length();
+        Q_ASSERT((largestSubLength && (len == left->len + right->len)) || len == (uint)_text->size);
+        return len;
     }
 
     union {
@@ -151,7 +149,8 @@ struct Q_QML_EXPORT String : public Managed {
         mutable String *right;
     };
     mutable uint stringHash;
-    mutable uint depth;
+    mutable uint largestSubLength;
+    uint len;
 
 
 protected:
