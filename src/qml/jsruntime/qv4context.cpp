@@ -81,9 +81,6 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *local
 
     c->locals = locals;
 
-    if (function->varCount)
-        std::fill(c->locals, c->locals + function->varCount, Primitive::undefinedValue());
-
     if (callData->argc < static_cast<int>(function->formalParameterCount)) {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
