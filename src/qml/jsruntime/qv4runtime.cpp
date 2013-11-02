@@ -892,14 +892,13 @@ ReturnedValue __qmljs_call_property(ExecutionContext *context, const StringRef n
 
 ReturnedValue __qmljs_call_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
 {
-    Scope scope(context);
-
     Lookup *l = context->lookups + index;
-    Scoped<Object> o(scope, l->getter(l, callData->thisObject));
-    if (!o)
+    SafeValue v;
+    v = l->getter(l, callData->thisObject);
+    if (!v.isManaged())
         return context->throwTypeError();
 
-    return o->call(callData);
+    return v.managed()->call(callData);
 }
 
 ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef index, CallDataRef callData)
@@ -921,11 +920,10 @@ ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRef ind
 
 ReturnedValue __qmljs_call_value(ExecutionContext *context, const ValueRef func, CallDataRef callData)
 {
-    Object *o = func->asObject();
-    if (!o)
+    if (!func->isManaged())
         return context->throwTypeError();
 
-    return o->call(callData);
+    return func->managed()->call(callData);
 }
 
 
