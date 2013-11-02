@@ -1174,6 +1174,13 @@ void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
     addInstruction(call);
 }
 
+
+void QQmlJS::Moth::InstructionSelection::callBuiltinConvertThisToObject()
+{
+    Instruction::CallBuiltinConvertThisToObject call;
+    addInstruction(call);
+}
+
 ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &instr)
 {
 #ifdef MOTH_THREADED_INTERPRETER

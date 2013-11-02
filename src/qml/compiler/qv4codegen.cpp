@@ -355,6 +355,12 @@ bool Codegen::ScanFunctions::visit(LocalForEachStatement *ast) {
     return false;
 }
 
+bool Codegen::ScanFunctions::visit(ThisExpression *)
+{
+    _env->usesThis = true;
+    return false;
+}
+
 bool Codegen::ScanFunctions::visit(Block *ast) {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _env->isStrict ? false : _allowFuncDecls);
     Node::accept(ast->statements, this);
@@ -1953,6 +1959,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
     function->hasDirectEval = _env->hasDirectEval;
     function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
+    function->usesThis = _env->usesThis;
     function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
     function->isStrict = _env->isStrict;
     function->isNamedExpression = _env->isNamedFunctionExpression;
@@ -2035,6 +2042,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         move(identifier(QStringLiteral("arguments"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
              _block->CALL(_block->NAME(V4IR::Name::builtin_setup_argument_object,
                      ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
+    }
+    if (_function->usesThis && !_function->isStrict) {
+        // make sure we convert this to an object
+        _block->EXP(_block->CALL(_block->NAME(V4IR::Name::builtin_convert_this_to_object,
+                ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
     }
 
     sourceElements(body);

@@ -422,6 +422,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_define_object_literal";
     case V4IR::Name::builtin_setup_argument_object:
         return "builtin_setup_argument_object";
+    case V4IR::Name::builtin_convert_this_to_object:
+        return "builtin_convert_this_to_object";
     case V4IR::Name::builtin_qml_id_scope:
         return "builtin_qml_id_scope";
     case V4IR::Name::builtin_qml_imported_scripts_object:

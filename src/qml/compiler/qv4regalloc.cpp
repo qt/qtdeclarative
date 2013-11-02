@@ -207,6 +207,7 @@ protected: // IRDecoder
     virtual void callBuiltinDefineArray(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *, V4IR::ExprList *) {}
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *) {}
+    virtual void callBuiltinConvertThisToObject() {}
 
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
     {

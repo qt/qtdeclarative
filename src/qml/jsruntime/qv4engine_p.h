@@ -369,8 +369,7 @@ struct ExecutionContextSaver
     }
     ~ExecutionContextSaver()
     {
-        while (engine->current != savedContext)
-            engine->popContext();
+        engine->current = savedContext;
     }
 };
 

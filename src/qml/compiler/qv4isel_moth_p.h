@@ -106,6 +106,7 @@ protected:
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args);
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result);
+    virtual void callBuiltinConvertThisToObject();
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);

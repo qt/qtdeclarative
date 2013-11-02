@@ -324,6 +324,7 @@ struct Name: Expr {
         builtin_define_getter_setter,
         builtin_define_object_literal,
         builtin_setup_argument_object,
+        builtin_convert_this_to_object,
         builtin_qml_id_scope,
         builtin_qml_imported_scripts_object,
         builtin_qml_context_object,
@@ -733,12 +734,13 @@ struct Function {
 
     uint hasDirectEval: 1;
     uint usesArgumentsObject : 1;
+    uint usesThis : 1;
     uint isStrict: 1;
     uint isNamedExpression : 1;
     uint hasTry: 1;
     uint hasWith: 1;
     uint hasQmlDependencies : 1;
-    uint unused : 25;
+    uint unused : 24;
 
     // Location of declaration in source code (-1 if not specified)
     int line;

@@ -144,6 +144,7 @@ QV4::ReturnedValue __qmljs_builtin_define_array(QV4::ExecutionContext *ctx, QV4:
 void __qmljs_builtin_define_getter_setter(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::StringRef name, const QV4::ValueRef getter, const QV4::ValueRef setter);
 QV4::ReturnedValue __qmljs_builtin_define_object_literal(QV4::ExecutionContext *ctx, const QV4::Value *args, int classId);
 QV4::ReturnedValue __qmljs_builtin_setup_arguments_object(ExecutionContext *ctx);
+void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx);
 
 QV4::ReturnedValue __qmljs_value_from_string(QV4::String *string);
 QV4::ReturnedValue __qmljs_lookup_runtime_regexp(QV4::ExecutionContext *ctx, int id);

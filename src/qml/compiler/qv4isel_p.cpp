@@ -383,6 +383,10 @@ void IRDecoder::callBuiltin(V4IR::Call *call, V4IR::Temp *result)
         callBuiltinSetupArgumentObject(result);
         return;
 
+    case V4IR::Name::builtin_convert_this_to_object:
+        callBuiltinConvertThisToObject();
+        return;
+
     default:
         break;
     }

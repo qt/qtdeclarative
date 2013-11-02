@@ -95,6 +95,7 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
     F(CallBuiltinSetupArgumentsObject, callBuiltinSetupArgumentsObject) \
+    F(CallBuiltinConvertThisToObject, callBuiltinConvertThisToObject) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(CreateActivationProperty, createActivationProperty) \
@@ -471,6 +472,9 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_callBuiltinConvertThisToObject {
+        MOTH_INSTR_HEADER
+    };
     struct instr_createValue {
         MOTH_INSTR_HEADER
         quint32 argc;
@@ -704,6 +708,7 @@ union Instr
     instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
     instr_callBuiltinSetupArgumentsObject callBuiltinSetupArgumentsObject;
+    instr_callBuiltinConvertThisToObject callBuiltinConvertThisToObject;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_createActivationProperty createActivationProperty;

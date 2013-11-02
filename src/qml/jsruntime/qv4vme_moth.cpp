@@ -478,6 +478,11 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         STOREVALUE(instr.result, __qmljs_builtin_setup_arguments_object(context));
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
+    MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
+        __qmljs_builtin_convert_this_to_object(context);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallBuiltinConvertThisToObject)
+
     MOTH_BEGIN_INSTR(CreateValue)
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::SafeValue) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);

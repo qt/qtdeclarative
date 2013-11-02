@@ -936,6 +936,11 @@ void InstructionSelection::callBuiltinSetupArgumentObject(V4IR::Temp *result)
     generateFunctionCall(result, __qmljs_builtin_setup_arguments_object, Assembler::ContextRegister);
 }
 
+void InstructionSelection::callBuiltinConvertThisToObject()
+{
+    generateFunctionCall(Assembler::Void, __qmljs_builtin_convert_this_to_object, Assembler::ContextRegister);
+}
+
 void InstructionSelection::callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result)
 {
     Q_ASSERT(value);

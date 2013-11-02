@@ -471,14 +471,6 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     CallContext *ctx = context->newCallContext(f, callData);
 
-    if (!f->strictMode && !callData->thisObject.isObject()) {
-        if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = v4->globalObject->asReturnedValue();
-        } else {
-            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
-        }
-    }
-
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(ctx->engine, f->function->compiledFunction);
 
@@ -567,14 +559,6 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = v4->current;
     ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
-
-    if (!f->strictMode && !callData->thisObject.isObject()) {
-        if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = v4->globalObject->asReturnedValue();
-        } else {
-            ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
-        }
-    }
 
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);

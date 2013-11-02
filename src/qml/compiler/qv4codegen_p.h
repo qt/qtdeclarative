@@ -148,6 +148,7 @@ protected:
         bool hasNestedFunctions;
         bool isStrict;
         bool isNamedFunctionExpression;
+        bool usesThis;
         enum UsesArgumentsObject {
             ArgumentsObjectUnknown,
             ArgumentsObjectNotUsed,
@@ -166,6 +167,7 @@ protected:
             , hasNestedFunctions(false)
             , isStrict(false)
             , isNamedFunctionExpression(false)
+            , usesThis(false)
             , usesArgumentsObject(ArgumentsObjectUnknown)
             , compilationMode(mode)
         {
@@ -513,6 +515,7 @@ protected:
         virtual bool visit(AST::LocalForStatement *ast);
         virtual bool visit(AST::ForEachStatement *ast);
         virtual bool visit(AST::LocalForEachStatement *ast);
+        virtual bool visit(AST::ThisExpression *ast);
 
         virtual bool visit(AST::Block *ast);
 

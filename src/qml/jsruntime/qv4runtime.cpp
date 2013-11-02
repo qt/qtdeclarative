@@ -1277,6 +1277,18 @@ ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx)
     return context->importedScripts.value();
 }
 
+void __qmljs_builtin_convert_this_to_object(ExecutionContext *ctx)
+{
+    SafeValue *t = &ctx->callData->thisObject;
+    if (t->isObject())
+        return;
+    if (t->isNullOrUndefined()) {
+        *t = ctx->engine->globalObject->asReturnedValue();
+    } else {
+        *t = t->toObject(ctx)->asReturnedValue();
+    }
+}
+
 } // namespace QV4
 
 QT_END_NAMESPACE

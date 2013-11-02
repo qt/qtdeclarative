@@ -132,6 +132,7 @@ public: // to implement by subclasses:
     virtual void callBuiltinDefineArray(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinDefineObjectLiteral(V4IR::Temp *result, V4IR::ExprList *args) = 0;
     virtual void callBuiltinSetupArgumentObject(V4IR::Temp *result) = 0;
+    virtual void callBuiltinConvertThisToObject() = 0;
     virtual void callValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void callProperty(V4IR::Expr *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result) = 0;
