@@ -345,18 +345,13 @@ union QQmlInstruction
     struct instr_storeTime {
         QML_INSTR_HEADER
         int propertyIndex;
-        struct QTime {
-            int mds;
-#if defined(Q_OS_WINCE)
-            int startTick;
-#endif
-        } time;
+        int time; // QTime::fromMSecsSinceStartOfDay
     };
     struct instr_storeDateTime {
         QML_INSTR_HEADER
         int propertyIndex;
         int date;
-        instr_storeTime::QTime time;
+        int time;
     };
     struct instr_storeRect {
         QML_INSTR_HEADER
@@ -540,7 +535,7 @@ struct QQmlInstructionMeta {
         enum { Size = QML_INSTR_SIZE(I, FMT) }; \
         typedef QQmlInstruction::instr_##FMT DataType; \
         static const DataType &data(const QQmlInstruction &instr) { return instr.FMT; } \
-        static void setData(QQmlInstruction &instr, const DataType &v) { instr.FMT = v; } \
+        static void setData(QQmlInstruction &instr, const DataType &v) { memcpy(&instr.FMT, &v, Size); } \
     }; 
 FOR_EACH_QML_INSTR(QML_INSTR_META_TEMPLATE);
 #undef QML_INSTR_META_TEMPLATE

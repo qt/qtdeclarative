@@ -400,8 +400,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_PROVIDER_VALUE(StoreColor, QMetaType::QColor, instr.value);
         QML_STORE_VALUE(StoreDate, QDate, QDate::fromJulianDay(instr.value));
         QML_STORE_VALUE(StoreDateTime, QDateTime,
-                        QDateTime(QDate::fromJulianDay(instr.date), *(QTime *)&instr.time));
-        QML_STORE_POINTER(StoreTime, (QTime *)&instr.time);
+                        QDateTime(QDate::fromJulianDay(instr.date), QTime::fromMSecsSinceStartOfDay(instr.time)));
+        QML_STORE_VALUE(StoreTime, QTime, QTime::fromMSecsSinceStartOfDay(instr.time));
         QML_STORE_POINTER(StorePoint, (QPoint *)&instr.point);
         QML_STORE_POINTER(StorePointF, (QPointF *)&instr.point);
         QML_STORE_POINTER(StoreSize, (QSize *)&instr.size);

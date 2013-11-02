@@ -583,8 +583,7 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
             Instruction::StoreTime instr;
             QTime time = QQmlStringConverters::timeFromString(v->value.asString());
             instr.propertyIndex = prop->index;
-            Q_ASSERT(sizeof(instr.time) == sizeof(QTime));
-            ::memcpy(&instr.time, &time, sizeof(QTime));
+            instr.time = time.msecsSinceStartOfDay();
             output->addInstruction(instr);
             }
             break;
@@ -595,8 +594,7 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
             QTime time = dateTime.time();
             instr.propertyIndex = prop->index;
             instr.date = dateTime.date().toJulianDay();
-            Q_ASSERT(sizeof(instr.time) == sizeof(QTime));
-            ::memcpy(&instr.time, &time, sizeof(QTime));
+            instr.time = time.msecsSinceStartOfDay();
             output->addInstruction(instr);
             }
             break;

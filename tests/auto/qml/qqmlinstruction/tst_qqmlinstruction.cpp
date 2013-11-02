@@ -63,7 +63,6 @@ private slots:
     void rectf();
     void vector3d();
     void vector4d();
-    void time();
 };
 
 void tst_qqmlinstruction::dump()
@@ -686,12 +685,6 @@ void tst_qqmlinstruction::vector4d()
     QCOMPARE(vector.y(), (qreal)(float)99.3);
     QCOMPARE(vector.z(), (qreal)(float)12.0);
     QCOMPARE(vector.w(), (qreal)(float)121.1);
-}
-
-void tst_qqmlinstruction::time()
-{
-    QCOMPARE(sizeof(QQmlInstruction::instr_storeTime::QTime), sizeof(QTime));
-    QCOMPARE(Q_ALIGNOF(QQmlInstruction::instr_storeTime::QTime), Q_ALIGNOF(QTime));
 }
 
 QTEST_MAIN(tst_qqmlinstruction)
