@@ -673,6 +673,10 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         VALUE(instr.result) = __qmljs_get_scope_object(static_cast<QV4::NoThrowContext*>(context));
     MOTH_END_INSTR(LoadScopeObject)
 
+    MOTH_BEGIN_INSTR(LoadQmlSingleton)
+        VALUE(instr.result) = __qmljs_get_qml_singleton(static_cast<QV4::NoThrowContext*>(context), runtimeStrings[instr.name]);
+    MOTH_END_INSTR(LoadQmlSingleton)
+
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do
 #else

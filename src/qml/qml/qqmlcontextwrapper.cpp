@@ -412,6 +412,25 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
     return idObjectsWrapper->asReturnedValue();
 }
 
+ReturnedValue QmlContextWrapper::qmlSingletonWrapper(const StringRef &name)
+{
+    if (!context->imports)
+        return Encode::undefined();
+    // Search for attached properties, enums and imported scripts
+    QQmlTypeNameCache::Result r = context->imports->query(name);
+
+    Q_ASSERT(r.isValid());
+    Q_ASSERT(r.type);
+    Q_ASSERT(r.type->isSingleton());
+
+    QQmlEngine *e = v8->engine();
+    QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
+    siinfo->init(e);
+
+    QObject *qobjectSingleton = siinfo->qobjectApi(e);
+    return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
+}
+
 DEFINE_MANAGED_VTABLE(QQmlIdObjectsArray);
 
 QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)

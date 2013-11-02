@@ -111,6 +111,8 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 loadQmlScopeObject(t);
             else if (n->builtin == V4IR::Name::builtin_qml_imported_scripts_object)
                 loadQmlImportedScripts(t);
+            else if (n->qmlSingleton)
+                loadQmlSingleton(*n->id, t);
             else
                 getActivationProperty(n, t);
             return;

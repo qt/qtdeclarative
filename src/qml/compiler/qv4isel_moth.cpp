@@ -416,6 +416,14 @@ void InstructionSelection::loadQmlScopeObject(V4IR::Temp *temp)
     addInstruction(load);
 }
 
+void InstructionSelection::loadQmlSingleton(const QString &name, V4IR::Temp *temp)
+{
+    Instruction::LoadQmlSingleton load;
+    load.result = getResultParam(temp);
+    load.name = registerString(name);
+    addInstruction(load);
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     assert(sourceConst);

@@ -177,6 +177,7 @@ QV4::ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
 void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
+QV4::ReturnedValue __qmljs_get_qml_singleton(NoThrowContext *ctx, const QV4::StringRef name);
 
 // For each
 QV4::ReturnedValue __qmljs_foreach_iterator_object(QV4::ExecutionContext *ctx, const QV4::ValueRef in);

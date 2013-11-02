@@ -116,6 +116,7 @@ protected:
     virtual void loadQmlImportedScripts(V4IR::Temp *temp);
     virtual void loadQmlContextObject(V4IR::Temp *temp);
     virtual void loadQmlScopeObject(V4IR::Temp *temp);
+    virtual void loadQmlSingleton(const QString &name, V4IR::Temp *temp);
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp);
     virtual void loadString(const QString &str, V4IR::Temp *targetTemp);
     virtual void loadRegexp(V4IR::RegExp *sourceRegexp, V4IR::Temp *targetTemp);

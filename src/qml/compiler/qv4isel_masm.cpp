@@ -900,6 +900,11 @@ void InstructionSelection::loadQmlScopeObject(V4IR::Temp *temp)
     generateFunctionCall(temp, __qmljs_get_scope_object, Assembler::ContextRegister);
 }
 
+void InstructionSelection::loadQmlSingleton(const QString &name, V4IR::Temp *temp)
+{
+    generateFunctionCall(temp, __qmljs_get_qml_singleton, Assembler::ContextRegister, Assembler::PointerToString(name));
+}
+
 void InstructionSelection::loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
 {
     if (targetTemp->kind == V4IR::Temp::PhysicalRegister) {

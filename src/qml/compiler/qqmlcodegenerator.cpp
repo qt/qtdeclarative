@@ -1319,20 +1319,43 @@ static QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, co
 
 static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
+enum MetaObjectResolverFlags {
+    AllPropertiesAreFinal    = 0x1,
+    LookupsIncludeEnums      = 0x2,
+    LookupsExcludeProperties = 0x4
+};
+
 static V4IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, V4IR::MemberExpressionResolver *resolver, V4IR::Member *member)
 {
     V4IR::Type result = V4IR::VarType;
-    // Try to resolve members of QObjects in QML mode
-    if (qmlEngine) {
-        QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
-        QQmlPropertyData *property = member->property;
+    QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
 
+    if (member->name->constData()->isUpper() && (resolver->flags & LookupsIncludeEnums)) {
+        const QMetaObject *mo = metaObject->createMetaObject();
+        QByteArray enumName = member->name->toUtf8();
+        for (int ii = mo->enumeratorCount() - 1; ii >= 0; --ii) {
+            QMetaEnum metaEnum = mo->enumerator(ii);
+            bool ok;
+            int value = metaEnum.keyToValue(enumName.constData(), &ok);
+            if (ok) {
+                member->memberIsEnum = true;
+                member->enumValue = value;
+                resolver->clear();
+                return V4IR::SInt32Type;
+            }
+        }
+    }
+
+    if (qmlEngine && !(resolver->flags & LookupsExcludeProperties)) {
+        QQmlPropertyData *property = member->property;
         if (!property && metaObject) {
-            QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0);
-            if (candidate && candidate->isFinal() && metaObject->isAllowedInRevision(candidate)
-                && !candidate->isFunction()) {
-                property = candidate;
-                member->property = candidate; // Cache for next iteration and isel needs it.
+            if (QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0)) {
+                const bool isFinalProperty = (candidate->isFinal() || (resolver->flags & AllPropertiesAreFinal))
+                                             && !candidate->isFunction();
+                if (isFinalProperty && metaObject->isAllowedInRevision(candidate)) {
+                    property = candidate;
+                    member->property = candidate; // Cache for next iteration and isel needs it.
+                }
             }
         }
 
@@ -1366,6 +1389,7 @@ static void initMetaObjectResolver(V4IR::MemberExpressionResolver *resolver, QQm
 {
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
+    resolver->flags = 0;
 }
 
 void JSCodeGen::beginFunctionBodyHook()
@@ -1418,10 +1442,40 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
     {
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
-            if (r.scriptIndex != -1)
-                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(V4IR::NumberType, r.scriptIndex));
-            else
+            if (r.scriptIndex != -1) {
+                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(V4IR::SInt32Type, r.scriptIndex));
+            } else if (r.type) {
+                V4IR::Name *typeName = _block->NAME(name, line, col);
+                V4IR::Temp *result = _block->TEMP(_block->newTemp());
+
+                if (r.type->isSingleton()) {
+                    if (r.type->isCompositeSingleton()) {
+                        QQmlTypeData *tdata = engine->typeLoader.getType(r.type->singletonInstanceInfo()->url);
+                        Q_ASSERT(tdata);
+                        Q_ASSERT(tdata->isComplete());
+                        initMetaObjectResolver(&result->memberResolver, engine->propertyCacheForType(tdata->compiledData()->metaTypeId));
+                        result->memberResolver.flags |= AllPropertiesAreFinal;
+                    } else {
+                        const QMetaObject *singletonMo = r.type->singletonInstanceInfo()->instanceMetaObject;
+                        if (!singletonMo) // We can only accelerate C++ singletons that were registered with their meta-type
+                            return 0;
+                        initMetaObjectResolver(&result->memberResolver, engine->cache(singletonMo));
+                    }
+
+                    // Instruct the isel to not load this as activation property but through the
+                    // run-time's singleton getter.
+                    typeName->qmlSingleton = true;
+                } else {
+                    initMetaObjectResolver(&result->memberResolver,engine->cache(r.type->metaObject()));
+                    result->memberResolver.flags |= LookupsExcludeProperties;
+                }
+                typeName->freeOfSideEffects = true;
+                result->memberResolver.flags |= LookupsIncludeEnums;
+                _block->MOVE(result, typeName);
+                return _block->TEMP(result->index);
+            } else {
                 return 0; // TODO: We can't do fast lookup for these yet.
+            }
         }
     }
 

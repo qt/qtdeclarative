@@ -364,6 +364,14 @@ protected: // IRDecoder
         addCall();
     }
 
+    virtual void loadQmlSingleton(const QString &/*name*/, Temp *temp)
+    {
+        Q_UNUSED(temp);
+
+        addDef(temp);
+        addCall();
+    }
+
     virtual void loadConst(V4IR::Const *sourceConst, V4IR::Temp *targetTemp)
     {
         Q_UNUSED(sourceConst);

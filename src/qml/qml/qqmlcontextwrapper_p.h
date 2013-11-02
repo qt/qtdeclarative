@@ -97,6 +97,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
     ReturnedValue idObjectsArray();
+    ReturnedValue qmlSingletonWrapper(const StringRef &name);
 
     QV8Engine *v8; // ### temporary, remove
     bool readOnly;

@@ -129,7 +129,8 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlContextObject, loadQmlContextObject) \
-    F(LoadQmlScopeObject, loadQmlScopeObject)
+    F(LoadQmlScopeObject, loadQmlScopeObject) \
+    F(LoadQmlSingleton, loadQmlSingleton)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -670,6 +671,11 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_loadQmlSingleton {
+        MOTH_INSTR_HEADER
+        Param result;
+        int name;
+    };
 
     instr_common common;
     instr_ret ret;
@@ -752,6 +758,7 @@ union Instr
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlContextObject loadQmlContextObject;
     instr_loadQmlScopeObject loadQmlScopeObject;
+    instr_loadQmlSingleton loadQmlSingleton;
 
     static int size(Type type);
 };

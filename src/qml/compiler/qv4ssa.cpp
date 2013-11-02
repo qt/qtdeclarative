@@ -1189,6 +1189,8 @@ protected:
 
     virtual void visitName(Name *e)
     {
+        if (e->freeOfSideEffects)
+            return;
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
         // a side-effect.
         if (e->builtin == Name::builtin_invalid || (e->id && *e->id != QStringLiteral("this")))
@@ -2511,6 +2513,17 @@ void optimizeSSA(Function *function, DefUsesCalculator &defUses)
                         *ref[s] = 0;
                     }
                     continue;
+                }
+                if (Member *potentialEnumMember = m->source->asMember()) {
+                    if (potentialEnumMember->memberIsEnum) {
+                        Const *c = function->New<Const>();
+                        c->init(SInt32Type, potentialEnumMember->enumValue);
+                        W += replaceUses(targetTemp, c);
+                        defUses.removeDef(*targetTemp);
+                        *ref[s] = 0;
+                        defUses.removeUse(s, *potentialEnumMember->base->asTemp());
+                        continue;
+                    }
                 }
 
                 // copy propagation:

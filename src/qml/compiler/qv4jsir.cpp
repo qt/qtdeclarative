@@ -372,6 +372,8 @@ void Name::initGlobal(const QString *id, quint32 line, quint32 column)
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = true;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }
@@ -381,6 +383,8 @@ void Name::init(const QString *id, quint32 line, quint32 column)
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = false;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }
@@ -390,6 +394,8 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
     this->id = 0;
     this->builtin = builtin;
     this->global = false;
+    this->qmlSingleton = false;
+    this->freeOfSideEffects = false;
     this->line = line;
     this->column = column;
 }

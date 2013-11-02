@@ -55,6 +55,7 @@
 #include "private/qv4global_p.h"
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qqmljsastfwd_p.h>
+#include <private/qflagpointer_p.h>
 
 #include <QtCore/QVector>
 #include <QtCore/QString>
@@ -123,6 +124,14 @@ struct Jump;
 struct CJump;
 struct Ret;
 struct Phi;
+
+// Flag pointer:
+// * The first flag indicates whether the meta object is final.
+//   If final, then none of its properties themselves need to
+//   be final when considering for lookups in QML.
+// * The second flag indicates whether enums should be included
+//   in the lookup of properties or not. The default is false.
+typedef QFlagPointer<QQmlPropertyCache> IRMetaObject;
 
 enum AluOp {
     OpInvalid = 0,
@@ -227,13 +236,14 @@ struct MemberExpressionResolver
     typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0) {}
+        : resolveMember(0), data(0), flags(0) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
 
     ResolveFunction resolveMember;
     void *data; // Could be pointer to meta object, QQmlTypeNameCache, etc. - depends on resolveMember implementation
+    int flags;
 };
 
 struct Expr {
@@ -351,7 +361,9 @@ struct Name: Expr {
 
     const QString *id;
     Builtin builtin;
-    bool global;
+    bool global : 1;
+    bool qmlSingleton : 1;
+    bool freeOfSideEffects : 1;
     quint32 line;
     quint32 column;
 
@@ -543,12 +555,15 @@ struct Member: Expr {
     Expr *base;
     const QString *name;
     QQmlPropertyData *property;
+    int enumValue;
+    bool memberIsEnum;
 
     void init(Expr *base, const QString *name, QQmlPropertyData *property = 0)
     {
         this->base = base;
         this->name = name;
         this->property = property;
+        this->memberIsEnum = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -919,6 +934,8 @@ public:
         newName->id = n->id;
         newName->builtin = n->builtin;
         newName->global = n->global;
+        newName->qmlSingleton = n->qmlSingleton;
+        newName->freeOfSideEffects = n->freeOfSideEffects;
         newName->line = n->line;
         newName->column = n->column;
         return newName;
