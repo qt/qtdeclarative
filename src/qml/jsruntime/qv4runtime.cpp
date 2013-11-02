@@ -1247,7 +1247,7 @@ ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx)
     return QObjectWrapper::wrap(ctx->engine, c->getScopeObject());
 }
 
-ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex)
+ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired)
 {
     Scope scope(ctx);
     QV4::Scoped<QObjectWrapper> wrapper(scope, object);
@@ -1255,7 +1255,7 @@ ReturnedValue __qmljs_get_qobject_property(ExecutionContext *ctx, const ValueRef
         ctx->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
-    return wrapper->getProperty(ctx, propertyIndex);
+    return wrapper->getProperty(ctx, propertyIndex, captureRequired);
 }
 
 void __qmljs_set_qobject_property(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value)

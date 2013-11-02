@@ -154,7 +154,6 @@ inline bool isBoolType(V4IR::Expr *e)
 
 InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
-    , _function(0)
     , _block(0)
     , _codeStart(0)
     , _codeNext(0)
@@ -509,12 +508,13 @@ void InstructionSelection::setQObjectProperty(V4IR::Expr *source, V4IR::Expr *ta
     addInstruction(store);
 }
 
-void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target)
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target)
 {
     Instruction::LoadQObjectProperty load;
     load.base = getParam(base);
     load.propertyIndex = propertyIndex;
     load.result = getResultParam(target);
+    load.captureRequired = captureRequired;
     addInstruction(load);
 }
 

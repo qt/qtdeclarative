@@ -286,6 +286,7 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
+        bool captureRequired;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER

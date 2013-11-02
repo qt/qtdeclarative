@@ -171,14 +171,10 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(*f->locals.at(i));
 
-        if (f->hasQmlDependencies) {
-            QQmlJS::V4IR::QmlDependenciesCollector depCollector;
-
-            QSet<int> idObjectDeps;
-            QSet<QQmlPropertyData*> contextPropertyDeps;
-            QSet<QQmlPropertyData*> scopePropertyDeps;
-
-            depCollector.run(f, &idObjectDeps, &contextPropertyDeps, &scopePropertyDeps);
+        if (f->hasQmlDependencies()) {
+            QSet<int> idObjectDeps = f->idObjectDependencies;
+            QSet<QQmlPropertyData*> contextPropertyDeps = f->contextObjectDependencies;
+            QSet<QQmlPropertyData*> scopePropertyDeps = f->scopeObjectDependencies;
 
             if (!idObjectDeps.isEmpty())
                 qmlIdObjectDependenciesPerFunction.insert(f, idObjectDeps);
@@ -206,7 +202,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(int *total
         int qmlIdDepsCount = 0;
         int qmlPropertyDepsCount = 0;
 
-        if (f->hasQmlDependencies) {
+        if (f->hasQmlDependencies()) {
             IdDependencyHash::ConstIterator idIt = qmlIdObjectDependenciesPerFunction.find(f);
             if (idIt != qmlIdObjectDependenciesPerFunction.constEnd())
                 qmlIdDepsCount += idIt->count();
@@ -361,7 +357,7 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
     QSet<QQmlPropertyData*> qmlContextPropertyDeps;
     QSet<QQmlPropertyData*> qmlScopePropertyDeps;
 
-    if (irFunction->hasQmlDependencies) {
+    if (irFunction->hasQmlDependencies()) {
         qmlIdObjectDeps = qmlIdObjectDependenciesPerFunction.value(irFunction);
         qmlContextPropertyDeps = qmlContextPropertyDependenciesPerFunction.value(irFunction);
         qmlScopePropertyDeps = qmlScopePropertyDependenciesPerFunction.value(irFunction);

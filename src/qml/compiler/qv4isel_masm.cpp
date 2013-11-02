@@ -559,7 +559,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _block(0)
-    , _function(0)
     , _as(0)
 {
     compilationUnit = new CompilationUnit;
@@ -995,9 +994,10 @@ void InstructionSelection::getProperty(V4IR::Expr *base, const QString &name, V4
     }
 }
 
-void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, V4IR::Temp *target)
+void InstructionSelection::getQObjectProperty(V4IR::Expr *base, int propertyIndex, bool captureRequired, V4IR::Temp *target)
 {
-    generateFunctionCall(target, __qmljs_get_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex));
+    generateFunctionCall(target, __qmljs_get_qobject_property, Assembler::ContextRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
+                         Assembler::TrustedImm32(captureRequired));
 }
 
 void InstructionSelection::setProperty(V4IR::Expr *source, V4IR::Expr *targetBase,

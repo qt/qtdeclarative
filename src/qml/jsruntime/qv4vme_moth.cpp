@@ -317,7 +317,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
     MOTH_END_INSTR(StoreQObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadQObjectProperty)
-        STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex));
+        STOREVALUE(instr.result, __qmljs_get_qobject_property(context, VALUEPTR(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadQObjectProperty)
 
     MOTH_BEGIN_INSTR(Push)
