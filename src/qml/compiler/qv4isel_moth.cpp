@@ -388,11 +388,10 @@ void InstructionSelection::loadThisObject(V4IR::Temp *temp)
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlIdObject(int id, V4IR::Temp *temp)
+void InstructionSelection::loadQmlIdArray(V4IR::Temp *temp)
 {
-    Instruction::LoadQmlIdObject load;
+    Instruction::LoadQmlIdArray load;
     load.result = getResultParam(temp);
-    load.id = id;
     addInstruction(load);
 }
 

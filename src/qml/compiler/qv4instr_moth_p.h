@@ -126,7 +126,7 @@ QT_BEGIN_NAMESPACE
     F(MulNumberParams, mulNumberParams) \
     F(SubNumberParams, subNumberParams) \
     F(LoadThis, loadThis) \
-    F(LoadQmlIdObject, loadQmlIdObject) \
+    F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlContextObject, loadQmlContextObject) \
     F(LoadQmlScopeObject, loadQmlScopeObject)
@@ -654,10 +654,9 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_loadQmlIdObject {
+    struct instr_loadQmlIdArray {
         MOTH_INSTR_HEADER
         Param result;
-        int id;
     };
     struct instr_loadQmlImportedScripts {
         MOTH_INSTR_HEADER
@@ -749,7 +748,7 @@ union Instr
     instr_mulNumberParams mulNumberParams;
     instr_subNumberParams subNumberParams;
     instr_loadThis loadThis;
-    instr_loadQmlIdObject loadQmlIdObject;
+    instr_loadQmlIdArray loadQmlIdArray;
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlContextObject loadQmlContextObject;
     instr_loadQmlScopeObject loadQmlScopeObject;

@@ -1213,6 +1213,7 @@ JSCodeGen::JSCodeGen(QQmlEnginePrivate *enginePrivate, const QString &fileName, 
     , _contextObjectTemp(-1)
     , _scopeObjectTemp(-1)
     , _importedScriptsTemp(-1)
+    , _idArrayTemp(-1)
 {
     _module = jsModule;
     _module->setFileName(fileName);
@@ -1372,6 +1373,7 @@ void JSCodeGen::beginFunctionBodyHook()
     _contextObjectTemp = _block->newTemp();
     _scopeObjectTemp = _block->newTemp();
     _importedScriptsTemp = _block->newTemp();
+    _idArrayTemp = _block->newTemp();
 
     V4IR::Temp *temp = _block->TEMP(_contextObjectTemp);
     initMetaObjectResolver(&temp->memberResolver, _contextObject);
@@ -1382,6 +1384,7 @@ void JSCodeGen::beginFunctionBodyHook()
     move(temp, _block->NAME(V4IR::Name::builtin_qml_scope_object, 0, 0));
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(V4IR::Name::builtin_qml_imported_scripts_object, 0, 0));
+    move(_block->TEMP(_idArrayTemp), _block->NAME(V4IR::Name::builtin_qml_id_array, 0, 0));
 }
 
 V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
@@ -1403,8 +1406,13 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
             _function->idObjectDependencies.insert(mapping.idIndex);
-            return _block->QML_CONTEXT_MEMBER(_block->NAME(V4IR::Name::builtin_qml_id_scope, line, col),
-                                              _function->newString(mapping.name), mapping.idIndex);
+            V4IR::Expr *s = subscript(_block->TEMP(_idArrayTemp), _block->CONST(V4IR::SInt32Type, mapping.idIndex));
+            V4IR::Temp *result = _block->TEMP(_block->newTemp());
+            initMetaObjectResolver(&result->memberResolver, mapping.type);
+            _block->MOVE(result, s);
+            result = _block->TEMP(result->index);
+            result->isReadOnly = true; // don't allow use as lvalue
+            return result;
         }
 
     {

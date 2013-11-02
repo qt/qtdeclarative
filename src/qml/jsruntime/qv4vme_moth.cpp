@@ -657,9 +657,9 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         VALUE(instr.result) = context->callData->thisObject;
     MOTH_END_INSTR(LoadThis)
 
-    MOTH_BEGIN_INSTR(LoadQmlIdObject)
-        VALUE(instr.result) = __qmljs_get_id_object(static_cast<QV4::NoThrowContext*>(context), instr.id);
-    MOTH_END_INSTR(LoadQmlIdObject)
+    MOTH_BEGIN_INSTR(LoadQmlIdArray)
+        VALUE(instr.result) = __qmljs_get_id_array(static_cast<QV4::NoThrowContext*>(context));
+    MOTH_END_INSTR(LoadQmlIdArray)
 
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
         VALUE(instr.result) = __qmljs_get_imported_scripts(static_cast<QV4::NoThrowContext*>(context));

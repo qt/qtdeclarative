@@ -69,6 +69,8 @@ namespace CompiledData {
 struct Function;
 }
 
+struct QQmlIdObjectsArray;
+
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
     Q_MANAGED
@@ -90,9 +92,11 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static ReturnedValue get(Managed *m, const StringRef name, bool *hasProperty);
     static void put(Managed *m, const StringRef name, const ValueRef value);
     static void destroy(Managed *that);
+    static void markObjects(Managed *m, ExecutionEngine *engine);
 
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
+    ReturnedValue idObjectsArray();
 
     QV8Engine *v8; // ### temporary, remove
     bool readOnly;
@@ -101,6 +105,19 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     QQmlGuardedContextData context;
     QPointer<QObject> scopeObject;
+private:
+    QQmlIdObjectsArray *idObjectsWrapper;
+};
+
+struct QQmlIdObjectsArray : public Object
+{
+    Q_MANAGED
+    QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper);
+
+    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static void markObjects(Managed *that, ExecutionEngine *engine);
+
+    QmlContextWrapper *contextWrapper;
 };
 
 }

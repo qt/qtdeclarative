@@ -103,6 +103,8 @@ void IRDecoder::visitMove(V4IR::Move *s)
         if (V4IR::Name *n = s->source->asName()) {
             if (n->id && *n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
                 loadThisObject(t);
+            else if (n->builtin == V4IR::Name::builtin_qml_id_array)
+                loadQmlIdArray(t);
             else if (n->builtin == V4IR::Name::builtin_qml_context_object)
                 loadQmlContextObject(t);
             else if (n->builtin == V4IR::Name::builtin_qml_scope_object)
@@ -142,15 +144,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
                 return;
             }
         } else if (V4IR::Member *m = s->source->asMember()) {
-            if (m->type == V4IR::Member::MemberOfQmlContext) {
-                V4IR::Name *base = m->base->asName();
-                Q_ASSERT(base);
-
-                if (base->builtin == V4IR::Name::builtin_qml_id_scope) {
-                    loadQmlIdObject(m->memberIndex, t);
-                    return;
-                }
-            } else if (m->property) {
+            if (m->property) {
                 bool captureRequired = true;
                 if (_function) {
                     captureRequired = !_function->contextObjectDependencies.contains(m->property)

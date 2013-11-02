@@ -63,7 +63,7 @@ DEFINE_MANAGED_VTABLE(QmlContextWrapper);
 QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
     : Object(QV8Engine::getV4(engine)),
       v8(engine), readOnly(true), ownsContext(ownsContext), isNullWrapper(false),
-      context(context), scopeObject(scopeObject)
+      context(context), scopeObject(scopeObject), idObjectsWrapper(0)
 {
     vtbl = &static_vtbl;
 }
@@ -355,6 +355,14 @@ void QmlContextWrapper::destroy(Managed *that)
     static_cast<QmlContextWrapper *>(that)->~QmlContextWrapper();
 }
 
+void QmlContextWrapper::markObjects(Managed *m, ExecutionEngine *engine)
+{
+    QmlContextWrapper *This = static_cast<QmlContextWrapper*>(m);
+    if (This->idObjectsWrapper)
+        This->idObjectsWrapper->mark(engine);
+    Object::markObjects(m, engine);
+}
+
 void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const CompiledData::Function *compiledFunction)
 {
     // Let the caller check and avoid the function call :)
@@ -393,6 +401,54 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
     }
 
+}
+
+ReturnedValue QmlContextWrapper::idObjectsArray()
+{
+    if (!idObjectsWrapper) {
+        ExecutionEngine *v4 = engine();
+        idObjectsWrapper = new (v4->memoryManager) QQmlIdObjectsArray(v4, this);
+    }
+    return idObjectsWrapper->asReturnedValue();
+}
+
+DEFINE_MANAGED_VTABLE(QQmlIdObjectsArray);
+
+QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QmlContextWrapper *contextWrapper)
+    : Object(engine)
+    , contextWrapper(contextWrapper)
+{
+    vtbl = &static_vtbl;
+}
+
+ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
+{
+    QQmlIdObjectsArray *This = static_cast<QQmlIdObjectsArray*>(m);
+    QQmlContextData *context = This->contextWrapper->getContext();
+    if (!context) {
+        if (hasProperty)
+            *hasProperty = false;
+        return Encode::undefined();
+    }
+    if (index >= (uint)context->idValueCount) {
+        if (hasProperty)
+            *hasProperty = false;
+        return Encode::undefined();
+    }
+
+    ExecutionEngine *v4 = m->engine();
+    QQmlEnginePrivate *ep = v4->v8Engine->engine() ? QQmlEnginePrivate::get(v4->v8Engine->engine()) : 0;
+    if (ep)
+        ep->captureProperty(&context->idValues[index].bindings);
+
+    return QObjectWrapper::wrap(This->engine(), context->idValues[index].data());
+}
+
+void QQmlIdObjectsArray::markObjects(Managed *that, ExecutionEngine *engine)
+{
+    QQmlIdObjectsArray *This = static_cast<QQmlIdObjectsArray*>(that);
+    This->contextWrapper->mark(engine);
+    Object::markObjects(that, engine);
 }
 
 QT_END_NAMESPACE

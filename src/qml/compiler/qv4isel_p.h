@@ -144,7 +144,7 @@ public: // to implement by subclasses:
     virtual void constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void constructValue(V4IR::Temp *value, V4IR::ExprList *args, V4IR::Temp *result) = 0;
     virtual void loadThisObject(V4IR::Temp *temp) = 0;
-    virtual void loadQmlIdObject(int id, V4IR::Temp *temp) = 0;
+    virtual void loadQmlIdArray(V4IR::Temp *temp) = 0;
     virtual void loadQmlImportedScripts(V4IR::Temp *temp) = 0;
     virtual void loadQmlContextObject(V4IR::Temp *temp) = 0;
     virtual void loadQmlScopeObject(V4IR::Temp *temp) = 0;

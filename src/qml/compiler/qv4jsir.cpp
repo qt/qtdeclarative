@@ -433,8 +433,8 @@ static const char *builtin_to_string(Name::Builtin b)
         return "builtin_setup_argument_object";
     case V4IR::Name::builtin_convert_this_to_object:
         return "builtin_convert_this_to_object";
-    case V4IR::Name::builtin_qml_id_scope:
-        return "builtin_qml_id_scope";
+    case V4IR::Name::builtin_qml_id_array:
+        return "builtin_qml_id_array";
     case V4IR::Name::builtin_qml_imported_scripts_object:
         return "builtin_qml_imported_scripts_object";
     case V4IR::Name::builtin_qml_scope_object:
@@ -841,13 +841,6 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *prop
     return e;
 }
 
-Expr *BasicBlock::QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIndex)
-{
-    Member*e = function->New<Member>();
-    e->initQmlContextMember(base, id, memberIndex);
-    return e;
-}
-
 Stmt *BasicBlock::EXP(Expr *expr)
 { 
     if (isTerminated())
@@ -1034,12 +1027,7 @@ void CloneExpr::visitSubscript(Subscript *e)
 
 void CloneExpr::visitMember(Member *e)
 {
-    if (e->type == Member::MemberByName)
-        cloned = block->MEMBER(clone(e->base), e->name, e->property);
-    else if (e->type == Member::MemberOfQmlContext)
-        cloned = block->QML_CONTEXT_MEMBER(clone(e->base), e->name, e->memberIndex);
-    else
-        Q_ASSERT(!"Unimplemented!");
+    cloned = block->MEMBER(clone(e->base), e->name, e->property);
 }
 
 } // end of namespace IR

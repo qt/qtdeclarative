@@ -343,7 +343,7 @@ struct Name: Expr {
         builtin_define_object_literal,
         builtin_setup_argument_object,
         builtin_convert_this_to_object,
-        builtin_qml_id_scope,
+        builtin_qml_id_array,
         builtin_qml_imported_scripts_object,
         builtin_qml_context_object,
         builtin_qml_scope_object
@@ -378,9 +378,10 @@ struct Temp: Expr {
     };
 
     unsigned index;
-    unsigned scope : 28; // how many scopes outside the current one?
+    unsigned scope : 27; // how many scopes outside the current one?
     unsigned kind  : 3;
     unsigned isArgumentsOrEval : 1;
+    unsigned isReadOnly : 1;
     // Used when temp is used as base in member expression
     MemberExpressionResolver memberResolver;
 
@@ -394,10 +395,11 @@ struct Temp: Expr {
         this->index = index;
         this->scope = scope;
         this->isArgumentsOrEval = false;
+        this->isReadOnly = false;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
-    virtual bool isLValue() { return true; }
+    virtual bool isLValue() { return !isReadOnly; }
     virtual Temp *asTemp() { return this; }
 
     virtual void dump(QTextStream &out) const;
@@ -538,38 +540,19 @@ struct Subscript: Expr {
 };
 
 struct Member: Expr {
-    enum MemberType {
-        MemberByName,
-        // QML extensions
-        MemberOfQmlContext // lookup in context's id values
-    };
-
-    MemberType type;
     Expr *base;
     const QString *name;
-    int memberIndex; // used if type == MemberOfQmlContext
     QQmlPropertyData *property;
 
     void init(Expr *base, const QString *name, QQmlPropertyData *property = 0)
     {
-        this->type = MemberByName;
         this->base = base;
         this->name = name;
-        this->memberIndex = -1;
         this->property = property;
     }
 
-    void initQmlContextMember(Expr *base, const QString *name, int memberIndex)
-    {
-        this->type = MemberOfQmlContext;
-        this->base = base;
-        this->name = name;
-        this->memberIndex = memberIndex;
-        this->property = 0;
-    }
-
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
-    virtual bool isLValue() { return type != MemberOfQmlContext; }
+    virtual bool isLValue() { return true; }
     virtual Member *asMember() { return this; }
 
     virtual void dump(QTextStream &out) const;
@@ -872,7 +855,6 @@ struct BasicBlock {
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
     Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0);
-    Expr *QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIndex);
 
     Stmt *EXP(Expr *expr);
 

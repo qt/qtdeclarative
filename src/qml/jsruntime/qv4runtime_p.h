@@ -171,7 +171,7 @@ QV4::ReturnedValue __qmljs_construct_global_lookup(QV4::ExecutionContext *contex
 QV4::ReturnedValue __qmljs_get_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index);
 void __qmljs_set_element(QV4::ExecutionContext *ctx, const QV4::ValueRef object, const QV4::ValueRef index, const QV4::ValueRef value);
 
-QV4::ReturnedValue __qmljs_get_id_object(NoThrowContext *ctx, int id);
+QV4::ReturnedValue __qmljs_get_id_array(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_imported_scripts(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx);
 QV4::ReturnedValue __qmljs_get_scope_object(NoThrowContext *ctx);

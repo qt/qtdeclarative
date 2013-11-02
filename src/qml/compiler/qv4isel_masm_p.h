@@ -1457,7 +1457,7 @@ protected:
     virtual void callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4IR::ExprList *args, V4IR::Temp *result);
     virtual void convertType(V4IR::Temp *source, V4IR::Temp *target);
     virtual void loadThisObject(V4IR::Temp *temp);
-    virtual void loadQmlIdObject(int id, V4IR::Temp *temp);
+    virtual void loadQmlIdArray(V4IR::Temp *temp);
     virtual void loadQmlImportedScripts(V4IR::Temp *temp);
     virtual void loadQmlContextObject(V4IR::Temp *temp);
     virtual void loadQmlScopeObject(V4IR::Temp *temp);

@@ -381,7 +381,7 @@ private:
     int _contextObjectTemp;
     int _scopeObjectTemp;
     int _importedScriptsTemp;
-    int _idScopeTemp;
+    int _idArrayTemp;
 };
 
 } // namespace QtQml

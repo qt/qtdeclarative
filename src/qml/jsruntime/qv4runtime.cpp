@@ -1242,10 +1242,9 @@ ReturnedValue __qmljs_lookup_runtime_regexp(ExecutionContext *ctx, int id)
     return ctx->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue __qmljs_get_id_object(NoThrowContext *ctx, int id)
+ReturnedValue __qmljs_get_id_array(NoThrowContext *ctx)
 {
-    QQmlContextData *context = QmlContextWrapper::callingContext(ctx->engine);
-    return QObjectWrapper::wrap(ctx->engine, context->idValues[id].data());
+    return ctx->engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>()->idObjectsArray();
 }
 
 ReturnedValue __qmljs_get_context_object(NoThrowContext *ctx)
