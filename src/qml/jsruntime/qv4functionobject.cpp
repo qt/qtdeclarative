@@ -112,7 +112,7 @@ FunctionObject::FunctionObject(InternalClass *ic)
     , function(0)
 {
     vtbl = &static_vtbl;
-    name = engine()->id_undefined;
+    name = ic->engine->id_undefined;
 
     type = Type_FunctionObject;
     needsActivation = false;
@@ -130,7 +130,7 @@ void FunctionObject::init(const StringRef n, bool createProto)
     vtbl = &static_vtbl;
     name = n;
 
-    Scope s(engine());
+    Scope s(internalClass->engine);
     ScopedValue protectThis(s, this);
 
     type = Type_FunctionObject;
@@ -152,14 +152,14 @@ void FunctionObject::init(const StringRef n, bool createProto)
 
 ReturnedValue FunctionObject::newInstance()
 {
-    Scope scope(engine());
+    Scope scope(internalClass->engine);
     ScopedCallData callData(scope, 0);
     return construct(callData);
 }
 
 bool FunctionObject::hasInstance(Managed *that, const ValueRef value)
 {
-    Scope scope(that->engine());
+    Scope scope(that->internalClass->engine);
     ScopedFunctionObject f(scope, static_cast<FunctionObject *>(that));
 
     ScopedObject v(scope, value);
@@ -186,7 +186,7 @@ bool FunctionObject::hasInstance(Managed *that, const ValueRef value)
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    ExecutionEngine *v4 = that->engine();
+    ExecutionEngine *v4 = that->internalClass->engine;
     Scope scope(v4);
     Scoped<FunctionObject> f(scope, that, Scoped<FunctionObject>::Cast);
 
@@ -240,7 +240,8 @@ FunctionCtor::FunctionCtor(ExecutionContext *scope)
 ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
-    ExecutionContext *ctx = f->engine()->current;
+    ExecutionEngine *v4 = f->internalClass->engine;
+    ExecutionContext *ctx = v4->current;
     QString arguments;
     QString body;
     if (callData->argc > 0) {
@@ -264,13 +265,12 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        return f->engine()->current->throwSyntaxError(QLatin1String("Parse error"));
+        return v4->current->throwSyntaxError(QLatin1String("Parse error"));
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
-    ExecutionEngine *v4 = f->engine();
     if (!fe)
-        return f->engine()->current->throwSyntaxError(QLatin1String("Parse error"));
+        return v4->current->throwSyntaxError(QLatin1String("Parse error"));
 
     QQmlJS::V4IR::Module module(v4->debugger != 0);
 
@@ -432,11 +432,11 @@ ScriptFunction::ScriptFunction(ExecutionContext *scope, Function *function)
 
 ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
-    Scope scope(v4);
-    if (scope.hasException())
+    ExecutionEngine *v4 = that->internalClass->engine;
+    if (v4->hasException)
         return Encode::undefined();
 
+    Scope scope(v4);
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
@@ -462,16 +462,18 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
     ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    ExecutionContext *context = f->engine()->current;
-    Scope scope(context);
-    if (scope.hasException())
+    ExecutionEngine *v4 = f->internalClass->engine;
+    if (v4->hasException)
         return Encode::undefined();
+
+    ExecutionContext *context = v4->current;
+    Scope scope(context);
 
     CallContext *ctx = context->newCallContext(f, callData);
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
+            ctx->callData->thisObject = v4->globalObject->asReturnedValue();
         } else {
             ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
@@ -523,10 +525,10 @@ SimpleScriptFunction::SimpleScriptFunction(ExecutionContext *scope, Function *fu
 
 ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
-    Scope scope(v4);
-    if (scope.hasException())
+    ExecutionEngine *v4 = that->internalClass->engine;
+    if (v4->hasException)
         return Encode::undefined();
+    Scope scope(v4);
 
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
@@ -554,10 +556,11 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
-    Scope scope(v4);
-    if (scope.hasException())
+    ExecutionEngine *v4 = that->internalClass->engine;
+    if (v4->hasException)
         return Encode::undefined();
+
+    Scope scope(v4);
 
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
@@ -567,7 +570,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
     if (!f->strictMode && !callData->thisObject.isObject()) {
         if (callData->thisObject.isNullOrUndefined()) {
-            ctx->callData->thisObject = f->engine()->globalObject->asReturnedValue();
+            ctx->callData->thisObject = v4->globalObject->asReturnedValue();
         } else {
             ctx->callData->thisObject = callData->thisObject.toObject(context)->asReturnedValue();
         }
@@ -594,16 +597,17 @@ BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, 
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
-    return f->engine()->current->throwTypeError();
+    return f->internalClass->engine->current->throwTypeError();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 {
     BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
-    Scope scope(v4);
-    if (scope.hasException())
+    ExecutionEngine *v4 = f->internalClass->engine;
+    if (v4->hasException)
         return Encode::undefined();
+
+    Scope scope(v4);
 
     ExecutionContext *context = v4->current;
 
@@ -620,11 +624,11 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
 {
     IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
+    ExecutionEngine *v4 = f->internalClass->engine;
+    if (v4->hasException)
+        return Encode::undefined();
     ExecutionContext *context = v4->current;
     Scope scope(v4);
-    if (scope.hasException())
-        return Encode::undefined();
 
     SimpleCallContext ctx;
     ctx.initSimpleCallContext(f->scope->engine);

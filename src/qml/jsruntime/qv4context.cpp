@@ -64,7 +64,6 @@ CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *local
 
     c->function = function;
     c->callData = callData;
-    c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode;
     c->marked = false;
