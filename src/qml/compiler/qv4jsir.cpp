@@ -550,7 +550,7 @@ void Member::dump(QTextStream &out) const
 {
     base->dump(out);
     out << '.' << *name;
-    if (type == MemberOfQObject)
+    if (property)
         out << " (meta-property " << property->coreIndex << " <" << QMetaType::typeName(property->propType) << ">)";
 }
 
@@ -834,10 +834,10 @@ Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
+Expr *BasicBlock::MEMBER(Expr *base, const QString *name, QQmlPropertyData *property)
 {
     Member*e = function->New<Member>();
-    e->init(base, name);
+    e->init(base, name, property);
     return e;
 }
 
@@ -845,13 +845,6 @@ Expr *BasicBlock::QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIn
 {
     Member*e = function->New<Member>();
     e->initQmlContextMember(base, id, memberIndex);
-    return e;
-}
-
-Expr *BasicBlock::QML_QOBJECT_PROPERTY(Expr *base, const QString *id, QQmlPropertyData *property)
-{
-    Member*e = function->New<Member>();
-    e->initMetaProperty(base, id, property);
     return e;
 }
 
@@ -1042,11 +1035,9 @@ void CloneExpr::visitSubscript(Subscript *e)
 void CloneExpr::visitMember(Member *e)
 {
     if (e->type == Member::MemberByName)
-        cloned = block->MEMBER(clone(e->base), e->name);
+        cloned = block->MEMBER(clone(e->base), e->name, e->property);
     else if (e->type == Member::MemberOfQmlContext)
         cloned = block->QML_CONTEXT_MEMBER(clone(e->base), e->name, e->memberIndex);
-    else if (e->type == Member::MemberOfQObject)
-        cloned = block->QML_QOBJECT_PROPERTY(clone(e->base), e->name, e->property);
     else
         Q_ASSERT(!"Unimplemented!");
 }

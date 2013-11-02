@@ -150,7 +150,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
                     loadQmlIdObject(m->memberIndex, t);
                     return;
                 }
-            } else if (m->type == V4IR::Member::MemberOfQObject) {
+            } else if (m->property) {
                 bool captureRequired = true;
                 if (_function) {
                     captureRequired = !_function->contextObjectDependencies.contains(m->property)
@@ -195,7 +195,7 @@ void IRDecoder::visitMove(V4IR::Move *s)
     } else if (V4IR::Member *m = s->target->asMember()) {
         if (m->base->asTemp() || m->base->asConst()) {
             if (s->source->asTemp() || s->source->asConst()) {
-                if (m->type == V4IR::Member::MemberOfQObject) {
+                if (m->property) {
                     setQObjectProperty(s->source, m->base, m->property->coreIndex);
                     return;
                 } else {

@@ -541,8 +541,7 @@ struct Member: Expr {
     enum MemberType {
         MemberByName,
         // QML extensions
-        MemberOfQmlContext, // lookup in context's id values
-        MemberOfQObject
+        MemberOfQmlContext // lookup in context's id values
     };
 
     MemberType type;
@@ -551,12 +550,13 @@ struct Member: Expr {
     int memberIndex; // used if type == MemberOfQmlContext
     QQmlPropertyData *property;
 
-    void init(Expr *base, const QString *name)
+    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0)
     {
         this->type = MemberByName;
         this->base = base;
         this->name = name;
-        this->property = 0;
+        this->memberIndex = -1;
+        this->property = property;
     }
 
     void initQmlContextMember(Expr *base, const QString *name, int memberIndex)
@@ -566,15 +566,6 @@ struct Member: Expr {
         this->name = name;
         this->memberIndex = memberIndex;
         this->property = 0;
-    }
-
-    void initMetaProperty(Expr *base, const QString *name, QQmlPropertyData *property)
-    {
-        this->type = MemberOfQObject;
-        this->base = base;
-        this->name = name;
-        this->memberIndex = -1;
-        this->property = property;
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
@@ -880,9 +871,8 @@ struct BasicBlock {
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
     Expr *SUBSCRIPT(Expr *base, Expr *index);
-    Expr *MEMBER(Expr *base, const QString *name);
+    Expr *MEMBER(Expr *base, const QString *name, QQmlPropertyData *property = 0);
     Expr *QML_CONTEXT_MEMBER(Expr *base, const QString *id, int memberIndex);
-    Expr *QML_QOBJECT_PROPERTY(Expr *base, const QString *id, QQmlPropertyData *property);
 
     Stmt *EXP(Expr *expr);
 

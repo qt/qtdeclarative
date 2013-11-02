@@ -1427,7 +1427,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
                 _function->scopeObjectDependencies.insert(pd);
             V4IR::Temp *base = _block->TEMP(_scopeObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _scopeObject);
-            return _block->QML_QOBJECT_PROPERTY(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd);
         }
     }
 
@@ -1441,7 +1441,7 @@ V4IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col
                 _function->contextObjectDependencies.insert(pd);
             V4IR::Temp *base = _block->TEMP(_contextObjectTemp);
             initMetaObjectResolver(&base->memberResolver, _contextObject);
-            return _block->QML_QOBJECT_PROPERTY(base, _function->newString(name), pd);
+            return _block->MEMBER(base, _function->newString(name), pd);
         }
     }
 

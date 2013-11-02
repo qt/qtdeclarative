@@ -1907,7 +1907,7 @@ protected:
         // when writing undefined to them, and an exception is thrown when they're missing
         // a reset function.
         const Member *targetMember = s->target->asMember();
-        const bool inhibitConversion = targetMember && targetMember->type == Member::MemberOfQObject && targetMember->property;
+        const bool inhibitConversion = targetMember && targetMember->property;
 
         run(s->source, s->target->type, !inhibitConversion);
     }
