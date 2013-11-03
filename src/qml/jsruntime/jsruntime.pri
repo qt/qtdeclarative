@@ -1,5 +1,3 @@
-CONFIG += warn_off
-
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$OUT_PWD
 
