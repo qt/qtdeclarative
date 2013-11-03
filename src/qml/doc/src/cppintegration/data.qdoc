@@ -83,7 +83,7 @@ when passed from C++ to QML and vice-versa:
         \li \l string
     \row
         \li QUrl
-        \li real
+        \li \l url
     \row
         \li QColor
         \li \l color
