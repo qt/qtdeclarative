@@ -741,7 +741,7 @@ inline WeakValue &WeakValue::operator=(Returned<T> *obj)
     return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
 }
 
-inline ReturnedValue SimpleCallContext::argument(int i) {
+inline ReturnedValue CallContext::argument(int i) {
     return i < callData->argc ? callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 

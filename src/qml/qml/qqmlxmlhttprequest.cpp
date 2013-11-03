@@ -279,24 +279,24 @@ public:
     static void initClass(ExecutionEngine *engine);
 
     // JS API
-    static ReturnedValue method_get_nodeName(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nodeValue(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nodeType(SimpleCallContext *ctx);
+    static ReturnedValue method_get_nodeName(CallContext *ctx);
+    static ReturnedValue method_get_nodeValue(CallContext *ctx);
+    static ReturnedValue method_get_nodeType(CallContext *ctx);
 
-    static ReturnedValue method_get_parentNode(SimpleCallContext *ctx);
-    static ReturnedValue method_get_childNodes(SimpleCallContext *ctx);
-    static ReturnedValue method_get_firstChild(SimpleCallContext *ctx);
-    static ReturnedValue method_get_lastChild(SimpleCallContext *ctx);
-    static ReturnedValue method_get_previousSibling(SimpleCallContext *ctx);
-    static ReturnedValue method_get_nextSibling(SimpleCallContext *ctx);
-    static ReturnedValue method_get_attributes(SimpleCallContext *ctx);
+    static ReturnedValue method_get_parentNode(CallContext *ctx);
+    static ReturnedValue method_get_childNodes(CallContext *ctx);
+    static ReturnedValue method_get_firstChild(CallContext *ctx);
+    static ReturnedValue method_get_lastChild(CallContext *ctx);
+    static ReturnedValue method_get_previousSibling(CallContext *ctx);
+    static ReturnedValue method_get_nextSibling(CallContext *ctx);
+    static ReturnedValue method_get_attributes(CallContext *ctx);
 
-    //static ReturnedValue ownerDocument(SimpleCallContext *ctx);
-    //static ReturnedValue namespaceURI(SimpleCallContext *ctx);
-    //static ReturnedValue prefix(SimpleCallContext *ctx);
-    //static ReturnedValue localName(SimpleCallContext *ctx);
-    //static ReturnedValue baseURI(SimpleCallContext *ctx);
-    //static ReturnedValue textContent(SimpleCallContext *ctx);
+    //static ReturnedValue ownerDocument(CallContext *ctx);
+    //static ReturnedValue namespaceURI(CallContext *ctx);
+    //static ReturnedValue prefix(CallContext *ctx);
+    //static ReturnedValue localName(CallContext *ctx);
+    //static ReturnedValue baseURI(CallContext *ctx);
+    //static ReturnedValue textContent(CallContext *ctx);
 
     static ReturnedValue getProto(ExecutionEngine *v4);
 
@@ -352,12 +352,12 @@ class Attr : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_name(SimpleCallContext *ctx);
-//    static ReturnedValue specified(SimpleCallContext *);
-    static ReturnedValue method_value(SimpleCallContext *ctx);
-    static ReturnedValue method_ownerElement(SimpleCallContext *ctx);
-//    static ReturnedValue schemaTypeInfo(SimpleCallContext *);
-//    static ReturnedValue isId(SimpleCallContext *c);
+    static ReturnedValue method_name(CallContext *ctx);
+//    static ReturnedValue specified(CallContext *);
+    static ReturnedValue method_value(CallContext *ctx);
+    static ReturnedValue method_ownerElement(CallContext *ctx);
+//    static ReturnedValue schemaTypeInfo(CallContext *);
+//    static ReturnedValue isId(CallContext *c);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -367,7 +367,7 @@ class CharacterData : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_length(SimpleCallContext *ctx);
+    static ReturnedValue method_length(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *v4);
@@ -377,8 +377,8 @@ class Text : public CharacterData
 {
 public:
     // JS API
-    static ReturnedValue method_isElementContentWhitespace(SimpleCallContext *ctx);
-    static ReturnedValue method_wholeText(SimpleCallContext *ctx);
+    static ReturnedValue method_isElementContentWhitespace(CallContext *ctx);
+    static ReturnedValue method_wholeText(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -395,10 +395,10 @@ class Document : public Node
 {
 public:
     // JS API
-    static ReturnedValue method_xmlVersion(SimpleCallContext *ctx);
-    static ReturnedValue method_xmlEncoding(SimpleCallContext *ctx);
-    static ReturnedValue method_xmlStandalone(SimpleCallContext *ctx);
-    static ReturnedValue method_documentElement(SimpleCallContext *ctx);
+    static ReturnedValue method_xmlVersion(CallContext *ctx);
+    static ReturnedValue method_xmlEncoding(CallContext *ctx);
+    static ReturnedValue method_xmlStandalone(CallContext *ctx);
+    static ReturnedValue method_documentElement(CallContext *ctx);
 
     // C++ API
     static ReturnedValue prototype(ExecutionEngine *);
@@ -417,7 +417,7 @@ void NodeImpl::release()
     document->release();
 }
 
-ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeName(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -442,7 +442,7 @@ ReturnedValue NodePrototype::method_get_nodeName(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(name));
 }
 
-ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeValue(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -461,7 +461,7 @@ ReturnedValue NodePrototype::method_get_nodeValue(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(r->d->data));
 }
 
-ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nodeType(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -471,7 +471,7 @@ ReturnedValue NodePrototype::method_get_nodeType(SimpleCallContext *ctx)
     return Encode(r->d->type);
 }
 
-ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_parentNode(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -486,7 +486,7 @@ ReturnedValue NodePrototype::method_get_parentNode(SimpleCallContext *ctx)
         return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_childNodes(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -498,7 +498,7 @@ ReturnedValue NodePrototype::method_get_childNodes(SimpleCallContext *ctx)
     return NodeList::create(engine, r->d);
 }
 
-ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_firstChild(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -513,7 +513,7 @@ ReturnedValue NodePrototype::method_get_firstChild(SimpleCallContext *ctx)
         return Node::create(engine, r->d->children.first());
 }
 
-ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_lastChild(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -528,7 +528,7 @@ ReturnedValue NodePrototype::method_get_lastChild(SimpleCallContext *ctx)
         return Node::create(engine, r->d->children.last());
 }
 
-ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_previousSibling(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -552,7 +552,7 @@ ReturnedValue NodePrototype::method_get_previousSibling(SimpleCallContext *ctx)
     return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_nextSibling(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -576,7 +576,7 @@ ReturnedValue NodePrototype::method_get_nextSibling(SimpleCallContext *ctx)
     return Encode::null();
 }
 
-ReturnedValue NodePrototype::method_get_attributes(SimpleCallContext *ctx)
+ReturnedValue NodePrototype::method_get_attributes(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -670,7 +670,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
     return d->attrPrototype.value();
 }
 
-ReturnedValue Attr::method_name(SimpleCallContext *ctx)
+ReturnedValue Attr::method_name(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -681,7 +681,7 @@ ReturnedValue Attr::method_name(SimpleCallContext *ctx)
     return engine->toString(r->d->name);
 }
 
-ReturnedValue Attr::method_value(SimpleCallContext *ctx)
+ReturnedValue Attr::method_value(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -692,7 +692,7 @@ ReturnedValue Attr::method_value(SimpleCallContext *ctx)
     return engine->toString(r->d->data);
 }
 
-ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
+ReturnedValue Attr::method_ownerElement(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -703,7 +703,7 @@ ReturnedValue Attr::method_ownerElement(SimpleCallContext *ctx)
     return Node::create(engine, r->d->parent);
 }
 
-ReturnedValue CharacterData::method_length(SimpleCallContext *ctx)
+ReturnedValue CharacterData::method_length(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -730,7 +730,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
     return d->characterDataPrototype.value();
 }
 
-ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
+ReturnedValue Text::method_isElementContentWhitespace(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -739,7 +739,7 @@ ReturnedValue Text::method_isElementContentWhitespace(SimpleCallContext *ctx)
     return Encode(r->d->data.trimmed().isEmpty());
 }
 
-ReturnedValue Text::method_wholeText(SimpleCallContext *ctx)
+ReturnedValue Text::method_wholeText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -997,7 +997,7 @@ ReturnedValue NodeList::create(QV8Engine *engine, NodeImpl *data)
     return instance.asReturnedValue();
 }
 
-ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
+ReturnedValue Document::method_documentElement(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1008,7 +1008,7 @@ ReturnedValue Document::method_documentElement(SimpleCallContext *ctx)
     return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
 }
 
-ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlStandalone(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1019,7 +1019,7 @@ ReturnedValue Document::method_xmlStandalone(SimpleCallContext *ctx)
     return Encode(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
-ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlVersion(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1030,7 +1030,7 @@ ReturnedValue Document::method_xmlVersion(SimpleCallContext *ctx)
     return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
 }
 
-ReturnedValue Document::method_xmlEncoding(SimpleCallContext *ctx)
+ReturnedValue Document::method_xmlEncoding(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Node> r(scope, ctx->callData->thisObject.as<Node>());
@@ -1671,18 +1671,18 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 
     void setupProto();
 
-    static ReturnedValue method_open(SimpleCallContext *ctx);
-    static ReturnedValue method_setRequestHeader(SimpleCallContext *ctx);
-    static ReturnedValue method_send(SimpleCallContext *ctx);
-    static ReturnedValue method_abort(SimpleCallContext *ctx);
-    static ReturnedValue method_getResponseHeader(SimpleCallContext *ctx);
-    static ReturnedValue method_getAllResponseHeaders(SimpleCallContext *ctx);
+    static ReturnedValue method_open(CallContext *ctx);
+    static ReturnedValue method_setRequestHeader(CallContext *ctx);
+    static ReturnedValue method_send(CallContext *ctx);
+    static ReturnedValue method_abort(CallContext *ctx);
+    static ReturnedValue method_getResponseHeader(CallContext *ctx);
+    static ReturnedValue method_getAllResponseHeaders(CallContext *ctx);
 
-    static ReturnedValue method_get_readyState(SimpleCallContext *ctx);
-    static ReturnedValue method_get_status(SimpleCallContext *ctx);
-    static ReturnedValue method_get_statusText(SimpleCallContext *ctx);
-    static ReturnedValue method_get_responseText(SimpleCallContext *ctx);
-    static ReturnedValue method_get_responseXML(SimpleCallContext *ctx);
+    static ReturnedValue method_get_readyState(CallContext *ctx);
+    static ReturnedValue method_get_status(CallContext *ctx);
+    static ReturnedValue method_get_statusText(CallContext *ctx);
+    static ReturnedValue method_get_responseText(CallContext *ctx);
+    static ReturnedValue method_get_responseXML(CallContext *ctx);
 
 
     Object *proto;
@@ -1722,7 +1722,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
 
 
 // XMLHttpRequest methods
-ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1772,7 +1772,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(SimpleCallContext *ctx)
     return r->open(meObject, method, url);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1819,7 +1819,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(SimpleCallContext 
     return Encode::undefined();
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_send(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1841,7 +1841,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(SimpleCallContext *ctx)
     return r->send(meObject, data);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_abort(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1853,7 +1853,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(SimpleCallContext *ctx)
     return r->abort(meObject);
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1874,7 +1874,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(SimpleCallContext
     return engine->toString(r->header(ctx->callData->args[0].toQStringNoThrow()));
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1896,7 +1896,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(SimpleCallCon
 }
 
 // XMLHttpRequest properties
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1907,7 +1907,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_readyState(SimpleCallContext *c
     return Encode(r->readyState());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1925,7 +1925,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_status(SimpleCallContext *ctx)
         return Encode(r->replyStatus());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1945,7 +1945,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(SimpleCallContext *c
         return engine->toString(r->replyStatusText());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());
@@ -1962,7 +1962,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(SimpleCallContext 
         return engine->toString(r->responseBody());
 }
 
-ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(SimpleCallContext *ctx)
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->callData->thisObject.as<QQmlXMLHttpRequestWrapper>());

@@ -379,7 +379,7 @@ public:
         QV4::ValueRef m_compareFn;
     };
 
-    void sort(QV4::SimpleCallContext *ctx)
+    void sort(QV4::CallContext *ctx)
     {
         if (m_isReference) {
             if (!m_object)
@@ -400,7 +400,7 @@ public:
             storeReference();
     }
 
-    static QV4::ReturnedValue method_get_length(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue method_get_length(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
@@ -415,7 +415,7 @@ public:
         return QV4::Encode(This->m_container.count());
     }
 
-    static QV4::ReturnedValue method_set_length(QV4::SimpleCallContext* ctx)
+    static QV4::ReturnedValue method_set_length(QV4::CallContext* ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlSequence<Container> > This(scope, ctx->callData->thisObject.as<QQmlSequence<Container> >());
@@ -553,7 +553,7 @@ void SequencePrototype::init()
     defineDefaultProperty(engine()->id_valueOf, method_valueOf, 0);
 }
 
-QV4::ReturnedValue SequencePrototype::method_sort(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue SequencePrototype::method_sort(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::ScopedObject o(scope, ctx->callData->thisObject);

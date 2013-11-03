@@ -51,47 +51,6 @@
 
 using namespace QV4;
 
-CallContext *ExecutionContext::newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *function, CallData *callData)
-{
-    CallContext *c = (CallContext *)stackSpace;
-#ifndef QT_NO_DEBUG
-    c->next = (CallContext *)0x1;
-#endif
-
-    engine->current = c;
-
-    c->initBaseContext(Type_CallContext, engine, this);
-
-    c->function = function;
-    c->callData = callData;
-
-    c->strictMode = function->strictMode;
-    c->marked = false;
-    c->outer = function->scope;
-#ifndef QT_NO_DEBUG
-    assert(c->outer->next != (ExecutionContext *)0x1);
-#endif
-
-    c->activation = 0;
-
-    if (function->function) {
-        c->compilationUnit = function->function->compilationUnit;
-        c->lookups = c->compilationUnit->runtimeLookups;
-    }
-
-    c->locals = locals;
-
-    if (callData->argc < static_cast<int>(function->formalParameterCount)) {
-#ifndef QT_NO_DEBUG
-        Q_ASSERT(function->formalParameterCount <= QV4::Global::ReservedArgumentCount);
-#endif
-        std::fill(c->callData->args + callData->argc, c->callData->args + function->formalParameterCount, Primitive::undefinedValue());
-        c->callData->argc = function->formalParameterCount;
-    }
-
-    return c;
-}
-
 CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
     CallContext *c = static_cast<CallContext *>(engine->memoryManager->allocContext(requiredMemoryForExecutionContect(function, callData->argc)));
@@ -187,22 +146,34 @@ void ExecutionContext::createMutableBinding(const StringRef name, bool deletable
 
 String * const *ExecutionContext::formals() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterList : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->formalParameterList : 0;
 }
 
 unsigned int ExecutionContext::formalCount() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->formalParameterCount : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->formalParameterCount : 0;
 }
 
 String * const *ExecutionContext::variables() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varList : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->varList : 0;
 }
 
 unsigned int ExecutionContext::variableCount() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this)->function->varCount : 0;
+    if (type < Type_SimpleCallContext)
+        return 0;
+    QV4::FunctionObject *f = static_cast<const CallContext *>(this)->function;
+    return f ? f->varCount : 0;
 }
 
 
@@ -320,9 +291,10 @@ void ExecutionContext::mark()
         return;
     marked = true;
 
-    if (type != Type_SimpleCallContext && outer)
+    if (outer)
         outer->mark();
 
+    // ### shouldn't need these 3 lines
     callData->thisObject.mark(engine);
     for (int arg = 0; arg < callData->argc; ++arg)
         callData->args[arg].mark(engine);
@@ -612,10 +584,4 @@ ReturnedValue ExecutionContext::throwURIError(const ValueRef msg)
     Scope scope(this);
     ScopedObject error(scope, engine->newURIErrorObject(msg));
     return throwError(error);
-}
-
-void SimpleCallContext::initSimpleCallContext(ExecutionEngine *engine)
-{
-    initBaseContext(Type_SimpleCallContext, engine, engine->current);
-    function = 0;
 }

@@ -121,7 +121,7 @@ inline double thisNumber(ExecutionContext *ctx)
     return n->value.asDouble();
 }
 
-ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
 {
     double num = thisNumber(ctx);
     if (ctx->engine->hasException)
@@ -173,7 +173,7 @@ ReturnedValue NumberPrototype::method_toString(SimpleCallContext *ctx)
     return Primitive::fromDouble(num).toString(ctx)->asReturnedValue();
 }
 
-ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toLocaleString(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, thisNumberValue(ctx));
@@ -183,12 +183,12 @@ ReturnedValue NumberPrototype::method_toLocaleString(SimpleCallContext *ctx)
     return str.asReturnedValue();
 }
 
-ReturnedValue NumberPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_valueOf(CallContext *ctx)
 {
     return thisNumberValue(ctx);
 }
 
-ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
 {
     double v = thisNumber(ctx);
     if (ctx->engine->hasException)
@@ -217,7 +217,7 @@ ReturnedValue NumberPrototype::method_toFixed(SimpleCallContext *ctx)
     return ctx->engine->newString(str)->asReturnedValue();
 }
 
-ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
 {
     Scope scope(ctx);
     double d = thisNumber(ctx);
@@ -242,7 +242,7 @@ ReturnedValue NumberPrototype::method_toExponential(SimpleCallContext *ctx)
     return ctx->engine->newString(result)->asReturnedValue();
 }
 
-ReturnedValue NumberPrototype::method_toPrecision(SimpleCallContext *ctx)
+ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, thisNumberValue(ctx));

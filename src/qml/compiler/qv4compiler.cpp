@@ -331,6 +331,8 @@ int QV4::Compiler::JSUnitGenerator::writeFunction(char *f, int index, QQmlJS::V4
         function->flags |= CompiledData::Function::IsStrict;
     if (irFunction->isNamedExpression)
         function->flags |= CompiledData::Function::IsNamedExpression;
+    if (irFunction->hasTry || irFunction->hasWith)
+        function->flags |= CompiledData::Function::HasCatchOrWith;
     function->nFormals = irFunction->formals.size();
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(quint32);

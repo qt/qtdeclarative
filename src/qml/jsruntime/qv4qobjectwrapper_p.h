@@ -121,8 +121,8 @@ private:
         static_cast<QObjectWrapper *>(that)->~QObjectWrapper();
     }
 
-    static ReturnedValue method_connect(SimpleCallContext *ctx);
-    static ReturnedValue method_disconnect(SimpleCallContext *ctx);
+    static ReturnedValue method_connect(CallContext *ctx);
+    static ReturnedValue method_disconnect(CallContext *ctx);
 };
 
 struct QObjectMethod : public QV4::FunctionObject

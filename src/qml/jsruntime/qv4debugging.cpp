@@ -125,7 +125,8 @@ Debugger::ExecutionState Debugger::currentExecutionState(const uchar *code) cons
 
     QV4::ExecutionContext *context = m_engine->current;
     QV4::Function *function = 0;
-    if (CallContext *callCtx = context->asCallContext())
+    CallContext *callCtx = context->asCallContext();
+    if (callCtx && callCtx->function)
         function = callCtx->function->function;
     else {
         Q_ASSERT(context->type == QV4::ExecutionContext::Type_GlobalContext);
@@ -230,7 +231,8 @@ void Debugger::convert(ValueRef v, QVariant *varValue, VarInfo::Type *type) cons
 static CallContext *findContext(ExecutionContext *ctxt, int frame)
 {
     while (ctxt) {
-        if (CallContext *cCtxt = ctxt->asCallContext()) {
+        CallContext *cCtxt = ctxt->asCallContext();
+        if (cCtxt && cCtxt->function) {
             if (frame < 1)
                 return cCtxt;
             --frame;
@@ -299,9 +301,10 @@ QList<Debugger::VarInfo> Debugger::retrieveLocalsFromContext(const QStringList &
     if (frame < 0)
         return args;
 
-    CallContext *ctxt = findContext(m_engine->current, frame);
-    if (!ctxt)
+    CallContext *sctxt = findContext(m_engine->current, frame);
+    if (!sctxt || sctxt->type < ExecutionContext::Type_SimpleCallContext)
         return args;
+    CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
     Scope scope(m_engine);
     ScopedValue v(scope);

@@ -89,10 +89,10 @@ public:
 
     void init();
 
-    static ReturnedValue method_preserve(SimpleCallContext *ctx);
-    static ReturnedValue method_destroy(SimpleCallContext *ctx);
-    static ReturnedValue method_toString(SimpleCallContext *ctx);
-    static ReturnedValue method_valueOf(SimpleCallContext *ctx);
+    static ReturnedValue method_preserve(CallContext *ctx);
+    static ReturnedValue method_destroy(CallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
+    static ReturnedValue method_valueOf(CallContext *ctx);
 };
 
 }

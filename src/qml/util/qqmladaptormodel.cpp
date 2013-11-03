@@ -63,7 +63,7 @@ public:
 
 V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
-static QV4::ReturnedValue get_index(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -108,8 +108,8 @@ public:
     void setValue(const QString &role, const QVariant &value);
     bool resolveIndex(const QQmlAdaptorModel &model, int idx);
 
-    static QV4::ReturnedValue get_property(QV4::SimpleCallContext *ctx, uint propertyId);
-    static QV4::ReturnedValue set_property(QV4::SimpleCallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue get_property(QV4::CallContext *ctx, uint propertyId);
+    static QV4::ReturnedValue set_property(QV4::CallContext *ctx, uint propertyId);
 
     VDMModelDelegateDataType *type;
     QVector<QVariant> cachedData;
@@ -195,7 +195,7 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
-    static QV4::ReturnedValue get_hasModelChildren(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue get_hasModelChildren(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -339,7 +339,7 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
     }
 }
 
-QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -359,7 +359,7 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::SimpleCallContext *c
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::SimpleCallContext *ctx, uint propertyId)
+QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -579,7 +579,7 @@ public:
         }
     }
 
-    static QV4::ReturnedValue get_modelData(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue get_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -589,7 +589,7 @@ public:
         return ctx->engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->item)->cachedData);
     }
 
-    static QV4::ReturnedValue set_modelData(QV4::SimpleCallContext *ctx)
+    static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());

@@ -1704,7 +1704,7 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::ValueRef groups) const
     return groupFlags;
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -1716,7 +1716,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_model(QV4::SimpleCallContext *ctx)
     return o->item->get();
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -1732,7 +1732,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::SimpleCallContext *ctx
     return ctx->engine->v8Engine->fromVariant(groups);
 }
 
-QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->callData->thisObject.as<QQmlDelegateModelItemObject>());
@@ -3147,21 +3147,21 @@ struct QQmlDelegateModelGroupChange : QV4::Object
         vtbl = &static_vtbl;
     }
 
-    static QV4::ReturnedValue method_get_index(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
             return ctx->throwTypeError();
         return QV4::Encode(that->change.index);
     }
-    static QV4::ReturnedValue method_get_count(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_count(QV4::CallContext *ctx) {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)
             return ctx->throwTypeError();
         return QV4::Encode(that->change.count);
     }
-    static QV4::ReturnedValue method_get_moveId(QV4::SimpleCallContext *ctx) {
+    static QV4::ReturnedValue method_get_moveId(QV4::CallContext *ctx) {
         QV4::Scope scope(ctx);
         QV4::Scoped<QQmlDelegateModelGroupChange> that(scope, ctx->callData->thisObject.as<QQmlDelegateModelGroupChange>());
         if (!that)

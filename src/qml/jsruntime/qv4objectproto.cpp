@@ -138,7 +138,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, ObjectRef ctor)
     p->setSetter(v4->newBuiltinFunction(v4->rootContext, id_proto, method_set_proto)->getPointer());
 }
 
-ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_getPrototypeOf(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -149,7 +149,7 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(SimpleCallContext *ctx)
     return !!p ? p->asReturnedValue() : Encode::null();
 }
 
-ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
@@ -165,7 +165,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(SimpleCallContext
     return fromPropertyDescriptor(ctx, desc, attrs);
 }
 
-ReturnedValue ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *context)
+ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
 {
     Scope scope(context);
     ScopedObject O(scope, context->argument(0));
@@ -176,7 +176,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(SimpleCallContext *con
     return array.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_create(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue O(scope, ctx->argument(0));
@@ -194,7 +194,7 @@ ReturnedValue ObjectPrototype::method_create(SimpleCallContext *ctx)
     return newObject.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
@@ -218,7 +218,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(SimpleCallContext *ctx)
     return O.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> O(scope, ctx->argument(0));
@@ -256,7 +256,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(SimpleCallContext *ctx)
     return O.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_seal(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -276,7 +276,7 @@ ReturnedValue ObjectPrototype::method_seal(SimpleCallContext *ctx)
     return o.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_freeze(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -297,7 +297,7 @@ ReturnedValue ObjectPrototype::method_freeze(SimpleCallContext *ctx)
     return o.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_preventExtensions(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -308,7 +308,7 @@ ReturnedValue ObjectPrototype::method_preventExtensions(SimpleCallContext *ctx)
     return o.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -336,7 +336,7 @@ ReturnedValue ObjectPrototype::method_isSealed(SimpleCallContext *ctx)
     return Encode(true);
 }
 
-ReturnedValue ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -364,7 +364,7 @@ ReturnedValue ObjectPrototype::method_isFrozen(SimpleCallContext *ctx)
     return Encode(true);
 }
 
-ReturnedValue ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isExtensible(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -374,7 +374,7 @@ ReturnedValue ObjectPrototype::method_isExtensible(SimpleCallContext *ctx)
     return Encode((bool)o->extensible);
 }
 
-ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->argument(0));
@@ -395,7 +395,7 @@ ReturnedValue ObjectPrototype::method_keys(SimpleCallContext *ctx)
     return a.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
     if (ctx->callData->thisObject.isUndefined()) {
@@ -409,7 +409,7 @@ ReturnedValue ObjectPrototype::method_toString(SimpleCallContext *ctx)
     }
 }
 
-ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject.toObject(ctx));
@@ -423,7 +423,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(SimpleCallContext *ctx)
     return f->call(callData);
 }
 
-ReturnedValue ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->callData->thisObject.toObject(ctx));
@@ -432,7 +432,7 @@ ReturnedValue ObjectPrototype::method_valueOf(SimpleCallContext *ctx)
     return v.asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<String> P(scope, ctx->argument(0), Scoped<String>::Convert);
@@ -447,7 +447,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(SimpleCallContext *ctx)
     return Encode(r);
 }
 
-ReturnedValue ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> V(scope, ctx->argument(0));
@@ -466,7 +466,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(SimpleCallContext *ctx)
     return Encode(false);
 }
 
-ReturnedValue ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<String> p(scope, ctx->argument(0), Scoped<String>::Convert);
@@ -481,7 +481,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(SimpleCallContext *ct
     return Encode(attrs.isEnumerable());
 }
 
-ReturnedValue ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         return ctx->throwTypeError();
@@ -507,7 +507,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         return ctx->throwTypeError();
@@ -533,7 +533,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_get_proto(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject.asObject());
@@ -543,7 +543,7 @@ ReturnedValue ObjectPrototype::method_get_proto(SimpleCallContext *ctx)
     return o->prototype()->asReturnedValue();
 }
 
-ReturnedValue ObjectPrototype::method_set_proto(SimpleCallContext *ctx)
+ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> o(scope, ctx->callData->thisObject);

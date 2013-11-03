@@ -187,7 +187,7 @@ void Object::defineDefaultProperty(const QString &name, ValueRef value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -197,7 +197,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Si
     defineDefaultProperty(s, function);
 }
 
-void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount)
+void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(CallContext *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -206,7 +206,7 @@ void Object::defineDefaultProperty(const StringRef name, ReturnedValue (*code)(S
     defineDefaultProperty(name, function);
 }
 
-void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
+void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -214,7 +214,7 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *))
+void Object::defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
 {
     ExecutionEngine *v4 = engine();
     Property *p = insertMember(name, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);

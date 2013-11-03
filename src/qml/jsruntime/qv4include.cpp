@@ -179,7 +179,7 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::ReturnedValue QV4Include::method_include(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
 {
     if (!ctx->callData->argc)
         return QV4::Encode::undefined();

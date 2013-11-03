@@ -215,7 +215,7 @@ QV4::ReturnedValue VME::run(QV4::ExecutionContext *context, const uchar *code,
         QV4::ExecutionContext *scope = context;
         int i = 0;
         while (scope) {
-            if (scope->type >= QV4::ExecutionContext::Type_CallContext) {
+            if (scope->type >= QV4::ExecutionContext::Type_SimpleCallContext) {
                 QV4::CallContext *cc = static_cast<QV4::CallContext *>(scope);
                 scopes[2*i + 2] = cc->callData->args;
                 scopes[2*i + 3] = cc->locals;

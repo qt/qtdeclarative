@@ -158,10 +158,10 @@ struct Q_QML_EXPORT Object: Managed {
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(const StringRef name, ValueRef value);
     void defineDefaultProperty(const QString &name, ValueRef value);
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
-    void defineDefaultProperty(const StringRef name, ReturnedValue (*code)(SimpleCallContext *), int argumentCount = 0);
-    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
-    void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(SimpleCallContext *), ReturnedValue (*setter)(SimpleCallContext *));
+    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineDefaultProperty(const StringRef name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
+    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
+    void defineAccessorProperty(const StringRef name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, ValueRef value);
     void defineReadonlyProperty(const StringRef name, ValueRef value);

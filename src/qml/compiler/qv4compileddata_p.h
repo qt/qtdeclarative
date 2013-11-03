@@ -217,7 +217,8 @@ struct Function
         HasDirectEval       = 0x1,
         UsesArgumentsObject = 0x2,
         IsStrict            = 0x4,
-        IsNamedExpression   = 0x8
+        IsNamedExpression   = 0x8,
+        HasCatchOrWith      = 0x10
     };
 
     quint32 index; // in CompilationUnit's function table

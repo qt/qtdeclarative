@@ -153,7 +153,7 @@ void VariantPrototype::init()
     defineDefaultProperty(engine()->id_toString, method_toString, 0);
 }
 
-QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_preserve(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
@@ -162,7 +162,7 @@ QV4::ReturnedValue VariantPrototype::method_preserve(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-QV4::ReturnedValue VariantPrototype::method_destroy(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_destroy(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
@@ -174,7 +174,7 @@ QV4::ReturnedValue VariantPrototype::method_destroy(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-QV4::ReturnedValue VariantPrototype::method_toString(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());
@@ -186,7 +186,7 @@ QV4::ReturnedValue VariantPrototype::method_toString(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(result));
 }
 
-QV4::ReturnedValue VariantPrototype::method_valueOf(SimpleCallContext *ctx)
+QV4::ReturnedValue VariantPrototype::method_valueOf(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<VariantObject> o(scope, ctx->callData->thisObject.as<QV4::VariantObject>());

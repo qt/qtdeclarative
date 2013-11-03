@@ -167,7 +167,7 @@ ErrorObject::ErrorObject(InternalClass *ic, const QString &message, const QStrin
     defineDefaultProperty(QStringLiteral("message"), v);
 }
 
-ReturnedValue ErrorObject::method_get_stack(SimpleCallContext *ctx)
+ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<ErrorObject> This(scope, ctx->callData->thisObject);
@@ -383,7 +383,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, ObjectRef ctor, Object *obj)
     obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())));
 }
 
-ReturnedValue ErrorPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
 

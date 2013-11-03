@@ -314,7 +314,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 
-ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
@@ -361,14 +361,14 @@ ReturnedValue RegExpPrototype::method_exec(SimpleCallContext *ctx)
     return array.asReturnedValue();
 }
 
-ReturnedValue RegExpPrototype::method_test(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_test(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue r(scope, method_exec(ctx));
     return Encode(!r->isNull());
 }
 
-ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());
@@ -378,7 +378,7 @@ ReturnedValue RegExpPrototype::method_toString(SimpleCallContext *ctx)
     return ctx->engine->newString(r->toString())->asReturnedValue();
 }
 
-ReturnedValue RegExpPrototype::method_compile(SimpleCallContext *ctx)
+ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<RegExpObject> r(scope, ctx->callData->thisObject.as<RegExpObject>());

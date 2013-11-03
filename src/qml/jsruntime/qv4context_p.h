@@ -62,6 +62,7 @@ struct Function;
 };
 
 struct CallContext;
+struct CallContext;
 struct CatchContext;
 struct WithContext;
 
@@ -114,7 +115,6 @@ struct Q_QML_EXPORT ExecutionContext
         jitInstructionPointer = 0;
     }
 
-    CallContext *newCallContext(void *stackSpace, SafeValue *locals, FunctionObject *f, CallData *callData);
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
     WithContext *newWithContext(ObjectRef with);
     CatchContext *newCatchContext(const StringRef exceptionVarName, const ValueRef exceptionValue);
@@ -153,22 +153,23 @@ struct Q_QML_EXPORT ExecutionContext
     inline const CallContext *asCallContext() const;
 };
 
-struct SimpleCallContext : public ExecutionContext
+struct CallContext : public ExecutionContext
 {
-    void initSimpleCallContext(ExecutionEngine *engine);
     FunctionObject *function;
     int realArgumentCount;
-
-    inline ReturnedValue argument(int i);
-};
-
-struct CallContext : public SimpleCallContext
-{
-    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
-    bool needsOwnArguments() const;
-
     SafeValue *locals;
     Object *activation;
+
+    void initSimpleCallContext(ExecutionEngine *engine, ExecutionContext *parent) {
+        initBaseContext(Type_SimpleCallContext, engine, parent);
+        function = 0;
+        locals = 0;
+        activation = 0;
+    }
+    void initQmlContext(ExecutionContext *parentContext, ObjectRef qml, QV4::FunctionObject *function);
+
+    inline ReturnedValue argument(int i);
+    bool needsOwnArguments() const;
 };
 
 struct GlobalContext : public ExecutionContext
@@ -195,19 +196,17 @@ struct WithContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return type >= Type_CallContext ? static_cast<CallContext *>(this) : 0;
+    return type >= Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return type >= Type_CallContext ? static_cast<const CallContext *>(this) : 0;
+    return type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 /* Function *f, int argc */
 #define requiredMemoryForExecutionContect(f, argc) \
     sizeof(CallContext) + sizeof(Value) * (f->varCount + qMax((uint)argc, f->formalParameterCount)) + sizeof(CallData)
-#define requiredMemoryForExecutionContectSimple(f) \
-    sizeof(CallContext)
 
 } // namespace QV4
 

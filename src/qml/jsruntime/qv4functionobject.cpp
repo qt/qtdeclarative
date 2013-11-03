@@ -222,7 +222,10 @@ void FunctionObject::markObjects(Managed *that, ExecutionEngine *e)
 
 FunctionObject *FunctionObject::creatScriptFunction(ExecutionContext *scope, Function *function)
 {
-    if (function->needsActivation() || function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount)
+    if (function->needsActivation() ||
+        function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
+        function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
+        function->isNamedExpression())
         return new (scope->engine->memoryManager) ScriptFunction(scope, function);
     return new (scope->engine->memoryManager) SimpleScriptFunction(scope, function);
 }
@@ -313,7 +316,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, ObjectRef ctor)
 
 }
 
-ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 {
     FunctionObject *fun = ctx->callData->thisObject.asFunctionObject();
     if (!fun)
@@ -322,7 +325,7 @@ ReturnedValue FunctionPrototype::method_toString(SimpleCallContext *ctx)
     return ctx->engine->newString(QStringLiteral("function() { [code] }"))->asReturnedValue();
 }
 
-ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
     Scope scope(ctx);
     FunctionObject *o = ctx->callData->thisObject.asFunctionObject();
@@ -361,7 +364,7 @@ ReturnedValue FunctionPrototype::method_apply(SimpleCallContext *ctx)
     return o->call(callData);
 }
 
-ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -378,7 +381,7 @@ ReturnedValue FunctionPrototype::method_call(SimpleCallContext *ctx)
     return o->call(callData);
 }
 
-ReturnedValue FunctionPrototype::method_bind(SimpleCallContext *ctx)
+ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<FunctionObject> target(scope, ctx->callData->thisObject);
@@ -520,29 +523,41 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionEngine *v4 = that->internalClass->engine;
     if (v4->hasException)
         return Encode::undefined();
-    Scope scope(v4);
 
+    Scope scope(v4);
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     InternalClass *ic = v4->objectClass;
     Scoped<Object> proto(scope, f->memberData[Index_Prototype].value);
     if (!!proto)
         ic = v4->emptyClass->changePrototype(proto.getPointer());
-    Scoped<Object> obj(scope, v4->newObject(ic));
+    callData->thisObject = v4->newObject(ic);
 
     ExecutionContext *context = v4->current;
-    void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
-    callData->thisObject = obj;
-    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
+
+    CallContext ctx;
+    ctx.initSimpleCallContext(v4, context);
+    ctx.strictMode = f->strictMode;
+    ctx.callData = callData;
+    ctx.function = f.getPointer();
+    ctx.compilationUnit = f->function->compilationUnit;
+    ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.outer = f->scope;
+    ctx.locals = v4->stackPush(f->function->locals.size());
+    while (callData->argc < (int)f->formalParameterCount) {
+        callData->args[callData->argc] = Encode::undefined();
+        ++callData->argc;
+    }
+    v4->pushContext(&ctx);
 
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
-    Scoped<Object> result(scope, f->function->code(ctx, f->function->codeData));
+    Scoped<Object> result(scope, f->function->code(&ctx, f->function->codeData));
 
     if (!result)
-        return obj.asReturnedValue();
+        return callData->thisObject.asReturnedValue();
     return result.asReturnedValue();
 }
 
@@ -552,19 +567,31 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     if (v4->hasException)
         return Encode::undefined();
 
+    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
+
     Scope scope(v4);
-
-    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
-
-    void *stackSpace = alloca(requiredMemoryForExecutionContectSimple(f));
     ExecutionContext *context = v4->current;
-    ExecutionContext *ctx = context->newCallContext(stackSpace, scope.alloc(f->varCount), f.getPointer(), callData);
+
+    CallContext ctx;
+    ctx.initSimpleCallContext(v4, context);
+    ctx.strictMode = f->strictMode;
+    ctx.callData = callData;
+    ctx.function = f;
+    ctx.compilationUnit = f->function->compilationUnit;
+    ctx.lookups = ctx.compilationUnit->runtimeLookups;
+    ctx.outer = f->scope;
+    ctx.locals = v4->stackPush(f->function->locals.size());
+    while (callData->argc < (int)f->formalParameterCount) {
+        callData->args[callData->argc] = Encode::undefined();
+        ++callData->argc;
+    }
+    v4->current = &ctx;
 
     if (f->function->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function->compiledFunction);
 
     ExecutionContextSaver ctxSaver(context);
-    return f->function->code(ctx, f->function->codeData);
+    return f->function->code(&ctx, f->function->codeData);
 }
 
 
@@ -572,7 +599,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
 DEFINE_MANAGED_VTABLE(BuiltinFunction);
 
-BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *))
+BuiltinFunction::BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
     : FunctionObject(scope, name)
     , code(code)
 {
@@ -591,12 +618,10 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     if (v4->hasException)
         return Encode::undefined();
 
-    Scope scope(v4);
-
     ExecutionContext *context = v4->current;
 
-    SimpleCallContext ctx;
-    ctx.initSimpleCallContext(f->scope->engine);
+    CallContext ctx;
+    ctx.initSimpleCallContext(v4, context);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);
@@ -614,8 +639,8 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContext *context = v4->current;
     Scope scope(v4);
 
-    SimpleCallContext ctx;
-    ctx.initSimpleCallContext(f->scope->engine);
+    CallContext ctx;
+    ctx.initSimpleCallContext(v4, context);
     ctx.strictMode = f->scope->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     v4->pushContext(&ctx);

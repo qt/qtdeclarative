@@ -246,7 +246,7 @@ static QString getThisString(ExecutionContext *ctx)
     return t->toQString();
 }
 
-ReturnedValue StringPrototype::method_toString(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_toString(CallContext *context)
 {
     if (context->callData->thisObject.isString())
         return context->callData->thisObject.asReturnedValue();
@@ -257,7 +257,7 @@ ReturnedValue StringPrototype::method_toString(SimpleCallContext *context)
     return o->value.asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_charAt(CallContext *context)
 {
     const QString str = getThisString(context);
     if (context->engine->hasException)
@@ -274,7 +274,7 @@ ReturnedValue StringPrototype::method_charAt(SimpleCallContext *context)
     return context->engine->newString(result)->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_charCodeAt(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_charCodeAt(CallContext *context)
 {
     const QString str = getThisString(context);
     if (context->engine->hasException)
@@ -291,7 +291,7 @@ ReturnedValue StringPrototype::method_charCodeAt(SimpleCallContext *context)
     return Encode(qSNaN());
 }
 
-ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_concat(CallContext *context)
 {
     Scope scope(context);
 
@@ -311,7 +311,7 @@ ReturnedValue StringPrototype::method_concat(SimpleCallContext *context)
     return context->engine->newString(value)->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_indexOf(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_indexOf(CallContext *context)
 {
     QString value = getThisString(context);
     if (context->engine->hasException)
@@ -332,7 +332,7 @@ ReturnedValue StringPrototype::method_indexOf(SimpleCallContext *context)
     return Encode(index);
 }
 
-ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_lastIndexOf(CallContext *context)
 {
     Scope scope(context);
 
@@ -360,7 +360,7 @@ ReturnedValue StringPrototype::method_lastIndexOf(SimpleCallContext *context)
     return Encode(index);
 }
 
-ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_localeCompare(CallContext *context)
 {
     Scope scope(context);
     const QString value = getThisString(context);
@@ -372,7 +372,7 @@ ReturnedValue StringPrototype::method_localeCompare(SimpleCallContext *context)
     return Encode(QString::localeAwareCompare(value, that));
 }
 
-ReturnedValue StringPrototype::method_match(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_match(CallContext *context)
 {
     if (context->callData->thisObject.isUndefined() || context->callData->thisObject.isNull())
         return context->throwTypeError();
@@ -482,7 +482,7 @@ static void appendReplacementString(QString *result, const QString &input, const
     }
 }
 
-ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_replace(CallContext *ctx)
 {
     Scope scope(ctx);
     QString string;
@@ -595,7 +595,7 @@ ReturnedValue StringPrototype::method_replace(SimpleCallContext *ctx)
     return ctx->engine->newString(result)->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_search(CallContext *ctx)
 {
     Scope scope(ctx);
     QString string = getThisString(ctx);
@@ -619,7 +619,7 @@ ReturnedValue StringPrototype::method_search(SimpleCallContext *ctx)
     return Encode(result);
 }
 
-ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_slice(CallContext *ctx)
 {
     const QString text = getThisString(ctx);
     if (ctx->engine->hasException)
@@ -648,7 +648,7 @@ ReturnedValue StringPrototype::method_slice(SimpleCallContext *ctx)
     return ctx->engine->newString(text.mid(intStart, count))->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_split(CallContext *ctx)
 {
     Scope scope(ctx);
     QString text = getThisString(ctx);
@@ -729,7 +729,7 @@ ReturnedValue StringPrototype::method_split(SimpleCallContext *ctx)
     return array.asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_substr(CallContext *context)
 {
     const QString value = getThisString(context);
     if (context->engine->hasException)
@@ -754,7 +754,7 @@ ReturnedValue StringPrototype::method_substr(SimpleCallContext *context)
     return context->engine->newString(value.mid(x, y))->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_substring(CallContext *context)
 {
     QString value = getThisString(context);
     if (context->engine->hasException)
@@ -795,7 +795,7 @@ ReturnedValue StringPrototype::method_substring(SimpleCallContext *context)
     return context->engine->newString(value.mid(x, y))->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLowerCase(CallContext *ctx)
 {
     QString value = getThisString(ctx);
     if (ctx->engine->hasException)
@@ -803,12 +803,12 @@ ReturnedValue StringPrototype::method_toLowerCase(SimpleCallContext *ctx)
     return ctx->engine->newString(value.toLower())->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_toLocaleLowerCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLocaleLowerCase(CallContext *ctx)
 {
     return method_toLowerCase(ctx);
 }
 
-ReturnedValue StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toUpperCase(CallContext *ctx)
 {
     QString value = getThisString(ctx);
     if (ctx->engine->hasException)
@@ -816,12 +816,12 @@ ReturnedValue StringPrototype::method_toUpperCase(SimpleCallContext *ctx)
     return ctx->engine->newString(value.toUpper())->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_toLocaleUpperCase(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_toLocaleUpperCase(CallContext *ctx)
 {
     return method_toUpperCase(ctx);
 }
 
-ReturnedValue StringPrototype::method_fromCharCode(SimpleCallContext *context)
+ReturnedValue StringPrototype::method_fromCharCode(CallContext *context)
 {
     QString str(context->callData->argc, Qt::Uninitialized);
     QChar *ch = str.data();
@@ -832,7 +832,7 @@ ReturnedValue StringPrototype::method_fromCharCode(SimpleCallContext *context)
     return context->engine->newString(str)->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_trim(SimpleCallContext *ctx)
+ReturnedValue StringPrototype::method_trim(CallContext *ctx)
 {
     QString s = getThisString(ctx);
     if (ctx->engine->hasException)

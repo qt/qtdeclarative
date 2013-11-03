@@ -164,17 +164,17 @@ struct FunctionPrototype: FunctionObject
     FunctionPrototype(InternalClass *ic);
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static ReturnedValue method_toString(SimpleCallContext *ctx);
-    static ReturnedValue method_apply(SimpleCallContext *ctx);
-    static ReturnedValue method_call(SimpleCallContext *ctx);
-    static ReturnedValue method_bind(SimpleCallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
+    static ReturnedValue method_apply(CallContext *ctx);
+    static ReturnedValue method_call(CallContext *ctx);
+    static ReturnedValue method_bind(CallContext *ctx);
 };
 
 struct BuiltinFunction: FunctionObject {
     Q_MANAGED
-    ReturnedValue (*code)(SimpleCallContext *);
+    ReturnedValue (*code)(CallContext *);
 
-    BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *));
+    BuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
 
     static ReturnedValue construct(Managed *, CallData *);
     static ReturnedValue call(Managed *that, CallData *callData);
@@ -184,10 +184,10 @@ struct IndexedBuiltinFunction: FunctionObject
 {
     Q_MANAGED
 
-    ReturnedValue (*code)(SimpleCallContext *ctx, uint index);
+    ReturnedValue (*code)(CallContext *ctx, uint index);
     uint index;
 
-    IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(SimpleCallContext *ctx, uint index))
+    IndexedBuiltinFunction(ExecutionContext *scope, uint index, ReturnedValue (*code)(CallContext *ctx, uint index))
         : FunctionObject(scope)
         , code(code)
         , index(index)

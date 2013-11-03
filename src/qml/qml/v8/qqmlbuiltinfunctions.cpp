@@ -158,7 +158,7 @@ QV4::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
 \qmlmethod bool Qt::isQtObject(object)
 Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.
 */
-ReturnedValue QtObject::method_isQtObject(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_isQtObject(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         return QV4::Encode(false);
@@ -172,7 +172,7 @@ ReturnedValue QtObject::method_isQtObject(QV4::SimpleCallContext *ctx)
 Returns a color with the specified \c red, \c green, \c blue and \c alpha components.
 All components should be in the range 0-1 inclusive.
 */
-ReturnedValue QtObject::method_rgba(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_rgba(QV4::CallContext *ctx)
 {
     int argCount = ctx->callData->argc;
     if (argCount < 3 || argCount > 4)
@@ -201,7 +201,7 @@ ReturnedValue QtObject::method_rgba(QV4::SimpleCallContext *ctx)
 Returns a color with the specified \c hue, \c saturation, \c lightness and \c alpha components.
 All components should be in the range 0-1 inclusive.
 */
-ReturnedValue QtObject::method_hsla(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_hsla(QV4::CallContext *ctx)
 {
     int argCount = ctx->callData->argc;
     if (argCount < 3 || argCount > 4)
@@ -232,7 +232,7 @@ may be either color values or string values.  If a string value is supplied it
 must be convertible to a color, as described for the \l{colorbasictypedocs}{color}
 basic type.
 */
-ReturnedValue QtObject::method_colorEqual(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_colorEqual(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
@@ -272,7 +272,7 @@ Returns a \c rect with the top-left corner at \c x, \c y and the specified \c wi
 
 The returned object has \c x, \c y, \c width and \c height attributes with the given values.
 */
-ReturnedValue QtObject::method_rect(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_rect(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 4)
         V4THROW_ERROR("Qt.rect(): Invalid arguments");
@@ -289,7 +289,7 @@ ReturnedValue QtObject::method_rect(QV4::SimpleCallContext *ctx)
 \qmlmethod point Qt::point(int x, int y)
 Returns a Point with the specified \c x and \c y coordinates.
 */
-ReturnedValue QtObject::method_point(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_point(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.point(): Invalid arguments");
@@ -304,7 +304,7 @@ ReturnedValue QtObject::method_point(QV4::SimpleCallContext *ctx)
 \qmlmethod Qt::size(int width, int height)
 Returns a Size with the specified \c width and \c height.
 */
-ReturnedValue QtObject::method_size(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_size(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.size(): Invalid arguments");
@@ -323,7 +323,7 @@ key-value pairs where valid keys are the \l{fontbasictypedocs}{font} type's
 subproperty names, and the values are valid values for each subproperty.
 Invalid keys will be ignored.
 */
-ReturnedValue QtObject::method_font(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_font(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 1 || !ctx->callData->args[0].isObject())
         V4THROW_ERROR("Qt.font(): Invalid arguments");
@@ -342,7 +342,7 @@ ReturnedValue QtObject::method_font(QV4::SimpleCallContext *ctx)
 \qmlmethod Qt::vector2d(real x, real y)
 Returns a Vector2D with the specified \c x and \c y.
 */
-ReturnedValue QtObject::method_vector2d(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_vector2d(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.vector2d(): Invalid arguments");
@@ -360,7 +360,7 @@ ReturnedValue QtObject::method_vector2d(QV4::SimpleCallContext *ctx)
 \qmlmethod Qt::vector3d(real x, real y, real z)
 Returns a Vector3D with the specified \c x, \c y and \c z.
 */
-ReturnedValue QtObject::method_vector3d(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_vector3d(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 3)
         V4THROW_ERROR("Qt.vector3d(): Invalid arguments");
@@ -379,7 +379,7 @@ ReturnedValue QtObject::method_vector3d(QV4::SimpleCallContext *ctx)
 \qmlmethod Qt::vector4d(real x, real y, real z, real w)
 Returns a Vector4D with the specified \c x, \c y, \c z and \c w.
 */
-ReturnedValue QtObject::method_vector4d(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_vector4d(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 4)
         V4THROW_ERROR("Qt.vector4d(): Invalid arguments");
@@ -399,7 +399,7 @@ ReturnedValue QtObject::method_vector4d(QV4::SimpleCallContext *ctx)
 \qmlmethod Qt::quaternion(real scalar, real x, real y, real z)
 Returns a Quaternion with the specified \c scalar, \c x, \c y, and \c z.
 */
-ReturnedValue QtObject::method_quaternion(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_quaternion(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 4)
         V4THROW_ERROR("Qt.quaternion(): Invalid arguments");
@@ -422,7 +422,7 @@ Alternatively, the function may be called with a single argument
 where that argument is a JavaScript array which contains the sixteen
 matrix values.
 */
-ReturnedValue QtObject::method_matrix4x4(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
 {
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -473,7 +473,7 @@ by factor and converts the color back to RGB.
 
 If \c factor is not supplied, returns a color 50% lighter than \c baseColor (factor 1.5).
 */
-ReturnedValue QtObject::method_lighter(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_lighter(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 1 && ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.lighter(): Invalid arguments");
@@ -512,7 +512,7 @@ by factor and converts the color back to RGB.
 
 If \c factor is not supplied, returns a color 50% darker than \c baseColor (factor 2.0).
 */
-ReturnedValue QtObject::method_darker(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_darker(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 1 && ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.darker(): Invalid arguments");
@@ -560,7 +560,7 @@ ReturnedValue QtObject::method_darker(QV4::SimpleCallContext *ctx)
 
     Tint is most useful when a subtle change is intended to be conveyed due to some event; you can then use tinting to more effectively tune the visible color.
 */
-ReturnedValue QtObject::method_tint(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 2)
         V4THROW_ERROR("Qt.tint(): Invalid arguments");
@@ -610,7 +610,7 @@ If \a format is not specified, \a date is formatted using
 
 \sa Locale
 */
-ReturnedValue QtObject::method_formatDate(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_formatDate(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
@@ -655,7 +655,7 @@ If \a format is not specified, \a time is formatted using
 
 \sa Locale
 */
-ReturnedValue QtObject::method_formatTime(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_formatTime(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
@@ -781,7 +781,7 @@ with the \a format values below to produce the following results:
 
     \sa Locale
 */
-ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_formatDateTime(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 2)
         V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
@@ -815,7 +815,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::SimpleCallContext *ctx)
 \qmlmethod bool Qt::openUrlExternally(url target)
 Attempts to open the specified \c target url in an external application, based on the user's desktop preferences. Returns true if it succeeds, and false otherwise.
 */
-ReturnedValue QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_openUrlExternally(QV4::CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         return QV4::Encode(false);
@@ -830,7 +830,7 @@ ReturnedValue QtObject::method_openUrlExternally(QV4::SimpleCallContext *ctx)
   \qmlmethod url Qt::resolvedUrl(url url)
   Returns \a url resolved relative to the URL of the caller.
 */
-ReturnedValue QtObject::method_resolvedUrl(QV4::SimpleCallContext *ctx)
+ReturnedValue QtObject::method_resolvedUrl(QV4::CallContext *ctx)
 {
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -853,7 +853,7 @@ ReturnedValue QtObject::method_resolvedUrl(QV4::SimpleCallContext *ctx)
 \qmlmethod list<string> Qt::fontFamilies()
 Returns a list of the font families available to the application.
 */
-ReturnedValue QtObject::method_fontFamilies(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_fontFamilies(CallContext *ctx)
 {
     if (ctx->callData->argc != 0)
         V4THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
@@ -866,7 +866,7 @@ ReturnedValue QtObject::method_fontFamilies(SimpleCallContext *ctx)
 \qmlmethod string Qt::md5(data)
 Returns a hex string of the md5 hash of \c data.
 */
-ReturnedValue QtObject::method_md5(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_md5(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("Qt.md5(): Invalid arguments");
@@ -880,7 +880,7 @@ ReturnedValue QtObject::method_md5(SimpleCallContext *ctx)
 \qmlmethod string Qt::btoa(data)
 Binary to ASCII - this function returns a base64 encoding of \c data.
 */
-ReturnedValue QtObject::method_btoa(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_btoa(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("Qt.btoa(): Invalid arguments");
@@ -894,7 +894,7 @@ ReturnedValue QtObject::method_btoa(SimpleCallContext *ctx)
 \qmlmethod string Qt::atob(data)
 ASCII to binary - this function returns a base64 decoding of \c data.
 */
-ReturnedValue QtObject::method_atob(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_atob(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("Qt.atob(): Invalid arguments");
@@ -911,7 +911,7 @@ Within the \l {Prototyping with qmlscene}, this causes the launcher application 
 to quit a C++ application when this method is called, connect the
 QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 */
-ReturnedValue QtObject::method_quit(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_quit(CallContext *ctx)
 {
     QV8Engine *v8engine = ctx->engine->v8Engine;
 
@@ -943,7 +943,7 @@ If this is the case, consider using \l{QtQml::Qt::createComponent()}{Qt.createCo
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
-ReturnedValue QtObject::method_createQmlObject(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
 {
     Scope scope(ctx);
     if (ctx->callData->argc < 2 || ctx->callData->argc > 3)
@@ -1075,7 +1075,7 @@ See \l {Dynamic QML Object Creation from JavaScript} for more information on usi
 To create a QML object from an arbitrary string of QML (instead of a file),
 use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
-ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_createComponent(CallContext *ctx)
 {
     if (ctx->callData->argc < 1 || ctx->callData->argc > 3)
         return ctx->throwError(QStringLiteral("Qt.createComponent(): Invalid arguments"));
@@ -1159,7 +1159,7 @@ ReturnedValue QtObject::method_createComponent(SimpleCallContext *ctx)
 
     \sa QtQuick::Locale
 */
-ReturnedValue QtObject::method_locale(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_locale(CallContext *ctx)
 {
     QString code;
     if (ctx->callData->argc > 1)
@@ -1253,7 +1253,7 @@ DEFINE_MANAGED_VTABLE(BindingFunction);
 
     \since 5.0
 */
-ReturnedValue QtObject::method_binding(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_binding(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("binding() requires 1 argument");
@@ -1265,7 +1265,7 @@ ReturnedValue QtObject::method_binding(SimpleCallContext *ctx)
 }
 
 
-ReturnedValue QtObject::method_get_platform(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_get_platform(CallContext *ctx)
 {
     // ### inefficient. Should be just a value based getter
     Object *o = ctx->callData->thisObject.asObject();
@@ -1282,7 +1282,7 @@ ReturnedValue QtObject::method_get_platform(SimpleCallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->engine, qt->m_platform);
 }
 
-ReturnedValue QtObject::method_get_application(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_get_application(CallContext *ctx)
 {
     // ### inefficient. Should be just a value based getter
     Object *o = ctx->callData->thisObject.asObject();
@@ -1300,7 +1300,7 @@ ReturnedValue QtObject::method_get_application(SimpleCallContext *ctx)
 }
 
 #ifndef QT_NO_IM
-ReturnedValue QtObject::method_get_inputMethod(SimpleCallContext *ctx)
+ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
 {
     QObject *o = QQml_guiProvider()->inputMethod();
     QQmlEngine::setObjectOwnership(o, QQmlEngine::CppOwnership);
@@ -1364,7 +1364,7 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
     return stack;
 }
 
-static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallContext *ctx,
+static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *ctx,
                                          bool printStack = false)
 {
     QString result;
@@ -1406,12 +1406,12 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, SimpleCallCont
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_error(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_error(CallContext *ctx)
 {
     return writeToConsole(Error, ctx);
 }
 
-QV4::ReturnedValue ConsoleObject::method_log(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_log(CallContext *ctx)
 {
     //console.log
     //console.debug
@@ -1420,7 +1420,7 @@ QV4::ReturnedValue ConsoleObject::method_log(SimpleCallContext *ctx)
     return writeToConsole(Log, ctx);
 }
 
-QV4::ReturnedValue ConsoleObject::method_profile(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 {
     //DeclarativeDebugTrace cannot handle nested profiling
     //although v8 can handle several profiling at once,
@@ -1443,7 +1443,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_profileEnd(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
 {
     //DeclarativeDebugTrace cannot handle nested profiling
     //although v8 can handle several profiling at once,
@@ -1471,7 +1471,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_time(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_time(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("console.time(): Invalid arguments");
@@ -1483,7 +1483,7 @@ QV4::ReturnedValue ConsoleObject::method_time(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_timeEnd(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_timeEnd(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("console.time(): Invalid arguments");
@@ -1499,7 +1499,7 @@ QV4::ReturnedValue ConsoleObject::method_timeEnd(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_count(CallContext *ctx)
 {
     // first argument: name to print. Ignore any additional arguments
     QString name;
@@ -1523,7 +1523,7 @@ QV4::ReturnedValue ConsoleObject::method_count(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_trace(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_trace(CallContext *ctx)
 {
     if (ctx->callData->argc != 0)
         V4THROW_ERROR("console.trace(): Invalid arguments");
@@ -1540,12 +1540,12 @@ QV4::ReturnedValue ConsoleObject::method_trace(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_warn(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_warn(CallContext *ctx)
 {
     return writeToConsole(Warn, ctx);
 }
 
-QV4::ReturnedValue ConsoleObject::method_assert(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_assert(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("console.assert(): Missing argument");
@@ -1572,7 +1572,7 @@ QV4::ReturnedValue ConsoleObject::method_assert(SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue ConsoleObject::method_exception(SimpleCallContext *ctx)
+QV4::ReturnedValue ConsoleObject::method_exception(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("console.exception(): Missing argument");
@@ -1630,7 +1630,7 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
 
     \sa {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTranslate(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTranslate(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         V4THROW_ERROR("qsTranslate() requires at least two arguments");
@@ -1686,7 +1686,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(SimpleCallContext *ctx)
 
     \sa {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTranslateNoOp(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTranslateNoOp(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         return QV4::Encode::undefined();
@@ -1710,7 +1710,7 @@ ReturnedValue GlobalExtensions::method_qsTranslateNoOp(SimpleCallContext *ctx)
 
     \sa {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTr(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
 {
     if (ctx->callData->argc < 1)
         V4THROW_ERROR("qsTr() requires at least one argument");
@@ -1764,7 +1764,7 @@ ReturnedValue GlobalExtensions::method_qsTr(SimpleCallContext *ctx)
 
     \sa {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTrNoOp(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTrNoOp(CallContext *ctx)
 {
     if (ctx->callData->argc < 1)
         return QV4::Encode::undefined();
@@ -1801,7 +1801,7 @@ ReturnedValue GlobalExtensions::method_qsTrNoOp(SimpleCallContext *ctx)
 
     \sa QT_TRID_NOOP, {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTrId(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTrId(CallContext *ctx)
 {
     if (ctx->callData->argc < 1)
         V4THROW_ERROR("qsTrId() requires at least one argument");
@@ -1833,7 +1833,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(SimpleCallContext *ctx)
 
     \sa qsTrId(), {Internationalization and Localization with Qt Quick}
 */
-ReturnedValue GlobalExtensions::method_qsTrIdNoOp(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_qsTrIdNoOp(CallContext *ctx)
 {
     if (ctx->callData->argc < 1)
         return QV4::Encode::undefined();
@@ -1842,7 +1842,7 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(SimpleCallContext *ctx)
 #endif // QT_NO_TRANSLATION
 
 
-QV4::ReturnedValue GlobalExtensions::method_gc(SimpleCallContext *ctx)
+QV4::ReturnedValue GlobalExtensions::method_gc(CallContext *ctx)
 {
     ctx->engine->memoryManager->runGC();
 
@@ -1851,7 +1851,7 @@ QV4::ReturnedValue GlobalExtensions::method_gc(SimpleCallContext *ctx)
 
 
 
-ReturnedValue GlobalExtensions::method_string_arg(SimpleCallContext *ctx)
+ReturnedValue GlobalExtensions::method_string_arg(CallContext *ctx)
 {
     if (ctx->callData->argc != 1)
         V4THROW_ERROR("String.arg(): Invalid arguments");

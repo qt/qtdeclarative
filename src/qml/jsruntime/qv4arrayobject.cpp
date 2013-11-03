@@ -131,13 +131,13 @@ uint ArrayPrototype::getLength(ExecutionContext *ctx, ObjectRef o)
     return v->toUInt32();
 }
 
-ReturnedValue ArrayPrototype::method_isArray(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_isArray(CallContext *ctx)
 {
     bool isArray = ctx->callData->argc && ctx->callData->args[0].asArrayObject();
     return Encode(isArray);
 }
 
-ReturnedValue ArrayPrototype::method_toString(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject, ScopedObject::Convert);
@@ -153,12 +153,12 @@ ReturnedValue ArrayPrototype::method_toString(SimpleCallContext *ctx)
     return ObjectPrototype::method_toString(ctx);
 }
 
-ReturnedValue ArrayPrototype::method_toLocaleString(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_toLocaleString(CallContext *ctx)
 {
     return method_toString(ctx);
 }
 
-ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject result(scope, ctx->engine->newArrayObject());
@@ -185,7 +185,7 @@ ReturnedValue ArrayPrototype::method_concat(SimpleCallContext *ctx)
     return result.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue arg(scope, ctx->argument(0));
@@ -244,7 +244,7 @@ ReturnedValue ArrayPrototype::method_join(SimpleCallContext *ctx)
     return ctx->engine->newString(R)->asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -272,7 +272,7 @@ ReturnedValue ArrayPrototype::method_pop(SimpleCallContext *ctx)
     return result.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -326,7 +326,7 @@ ReturnedValue ArrayPrototype::method_push(SimpleCallContext *ctx)
     return Encode(len);
 }
 
-ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_reverse(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -358,7 +358,7 @@ ReturnedValue ArrayPrototype::method_reverse(SimpleCallContext *ctx)
     return instance.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -418,7 +418,7 @@ ReturnedValue ArrayPrototype::method_shift(SimpleCallContext *ctx)
     return result.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject o(scope, ctx->callData->thisObject.toObject(ctx));
@@ -460,7 +460,7 @@ ReturnedValue ArrayPrototype::method_slice(SimpleCallContext *ctx)
     return result.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_sort(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -474,7 +474,7 @@ ReturnedValue ArrayPrototype::method_sort(SimpleCallContext *ctx)
     return ctx->callData->thisObject.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -552,7 +552,7 @@ ReturnedValue ArrayPrototype::method_splice(SimpleCallContext *ctx)
     return newArray.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedObject instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -604,7 +604,7 @@ ReturnedValue ArrayPrototype::method_unshift(SimpleCallContext *ctx)
     return Encode(newLen);
 }
 
-ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -643,7 +643,7 @@ ReturnedValue ArrayPrototype::method_indexOf(SimpleCallContext *ctx)
     return instance->arrayIndexOf(searchValue, fromIndex, len, ctx, instance.getPointer());
 }
 
-ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_lastIndexOf(CallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -689,7 +689,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(SimpleCallContext *ctx)
     return Encode(-1);
 }
 
-ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -723,7 +723,7 @@ ReturnedValue ArrayPrototype::method_every(SimpleCallContext *ctx)
     return Encode(ok);
 }
 
-ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -757,7 +757,7 @@ ReturnedValue ArrayPrototype::method_some(SimpleCallContext *ctx)
     return Encode(false);
 }
 
-ReturnedValue ArrayPrototype::method_forEach(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -788,7 +788,7 @@ ReturnedValue ArrayPrototype::method_forEach(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -825,7 +825,7 @@ ReturnedValue ArrayPrototype::method_map(SimpleCallContext *ctx)
     return a.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -866,7 +866,7 @@ ReturnedValue ArrayPrototype::method_filter(SimpleCallContext *ctx)
     return a.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));
@@ -916,7 +916,7 @@ ReturnedValue ArrayPrototype::method_reduce(SimpleCallContext *ctx)
     return acc.asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_reduceRight(SimpleCallContext *ctx)
+ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
 {
     Scope scope(ctx);
     Scoped<Object> instance(scope, ctx->callData->thisObject.toObject(ctx));

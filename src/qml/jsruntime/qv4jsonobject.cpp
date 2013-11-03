@@ -893,7 +893,7 @@ JsonObject::JsonObject(ExecutionEngine *engine)
 }
 
 
-ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_parse(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->argument(0));
@@ -911,7 +911,7 @@ ReturnedValue JsonObject::method_parse(SimpleCallContext *ctx)
     return result.asReturnedValue();
 }
 
-ReturnedValue JsonObject::method_stringify(SimpleCallContext *ctx)
+ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 {
     Scope scope(ctx);
 

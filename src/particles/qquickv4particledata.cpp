@@ -298,7 +298,7 @@ public:
     QV4::PersistentValue proto;
 };
 
-static QV4::ReturnedValue particleData_discard(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue particleData_discard(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
@@ -310,7 +310,7 @@ static QV4::ReturnedValue particleData_discard(QV4::SimpleCallContext *ctx)
     return QV4::Encode::undefined();
 }
 
-static QV4::ReturnedValue particleData_lifeLeft(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue particleData_lifeLeft(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
@@ -321,7 +321,7 @@ static QV4::ReturnedValue particleData_lifeLeft(QV4::SimpleCallContext *ctx)
     return QV4::Encode(r->datum->lifeLeft());
 }
 
-static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
+static QV4::ReturnedValue particleData_curSize(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject);
@@ -331,7 +331,7 @@ static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
 
     return QV4::Encode(r->datum->curSize());
 }
-#define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::ReturnedValue particleData_get_ ## NAME (QV4::SimpleCallContext *ctx) \
+#define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::ReturnedValue particleData_get_ ## NAME (QV4::CallContext *ctx) \
 { \
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -341,7 +341,7 @@ static QV4::ReturnedValue particleData_curSize(QV4::SimpleCallContext *ctx)
     return QV4::Encode((r->datum->color. VAR )/255.0);\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## NAME (QV4::SimpleCallContext *ctx)\
+static QV4::ReturnedValue particleData_set_ ## NAME (QV4::CallContext *ctx)\
 {\
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -354,7 +354,7 @@ static QV4::ReturnedValue particleData_set_ ## NAME (QV4::SimpleCallContext *ctx
 }
 
 
-#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
+#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
 { \
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -364,7 +364,7 @@ static QV4::ReturnedValue particleData_set_ ## NAME (QV4::SimpleCallContext *ctx
     return QV4::Encode(r->datum-> VARIABLE);\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
+static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
 {\
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -375,7 +375,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
     return QV4::Encode::undefined(); \
 }
 
-#define FLOAT_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
+#define FLOAT_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
 { \
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -385,7 +385,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
     return QV4::Encode(r->datum-> VARIABLE);\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
+static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
 {\
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -396,7 +396,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
     return QV4::Encode::undefined(); \
 }
 
-#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::SimpleCallContext *ctx) \
+#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
 { \
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \
@@ -406,7 +406,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext 
     return QV4::Encode(r->datum-> GETTER ());\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::SimpleCallContext *ctx)\
+static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
 {\
     QV4::Scope scope(ctx); \
     QV4::Scoped<QV4ParticleData> r(scope, ctx->callData->thisObject); \

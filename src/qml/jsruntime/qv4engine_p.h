@@ -271,10 +271,10 @@ struct Q_QML_EXPORT ExecutionEngine
     void enableDebugger();
 
     ExecutionContext *pushGlobalContext();
-    void pushContext(SimpleCallContext *context);
+    void pushContext(CallContext *context);
     ExecutionContext *popContext();
 
-    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *));
+    Returned<FunctionObject> *newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *));
     Returned<BoundFunction> *newBoundFunction(ExecutionContext *scope, FunctionObjectRef target, const ValueRef boundThis, const QVector<SafeValue> &boundArgs);
 
     Returned<Object> *newObject();
@@ -344,7 +344,7 @@ private:
     QmlExtensions *m_qmlExtensions;
 };
 
-inline void ExecutionEngine::pushContext(SimpleCallContext *context)
+inline void ExecutionEngine::pushContext(CallContext *context)
 {
     context->parent = current;
     current = context;

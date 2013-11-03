@@ -833,7 +833,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
@@ -879,7 +879,7 @@ ReturnedValue QObjectWrapper::method_connect(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-ReturnedValue QObjectWrapper::method_disconnect(SimpleCallContext *ctx)
+ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
 {
     if (ctx->callData->argc == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");

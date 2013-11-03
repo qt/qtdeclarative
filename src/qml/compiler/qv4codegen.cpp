@@ -1957,7 +1957,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     V4IR::BasicBlock *entryBlock = function->newBasicBlock(groupStartBlock(), 0);
     V4IR::BasicBlock *exitBlock = function->newBasicBlock(groupStartBlock(), 0, V4IR::Function::DontInsertBlock);
-    function->hasDirectEval = _env->hasDirectEval;
+    function->hasDirectEval = _env->hasDirectEval || _env->compilationMode == EvalCode;
     function->usesArgumentsObject = _env->parent && (_env->usesArgumentsObject == Environment::ArgumentsObjectUsed);
     function->usesThis = _env->usesThis;
     function->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);

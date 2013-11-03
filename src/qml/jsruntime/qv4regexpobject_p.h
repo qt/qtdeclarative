@@ -115,10 +115,10 @@ struct RegExpPrototype: RegExpObject
     RegExpPrototype(InternalClass *ic): RegExpObject(ic) {}
     void init(ExecutionEngine *engine, ObjectRef ctor);
 
-    static ReturnedValue method_exec(SimpleCallContext *ctx);
-    static ReturnedValue method_test(SimpleCallContext *ctx);
-    static ReturnedValue method_toString(SimpleCallContext *ctx);
-    static ReturnedValue method_compile(SimpleCallContext *ctx);
+    static ReturnedValue method_exec(CallContext *ctx);
+    static ReturnedValue method_test(CallContext *ctx);
+    static ReturnedValue method_toString(CallContext *ctx);
+    static ReturnedValue method_compile(CallContext *ctx);
 };
 
 }

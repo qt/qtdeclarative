@@ -459,7 +459,7 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_parseInt(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue string(scope, ctx->argument(0));
@@ -543,7 +543,7 @@ ReturnedValue GlobalFunctions::method_parseInt(SimpleCallContext *ctx)
 }
 
 // parseFloat [15.1.2.3]
-ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_parseFloat(CallContext *ctx)
 {
     Scope scope(ctx);
 
@@ -572,7 +572,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(SimpleCallContext *ctx)
 }
 
 /// isNaN [15.1.2.4]
-ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_isNaN(CallContext *ctx)
 {
     if (!ctx->callData->argc)
         // undefined gets converted to NaN
@@ -586,7 +586,7 @@ ReturnedValue GlobalFunctions::method_isNaN(SimpleCallContext *ctx)
 }
 
 /// isFinite [15.1.2.5]
-ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
+ReturnedValue GlobalFunctions::method_isFinite(CallContext *ctx)
 {
     if (!ctx->callData->argc)
         // undefined gets converted to NaN
@@ -600,7 +600,7 @@ ReturnedValue GlobalFunctions::method_isFinite(SimpleCallContext *ctx)
 }
 
 /// decodeURI [15.1.3.1]
-ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURI(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -618,7 +618,7 @@ ReturnedValue GlobalFunctions::method_decodeURI(SimpleCallContext *context)
 }
 
 /// decodeURIComponent [15.1.3.2]
-ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -636,7 +636,7 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(SimpleCallContext *cont
 }
 
 /// encodeURI [15.1.3.3]
-ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURI(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -654,7 +654,7 @@ ReturnedValue GlobalFunctions::method_encodeURI(SimpleCallContext *context)
 }
 
 /// encodeURIComponent [15.1.3.4]
-ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(CallContext *context)
 {
     if (context->callData->argc == 0)
         return Encode::undefined();
@@ -671,7 +671,7 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(SimpleCallContext *cont
     return context->engine->newString(out)->asReturnedValue();
 }
 
-ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_escape(CallContext *context)
 {
     if (!context->callData->argc)
         return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
@@ -680,7 +680,7 @@ ReturnedValue GlobalFunctions::method_escape(SimpleCallContext *context)
     return context->engine->newString(escape(str))->asReturnedValue();
 }
 
-ReturnedValue GlobalFunctions::method_unescape(SimpleCallContext *context)
+ReturnedValue GlobalFunctions::method_unescape(CallContext *context)
 {
     if (!context->callData->argc)
         return context->engine->newString(QStringLiteral("undefined"))->asReturnedValue();

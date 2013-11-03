@@ -181,7 +181,7 @@ public:
 
     int m_nextId;
 
-    static QV4::ReturnedValue method_sendMessage(QV4::SimpleCallContext *ctx);
+    static QV4::ReturnedValue method_sendMessage(QV4::CallContext *ctx);
 
 signals:
     void stopThread();
@@ -281,7 +281,7 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::SimpleCallContext *ctx)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::CallContext *ctx)
 {
     WorkerEngine *engine = (WorkerEngine*)ctx->engine->v8Engine;
 

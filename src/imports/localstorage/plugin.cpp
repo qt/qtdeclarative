@@ -133,7 +133,7 @@ public:
 
 DEFINE_MANAGED_VTABLE(QQmlSqlDatabaseWrapper);
 
-static ReturnedValue qmlsqldatabase_version(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -143,7 +143,7 @@ static ReturnedValue qmlsqldatabase_version(SimpleCallContext *ctx)
     return Encode(ctx->engine->newString(r->version));
 }
 
-static ReturnedValue qmlsqldatabase_rows_length(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_length(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -162,7 +162,7 @@ static ReturnedValue qmlsqldatabase_rows_length(SimpleCallContext *ctx)
     return Encode(s);
 }
 
-static ReturnedValue qmlsqldatabase_rows_forwardOnly(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_forwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -171,7 +171,7 @@ static ReturnedValue qmlsqldatabase_rows_forwardOnly(SimpleCallContext *ctx)
     return Encode(r->sqlQuery.isForwardOnly());
 }
 
-static ReturnedValue qmlsqldatabase_rows_setForwardOnly(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_setForwardOnly(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -241,7 +241,7 @@ ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *h
     return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty);
 }
 
-static ReturnedValue qmlsqldatabase_rows_item(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -251,7 +251,7 @@ static ReturnedValue qmlsqldatabase_rows_item(SimpleCallContext *ctx)
     return qmlsqldatabase_rows_index(r, ctx->engine, ctx->callData->argc ? ctx->callData->args[0].toUInt32() : 0);
 }
 
-static ReturnedValue qmlsqldatabase_executeSql(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -363,7 +363,7 @@ struct TransactionRollback {
 };
 
 
-static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
 {
     if (ctx->callData->argc < 2)
         return Encode::undefined();
@@ -422,7 +422,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(SimpleCallContext *ctx)
     return Encode::undefined();
 }
 
-static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, bool readOnly)
+static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool readOnly)
 {
     QV4::Scope scope(ctx);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, ctx->callData->thisObject.as<QQmlSqlDatabaseWrapper>());
@@ -461,12 +461,12 @@ static ReturnedValue qmlsqldatabase_transaction_shared(SimpleCallContext *ctx, b
     return Encode::undefined();
 }
 
-static ReturnedValue qmlsqldatabase_transaction(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_transaction(CallContext *ctx)
 {
     return qmlsqldatabase_transaction_shared(ctx, false);
 }
 
-static ReturnedValue qmlsqldatabase_read_transaction(SimpleCallContext *ctx)
+static ReturnedValue qmlsqldatabase_read_transaction(CallContext *ctx)
 {
     return qmlsqldatabase_transaction_shared(ctx, true);
 }

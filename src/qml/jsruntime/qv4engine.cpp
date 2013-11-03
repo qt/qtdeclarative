@@ -78,7 +78,7 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
-static ReturnedValue throwTypeError(SimpleCallContext *ctx)
+static ReturnedValue throwTypeError(CallContext *ctx)
 {
     return ctx->throwTypeError();
 }
@@ -359,7 +359,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     return current;
 }
 
-Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(SimpleCallContext *))
+Returned<FunctionObject> *ExecutionEngine::newBuiltinFunction(ExecutionContext *scope, const StringRef name, ReturnedValue (*code)(CallContext *))
 {
     BuiltinFunction *f = new (memoryManager) BuiltinFunction(scope, name, code);
     return f->asReturned<FunctionObject>();
@@ -546,7 +546,7 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
 {
     ExecutionContext *ctx = current;
 
-    if (ctx->type == QV4::ExecutionContext::Type_SimpleCallContext)
+    if (ctx->type == QV4::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
         ctx = ctx->parent;
 
     if (!ctx->outer)
@@ -555,7 +555,7 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
     while (ctx->outer && ctx->outer->type != ExecutionContext::Type_GlobalContext)
         ctx = ctx->outer;
 
-    assert(ctx);
+    Q_ASSERT(ctx);
     if (ctx->type != ExecutionContext::Type_QmlContext)
         return 0;
 
@@ -591,7 +591,8 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 
     QV4::ExecutionContext *c = current;
     while (c && frameLimit) {
-        if (CallContext *callCtx = c->asCallContext()) {
+        CallContext *callCtx = c->asCallContext();
+        if (callCtx && callCtx->function) {
             StackFrame frame;
             if (callCtx->function->function)
                 frame.source = callCtx->function->function->sourceFile();
@@ -644,7 +645,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     QUrl base;
     QV4::ExecutionContext *c = current;
     while (c) {
-        if (CallContext *callCtx = c->asCallContext()) {
+        CallContext *callCtx = c->asCallContext();
+        if (callCtx && callCtx->function) {
             if (callCtx->function->function)
                 base.setUrl(callCtx->function->function->sourceFile());
             break;
