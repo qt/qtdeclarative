@@ -276,7 +276,7 @@ void QQuickPaintedItem::setMipmap(bool enable)
 /*!
     Returns the performance hints.
 
-    By default, no performance hint is enabled/
+    By default, no performance hint is enabled.
 
     \sa setPerformanceHint(), setPerformanceHints()
 */

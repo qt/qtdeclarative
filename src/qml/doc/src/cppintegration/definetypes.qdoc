@@ -699,7 +699,7 @@ its properties have been set. For example, this may be the case if the
 initialization is costly, or if the initialization should not be performed until
 all property values have been initialized.
 
-The \l {Qt QML} module provides the QQmlParserStatus to be subclass for these
+The \l {Qt QML} module provides the QQmlParserStatus to be subclassed for these
 purposes. It defines a number of virtual methods that are invoked invoked at
 various stages during component instantiation. To receive these notifications, a
 C++ class should inherit QQmlParserStatus and also notify the Qt meta system

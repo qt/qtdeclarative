@@ -128,7 +128,6 @@ Additional Qt Quick information:
     \endlist
 \li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Code Samples} - list of all Qt Quick examples
-module
 \endlist
 
 Further information for writing QML applications:
