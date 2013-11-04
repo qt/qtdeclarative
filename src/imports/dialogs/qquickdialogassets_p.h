@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMESSAGEATTACHED_H
-#define QQUICKMESSAGEATTACHED_H
+#ifndef QQUICKDIALOGASSETS_P_H
+#define QQUICKDIALOGASSETS_P_H
 
 #include <private/qtquickglobal_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
@@ -48,22 +48,18 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_DECL_EXPORT QQuickMessageAttached : public QObject
+class QQuickStandardButton
 {
-    Q_OBJECT
-    Q_ENUMS(QQuickAbstractMessageDialog::Icon)
+    Q_GADGET
     Q_ENUMS(QQuickAbstractMessageDialog::StandardButton)
+};
 
-public:
-    static QQuickMessageAttached *qmlAttachedProperties(QObject *obj) {
-        return new QQuickMessageAttached(obj); }
-
-    QQuickMessageAttached(QObject *parent = 0) : QObject(parent) { }
+class QQuickStandardIcon
+{
+    Q_GADGET
+    Q_ENUMS(QQuickAbstractMessageDialog::Icon)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMessageAttached)
-QML_DECLARE_TYPEINFO(QQuickMessageAttached, QML_HAS_ATTACHED_PROPERTIES)
-
-#endif // QQUICKMESSAGEATTACHED_H
+#endif // QQUICKDIALOGASSETS_P_H

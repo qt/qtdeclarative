@@ -61,12 +61,12 @@ Rectangle {
         detailedText: customizeDetailedText.checked ? detailedTextField.text : ""
         onButtonClicked: console.log("clicked button " + clickedButton)
         onAccepted: lastChosen.text = "Accepted " +
-            (clickedButton == Message.Ok ? "(OK)" : (clickedButton == Message.Retry ? "(Retry)" : "(Ignore)"))
+            (clickedButton == StandardButton.Ok ? "(OK)" : (clickedButton == StandardButton.Retry ? "(Retry)" : "(Ignore)"))
         onRejected: lastChosen.text = "Rejected " +
-            (clickedButton == Message.Close ? "(Close)" : (clickedButton == Message.Abort ? "(Abort)" : "(Cancel)"))
+            (clickedButton == StandardButton.Close ? "(Close)" : (clickedButton == StandardButton.Abort ? "(Abort)" : "(Cancel)"))
         onHelp: lastChosen.text = "Yelped for help!"
-        onYes: lastChosen.text = (clickedButton == Message.Yes ? "Yeessss!!" : "Yes, now and always")
-        onNo: lastChosen.text = (clickedButton == Message.No ? "Oh No." : "No, no, a thousand times no!")
+        onYes: lastChosen.text = (clickedButton == StandardButton.Yes ? "Yeessss!!" : "Yes, now and always")
+        onNo: lastChosen.text = (clickedButton == StandardButton.No ? "Oh No." : "No, no, a thousand times no!")
         onApply: lastChosen.text = "Apply"
         onReset: lastChosen.text = "Reset"
     }
@@ -105,7 +105,7 @@ Rectangle {
             function updateIcon(icon, checked) {
                 if (updating) return
                 updating = true
-                messageDialog.icon = (checked ? icon : Message.NoIcon)
+                messageDialog.icon = (checked ? icon : StandardIcon.NoIcon)
                 for (var i = 0; i < children.length; ++i)
                     if (children[i].icon !== icon)
                         children[i].checked = false
@@ -115,7 +115,7 @@ Rectangle {
             CheckBox {
                 id: iconInformation
                 text: "Information"
-                property int icon: Message.Information
+                property int icon: StandardIcon.Information
                 onCheckedChanged: parent.updateIcon(icon, checked)
             }
 
@@ -123,7 +123,7 @@ Rectangle {
                 id: iconWarning
                 text: "Warning"
                 checked: true
-                property int icon: Message.Warning
+                property int icon: StandardIcon.Warning
                 onCheckedChanged: parent.updateIcon(icon, checked)
                 Component.onCompleted: parent.updateIcon(icon, true)
             }
@@ -131,14 +131,14 @@ Rectangle {
             CheckBox {
                 id: iconCritical
                 text: "Critical"
-                property int icon: Message.Critical
+                property int icon: StandardIcon.Critical
                 onCheckedChanged: parent.updateIcon(icon, checked)
             }
 
             CheckBox {
                 id: iconQuestion
                 text: "Question"
-                property int icon: Message.Question
+                property int icon: StandardIcon.Question
                 onCheckedChanged: parent.updateIcon(icon, checked)
             }
         }
@@ -182,75 +182,75 @@ Rectangle {
                     if (children[i].checked)
                         buttons |= children[i].button
                 if (!buttons)
-                    buttons = Message.Ok
+                    buttons = StandardButton.Ok
                 messageDialog.standardButtons = buttons
                 updating = false
             }
 
             CheckBox {
                 text: "Help"
-                property int button: Message.Help
+                property int button: StandardButton.Help
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Abort"
-                property int button: Message.Abort
+                property int button: StandardButton.Abort
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Close"
-                property int button: Message.Close
+                property int button: StandardButton.Close
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Cancel"
-                property int button: Message.Cancel
+                property int button: StandardButton.Cancel
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "NoToAll"
-                property int button: Message.NoToAll
+                property int button: StandardButton.NoToAll
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "No"
-                property int button: Message.No
+                property int button: StandardButton.No
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "YesToAll"
-                property int button: Message.YesToAll
+                property int button: StandardButton.YesToAll
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Yes"
-                property int button: Message.Yes
+                property int button: StandardButton.Yes
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Ignore"
-                property int button: Message.Ignore
+                property int button: StandardButton.Ignore
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "Retry"
-                property int button: Message.Retry
+                property int button: StandardButton.Retry
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
 
             CheckBox {
                 text: "OK"
                 checked: true
-                property int button: Message.Ok
+                property int button: StandardButton.Ok
                 onCheckedChanged: parent.updateButtons(button, checked)
             }
         }
