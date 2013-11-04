@@ -898,8 +898,8 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             int fragmentEnd = textPos + fragment.length();
 #ifndef QT_NO_IM
             if (preeditPosition >= 0
-                    && preeditPosition >= textPos
-                    && preeditPosition <= fragmentEnd) {
+                    && (preeditPosition + block.position()) >= textPos
+                    && (preeditPosition + block.position()) <= fragmentEnd) {
                 fragmentEnd += preeditLength;
             }
 #endif
