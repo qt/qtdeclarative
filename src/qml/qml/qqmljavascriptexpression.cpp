@@ -156,8 +156,8 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     QV4::ExecutionContext *ctx = v4->current;
-    callData->thisObject = ep->v8engine()->global();
-    if (scopeObject() && requiresThisObject()) {
+    callData->thisObject = v4->globalObject;
+    if (scopeObject()) {
         QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->engine, scopeObject()));
         if (value->isObject())
             callData->thisObject = value;

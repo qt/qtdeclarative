@@ -307,6 +307,7 @@ private slots:
     void numberParsing();
     void stringParsing();
     void qtbug_32801();
+    void thisObject();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7309,6 +7310,15 @@ void tst_qqmlecmascript::qtbug_32801()
     // do not crash when a QML signal is connected to a non-void slot
     connect(obj.data(), SIGNAL(testSignal(QString)), obj.data(), SLOT(slotWithReturnValue(QString)));
     QVERIFY(QMetaObject::invokeMethod(obj.data(), "emitTestSignal"));
+}
+
+void tst_qqmlecmascript::thisObject()
+{
+    QQmlComponent component(&engine, testFileUrl("thisObject.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+    QCOMPARE(qvariant_cast<QObject*>(object->property("subObject"))->property("test").toInt(), 2);
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

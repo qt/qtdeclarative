@@ -76,9 +76,6 @@ class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractBinding
 {
 public:
-    enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
-    Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
-
     QQmlBinding(const QString &, QObject *, QQmlContext *);
     QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
@@ -90,9 +87,6 @@ public:
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
     QQmlProperty property() const;
-
-    void setEvaluateFlags(EvaluateFlags flags);
-    EvaluateFlags evaluateFlags() const;
 
     void setNotifyOnValueChanged(bool);
 
@@ -176,8 +170,6 @@ void QQmlBinding::setEnabledFlag(bool v)
 {
     m_ctxt.setFlag2Value(v);
 }
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlBinding::EvaluateFlags)
 
 QT_END_NAMESPACE
 

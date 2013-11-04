@@ -477,8 +477,6 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
             newBinding = new QQmlBinding(value, object, callingQmlContext, frame.source,
                                          qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(object, *property, callingQmlContext);
-            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                         QQmlBinding::RequiresThisObject);
         }
     }
 

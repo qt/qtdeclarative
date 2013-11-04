@@ -385,8 +385,6 @@ void QmlValueTypeWrapper::put(Managed *m, const StringRef name, const ValueRef v
             newBinding = new QQmlBinding(value, reference->object, context,
                                          frame.source, qmlSourceCoordinate(frame.line), qmlSourceCoordinate(frame.column));
             newBinding->setTarget(reference->object, cacheData, context);
-            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                         QQmlBinding::RequiresThisObject);
         }
 
         QQmlAbstractBinding *oldBinding =
