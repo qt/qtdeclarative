@@ -1010,8 +1010,7 @@ void QmlObjectCreator::setupBindings()
 bool QmlObjectCreator::setPropertyValue(QQmlPropertyData *property, int bindingIndex, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
-        Q_ASSERT(stringAt(obj->inheritedTypeNameIndex).isEmpty());
+        Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
         QQmlType *attachedType = resolvedTypes.value(binding->propertyNameIndex).type;
         const int id = attachedType->attachedPropertiesId();
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
