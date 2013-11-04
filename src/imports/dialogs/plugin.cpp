@@ -60,6 +60,11 @@
 //#define PURE_QML_ONLY
 //#define DEBUG_REGISTRATION
 
+static void initResources()
+{
+    Q_INIT_RESOURCE(dialogs);
+}
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -96,6 +101,8 @@ public:
     }
 
     virtual void registerTypes(const char *uri) {
+        initResources();
+
 #ifdef DEBUG_REGISTRATION
         qDebug() << Q_FUNC_INFO << uri;
 #endif
