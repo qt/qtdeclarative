@@ -995,6 +995,29 @@ void tst_QQuickMouseArea::clickThrough()
     QTRY_COMPARE(window->rootObject()->property("clicks").toInt(), 2);
     QCOMPARE(window->rootObject()->property("doubleClicks").toInt(), 1);
     QCOMPARE(window->rootObject()->property("pressAndHolds").toInt(), 1);
+
+    window.reset(new QQuickView);
+
+    //QTBUG-34368 - Shouldn't propagate to disabled mouse areas
+    QVERIFY2(initView(*window.data(), testFileUrl("qtbug34368.qml"), true, &errorMessage), errorMessage.constData());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+
+    QCOMPARE(window->rootObject()->property("clicksEnabled").toInt(), 1);
+    QCOMPARE(window->rootObject()->property("clicksDisabled").toInt(), 1); //Not disabled yet
+
+    window->rootObject()->setProperty("disableLower", QVariant(true));
+
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(100,100));
+
+    QCOMPARE(window->rootObject()->property("clicksEnabled").toInt(), 2);
+    QCOMPARE(window->rootObject()->property("clicksDisabled").toInt(), 1); //disabled, shouldn't increment
 }
 
 void tst_QQuickMouseArea::hoverPosition()
