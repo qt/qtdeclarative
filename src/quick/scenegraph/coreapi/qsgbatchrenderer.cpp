@@ -553,6 +553,15 @@ void Element::computeBounds()
         vd += g->sizeOfVertex();
     }
     bounds.map(*node->matrix());
+
+    if (!qIsFinite(bounds.tl.x))
+        bounds.tl.x = -FLT_MAX;
+    if (!qIsFinite(bounds.tl.y))
+        bounds.tl.y = -FLT_MAX;
+    if (!qIsFinite(bounds.br.x))
+        bounds.br.x = FLT_MAX;
+    if (!qIsFinite(bounds.br.y))
+        bounds.br.y = FLT_MAX;
 }
 
 RenderNodeElement::~RenderNodeElement()
