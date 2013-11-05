@@ -483,6 +483,7 @@ void QSGRenderContext::invalidate()
          end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
         (*it)->clearGlyphCache(m_gl);
     }
+    m_fontEnginesToClean.clear();
 
     delete m_depthStencilManager;
     m_depthStencilManager = 0;
