@@ -111,36 +111,6 @@ to a \l{QtQml::Date}{Date} object.
 */
 
 /*!
-\qmlbasictype time
-\ingroup qtqmlbasictypes
-\ingroup qtquickbasictypes
-\brief a time value.
-
-The \c time type refers to a time value.
-
-To create a \c time value, specified as "hh:mm:ss":
-
-\qml
-MyTimePicker { time: "14:22:15" }
-\endqml
-
-To read a time value returned from a C++ extension class, use
-\l{QtQml::Qt::formatTime()}{Qt.formatTime()} and \l{QtQml::Qt::formatDateTime()}{Qt.formatDateTime()}.
-
-Note that when converting historical times to and from javascript that QDateTime and the JS Date object
-have different methods of calculating historical daylight savings time application. This can lead to variations of one hour
-when converting to historical local time.
-
-When integrating with C++, note that any QTime value
-\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
-converted into a \c time value, and vice-versa.
-
-This basic type is provided by the QML language.
-
-\sa {QML Basic Types}
-*/
-
-/*!
 \qmlbasictype point
 \ingroup qtqmlbasictypes
 \ingroup qtquickbasictypes
