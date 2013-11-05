@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     can be in the middle of an image file, or split along multiple rows, as long as they form
     a contiguous line wrapping to the next row of the file from the left edge of the file.
 
-    For full details, see the \l{Sprite Animation} overview.
+    For full details, see the \l{Sprite Animations} overview.
 */
 /*!
     \qmlproperty int QtQuick::Sprite::duration

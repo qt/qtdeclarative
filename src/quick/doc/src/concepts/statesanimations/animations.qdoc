@@ -65,6 +65,8 @@ To create an animation, use an appropriate animation type for the type of
 the property that is to be animated, and apply the animation depending on the
 type of behavior that is required.
 
+\sa {Qt Quick Examples - Animation}
+
 \section1 Triggering Animations
 
 There are several ways of setting animation to an object.
@@ -217,9 +219,6 @@ sequential or parallel animation must be started and stopped as a group.
 The \l SequentialAnimation type is also useful for playing
 \l{qml-transition-animations}{transition animations} because animations are
 played in parallel inside transitions.
-
-See the \l {declarative/animation/basics}{Animation basics example} for a
-demonstration of creating and combining multiple animations in QML.
 
 \keyword qml-controlling-animations
 \section1 Controlling Animations

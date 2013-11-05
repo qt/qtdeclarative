@@ -218,7 +218,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     Components are often defined by \l {{QML Documents}}{component files} -
     that is, \c .qml files. The \e Component type essentially allows QML components
-    to be defined inline, within a \l {QML Document}{QML document}, rather than as a separate QML file.
+    to be defined inline, within a \l {QML Documents}{QML document}, rather than as a separate QML file.
     This may be useful for reusing a small component within a QML file, or for defining
     a component that logically belongs with other QML components within a file.
 
@@ -235,7 +235,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     two \l Loader objects). Because Component is not derived from Item, you cannot
     anchor anything to it.
 
-    Defining a \c Component is similar to defining a \l {QML Document}{QML document}.
+    Defining a \c Component is similar to defining a \l {QML Documents}{QML document}.
     A QML document has a single top-level item that defines the behavior and
     properties of that component, and cannot define properties or behavior outside
     of that top-level item. In the same way, a \c Component definition contains a single

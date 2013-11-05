@@ -51,7 +51,7 @@
   \fn void qmlClearTypeRegistrations()
   \relates QQmlEngine
 
-  Clears all stored type registrations, such as those produced with \l qmlRegisterType.
+  Clears all stored type registrations, such as those produced with qmlRegisterType().
 
   Do not call this function while a QQmlEngine exists or behavior will be undefined.
   Any existing QQmlEngines must be deleted before calling this function.  This function

@@ -673,7 +673,7 @@ QQuickAbstractAnimation::ThreadingModel QQuickAbstractAnimation::threadingModel(
     }
     \endcode
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickPauseAnimation::QQuickPauseAnimation(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickPauseAnimationPrivate), parent)
@@ -752,7 +752,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
     \l{PropertyAnimation::}{properties} are explicitly set for the animation,
     then those are used instead.
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickColorAnimation::QQuickColorAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -1275,7 +1275,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     changes in the number value that it is tracking. If this is the case, use
     SmoothedAnimation instead.
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickNumberAnimation::QQuickNumberAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -1378,7 +1378,7 @@ void QQuickNumberAnimation::setTo(qreal t)
     sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickVector3dAnimation::QQuickVector3dAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -1478,7 +1478,7 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
     sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QVariant _q_interpolateShortestRotation(qreal &f, qreal &t, qreal progress)
 {
@@ -1711,7 +1711,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
     ParallelAnimation, it cannot be individually started and stopped; the
     SequentialAnimation or ParallelAnimation must be started and stopped as a group.
 
-    \sa ParallelAnimation, {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa ParallelAnimation, {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 
 QQuickSequentialAnimation::QQuickSequentialAnimation(QObject *parent) :
@@ -1801,7 +1801,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
     ParallelAnimation, it cannot be individually started and stopped; the
     SequentialAnimation or ParallelAnimation must be started and stopped as a group.
 
-    \sa SequentialAnimation, {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa SequentialAnimation, {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickParallelAnimation::QQuickParallelAnimation(QObject *parent) :
     QQuickAnimationGroup(parent)
@@ -1984,7 +1984,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
-    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 
 QQuickPropertyAnimation::QQuickPropertyAnimation(QObject *parent)

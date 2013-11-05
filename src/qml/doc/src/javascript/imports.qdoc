@@ -32,7 +32,7 @@
 \l{qtqml-javascript-resources.html}{JavaScript resources} may be imported by
 QML documents and other JavaScript resources.  JavaScript resources may be
 imported via either relative or absolute URLs.  In the case of a relative URL,
-the location is resolved relative to the location of the \l {QML Document} or
+the location is resolved relative to the location of the \l {QML Documents}{QML document} or
 \l{qtqml-javascript-resources.html}{JavaScript Resource} that contains the
 import.  If the script file is not accessible, an error will occur.  If the
 JavaScript needs to be fetched from a network resource, the component's

@@ -40,8 +40,8 @@ a summary of the new changes:
 \li The 'with' statement has been deprecated and is slated for removal in a
     future version of the language.
 \li New \l Qt.platform object with an os property
-\li New \l qmlClearTypeRegistations() function drops all data from qmlRegisterType calls
-\li New \l qmlRegisterType function for registering composite types.
+\li New \l qmlClearTypeRegistrations() function drops all data from qmlRegisterType() calls
+\li New \l qmlRegisterType() function for registering composite types.
 \endlist
 
 \section2 New Submodule

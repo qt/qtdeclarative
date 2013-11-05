@@ -2768,7 +2768,7 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
     Grabs the contents of the window and returns it as an image.
 
     It is possible to call the grabWindow() function when the window is not
-    visible. This requires that the window is \l{QWindow::create} {created}
+    visible. This requires that the window is \l{QWindow::create()} {created}
     and has a valid size and that no other QQuickWindow instances are rendering
     in the same process.
 

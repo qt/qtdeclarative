@@ -172,7 +172,7 @@ struct SpriteVertices {
     SpriteSequence renders and controls a list of animations defined
     by \l Sprite types.
 
-    For full details, see the \l{Sprite Animation} overview.
+    For full details, see the \l{Sprite Animations} overview.
 */
 /*!
     \qmlproperty bool QtQuick::SpriteSequence::running

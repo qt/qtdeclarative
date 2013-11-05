@@ -29,7 +29,6 @@
 \page qml-tutorial.html
 \title QML Tutorial
 \brief An introduction to the basic concepts and features of QML.
-\previouspage Introduction to the QML Language
 \nextpage QML Tutorial 1 - Basic Types
 
 This tutorial gives an introduction to QML, the declarative language for Qt Quick. It doesn't cover everything;

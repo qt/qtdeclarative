@@ -351,7 +351,7 @@ void QSmoothedAnimation::init()
     sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa SpringAnimation, NumberAnimation, {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}
+    \sa SpringAnimation, NumberAnimation, {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 
 QQuickSmoothedAnimation::QQuickSmoothedAnimation(QObject *parent)

@@ -174,7 +174,7 @@ struct AnimatedSpriteVertices {
     as multiple frames in the same image file. You can play it at a fixed speed, at the
     frame rate of your display, or manually advance and control the progress.
 
-    For details of how a sprite animation is defined see the \l{Sprite Animation} overview.
+    For details of how a sprite animation is defined see the \l{Sprite Animations} overview.
     Note that the AnimatedSprite type does not use Sprite types to define multiple animations,
     but instead encapsulates a single animation itself.
 */

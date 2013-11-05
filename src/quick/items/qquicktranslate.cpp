@@ -335,7 +335,7 @@ public:
 
     \image axisrotation.png
 
-    \sa {declarative/ui-components/dialcontrol}{Dial Control example}, {declarative/toys/clocks}{Clocks example}
+    \sa {declarative/ui-components/dialcontrol}{Dial Control example}, {Qt Quick Demo - Clocks}
 */
 QQuickRotation::QQuickRotation(QObject *parent)
     : QQuickTransform(*new QQuickRotationPrivate, parent)

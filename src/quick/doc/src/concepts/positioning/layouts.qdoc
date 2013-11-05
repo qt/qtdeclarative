@@ -32,7 +32,7 @@
 
 Positioner items are container items that manage the positions of
 items in a declarative user interface. Positioners behave in a similar way to
-the \l{Widgets and Layouts}{layout managers} used with standard Qt widgets,
+the \l{Qt Widgets}{layout managers} used with standard Qt widgets,
 except that they are also containers in their own right.
 
 Positioners make it easier to work with many items when they need

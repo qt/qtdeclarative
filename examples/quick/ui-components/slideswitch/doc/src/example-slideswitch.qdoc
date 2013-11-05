@@ -116,7 +116,7 @@ states (\e on and \e off).
 This second function is called when the knob is released and we want to make sure that the knob does not end up between states
 (neither \e on nor \e off). If it is the case call the \c toggle() function otherwise we do nothing.
 
-For more information on scripts see \l{Using JavaScript Expressions in QML}.
+For more information on scripts see \l{JavaScript Expressions in QML Documents}.
 
 \section2 Transition
 \snippet ui-components/slideswitch/content/Switch.qml 7

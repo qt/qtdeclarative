@@ -1248,7 +1248,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image gridview-layout-toptobottom-rtl-btt.png
     \endtable
 
-    \sa {quick/modelviews/gridview}{GridView example}
+    \sa {QML Data Models}, ListView, PathView, {Qt Quick Examples - Views}
 */
 
 QQuickGridView::QQuickGridView(QQuickItem *parent)

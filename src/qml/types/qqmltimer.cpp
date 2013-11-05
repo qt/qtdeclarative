@@ -109,7 +109,7 @@ public:
     elapsed time will be reset to 0, and the Timer will be triggered
     1000ms later.
 
-    \sa {declarative/toys/clocks}{Clocks example}
+    \sa {Qt Quick Demo - Clocks}
 */
 
 QQmlTimer::QQmlTimer(QObject *parent)

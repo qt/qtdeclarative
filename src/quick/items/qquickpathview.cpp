@@ -553,7 +553,7 @@ void QQuickPathViewPrivate::setDragging(bool d)
     to set \e {clip: true} in order to have the out of view items clipped
     nicely.
 
-    \sa Path, {quick/modelviews/pathview}{PathView example}
+    \sa Path, {QML Data Models}, ListView, GridView, {Qt Quick Examples - Views}
 */
 
 QQuickPathView::QQuickPathView(QQuickItem *parent)

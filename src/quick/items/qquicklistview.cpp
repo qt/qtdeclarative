@@ -1744,7 +1744,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image listview-layout-righttoleft.png
     \endtable
 
-    \sa {QML Data Models}, GridView, {quick/modelviews/listview}{ListView examples}
+    \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
@@ -1907,7 +1907,8 @@ QQuickListView::~QQuickListView()
     so as to stay with the current item, unless the highlightFollowsCurrentItem
     property is false.
 
-    \sa highlightItem, highlightFollowsCurrentItem, {quick/modelviews/listview}{ListView examples}
+    \sa highlightItem, highlightFollowsCurrentItem,
+    {Qt Quick Examples - Views#Highlight demonstrates adding a custom highlight to a ListView.}{ListView highlight example}
 */
 
 /*!

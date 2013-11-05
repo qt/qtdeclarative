@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     ParentChange that has occurred during the state change. This can be
     overridden by setting a specific target item using the \l target property.
 
-    \sa {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 QQuickParentAnimation::QQuickParentAnimation(QObject *parent)
     : QQuickAnimationGroup(*(new QQuickParentAnimationPrivate), parent)

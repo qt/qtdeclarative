@@ -59,7 +59,7 @@ instance which already has a parent.
 \section1 Basic Qt Data Types
 
 By default, QML recognizes the following Qt data types, which are
-automatically converted to a corresponding \l {QML Basic Type}{QML basic type}
+automatically converted to a corresponding \l {QML Basic Types}{QML basic type}
 when passed from C++ to QML and vice-versa:
 
 \table
