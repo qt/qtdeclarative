@@ -73,7 +73,7 @@ using namespace QV4;
 
 #define V4THROW_REFERENCE(string) { \
         Scoped<Object> error(scope, ctx->engine->newReferenceErrorObject(QStringLiteral(string))); \
-        ctx->throwError(error); \
+        return ctx->throwError(error); \
     }
 
 QT_BEGIN_NAMESPACE
