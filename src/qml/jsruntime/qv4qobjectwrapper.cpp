@@ -524,7 +524,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     } else if (value->asFunctionObject()) {
         // this is handled by the binding creation above
     } else if (property->propType == QMetaType::Int && value->isNumber()) {
-        PROPERTY_STORE(int, qRound(value->asDouble()));
+        PROPERTY_STORE(int, value->asDouble());
     } else if (property->propType == QMetaType::QReal && value->isNumber()) {
         PROPERTY_STORE(qreal, qreal(value->asDouble()));
     } else if (property->propType == QMetaType::Float && value->isNumber()) {

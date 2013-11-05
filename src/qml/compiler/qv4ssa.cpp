@@ -1572,10 +1572,7 @@ protected:
     {
         switch (propType) {
         case QMetaType::Bool: return BoolType;
-
-        // Can't propagate integers right now, because QML rounds doubles to integers on assignment, as opposed to EcmaScript
-//        case QMetaType::Int: return SInt32Type;
-
+        case QMetaType::Int: return SInt32Type;
         case QMetaType::Double: return DoubleType;
         case QMetaType::QString: return StringType;
         default: break;
@@ -1813,11 +1810,12 @@ protected:
             }
         }
 
-        // Resettable properties need to be able to receive the un-converted
-        // value, because assigning "undefined" to them calls the reset function
-        // of the property.
+        // Don't convert when writing to QObject properties. All sorts of extra behavior
+        // is defined when writing to them, for example resettable properties are reset
+        // when writing undefined to them, and an exception is thrown when they're missing
+        // a reset function.
         const Member *targetMember = s->target->asMember();
-        const bool inhibitConversion = targetMember && targetMember->type == Member::MemberOfQObject && targetMember->property->isResettable();
+        const bool inhibitConversion = targetMember && targetMember->type == Member::MemberOfQObject && targetMember->property;
 
         run(s->source, s->target->type, !inhibitConversion);
     }

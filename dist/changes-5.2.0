@@ -42,6 +42,10 @@ Third party components
    flag QSGNode::DirtySubtreeBlocked whenever the state of
    QSGNode::isSubtreeBlocked() is changed.
 
+ - When assigning double precision floating point values to integer properties,
+   the engine now truncates instead of rounding. This is consistent with the
+   ECMAScript specification's way of converting doubles to ints.
+
 ****************************************************************************
 *                          Library                                         *
 ****************************************************************************

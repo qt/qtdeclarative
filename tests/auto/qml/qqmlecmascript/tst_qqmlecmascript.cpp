@@ -3489,9 +3489,9 @@ void tst_qqmlecmascript::compiled()
     QCOMPARE(object->property("test15").toBool(), false);
     QCOMPARE(object->property("test16").toBool(), true);
 
-    QCOMPARE(object->property("test17").toInt(), 5);
+    QCOMPARE(object->property("test17").toInt(), 4);
     QCOMPARE(object->property("test18").toReal(), qreal(176));
-    QCOMPARE(object->property("test19").toInt(), 7);
+    QCOMPARE(object->property("test19").toInt(), 6);
     QCOMPARE(object->property("test20").toReal(), qreal(6.7));
     QCOMPARE(object->property("test21").toString(), QLatin1String("6.7"));
     QCOMPARE(object->property("test22").toString(), QLatin1String("!"));
@@ -3516,7 +3516,7 @@ void tst_qqmlecmascript::numberAssignment()
     QCOMPARE(object->property("test3"), QVariant((qreal)6));
     QCOMPARE(object->property("test4"), QVariant((qreal)6));
 
-    QCOMPARE(object->property("test5"), QVariant((int)7));
+    QCOMPARE(object->property("test5"), QVariant((int)6));
     QCOMPARE(object->property("test6"), QVariant((int)7));
     QCOMPARE(object->property("test7"), QVariant((int)6));
     QCOMPARE(object->property("test8"), QVariant((int)6));
@@ -6445,7 +6445,7 @@ void tst_qqmlecmascript::realToInt()
     QMetaObject::invokeMethod(object, "test1");
     QCOMPARE(object->value(), int(4));
     QMetaObject::invokeMethod(object, "test2");
-    QCOMPARE(object->value(), int(8));
+    QCOMPARE(object->value(), int(7));
 }
 
 void tst_qqmlecmascript::urlProperty()

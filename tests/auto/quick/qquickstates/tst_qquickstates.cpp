@@ -1567,7 +1567,7 @@ void tst_qquickstates::QTBUG_14830()
     QVERIFY(rect != 0);
     QQuickItem *item = rect->findChild<QQuickItem*>("area");
 
-    QCOMPARE(item->width(), qreal(171));
+    QCOMPARE(item->width(), qreal(170));
 }
 
 void tst_qquickstates::avoidFastForward()
