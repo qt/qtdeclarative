@@ -340,7 +340,7 @@ void MemoryManager::mark()
 
     if (!m_d->exactGC) {
         // push all caller saved registers to the stack, so we can find the objects living in these registers
-#if COMPILER(MSVC)
+#if COMPILER(MSVC) && !OS(WINRT) // WinRT must use exact GC
 #  if CPU(X86_64)
         HANDLE thread = GetCurrentThread();
         WOW64_CONTEXT ctxt;
