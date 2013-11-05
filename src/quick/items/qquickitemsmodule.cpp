@@ -268,6 +268,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickTextEdit, 2>(uri, 2, 2, "TextEdit");
 }
 
+QT_BEGIN_NAMESPACE
+
 void QQuickItemsModule::defineModule()
 {
     QByteArray name = "QtQuick";
@@ -277,3 +279,4 @@ void QQuickItemsModule::defineModule()
     qt_quickitems_defineModule(name, majorVersion, minorVersion);
 }
 
+QT_END_NAMESPACE
