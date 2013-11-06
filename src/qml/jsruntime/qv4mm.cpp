@@ -165,6 +165,8 @@ struct MemoryManager::Data
         , gcBlocked(false)
         , engine(0)
         , stackTop(0)
+        , totalItems(0)
+        , totalAlloc(0)
     {
         memset(smallItems, 0, sizeof(smallItems));
         memset(nChunks, 0, sizeof(nChunks));
