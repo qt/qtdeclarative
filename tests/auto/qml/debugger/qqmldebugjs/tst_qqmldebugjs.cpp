@@ -103,10 +103,8 @@ const char *SETBREAKPOINT = "setbreakpoint";
 const char *CHANGEBREAKPOINT = "changebreakpoint";
 const char *CLEARBREAKPOINT = "clearbreakpoint";
 const char *SETEXCEPTIONBREAK = "setexceptionbreak";
-const char *V8FLAGS = "v8flags";
 const char *VERSION = "version";
 const char *DISCONNECT = "disconnect";
-const char *LISTBREAKPOINTS = "listbreakpoints";
 const char *GARBAGECOLLECTOR = "gc";
 //const char *PROFILE = "profile";
 
@@ -182,13 +180,7 @@ private slots:
     void getVersion();
 //    void getVersionWhenAttaching();
 
-    void applyV8Flags();
-
     void disconnect();
-
-    void gc();
-
-    void listBreakpoints();
 
     void setBreakpointInScriptOnCompleted();
     void setBreakpointInScriptOnComponentCreated();
@@ -290,12 +282,9 @@ public:
     void changeBreakpoint(int breakpoint, bool enabled = true, QString condition = QString(), int ignoreCount = -1);
     void clearBreakpoint(int breakpoint);
     void setExceptionBreak(Exception type, bool enabled = false);
-    void v8flags(QString flags);
     void version();
     //void profile(ProfileCommand command); //NOT SUPPORTED
     void disconnect();
-    void gc();
-    void listBreakpoints();
 
 protected:
     //inherited from QQmlDebugClient
@@ -767,29 +756,6 @@ void QJSDebugClient::setExceptionBreak(Exception type, bool enabled)
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
-void QJSDebugClient::v8flags(QString flags)
-{
-    //    { "seq"       : <number>,
-    //      "type"      : "request",
-    //      "command"   : "v8flags",
-    //      "arguments" : { "flags" : <string: a sequence of v8 flags just like those used on the command line>
-    //                    }
-    //    }
-    VARIANTMAPINIT;
-    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(V8FLAGS)));
-
-    QJSValue args = parser.call(QJSValueList() << obj);
-
-    args.setProperty(QLatin1String(FLAGS),QJSValue(flags));
-
-    if (!args.isUndefined()) {
-        jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
-    }
-
-    QJSValue json = stringify.call(QJSValueList() << jsonVal);
-    sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
-}
-
 void QJSDebugClient::version()
 {
     //    { "seq"       : <number>,
@@ -842,42 +808,6 @@ void QJSDebugClient::disconnect()
     sendMessage(packMessage(DISCONNECT, json.toString().toUtf8()));
 }
 
-void QJSDebugClient::gc()
-{
-    //    { "seq"       : <number>,
-    //      "type"      : "request",
-    //      "command"   : "gc",
-    //      "arguments" : { "type" : <string: "all">,
-    //                    }
-    //    }
-    VARIANTMAPINIT;
-    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(GARBAGECOLLECTOR)));
-
-    QJSValue args = parser.call(QJSValueList() << obj);
-
-    args.setProperty(QLatin1String(TYPE),QJSValue(QLatin1String(ALL)));
-
-    if (!args.isUndefined()) {
-        jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
-    }
-
-    QJSValue json = stringify.call(QJSValueList() << jsonVal);
-    sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
-}
-
-void QJSDebugClient::listBreakpoints()
-{
-    //    { "seq"       : <number>,
-    //      "type"      : "request",
-    //      "command"   : "listbreakpoints",
-    //    }
-    VARIANTMAPINIT;
-    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(LISTBREAKPOINTS)));
-
-    QJSValue json = stringify.call(QJSValueList() << jsonVal);
-    sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
-}
-
 void QJSDebugClient::stateChanged(State state)
 {
     if (state == Enabled) {
@@ -919,9 +849,7 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
                         debugCommand == "lookup" ||
                         debugCommand == "setbreakpoint" ||
                         debugCommand == "evaluate" ||
-                        debugCommand == "listbreakpoints" ||
                         debugCommand == "version" ||
-                        debugCommand == "v8flags" ||
                         debugCommand == "disconnect" ||
                         debugCommand == "gc" ||
                         debugCommand == "changebreakpoint" ||
@@ -1104,17 +1032,6 @@ void tst_QQmlDebugJS::getVersionWhenAttaching()
 }
 */
 
-void tst_QQmlDebugJS::applyV8Flags()
-{
-    //void v8flags(QString flags)
-
-    QVERIFY(init());
-    client->connect();
-
-    client->v8flags(QString());
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-}
-
 void tst_QQmlDebugJS::disconnect()
 {
     //void disconnect()
@@ -1124,45 +1041,6 @@ void tst_QQmlDebugJS::disconnect()
 
     client->disconnect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-}
-
-void tst_QQmlDebugJS::gc()
-{
-    //void gc()
-
-    QVERIFY(init());
-    client->connect();
-
-    client->gc();
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-}
-
-void tst_QQmlDebugJS::listBreakpoints()
-{
-    //void listBreakpoints()
-
-    int sourceLine1 = 53;
-    int sourceLine2 = 54;
-    int sourceLine3 = 55;
-
-    QVERIFY(init());
-    client->connect();
-
-    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_QMLFILE), sourceLine3, -1, true);
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-    client->listBreakpoints();
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
-
-    QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QList<QVariant> breakpoints = value.value("body").toMap().value("breakpoints").toList();
-
-    QCOMPARE(breakpoints.count(), 3);
 }
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
