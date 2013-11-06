@@ -217,7 +217,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 }
 
 /*!
-    \qmlmodule Qt.labs.folderlistmodel 1.0
+    \qmlmodule Qt.labs.folderlistmodel 2.1
     \title Qt Labs FolderListModel QML Types
     \ingroup qmlmodules
     \brief The FolderListModel provides a model of the contents of a file system folder.
@@ -225,14 +225,14 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     To use this module, import the module with the following line:
 
     \code
-    import Qt.labs.folderlistmodel 1.0
+    import Qt.labs.folderlistmodel 2.1
     \endcode
 */
 
 
 /*!
     \qmltype FolderListModel
-    \inqmlmodule Qt.labs.folderlistmodel 1.0
+    \inqmlmodule Qt.labs.folderlistmodel
     \instantiates QQuickFolderListModel
     \ingroup qtquick-models
     \brief The FolderListModel provides a model of the contents of a file system folder.
@@ -244,7 +244,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
-    \b{import Qt.labs.folderlistmodel 1.0}
+    \b{import Qt.labs.folderlistmodel 2.1}
 
     The \l folder property specifies the folder to access. Information about the
     files and directories in the folder is supplied via the model's interface.
@@ -253,6 +253,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \list
     \li \c fileName
     \li \c filePath
+    \li \c fileURL (since Qt 5.2)
     \li \c fileBaseName
     \li \c fileSuffix
     \li \c fileSize
@@ -289,7 +290,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 
     \qml
     import QtQuick 2.0
-    import Qt.labs.folderlistmodel 1.0
+    import Qt.labs.folderlistmodel 2.1
 
     ListView {
         width: 200; height: 400
@@ -627,6 +628,7 @@ bool QQuickFolderListModel::isFolder(int index) const
 
 /*!
     \qmlproperty bool FolderListModel::showFiles
+    \since 5.2
 
     If true, files are included in the model; otherwise only directories
     are included.
@@ -727,6 +729,7 @@ void  QQuickFolderListModel::setShowDotAndDotDot(bool on)
 
 /*!
     \qmlproperty bool FolderListModel::showHidden
+    \since 5.2
 
     If true, hidden files and directories are included in the model; otherwise
     they are excluded.
@@ -774,7 +777,7 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
 }
 
 /*!
-    \qmlmethod QVariant QQuickFolderListModel::get(int idx, const QString &property) const
+    \qmlmethod var FolderListModel::get(int index, string property)
 
     Get the folder property for the given index. The following properties
     are available.
@@ -782,7 +785,7 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
     \list
         \li \c fileName
         \li \c filePath
-        \li \c fileURL
+        \li \c fileURL (since Qt 5.2)
         \li \c fileBaseName
         \li \c fileSuffix
         \li \c fileSize

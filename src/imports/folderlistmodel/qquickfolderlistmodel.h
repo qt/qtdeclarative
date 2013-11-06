@@ -69,11 +69,11 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters)
     Q_PROPERTY(SortField sortField READ sortField WRITE setSortField)
     Q_PROPERTY(bool sortReversed READ sortReversed WRITE setSortReversed)
-    Q_PROPERTY(bool showFiles READ showFiles WRITE setShowFiles)
+    Q_PROPERTY(bool showFiles READ showFiles WRITE setShowFiles REVISION 1)
     Q_PROPERTY(bool showDirs READ showDirs WRITE setShowDirs)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst)
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
-    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden)
+    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden REVISION 1)
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 //![class props]
@@ -152,7 +152,7 @@ public:
 Q_SIGNALS:
     void folderChanged();
     void rowCountChanged() const;
-    void countChanged() const;
+    Q_REVISION(1) void countChanged() const;
 //![notifier]
 
 //![class end]
