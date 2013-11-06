@@ -2031,7 +2031,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 
     const int modelCount = d->modelCount;
     int moveId = -1;
-    int moveOffset;
+    int moveOffset = 0;
     bool currentChanged = false;
     bool changedOffset = false;
     foreach (const QQmlChangeSet::Remove &r, changeSet.removes()) {
