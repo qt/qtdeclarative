@@ -60,7 +60,7 @@ static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font)
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : m_manager(man)
     , m_pendingGlyphs(64)
 {
@@ -74,6 +74,8 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     m_referenceFont = font;
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
+
+    m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()

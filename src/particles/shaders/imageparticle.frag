@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D _qt_texture;
 uniform lowp float qt_Opacity;
 

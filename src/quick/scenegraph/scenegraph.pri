@@ -126,5 +126,37 @@ OTHER_FILES += \
     $$PWD/shaders/textmask.vert \
     $$PWD/shaders/texture.frag \
     $$PWD/shaders/vertexcolor.frag \
-    $$PWD/shaders/vertexcolor.vert
+    $$PWD/shaders/vertexcolor.vert \
+    $$PWD/shaders/24bittextmask_core.frag \
+    $$PWD/shaders/8bittextmask_core.frag \
+    $$PWD/shaders/distancefieldoutlinetext_core.frag \
+    $$PWD/shaders/distancefieldshiftedtext_core.frag \
+    $$PWD/shaders/distancefieldshiftedtext_core.vert \
+    $$PWD/shaders/distancefieldtext_core.frag \
+    $$PWD/shaders/distancefieldtext_core.vert \
+    $$PWD/shaders/flatcolor_core.frag \
+    $$PWD/shaders/flatcolor_core.vert \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext_core.frag \
+    $$PWD/shaders/hiqsubpixeldistancefieldtext_core.vert \
+    $$PWD/shaders/loqsubpixeldistancefieldtext_core.frag \
+    $$PWD/shaders/loqsubpixeldistancefieldtext_core.vert \
+    $$PWD/shaders/opaquetexture_core.frag \
+    $$PWD/shaders/opaquetexture_core.vert \
+    $$PWD/shaders/outlinedtext_core.frag \
+    $$PWD/shaders/outlinedtext_core.vert \
+    $$PWD/shaders/rendernode_core.frag \
+    $$PWD/shaders/rendernode_core.vert \
+    $$PWD/shaders/smoothcolor_core.frag \
+    $$PWD/shaders/smoothcolor_core.vert \
+    $$PWD/shaders/smoothtexture_core.frag \
+    $$PWD/shaders/smoothtexture_core.vert \
+    $$PWD/shaders/stencilclip_core.frag \
+    $$PWD/shaders/stencilclip_core.vert \
+    $$PWD/shaders/styledtext_core.frag \
+    $$PWD/shaders/styledtext_core.vert \
+    $$PWD/shaders/textmask_core.frag \
+    $$PWD/shaders/textmask_core.vert \
+    $$PWD/shaders/texture_core.frag \
+    $$PWD/shaders/vertexcolor_core.frag \
+    $$PWD/shaders/vertexcolor_core.vert
 

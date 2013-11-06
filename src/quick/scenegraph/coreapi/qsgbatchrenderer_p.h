@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenGLVertexArrayObject;
+
 namespace QSGBatchRenderer
 {
 
@@ -398,6 +400,7 @@ public:
 
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
+    void preprocess() Q_DECL_OVERRIDE;
     void render();
 
 private:
@@ -481,6 +484,9 @@ private:
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
     const QSGClipNode *m_currentClip;
+
+    // For minimal OpenGL core profile support
+    QOpenGLVertexArrayObject *m_vao;
 };
 
 Batch *Renderer::newBatch()

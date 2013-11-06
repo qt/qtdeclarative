@@ -48,16 +48,23 @@
 #include <qopenglfunctions.h>
 #include <qmath.h>
 
+#if !defined(QT_OPENGL_ES_2)
+#include <QtGui/qopenglfunctions_3_2_core.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
 
-QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(man, font)
+QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
+    : QSGDistanceFieldGlyphCache(man, c, font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
     , m_blitProgram(0)
     , m_fboGuard(0)
+#if !defined(QT_OPENGL_ES_2)
+    , m_funcs(0)
+#endif
 {
     m_blitVertexCoordinateArray[0] = -1.0f;
     m_blitVertexCoordinateArray[1] = -1.0f;
@@ -177,17 +184,22 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> 
             }
         }
 
+#if !defined(QT_OPENGL_ES_2)
+        const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
+#else
+        const GLenum format = GL_ALPHA;
+#endif
         if (useTextureUploadWorkaround()) {
             for (int i = 0; i < glyph.height(); ++i) {
                 glTexSubImage2D(GL_TEXTURE_2D, 0,
                                 c.x, c.y + i, glyph.width(),1,
-                                GL_ALPHA, GL_UNSIGNED_BYTE,
+                                format, GL_UNSIGNED_BYTE,
                                 glyph.scanLine(i));
             }
         } else {
             glTexSubImage2D(GL_TEXTURE_2D, 0,
                             c.x, c.y, glyph.width(), glyph.height(),
-                            GL_ALPHA, GL_UNSIGNED_BYTE,
+                            format, GL_UNSIGNED_BYTE,
                             glyph.constBits());
         }
     }
@@ -230,8 +242,14 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #if !defined(QT_OPENGL_ES_2)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    const GLint internalFormat = isCoreProfile() ? GL_R8 : GL_ALPHA;
+    const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
+#else
+    const GLint internalFormat = GL_ALPHA;
+    const GLenum format = GL_ALPHA;
 #endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
 
     texInfo->size = QSize(width, height);
 
@@ -267,22 +285,74 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
+#if !defined(QT_OPENGL_ES_2)
+    if (isCoreProfile() && !useTextureResizeWorkaround()) {
+        // For an OpenGL Core Profile we can use http://www.opengl.org/wiki/Framebuffer#Blitting
+        // to efficiently copy the contents of the old texture to the new texture
+        // TODO: Use ARB_copy_image if available of if we have >=4.3 context
+        if (!m_funcs) {
+            m_funcs = ctx->versionFunctions<QOpenGLFunctions_3_2_Core>();
+            Q_ASSERT(m_funcs);
+            m_funcs->initializeOpenGLFunctions();
+        }
+
+        // Create a framebuffer object to which we can attach our old and new textures (to
+        // the first two color buffer attachment points)
+        if (!m_fboGuard) {
+            GLuint fbo;
+            m_funcs->glGenFramebuffers(1, &fbo);
+            m_fboGuard = new QOpenGLSharedResourceGuard(ctx, fbo, freeFramebufferFunc);
+        }
+
+        // Bind the FBO to both the GL_READ_FRAMEBUFFER? and GL_DRAW_FRAMEBUFFER targets
+        m_funcs->glBindFramebuffer(GL_FRAMEBUFFER, m_fboGuard->id());
+
+        // Bind the old texture to GL_COLOR_ATTACHMENT0
+        m_funcs->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                        GL_TEXTURE_2D, oldTexture, 0);
+
+        // Bind the new texture to GL_COLOR_ATTACHMENT1
+        m_funcs->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+                                        GL_TEXTURE_2D, texInfo->texture, 0);
+
+        // Set the source and destination buffers
+        m_funcs->glReadBuffer(GL_COLOR_ATTACHMENT0);
+        m_funcs->glDrawBuffer(GL_COLOR_ATTACHMENT1);
+
+        // Do the blit
+        m_funcs->glBlitFramebuffer(0, 0, oldWidth, oldHeight,
+                                   0, 0, oldWidth, oldHeight,
+                                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // Reset the default framebuffer
+        m_funcs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        return;
+    } else if (useTextureResizeWorkaround()) {
+#else
     if (useTextureResizeWorkaround()) {
+#endif
         GLint alignment = 4; // default value
         glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+#if !defined(QT_OPENGL_ES_2)
+        const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
+#else
+        const GLenum format = GL_ALPHA;
+#endif
 
         if (useTextureUploadWorkaround()) {
             for (int i = 0; i < texInfo->image.height(); ++i) {
                 glTexSubImage2D(GL_TEXTURE_2D, 0,
                                 0, i, oldWidth, 1,
-                                GL_ALPHA, GL_UNSIGNED_BYTE,
+                                format, GL_UNSIGNED_BYTE,
                                 texInfo->image.scanLine(i));
             }
         } else {
             glTexSubImage2D(GL_TEXTURE_2D, 0,
                             0, 0, oldWidth, oldHeight,
-                            GL_ALPHA, GL_UNSIGNED_BYTE,
+                            format, GL_UNSIGNED_BYTE,
                             texInfo->image.constBits());
         }
 

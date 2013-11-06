@@ -46,6 +46,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
+#include <QtGui/QOpenGLVertexArrayObject>
 
 #include <private/qqmlprofilerservice_p.h>
 
@@ -57,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input);
+extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat::OpenGLContextProfile profile);
 
 namespace QSGBatchRenderer
 {
@@ -132,10 +133,12 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
 #endif
 
     QSGMaterialShader *s = material->createShader();
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     QOpenGLShaderProgram *p = s->program();
     p->addShaderFromSourceCode(QOpenGLShader::Vertex,
-                               qsgShaderRewriter_insertZAttributes(s->vertexShader()));
+                               qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile));
     p->addShaderFromSourceCode(QOpenGLShader::Fragment,
                                s->fragmentShader());
 
@@ -761,6 +764,7 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_zRange(0)
     , m_currentMaterial(0)
     , m_currentShader(0)
+    , m_vao(0)
 {
     setNodeUpdater(new Updater(this));
 
@@ -800,6 +804,13 @@ Renderer::Renderer(QSGRenderContext *ctx)
     if (Q_UNLIKELY(debug_build || debug_render)) {
         qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
         qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));
+    }
+
+    // If rendering with an OpenGL Core profile context, we need to create a VAO
+    // to hold our vertex specification state.
+    if (context()->openglContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+        m_vao = new QOpenGLVertexArrayObject(this);
+        m_vao->create();
     }
 }
 
@@ -2211,6 +2222,17 @@ void Renderer::deleteRemovedElements()
     m_elementsToDelete.reset();
 }
 
+void Renderer::preprocess()
+{
+    // Bind our VAO. It's important that we do this here as the
+    // QSGRenderer::preprocess() call may well do work that requires
+    // a bound VAO.
+    if (m_vao)
+        m_vao->bind();
+
+    QSGRenderer::preprocess();
+}
+
 void Renderer::render()
 {
     if (Q_UNLIKELY(debug_dump)) {
@@ -2318,6 +2340,9 @@ void Renderer::render()
     renderBatches();
 
     m_rebuild = 0;
+
+    if (m_vao)
+        m_vao->release();
 }
 
 void Renderer::prepareRenderNode(RenderNodeElement *e)
