@@ -2045,7 +2045,9 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
         program->updateState(state(dirty), material, m_currentMaterial);
 
-        m_currentMaterial = gn->activeMaterial();
+        // We don't need to bother with asking each node for its material as they
+        // are all identical (compare==0) since they are in the same batch.
+        m_currentMaterial = material;
 
         QSGGeometry* g = gn->geometry();
         char const *const *attrNames = program->attributeNames();
