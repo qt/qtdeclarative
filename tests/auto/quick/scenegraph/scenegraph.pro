@@ -9,3 +9,6 @@ macx:CONFIG -= app_bundle
 QT += core-private gui-private qml-private quick-private  testlib
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+
+OTHER_FILES += \
+    data/render_OutOfFloatRange.qml

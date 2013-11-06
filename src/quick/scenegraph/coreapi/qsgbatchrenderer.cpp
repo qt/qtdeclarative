@@ -562,6 +562,8 @@ void Element::computeBounds()
         bounds.br.x = FLT_MAX;
     if (!qIsFinite(bounds.br.y))
         bounds.br.y = FLT_MAX;
+
+    boundsOutsideFloatRange = bounds.isOutsideFloatRange();
 }
 
 RenderNodeElement::~RenderNodeElement()
@@ -662,12 +664,26 @@ bool Batch::isTranslateOnlyToRoot() const {
 
 /*
  * Iterates through all the nodes in the batch and returns true if the
- * nodes are all "2D safe" meaning that they can be merged and that
- * the value in the z coordinate is of no consequence.
+ * nodes are all safe to batch. There are two separate criteria:
+ *
+ * - The matrix is such that the z component of the result is of no
+ *   consequence.
+ *
+ * - The bounds are inside the stable floating point range. This applies
+ *   to desktop only where we in this case can trigger a fallback to
+ *   unmerged in which case we pass the geometry straight through and
+ *   just apply the matrix.
+ *
+ *   NOTE: This also means a slight performance impact for geometries which
+ *   are defined to be outside the stable floating point range and still
+ *   use single precision float, but given that this implicitly fixes
+ *   huge lists and tables, it is worth it.
  */
-bool Batch::allMatricesAre2DSafe() const {
+bool Batch::isSafeToBatch() const {
     Element *e = first;
     while (e) {
+        if (e->boundsOutsideFloatRange)
+            return false;
         if (!QMatrix4x4_Accessor::is2DSafe(*e->node->matrix()))
             return false;
         e = e->nextInBatch;
@@ -1637,7 +1653,7 @@ void Renderer::uploadBatch(Batch *b)
                         && (((gn->activeMaterial()->flags() & QSGMaterial::RequiresDeterminant) == 0)
                             || (((gn->activeMaterial()->flags() & QSGMaterial_RequiresFullMatrixBit) == 0) && b->isTranslateOnlyToRoot())
                             )
-                        && b->allMatricesAre2DSafe();
+                        && b->isSafeToBatch();
 
         b->merged = canMerge;
 

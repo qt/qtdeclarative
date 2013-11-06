@@ -53,6 +53,8 @@ QT_BEGIN_NAMESPACE
 namespace QSGBatchRenderer
 {
 
+#define QSG_RENDERER_COORD_LIMIT 1000000.0f
+
 struct Vec;
 struct Rect;
 struct Buffer;
@@ -136,6 +138,13 @@ struct Rect {
         bool yOverlap = r.tl.y < br.y && r.br.y > tl.y;
         return xOverlap && yOverlap;
     }
+
+    bool isOutsideFloatRange() const {
+        return tl.x < -QSG_RENDERER_COORD_LIMIT
+                || tl.y < -QSG_RENDERER_COORD_LIMIT
+                || br.x > QSG_RENDERER_COORD_LIMIT
+                || br.y > QSG_RENDERER_COORD_LIMIT;
+    }
 };
 
 inline QDebug operator << (QDebug d, const Rect &r) {
@@ -158,6 +167,7 @@ struct Element {
         , root(0)
         , order(0)
         , boundsComputed(false)
+        , boundsOutsideFloatRange(false)
         , translateOnlyToRoot(false)
         , removed(false)
         , orphaned(false)
@@ -181,6 +191,7 @@ struct Element {
     int order;
 
     uint boundsComputed : 1;
+    uint boundsOutsideFloatRange : 1;
     uint translateOnlyToRoot : 1;
     uint removed : 1;
     uint orphaned : 1;
@@ -242,7 +253,7 @@ struct Batch
     void cleanupRemovedElements();
 
     bool isTranslateOnlyToRoot() const;
-    bool allMatricesAre2DSafe() const;
+    bool isSafeToBatch() const;
 
     // pseudo-constructor...
     void init() {
