@@ -902,6 +902,8 @@ void tst_qquicktext::hAlignImplicitWidth()
     {
         // HCenter Align
         text->setHAlign(QQuickText::AlignHCenter);
+        text->setText("Reset"); // set dummy string to force relayout once original text is set again
+        text->setText("AA\nBBBBBBB\nCCCCCCCCCCCCCCCC");
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);
@@ -912,6 +914,8 @@ void tst_qquicktext::hAlignImplicitWidth()
     {
         // Right Align
         text->setHAlign(QQuickText::AlignRight);
+        text->setText("Reset"); // set dummy string to force relayout once original text is set again
+        text->setText("AA\nBBBBBBB\nCCCCCCCCCCCCCCCC");
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
         const int mid = numberOfNonWhitePixels(centeredSection2, centeredSection3, image);

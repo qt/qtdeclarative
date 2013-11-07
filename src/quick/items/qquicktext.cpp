@@ -1009,7 +1009,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             // If the horizontal alignment is not left and the width was not valid we need to relayout
             // now that we know the maximum line width.
-            if (!implicitWidthValid && lineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
+            if (!implicitWidthValid && unwrappedLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
                 widthExceeded = false;
                 heightExceeded = false;
                 continue;
