@@ -139,6 +139,8 @@ private:
     QOpenGLFramebufferObject *m_secondaryFbo;
     QSharedPointer<QSGDepthStencilBuffer> m_depthStencilBuffer;
 
+    GLuint m_transparentTexture;
+
 #ifdef QSG_DEBUG_FBO_OVERLAY
     QSGSimpleRectNode *m_debugOverlay;
 #endif

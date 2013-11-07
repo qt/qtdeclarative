@@ -141,6 +141,7 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
     , m_renderer(0)
     , m_fbo(0)
     , m_secondaryFbo(0)
+    , m_transparentTexture(0)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
@@ -165,6 +166,8 @@ QQuickShaderEffectTexture::~QQuickShaderEffectTexture()
 #ifdef QSG_DEBUG_FBO_OVERLAY
     delete m_debugOverlay;
 #endif
+    if (m_transparentTexture)
+        glDeleteTextures(1, &m_transparentTexture);
 }
 
 int QQuickShaderEffectTexture::textureId() const
@@ -189,8 +192,20 @@ void QQuickShaderEffectTexture::bind()
     if (!m_recursive && m_fbo && ((m_multisampling && m_secondaryFbo->isBound()) || m_fbo->isBound()))
         qWarning("ShaderEffectSource: \'recursive\' must be set to true when rendering recursively.");
 #endif
-    glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : 0);
-    updateBindOptions();
+
+    if (!m_fbo && m_format == GL_RGBA) {
+        if (m_transparentTexture == 0) {
+            glGenTextures(1, &m_transparentTexture);
+            glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
+            const uint zero = 0;
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &zero);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, m_transparentTexture);
+        }
+    } else {
+        glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : 0);
+        updateBindOptions();
+    }
 }
 
 bool QQuickShaderEffectTexture::updateTexture()
