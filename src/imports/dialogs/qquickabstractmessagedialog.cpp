@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickabstractmessagedialog_p.h"
+#include <QtGui/qpa/qplatformdialoghelper.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -133,10 +134,46 @@ void QQuickAbstractMessageDialog::setStandardButtons(StandardButtons buttons)
     }
 }
 
+void QQuickAbstractMessageDialog::click(QMessageDialogOptions::StandardButton button, QMessageDialogOptions::ButtonRole role)
+{
+    setVisible(false);
+    m_clickedButton = static_cast<StandardButton>(button);
+    emit buttonClicked();
+    switch (role) {
+    case QMessageDialogOptions::AcceptRole:
+        emit accept();
+        break;
+    case QMessageDialogOptions::RejectRole:
+        emit reject();
+        break;
+    case QMessageDialogOptions::DestructiveRole:
+        emit discard();
+        break;
+    case QMessageDialogOptions::HelpRole:
+        emit help();
+        break;
+    case QMessageDialogOptions::YesRole:
+        emit yes();
+        break;
+    case QMessageDialogOptions::NoRole:
+        emit no();
+        break;
+    case QMessageDialogOptions::ApplyRole:
+        emit apply();
+        break;
+    case QMessageDialogOptions::ResetRole:
+        emit reset();
+        break;
+    default:
+        qWarning("unhandled MessageDialog button %d with role %d", button, role);
+    }
+}
+
 void QQuickAbstractMessageDialog::click(QQuickAbstractMessageDialog::StandardButton button)
 {
-    m_clickedButton = button;
-    emit buttonClicked();
+    click(static_cast<QMessageDialogOptions::StandardButton>(button),
+        static_cast<QMessageDialogOptions::ButtonRole>(
+            QMessageDialogOptions::buttonRole(static_cast<QMessageDialogOptions::StandardButton>(button))));
 }
 
 QT_END_NAMESPACE

@@ -133,7 +133,8 @@ public Q_SLOTS:
     void setDetailedText(const QString &arg);
     void setIcon(Icon icon);
     void setStandardButtons(StandardButtons buttons);
-    void click(StandardButton button);
+    void click(QMessageDialogOptions::StandardButton button, QMessageDialogOptions::ButtonRole);
+    void click(QQuickAbstractMessageDialog::StandardButton button);
 
 Q_SIGNALS:
     void textChanged();

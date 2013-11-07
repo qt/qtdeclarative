@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickqmessagebox_p.h"
+#include "qmessageboxhelper_p.h"
 #include "qquickitem.h"
 
 #include <private/qguiapplication_p.h>
@@ -50,42 +51,6 @@
 #include <QAbstractButton>
 
 QT_BEGIN_NAMESPACE
-
-class QMessageBoxHelper : public QPlatformMessageDialogHelper
-{
-public:
-    QMessageBoxHelper() {
-        connect(&m_dialog, SIGNAL(accepted()), this, SIGNAL(accept()));
-        connect(&m_dialog, SIGNAL(rejected()), this, SIGNAL(reject()));
-    }
-
-    virtual void exec() { m_dialog.exec(); }
-
-    virtual bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
-        m_dialog.winId();
-        QWindow *window = m_dialog.windowHandle();
-        Q_ASSERT(window);
-        window->setTransientParent(parent);
-        window->setFlags(f);
-        m_dialog.setWindowModality(m);
-        m_dialog.setWindowTitle(QPlatformMessageDialogHelper::options()->windowTitle());
-        m_dialog.setIcon(static_cast<QMessageBox::Icon>(QPlatformMessageDialogHelper::options()->icon()));
-        if (!QPlatformMessageDialogHelper::options()->text().isNull())
-            m_dialog.setText(QPlatformMessageDialogHelper::options()->text());
-        if (!QPlatformMessageDialogHelper::options()->informativeText().isNull())
-            m_dialog.setInformativeText(QPlatformMessageDialogHelper::options()->informativeText());
-        if (!QPlatformMessageDialogHelper::options()->detailedText().isNull())
-            m_dialog.setDetailedText(QPlatformMessageDialogHelper::options()->detailedText());
-        m_dialog.setStandardButtons(static_cast<QMessageBox::StandardButtons>(static_cast<int>(
-            QPlatformMessageDialogHelper::options()->standardButtons())));
-        m_dialog.show();
-        return m_dialog.isVisible();
-    }
-
-    virtual void hide() { m_dialog.hide(); }
-
-    QMessageBox m_dialog;
-};
 
 /*!
     \qmltype QtMessageDialog
@@ -156,44 +121,6 @@ QQuickQMessageBox::~QQuickQMessageBox()
     delete m_dlgHelper;
 }
 
-void QQuickQMessageBox::finished(int button) {
-    click(static_cast<StandardButton>(button));
-}
-
-void QQuickQMessageBox::clicked(QAbstractButton* button) {
-    QMessageBox &mb = static_cast<QMessageBoxHelper*>(QQuickAbstractMessageDialog::m_dlgHelper)->m_dialog;
-    switch (mb.buttonRole(button)) {
-    case QMessageBox::AcceptRole:
-        emit accepted();
-        break;
-    case QMessageBox::RejectRole:
-        emit rejected();
-        break;
-    case QMessageBox::DestructiveRole:
-        emit discard();
-        break;
-    case QMessageBox::HelpRole:
-        emit help();
-        break;
-    case QMessageBox::YesRole:
-        emit yes();
-        break;
-    case QMessageBox::NoRole:
-        emit no();
-        break;
-    case QMessageBox::ApplyRole:
-        emit apply();
-        break;
-    case QMessageBox::ResetRole:
-        emit reset();
-        break;
-    default:
-        qWarning("unhandled QMessageBox button role %d", mb.buttonRole(button));
-    }
-    if (!mb.isVisible())
-        setVisible(false);
-}
-
 QPlatformDialogHelper *QQuickQMessageBox::helper()
 {
     QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent());
@@ -203,10 +130,12 @@ QPlatformDialogHelper *QQuickQMessageBox::helper()
     if (!QQuickAbstractMessageDialog::m_dlgHelper) {
         QMessageBoxHelper* helper = new QMessageBoxHelper();
         QQuickAbstractMessageDialog::m_dlgHelper = helper;
+        // accept() shouldn't be emitted.  reject() happens only if the dialog is
+        // dismissed by closing the window rather than by one of its button widgets.
         connect(helper, SIGNAL(accept()), this, SLOT(accept()));
         connect(helper, SIGNAL(reject()), this, SLOT(reject()));
-        connect(&helper->m_dialog, SIGNAL(finished(int)), this, SLOT(finished(int)));
-        connect(&helper->m_dialog, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(clicked(QAbstractButton*)));
+        connect(helper, SIGNAL(clicked(QMessageDialogOptions::StandardButton, QMessageDialogOptions::ButtonRole)),
+            this, SLOT(click(QMessageDialogOptions::StandardButton, QMessageDialogOptions::ButtonRole)));
     }
 
     return QQuickAbstractMessageDialog::m_dlgHelper;

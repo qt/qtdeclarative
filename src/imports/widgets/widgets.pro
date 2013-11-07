@@ -17,6 +17,7 @@ SOURCES += \
 
 HEADERS += \
     qquickqmessagebox_p.h \
+    qmessageboxhelper_p.h \
     ../dialogs/qquickabstractmessagedialog_p.h \
     qquickqfiledialog_p.h \
     ../dialogs/qquickabstractfiledialog_p.h \

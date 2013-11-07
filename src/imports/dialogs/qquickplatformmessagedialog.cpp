@@ -153,8 +153,12 @@ QPlatformMessageDialogHelper *QQuickPlatformMessageDialog::helper()
            ->createPlatformDialogHelper(QPlatformTheme::MessageDialog));
         if (!m_dlgHelper)
             return m_dlgHelper;
+        // accept() shouldn't be emitted.  reject() happens only if the dialog is
+        // dismissed by closing the window rather than by one of its button widgets.
         connect(m_dlgHelper, SIGNAL(accept()), this, SLOT(accept()));
         connect(m_dlgHelper, SIGNAL(reject()), this, SLOT(reject()));
+        connect(m_dlgHelper, SIGNAL(clicked(QMessageDialogOptions::StandardButton, QMessageDialogOptions::ButtonRole)),
+            this, SLOT(click(QMessageDialogOptions::StandardButton, QMessageDialogOptions::ButtonRole)));
     }
 
     return m_dlgHelper;

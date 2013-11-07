@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKQMESSAGEBOX_P_H
-#define QQUICKQMESSAGEBOX_P_H
+#ifndef QMESSAGEBOXHELPER_P_H
+#define QMESSAGEBOXHELPER_P_H
 
 //
 //  W A R N I N G
@@ -53,25 +53,55 @@
 // We mean it.
 //
 
+#include <QMessageBox>
 #include "../dialogs/qquickabstractmessagedialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickQMessageBox : public QQuickAbstractMessageDialog
+class QMessageBoxHelper : public QPlatformMessageDialogHelper
 {
+    Q_OBJECT
 public:
-    QQuickQMessageBox(QObject *parent = 0);
-    virtual ~QQuickQMessageBox();
+    QMessageBoxHelper() {
+        connect(&m_dialog, SIGNAL(accepted()), this, SIGNAL(accept()));
+        connect(&m_dialog, SIGNAL(rejected()), this, SIGNAL(reject()));
+        connect(&m_dialog, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(buttonClicked(QAbstractButton*)));
+    }
 
-protected:
-    virtual QPlatformDialogHelper *helper();
+    virtual void exec() { m_dialog.exec(); }
 
-protected:
-    Q_DISABLE_COPY(QQuickQMessageBox)
+    virtual bool show(Qt::WindowFlags f, Qt::WindowModality m, QWindow *parent) {
+        m_dialog.winId();
+        QWindow *window = m_dialog.windowHandle();
+        Q_ASSERT(window);
+        window->setTransientParent(parent);
+        window->setFlags(f);
+        m_dialog.setWindowModality(m);
+        m_dialog.setWindowTitle(QPlatformMessageDialogHelper::options()->windowTitle());
+        m_dialog.setIcon(static_cast<QMessageBox::Icon>(QPlatformMessageDialogHelper::options()->icon()));
+        if (!QPlatformMessageDialogHelper::options()->text().isNull())
+            m_dialog.setText(QPlatformMessageDialogHelper::options()->text());
+        if (!QPlatformMessageDialogHelper::options()->informativeText().isNull())
+            m_dialog.setInformativeText(QPlatformMessageDialogHelper::options()->informativeText());
+        if (!QPlatformMessageDialogHelper::options()->detailedText().isNull())
+            m_dialog.setDetailedText(QPlatformMessageDialogHelper::options()->detailedText());
+        m_dialog.setStandardButtons(static_cast<QMessageBox::StandardButtons>(static_cast<int>(
+            QPlatformMessageDialogHelper::options()->standardButtons())));
+        m_dialog.show();
+        return m_dialog.isVisible();
+    }
+
+    virtual void hide() { m_dialog.hide(); }
+
+    QMessageBox m_dialog;
+
+public Q_SLOTS:
+    void buttonClicked(QAbstractButton* button) {
+        emit clicked(static_cast<QMessageDialogOptions::StandardButton>(m_dialog.standardButton(button)),
+            static_cast<QMessageDialogOptions::ButtonRole>(m_dialog.buttonRole(button)));
+    }
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickQMessageBox *)
-
-#endif // QQUICKQMESSAGEBOX_P_H
+#endif // QMESSAGEBOXHELPER_P_H
