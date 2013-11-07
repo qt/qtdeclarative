@@ -295,16 +295,16 @@ static inline double DaylightSavingTA(double t)
     __time64_t  tt = (__time64_t)(t / msPerSecond);
     // _localtime_64_s returns non-zero on failure
     if (_localtime64_s(&tmtm, &tt) != 0)
-#elif defined(Q_CC_MINGW) && !defined(__MINGW64_VERSION_MAJOR)
-    // mingw.org headers do not define localtime_r.
-    // luckily Windows localtime() is thread safe.
+#elif !defined(QT_NO_THREAD) && defined(_POSIX_THREAD_SAFE_FUNCTIONS)
+    long int tt = (long int)(t / msPerSecond);
+    if (!localtime_r((const time_t*) &tt, &tmtm))
+#else
+    // Returns shared static data which may be overwritten at any time
+    // (for MinGW/Windows localtime is luckily thread safe)
     long int tt = (long int)(t / msPerSecond);
     if (struct tm *tmtm_p = localtime((const time_t*) &tt))
         tmtm = *tmtm_p;
     else
-#else
-    long int tt = (long int)(t / msPerSecond);
-    if (!localtime_r((const time_t*) &tt, &tmtm))
 #endif
         return 0;
     return (tmtm.tm_isdst > 0) ? msPerHour : 0;
