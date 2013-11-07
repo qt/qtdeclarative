@@ -126,6 +126,7 @@ private slots:
     void clipRect();
     void lineLaidOut();
     void lineLaidOutRelayout();
+    void lineLaidOutHAlign();
 
     void imgTagsBaseUrl_data();
     void imgTagsBaseUrl();
@@ -2626,6 +2627,23 @@ void tst_qquicktext::lineLaidOutRelayout()
             QCOMPARE(r.y(), (i * r.height()) - maxH);
         }
     }
+
+    delete window;
+}
+
+void tst_qquicktext::lineLaidOutHAlign()
+{
+    QQuickView *window = createView(testFile("lineLayoutHAlign.qml"));
+
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(myText != 0);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+
+    QCOMPARE(textPrivate->layout.lineCount(), 1);
+
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().x() < 0.0);
 
     delete window;
 }

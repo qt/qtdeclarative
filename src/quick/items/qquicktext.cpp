@@ -669,8 +669,9 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
     textLine->setHeight(0);
     textLine->setLineOffset(lineOffset);
 
-    // use the text item's width by default if it has one and wrap is on
-    if (q->widthValid() && q->wrapMode() != QQuickText::NoWrap)
+    // use the text item's width by default if it has one and wrap is on or text must be aligned
+    if (q->widthValid() && (q->wrapMode() != QQuickText::NoWrap ||
+                            q->effectiveHAlign() != QQuickText::AlignLeft))
         textLine->setWidth(q->width());
     else
         textLine->setWidth(INT_MAX);
