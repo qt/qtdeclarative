@@ -57,6 +57,7 @@ Debugger::Debugger(QV4::ExecutionEngine *engine)
     , m_agent(0)
     , m_state(Running)
     , m_pauseRequested(false)
+    , m_havePendingBreakPoints(false)
     , m_currentInstructionPointer(0)
 {
     qMetaTypeId<Debugger*>();
