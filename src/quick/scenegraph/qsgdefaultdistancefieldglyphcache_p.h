@@ -62,7 +62,8 @@ public:
     void referenceGlyphs(const QSet<glyph_t> &glyphs);
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
-    bool useWorkaround() const;
+    bool useTextureResizeWorkaround() const;
+    bool useTextureUploadWorkaround() const;
     int maxTextureSize() const;
 
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }
