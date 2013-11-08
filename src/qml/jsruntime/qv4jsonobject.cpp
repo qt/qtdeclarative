@@ -612,7 +612,6 @@ bool JsonParser::parseString(QString *string)
                 lastError = QJsonParseError::IllegalEscapeSequence;
                 return false;
             }
-            qDebug() << "scanEscape" << hex << ch;
             if (QChar::requiresSurrogates(ch)) {
                 *string += QChar(QChar::highSurrogate(ch));
                 *string += QChar(QChar::lowSurrogate(ch));
