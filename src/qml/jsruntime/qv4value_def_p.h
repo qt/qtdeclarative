@@ -382,6 +382,14 @@ inline Primitive Primitive::undefinedValue()
     return v;
 }
 
+inline Primitive Primitive::emptyValue()
+{
+    Primitive v;
+    v.tag = Value::Empty_Type;
+    v.uint_32 = 0;
+    return v;
+}
+
 inline Value Value::fromManaged(Managed *m)
 {
     if (!m)

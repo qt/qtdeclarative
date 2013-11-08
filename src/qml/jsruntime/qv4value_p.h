@@ -105,15 +105,6 @@ inline Primitive Primitive::nullValue()
     return v;
 }
 
-inline Primitive Primitive::emptyValue()
-{
-    Primitive v;
-    v.tag = Value::Empty_Type;
-    v.uint_32 = 0;
-    return v;
-}
-
-
 inline Primitive Primitive::fromBoolean(bool b)
 {
     Primitive v;
