@@ -422,6 +422,8 @@ public:
     bool hasCursor:1;
     // Bit 32
     bool activeFocusOnTab:1;
+    bool implicitAntialiasing:1;
+    bool antialiasingValid:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -520,6 +522,8 @@ public:
     virtual qreal getImplicitHeight() const;
     virtual void implicitWidthChanged();
     virtual void implicitHeightChanged();
+
+    void setImplicitAntialiasing(bool antialiasing);
 
     void resolveLayoutMirror();
     void setImplicitLayoutMirror(bool mirror, bool inherit);

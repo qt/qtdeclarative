@@ -2703,6 +2703,8 @@ QQuickItemPrivate::QQuickItemPrivate()
     , culled(false)
     , hasCursor(false)
     , activeFocusOnTab(false)
+    , implicitAntialiasing(false)
+    , antialiasingValid(false)
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
@@ -5477,6 +5479,9 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
             }
         }
         break;
+    case QQuickItem::ItemAntialiasingHasChanged:
+        q->itemChange(change, data);
+        break;
     }
 }
 
@@ -5570,37 +5575,65 @@ void QQuickItem::setActiveFocusOnTab(bool activeFocusOnTab)
 /*!
     \qmlproperty bool QtQuick::Item::antialiasing
 
-    Primarily used in Rectangle and image based elements to decide if the item should
-    use antialiasing or not. Items with antialiasing enabled require more memory and
-    are potentially slower to render.
+    Used by visual elements to decide if the item should use antialiasing or not.
+    In some cases items with antialiasing require more memory and are potentially
+    slower to render (see \l {Antialiasing} for more details).
 
-    The default is false.
+    The default is false, but may be overridden by derived elements.
 */
 /*!
     \property QQuickItem::antialiasing
     \brief Specifies whether the item is antialiased or not
 
-    Primarily used in Rectangle and image based elements to decide if the item should
-    use antialiasing or not. Items with antialiasing enabled require more memory and
-    are potentially slower to render.
+    Used by visual elements to decide if the item should use antialiasing or not.
+    In some cases items with antialiasing require more memory and are potentially
+    slower to render (see \l {Antialiasing} for more details).
 
-    The default is false.
+    The default is false, but may be overridden by derived elements.
 */
 bool QQuickItem::antialiasing() const
 {
     Q_D(const QQuickItem);
-    return d->antialiasing;
+    return d->antialiasingValid ? d->antialiasing : d->implicitAntialiasing;
 }
-void QQuickItem::setAntialiasing(bool antialiasing)
+
+void QQuickItem::setAntialiasing(bool aa)
 {
     Q_D(QQuickItem);
-    if (d->antialiasing == antialiasing)
+
+    bool changed = (aa != antialiasing());
+    d->antialiasingValid = true;
+
+    if (!changed)
         return;
 
-    d->antialiasing = antialiasing;
+    d->antialiasing = aa;
     d->dirty(QQuickItemPrivate::Antialiasing);
 
-    emit antialiasingChanged(antialiasing);
+    d->itemChange(ItemAntialiasingHasChanged, d->antialiasing);
+
+    emit antialiasingChanged(antialiasing());
+}
+
+void QQuickItem::resetAntialiasing()
+{
+    Q_D(QQuickItem);
+    if (!d->antialiasingValid)
+        return;
+
+    d->antialiasingValid = false;
+
+    if (d->implicitAntialiasing != d->antialiasing)
+        emit antialiasingChanged(antialiasing());
+}
+
+void QQuickItemPrivate::setImplicitAntialiasing(bool antialiasing)
+{
+    Q_Q(QQuickItem);
+    bool prev = q->antialiasing();
+    implicitAntialiasing = antialiasing;
+    if (componentComplete && (q->antialiasing() != prev))
+        emit q->antialiasingChanged(q->antialiasing());
 }
 
 /*!

@@ -321,6 +321,16 @@ void QQuickRectangle::doUpdate()
 }
 
 /*!
+    \qmlproperty bool QtQuick::Rectangle::antialiasing
+
+    Used to decide if the Rectangle should use antialiasing or not.
+    \l {Antialiasing} provides information on the performance implications
+    of this property.
+
+    The default is true for Rectangles with a radius, and false otherwise.
+*/
+
+/*!
     \qmlproperty int QtQuick::Rectangle::border.width
     \qmlproperty color QtQuick::Rectangle::border.color
 
@@ -408,6 +418,8 @@ void QQuickRectangle::setRadius(qreal radius)
         return;
 
     d->radius = radius;
+    d->setImplicitAntialiasing(radius != 0.0);
+
     update();
     emit radiusChanged();
 }
@@ -475,7 +487,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     rectangle->setRadius(d->radius);
-    rectangle->setAntialiasing(d->antialiasing || d->radius > 0);
+    rectangle->setAntialiasing(antialiasing());
 
     QGradientStops stops;
     if (d->gradient) {

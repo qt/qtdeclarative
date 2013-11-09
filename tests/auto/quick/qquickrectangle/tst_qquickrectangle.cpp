@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include <qtest.h>
+#include <QtTest/QSignalSpy>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -54,6 +55,7 @@ public:
 
 private slots:
     void gradient();
+    void antialiasing();
 
 private:
     QQmlEngine engine;
@@ -87,6 +89,61 @@ void tst_qquickrectangle::gradient()
     delete rect;
 }
 
+void tst_qquickrectangle::antialiasing()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n Rectangle {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(object.data());
+    QVERIFY(rect);
+
+    QSignalSpy spy(rect, SIGNAL(antialiasingChanged(bool)));
+
+    QCOMPARE(rect->antialiasing(), false);
+
+    rect->setAntialiasing(true);
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 1);
+
+    rect->setAntialiasing(true);
+    QCOMPARE(spy.count(), 1);
+
+    rect->resetAntialiasing();
+    QCOMPARE(rect->antialiasing(), false);
+    QCOMPARE(spy.count(), 2);
+
+    rect->setRadius(5);
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 3);
+
+    rect->resetAntialiasing();
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 3);
+
+    rect->setRadius(0);
+    QCOMPARE(rect->antialiasing(), false);
+    QCOMPARE(spy.count(), 4);
+
+    rect->resetAntialiasing();
+    QCOMPARE(rect->antialiasing(), false);
+    QCOMPARE(spy.count(), 4);
+
+    rect->setRadius(5);
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    rect->resetAntialiasing();
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    rect->setAntialiasing(false);
+    QCOMPARE(rect->antialiasing(), false);
+    QCOMPARE(spy.count(), 6);
+
+    rect->resetAntialiasing();
+    QCOMPARE(rect->antialiasing(), true);
+    QCOMPARE(spy.count(), 7);
+}
 
 QTEST_MAIN(tst_qquickrectangle)
 

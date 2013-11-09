@@ -101,6 +101,7 @@ private slots:
     void color();
     void smooth();
     void renderType();
+    void antialiasing();
 
     // QQuickFontValueType
     void weight();
@@ -1308,6 +1309,30 @@ void tst_qquicktext::renderType()
 
     text->setRenderType(QQuickText::QtRendering);
     QCOMPARE(text->renderType(), QQuickText::QtRendering);
+    QCOMPARE(spy.count(), 2);
+}
+
+void tst_qquicktext::antialiasing()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n Text {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QSignalSpy spy(text, SIGNAL(antialiasingChanged(bool)));
+
+    QCOMPARE(text->antialiasing(), true);
+
+    text->setAntialiasing(false);
+    QCOMPARE(text->antialiasing(), false);
+    QCOMPARE(spy.count(), 1);
+
+    text->setAntialiasing(false);
+    QCOMPARE(spy.count(), 1);
+
+    text->resetAntialiasing();
+    QCOMPARE(text->antialiasing(), true);
     QCOMPARE(spy.count(), 2);
 }
 

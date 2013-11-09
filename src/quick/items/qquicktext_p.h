@@ -241,6 +241,7 @@ Q_SIGNALS:
 protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    virtual void itemChange(ItemChange change, const ItemChangeData &value);
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);

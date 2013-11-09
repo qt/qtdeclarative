@@ -88,6 +88,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
 {
+    implicitAntialiasing = true;
 }
 
 QQuickTextPrivate::ExtraData::ExtraData()
@@ -296,6 +297,15 @@ qreal QQuickTextPrivate::getImplicitHeight() const
     }
     return implicitHeight;
 }
+
+/*!
+    \qmlproperty bool QtQuick::Text::antialiasing
+
+    Used to decide if the Text should use antialiasing or not. Only Text
+    with renderType of Text.NativeRendering can disable antialiasing.
+
+    The default is true.
+*/
 
 /*!
     \qmlproperty enumeration QtQuick::Text::renderType
@@ -1465,6 +1475,9 @@ void QQuickText::setFont(const QFont &font)
     QFont oldFont = d->font;
     d->font = font;
 
+    if (!antialiasing())
+        d->font.setStyleStrategy(QFont::NoAntialias);
+
     if (d->font.pointSizeF() != -1) {
         // 0.5pt resolution
         qreal size = qRound(d->font.pointSizeF()*2.0);
@@ -1482,6 +1495,21 @@ void QQuickText::setFont(const QFont &font)
     }
 
     emit fontChanged(d->sourceFont);
+}
+
+void QQuickText::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    Q_D(QQuickText);
+    Q_UNUSED(value);
+    if (change == ItemAntialiasingHasChanged) {
+        if (!antialiasing())
+            d->font.setStyleStrategy(QFont::NoAntialias);
+        else
+            d->font.setStyleStrategy(QFont::PreferAntialias);
+        d->implicitWidthValid = false;
+        d->implicitHeightValid = false;
+        d->updateLayout();
+    }
 }
 
 /*!

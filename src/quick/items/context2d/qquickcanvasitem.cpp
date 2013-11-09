@@ -196,7 +196,7 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , renderTarget(QQuickCanvasItem::Image)
     , renderStrategy(QQuickCanvasItem::Cooperative)
 {
-    antialiasing = true;
+    implicitAntialiasing = true;
 }
 
 QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
@@ -654,7 +654,7 @@ void QQuickCanvasItem::updatePolish()
     Q_D(QQuickCanvasItem);
 
     if (d->context && d->renderStrategy != QQuickCanvasItem::Cooperative)
-        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
+        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, antialiasing());
 
     if (d->animationCallbacks.size() > 0 && isVisible()) {
         QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
@@ -708,7 +708,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
         node->setFiltering(QSGTexture::Nearest);
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative) {
-        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
+        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, antialiasing());
         d->context->flush();
     }
 

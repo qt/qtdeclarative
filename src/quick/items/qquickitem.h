@@ -141,7 +141,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QQuickTransform> transform READ transform DESIGNABLE false FINAL)
 
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
-    Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged)
+    Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
 
@@ -172,7 +172,8 @@ public:
         ItemParentHasChanged,      // value.item
         ItemOpacityHasChanged,     // value.realValue
         ItemActiveFocusHasChanged, // value.boolValue
-        ItemRotationHasChanged     // value.realValue
+        ItemRotationHasChanged,    // value.realValue
+        ItemAntialiasingHasChanged // value.boolValue
     };
 
     union ItemChangeData {
@@ -267,6 +268,7 @@ public:
 
     bool antialiasing() const;
     void setAntialiasing(bool);
+    void resetAntialiasing();
 
     Flags flags() const;
     void setFlag(Flag flag, bool enabled = true);
