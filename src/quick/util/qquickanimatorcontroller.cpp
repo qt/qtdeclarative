@@ -62,6 +62,8 @@ QQuickAnimatorController::~QQuickAnimatorController()
     // The proxy job might already have been deleted, in which case we
     // need to avoid calling functions on them. Then delete the job.
     foreach (QAbstractAnimationJob *job, m_deleting) {
+        m_starting.take(job);
+        m_stopping.take(job);
         m_animatorRoots.take(job);
         delete job;
     }
