@@ -1039,13 +1039,13 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         _as->and32(Assembler::TrustedImm32(QV4::Managed::SimpleArray), Assembler::ReturnValueRegister);
         Assembler::Jump notSimple = _as->branch32(Assembler::Equal, Assembler::ReturnValueRegister, Assembler::TrustedImm32(0));
 
-        Assembler::Jump fallback;
+        Assembler::Jump fallback, fallback2;
         if (tindex->kind == V4IR::Temp::PhysicalRegister) {
             if (tindex->type == V4IR::SInt32Type) {
                 _as->move((Assembler::RegisterID) tindex->index, Assembler::ScratchRegister);
             } else {
                 // double, convert and check if it's a int
-                _as->truncateDoubleToUint32((Assembler::FPRegisterID) tindex->index, Assembler::ScratchRegister);
+                fallback2 = _as->branchTruncateDoubleToUint32((Assembler::FPRegisterID) tindex->index, Assembler::ScratchRegister);
                 _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr0);
                 fallback = _as->branchDouble(Assembler::DoubleNotEqual, Assembler::FPGpr0, (Assembler::FPRegisterID) tindex->index);
             }
@@ -1062,7 +1062,7 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
             _as->move(Assembler::TrustedImm64(QV4::Value::NaNEncodeMask), Assembler::ReturnValueRegister);
             _as->xor64(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
             _as->move64ToDouble(Assembler::ReturnValueRegister, Assembler::FPGpr0);
-            _as->truncateDoubleToUint32(Assembler::FPGpr0, Assembler::ScratchRegister);
+            fallback2 = _as->branchTruncateDoubleToUint32(Assembler::FPGpr0, Assembler::ScratchRegister);
             _as->convertInt32ToDouble(Assembler::ScratchRegister, Assembler::FPGpr1);
             fallback = _as->branchDouble(Assembler::DoubleNotEqualOrUnordered, Assembler::FPGpr0, Assembler::FPGpr1);
 
@@ -1095,6 +1095,8 @@ void InstructionSelection::getElement(V4IR::Expr *base, V4IR::Expr *index, V4IR:
         outOfRange.link(_as);
         if (fallback.isSet())
             fallback.link(_as);
+        if (fallback2.isSet())
+            fallback2.link(_as);
         notSimple.link(_as);
         notManaged.link(_as);
 
