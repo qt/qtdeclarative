@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     The most basic use case for a MessageDialog is a popup alert. It also
     allows the user to respond in various ways depending on which buttons are
     enabled. The dialog is initially invisible. You need to set the properties
-    as desired first, then set \l visible to true or call \l open().
+    as desired first, then set \l visible to \c true or call \l open().
 
     Here is a minimal example to show an alert and exit after the user
     responds:
@@ -81,6 +81,11 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    There are several possible handlers depending on which \l standardButtons
+    the dialog has and the \l {QMessageBox::ButtonRole} {ButtonRole} of each.
+    For example, the \l {rejected} {onRejected} handler will be called if the
+    user presses a \gui Cancel, \gui Close or \gui Abort button.
+
     A MessageDialog window is automatically transient for its parent window. So
     whether you declare the dialog inside an \l Item or inside a \l Window, the
     dialog will appear centered over the window containing the item, or over
@@ -89,25 +94,73 @@ QT_BEGIN_NAMESPACE
     The implementation of MessageDialog will be a platform message dialog if
     possible. If that isn't possible, then it will try to instantiate a
     \l QMessageBox. If that also isn't possible, then it will fall back to a QML
-    implementation, DefaultMessageDialog.qml. In that case you can customize the
-    appearance by editing this file. DefaultMessageDialog.qml contains a Rectangle
-    to hold the dialog's contents, because certain embedded systems do not
-    support multiple top-level windows. When the dialog becomes visible, it
-    will automatically be wrapped in a Window if possible, or simply reparented
-    on top of the main window if there can only be one window.
+    implementation, \c DefaultMessageDialog.qml. In that case you can customize
+    the appearance by editing this file. \c DefaultMessageDialog.qml contains a
+    \l Rectangle to hold the dialog's contents, because certain embedded systems
+    do not support multiple top-level windows. When the dialog becomes visible,
+    it will automatically be wrapped in a \l Window if possible, or simply
+    reparented on top of the main window if there can only be one window.
 */
 
 /*!
-    \qmlsignal QtQuick::Dialogs::MessageDialog::accepted
+    \qmlsignal MessageDialog::accepted()
 
-    This handler is called when the user has pressed OK.
+    This handler is called when the user has pressed any button which has the
+    \l {QMessageBox::AcceptRole} {AcceptRole}: \gui OK, \gui Open, \gui Save,
+    \gui {Save All}, \gui Retry or \gui Ignore.
 */
 
 /*!
-    \qmlsignal QtQuick::Dialogs::MessageDialog::rejected
+    \qmlsignal MessageDialog::rejected()
 
-    This handler is called when the user has dismissed the dialog,
-    either by closing the dialog window or by pressing the Cancel button.
+    This handler is called when the user has dismissed the dialog, by closing
+    the dialog window, by pressing a \gui Cancel, \gui Close or \gui Abort
+    button on the dialog, or by pressing the back button or the escape key.
+*/
+
+/*!
+    \qmlsignal MessageDialog::discard()
+
+    This handler is called when the user has pressed the \gui Discard button.
+*/
+
+/*!
+    \qmlsignal MessageDialog::help()
+
+    This handler is called when the user has pressed the \gui Help button.
+    Depending on platform, the dialog may not be automatically dismissed
+    because the help that your application provides may need to be relevant to
+    the text shown in this dialog in order to assist the user in making a
+    decision. However on other platforms it's not possible to show a dialog and
+    a help window at the same time. If you want to be sure that the dialog will
+    close, you can set \l visible to \c false in your handler.
+*/
+
+/*!
+    \qmlsignal MessageDialog::yes()
+
+    This handler is called when the user has pressed any button which has
+    the \l {QMessageBox::YesRole} {YesRole}: \gui Yes or \gui {Yes to All}.
+*/
+
+/*!
+    \qmlsignal MessageDialog::no()
+
+    This handler is called when the user has pressed any button which has
+    the \l {QMessageBox::NoRole} {NoRole}: \gui No or \gui {No to All}.
+*/
+
+/*!
+    \qmlsignal MessageDialog::apply()
+
+    This handler is called when the user has pressed the \gui Apply button.
+*/
+
+/*!
+    \qmlsignal MessageDialog::reset()
+
+    This handler is called when the user has pressed any button which has
+    the \l {QMessageBox::ResetRole} {ResetRole}: \gui Reset or \gui {Restore Defaults}.
 */
 
 /*!
@@ -168,7 +221,7 @@ QPlatformMessageDialogHelper *QQuickPlatformMessageDialog::helper()
     \qmlproperty bool MessageDialog::visible
 
     This property holds whether the dialog is visible. By default this is
-    false.
+    \c false.
 
     \sa modality
 */
@@ -185,14 +238,14 @@ QPlatformMessageDialogHelper *QQuickPlatformMessageDialog::helper()
     Modality does not mean that there are any blocking calls to wait for the
     dialog to be accepted or rejected; it's only that the user will be
     prevented from interacting with the parent window and/or the application
-    windows at the same time.
+    windows until the dialog is dismissed.
 */
 
 /*!
     \qmlmethod void MessageDialog::open()
 
     Shows the dialog to the user. It is equivalent to setting \l visible to
-    true.
+    \c true.
 */
 
 /*!
@@ -205,6 +258,141 @@ QPlatformMessageDialogHelper *QQuickPlatformMessageDialog::helper()
     \qmlproperty string MessageDialog::title
 
     The title of the dialog window.
+*/
+
+/*!
+    \qmlproperty string MessageDialog::text
+
+    The primary text to be displayed.
+*/
+
+/*!
+    \qmlproperty string MessageDialog::informativeText
+
+    The informative text that provides a fuller description for the message.
+
+    Informative text can be used to supplement the \c text to give more
+    information to the user. Depending on the platform, it may appear in a
+    smaller font below the text, or simply appended to the text.
+
+    \sa {MessageDialog::text}{text}
+*/
+
+/*!
+    \qmlproperty string MessageDialog::detailedText
+
+    The text to be displayed in the details area, which is hidden by default.
+    The user will then be able to press the \gui {Show Details...} button to
+    make it visible.
+
+    \sa {MessageDialog::text}{text}
+*/
+
+/*!
+    \enum QQuickStandardIcon::Icon
+
+    This enum specifies a standard icon to be used on a dialog.
+*/
+
+/*!
+    \qmlproperty QQuickStandardIcon::Icon MessageDialog::icon
+
+    The icon of the message box can be specified with one of these values:
+
+    \table
+    \row
+    \li no icon
+    \li \l StandardIcon.NoIcon
+    \li For an unadorned text alert.
+    \row
+    \li \inlineimage ../images/question.png "Question icon"
+    \li \l StandardIcon.Question
+    \li For asking a question during normal operations.
+    \row
+    \li \image information.png
+    \li \l StandardIcon.Information
+    \li For reporting information about normal operations.
+    \row
+    \li \image warning.png
+    \li \l StandardIcon.Warning
+    \li For reporting non-critical errors.
+    \row
+    \li \image critical.png
+    \li \l StandardIcon.Critical
+    \li For reporting critical errors.
+    \endtable
+
+    The default is \c StandardIcon.NoIcon.
+
+    The enum values are the same as in \l QMessageBox::Icon.
+*/
+
+// TODO after QTBUG-35019 is fixed: fix links to this module's enums
+// rather than linking to those in QMessageBox
+/*!
+    \enum QQuickStandardButton::StandardButton
+
+    This enum specifies a button with a standard label to be used on a dialog.
+*/
+
+/*!
+    \qmlproperty StandardButtons MessageDialog::standardButtons
+
+    The MessageDialog has a row of buttons along the bottom, each of which has
+    a \l {QMessageBox::ButtonRole} {ButtonRole} that determines which signal
+    will be emitted when the button is pressed. You can also find out which
+    specific button was pressed after the fact via the \l clickedButton
+    property. You can control which buttons are available by setting
+    standardButtons to a bitwise-or combination of the following flags:
+
+    \table
+    \row \li StandardButton.Ok          \li An \gui OK button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \row \li  StandardButton.Open       \li An \gui Open button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \row \li  StandardButton.Save       \li A \gui Save button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \row \li  StandardButton.Cancel     \li A \gui Cancel button defined with the \l {QMessageBox::RejectRole} {RejectRole}.
+    \row \li  StandardButton.Close      \li A \gui Close button defined with the \l {QMessageBox::RejectRole} {RejectRole}.
+    \row \li  StandardButton.Discard    \li A \gui Discard or \gui {Don't Save} button, depending on the platform,
+                                        defined with the \l {QMessageBox::DestructiveRole} {DestructiveRole}.
+    \row \li  StandardButton.Apply      \li An \gui Apply button defined with the \l {QMessageBox::ApplyRole} {ApplyRole}.
+    \row \li  StandardButton.Reset      \li A \gui Reset button defined with the \l {QMessageBox::ResetRole} {ResetRole}.
+    \row \li  StandardButton.RestoreDefaults \li A \gui {Restore Defaults} button defined with the \l {QMessageBox::ResetRole} {ResetRole}.
+    \row \li  StandardButton.Help       \li A \gui Help button defined with the \l {QMessageBox::HelpRole} {HelpRole}.
+    \row \li  StandardButton.SaveAll    \li A \gui {Save All} button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \row \li  StandardButton.Yes        \li A \gui Yes button defined with the \l {QMessageBox::YesRole} {YesRole}.
+    \row \li  StandardButton.YesToAll   \li A \gui {Yes to All} button defined with the \l {QMessageBox::YesRole} {YesRole}.
+    \row \li  StandardButton.No         \li A \gui No button defined with the \l {QMessageBox::NoRole} {NoRole}.
+    \row \li  StandardButton.NoToAll    \li A \gui {No to All} button defined with the \l {QMessageBox::NoRole} {NoRole}.
+    \row \li  StandardButton.Abort      \li An \gui Abort button defined with the \l {QMessageBox::RejectRole} {RejectRole}.
+    \row \li  StandardButton.Retry      \li A \gui Retry button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \row \li  StandardButton.Ignore     \li An \gui Ignore button defined with the \l {QMessageBox::AcceptRole} {AcceptRole}.
+    \endtable
+
+    For example the following dialog will ask a question with 5 possible answers:
+
+    \qml
+    import QtQuick 2.2
+    import QtQuick.Dialogs 1.1
+
+    MessageDialog {
+        title: "Overwrite?"
+        icon: StandardIcon.Question
+        text: "file.txt already exists.  Replace?"
+        detailedText: "To replace a file means that its existing contents will be lost. " +
+            "The file that you are copying now will be copied over it instead."
+        standardButtons: StandardButton.Yes | StandardButton.YesToAll |
+            StandardButton.No | StandardButton.NoToAll | StandardButton.Abort
+        Component.onCompleted: visible = true
+        onYes: console.log("copied")
+        onNo: console.log("didn't copy")
+        onRejected: console.log("aborted")
+    }
+    \endqml
+
+    \image replacefile.png
+
+    The default is \c StandardButton.Ok.
+
+    The enum values are the same as in \l QMessageBox::StandardButtons.
 */
 
 QT_END_NAMESPACE
