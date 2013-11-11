@@ -89,6 +89,8 @@ QmlBindingWrapper::QmlBindingWrapper(ExecutionContext *scope, ObjectRef qml)
 ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 {
     ExecutionEngine *engine = that->engine();
+    CHECK_STACK_LIMITS(engine);
+
     Scope scope(engine);
     QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
     Q_ASSERT(This->function);

@@ -113,6 +113,12 @@ class RegExpCache;
 struct QmlExtensions;
 struct Exception;
 
+#define CHECK_STACK_LIMITS(v4) \
+    if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
+    else \
+        return v4->current->throwRangeError(QStringLiteral("Maximum call stack size exceeded."))
+
+
 struct Q_QML_EXPORT ExecutionEngine
 {
     MemoryManager *memoryManager;
@@ -123,11 +129,15 @@ struct Q_QML_EXPORT ExecutionEngine
     ExecutionContext *current;
     GlobalContext *rootContext;
 
+    SafeValue *jsStackTop;
+    SafeValue *jsStackLimit;
+    quintptr cStackLimit;
+
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
+    enum { JSStackLimit = 4*1024*1024 };
     WTF::PageAllocation *jsStack;
     SafeValue *jsStackBase;
-    SafeValue *jsStackTop;
 
     SafeValue *stackPush(uint nValues) {
         SafeValue *ptr = jsStackTop;
@@ -328,6 +338,8 @@ struct Q_QML_EXPORT ExecutionEngine
     Function *functionForProgramCounter(quintptr pc) const;
 
     QmlExtensions *qmlExtensions();
+
+    bool recheckCStackLimits();
 
     // Exception handling
     SafeValue exceptionValue;

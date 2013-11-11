@@ -313,6 +313,7 @@ private slots:
     void singletonFromQMLToCpp();
     void setPropertyOnInvalid();
     void miscTypeTest();
+    void stackLimits();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7404,7 +7405,12 @@ void tst_qqmlecmascript::miscTypeTest()
     QVERIFY(q.toBool() == true);
 
     delete object;
+}
 
+void tst_qqmlecmascript::stackLimits()
+{
+    QJSEngine engine;
+    engine.evaluate(QStringLiteral("function foo() {foo();} try {foo()} catch(e) { }"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
