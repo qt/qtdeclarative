@@ -152,75 +152,6 @@ inline bool isBoolType(V4IR::Expr *e)
 
 } // anonymous namespace
 
-// TODO: extend to optimize out temp-to-temp moves, where the lifetime of one temp ends at that statement.
-//       To handle that, add a hint when such a move will occur, and add a stmt for the hint.
-//       Then when asked for a register, check if the active statement is the terminating statement, and if so, apply the hint.
-//       This generalises the hint usage for Phi removal too, when the phi is passed in there as the current statement.
-class QQmlJS::Moth::StackSlotAllocator
-{
-    QHash<V4IR::Temp, int> _slotForTemp;
-    QHash<V4IR::Temp, int> _hints;
-    QVector<int> _activeSlots;
-
-    QHash<V4IR::Temp, V4IR::LifeTimeInterval> _intervals;
-
-public:
-    StackSlotAllocator(const QVector<V4IR::LifeTimeInterval> &ranges, int maxTempCount)
-        : _activeSlots(maxTempCount)
-    {
-        _intervals.reserve(ranges.size());
-        foreach (const V4IR::LifeTimeInterval &r, ranges)
-            _intervals[r.temp()] = r;
-    }
-
-    void addHint(const V4IR::Temp &hintedSlotOfTemp, const V4IR::Temp &newTemp)
-    {
-        if (hintedSlotOfTemp.kind != V4IR::Temp::VirtualRegister
-                || newTemp.kind != V4IR::Temp::VirtualRegister)
-            return;
-
-        if (_slotForTemp.contains(newTemp) || _hints.contains(newTemp))
-            return;
-
-        int hintedSlot = _slotForTemp.value(hintedSlotOfTemp, -1);
-        Q_ASSERT(hintedSlot >= 0);
-        _hints[newTemp] = hintedSlot;
-    }
-
-    int stackSlotFor(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
-        Q_ASSERT(t->kind == V4IR::Temp::VirtualRegister);
-        Q_ASSERT(t->scope == 0);
-        int idx = _slotForTemp.value(*t, -1);
-        if (idx == -1)
-            idx = allocateSlot(t, currentStmt);
-        Q_ASSERT(idx >= 0);
-        return idx;
-    }
-
-private:
-    int allocateSlot(V4IR::Temp *t, V4IR::Stmt *currentStmt) {
-        Q_ASSERT(currentStmt->id > 0);
-
-        const V4IR::LifeTimeInterval &interval = _intervals[*t];
-        int idx = _hints.value(*t, -1);
-        if (idx != -1 && _activeSlots[idx] == currentStmt->id) {
-            _slotForTemp[*t] = idx;
-            _activeSlots[idx] = interval.end();
-            return idx;
-        }
-
-        for (int i = 0, ei = _activeSlots.size(); i != ei; ++i) {
-            if (_activeSlots[i] < currentStmt->id) {
-                _slotForTemp[*t] = i;
-                _activeSlots[i] = interval.end();
-                return i;
-            }
-        }
-
-        return -1;
-    }
-};
-
 InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocator, V4IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator)
     : EvalInstructionSelection(execAllocator, module, jsGenerator)
     , _function(0)
@@ -228,7 +159,6 @@ InstructionSelection::InstructionSelection(QV4::ExecutableAllocator *execAllocat
     , _codeStart(0)
     , _codeNext(0)
     , _codeEnd(0)
-    , _stackSlotAllocator(0)
     , _currentStatement(0)
 {
     compilationUnit = new CompilationUnit;
@@ -263,13 +193,12 @@ void InstructionSelection::run(int functionIndex)
 
     V4IR::Optimizer opt(_function);
     opt.run();
-    StackSlotAllocator *stackSlotAllocator = 0;
     if (opt.isInSSA()) {
-        //stackSlotAllocator = new StackSlotAllocator(opt.lifeRanges(), _function->tempCount);
         opt.convertOutOfSSA();
+        opt.showMeTheCode(_function);
     }
+    ConvertTemps().toStackSlots(_function);
 
-    qSwap(_stackSlotAllocator, stackSlotAllocator);
     QSet<V4IR::Jump *> removableJumps = opt.calculateOptionalJumps();
     qSwap(_removableJumps, removableJumps);
 
@@ -324,8 +253,6 @@ void InstructionSelection::run(int functionIndex)
 
     qSwap(_currentStatement, cs);
     qSwap(_removableJumps, removableJumps);
-    qSwap(_stackSlotAllocator, stackSlotAllocator);
-    delete stackSlotAllocator;
     qSwap(_function, function);
     qSwap(block, _block);
     qSwap(nextBlock, _nextBlock);
@@ -395,9 +322,6 @@ void InstructionSelection::callSubscript(V4IR::Expr *base, V4IR::Expr *index, V4
 
 void InstructionSelection::convertType(V4IR::Temp *source, V4IR::Temp *target)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*source, *target);
-
     // FIXME: do something more useful with this info
     if (target->type & V4IR::NumberType)
         unop(V4IR::OpUPlus, source, target);
@@ -615,9 +539,6 @@ void InstructionSelection::setElement(V4IR::Expr *source, V4IR::Expr *targetBase
 
 void InstructionSelection::copyValue(V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
-
     Instruction::Move move;
     move.source = getParam(sourceTemp);
     move.result = getResultParam(targetTemp);
@@ -635,9 +556,6 @@ void InstructionSelection::swapValues(V4IR::Temp *sourceTemp, V4IR::Temp *target
 
 void InstructionSelection::unop(V4IR::AluOp oper, V4IR::Temp *sourceTemp, V4IR::Temp *targetTemp)
 {
-    if (_stackSlotAllocator)
-        _stackSlotAllocator->addHint(*sourceTemp, *targetTemp);
-
     switch (oper) {
     case V4IR::OpIfTrue:
         Q_ASSERT(!"unreachable"); break;
@@ -750,9 +668,6 @@ Param InstructionSelection::binopHelper(V4IR::AluOp oper, V4IR::Expr *leftSource
             break;
         }
     }
-
-    if (_stackSlotAllocator && target && leftSource->asTemp())
-        _stackSlotAllocator->addHint(*leftSource->asTemp(), *target);
 
     if (oper == V4IR::OpAdd) {
         Instruction::Add add;
@@ -1249,11 +1164,10 @@ Param InstructionSelection::getParam(V4IR::Expr *e) {
         case V4IR::Temp::ScopedFormal: return Param::createArgument(t->index, t->scope);
         case V4IR::Temp::Local: return Param::createLocal(t->index);
         case V4IR::Temp::ScopedLocal: return Param::createScopedLocal(t->index, t->scope);
-        case V4IR::Temp::VirtualRegister:
-            return Param::createTemp(_stackSlotAllocator ?
-                        _stackSlotAllocator->stackSlotFor(t, _currentStatement) : t->index);
+        case V4IR::Temp::StackSlot:
+            return Param::createTemp(t->index);
         default:
-            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
             return Param();
         }
     } else {

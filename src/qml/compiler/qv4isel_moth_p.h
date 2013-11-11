@@ -54,8 +54,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Moth {
 
-class StackSlotAllocator;
-
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
@@ -64,7 +62,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QVector<QByteArray> codeRefs;
 
 };
-
 
 class Q_QML_EXPORT InstructionSelection:
         public V4IR::IRDecoder,
@@ -182,7 +179,6 @@ private:
     uchar *_codeNext;
     uchar *_codeEnd;
 
-    StackSlotAllocator *_stackSlotAllocator;
     QSet<V4IR::Jump *> _removableJumps;
     V4IR::Stmt *_currentStatement;
 
