@@ -308,6 +308,7 @@ private slots:
     void stringParsing();
     void qtbug_32801();
     void thisObject();
+    void qtbug_33754();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7319,6 +7320,14 @@ void tst_qqmlecmascript::thisObject()
     QVERIFY(object);
     QCOMPARE(qvariant_cast<QObject*>(object->property("subObject"))->property("test").toInt(), 2);
     delete object;
+}
+
+void tst_qqmlecmascript::qtbug_33754()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_33754.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

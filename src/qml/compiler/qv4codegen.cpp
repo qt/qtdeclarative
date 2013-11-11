@@ -2291,10 +2291,10 @@ bool Codegen::visit(ForStatement *ast)
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, forcond, forend, forstep);
-
     statement(ast->initialiser);
     _block->JUMP(forcond);
+
+    enterLoop(ast, forcond, forend, forstep);
 
     _block = forcond;
     if (ast->condition)
@@ -2431,10 +2431,10 @@ bool Codegen::visit(LocalForStatement *ast)
     V4IR::BasicBlock *forstep = _function->newBasicBlock(forcond, exceptionHandler());
     V4IR::BasicBlock *forend = _function->newBasicBlock(groupStartBlock(), exceptionHandler());
 
-    enterLoop(ast, forcond, forend, forstep);
-
     variableDeclarationList(ast->declarations);
     _block->JUMP(forcond);
+
+    enterLoop(ast, forcond, forend, forstep);
 
     _block = forcond;
     if (ast->condition)
