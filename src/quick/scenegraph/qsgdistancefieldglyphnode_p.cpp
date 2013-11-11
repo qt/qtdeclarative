@@ -471,6 +471,13 @@ QSGMaterialShader *QSGDistanceFieldShiftedStyleTextMaterial::createShader() cons
     return new DistanceFieldShiftedStyleTextMaterialShader;
 }
 
+int QSGDistanceFieldShiftedStyleTextMaterial::compare(const QSGMaterial *o) const
+{
+    const QSGDistanceFieldShiftedStyleTextMaterial *other = static_cast<const QSGDistanceFieldShiftedStyleTextMaterial *>(o);
+    if (m_shift != other->m_shift)
+        return &m_shift < &other->m_shift ? -1 : 1;
+    return QSGDistanceFieldStyledTextMaterial::compare(o);
+}
 
 class QSGHiQSubPixelDistanceFieldTextMaterialShader : public QSGDistanceFieldTextMaterialShader
 {
