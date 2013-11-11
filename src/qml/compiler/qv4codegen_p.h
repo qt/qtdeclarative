@@ -476,6 +476,9 @@ protected:
         void enterQmlScope(AST::Node *ast, const QString &name)
         { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0, /*isExpression*/false); }
 
+        void enterQmlFunction(AST::FunctionDeclaration *ast)
+        { enterFunction(ast, false, false); }
+
     protected:
         using Visitor::visit;
         using Visitor::endVisit;

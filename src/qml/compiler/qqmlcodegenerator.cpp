@@ -1236,7 +1236,11 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<AST::N
         Q_ASSERT(node != qmlRoot);
         AST::FunctionDeclaration *function = AST::cast<AST::FunctionDeclaration*>(node);
 
-        scan.enterEnvironment(node, function ? FunctionCode : QmlBinding);
+        if (function)
+            scan.enterQmlFunction(function);
+        else
+            scan.enterEnvironment(node, QmlBinding);
+
         scan(function ? function->body : node);
         scan.leaveEnvironment();
     }

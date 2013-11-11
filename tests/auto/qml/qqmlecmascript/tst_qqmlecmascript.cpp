@@ -309,6 +309,7 @@ private slots:
     void qtbug_32801();
     void thisObject();
     void qtbug_33754();
+    void qtbug_34493();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7328,6 +7329,19 @@ void tst_qqmlecmascript::qtbug_33754()
 
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
+}
+
+void tst_qqmlecmascript::qtbug_34493()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_34493.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(obj != 0);
+    QVERIFY(QMetaObject::invokeMethod(obj.data(), "doIt"));
+    QTRY_VERIFY(obj->property("prop").toString() == QLatin1String("Hello World!"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
