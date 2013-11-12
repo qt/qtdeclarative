@@ -119,14 +119,7 @@ struct Rect {
         Q_ASSERT(tl.y <= br.y);
     }
 
-    void map(const QMatrix4x4 &m) {
-        tl.map(m);
-        br.map(m);
-        if (br.x < tl.x)
-            qSwap(br.x, tl.x);
-        if (br.y < tl.y)
-            qSwap(br.y, tl.y);
-    }
+    void map(const QMatrix4x4 &m);
 
     void set(float left, float top, float right, float bottom) {
         tl.set(left, top);
