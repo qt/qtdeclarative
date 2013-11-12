@@ -130,10 +130,17 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty real Screen::logicalPixelDensity
     \readonly
     \since 5.1
+    \deprecated
 
-    The number of logical pixels per millimeter.  Logical pixels are the
-    usual units in QML; on some systems they may be different than physical
-    pixels.
+    The number of logical pixels per millimeter. This is the effective pixel
+    density provided by the platform to use in image scaling calculations.
+
+    Due to inconsistencies in how logical pixel density is handled across
+    the various platforms Qt supports, it is recommended to
+    use physical pixels instead (via the \c pixelDensity property) for
+    portability.
+
+    \sa pixelDensity
 */
 /*!
     \qmlattachedproperty real Screen::pixelDensity
