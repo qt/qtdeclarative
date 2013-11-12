@@ -50,7 +50,7 @@
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
     view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
-    view.engine()->setUrlInterceptor(new QQmlFileSelector(&view));\
+    new QQmlFileSelector(view.engine(), &view);\
     view.setSource(QUrl("qrc:///" #NAME ".qml")); \
     view.setResizeMode(QQuickView::SizeRootObjectToView);\
     if (QGuiApplication::platformName() == QLatin1String("qnx") || \

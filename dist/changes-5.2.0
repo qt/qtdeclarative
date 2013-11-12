@@ -53,6 +53,10 @@ Third party components
 QtQml
 ------
 
+- New class QQmlFileSelectors allows applying a QFileSelector to QML assets
+  and types. One is automatically set on QQmlApplicationEngines from now on,
+  plain QQmlEngines must set their own in order to be affected.
+
 QtQuick
 ------
 

@@ -43,6 +43,7 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlFileSelector>
+#include <QQmlApplicationEngine>
 #include <QFileSelector>
 #include <QQmlContext>
 #include <qqmlinfo.h>
@@ -56,17 +57,30 @@ public:
 
 private slots:
     void basicTest();
+    void applicationEngineTest();
 
 };
 
 void tst_qqmlfileselector::basicTest()
 {
     QQmlEngine engine;
-    QFileSelector selector;
+    QQmlFileSelector selector(&engine);
     selector.setExtraSelectors(QStringList() << "basic");
-    QQmlFileSelector qmlSelector;
-    qmlSelector.setSelector(&selector);
-    engine.setUrlInterceptor(&qmlSelector);
+
+    QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("value").toString(), QString("selected"));
+
+    delete object;
+}
+
+void tst_qqmlfileselector::applicationEngineTest()
+{
+    QQmlApplicationEngine engine;
+    QQmlFileSelector* selector = QQmlFileSelector::get(&engine);
+    QVERIFY(selector != 0);
+    selector->setExtraSelectors(QStringList() << "basic");
 
     QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
     QObject *object = component.create();

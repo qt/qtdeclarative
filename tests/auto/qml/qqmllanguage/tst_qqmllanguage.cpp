@@ -3511,12 +3511,9 @@ void tst_qqmllanguage::compositeSingletonJavaScriptPragma()
 // Reads values from a Singleton accessed through selectors.
 void tst_qqmllanguage::compositeSingletonSelectors()
 {
-    QFileSelector selector;
-    selector.setExtraSelectors(QStringList() << "basicSelector");
-    QQmlFileSelector qmlSelector;
-    qmlSelector.setSelector(&selector);
     QQmlEngine e2;
-    e2.setUrlInterceptor(&qmlSelector);
+    QQmlFileSelector qmlSelector(&e2);
+    qmlSelector.setExtraSelectors(QStringList() << "basicSelector");
     QQmlComponent component(&e2, testFile("singletonTest1.qml"));
     VERIFY_ERRORS(0);
     QObject *o = component.create();
