@@ -644,7 +644,9 @@ namespace {
 class ResolutionPhase: protected StmtVisitor, protected ExprVisitor {
     QVector<LifeTimeInterval> _intervals;
     Function *_function;
+#if !defined(QT_NO_DEBUG)
     RegAllocInfo *_info;
+#endif
     const QHash<V4IR::Temp, int> &_assignedSpillSlots;
     QHash<V4IR::Temp, LifeTimeInterval> _intervalForTemp;
     const QVector<int> &_intRegs;
@@ -663,11 +665,16 @@ public:
                     const QVector<int> &intRegs, const QVector<int> &fpRegs)
         : _intervals(intervals)
         , _function(function)
+#if !defined(QT_NO_DEBUG)
         , _info(info)
+#endif
         , _assignedSpillSlots(assignedSpillSlots)
         , _intRegs(intRegs)
         , _fpRegs(fpRegs)
     {
+#if defined(QT_NO_DEBUG)
+        Q_UNUSED(info)
+#endif
     }
 
     void run() {
