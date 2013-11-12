@@ -312,6 +312,7 @@ private slots:
     void qtbug_34493();
     void singletonFromQMLToCpp();
     void setPropertyOnInvalid();
+    void miscTypeTest();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7381,6 +7382,29 @@ void tst_qqmlecmascript::setPropertyOnInvalid()
         QVERIFY(object);
         delete object;
     }
+}
+
+void tst_qqmlecmascript::miscTypeTest()
+{
+    QQmlComponent component(&engine, testFileUrl("misctypetest.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, "test_invalid_url_equal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_invalid_url_strictequal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_valid_url_equal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+    QMetaObject::invokeMethod(object, "test_valid_url_strictequal", Q_RETURN_ARG(QVariant, q));
+    QVERIFY(q.toBool() == true);
+
+    delete object;
+
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

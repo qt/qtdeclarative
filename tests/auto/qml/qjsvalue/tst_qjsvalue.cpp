@@ -2206,7 +2206,7 @@ void tst_QJSValue::strictlyEquals()
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(1, 2)));
-        QVERIFY(!var1.strictlyEquals(var2));
+        QVERIFY(var1.strictlyEquals(var2));
     }
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));

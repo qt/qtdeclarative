@@ -235,6 +235,21 @@ public:
     }
 };
 
+class MiscTypeTestClass : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QUrl invalidUrl()
+    {
+        return QUrl();
+    }
+
+    Q_INVOKABLE QUrl validUrl()
+    {
+        return QUrl("http://wwww.qt-project.org");
+    }
+};
+
 class MyStringClass : public QObject
 {
     Q_OBJECT
@@ -353,6 +368,7 @@ void registerTypes()
 
     qmlRegisterType<MyDateClass>("Qt.test", 1, 0, "MyDateClass");
     qmlRegisterType<MyStringClass>("Qt.test", 1, 0, "MyStringClass");
+    qmlRegisterType<MiscTypeTestClass>("Qt.test", 1, 0, "MiscTypeTest");
 
     qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi",1,0,"Data",testImportOrder_api);
     qmlRegisterSingletonType<testImportOrderApi>("NamespaceAndType",1,0,"NamespaceAndType",testImportOrder_api);
