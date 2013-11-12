@@ -1118,9 +1118,12 @@ QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::CallContext *ctx)
     \list
     \li Locale.MetricSystem This value indicates metric units, such as meters,
         centimeters and millimeters.
-    \li Locale.ImperialSystem This value indicates imperial units, such as inches and
-        miles. There are several distinct imperial systems in the world; this
-        value stands for the official United States imperial units.
+    \li Locale.ImperialUSSystem This value indicates imperial units, such as
+        inches and miles as they are used in the United States.
+    \li Locale.ImperialUKSystem This value indicates imperial units, such as
+        inches and miles as they are used in the United Kingdom.
+    \li Locale.ImperialSystem Provided for compatibility. The same as
+        Locale.ImperialUSSystem.
     \endlist
 */
 
