@@ -533,6 +533,8 @@ void __qmljs_set_property(ExecutionContext *ctx, const ValueRef object, const St
 {
     Scope scope(ctx);
     ScopedObject o(scope, object->toObject(ctx));
+    if (!o)
+        return;
     o->put(name, value);
 }
 

@@ -311,6 +311,7 @@ private slots:
     void qtbug_33754();
     void qtbug_34493();
     void singletonFromQMLToCpp();
+    void setPropertyOnInvalid();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7359,6 +7360,27 @@ void tst_qqmlecmascript::singletonFromQMLToCpp()
     QCOMPARE(obj->property("qobjectTest"), QVariant(true));
     QCOMPARE(obj->property("myQmlObjectTest"), QVariant(true));
     QCOMPARE(obj->property("myInheritedQmlObjectTest"), QVariant(true));
+}
+
+void tst_qqmlecmascript::setPropertyOnInvalid()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("setPropertyOnNull.qml"));
+        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+        QObject *object = component.create();
+        QVERIFY(object);
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("setPropertyOnUndefined.qml"));
+        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+        QObject *object = component.create();
+        QVERIFY(object);
+        delete object;
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
