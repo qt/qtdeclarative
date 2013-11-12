@@ -275,6 +275,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (QSGContext::sharedOpenGLContext())
             gl->setShareContext(QSGContext::sharedOpenGLContext());
         if (!gl->create()) {
+            qWarning("QtQuick: failed to create OpenGL context");
             delete gl;
             gl = 0;
         } else {

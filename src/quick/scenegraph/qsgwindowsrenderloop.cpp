@@ -180,13 +180,20 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         m_gl->setFormat(window->requestedFormat());
         if (QSGContext::sharedOpenGLContext())
             m_gl->setShareContext(QSGContext::sharedOpenGLContext());
-        m_gl->create();
+        bool created = m_gl->create();
+        if (!created) {
+            qWarning("QtQuick: failed to create OpenGL context");
+            delete m_gl;
+            m_gl = 0;
+            return;
+        }
         QSG_RENDER_TIMING_SAMPLE(time_created);
         RLDEBUG(" - making current");
-        m_gl->makeCurrent(window);
+        bool current = m_gl->makeCurrent(window);
         RLDEBUG(" - initializing SG");
         QSG_RENDER_TIMING_SAMPLE(time_current);
-        QQuickWindowPrivate::get(window)->context->initialize(m_gl);
+        if (current)
+            m_rc->initialize(m_gl);
 
 #ifndef QSG_NO_RENDER_TIMING
         if (qsg_render_timing) {
