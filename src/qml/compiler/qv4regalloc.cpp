@@ -886,8 +886,28 @@ private:
 #if !defined(QT_NO_DEBUG)
                 if (_info->def(it.temp()) != successorStart && !it.isSplitFromInterval()) {
                     const int successorEnd = successor->statements.last()->id;
-                    foreach (const Use &use, _info->uses(it.temp()))
-                        Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) || use.pos > static_cast<unsigned>(successorEnd));
+                    const int idx = successor->in.indexOf(predecessor);
+                    foreach (const Use &use, _info->uses(it.temp())) {
+                        if (use.pos == static_cast<unsigned>(successorStart)) {
+                            // only check the current edge, not all other possible ones. This is
+                            // important for phi nodes: they have uses that are only valid when
+                            // coming in over a specific edge.
+                            foreach (Stmt *s, successor->statements) {
+                                if (Phi *phi = s->asPhi()) {
+                                    Q_ASSERT(it.temp().index != phi->targetTemp->index);
+                                    Q_ASSERT(phi->d->incoming[idx]->asTemp() == 0
+                                             || it.temp().index != phi->d->incoming[idx]->asTemp()->index);
+                                } else {
+                                    // TODO: check that the first non-phi statement does not use
+                                    // the temp.
+                                    break;
+                                }
+                            }
+                        } else {
+                            Q_ASSERT(use.pos < static_cast<unsigned>(successorStart) ||
+                                     use.pos > static_cast<unsigned>(successorEnd));
+                        }
+                    }
                 }
 #endif
 
