@@ -524,7 +524,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 item->grabMouse();
             item->grabTouchPoints(QVector<int>() << touchMouseId);
 
-            QQuickItemPrivate::get(item)->deliverMouseEvent(mousePress.data());
+            QCoreApplication::sendEvent(item, mousePress.data());
             event->setAccepted(mousePress->isAccepted());
             if (!mousePress->isAccepted()) {
                 touchMouseId = -1;
@@ -537,7 +537,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
 
             if (mousePress->isAccepted() && checkIfDoubleClicked(event->timestamp())) {
                 QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item));
-                QQuickItemPrivate::get(item)->deliverMouseEvent(mouseDoubleClick.data());
+                QCoreApplication::sendEvent(item, mouseDoubleClick.data());
                 event->setAccepted(mouseDoubleClick->isAccepted());
                 if (mouseDoubleClick->isAccepted()) {
                     return true;
@@ -558,7 +558,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             if (p.state() & Qt::TouchPointMoved) {
                 if (mouseGrabberItem) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem));
-                    QQuickItemPrivate::get(item)->deliverMouseEvent(me.data());
+                    QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
                         itemForTouchPointId[p.id()] = mouseGrabberItem; // N.B. the mouseGrabberItem may be different after returning from sendEvent()
@@ -588,7 +588,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 touchMouseId = -1;
                 if (mouseGrabberItem) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem));
-                    QQuickItemPrivate::get(item)->deliverMouseEvent(me.data());
+                    QCoreApplication::sendEvent(item, me.data());
                     if (mouseGrabberItem) // might have ungrabbed due to event
                         mouseGrabberItem->ungrabMouse();
                     return me->isAccepted();
@@ -1807,11 +1807,11 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
         itemForTouchPointId[id] = item;
 
     // Deliver the touch event to the given item
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    itemPrivate->deliverTouchEvent(touchEvent.data());
+    QCoreApplication::sendEvent(item, touchEvent.data());
     touchEventAccepted = touchEvent->isAccepted();
 
     // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!touchEventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
         event->setAccepted(translateTouchToMouse(item, event));
@@ -2229,15 +2229,11 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::KeyPress:
     case QEvent::KeyRelease:
         e->accept();
-        QQuickItemPrivate::get(item)->deliverKeyEvent(static_cast<QKeyEvent *>(e));
+        QCoreApplication::sendEvent(item, e);
         while (!e->isAccepted() && (item = item->parentItem())) {
             e->accept();
-            QQuickItemPrivate::get(item)->deliverKeyEvent(static_cast<QKeyEvent *>(e));
+            QCoreApplication::sendEvent(item, e);
         }
-        break;
-    case QEvent::FocusIn:
-    case QEvent::FocusOut:
-        QQuickItemPrivate::get(item)->deliverFocusEvent(static_cast<QFocusEvent *>(e));
         break;
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
@@ -2247,7 +2243,7 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
         if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
             // accept because qml items by default accept and have to explicitly opt out of accepting
             e->accept();
-            QQuickItemPrivate::get(item)->deliverMouseEvent(static_cast<QMouseEvent *>(e));
+            QCoreApplication::sendEvent(item, e);
         }
         break;
     case QEvent::UngrabMouse:
@@ -2258,30 +2254,26 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
         break;
 #ifndef QT_NO_WHEELEVENT
     case QEvent::Wheel:
-        QQuickItemPrivate::get(item)->deliverWheelEvent(static_cast<QWheelEvent *>(e));
-        break;
 #endif
+#ifndef QT_NO_DRAGANDDROP
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+    case QEvent::Drop:
+#endif
+    case QEvent::FocusIn:
+    case QEvent::FocusOut:
     case QEvent::HoverEnter:
     case QEvent::HoverLeave:
     case QEvent::HoverMove:
-        QQuickItemPrivate::get(item)->deliverHoverEvent(static_cast<QHoverEvent *>(e));
+    case QEvent::TouchCancel:
+        QCoreApplication::sendEvent(item, e);
         break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         d->sendFilteredTouchEvent(item->parentItem(), item, static_cast<QTouchEvent *>(e));
         break;
-    case QEvent::TouchCancel:
-        QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
-        break;
-#ifndef QT_NO_DRAGANDDROP
-    case QEvent::DragEnter:
-    case QEvent::DragMove:
-    case QEvent::DragLeave:
-    case QEvent::Drop:
-        QQuickItemPrivate::get(item)->deliverDragEvent(e);
-        break;
-#endif
     default:
         break;
     }

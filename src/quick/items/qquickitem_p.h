@@ -540,16 +540,6 @@ public:
 #ifndef QT_NO_IM
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
-    void deliverFocusEvent(QFocusEvent *);
-    void deliverMouseEvent(QMouseEvent *);
-#ifndef QT_NO_WHEELEVENT
-    void deliverWheelEvent(QWheelEvent *);
-#endif
-    void deliverTouchEvent(QTouchEvent *);
-    void deliverHoverEvent(QHoverEvent *);
-#ifndef QT_NO_DRAGANDDROP
-    void deliverDragEvent(QEvent *);
-#endif
 
     bool calcEffectiveVisible() const;
     bool setEffectiveVisibleRecur(bool);

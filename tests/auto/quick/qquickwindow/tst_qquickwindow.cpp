@@ -250,6 +250,18 @@ int TestTouchItem::mousePressNum = 0;
 int TestTouchItem::mouseMoveNum = 0;
 int TestTouchItem::mouseReleaseNum = 0;
 
+class EventFilter : public QObject
+{
+public:
+    bool eventFilter(QObject *watched, QEvent *event) {
+        Q_UNUSED(watched);
+        events.append(event->type());
+        return false;
+    }
+
+    QList<int> events;
+};
+
 class ConstantUpdateItem : public QQuickItem
 {
 Q_OBJECT
@@ -329,6 +341,10 @@ private slots:
     void blockClosing();
 
     void crashWhenHoverItemDeleted();
+
+    void qobjectEventFilter_touch();
+    void qobjectEventFilter_key();
+    void qobjectEventFilter_mouse();
 
 #ifndef QT_NO_CURSOR
     void cursor();
@@ -922,6 +938,9 @@ void tst_qquickwindow::mouseFiltering()
     QTRY_COMPARE(middleItem->mousePressId, 1);
     QTRY_COMPARE(bottomItem->mousePressId, 2);
     QTRY_COMPARE(topItem->mousePressId, 3);
+
+    // clean up mouse press state for the next tests
+    QTest::mouseRelease(window, Qt::LeftButton, 0, pos);
 }
 
 void tst_qquickwindow::qmlCreation()
@@ -1523,6 +1542,84 @@ void tst_qquickwindow::crashWhenHoverItemDeleted()
     for (int i = 99; i < 102; ++i) {
         QTest::mouseMove(window, QPoint(0, i));
     }
+}
+
+// QTBUG-32004
+void tst_qquickwindow::qobjectEventFilter_touch()
+{
+    QQuickWindow window;
+
+    window.resize(250, 250);
+    window.setPosition(100, 100);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    TestTouchItem *item = new TestTouchItem(window.contentItem());
+    item->setSize(QSizeF(150, 150));
+
+    EventFilter eventFilter;
+    item->installEventFilter(&eventFilter);
+
+    QPointF pos(10, 10);
+
+    // press single point
+    QTest::touchEvent(&window, touchDevice).press(0, item->mapToScene(pos).toPoint(), &window);
+
+    QCOMPARE(eventFilter.events.count(), 1);
+    QCOMPARE(eventFilter.events.first(), (int)QEvent::TouchBegin);
+}
+
+// QTBUG-32004
+void tst_qquickwindow::qobjectEventFilter_key()
+{
+    QQuickWindow window;
+
+    window.resize(250, 250);
+    window.setPosition(100, 100);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    TestTouchItem *item = new TestTouchItem(window.contentItem());
+    item->setSize(QSizeF(150, 150));
+    item->setFocus(true);
+
+    EventFilter eventFilter;
+    item->installEventFilter(&eventFilter);
+
+    QTest::keyPress(&window, Qt::Key_A);
+
+    // NB: It may also receive some QKeyEvent(ShortcutOverride) which we're not interested in
+    QVERIFY(eventFilter.events.contains((int)QEvent::KeyPress));
+    eventFilter.events.clear();
+
+    QTest::keyRelease(&window, Qt::Key_A);
+
+    QVERIFY(eventFilter.events.contains((int)QEvent::KeyRelease));
+}
+
+// QTBUG-32004
+void tst_qquickwindow::qobjectEventFilter_mouse()
+{
+    QQuickWindow window;
+
+    window.resize(250, 250);
+    window.setPosition(100, 100);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    TestTouchItem *item = new TestTouchItem(window.contentItem());
+    item->setSize(QSizeF(150, 150));
+
+    EventFilter eventFilter;
+    item->installEventFilter(&eventFilter);
+
+    QPoint point = item->mapToScene(QPointF(10, 10)).toPoint();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, point);
+
+    QVERIFY(eventFilter.events.contains((int)QEvent::MouseButtonPress));
+
+    // clean up mouse press state for the next tests
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, point);
 }
 
 QTEST_MAIN(tst_qquickwindow)

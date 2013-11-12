@@ -4472,96 +4472,6 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 }
 #endif // QT_NO_IM
 
-void QQuickItemPrivate::deliverFocusEvent(QFocusEvent *e)
-{
-    Q_Q(QQuickItem);
-
-    if (e->type() == QEvent::FocusIn) {
-        q->focusInEvent(e);
-    } else {
-        q->focusOutEvent(e);
-    }
-}
-
-void QQuickItemPrivate::deliverMouseEvent(QMouseEvent *e)
-{
-    Q_Q(QQuickItem);
-
-    Q_ASSERT(e->isAccepted());
-
-    switch (e->type()) {
-    default:
-        Q_ASSERT(!"Unknown event type");
-    case QEvent::MouseMove:
-        q->mouseMoveEvent(e);
-        break;
-    case QEvent::MouseButtonPress:
-        q->mousePressEvent(e);
-        break;
-    case QEvent::MouseButtonRelease:
-        q->mouseReleaseEvent(e);
-        break;
-    case QEvent::MouseButtonDblClick:
-        q->mouseDoubleClickEvent(e);
-        break;
-    }
-}
-
-#ifndef QT_NO_WHEELEVENT
-void QQuickItemPrivate::deliverWheelEvent(QWheelEvent *e)
-{
-    Q_Q(QQuickItem);
-    q->wheelEvent(e);
-}
-#endif
-
-void QQuickItemPrivate::deliverTouchEvent(QTouchEvent *e)
-{
-    Q_Q(QQuickItem);
-    q->touchEvent(e);
-}
-
-void QQuickItemPrivate::deliverHoverEvent(QHoverEvent *e)
-{
-    Q_Q(QQuickItem);
-    switch (e->type()) {
-    default:
-        Q_ASSERT(!"Unknown event type");
-    case QEvent::HoverEnter:
-        q->hoverEnterEvent(e);
-        break;
-    case QEvent::HoverLeave:
-        q->hoverLeaveEvent(e);
-        break;
-    case QEvent::HoverMove:
-        q->hoverMoveEvent(e);
-        break;
-    }
-}
-
-#ifndef QT_NO_DRAGANDDROP
-void QQuickItemPrivate::deliverDragEvent(QEvent *e)
-{
-    Q_Q(QQuickItem);
-    switch (e->type()) {
-    default:
-        Q_ASSERT(!"Unknown event type");
-    case QEvent::DragEnter:
-        q->dragEnterEvent(static_cast<QDragEnterEvent *>(e));
-        break;
-    case QEvent::DragLeave:
-        q->dragLeaveEvent(static_cast<QDragLeaveEvent *>(e));
-        break;
-    case QEvent::DragMove:
-        q->dragMoveEvent(static_cast<QDragMoveEvent *>(e));
-        break;
-    case QEvent::Drop:
-        q->dropEvent(static_cast<QDropEvent *>(e));
-        break;
-    }
-}
-#endif // QT_NO_DRAGANDDROP
-
 /*!
     Called when \a change occurs for this item.
 
@@ -6983,18 +6893,17 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   */
 bool QQuickItem::event(QEvent *ev)
 {
+    Q_D(QQuickItem);
+
+    switch (ev->type()) {
 #if 0
-    if (ev->type() == QEvent::PolishRequest) {
-        Q_D(QQuickItem);
+    case QEvent::PolishRequest:
         d->polishScheduled = false;
         updatePolish();
-        return true;
-    } else {
-        return QObject::event(ev);
-    }
+        break;
 #endif
 #ifndef QT_NO_IM
-    if (ev->type() == QEvent::InputMethodQuery) {
+    case QEvent::InputMethodQuery: {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
         Qt::InputMethodQueries queries = query->queries();
         for (uint i = 0; i < 32; ++i) {
@@ -7005,17 +6914,76 @@ bool QQuickItem::event(QEvent *ev)
             }
         }
         query->accept();
-        return true;
-    } else if (ev->type() == QEvent::InputMethod) {
-        inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
-        return true;
-    } else
-#endif // QT_NO_IM
-    if (ev->type() == QEvent::StyleAnimationUpdate) {
-        update();
-        return true;
+        break;
     }
-    return QObject::event(ev);
+    case QEvent::InputMethod:
+        inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
+        break;
+#endif // QT_NO_IM
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
+        touchEvent(static_cast<QTouchEvent*>(ev));
+        break;
+    case QEvent::StyleAnimationUpdate:
+        update();
+        break;
+    case QEvent::HoverEnter:
+        hoverEnterEvent(static_cast<QHoverEvent*>(ev));
+        break;
+    case QEvent::HoverLeave:
+        hoverLeaveEvent(static_cast<QHoverEvent*>(ev));
+        break;
+    case QEvent::HoverMove:
+        hoverMoveEvent(static_cast<QHoverEvent*>(ev));
+        break;
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+        d->deliverKeyEvent(static_cast<QKeyEvent*>(ev));
+        break;
+    case QEvent::FocusIn:
+        focusInEvent(static_cast<QFocusEvent*>(ev));
+        break;
+    case QEvent::FocusOut:
+        focusOutEvent(static_cast<QFocusEvent*>(ev));
+        break;
+    case QEvent::MouseMove:
+        mouseMoveEvent(static_cast<QMouseEvent*>(ev));
+        break;
+    case QEvent::MouseButtonPress:
+        mousePressEvent(static_cast<QMouseEvent*>(ev));
+        break;
+    case QEvent::MouseButtonRelease:
+        mouseReleaseEvent(static_cast<QMouseEvent*>(ev));
+        break;
+    case QEvent::MouseButtonDblClick:
+        mouseDoubleClickEvent(static_cast<QMouseEvent*>(ev));
+        break;
+#ifndef QT_NO_WHEELEVENT
+    case QEvent::Wheel:
+        wheelEvent(static_cast<QWheelEvent*>(ev));
+        break;
+#endif
+#ifndef QT_NO_DRAGANDDROP
+    case QEvent::DragEnter:
+        dragEnterEvent(static_cast<QDragEnterEvent*>(ev));
+        break;
+    case QEvent::DragLeave:
+        dragLeaveEvent(static_cast<QDragLeaveEvent*>(ev));
+        break;
+    case QEvent::DragMove:
+        dragMoveEvent(static_cast<QDragMoveEvent*>(ev));
+        break;
+    case QEvent::Drop:
+        dropEvent(static_cast<QDropEvent*>(ev));
+        break;
+#endif // QT_NO_DRAGANDDROP
+    default:
+        return QObject::event(ev);
+    }
+
+    return true;
 }
 
 #ifndef QT_NO_DEBUG_STREAM
