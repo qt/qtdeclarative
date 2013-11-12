@@ -1977,33 +1977,59 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 }
 #endif
 
-void cleanupBasicBlocks(Function *function)
+void cleanupBasicBlocks(Function *function, bool renumber)
 {
-//        showMeTheCode(function);
+    showMeTheCode(function);
 
-    // remove all basic blocks that have no incoming edges, but skip the entry block
-    QVector<BasicBlock *> W = function->basicBlocks;
-    W.removeFirst();
+    // Algorithm: this is the iterative version of a depth-first search for all blocks that are
+    // reachable through outgoing edges, starting with the start block and all exception handler
+    // blocks.
+    QSet<BasicBlock *> postponed, done;
     QSet<BasicBlock *> toRemove;
-
-    while (!W.isEmpty()) {
-        BasicBlock *bb = W.first();
-        W.removeFirst();
-        if (toRemove.contains(bb))
-            continue;
-        if (bb->in.isEmpty() && !bb->isExceptionHandler) {
-            foreach (BasicBlock *outBB, bb->out) {
-                int idx = outBB->in.indexOf(bb);
-                if (idx != -1) {
-                    outBB->in.remove(idx);
-                    W.append(outBB);
-                }
-            }
+    toRemove.reserve(function->basicBlocks.size());
+    done.reserve(function->basicBlocks.size());
+    postponed.reserve(8);
+    for (int i = 0, ei = function->basicBlocks.size(); i != ei; ++i) {
+        BasicBlock *bb = function->basicBlocks[i];
+        if (i == 0 || bb->isExceptionHandler)
+            postponed.insert(bb);
+        else
             toRemove.insert(bb);
+    }
+
+    while (!postponed.isEmpty()) {
+        QSet<BasicBlock *>::iterator it = postponed.begin();
+        BasicBlock *bb = *it;
+        postponed.erase(it);
+        done.insert(bb);
+
+        foreach (BasicBlock *outBB, bb->out) {
+            if (!done.contains(outBB)) {
+                postponed.insert(outBB);
+                toRemove.remove(outBB);
+            }
         }
     }
 
     foreach (BasicBlock *bb, toRemove) {
+        foreach (BasicBlock *outBB, bb->out) {
+            if (toRemove.contains(outBB))
+                continue; // We do not need to unlink from blocks that are scheduled to be removed.
+                          // Actually, it is potentially dangerous: if that block was already
+                          // destroyed, this could result in a use-after-free.
+
+            int idx = outBB->in.indexOf(bb);
+            if (idx != -1) {
+                outBB->in.remove(idx);
+                foreach (Stmt *s, outBB->statements) {
+                    if (Phi *phi = s->asPhi())
+                        phi->d->incoming.remove(idx);
+                    else
+                        break;
+                }
+            }
+        }
+
         foreach (Stmt *s, bb->statements)
             s->destroyData();
         int idx = function->basicBlocks.indexOf(bb);
@@ -2012,9 +2038,11 @@ void cleanupBasicBlocks(Function *function)
         delete bb;
     }
 
-    // re-number all basic blocks:
-    for (int i = 0; i < function->basicBlocks.size(); ++i)
-        function->basicBlocks[i]->index = i;
+    if (renumber)
+        for (int i = 0; i < function->basicBlocks.size(); ++i)
+            function->basicBlocks[i]->index = i;
+
+    showMeTheCode(function);
 }
 
 inline Const *isConstPhi(Phi *phi)
@@ -2867,7 +2895,7 @@ void Optimizer::run()
         function->basicBlocks[i]->index = i;
 //    showMeTheCode(function);
 
-    cleanupBasicBlocks(function);
+    cleanupBasicBlocks(function, true);
 
     function->removeSharedExpressions();
 
@@ -2912,6 +2940,13 @@ void Optimizer::run()
 
 //        qout << "Doing block merging..." << endl;
 //        mergeBasicBlocks(function);
+//        showMeTheCode(function);
+
+        // Basic-block cycles that are unreachable (i.e. for loops in a then-part where the
+        // condition is calculated to be always false) are not yet removed. This will choke the
+        // block scheduling, so remove those now.
+//        qout << "Cleaning up unreachable basic blocks..." << endl;
+        cleanupBasicBlocks(function, false);
 //        showMeTheCode(function);
 
 //        qout << "Doing block scheduling..." << endl;
