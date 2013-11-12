@@ -210,6 +210,7 @@ struct Q_QML_EXPORT Object: Managed {
             delete [] arrayAttributes;
             arrayAttributes = newAttrs + arrayOffset;
         }
+        arrayAlloc += arrayOffset;
     }
 
 public:
