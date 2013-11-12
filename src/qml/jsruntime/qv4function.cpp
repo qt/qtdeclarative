@@ -103,7 +103,7 @@ struct LineNumberMappingHelper
         while (n > 0) {
             half = n >> 1;
             middle = begin + half;
-            if (table[middle * 2 + field] < value) {
+            if (table[middle * 2 + field] < static_cast<quint32>(value)) {
                 begin = middle + 1;
                 n -= half + 1;
             } else {
