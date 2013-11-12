@@ -1660,7 +1660,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
 
     QV8Engine *engine = ctx->engine->v8Engine;
 
-    if (ctx->callData->argc == 6) {
+    if (ctx->callData->argc == 3) {
         qreal x = ctx->callData->args[0].toNumber();
         qreal y = ctx->callData->args[1].toNumber();
         qreal angle = DEGREES(ctx->callData->args[2].toNumber());
