@@ -69,6 +69,11 @@ QmlTypeWrapper::~QmlTypeWrapper()
         typeNamespace->release();
 }
 
+bool QmlTypeWrapper::isSingleton() const
+{
+    return type && type->isSingleton();
+}
+
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (type && type->isSingleton()) {

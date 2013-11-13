@@ -291,6 +291,16 @@ Q_DECLARE_METATYPE(QQmlListProperty<MyQmlObject>)
 
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
 
+class MyInheritedQmlObject : public MyQmlObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE bool isItYouQObject(QObject *o);
+    Q_INVOKABLE bool isItYouMyQmlObject(MyQmlObject *o);
+    Q_INVOKABLE bool isItYouMyInheritedQmlObject(MyInheritedQmlObject *o);
+};
+QML_DECLARE_TYPE(MyInheritedQmlObject)
+
 class MyQmlContainer : public QObject
 {
     Q_OBJECT

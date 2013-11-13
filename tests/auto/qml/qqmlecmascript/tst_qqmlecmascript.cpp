@@ -310,6 +310,7 @@ private slots:
     void thisObject();
     void qtbug_33754();
     void qtbug_34493();
+    void singletonFromQMLToCpp();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7342,6 +7343,22 @@ void tst_qqmlecmascript::qtbug_34493()
     QVERIFY(obj != 0);
     QVERIFY(QMetaObject::invokeMethod(obj.data(), "doIt"));
     QTRY_VERIFY(obj->property("prop").toString() == QLatin1String("Hello World!"));
+}
+
+// Check that a Singleton can be passed from QML to C++
+// as its type*, it's parent type* and as QObject*
+void tst_qqmlecmascript::singletonFromQMLToCpp()
+{
+    QQmlComponent component(&engine, testFile("singletonTest.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(obj != 0);
+
+    QCOMPARE(obj->property("qobjectTest"), QVariant(true));
+    QCOMPARE(obj->property("myQmlObjectTest"), QVariant(true));
+    QCOMPARE(obj->property("myInheritedQmlObjectTest"), QVariant(true));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

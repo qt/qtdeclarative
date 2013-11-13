@@ -76,6 +76,8 @@ private:
 public:
     enum TypeNameMode { IncludeEnums, ExcludeEnums };
 
+    bool isSingleton() const;
+
     QVariant toVariant() const;
 
     static ReturnedValue create(QV8Engine *, QObject *, QQmlType *, TypeNameMode = IncludeEnums);

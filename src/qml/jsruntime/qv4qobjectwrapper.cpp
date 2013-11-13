@@ -1539,6 +1539,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
 
     QV4::Scope scope(QV8Engine::getV4(engine));
 
+    bool queryEngine = false;
     if (callType == qMetaTypeId<QJSValue>()) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(v4, value));
@@ -1568,6 +1569,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         qobjectPtr = 0;
         if (QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
+        else if (QV4::QmlTypeWrapper *qmlTypeWrapper = value->as<QV4::QmlTypeWrapper>())
+            queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
@@ -1610,6 +1613,10 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
     } else {
+        queryEngine = true;
+    }
+
+    if (queryEngine) {
         qvariantPtr = new (&allocData) QVariant();
         type = -1;
 

@@ -257,10 +257,34 @@ public:
     }
 };
 
+static MyInheritedQmlObject *theSingletonObject = 0;
+
+static QObject *inheritedQmlObject_provider(QQmlEngine* /* engine */, QJSEngine* /* scriptEngine */)
+{
+    theSingletonObject = new MyInheritedQmlObject();
+    return theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouQObject(QObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouMyQmlObject(MyQmlObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
+bool MyInheritedQmlObject::isItYouMyInheritedQmlObject(MyInheritedQmlObject *o)
+{
+    return o && o == theSingletonObject;
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObject");
+    qmlRegisterSingletonType<MyInheritedQmlObject>("Test", 1, 0, "MyInheritedQmlObjectSingleton", inheritedQmlObject_provider);
     qmlRegisterType<MyDeferredObject>("Qt.test", 1,0, "MyDeferredObject");
     qmlRegisterType<MyVeryDeferredObject>("Qt.test", 1,0, "MyVeryDeferredObject");
     qmlRegisterType<MyQmlContainer>("Qt.test", 1,0, "MyQmlContainer");
