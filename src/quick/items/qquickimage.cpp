@@ -62,6 +62,13 @@ public:
     {
     }
 
+    void updateTexture(QSGTexture *texture) {
+        if (m_texture == texture)
+            return;
+        m_texture = texture;
+        emit textureChanged();
+    }
+
     QSGTexture *texture() const {
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
@@ -542,7 +549,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
         QQuickImagePrivate *dd = const_cast<QQuickImagePrivate *>(d);
         dd->provider = new QQuickImageTextureProvider;
         dd->provider->m_smooth = d->smooth;
-        dd->provider->m_texture = d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window());
+        dd->provider->updateTexture(d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window()));
     }
 
     return d->provider;
@@ -557,7 +564,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     // Copy over the current texture state into the texture provider...
     if (d->provider) {
         d->provider->m_smooth = d->smooth;
-        d->provider->m_texture = texture;
+        d->provider->updateTexture(texture);
     }
 
     if (!texture || width() <= 0 || height() <= 0) {
