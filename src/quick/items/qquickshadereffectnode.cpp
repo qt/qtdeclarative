@@ -197,6 +197,12 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 case QMetaType::QVector4D:
                     program()->setUniformValue(loc, qvariant_cast<QVector4D>(d.value));
                     break;
+                case QMetaType::QQuaternion:
+                    {
+                        QQuaternion q = qvariant_cast<QQuaternion>(d.value);
+                        program()->setUniformValue(loc, q.x(), q.y(), q.z(), q.scalar());
+                    }
+                    break;
                 case QMetaType::QMatrix4x4:
                     program()->setUniformValue(loc, qvariant_cast<QMatrix4x4>(d.value));
                     break;
