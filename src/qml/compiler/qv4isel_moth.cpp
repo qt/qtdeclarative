@@ -351,6 +351,16 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func,
 
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
+    if (useFastLookups) {
+        Instruction::ConstructPropertyLookup call;
+        call.base = getParam(base);
+        call.index = registerGetterLookup(name);
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+        return;
+    }
     Instruction::CreateProperty create;
     create.base = getParam(base);
     create.name = registerString(name);

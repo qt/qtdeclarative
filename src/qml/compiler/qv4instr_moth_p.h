@@ -98,6 +98,7 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinConvertThisToObject, callBuiltinConvertThisToObject) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
+    F(ConstructPropertyLookup, constructPropertyLookup) \
     F(CreateActivationProperty, createActivationProperty) \
     F(ConstructGlobalLookup, constructGlobalLookup) \
     F(Jump, jump) \
@@ -491,6 +492,14 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_constructPropertyLookup {
+        MOTH_INSTR_HEADER
+        int index;
+        quint32 argc;
+        quint32 callData;
+        Param base;
+        Param result;
+    };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
@@ -712,6 +721,7 @@ union Instr
     instr_callBuiltinConvertThisToObject callBuiltinConvertThisToObject;
     instr_createValue createValue;
     instr_createProperty createProperty;
+    instr_constructPropertyLookup constructPropertyLookup;
     instr_createActivationProperty createActivationProperty;
     instr_constructGlobalLookup constructGlobalLookup;
     instr_jump jump;

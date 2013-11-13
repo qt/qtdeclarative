@@ -966,10 +966,10 @@ ReturnedValue __qmljs_construct_value(ExecutionContext *context, const ValueRef 
     return f->construct(callData);
 }
 
-ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueRef base, const StringRef name, CallDataRef callData)
+ReturnedValue __qmljs_construct_property(ExecutionContext *context, const StringRef name, CallDataRef callData)
 {
     Scope scope(context);
-    ScopedObject thisObject(scope, base->toObject(context));
+    ScopedObject thisObject(scope, callData->thisObject.toObject(context));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -979,6 +979,18 @@ ReturnedValue __qmljs_construct_property(ExecutionContext *context, const ValueR
 
     return f->construct(callData);
 }
+
+ReturnedValue __qmljs_construct_property_lookup(ExecutionContext *context, uint index, CallDataRef callData)
+{
+    Lookup *l = context->lookups + index;
+    SafeValue v;
+    v = l->getter(l, callData->thisObject);
+    if (!v.isManaged())
+        return context->throwTypeError();
+
+    return v.managed()->construct(callData);
+}
+
 
 void __qmljs_throw(ExecutionContext *context, const ValueRef value)
 {

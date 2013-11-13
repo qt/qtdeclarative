@@ -125,7 +125,8 @@ QV4::ReturnedValue __qmljs_call_element(ExecutionContext *context, const ValueRe
 QV4::ReturnedValue __qmljs_call_value(QV4::ExecutionContext *context, const QV4::ValueRef func, CallDataRef callData);
 
 QV4::ReturnedValue __qmljs_construct_activation_property(QV4::ExecutionContext *, const QV4::StringRef name, CallDataRef callData);
-QV4::ReturnedValue __qmljs_construct_property(QV4::ExecutionContext *context, const QV4::ValueRef base, const QV4::StringRef name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_property(QV4::ExecutionContext *context, const QV4::StringRef name, CallDataRef callData);
+QV4::ReturnedValue __qmljs_construct_property_lookup(ExecutionContext *context, uint index, CallDataRef callData);
 QV4::ReturnedValue __qmljs_construct_value(QV4::ExecutionContext *context, const QV4::ValueRef func, CallDataRef callData);
 
 QV4::ReturnedValue __qmljs_builtin_typeof(QV4::ExecutionContext *ctx, const QV4::ValueRef val);

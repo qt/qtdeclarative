@@ -1777,9 +1777,18 @@ void InstructionSelection::constructActivationProperty(V4IR::Name *func, V4IR::E
 
 void InstructionSelection::constructProperty(V4IR::Temp *base, const QString &name, V4IR::ExprList *args, V4IR::Temp *result)
 {
-    prepareCallData(args, 0);
+    prepareCallData(args, base);
+    if (useFastLookups) {
+        uint index = registerGetterLookup(name);
+        generateFunctionCall(result, __qmljs_construct_property_lookup,
+                             Assembler::ContextRegister,
+                             Assembler::TrustedImm32(index),
+                             baseAddressForCallData());
+        return;
+    }
+
     generateFunctionCall(result, __qmljs_construct_property, Assembler::ContextRegister,
-                         Assembler::Reference(base), Assembler::PointerToString(name),
+                         Assembler::PointerToString(name),
                          baseAddressForCallData());
 }
 
