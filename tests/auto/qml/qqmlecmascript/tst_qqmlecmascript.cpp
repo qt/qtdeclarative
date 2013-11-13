@@ -313,6 +313,7 @@ private slots:
     void qtbug_33754();
     void qtbug_34493();
     void singletonFromQMLToCpp();
+    void singletonFromQMLAndBackAndCompare();
     void setPropertyOnInvalid();
     void miscTypeTest();
     void stackLimits();
@@ -7387,6 +7388,33 @@ void tst_qqmlecmascript::singletonFromQMLToCpp()
     QCOMPARE(obj->property("qobjectTest"), QVariant(true));
     QCOMPARE(obj->property("myQmlObjectTest"), QVariant(true));
     QCOMPARE(obj->property("myInheritedQmlObjectTest"), QVariant(true));
+}
+
+// Check that a Singleton can be passed from QML to C++
+// as its type*, it's parent type* and as QObject*
+// and correctly compares to itself
+void tst_qqmlecmascript::singletonFromQMLAndBackAndCompare()
+{
+    QQmlComponent component(&engine, testFile("singletonTest2.qml"));
+    QScopedPointer<QObject> o(component.create());
+    if (component.errors().size())
+        qDebug() << component.errors();
+    QVERIFY(component.errors().isEmpty());
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("myInheritedQmlObjectTest1"), QVariant(true));
+    QCOMPARE(o->property("myInheritedQmlObjectTest2"), QVariant(true));
+    QCOMPARE(o->property("myInheritedQmlObjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("myQmlObjectTest1"), QVariant(true));
+    QCOMPARE(o->property("myQmlObjectTest2"), QVariant(true));
+    QCOMPARE(o->property("myQmlObjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("qobjectTest1"), QVariant(true));
+    QCOMPARE(o->property("qobjectTest2"), QVariant(true));
+    QCOMPARE(o->property("qobjectTest3"), QVariant(true));
+
+    QCOMPARE(o->property("singletonEqualToItself"), QVariant(true));
 }
 
 void tst_qqmlecmascript::setPropertyOnInvalid()

@@ -89,6 +89,9 @@ public:
     static PropertyAttributes query(const Managed *, StringRef name);
     static void destroy(Managed *that);
 
+protected:
+    static bool isEqualTo(Managed *that, Managed *o);
+
 private:
     QV8Engine *v8;
     TypeNameMode mode;

@@ -97,6 +97,9 @@ struct Q_QML_EXPORT QObjectWrapper : public QV4::Object
     ReturnedValue getProperty(ExecutionContext *ctx, int propertyIndex, bool captureRequired);
     void setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value);
 
+protected:
+    static bool isEqualTo(Managed *that, Managed *o);
+
 private:
     ReturnedValue getProperty(ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired = true);
     static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value);

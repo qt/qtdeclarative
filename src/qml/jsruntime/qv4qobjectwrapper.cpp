@@ -646,6 +646,15 @@ void QObjectWrapper::setProperty(ExecutionContext *ctx, int propertyIndex, const
     return setProperty(m_object, ctx, property, value);
 }
 
+bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
+{
+    QV4::QObjectWrapper *qobjectWrapper = a->as<QV4::QObjectWrapper>();
+    if (QV4::QmlTypeWrapper *qmlTypeWrapper = b->asObject()->as<QV4::QmlTypeWrapper>())
+        return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
+
+    return false;
+}
+
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QQmlData *ddata, QObject *object)
 {
     QQmlEngine *qmlEngine = engine->v8Engine->engine();
