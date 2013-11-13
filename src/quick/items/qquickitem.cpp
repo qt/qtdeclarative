@@ -6629,15 +6629,7 @@ void QQuickItem::grabMouse()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    if (windowPriv->mouseGrabberItem == this)
-        return;
-
-    QQuickItem *oldGrabber = windowPriv->mouseGrabberItem;
-    windowPriv->mouseGrabberItem = this;
-    if (oldGrabber) {
-        QEvent ev(QEvent::UngrabMouse);
-        d->window->sendEvent(oldGrabber, &ev);
-    }
+    windowPriv->setMouseGrabber(this);
 }
 
 /*!

@@ -2048,12 +2048,13 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
         if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
             d->clearDelayedPress();
             grabMouse();
+        } else if (d->delayedPressEvent) {
+            grabMouse();
         }
 
-        // Do not accept this event when filtering, as this would force the mouse grab to the child
         const bool filtered = stealThisEvent || d->delayedPressEvent || grabberDisabled;
         if (filtered) {
-            event->setAccepted(false);
+            event->setAccepted(true);
         }
         return filtered;
     } else if (d->lastPosTime != -1) {

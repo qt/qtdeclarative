@@ -1310,7 +1310,10 @@ void tst_qquickitem::touchEventAcceptIgnore()
         bool accepted = window.event(&event);
 
         QVERIFY(item->touchEventReached);
-        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+
+        // always true because QtQuick always eats touch events so as to not
+        // allow QtGui to synthesise them for us.
+        QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
         QTouchEvent::TouchPoint point;
@@ -1330,7 +1333,10 @@ void tst_qquickitem::touchEventAcceptIgnore()
         bool accepted = window.event(&event);
 
         QCOMPARE(item->touchEventReached, itemSupportsTouch);
-        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+
+        // always true because QtQuick always eats touch events so as to not
+        // allow QtGui to synthesise them for us.
+        QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
         QTouchEvent::TouchPoint point;
@@ -1350,7 +1356,10 @@ void tst_qquickitem::touchEventAcceptIgnore()
         bool accepted = window.event(&event);
 
         QCOMPARE(item->touchEventReached, itemSupportsTouch);
-        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+
+        // always true because QtQuick always eats touch events so as to not
+        // allow QtGui to synthesise them for us.
+        QCOMPARE(accepted && event.isAccepted(), true);
     }
 }
 
