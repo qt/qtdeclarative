@@ -276,11 +276,17 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
         QSGShaderSourceBuilder builder;
         if (s.sourceCode[Key::FragmentShader].isEmpty()) {
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.frag"));
+#if defined(QT_OPENGL_ES_2)
+            builder.removeVersion();
+#endif
             s.sourceCode[Key::FragmentShader] = builder.source();
             builder.clear();
         }
 
         builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticletemplate.vert"));
+#if defined(QT_OPENGL_ES_2)
+        builder.removeVersion();
+#endif
         if (s.sourceCode[Key::VertexShader].isEmpty())
             builder.appendSourceFile(QStringLiteral(":/particles/shaders/customparticle.vert"));
         s.sourceCode[Key::VertexShader] = builder.source() + s.sourceCode[Key::VertexShader];
