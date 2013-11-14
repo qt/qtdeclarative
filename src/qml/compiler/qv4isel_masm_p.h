@@ -466,23 +466,6 @@ public:
         V4IR::BasicBlock *block;
     };
 
-    void saveInstructionPointer(RegisterID freeScratchRegister) {
-        Address ipAddr(ContextRegister, qOffsetOf(QV4::ExecutionContext, jitInstructionPointer));
-        RegisterID sourceRegister = freeScratchRegister;
-
-#if CPU(X86_64) || CPU(X86)
-        callToRetrieveIP();
-        peek(sourceRegister);
-        pop();
-#elif CPU(ARM)
-        move(JSC::ARMRegisters::pc, sourceRegister);
-#else
-#error "Port me!"
-#endif
-
-        storePtr(sourceRegister, ipAddr);
-    }
-
     void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
         ctl.call = call();
@@ -1397,8 +1380,6 @@ public:
 
     JSC::MacroAssemblerCodeRef link(int *codeSize);
 
-    void recordLineNumber(int lineNumber);
-
     const StackLayout stackLayout() const { return _stackLayout; }
     ConstantTable &constantTable() { return _constTable; }
 
@@ -1424,13 +1405,6 @@ private:
 
     QV4::ExecutableAllocator *_executableAllocator;
     InstructionSelection *_isel;
-
-    struct CodeLineNumerMapping
-    {
-        Assembler::Label location;
-        int lineNumber;
-    };
-    QVector<CodeLineNumerMapping> codeLineNumberMappings;
 };
 
 template <typename T> inline void prepareRelativeCall(const T &, Assembler *){}

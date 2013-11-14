@@ -439,15 +439,6 @@ static void printDisassembledOutputWithCalls(const char* output, const QHash<voi
 }
 #endif
 
-void Assembler::recordLineNumber(int lineNumber)
-{
-    CodeLineNumerMapping mapping;
-    mapping.location = label();
-    mapping.lineNumber = lineNumber;
-    codeLineNumberMappings << mapping;
-}
-
-
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
     Label endOfCode = label();
@@ -466,14 +457,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     JSC::JSGlobalData dummy(_executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
-
-    QVector<uint> lineNumberMapping(codeLineNumberMappings.count() * 2);
-
-    for (int i = 0; i < codeLineNumberMappings.count(); ++i) {
-        lineNumberMapping[i * 2] = linkBuffer.offsetOf(codeLineNumberMappings.at(i).location);
-        lineNumberMapping[i * 2 + 1] = codeLineNumberMappings.at(i).lineNumber;
-    }
-    _isel->jsUnitGenerator()->registerLineNumberMapping(_function, lineNumberMapping);
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
@@ -642,9 +625,9 @@ void InstructionSelection::run(int functionIndex)
 
         foreach (V4IR::Stmt *s, _block->statements) {
             if (s->location.isValid()) {
-                _as->recordLineNumber(s->location.startLine);
                 if (int(s->location.startLine) != lastLine) {
-                    _as->saveInstructionPointer(Assembler::ScratchRegister);
+                    Assembler::Address lineAddr(Assembler::ContextRegister, qOffsetOf(QV4::ExecutionContext, lineNumber));
+                    _as->store32(Assembler::TrustedImm32(s->location.startLine), lineAddr);
                     lastLine = s->location.startLine;
                 }
             }

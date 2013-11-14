@@ -621,11 +621,12 @@ namespace {
         void resolve(StackFrame *frame, ExecutionContext *context, Function *function)
         {
             qptrdiff offset;
-            if (context->interpreterInstructionPointer)
+            if (context->interpreterInstructionPointer) {
                 offset = *context->interpreterInstructionPointer - 1 - function->codeData;
-            else
-                offset = context->jitInstructionPointer - (char*)function->codePtr;
-            frame->line = function->lineNumberForProgramCounter(offset);
+                frame->line = function->lineNumberForProgramCounter(offset);
+            } else {
+                frame->line = context->lineNumber;
+            }
         }
     };
 }

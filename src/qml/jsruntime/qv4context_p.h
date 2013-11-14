@@ -110,7 +110,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     EvalCode *currentEvalCode;
 
     const uchar **interpreterInstructionPointer;
-    char *jitInstructionPointer;
+    int lineNumber;
 
     void initBaseContext(Type type, ExecutionEngine *engine, ExecutionContext *parentContext)
     {
@@ -123,7 +123,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         compilationUnit = 0;
         currentEvalCode = 0;
         interpreterInstructionPointer = 0;
-        jitInstructionPointer = 0;
+        lineNumber = -1;
     }
 
     CallContext *newCallContext(FunctionObject *f, CallData *callData);
@@ -141,11 +141,11 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue throwError(const QV4::ValueRef value);
     ReturnedValue throwError(const QString &message);
     ReturnedValue throwSyntaxError(const QString &message);
-    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int line, int column);
+    ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int lineNumber, int column);
     ReturnedValue throwTypeError();
     ReturnedValue throwTypeError(const QString &message);
     ReturnedValue throwReferenceError(const ValueRef value);
-    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int line, int column);
+    ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
     ReturnedValue throwRangeError(const ValueRef value);
     ReturnedValue throwRangeError(const QString &message);
     ReturnedValue throwURIError(const ValueRef msg);
